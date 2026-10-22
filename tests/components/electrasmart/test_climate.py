@@ -25,7 +25,6 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     HVACMode,
 )
-from homeassistant.components.electrasmart.climate import ElectraClimateEntity
 from homeassistant.components.electrasmart.const import PRESET_NONE, PRESET_SHABAT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -36,21 +35,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_component import DATA_INSTANCES
+from homeassistant.helpers.entity_component import async_update_entity
 
 ENTITY_ID = "climate.living_room"
-
-
-def _get_entity(hass: HomeAssistant) -> ElectraClimateEntity:
-    """Return the climate entity created by the integration."""
-    entity = hass.data[DATA_INSTANCES][CLIMATE_DOMAIN].get_entity(ENTITY_ID)
-    assert isinstance(entity, ElectraClimateEntity)
-    return entity
-
-
-async def _async_update_entity(hass: HomeAssistant) -> None:
-    """Run one update of the climate entity, as a poll would."""
-    await _get_entity(hass).async_update_ha_state(force_refresh=True)
 
 
 async def test_turn_on_keeps_the_mode_the_ac_was_last_running_in(
@@ -137,18 +124,6 @@ async def test_set_temperature(
 
     mock_device.set_temperature.assert_called_once_with(25)
     mock_api.set_state.assert_awaited_once_with(mock_device)
-
-
-async def test_set_temperature_without_a_temperature(
-    hass: HomeAssistant, mock_device: Mock, setup_integration: None
-) -> None:
-    """A temperature command without a value is rejected instead of guessed."""
-    entity = _get_entity(hass)
-
-    with pytest.raises(ValueError, match="No target temperature provided"):
-        await entity.async_set_temperature()
-
-    mock_device.set_temperature.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -243,7 +218,7 @@ async def test_update_polls_the_cloud(
     hass: HomeAssistant, mock_api: Mock, setup_integration: None
 ) -> None:
     """A scheduled update asks the API for the latest telemetry."""
-    await _async_update_entity(hass)
+    await async_update_entity(hass, ENTITY_ID)
 
     mock_api.get_last_telemtry.assert_awaited_once()
 
@@ -256,7 +231,7 @@ async def test_update_is_skipped_right_after_a_command(
         CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
 
-    await _async_update_entity(hass)
+    await async_update_entity(hass, ENTITY_ID)
 
     mock_api.get_last_telemtry.assert_not_awaited()
 
@@ -282,7 +257,7 @@ async def test_swing_mode_reflects_the_device(
     mock_device.is_horizontal_swing = Mock(return_value=horizontal)
     mock_device.is_vertical_swing = Mock(return_value=vertical)
 
-    await _async_update_entity(hass)
+    await async_update_entity(hass, ENTITY_ID)
 
     assert hass.states.get(ENTITY_ID).attributes[ATTR_SWING_MODE] == expected
 
@@ -301,18 +276,18 @@ async def test_unavailable_device_warns_once_and_recovers(
     )
     mock_device.is_disconnected = Mock(return_value=True)
 
-    await _async_update_entity(hass)
+    await async_update_entity(hass, ENTITY_ID)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     assert caplog.text.count(warning) == 1
 
-    await _async_update_entity(hass)
+    await async_update_entity(hass, ENTITY_ID)
 
     assert caplog.text.count(warning) == 1
 
     mock_device.is_disconnected = Mock(return_value=False)
 
-    await _async_update_entity(hass)
+    await async_update_entity(hass, ENTITY_ID)
 
     assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
     assert "is now available" in caplog.text
@@ -329,7 +304,7 @@ async def test_update_failure_keeps_the_old_state(
         side_effect=ElectraApiError("Failed to retrieve telemetry")
     )
 
-    await _async_update_entity(hass)
+    await async_update_entity(hass, ENTITY_ID)
 
     assert "Failed to get climate.living_room state" in caplog.text
     assert "Failed to retrieve telemetry" in caplog.text

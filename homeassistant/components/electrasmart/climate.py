@@ -262,12 +262,13 @@ class ElectraClimateEntity(ClimateEntity):
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
+        """Set new target temperature.
 
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise ValueError("No target temperature provided")
-
-        self._electra_ac_device.set_temperature(int(temperature))
+        The climate service schema requires one of the temperature attributes
+        and this entity only supports a target temperature, so the value is
+        always there.
+        """
+        self._electra_ac_device.set_temperature(int(kwargs[ATTR_TEMPERATURE]))
         await self._async_operate_electra_ac()
 
     def _update_device_attrs(self) -> None:
