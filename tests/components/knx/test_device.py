@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.storage.config_store import (
@@ -15,9 +17,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit, _patch_telegram_store
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_create_device(

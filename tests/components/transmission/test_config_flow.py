@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from transmission_rpc.error import (
     TransmissionAuthError,
     TransmissionConnectError,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_CONFIG_DATA, setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(
@@ -216,7 +215,7 @@ async def test_reauth_success(
 
     with patch(
         "homeassistant.components.transmission.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

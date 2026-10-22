@@ -1,4 +1,4 @@
-"""Set up some common test helper things."""
+"""Home Assistant pytest fixtures and hooks."""
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Sequence
@@ -111,6 +111,7 @@ from homeassistant.util import dt as dt_util, location as location_util
 from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_handles
 from homeassistant.util.json import json_loads
 
+from . import _paths
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 from .syrupy import HomeAssistantSnapshotExtension
 from .typing import (
@@ -133,6 +134,7 @@ if TYPE_CHECKING:
         MockInfraredEmitterEntity,
         MockInfraredReceiverEntity,
     )
+    from .components.radio_frequency.common import MockRadioFrequencyEntity
 
 
 pytest.register_assert_rewrite("pytest_homeassistant.common")
@@ -173,12 +175,22 @@ if expected_sqlite := os.environ.get("EXPECTED_SQLITE_VERSION"):
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
+    parser.addini("ha_test_root", "Directory containing test fixtures", default="tests")
+    parser.addini(
+        "ha_test_config_dir", "Directory containing the test HA configuration"
+    )
     parser.addoption("--dburl", action="store", default="sqlite://")
     parser.addoption("--drop-existing-db", action="store_const", const=True)
 
 
+def pytest_load_initial_conftests(early_config: pytest.Config) -> None:
+    """Configure fixture paths when the plugin is loaded early."""
+    _paths.configure(early_config)
+
+
 def pytest_configure(config: pytest.Config) -> None:
-    """Register marker for tests that log exceptions."""
+    """Configure test paths and register markers."""
+    _paths.configure(config)
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
@@ -676,12 +688,14 @@ def hass_tmp_config_dir(tmp_path: pathlib.Path) -> str:
         # Use temporary config directory for this test/module.
         return hass_tmp_config_dir
     """
-    copytree(
-        get_test_config_dir(),
-        tmp_path,
-        symlinks=True,
-        dirs_exist_ok=True,
-    )
+    config_dir = get_test_config_dir()
+    if _paths.CONFIG_DIR is not None or pathlib.Path(config_dir).is_dir():
+        copytree(
+            config_dir,
+            tmp_path,
+            symlinks=True,
+            dirs_exist_ok=True,
+        )
     return str(tmp_path)
 
 
@@ -696,6 +710,28 @@ def hass_config_dir() -> str:
 
 
 @pytest.fixture
+def entity_registry_enabled_by_default() -> Generator[None]:
+    """Test fixture that ensures all entities are enabled in the registry."""
+    with (
+        patch(
+            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.device_tracker.config_entry.ScannerEntity.entity_registry_enabled_default",
+            return_value=True,
+        ),
+    ):
+        yield
+
+
+@pytest.fixture
+def custom_integrations_enabled() -> bool:
+    """Control custom integration loading."""
+    return True
+
+
+@pytest.fixture
 async def hass(
     hass_fixture_setup: list[bool],
     load_registries: bool,
@@ -703,6 +739,7 @@ async def hass(
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
     mock_recorder_before_hass: None,
+    custom_integrations_enabled: bool,
 ) -> AsyncGenerator[HomeAssistant]:
     """Create a test instance of Home Assistant."""
 
@@ -729,6 +766,8 @@ async def hass(
     async with async_test_home_assistant(
         loop, load_registries, config_dir=hass_config_dir
     ) as hass:
+        if custom_integrations_enabled:
+            hass.data.pop(loader.DATA_CUSTOM_COMPONENTS, None)
         orig_exception_handler = loop.get_exception_handler()
         loop.set_exception_handler(exc_handle)
         frame.async_setup(hass)
@@ -863,7 +902,7 @@ async def hass_access_token(
 def hass_owner_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
-    """Return a Home Assistant admin user."""
+    """Return a Home Assistant owner user."""
     return MockUser(is_owner=True).add_to_hass(hass)
 
 
@@ -891,7 +930,7 @@ async def hass_read_only_access_token(
     hass_read_only_user: MockUser,
     local_auth: homeassistant.HassAuthProvider,
 ) -> str:
-    """Return a Home Assistant read only user."""
+    """Return an access token for a read-only user."""
     credential = Credentials(
         id="mock-readonly-credential-id",
         auth_provider_type="homeassistant",
@@ -1556,7 +1595,7 @@ def mock_async_zeroconf(mock_zeroconf: MagicMock) -> Generator[MagicMock]:
 @pytest.fixture
 def enable_custom_integrations(hass: HomeAssistant) -> None:
     """Enable custom integrations defined in the test dir."""
-    hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
+    hass.data.pop(loader.DATA_CUSTOM_COMPONENTS, None)
 
 
 @pytest.fixture
@@ -2046,6 +2085,26 @@ def mock_recorder_before_hass() -> None:
     """
 
 
+# Radio frequency test fixtures
+@pytest.fixture(name="init_radio_frequency")
+async def init_radio_frequency_fixture(hass: HomeAssistant) -> None:
+    """Set up the Radio Frequency integration for testing."""
+    from .components.radio_frequency.common import init_radio_frequency_fixture_helper  # noqa: PLC0415
+
+    await init_radio_frequency_fixture_helper(hass)
+
+
+@pytest.fixture(name="mock_rf_entity")
+async def mock_rf_entity_fixture(
+    hass: HomeAssistant, init_radio_frequency: None
+) -> MockRadioFrequencyEntity:
+    """Return a mock radio frequency entity."""
+    from .components.radio_frequency.common import mock_rf_entity_fixture_helper  # noqa: PLC0415
+
+    return await mock_rf_entity_fixture_helper(hass)
+
+
+# Infrared test fixtures
 @pytest.fixture(name="init_infrared")
 async def init_infrared_fixture(hass: HomeAssistant) -> None:
     """Set up the Infrared integration for testing."""
@@ -2229,39 +2288,6 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
         ),
     ):
         yield mock_bleak_scanner_start
-
-
-@pytest.fixture
-def hassio_env(
-    supervisor_is_connected: AsyncMock, supervisor_root_info: AsyncMock
-) -> Generator[None]:
-    """Fixture to inject hassio env."""
-    from aiohasupervisor import SupervisorError  # noqa: PLC0415
-
-    from .components.hassio import SUPERVISOR_TOKEN  # noqa: PLC0415
-
-    supervisor_root_info.side_effect = SupervisorError()
-    with (
-        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
-        patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
-    ):
-        yield
-
-
-@pytest.fixture
-async def hassio_stubs(
-    hassio_env: None,
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    supervisor_client: AsyncMock,
-    ingress_panels: AsyncMock,
-) -> None:
-    """Create mock hassio http client."""
-    with patch(
-        "homeassistant.components.hassio.coordinator.SupervisorIssuesCoordinator.async_refresh",
-    ):
-        await async_setup_component(hass, "hassio", {})
 
 
 @pytest.fixture

@@ -6,7 +6,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import FullyKioskConfigEntry
+from .coordinator import FullyKioskConfigEntry
 
 DEVICE_INFO_TO_REDACT = {
     "serial",

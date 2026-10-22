@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 from pyisy import ISYConnectionError, ISYInvalidAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.isy994.const import (
@@ -26,8 +27,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_HOSTNAME = "1.1.1.1"
 MOCK_USERNAME = "test-username"
@@ -88,7 +87,7 @@ def _patch_isy_success() -> Generator[None]:
     """Patch a successful connection to the ISY."""
     with (
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
-        patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True),
+        patch(PATCH_ASYNC_SETUP_ENTRY, return_value=None),
     ):
         yield
 
@@ -114,7 +113,7 @@ async def test_form(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -283,7 +282,7 @@ async def test_form_forwards_verify_ssl_to_connection(
         ) as mock_connection_cls,
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ),
     ):
         mock_connection_cls.return_value.test_connection = AsyncMock(
@@ -425,7 +424,7 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -587,7 +586,7 @@ async def test_form_dhcp(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -627,7 +626,7 @@ async def test_form_dhcp_with_polisy(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -667,7 +666,7 @@ async def test_form_dhcp_with_eisy(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -833,7 +832,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             "homeassistant.components.isy994.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(

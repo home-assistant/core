@@ -46,6 +46,7 @@ class GroupEntity(Entity):
 
     _attr_should_poll = False
     _entity_ids: list[str]
+    _is_preview = False
 
     @callback
     def async_start_preview(
@@ -53,6 +54,7 @@ class GroupEntity(Entity):
         preview_callback: Callable[[str, Mapping[str, Any]], None],
     ) -> CALLBACK_TYPE:
         """Render a preview."""
+        self._is_preview = True
 
         for entity_id in self._entity_ids:
             if (state := self.hass.states.get(entity_id)) is None:

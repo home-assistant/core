@@ -15,7 +15,7 @@ from .coordinator import BluesoundCoordinator
 from .entity import BluesoundEntity
 
 if TYPE_CHECKING:
-    from . import BluesoundConfigEntry
+    from .coordinator import BluesoundConfigEntry
 
 
 async def async_setup_entry(

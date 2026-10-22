@@ -3,18 +3,18 @@
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
-from pydrawise import APIError
+from pydrawise import APIError, auth as pydrawise_auth
 from pydrawise.exceptions import NotAuthorizedError
 from pydrawise.schema import User
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.hydrawise.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -55,6 +55,12 @@ async def test_form(
     assert result["result"].unique_id == f"hydrawise-{user.customer_id}"
     assert len(mock_setup_entry.mock_calls) == 1
     mock_auth.check.assert_awaited_once_with()
+    pydrawise_auth.HybridAuth.assert_called_once_with(
+        "asdf@asdf.com",
+        "__password__",
+        "__api-key__",
+        session=async_get_clientsession(hass),
+    )
     mock_pydrawise.get_user.assert_awaited_once_with(fetch_zones=False)
 
 
