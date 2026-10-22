@@ -39,7 +39,7 @@ async def async_setup_entry(
         """Return if a device with the client's MAC address is registered."""
         return bool(
             dr.async_get(hass).async_get_devices(
-                connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))}
+                connections={(dr.CONNECTION_NETWORK_MAC, mac)}
             )
         )
 
