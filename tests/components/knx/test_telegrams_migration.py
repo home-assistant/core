@@ -6,14 +6,13 @@ import os
 from typing import Any
 
 from knx_telegram_store import TelegramQuery
+from pytest_homeassistant.common import async_load_json_object_fixture
 
 from homeassistant.components.knx.const import DOMAIN, KNX_MODULE_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .conftest import KNXTestKit
-
-from tests.common import async_load_json_object_fixture
 
 
 async def test_migrate_telegrams_json_to_sqlite(

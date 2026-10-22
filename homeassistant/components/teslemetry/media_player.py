@@ -204,6 +204,8 @@ class TeslemetryStreamingMediaEntity(
                 self._attr_state = MediaPlayerState(state.state)
             except ValueError:
                 self._attr_state = None
+            if self._attr_state in (MediaPlayerState.PLAYING, MediaPlayerState.PAUSED):
+                self._playback_state = self._attr_state
             self._attr_volume_level = state.attributes.get(
                 MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
             )
@@ -281,6 +283,18 @@ class TeslemetryStreamingMediaEntity(
                 self._async_handle_media_now_playing_station
             )
         )
+
+    @override
+    async def async_media_play(self) -> None:
+        """Send play command."""
+        await super().async_media_play()
+        self._playback_state = self._attr_state
+
+    @override
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        await super().async_media_pause()
+        self._playback_state = self._attr_state
 
     def _async_handle_center_display(self, value: str | None) -> None:
         """Update entity attributes."""

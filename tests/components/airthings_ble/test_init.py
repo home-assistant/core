@@ -8,6 +8,8 @@ from airthings_ble import AirthingsDevice, AirthingsDeviceType
 from bleak import BleakError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.airthings_ble.const import (
     DEFAULT_SCAN_INTERVAL,
@@ -31,9 +33,6 @@ from . import (
     patch_airthings_ble,
     patch_async_ble_device_from_address,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 # A read that ends early leaves the address empty. The coordinator treats
 # such a read as incomplete instead of creating entities from it.

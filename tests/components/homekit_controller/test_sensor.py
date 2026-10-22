@@ -8,6 +8,7 @@ from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, Threa
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.protocol.statuscodes import HapStatusCode
 import pytest
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.homekit_controller.sensor import (
     SimpleSensor,
@@ -20,8 +21,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from .common import TEST_DEVICE_SERVICE_INFO, Helper, setup_test_component
-
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 def create_temperature_sensor_service(accessory: Accessory) -> None:

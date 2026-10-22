@@ -5,6 +5,11 @@ from unittest.mock import MagicMock
 from PySrDaliGateway import CallbackEventType
 from PySrDaliGateway.types import MotionState
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    snapshot_platform,
+)
 
 from homeassistant.const import (
     STATE_OFF,
@@ -17,8 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import find_device_listener, trigger_availability_callback
-
-from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 TEST_MOTION_ENTITY_ID = "binary_sensor.motion_sensor_0000_10_motion"
 TEST_OCCUPANCY_ENTITY_ID = "binary_sensor.motion_sensor_0000_10_occupancy"

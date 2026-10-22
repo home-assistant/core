@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
+
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.homekit.const import (
     CHAR_CONFIGURED_NAME,
@@ -13,8 +15,6 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_programmable_switch_button_fires_on_trigger(

@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import hue
 from homeassistant.components.hue import DOMAIN, bridge
 from homeassistant.components.hue.const import (
@@ -12,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_bridge, setup_component
-
-from tests.common import MockConfigEntry
 
 GROUP_RESPONSE = {
     "group_1": {

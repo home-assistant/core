@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from pyHomee import HomeeAuthFailedException, HomeeConnectionFailedException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.homee.const import (
@@ -30,8 +31,6 @@ from .conftest import (
     TESTPASS,
     TESTUSER,
 )
-
-from tests.common import MockConfigEntry
 
 PARAMETRIZED_ERRORS = (
     ("side_eff", "error"),

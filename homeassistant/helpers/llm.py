@@ -681,7 +681,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
 
     if isinstance(schema, selector.TargetSelector):
         return probatio.to_openapi(
-            cv.TARGET_FIELDS, custom_serializer=selector_serializer
+            cv.TARGET_ID_FIELDS, custom_serializer=selector_serializer
         )
 
     if isinstance(schema, selector.TemplateSelector):

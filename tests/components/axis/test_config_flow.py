@@ -5,6 +5,7 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
@@ -37,8 +38,6 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import API_DISCOVERY_BASIC_DEVICE_INFO, DEFAULT_HOST, MAC, MODEL, NAME
-
-from tests.common import MockConfigEntry
 
 DHCP_FORMATTED_MAC = dr.format_mac(MAC).replace(":", "")
 
