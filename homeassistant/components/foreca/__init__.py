@@ -12,7 +12,7 @@ from .coordinator import ForecaConfigEntry, ForecaUpdateCoordinator
 PLATFORMS = [Platform.WEATHER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> None:
     """Set up Foreca from a config entry."""
     client = ForecaApiClient(
         entry.data[CONF_API_KEY], session=async_get_clientsession(hass)
@@ -27,7 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> bo
     entry.runtime_data = coordinators
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def _async_reload_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> None:
@@ -35,6 +34,6 @@ async def _async_reload_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> 
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
