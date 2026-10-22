@@ -6,8 +6,9 @@ import probatio
 from pyrail import IRail, PyRailError
 from pyrail.models import StationDetails
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_SHOW_ON_MAP
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -17,7 +18,14 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_EXCLUDE_VIAS, CONF_STATION_FROM, CONF_STATION_TO, DOMAIN
+from .const import (
+    CONF_EXCLUDE_VIAS,
+    CONF_STATION_FROM,
+    CONF_STATION_TO,
+    CONNECTION_UNIQUE_ID_PREFIX,
+    DOMAIN,
+    LIVEBOARD_UNIQUE_ID_PREFIX,
+)
 
 
 class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -49,6 +57,42 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             SelectOptionDict(value=station.id, label=station.standard_name)
             for station in self.stations
         ]
+
+    def _async_migrate_entities(
+        self,
+        entry: ConfigEntry,
+        unique_id: str,
+        station_from: StationDetails,
+        station_to: StationDetails,
+    ) -> None:
+        """Migrate the entities of the entry to the unique IDs of the new route.
+
+        Entity unique IDs embed the route, so they change with it.
+        """
+        unique_ids = {
+            f"{CONNECTION_UNIQUE_ID_PREFIX}{entry.unique_id}": (
+                f"{CONNECTION_UNIQUE_ID_PREFIX}{unique_id}"
+            ),
+            f"{LIVEBOARD_UNIQUE_ID_PREFIX}{entry.data[CONF_STATION_FROM]}_{entry.unique_id}": (
+                f"{LIVEBOARD_UNIQUE_ID_PREFIX}{station_from.id}_{unique_id}"
+            ),
+            f"{LIVEBOARD_UNIQUE_ID_PREFIX}{entry.data[CONF_STATION_TO]}_{entry.unique_id}": (
+                f"{LIVEBOARD_UNIQUE_ID_PREFIX}{station_to.id}_{unique_id}"
+            ),
+        }
+        entity_registry = er.async_get(self.hass)
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            new_unique_id = unique_ids.get(entity_entry.unique_id)
+            if new_unique_id is None:
+                continue
+            if not entity_registry.async_get_entity_id(
+                entity_entry.domain, DOMAIN, new_unique_id
+            ):
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id, new_unique_id=new_unique_id
+                )
 
     @override
     async def async_step_user(
@@ -147,6 +191,9 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                 if unique_id != entry.unique_id:
                     await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()
+                    self._async_migrate_entities(
+                        entry, unique_id, station_from, station_to
+                    )
                 return self.async_update_reload_and_abort(
                     entry,
                     unique_id=unique_id,
@@ -154,7 +201,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                         f"Train from {station_from.standard_name}"
                         f" to {station_to.standard_name}"
                     ),
-                    data=user_input,
+                    data_updates=user_input,
                 )
 
         return self.async_show_form(
