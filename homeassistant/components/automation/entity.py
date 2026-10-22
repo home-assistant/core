@@ -211,6 +211,11 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         """Return the repair issue id for the entity_id."""
         return f"{entity_id}_validation_{self._validation_status}"
 
+    @property
+    def repair_issue_id(self) -> str:
+        """Return the id of the repair issue."""
+        return self._issue_id(self.entity_id)
+
     @callback
     def _async_create_issue(self) -> None:
         """Create a repair issue to notify the user the automation has errors."""
@@ -247,7 +252,9 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
-        async_delete_issue(self.hass, DOMAIN, self._issue_id(self.entity_id))
+        async_delete_issue(
+            self.hass, DOMAIN, self.repair_issue_id, defer_to_refresh=True
+        )
 
     @override
     async def async_trigger(
