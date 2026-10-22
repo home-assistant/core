@@ -1082,10 +1082,6 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
                 # Cancel the update, the current config remains active
                 _log_device_info_error(err)
                 return
-            except dr.DeviceInfoError as err:
-                # Cancel the update, the current config remains active
-                _log_device_info_error(err)
-                return
             finally:
                 send_discovery_done(self.hass, self._discovery_data)
             self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
@@ -1506,11 +1502,6 @@ def _via_device_identifier(
     return (DOMAIN, specifications[CONF_VIA_DEVICE])
 
 
-def _log_device_info_error(err: dr.DeviceInfoError) -> None:
-    """Log a device that could not be registered."""
-    _LOGGER.warning("Unable to register MQTT device: %s", err)
-
-
 @callback
 def ensure_via_device_exists(
     hass: HomeAssistant,
@@ -1537,9 +1528,9 @@ def ensure_via_device_exists(
         identifier,
     )
     try:
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
-            device_info=dr.DeviceInfo(identifiers={identifier}),
+            identifiers={identifier},
         )
     except dr.DeviceInfoError as err:
         _log_device_info_error(err)
@@ -1631,7 +1622,7 @@ class MqttEntityDeviceInfo(Entity):
         device_registry = dr.async_get(self.hass)
         config_entry_id = self._config_entry.entry_id
         try:
-            device = device_registry.async_get_or_create_device(
+            device = device_registry.async_get_or_create_from_info(
                 config_entry_id=config_entry_id, device_info=device_info
             )
         except dr.DeviceInfoError as err:
@@ -1642,7 +1633,7 @@ class MqttEntityDeviceInfo(Entity):
             self._registered_device_id = self._main_device_id = device.id
             return device
         try:
-            child_device = device_registry.async_get_or_create_child_device(
+            child_device = device_registry.async_get_or_create_child_from_info(
                 config_entry_id=config_entry_id,
                 device_info=self._child_device_info(device.id),
             )
@@ -2185,7 +2176,7 @@ def update_device(
     if config_entry_id is not None and device_info is not None:
         if via_device_id := _resolve_via_device_id(hass, specifications, config_entry):
             device_info.via_device_id = via_device_id
-        device = device_registry.async_get_or_create_device(
+        device = device_registry.async_get_or_create_from_info(
             config_entry_id=config_entry_id, device_info=device_info
         )
 
