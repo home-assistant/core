@@ -5709,6 +5709,37 @@ async def test_update_suggested_area(
     assert updated_entry.area_id == device_area_id
 
 
+@pytest.mark.usefixtures("hass")
+async def test_get_or_create_disabled_by_ignored_for_existing_device(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test disabled_by passed to async_get_or_create only applies when creating."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "1")},
+    )
+    assert device.disabled_by is None
+
+    updated = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "1")},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+    assert updated.id == device.id
+    assert updated.disabled_by is None
+
+    device_registry.async_update_device(
+        device.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    updated = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "1")},
+        disabled_by=None,
+    )
+    assert updated.disabled_by is dr.DeviceEntryDisabler.USER
+
+
 @pytest.mark.parametrize(
     ("config_entry_disabled_by", "device_disabled_by"),
     [
@@ -11395,6 +11426,38 @@ async def test_restore_child_deleted_via_parent_cascade(
     assert restored_child.parent_device_id == restored_parent.id
     assert device_registry.async_get(child_device.id) is restored_child
     assert child_device.id not in device_registry._deleted_devices
+
+
+@pytest.mark.usefixtures("hass")
+async def test_get_or_create_child_disabled_by_ignored_for_existing_device(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test disabled_by passed to async_get_or_create_child only applies when creating."""
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert child_device.disabled_by is None
+
+    updated = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+    assert updated.id == child_device.id
+    assert updated.disabled_by is None
+
+    device_registry.async_update_child_device(
+        child_device.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    updated = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        disabled_by=None,
+    )
+    assert updated.disabled_by is dr.DeviceEntryDisabler.USER
 
 
 @pytest.mark.usefixtures("hass")
