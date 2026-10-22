@@ -1340,6 +1340,70 @@ async def test_delete_deferred_to_refresh_sequences(
     ] == [True] * kept
 
 
+def _begin(name: str) -> _RefreshStep:
+    def begin(hass: HomeAssistant, refreshes: dict[str, ir.IssuesRefresh]) -> None:
+        refreshes[name] = ir.async_begin_issues_refresh(
+            hass, "test", issue_ids=["issue_1"]
+        )
+
+    return begin
+
+
+@pytest.mark.parametrize(
+    ("steps", "expected"),
+    [
+        pytest.param(
+            [_defer_delete, _keep("new"), _finish("old")],
+            [{"issue_1", "issue_2"}, {"issue_1", "issue_2"}, {"issue_2"}],
+            id="defer_keep_outside_scope_finish",
+        ),
+        pytest.param(
+            [_keep("new"), _finish("old")],
+            [{"issue_1", "issue_2"}, {"issue_2"}],
+            id="keep_outside_scope_finish",
+        ),
+        pytest.param(
+            [
+                _defer_delete,
+                _keep("new"),
+                _finish("old"),
+                _begin("third"),
+                _cancel("third"),
+            ],
+            [
+                {"issue_1", "issue_2"},
+                {"issue_1", "issue_2"},
+                {"issue_2"},
+                {"issue_2"},
+                {"issue_2"},
+            ],
+            id="defer_keep_outside_scope_finish_then_cancel_later",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("issue_registry")
+async def test_keep_outside_refresh_scope_disjoint_refreshes(
+    hass: HomeAssistant,
+    steps: list[_RefreshStep],
+    expected: list[set[str]],
+) -> None:
+    """Test a refresh keeping an issue outside its set doesn't keep it elsewhere."""
+    _create_issue(hass, "issue_1")
+    _create_issue(hass, "issue_2")
+    refreshes = {
+        "old": ir.async_begin_issues_refresh(hass, "test", issue_ids=["issue_1"]),
+        "new": ir.async_begin_issues_refresh(hass, "test", issue_ids=["issue_2"]),
+    }
+    issue_registry = ir.async_get(hass)
+
+    after_each_step = []
+    for step in steps:
+        step(hass, refreshes)
+        after_each_step.append({issue_id for _, issue_id in issue_registry.issues})
+
+    assert after_each_step == expected
+
+
 @pytest.mark.usefixtures("issue_registry")
 async def test_delete_not_deferred_during_refresh(hass: HomeAssistant) -> None:
     """Test a plain delete during a refresh deletes immediately and unmarks."""

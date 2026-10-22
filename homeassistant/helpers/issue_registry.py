@@ -187,13 +187,18 @@ class IssuesRefresh:
     @callback
     @verify_event_loop_thread("issue_registry.IssuesRefresh.async_keep")
     def async_keep(self, issue_ids: Iterable[str]) -> None:
-        """Keep issues without creating or updating them."""
+        """Keep issues without creating or updating them.
+
+        Issues outside the set of the refresh are ignored.
+        """
         if (state := self._state) not in self._refreshes:
             return
         # Older refreshes don't get to delete an issue a newer one kept
         self_and_older = self._refreshes[: self._refreshes.index(state) + 1]
         for issue_id in issue_ids:
             key = (self._domain, issue_id)
+            if key not in state.scope:
+                continue
             for other in self_and_older:
                 other.untouched.discard(key)
             if _newest_refresh(self._refreshes, key) is state:
