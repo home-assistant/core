@@ -14,7 +14,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from .const import ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE
+from .const import ATTR_VALUE, DOMAIN, TextService, TextServiceArgument
 
 ATYP_SET_VALUE = "set_value"
 
@@ -67,10 +67,10 @@ async def async_call_action_from_config(
     """Execute a device action."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
+        TextService.SET_VALUE,
         {
             ATTR_ENTITY_ID: config[CONF_ENTITY_ID],
-            ATTR_VALUE: config[ATTR_VALUE],
+            TextServiceArgument.VALUE: config[ATTR_VALUE],
         },
         blocking=True,
         context=context,

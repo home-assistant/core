@@ -14,16 +14,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import (
-    DOMAIN,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
-    VacuumActivity,
-)
-from .const import VacuumEntityStateAttribute
+from . import DOMAIN, VacuumActivity
+from .const import VacuumEntityStateAttribute, VacuumService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,13 +62,13 @@ async def _async_reproduce_state(
         elif state.state == STATE_OFF:
             service = SERVICE_TURN_OFF
         elif state.state == VacuumActivity.CLEANING:
-            service = SERVICE_START
+            service = VacuumService.START
         elif state.state in [VacuumActivity.DOCKED, VacuumActivity.RETURNING]:
-            service = SERVICE_RETURN_TO_BASE
+            service = VacuumService.RETURN_TO_BASE
         elif state.state == VacuumActivity.IDLE:
-            service = SERVICE_STOP
+            service = VacuumService.STOP
         elif state.state == VacuumActivity.PAUSED:
-            service = SERVICE_PAUSE
+            service = VacuumService.PAUSE
 
         await hass.services.async_call(
             DOMAIN, service, service_data, context=context, blocking=True
@@ -90,7 +82,11 @@ async def _async_reproduce_state(
             VacuumEntityStateAttribute.FAN_SPEED
         ]
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_FAN_SPEED, service_data, context=context, blocking=True
+            DOMAIN,
+            VacuumService.SET_FAN_SPEED,
+            service_data,
+            context=context,
+            blocking=True,
         )
 
 
