@@ -239,7 +239,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         attribute="grobstaubfilter_max_foerdervolume",
         native_unit_of_measurement="m³",
         device_class=SensorDeviceClass.VOLUME,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
         key="cooling_aussenluft_temp_kuehlung_aus",

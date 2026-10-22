@@ -33,3 +33,13 @@ def test_filter_change_volume_is_a_total_increasing_counter() -> None:
         descriptions["ventilation_befoerderte_luftmenge_seit_filterwechsel"].state_class
         is SensorStateClass.TOTAL_INCREASING
     )
+
+
+def test_volume_limit_has_no_state_class() -> None:
+    """A configured volume limit is not an accumulating measurement."""
+    descriptions = {description.key: description for description in SENSOR_DESCRIPTIONS}
+
+    assert (
+        descriptions["coarse_dust_filter_grobstaubfilter_max_foerdervolume"].state_class
+        is None
+    )

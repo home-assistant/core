@@ -1,6 +1,5 @@
 """Config flow for aerosmart."""
 
-import logging
 from typing import Any, override
 
 from aerosmart_modbus import AerosmartDevice
@@ -28,8 +27,6 @@ from .const import (
     DEFAULT_UNIT_VENTILATION,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 _CONNECT_ERRORS = (ModbusError, HomeAssistantError, OSError, ValueError)
 
@@ -80,6 +77,7 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not await self._async_can_connect(user_input):
                     errors["base"] = "cannot_connect"
                 else:
+                    self._async_abort_entries_match(user_input)
                     return self.async_create_entry(title="aerosmart", data=user_input)
 
         return self.async_show_form(
@@ -101,8 +99,7 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
                 AerosmartDevice.configure_units(unit_ventilation, unit_heat_pump)
                 await unit_ventilation.read_holding_registers(1174, 2)
                 await unit_heat_pump.read_holding_registers(1044, 2)
-        except _CONNECT_ERRORS as err:
-            _LOGGER.warning("Failed to validate aerosmart connection: %s", err)
+        except _CONNECT_ERRORS:
             return False
         return True
 
