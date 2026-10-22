@@ -454,11 +454,20 @@ async def test_device_offline_when_not_reporting(
     assert state.state != STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("exception", "has_reauth_flow"),
+    [
+        pytest.param(GkpConnectionError("lost"), False, id="connection_error"),
+        pytest.param(GkpAuthError("expired"), True, id="auth_error"),
+    ],
+)
 async def test_refresh_after_command_error(
     hass: HomeAssistant,
     mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    exception: Exception,
+    has_reauth_flow: bool,
 ) -> None:
     """Test a device is unavailable when it cannot be read after a command."""
     await setup_integration(hass, mock_config_entry)
@@ -470,12 +479,16 @@ async def test_refresh_after_command_error(
         blocking=True,
     )
 
-    mock_gkp_client.get_thermostat.side_effect = GkpConnectionError("lost")
+    mock_gkp_client.get_thermostat.side_effect = exception
     await advance_time(hass, freezer, FAST_POLLING_INTERVAL)
 
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+    assert (
+        any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        == has_reauth_flow
+    )
 
 
 async def test_rate_limited(

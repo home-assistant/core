@@ -259,6 +259,11 @@ class GkpDeviceCoordinator(DataUpdateCoordinator[GkpDeviceData]):
             thermostat = await self.client.get_thermostat(
                 self.device_id, self.installation
             )
+        except GkpAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except GkpRateLimitError as err:
             raise _rate_limited_error(err) from err
         except GkpError as err:
