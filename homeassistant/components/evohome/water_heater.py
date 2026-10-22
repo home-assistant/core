@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import EVOHOME_DATA
+from .const import EVOHOME_DATA, NEXT_SP_FROM
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild
 
@@ -107,7 +107,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
             until = None  # indefinitely, aka permanent override
         elif duration.total_seconds() == 0:
             await self.coordinator.async_ensure_schedule(self._evo_device)
-            until = self.setpoints.get("next_sp_from")
+            until = self.setpoints.get(NEXT_SP_FROM)
         else:
             until = dt_util.now() + duration
 
@@ -146,7 +146,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
             await self.coordinator.call_client_api(self._evo_device.reset())
         else:
             await self.coordinator.async_ensure_schedule(self._evo_device)
-            until = self.setpoints.get("next_sp_from")
+            until = self.setpoints.get(NEXT_SP_FROM)
             until = dt_util.as_utc(until) if until else None
 
             if operation_mode == STATE_ON:
