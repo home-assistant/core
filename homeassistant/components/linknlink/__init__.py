@@ -4,7 +4,6 @@ from aiolinknlink import UltraClient, UltraDevice
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DEFAULT_PORT, DISPLAY_MODEL
 from .coordinator import LinknLinkConfigEntry, LinknLinkCoordinator
@@ -26,11 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinknLinkConfigEntry) ->
     client = UltraClient(default_port=DEFAULT_PORT)
     coordinator = LinknLinkCoordinator(hass, entry, client, device)
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
-        await coordinator.async_shutdown()
-        raise
+    await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

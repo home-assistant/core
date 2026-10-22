@@ -102,9 +102,6 @@ class LinknLinkCoordinator(DataUpdateCoordinator[LinknLinkData]):
             self.data = replace(self.data, target_state=target_state)
             self._target_subscription_connected = target_state.subscribed
         except (OSError, TimeoutError, UltraError, ValueError) as err:
-            if self.target_subscription is not None:
-                await self.target_subscription.stop()
-                self.target_subscription = None
             raise _update_failed(err) from err
 
     @override
