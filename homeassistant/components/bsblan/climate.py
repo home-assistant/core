@@ -218,4 +218,4 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="set_data_error",
             ) from err
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_circuit(self._circuit)

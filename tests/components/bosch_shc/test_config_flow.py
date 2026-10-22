@@ -76,7 +76,7 @@ def _patch_successful_pairing() -> Generator[None]:
         patch("boschshcpy.session.SHCSession.authenticate"),
         patch(
             "homeassistant.components.bosch_shc.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -132,7 +132,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
         patch("boschshcpy.session.SHCSession.authenticate") as mock_authenticate,
         patch(
             "homeassistant.components.bosch_shc.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -665,7 +665,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.bosch_shc.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -819,7 +819,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         patch("boschshcpy.session.SHCSession.authenticate"),
         patch(
             "homeassistant.components.bosch_shc.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -928,7 +928,7 @@ async def test_register_multiple_controllers(hass: HomeAssistant) -> None:
         patch("boschshcpy.session.SHCSession.authenticate"),
         patch(
             "homeassistant.components.bosch_shc.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         ctrl_1_result3 = await hass.config_entries.flow.async_configure(
@@ -984,7 +984,7 @@ async def test_register_multiple_controllers(hass: HomeAssistant) -> None:
         patch("boschshcpy.session.SHCSession.authenticate"),
         patch(
             "homeassistant.components.bosch_shc.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         ctrl_2_result3 = await hass.config_entries.flow.async_configure(
