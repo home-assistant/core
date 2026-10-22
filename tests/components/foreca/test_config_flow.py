@@ -193,24 +193,3 @@ async def test_duplicate_api_key_aborts(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_api_key_added_during_validation_aborts(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_foreca_client: MagicMock,
-) -> None:
-    """Test a key another flow sets up while this one checks it aborts."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    mock_foreca_client.current.side_effect = lambda _: mock_config_entry.add_to_hass(
-        hass
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"

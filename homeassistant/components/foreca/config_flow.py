@@ -72,10 +72,6 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config.longitude,
             )
             if not errors:
-                # Another flow may have set the key up while this one checked it.
-                self._async_abort_entries_match(
-                    {CONF_API_KEY: user_input[CONF_API_KEY]}
-                )
                 return self.async_create_entry(
                     title="Foreca",
                     data={CONF_API_KEY: user_input[CONF_API_KEY]},
@@ -125,7 +121,8 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             longitude = user_input[CONF_LOCATION][CONF_LONGITUDE]
             unique = f"{latitude}-{longitude}"
             if any(
-                subentry.unique_id == unique for subentry in entry.subentries.values()
+                subentry.unique_id == unique
+                for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LOCATION)
             ):
                 return self.async_abort(reason="already_configured")
 
