@@ -502,6 +502,8 @@ def thermostat_gen2_device(
     supports_displayed_temperature: bool | None = None,
     valve_type: WallThermostatConfiguration.ValveType | None = None,
     heater_type: WallThermostatConfiguration.HeaterType | None = None,
+    display_brightness: int | None = None,
+    display_on_time: int | None = None,
     spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
 ) -> SHCThermostatGen2 | SHCRoomThermostat2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
@@ -536,6 +538,8 @@ def thermostat_gen2_device(
         )
         device.valve_type = valve_type
         device.heater_type = heater_type
+    device.display_brightness = display_brightness
+    device.display_on_time = display_on_time
     return device
 
 

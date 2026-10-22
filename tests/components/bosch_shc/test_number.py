@@ -21,6 +21,7 @@ from .conftest import (
     smart_plug_compact_device,
     smart_plug_device,
     thermostat_device,
+    thermostat_gen2_device,
 )
 
 OFFSET_ENTITY_ID = "number.thermostat_temperature_offset"
@@ -30,6 +31,8 @@ POWER_THRESHOLD_ENTITY_ID = "number.smart_plug_energy_saving_power_threshold"
 POWER_THRESHOLD_COMPACT_ENTITY_ID = (
     "number.smart_plug_compact_energy_saving_power_threshold"
 )
+DISPLAY_BRIGHTNESS_ENTITY_ID = "number.thermostat_gen2_display_brightness"
+DISPLAY_ON_TIME_ENTITY_ID = "number.thermostat_gen2_display_on_time"
 ENTER_DURATION_ENTITY_ID = "number.smart_plug_energy_saving_enter_duration"
 ENTER_DURATION_COMPACT_ENTITY_ID = (
     "number.smart_plug_compact_energy_saving_enter_duration"
@@ -456,3 +459,109 @@ async def test_other_thermostat_families_offset(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "1.0"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_gen2_device(
+                    supports_display_configuration=True,
+                    display_brightness=60,
+                    display_on_time=30,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_gen2_display_numbers_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The display brightness and on time are exposed."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(DISPLAY_BRIGHTNESS_ENTITY_ID)
+    assert state is not None
+    assert state.state == "60"
+    state = hass.states.get(DISPLAY_ON_TIME_ENTITY_ID)
+    assert state is not None
+    assert state.state == "30"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "roomthermostats": [
+                thermostat_gen2_device(
+                    device_id="hdm:ZigBee:roomthermostat2_1",
+                    name="Room Thermostat 2",
+                    supports_display_configuration=True,
+                    display_brightness=10,
+                    display_on_time=5,
+                    spec=SHCRoomThermostat2,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_room_thermostat2_display_numbers_set_value(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setting a value writes it to the room thermostat."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.roomthermostats[0]
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "number.room_thermostat_2_display_brightness",
+            ATTR_VALUE: 80,
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "number.room_thermostat_2_display_on_time",
+            ATTR_VALUE: 120,
+        },
+        blocking=True,
+    )
+    assert device.display_brightness == 80
+    assert device.display_on_time == 120
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {"thermostats": [thermostat_gen2_device(supports_display_configuration=False)]},
+        {
+            "thermostats": [
+                thermostat_gen2_device(
+                    supports_display_configuration=True, display_brightness=40
+                )
+            ]
+        },
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_gen2_display_numbers_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No on-time entity without a value, and none at all without support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(DISPLAY_ON_TIME_ENTITY_ID) is None
