@@ -5,11 +5,15 @@ from collections.abc import Iterable, Mapping
 import logging
 from typing import Any
 
-from homeassistant.components.select import SelectEntityCapabilityAttribute
+from homeassistant.components.select import (
+    ATTR_OPTIONS,
+    SERVICE_SELECT_OPTION,
+    SelectEntityCapabilityAttribute,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import ATTR_OPTIONS, DOMAIN, SERVICE_SELECT_OPTION, SERVICE_SET_OPTIONS
+from .const import DOMAIN, SERVICE_SET_OPTIONS
 
 ATTR_GROUP = [ATTR_OPTION, ATTR_OPTIONS]
 

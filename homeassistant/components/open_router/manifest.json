@@ -2,6 +2,7 @@
   "domain": "open_router",
   "name": "OpenRouter",
   "after_dependencies": ["assist_pipeline", "intent"],
+  "categories": ["ai_voice.ai_models"],
   "codeowners": ["@joostlek", "@ab3lson"],
   "config_flow": true,
   "dependencies": ["conversation"],

@@ -9,6 +9,7 @@ from pyhap.const import (
     HAP_REPR_VALUE,
 )
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
@@ -43,8 +44,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, HomeAssistant
-
-from tests.common import async_mock_service
 
 
 async def test_humidifier(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:

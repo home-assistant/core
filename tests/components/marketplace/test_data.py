@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.marketplace.base import MarketplaceManager, Repositories
 from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
@@ -25,8 +26,6 @@ from .const import (
     REPOSITORY_INTEGRATION_ID,
     REPOSITORY_PLUGIN_ID,
 )
-
-from tests.common import MockConfigEntry
 
 RESTORED_REPOSITORIES = {
     "1296269": {

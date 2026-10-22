@@ -126,6 +126,7 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         """Subscribe to the underlying DoorBird events."""
         await super().async_added_to_hass()
         for event_name in self._matching_event_names:
+            self._door_bird_data.event_entity_ids[event_name] = self.entity_id
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
@@ -133,6 +134,21 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
                     self._async_handle_event,
                 )
             )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Report the new entity_id in the events this image refreshes on."""
+        super().async_entity_id_changed(old_entity_id)
+        for event_name in self._matching_event_names:
+            self._door_bird_data.event_entity_ids[event_name] = self.entity_id
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop reporting this image in events."""
+        for event_name in self._matching_event_names:
+            self._door_bird_data.event_entity_ids.pop(event_name, None)
+        await super().async_will_remove_from_hass()
 
     @callback
     def _async_handle_event(self) -> None:

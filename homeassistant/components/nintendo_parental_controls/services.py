@@ -43,7 +43,7 @@ from .sensor import NintendoParentalControlsSensor
 _LOGGER = logging.getLogger(__name__)
 
 
-class NintendoParentalServices(StrEnum):
+class NintendoParentalService(StrEnum):
     """Store keys for Nintendo Parental services."""
 
     ADD_BONUS_TIME = "add_bonus_time"
@@ -60,7 +60,7 @@ def async_setup_services(
     """Set up the Nintendo Parental services."""
     hass.services.async_register(
         domain=DOMAIN,
-        service=NintendoParentalServices.ADD_BONUS_TIME,
+        service=NintendoParentalService.ADD_BONUS_TIME,
         service_func=async_add_bonus_time,
         schema=probatio.Schema(
             {
@@ -73,7 +73,7 @@ def async_setup_services(
     )
     hass.services.async_register(
         domain=DOMAIN,
-        service=NintendoParentalServices.PLAYER_USAGE_REPORT,
+        service=NintendoParentalService.PLAYER_USAGE_REPORT,
         service_func=async_get_player_usage,
         supports_response=SupportsResponse.ONLY,
         schema=probatio.Schema(
@@ -85,7 +85,7 @@ def async_setup_services(
     )
     hass.services.async_register(
         domain=DOMAIN,
-        service=NintendoParentalServices.DEVICE_USAGE_REPORT,
+        service=NintendoParentalService.DEVICE_USAGE_REPORT,
         service_func=async_get_device_usage_report,
         supports_response=SupportsResponse.ONLY,
         schema=probatio.Schema(
@@ -97,7 +97,7 @@ def async_setup_services(
     service.async_register_admin_service(
         hass,
         DOMAIN,
-        NintendoParentalServices.UPDATE_DAILY_RESTRICTIONS,
+        NintendoParentalService.UPDATE_DAILY_RESTRICTIONS,
         async_set_per_day_controls,
         probatio.Schema(
             {
@@ -114,7 +114,7 @@ def async_setup_services(
     service.async_register_admin_service(
         hass,
         DOMAIN,
-        NintendoParentalServices.UPDATE_PIN_CODE,
+        NintendoParentalService.UPDATE_PIN_CODE,
         async_update_pin_code,
         probatio.Schema(
             {

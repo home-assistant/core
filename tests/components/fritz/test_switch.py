@@ -1,12 +1,17 @@
 """Tests for Fritz!Tools switch platform."""
 
 from copy import deepcopy
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzActionError
 from fritzconnection.lib.fritzstatus import DefaultConnectionService
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz import switch as fritz_switch
@@ -39,9 +44,7 @@ from .const import (
     MOCK_USER_DATA,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-MOCK_WLANCONFIGS_SAME_SSID: dict[str, dict] = {
+MOCK_WLANCONFIGS_24_5_GUEST_SAME_SSID: dict[str, dict] = {
     "WLANConfiguration1": {
         "GetSSID": {"NewSSID": "WiFi"},
         "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
@@ -98,8 +101,36 @@ MOCK_WLANCONFIGS_SAME_SSID: dict[str, dict] = {
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
         },
     },
+    "WLANConfiguration3": {
+        "GetSSID": {"NewSSID": "WiFi-Guest"},
+        "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewMaxBitRate": "Auto",
+            "NewChannel": 52,
+            "NewSSID": "WiFi-Guest",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewMACAddressControlEnabled": False,
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewBasicEncryptionModes": "None",
+            "NewBasicAuthenticationMode": "None",
+            "NewMaxCharsSSID": 32,
+            "NewMinCharsSSID": 1,
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
+            "NewMinCharsPSK": 64,
+            "NewMaxCharsPSK": 64,
+            "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
+        },
+    },
 }
-MOCK_WLANCONFIGS_DIFF_SSID: dict[str, dict] = {
+MOCK_WLANCONFIGS_24_5_GUEST_DIFF_SSID: dict[str, dict] = {
     "WLANConfiguration1": {
         "GetSSID": {"NewSSID": "WiFi"},
         "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
@@ -156,8 +187,36 @@ MOCK_WLANCONFIGS_DIFF_SSID: dict[str, dict] = {
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
         },
     },
+    "WLANConfiguration3": {
+        "GetSSID": {"NewSSID": "WiFi-Guest"},
+        "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewMaxBitRate": "Auto",
+            "NewChannel": 52,
+            "NewSSID": "WiFi-Guest",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewMACAddressControlEnabled": False,
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewBasicEncryptionModes": "None",
+            "NewBasicAuthenticationMode": "None",
+            "NewMaxCharsSSID": 32,
+            "NewMinCharsSSID": 1,
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
+            "NewMinCharsPSK": 64,
+            "NewMaxCharsPSK": 64,
+            "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
+        },
+    },
 }
-MOCK_WLANCONFIGS_DIFF2_SSID: dict[str, dict] = {
+MOCK_WLANCONFIGS_24_GUEST: dict[str, dict] = {
     "WLANConfiguration1": {
         "GetSSID": {"NewSSID": "WiFi"},
         "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
@@ -187,14 +246,270 @@ MOCK_WLANCONFIGS_DIFF2_SSID: dict[str, dict] = {
         },
     },
     "WLANConfiguration2": {
-        "GetSSID": {"NewSSID": "WiFi+"},
+        "GetSSID": {"NewSSID": "WiFi-Guest"},
         "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
         "GetInfo": {
             "NewEnable": True,
             "NewStatus": "Up",
             "NewMaxBitRate": "Auto",
             "NewChannel": 52,
-            "NewSSID": "WiFi+",
+            "NewSSID": "WiFi-Guest",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewMACAddressControlEnabled": False,
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewBasicEncryptionModes": "None",
+            "NewBasicAuthenticationMode": "None",
+            "NewMaxCharsSSID": 32,
+            "NewMinCharsSSID": 1,
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
+            "NewMinCharsPSK": 64,
+            "NewMaxCharsPSK": 64,
+            "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
+        },
+    },
+}
+MOCK_WLANCONFIGS_24_5_5HIGH_GUEST: dict[str, dict] = {
+    "WLANConfiguration1": {
+        "GetSSID": {"NewSSID": "WiFi"},
+        "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewMaxBitRate": "Auto",
+            "NewChannel": 13,
+            "NewSSID": "WiFi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewMACAddressControlEnabled": False,
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:12",
+            "NewBasicEncryptionModes": "None",
+            "NewBasicAuthenticationMode": "None",
+            "NewMaxCharsSSID": 32,
+            "NewMinCharsSSID": 1,
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
+            "NewMinCharsPSK": 64,
+            "NewMaxCharsPSK": 64,
+            "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
+        },
+    },
+    "WLANConfiguration2": {
+        "GetSSID": {"NewSSID": "WiFi"},
+        "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewMaxBitRate": "Auto",
+            "NewChannel": 52,
+            "NewSSID": "WiFi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewMACAddressControlEnabled": False,
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewBasicEncryptionModes": "None",
+            "NewBasicAuthenticationMode": "None",
+            "NewMaxCharsSSID": 32,
+            "NewMinCharsSSID": 1,
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
+            "NewMinCharsPSK": 64,
+            "NewMaxCharsPSK": 64,
+            "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
+        },
+    },
+    "WLANConfiguration3": {
+        "GetSSID": {"NewSSID": "WiFi"},
+        "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewMaxBitRate": "Auto",
+            "NewChannel": 112,
+            "NewSSID": "WiFi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewMACAddressControlEnabled": False,
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewBasicEncryptionModes": "None",
+            "NewBasicAuthenticationMode": "None",
+            "NewMaxCharsSSID": 32,
+            "NewMinCharsSSID": 1,
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
+            "NewMinCharsPSK": 64,
+            "NewMaxCharsPSK": 64,
+            "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
+        },
+    },
+    "WLANConfiguration4": {
+        "GetSSID": {"NewSSID": "WiFi-Guest"},
+        "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewMaxBitRate": "Auto",
+            "NewChannel": 13,
+            "NewSSID": "WiFi-Guest",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewMACAddressControlEnabled": False,
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewBasicEncryptionModes": "None",
+            "NewBasicAuthenticationMode": "None",
+            "NewMaxCharsSSID": 32,
+            "NewMinCharsSSID": 1,
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
+            "NewMinCharsPSK": 64,
+            "NewMaxCharsPSK": 64,
+            "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
+        },
+    },
+}
+MOCK_WLANCONFIGS_24_5_5HIGH_UNKNOWN_GUEST: dict[str, dict] = {
+    "WLANConfiguration1": {
+        "GetSSID": {"NewSSID": "WiFi"},
+        "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewMaxBitRate": "Auto",
+            "NewChannel": 13,
+            "NewSSID": "WiFi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewMACAddressControlEnabled": False,
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:12",
+            "NewBasicEncryptionModes": "None",
+            "NewBasicAuthenticationMode": "None",
+            "NewMaxCharsSSID": 32,
+            "NewMinCharsSSID": 1,
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
+            "NewMinCharsPSK": 64,
+            "NewMaxCharsPSK": 64,
+            "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
+        },
+    },
+    "WLANConfiguration2": {
+        "GetSSID": {"NewSSID": "WiFi"},
+        "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewMaxBitRate": "Auto",
+            "NewChannel": 52,
+            "NewSSID": "WiFi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewMACAddressControlEnabled": False,
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewBasicEncryptionModes": "None",
+            "NewBasicAuthenticationMode": "None",
+            "NewMaxCharsSSID": 32,
+            "NewMinCharsSSID": 1,
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
+            "NewMinCharsPSK": 64,
+            "NewMaxCharsPSK": 64,
+            "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
+        },
+    },
+    "WLANConfiguration3": {
+        "GetSSID": {"NewSSID": "WiFi"},
+        "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewMaxBitRate": "Auto",
+            "NewChannel": 112,
+            "NewSSID": "WiFi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewMACAddressControlEnabled": False,
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewBasicEncryptionModes": "None",
+            "NewBasicAuthenticationMode": "None",
+            "NewMaxCharsSSID": 32,
+            "NewMinCharsSSID": 1,
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
+            "NewMinCharsPSK": 64,
+            "NewMaxCharsPSK": 64,
+            "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
+        },
+    },
+    "WLANConfiguration4": {
+        "GetSSID": {"NewSSID": "WiFi-Unknown"},
+        "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewMaxBitRate": "Auto",
+            "NewChannel": 13,
+            "NewSSID": "WiFi-Unknown",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewMACAddressControlEnabled": False,
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewBasicEncryptionModes": "None",
+            "NewBasicAuthenticationMode": "None",
+            "NewMaxCharsSSID": 32,
+            "NewMinCharsSSID": 1,
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
+            "NewMinCharsPSK": 64,
+            "NewMaxCharsPSK": 64,
+            "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
+        },
+    },
+    "WLANConfiguration5": {
+        "GetSSID": {"NewSSID": "WiFi-Guest"},
+        "GetSecurityKeys": {"NewKeyPassphrase": "mysecret"},
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewMaxBitRate": "Auto",
+            "NewChannel": 13,
+            "NewSSID": "WiFi-Guest",
             "NewBeaconType": "11iandWPA3",
             "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
             "NewMACAddressControlEnabled": False,
@@ -218,12 +533,56 @@ MOCK_WLANCONFIGS_DIFF2_SSID: dict[str, dict] = {
 
 
 @pytest.mark.parametrize(
-    ("fc_data"),
+    ("fc_data", "expected_wifi_switches"),
     [
-        ({**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_SAME_SSID}),
-        ({**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_DIFF_SSID}),
-        ({**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_DIFF2_SSID}),
-        ({**MOCK_FB_SERVICES, **MOCK_CALL_DEFLECTION_DATA}),
+        (
+            {**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_24_5_GUEST_SAME_SSID},
+            [
+                "switch.mock_title_wi_fi_main_2_4ghz",
+                "switch.mock_title_wi_fi_main_5ghz",
+                "switch.mock_title_wi_fi_guest",
+            ],
+        ),
+        (
+            {**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_24_5_GUEST_DIFF_SSID},
+            [
+                "switch.mock_title_wi_fi_main_2_4ghz",
+                "switch.mock_title_wi_fi_main_5ghz",
+                "switch.mock_title_wi_fi_guest",
+            ],
+        ),
+        (
+            {**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_24_GUEST},
+            [
+                "switch.mock_title_wi_fi_main_2_4ghz",
+                "switch.mock_title_wi_fi_guest",
+            ],
+        ),
+        (
+            {**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_24_5_5HIGH_GUEST},
+            [
+                "switch.mock_title_wi_fi_main_2_4ghz",
+                "switch.mock_title_wi_fi_main_5ghz",
+                "switch.mock_title_wi_fi_main_5ghz_high_6ghz",
+                "switch.mock_title_wi_fi_guest",
+            ],
+        ),
+        (
+            {**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_24_5_5HIGH_UNKNOWN_GUEST},
+            [
+                "switch.mock_title_wi_fi_main_2_4ghz",
+                "switch.mock_title_wi_fi_main_5ghz",
+                "switch.mock_title_wi_fi_main_5ghz_high_6ghz",
+                "switch.mock_title_wi_fi_guest",
+            ],
+        ),
+        (
+            {**MOCK_FB_SERVICES, **MOCK_CALL_DEFLECTION_DATA},
+            [
+                "switch.mock_title_wi_fi_main_2_4ghz",
+                "switch.mock_title_wi_fi_guest",
+            ],
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -233,6 +592,7 @@ async def test_switch_setup(
     fc_class_mock,
     fh_class_mock,
     snapshot: SnapshotAssertion,
+    expected_wifi_switches: list[str],
 ) -> None:
     """Test setup of Fritz!Tools switches."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -243,6 +603,10 @@ async def test_switch_setup(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+    assert [
+        e for e in entity_registry.entities if e.startswith("switch.mock_title_wi_fi")
+    ] == expected_wifi_switches
 
 
 async def test_switch_no_device_conn_type(
@@ -646,44 +1010,27 @@ async def test_migrate_to_new_unique_id(
         assert entity_entry.unique_id == new_unique_id
 
 
-async def test_wifi_naming_internal_comm_and_skipped() -> None:
-    """Test skip internal Wi-Fi network."""
-    # Prepare AvmWrapper mock with 4 Wi-Fi networks
-    avm_wrapper = MagicMock()
-    avm_wrapper.connection.services = [
-        "WLANConfiguration1",
-        "WLANConfiguration2",
-        "WLANConfiguration3",
-        "WLANConfiguration4",
-    ]
-    # The 3rd network (index 2) should be skipped
-    wifi_configs = [
-        {"NewSSID": "wifi1"},
-        {"NewSSID": "wifi2"},
-        {"NewSSID": "wifi3"},
-        {"NewSSID": "wifi4"},
-    ]
-    avm_wrapper.async_get_wlan_configuration = AsyncMock(side_effect=wifi_configs)
-
-    networks = await fritz_switch._get_wifi_networks_list(avm_wrapper)
-    # The 3rd network (index 2) should be skipped
-    assert 3 not in networks  # 1-based index, so 3 is the 3rd
-    # The rest should be present
-    assert set(networks.keys()) == {1, 2, 4}
-
-
 @pytest.mark.parametrize(
     ("wifi_index", "wifi_count", "expected_name"),
     [
-        (0, 2, "Main 2.4Ghz"),
-        (1, 3, "Main 5Ghz"),
-        (1, 2, "Guest"),
-        (2, 4, None),
-        (2, 5, None),
+        (1, 2, "Main 2.4Ghz"),
+        (2, 2, "Guest"),
+        (1, 3, "Main 2.4Ghz"),
+        (2, 3, "Main 5Ghz"),
+        (3, 3, "Guest"),
+        (1, 4, "Main 2.4Ghz"),
+        (2, 4, "Main 5Ghz"),
+        (3, 4, "Main 5Ghz High / 6Ghz"),
+        (4, 4, "Guest"),
+        (1, 5, "Main 2.4Ghz"),
+        (2, 5, "Main 5Ghz"),
+        (3, 5, "Main 5Ghz High / 6Ghz"),
+        (4, 5, None),
+        (5, 5, "Guest"),
     ],
 )
 def test_wifi_naming_helper(
     wifi_index: int, wifi_count: int, expected_name: str | None
 ) -> None:
     """Test Wi-Fi naming helper covers supported and fallback branches."""
-    assert fritz_switch._wifi_naming({}, wifi_index, wifi_count) == expected_name
+    assert fritz_switch._wifi_naming(wifi_index, wifi_count) == expected_name

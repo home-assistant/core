@@ -5,6 +5,8 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.switcher_kis.const import DOMAIN, MAX_UPDATE_INTERVAL_SEC
 from homeassistant.config_entries import ConfigEntryState
@@ -26,9 +28,6 @@ from .consts import (
     DUMMY_TOKEN as TOKEN,
     DUMMY_USERNAME as USERNAME,
 )
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_update_fail(

@@ -7,6 +7,8 @@ from unittest.mock import Mock, patch
 
 from aiowebdav2.exceptions import UnauthorizedError, WebDavError
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.webdav.backup import async_register_backup_agents_listener
@@ -17,9 +19,6 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
 
 from .const import BACKUP_METADATA
-
-from tests.common import AsyncMock, MockConfigEntry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

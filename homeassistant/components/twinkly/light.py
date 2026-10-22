@@ -90,6 +90,8 @@ class TwinklyLight(TwinklyEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
+        current_mode = self.coordinator.data.current_mode
+
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(int(kwargs[ATTR_BRIGHTNESS]) / 2.55)
 
@@ -117,6 +119,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
                 )
                 await self.client.set_mode("color")
                 self.client.default_mode = "color"
+                current_mode = "color"
             else:
                 await self.client.set_cycle_colours(
                     (
@@ -136,6 +139,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
                 await self.client.set_static_colour(kwargs[ATTR_RGB_COLOR])
                 await self.client.set_mode("color")
                 self.client.default_mode = "color"
+                current_mode = "color"
             else:
                 await self.client.set_cycle_colours(kwargs[ATTR_RGB_COLOR])
                 await self.client.set_mode("movie")
@@ -153,13 +157,18 @@ class TwinklyLight(TwinklyEntity, LightEntity):
                 await self.client.set_mode("color")
                 self.client.default_mode = "color"
             else:
-                # Always re-apply. The remembered movie id can still match after
-                # a solid color, which used to leave the device in color mode.
+                # Skip only when this movie is already playing. A solid color
+                # keeps the last movie id, so the same effect is sent again.
                 movie_id = int(effect.split(" ")[0])
-                await self.client.interview()
-                await self.client.set_current_movie(movie_id)
-                await self.client.set_mode("movie")
-                self.client.default_mode = "movie"
+                if (
+                    current_mode != "movie"
+                    or self.coordinator.data.current_movie is None
+                    or movie_id != self.coordinator.data.current_movie
+                ):
+                    await self.client.interview()
+                    await self.client.set_current_movie(movie_id)
+                    await self.client.set_mode("movie")
+                    self.client.default_mode = "movie"
         if not self._attr_is_on:
             await self.client.turn_on()
         await self.coordinator.async_refresh()

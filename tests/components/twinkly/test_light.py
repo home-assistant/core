@@ -2,10 +2,15 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from ttls.client import TwinklyError
 
@@ -34,8 +39,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import TEST_MAC
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_twinkly_client")
@@ -232,6 +235,83 @@ async def test_turn_on_reapplies_current_effect(
 
     mock_twinkly_client.set_current_movie.assert_called_once_with(1)
     mock_twinkly_client.set_mode.assert_called_once_with("movie")
+    assert mock_twinkly_client.default_mode == "movie"
+
+
+@pytest.mark.parametrize("mode", ["color", "rt"])
+async def test_turn_on_with_current_movie_in_other_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+    mode: str,
+) -> None:
+    """Test selecting the current movie switches to movie mode from another mode."""
+    mock_twinkly_client.get_mode.return_value = {"mode": mode}
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "1 Rainbow"},
+        blocking=True,
+    )
+
+    mock_twinkly_client.set_current_movie.assert_called_once_with(1)
+    mock_twinkly_client.set_mode.assert_called_once_with("movie")
+    assert mock_twinkly_client.default_mode == "movie"
+
+
+async def test_turn_on_with_current_movie_in_movie_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
+    """Test selecting the movie already playing sends nothing."""
+    mock_twinkly_client.get_mode.return_value = {"mode": "movie"}
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "1 Rainbow"},
+        blocking=True,
+    )
+
+    mock_twinkly_client.set_current_movie.assert_not_called()
+    mock_twinkly_client.set_mode.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("led_profile", "data"),
+    [
+        ("RGBW", {ATTR_RGBW_COLOR: (128, 64, 32, 0)}),
+        ("RGB", {ATTR_RGB_COLOR: (128, 64, 32)}),
+    ],
+)
+async def test_turn_on_with_color_and_current_movie(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+    led_profile: str,
+    data: dict[str, Any],
+) -> None:
+    """Test the current movie is applied after a color set in the same call."""
+    mock_twinkly_client.get_mode.return_value = {"mode": "movie"}
+    mock_twinkly_client.get_details.return_value["led_profile"] = led_profile
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "1 Rainbow"} | data,
+        blocking=True,
+    )
+
+    assert mock_twinkly_client.set_mode.call_args_list == [call("color"), call("movie")]
+    mock_twinkly_client.set_current_movie.assert_called_once_with(1)
     assert mock_twinkly_client.default_mode == "movie"
 
 

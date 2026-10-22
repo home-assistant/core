@@ -1,6 +1,7 @@
 """Tests for hassfest translations."""
 
 from dataclasses import replace
+import json
 from pathlib import Path
 
 import probatio
@@ -10,6 +11,54 @@ from script.hassfest import translations
 from script.hassfest.model import Config
 
 from . import get_integration
+
+
+@pytest.mark.parametrize(
+    ("reference", "expected_errors"),
+    [
+        ("common::test", []),
+        (
+            "common::missing",
+            [
+                "strings.json::config::error::cannot_connect contains invalid reference"
+                "common::missing: Could not find missing"
+            ],
+        ),
+    ],
+)
+def test_validate_uses_core_path(
+    config: Config,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    reference: str,
+    expected_errors: list[str],
+) -> None:
+    """Resolve translation references from the configured Core path, not the cwd."""
+    core_path = tmp_path / "core"
+    integration_path = core_path / "homeassistant/components/test_integration"
+    integration_path.mkdir(parents=True)
+    (core_path / "homeassistant/strings.json").write_text(
+        json.dumps({"common": {"test": "Test"}})
+    )
+    (integration_path / "strings.json").write_text(
+        json.dumps(
+            {
+                "config": {
+                    "step": {"user": {"title": "Test"}},
+                    "error": {"cannot_connect": f"[%key:{reference}%]"},
+                }
+            }
+        )
+    )
+    config = replace(config, root=core_path)
+    integration = replace(
+        get_integration("test_integration", config), path=integration_path
+    )
+    monkeypatch.chdir(tmp_path)
+
+    translations.validate({integration.domain: integration}, config)
+
+    assert [error.error for error in integration.errors] == expected_errors
 
 
 def test_string_with_no_placeholders_in_single_quotes() -> None:

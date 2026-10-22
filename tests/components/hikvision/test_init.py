@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from xml.etree.ElementTree import ParseError
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.config_entries import ConfigEntryState
@@ -13,8 +14,6 @@ from homeassistant.core import CoreState, HomeAssistant
 
 from . import setup_integration
 from .conftest import TEST_HOST, TEST_PASSWORD, TEST_PORT, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload_entry(

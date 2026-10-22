@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tesla_fleet.const import DOMAIN
 from homeassistant.components.tesla_fleet.models import TeslaFleetVehicleData
@@ -23,8 +24,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
 from .const import COMMAND_ERROR, COMMAND_OK, COMMAND_REASON, VEHICLE_DATA
-
-from tests.common import MockConfigEntry
 
 LAT = -27.9699373
 LON = 153.3726526

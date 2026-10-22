@@ -1,6 +1,11 @@
 {
   "domain": "icloud",
   "name": "Apple iCloud",
+  "categories": [
+    "presence_location.phones_companion_apps",
+    "productivity_information.calendars_todos",
+    "productivity_information.documents_photos"
+  ],
   "codeowners": ["@Quentame", "@nzapponi"],
   "config_flow": true,
   "dependencies": ["http"],

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock
 from aioshelly.const import MODEL_BLU_GATEWAY_G3
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -40,11 +41,14 @@ from . import (
     register_device,
     register_entity,
 )
-from .conftest import MOCK_LEDSTRIP_STATUS
-
-from tests.common import mock_restore_cache_with_extra_data
+from .conftest import (
+    MOCK_LEDSTRIP_STATUS_BLINK,
+    MOCK_LEDSTRIP_STATUS_RAINBOW,
+    MOCK_LEDSTRIP_STATUS_SOLID,
+)
 
 DEVICE_BLOCK_ID = 4
+LEDSTRIP_ENTITY_ID = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_speed"
 
 
 @pytest.fixture(autouse=True)
@@ -627,30 +631,12 @@ async def test_cury_number_entity(
     mock_rpc_device.cury_set.assert_called_once_with(0, slot="left", intensity=80)
 
 
-LEDSTRIP_ENTITY_ID = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_speed"
-LEDSTRIP_STATUS_RAINBOW = MOCK_LEDSTRIP_STATUS["ledstrip:0"]
-LEDSTRIP_STATUS_BLINK = {
-    "id": 0,
-    "on": False,
-    "brightness": 36,
-    "effect": "blink",
-    "rgb": [127, 172, 255],
-    "bg_rgb": [171, 171, 171],
-    "speed": 50,
-    "intensity": 65,
-}
-LEDSTRIP_STATUS_SOLID = {
-    "id": 0,
-    "on": False,
-    "brightness": 36,
-    "effect": "solid",
-    "rgb": [255, 81, 68],
-}
-
-
 @pytest.mark.parametrize(
     ("control", "ledstrip_status"),
-    [("speed", LEDSTRIP_STATUS_RAINBOW), ("intensity", LEDSTRIP_STATUS_BLINK)],
+    [
+        ("speed", MOCK_LEDSTRIP_STATUS_RAINBOW),
+        ("intensity", MOCK_LEDSTRIP_STATUS_BLINK),
+    ],
 )
 async def test_rpc_ledstrip_number(
     hass: HomeAssistant,
@@ -695,9 +681,12 @@ async def test_rpc_ledstrip_number(
 @pytest.mark.parametrize(
     ("ledstrip_status", "expected_state"),
     [
-        (LEDSTRIP_STATUS_RAINBOW, "33"),
-        (LEDSTRIP_STATUS_SOLID, STATE_UNAVAILABLE),
-        (LEDSTRIP_STATUS_SOLID | {"speed": 33, "reverse": True}, STATE_UNAVAILABLE),
+        (MOCK_LEDSTRIP_STATUS_RAINBOW, "33"),
+        (MOCK_LEDSTRIP_STATUS_SOLID, STATE_UNAVAILABLE),
+        (
+            MOCK_LEDSTRIP_STATUS_SOLID | {"speed": 33, "reverse": True},
+            STATE_UNAVAILABLE,
+        ),
         (
             {
                 "id": 0,
@@ -730,7 +719,9 @@ async def test_rpc_ledstrip_speed_number_availability(
 ) -> None:
     """Test RPC LED strip effect speed number availability depends on the effect."""
     monkeypatch.setitem(
-        mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_SOLID)
+        mock_ledstrip_rpc_device.status,
+        "ledstrip:0",
+        deepcopy(MOCK_LEDSTRIP_STATUS_SOLID),
     )
 
     await init_integration(hass, 4)

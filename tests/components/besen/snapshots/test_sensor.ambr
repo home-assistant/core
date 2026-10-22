@@ -143,7 +143,7 @@
         'finish_charging',
         'waiting',
         'finished',
-        'canceled',
+        'scheduled',
         'connect',
         'fault',
       ]),
@@ -188,7 +188,7 @@
         'finish_charging',
         'waiting',
         'finished',
-        'canceled',
+        'scheduled',
         'connect',
         'fault',
       ]),
@@ -1256,7 +1256,7 @@
         'finish_charging',
         'waiting',
         'finished',
-        'canceled',
+        'scheduled',
         'connect',
         'fault',
       ]),
@@ -1301,7 +1301,7 @@
         'finish_charging',
         'waiting',
         'finished',
-        'canceled',
+        'scheduled',
         'connect',
         'fault',
       ]),
@@ -2455,5 +2455,28 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12.3',
+  })
+# ---
+# name: test_sensor_updates_from_client
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Charging status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'start',
+        'finish_charging',
+        'waiting',
+        'finished',
+        'scheduled',
+        'connect',
+        'fault',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'scheduled',
   })
 # ---

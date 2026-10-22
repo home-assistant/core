@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 import python_otbr_api
 
 from homeassistant.components import otbr, thread
@@ -17,9 +19,6 @@ from . import (
     TEST_BORDER_AGENT_EXTENDED_ADDRESS,
     TEST_BORDER_AGENT_ID,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture

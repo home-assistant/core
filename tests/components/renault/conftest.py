@@ -6,6 +6,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from renault_api.kamereon import exceptions, models, schemas
 from renault_api.renault_account import RenaultAccount
 
@@ -16,14 +17,12 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import MOCK_ACCOUNT_ID, MOCK_CONFIG, MOCK_VEHICLES
 
-from tests.common import MockConfigEntry, load_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.renault.async_setup_entry", return_value=True
+        "homeassistant.components.renault.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

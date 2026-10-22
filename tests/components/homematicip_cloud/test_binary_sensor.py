@@ -10,6 +10,10 @@ from homematicip.base.enums import (
     WindowState,
 )
 import pytest
+from pytest_homeassistant.common import (
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -45,8 +49,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
-
-from tests.common import async_load_json_object_fixture, snapshot_platform
 
 
 async def test_hmip_full_flush_lock_controller_binary_sensors(

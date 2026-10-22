@@ -13,9 +13,9 @@ from probatio.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import FRONTEND_HANDLED_ISSUES
-from script.translations import upload
 
 from .model import Config, Integration, IntegrationType
+from .translation_data import generate_upload_data
 
 UNDEFINED = 0
 REQUIRED = 1
@@ -822,7 +822,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         all_strings = None
     else:
-        all_strings = upload.generate_upload_data()  # type: ignore[no-untyped-call]
+        all_strings = generate_upload_data(config.root)
 
     for integration in integrations.values():
         validate_translation_file(config, integration, all_strings)

@@ -7,6 +7,12 @@ from unittest.mock import AsyncMock, Mock, patch
 import attr
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_platform
+from pytest_homeassistant.components.diagnostics import (
+    _get_diagnostics_for_config_entry,
+    _get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.diagnostics import _DIAGNOSTICS_DATA, DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
@@ -15,11 +21,6 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
-
-from . import _get_diagnostics_for_config_entry, _get_diagnostics_for_device
-
-from tests.common import MockConfigEntry, mock_platform
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

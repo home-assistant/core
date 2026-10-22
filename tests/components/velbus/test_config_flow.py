@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.components.velbus.const import CONF_TLS, CONF_VLP_FILE, DOMAIN
@@ -18,8 +19,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import init_integration
 from .const import PORT_SERIAL
-
-from tests.common import MockConfigEntry
 
 DISCOVERY_INFO = UsbServiceInfo(
     device=PORT_SERIAL,
@@ -66,7 +65,7 @@ def override_async_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with (
         patch(
-            "homeassistant.components.velbus.async_setup_entry", return_value=True
+            "homeassistant.components.velbus.async_setup_entry", return_value=None
         ) as mock,
     ):
         yield mock
@@ -288,7 +287,7 @@ async def test_vlp_step_no_modules(
     with (
         patch(
             "homeassistant.components.velbus.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "velbusaio.vlp_reader.VlpFile.read",
@@ -351,7 +350,7 @@ async def test_vlp_step_success(
     with (
         patch(
             "homeassistant.components.velbus.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "velbusaio.vlp_reader.VlpFile.read",
