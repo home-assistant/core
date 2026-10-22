@@ -66,8 +66,9 @@ GET_TEXT_SCHEMA = probatio.Schema(
 
 async def _async_access_token(call: ServiceCall, entry: GoogleDocsConfigEntry) -> str:
     """Get a valid token and start reauthentication when authorization expires."""
+    session = entry.runtime_data
     try:
-        await entry.runtime_data.async_ensure_token_valid()
+        await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
         entry.async_start_reauth(call.hass)
         raise HomeAssistantError(
@@ -77,7 +78,7 @@ async def _async_access_token(call: ServiceCall, entry: GoogleDocsConfigEntry) -
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="cannot_connect"
         ) from err
-    return cast(str, entry.runtime_data.token[CONF_ACCESS_TOKEN])
+    return cast(str, session.token[CONF_ACCESS_TOKEN])
 
 
 def _raise_action_error(

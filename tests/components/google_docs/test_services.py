@@ -1,6 +1,8 @@
 """Test Google Docs actions through Home Assistant's service registry."""
 
-from unittest.mock import MagicMock
+import asyncio
+import time
+from unittest.mock import MagicMock, patch
 
 import probatio
 import pytest
@@ -131,6 +133,77 @@ async def test_unloaded_entry(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("action", "fields", "return_response", "api_method", "api_arguments"),
+    [
+        pytest.param(
+            "append_text",
+            {"text": "Entry"},
+            False,
+            "append_text",
+            (DOCUMENT_ID, "Entry"),
+            id="append",
+        ),
+        pytest.param("get_text", {}, True, "get_document", (DOCUMENT_ID,), id="read"),
+    ],
+)
+async def test_action_refresh_survives_unload(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    mock_api: dict[str, MagicMock],
+    action: str,
+    fields: dict[str, str],
+    return_response: bool,
+    api_method: str,
+    api_arguments: tuple[str, ...],
+) -> None:
+    """An in-flight action retains its session when the entry is unloaded."""
+    token = {**setup_integration.data["token"], "expires_at": 0}
+    hass.config_entries.async_update_entry(
+        setup_integration, data={**setup_integration.data, "token": token}
+    )
+    refresh_started = asyncio.Event()
+    finish_refresh = asyncio.Event()
+
+    async def async_refresh_token(
+        token: dict[str, str | float],
+    ) -> dict[str, str | float]:
+        refresh_started.set()
+        await finish_refresh.wait()
+        return {
+            **token,
+            "access_token": "refreshed-access-token",
+            "expires_at": time.time() + 3600,
+        }
+
+    mock_api["get_document"].reset_mock()
+    with patch.object(
+        setup_integration.runtime_data.implementation,
+        "async_refresh_token",
+        side_effect=async_refresh_token,
+    ):
+        action_task = hass.async_create_task(
+            hass.services.async_call(
+                DOMAIN,
+                action,
+                {"config_entry": setup_integration.entry_id, **fields},
+                blocking=True,
+                return_response=return_response,
+            )
+        )
+        try:
+            await refresh_started.wait()
+            assert await hass.config_entries.async_unload(setup_integration.entry_id)
+            assert not hasattr(setup_integration, "runtime_data")
+        finally:
+            finish_refresh.set()
+        await action_task
+
+    mock_api[api_method].assert_called_once_with(
+        "refreshed-access-token", *api_arguments
+    )
 
 
 @pytest.mark.parametrize(
