@@ -25,7 +25,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -1560,3 +1565,81 @@ async def test_zone_control_zone_manual_derogation_shows_manual_setpoint(
     state = hass.states.get(ZONE_CONTROL_ZONE.entity_id)
     assert state is not None
     assert state.attributes[ATTR_TEMPERATURE] == 18.5
+
+
+async def test_zone_control_zone_single_setpoint_needs_a_known_side(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a single setpoint is not offered while no side is heating or cooling."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    await _async_set_zone_control_operating_mode(
+        hass, freezer, mock_client, "stop", "stop"
+    )
+    await _async_set_zone_program(hass, freezer, mock_client, "manu", "off")
+    mock_client.execute_action_group.reset_mock()
+
+    state = hass.states.get(ZONE_CONTROL_ZONE.entity_id)
+    assert state is not None
+    features = ClimateEntityFeature(state.attributes[ATTR_SUPPORTED_FEATURES])
+    assert ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in features
+    assert ClimateEntityFeature.TARGET_TEMPERATURE not in features
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {ATTR_ENTITY_ID: ZONE_CONTROL_ZONE.entity_id, ATTR_TEMPERATURE: 21.0},
+            blocking=True,
+        )
+
+    mock_client.execute_action_group.assert_not_called()
+
+
+async def test_zone_control_zone_saved_state_restores_range_and_setpoint(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the range and the single setpoint of a saved state are both restored."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    await _async_set_zone_control_operating_mode(hass, freezer, mock_client, "heating")
+    await _async_set_zone_program(hass, freezer, mock_client, "manu", "off")
+    mock_client.execute_action_group.reset_mock()
+
+    # What `climate.reproduce_state` sends for the attributes of a manual zone.
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            ATTR_ENTITY_ID: ZONE_CONTROL_ZONE.entity_id,
+            ATTR_TEMPERATURE: 21.0,
+            ATTR_TARGET_TEMP_LOW: 18.5,
+            ATTR_TARGET_TEMP_HIGH: 19.5,
+        },
+        blocking=True,
+    )
+
+    assert [
+        [
+            (str(command.name), command.parameters)
+            for command in call.kwargs["actions"][0].commands
+        ]
+        for call in mock_client.execute_action_group.await_args_list
+    ] == [
+        [
+            ("setEcoHeatingTargetTemperature", [18.5]),
+            ("setComfortHeatingTargetTemperature", [19.5]),
+            ("refreshEcoHeatingTargetTemperature", None),
+            ("refreshComfortHeatingTargetTemperature", None),
+            ("refreshTargetTemperature", None),
+        ],
+        [
+            ("setHeatingTargetTemperature", [21.0]),
+            ("setDerogationOnOffState", ["on"]),
+            *((name, None) for name, _ in ZONE_CONTROL_ZONE_REFRESH_COMMANDS),
+        ],
+    ]

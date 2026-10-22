@@ -413,14 +413,19 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             return supported_features
 
         # The range is the program and the single setpoint the manual one. Both
-        # are always accepted: restoring a scene sets the temperatures before
-        # the preset, whatever the mode of the zone is at that time.
-        if self.device_hvac_mode is not None:
-            return (
-                supported_features
-                | ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            )
+        # are accepted whatever the mode of the zone is: restoring a scene sets
+        # the temperatures before the preset. A single setpoint needs a side to
+        # write it to, so it is not offered while neither side is known.
+        if self.device_hvac_mode is None:
+            return supported_features
+
+        supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+
+        if (
+            self.device_hvac_mode != HVACMode.HEAT_COOL
+            or self.active_hvac_mode != HVACMode.HEAT_COOL
+        ):
+            supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         return supported_features
 
@@ -751,7 +756,12 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 await self.async_execute_and_refresh_modes(
                     program_commands, _program_refresh_commands(program_commands)
                 )
-                return
+
+                # A saved state holds the range and the manual setpoint together.
+                kwargs.pop(ATTR_TARGET_TEMP_LOW, None)
+                kwargs.pop(ATTR_TARGET_TEMP_HIGH, None)
+                if ATTR_TEMPERATURE not in kwargs:
+                    return
 
             # While following the program, a single setpoint is only kept as the
             # manual one, which applies once the zone is switched to manual.
