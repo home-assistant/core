@@ -1,5 +1,6 @@
 """Tests for the Sofar integration."""
 
+from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusUnit
 
 from homeassistant.components.sofar.const import (
@@ -79,6 +80,16 @@ def serve_meter_energy(unit: MockModbusUnit) -> None:
     unit.holding[0x068B] = 10000  # load_consumption_total -> 1000.0 kWh
 
 
+def deny_charge_cutoff(unit: MockModbusUnit) -> None:
+    """Seed a battery config mask that leaves out 0x105B."""
+    unit.holding[0x1042] = 0x0000
+
+
+def refuse_battery_config_mask(unit: MockModbusUnit) -> None:
+    """Seed a model that publishes no battery config mask."""
+    unit.fail_read(0x1040, ModbusError("illegal data address"))
+
+
 def declare_pv_in_masks(unit: MockModbusUnit) -> None:
     """Seed masks declaring a three-phase PV model with two strings."""
     # Each mask's lowest word sits at base+3; bits 0-3 make it usable.
@@ -97,3 +108,9 @@ def seed_hybrid_inverter(
     unit.holding[0x0608] = 87  # battery_capacity_1 -> 87%
     unit.holding[0x0612] = 515  # battery_voltage_3 -> 51.5 V
     unit.holding[0x0616] = 85  # battery_capacity_3 -> 85%
+    unit.holding[0x104D] = 73  # depth of discharge -> 27% on-grid cut-off
+    unit.holding[0x104E] = 90  # end of discharge -> 10% off-grid cut-off
+    unit.holding[0x1052] = 5  # EPS buffer -> 15% off-grid recovery
+    unit.holding[0x1042] = 0x0800  # 0x105B, the charge cut-off, is served
+    unit.holding[0x1043] = 0x000F
+    unit.holding[0x105B] = 95  # charge cut-off -> 95%

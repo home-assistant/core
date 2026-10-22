@@ -15,7 +15,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.util import dt as dt_util
 
-from .. import OverkizDataUpdateCoordinator
+from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
 

@@ -25,6 +25,11 @@
         "default": "mdi:pipe-valve"
       }
     },
+    "select": {
+      "effect_palette": {
+        "default": "mdi:palette"
+      }
+    },
     "sensor": {
       "charger_state": {
         "default": "mdi:ev-station"
