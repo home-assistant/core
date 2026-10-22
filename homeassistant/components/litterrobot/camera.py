@@ -1,6 +1,5 @@
 """Support for Litter-Robot cameras."""
 
-import asyncio
 import functools
 import logging
 from pathlib import Path
@@ -149,10 +148,20 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
     async def async_added_to_hass(self) -> None:
         """Fetch a first session for TURN credentials when added to hass.
 
-        It is not renewed afterwards, see `_refresh_cached_session`.
+        Later sessions are fetched on demand, see `_refresh_cached_session`.
         """
         await super().async_added_to_hass()
-        await self._refresh_cached_session()
+        # in the background, so a slow camera API does not hold up setup
+        self._async_refresh_in_background()
+
+    @callback
+    def _async_refresh_in_background(self) -> None:
+        """Fetch a session without the config entry waiting for it on unload."""
+        self.coordinator.config_entry.async_create_background_task(
+            self.hass,
+            self._refresh_cached_session(),
+            f"{DOMAIN} camera session {self.robot.serial}",
+        )
 
     async def _refresh_cached_session(self) -> None:
         """Fetch a camera session to get TURN credentials for viewers.
@@ -197,9 +206,7 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
                 _LOGGER.debug("Camera session expired, fetching a new one")
             session = None
             self._cached_session = None
-            self.coordinator.config_entry.async_create_task(
-                self.hass, self._refresh_cached_session()
-            )
+            self._async_refresh_in_background()
         ice_servers = _build_ice_servers(session) if session else []
         if not ice_servers:
             _LOGGER.debug("Serving the WebRTC configuration without TURN servers")
@@ -246,17 +253,22 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
 
         try:
             session = await relay.start(offer_sdp, on_answer, on_candidate)
-        except asyncio.CancelledError:
-            # the client went away mid-offer
-            self._relays.pop(session_id, None)
-            raise
         except (LitterRobotException, ClientError, TimeoutError) as err:
-            self._relays.pop(session_id, None)
+            if self._relays.pop(session_id, None) is not relay:
+                # the viewer closed the session while it was starting
+                _LOGGER.debug("WebRTC session %s closed while starting", session_id)
+                return
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="camera_stream_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+        except BaseException:
+            # cancelled (Home Assistant is stopping), or an error the library
+            # does not wrap; either way start() may have left its socket open
+            self._relays.pop(session_id, None)
+            await relay.close()
+            raise
 
         if self._relays.get(session_id) is not relay:
             # the viewer went away while start() was connecting, and the
@@ -302,14 +314,17 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
     async def _async_close_relay(self, session_id: str) -> None:
         """Close a WebRTC session, awaiting the relay teardown.
 
-        Used when the entity is removed, where a scheduled task may never run.
+        Used on removal, so every relay is closed before removal returns
+        rather than after the entity is gone.
         """
-        if relay := self._relays.pop(session_id, None):
-            _LOGGER.debug("Closing WebRTC session %s", session_id)
-            await relay.close()
+        try:
+            if relay := self._relays.pop(session_id, None):
+                _LOGGER.debug("Closing WebRTC session %s", session_id)
+                await relay.close()
+        finally:
             self._started.discard(session_id)
             self._update_streaming()
-        super().close_webrtc_session(session_id)
+            super().close_webrtc_session(session_id)
 
     def _update_streaming(self) -> None:
         """Report streaming only while a viewer is connected."""
@@ -320,6 +335,9 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
     async def async_will_remove_from_hass(self) -> None:
         """Close all active relays when the entity is removed."""
         for session_id in list(self._relays):
-            # awaited, not fire-and-forget
-            await self._async_close_relay(session_id)
+            try:
+                await self._async_close_relay(session_id)
+            except Exception:
+                # keep closing the others
+                _LOGGER.exception("Error closing WebRTC session %s", session_id)
         await super().async_will_remove_from_hass()
