@@ -825,6 +825,7 @@ async def test_media_player_proxy(
                         num_channels=0,  # source channels
                         purpose=MediaPlayerFormatPurpose.DEFAULT,
                         sample_bytes=0,  # source width
+                        bitrate=48,
                     ),
                     MediaPlayerSupportedFormat(
                         format="wav",
@@ -889,6 +890,7 @@ async def test_media_player_proxy(
             rate=None,
             channels=None,
             width=None,
+            bitrate=48,
         )
 
         media_args = mock_client.media_player_command.call_args.kwargs
@@ -921,6 +923,7 @@ async def test_media_player_proxy(
             rate=16000,
             channels=1,
             width=2,
+            bitrate=None,
         )
 
         media_args = mock_client.media_player_command.call_args.kwargs
