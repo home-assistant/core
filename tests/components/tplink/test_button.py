@@ -1,7 +1,6 @@
 """Tests for tplink button platform."""
 
-from datetime import timedelta
-
+from freezegun.api import FrozenDateTimeFactory
 from kasa import (
     AuthenticationError,
     Device,
@@ -34,7 +33,6 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.util import dt as dt_util
 
 from . import (
     _mocked_device,
@@ -437,6 +435,7 @@ async def test_ptz_preset_button_press_errors(
 )
 async def test_ptz_preset_buttons_follow_camera(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     is_on: bool,
     presets: dict[str, str],
@@ -450,7 +449,8 @@ async def test_ptz_preset_buttons_follow_camera(
 
     camera.is_on = is_on
     camera.modules[Module.PanTilt].presets = presets
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    freezer.tick(30)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -461,6 +461,7 @@ async def test_ptz_preset_buttons_follow_camera(
 
 async def test_ptz_preset_buttons_on_hub_cameras(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -491,7 +492,8 @@ async def test_ptz_preset_buttons_on_hub_cameras(
     front_camera.modules[Module.PanTilt].goto_preset.assert_not_called()
 
     back_camera.modules[Module.PanTilt].presets = {"Door": "1", "Window": "3"}
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    freezer.tick(30)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get("button.back_camera_go_to_preset_window")
@@ -500,6 +502,7 @@ async def test_ptz_preset_buttons_on_hub_cameras(
 
 async def test_ptz_preset_buttons_hub_camera_paired_again(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mocked_hub_with_cameras: Device,
 ) -> None:
@@ -510,11 +513,13 @@ async def test_ptz_preset_buttons_hub_camera_paired_again(
     assert hass.states.get(FRONT_CAMERA_DOOR_ENTITY_ID)
 
     hub.children = []
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    freezer.tick(30)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert not hass.states.get(FRONT_CAMERA_DOOR_ENTITY_ID)
 
     hub.children = cameras
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    freezer.tick(30)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(FRONT_CAMERA_DOOR_ENTITY_ID)
