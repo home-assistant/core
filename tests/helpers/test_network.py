@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, Mock, patch
 from aiohttp import hdrs
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from pytest_homeassistant.common import mock_component
 from yarl import URL
 
 from homeassistant.components import cloud
@@ -21,8 +22,6 @@ from homeassistant.helpers.network import (
     is_hass_url,
     is_internal_request,
 )
-
-from tests.common import mock_component
 
 
 @pytest.fixture(name="mock_current_request")

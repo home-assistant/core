@@ -4,7 +4,7 @@ import asyncio
 import datetime as dt
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -20,18 +20,18 @@ def validate_datetime(value: Any) -> dt.datetime:
     """Validate that a provided datetime is supported on a bosch alarm panel."""
     date_val = cv.datetime(value)
     if date_val.year < 2010:
-        raise vol.RangeInvalid("datetime must be after 2009")
+        raise probatio.RangeInvalid("datetime must be after 2009")
 
     if date_val.year > 2037:
-        raise vol.RangeInvalid("datetime must be before 2038")
+        raise probatio.RangeInvalid("datetime must be before 2038")
 
     return date_val
 
 
-SET_DATE_TIME_SCHEMA = vol.Schema(
+SET_DATE_TIME_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Optional(ATTR_DATETIME): validate_datetime,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(ATTR_DATETIME): validate_datetime,
     }
 )
 

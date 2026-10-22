@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from vilfo.exceptions import AuthenticationException, VilfoException
 
 from homeassistant.components.vilfo.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -148,6 +147,7 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_vilfo_client", "mock_setup_entry")
 async def test_form_wrong_host(
     hass: HomeAssistant,
     mock_is_valid_host: AsyncMock,
@@ -155,15 +155,30 @@ async def test_form_wrong_host(
     """Test we handle wrong host errors."""
     mock_is_valid_host.return_value = False
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_HOST: "this is an invalid hostname",
             CONF_ACCESS_TOKEN: "test-token",
         },
     )
 
     assert result["errors"] == {"base": "invalid_host"}
+
+    mock_is_valid_host.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "testadmin.vilfo.com", CONF_ACCESS_TOKEN: "test-token"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

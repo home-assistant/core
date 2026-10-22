@@ -38,6 +38,14 @@ LYRIC_SETPOINT_STATUS_NAMES = {
     PRESET_VACATION_HOLD: "Holiday",
 }
 
+PRIORITY_STATUS_OPTIONS = {
+    PRESET_NO_HOLD: "no_hold",
+    PRESET_TEMPORARY_HOLD: "temporary_hold",
+    PRESET_HOLD_UNTIL: "hold_until",
+    PRESET_PERMANENT_HOLD: "permanent_hold",
+    PRESET_VACATION_HOLD: "vacation_hold",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class LyricSensorEntityDescription(SensorEntityDescription):
@@ -179,7 +187,7 @@ async def async_setup_entry(
     """Set up the Honeywell Lyric sensor platform based on a config entry."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
+    entities: list[SensorEntity] = [
         LyricSensor(
             coordinator,
             device_sensor,
@@ -190,9 +198,9 @@ async def async_setup_entry(
         for device in location.devices
         for device_sensor in DEVICE_SENSORS
         if device_sensor.suitable_fn(device)
-    )
+    ]
 
-    async_add_entities(
+    entities.extend(
         LyricAccessorySensor(
             coordinator, accessory_sensor, location, device, room, accessory
         )
@@ -203,6 +211,16 @@ async def async_setup_entry(
         for accessory_sensor in ACCESSORY_SENSORS
         if accessory_sensor.suitable_fn(room, accessory)
     )
+
+    entities.extend(
+        LyricPriorityStatusSensor(coordinator, location, device)
+        for location in coordinator.data.locations
+        for device in location.devices
+        if device.device_class == "Thermostat"
+        and coordinator.data.rooms_dict.get(device.mac_id)
+    )
+
+    async_add_entities(entities)
 
 
 class LyricSensor(LyricDeviceEntity, SensorEntity):
@@ -273,3 +291,35 @@ class LyricAccessorySensor(LyricAccessoryEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.room, self.accessory)
+
+
+class LyricPriorityStatusSensor(LyricDeviceEntity, SensorEntity):
+    """Define a Honeywell Lyric room priority hold status sensor."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "priority_status"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = list(PRIORITY_STATUS_OPTIONS.values())
+
+    def __init__(
+        self,
+        coordinator: LyricDataUpdateCoordinator,
+        location: LyricLocation,
+        device: LyricDevice,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            coordinator,
+            location,
+            device,
+            f"{device.mac_id}_priority_status",
+        )
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the state."""
+        priority = self.coordinator.data.priorities_dict.get(self._mac_id)
+        if priority is None:
+            return None
+        return PRIORITY_STATUS_OPTIONS.get(priority.status)

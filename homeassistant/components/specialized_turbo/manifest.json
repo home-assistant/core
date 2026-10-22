@@ -41,6 +41,7 @@
       "local_name": "SPECIALIZED*"
     }
   ],
+  "categories": ["vehicles_transport.bikes_scooters"],
   "codeowners": ["@JamieMagee"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
@@ -49,5 +50,5 @@
   "iot_class": "local_push",
   "loggers": ["specialized_turbo"],
   "quality_scale": "silver",
-  "requirements": ["specialized-turbo[cloud]==0.8.2"]
+  "requirements": ["specialized-turbo[cloud]==0.8.4"]
 }

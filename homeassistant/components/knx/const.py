@@ -1,6 +1,7 @@
 """Constants for the KNX integration."""
 
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from enum import Enum, StrEnum
 from typing import TYPE_CHECKING, Final, TypedDict
 
@@ -18,6 +19,25 @@ if TYPE_CHECKING:
 
 DOMAIN: Final = "knx"
 KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
+
+
+@dataclass(slots=True, frozen=True)
+class KnxEntityIdentifier:
+    """Class to identify KNX entities in KNX frontend."""
+
+    platform: str
+    unique_id: str
+    ui: bool  # ui or yaml entity
+
+
+class GroupAddressEntity(TypedDict):
+    """An entity using a group address, as reported to the KNX frontend."""
+
+    platform: str
+    unique_id: str
+    ui: bool
+    disabled: bool  # disabled in the entity registry
+
 
 # Prefix of device identifiers created via the `knx/create_device` websocket
 # command (see websocket.py). A YAML `device.id` matching this prefix is
@@ -114,16 +134,10 @@ ATTR_SOURCE: Final = "source"
 type AsyncMessageCallbackType = Callable[[Telegram], Awaitable[None]]
 type MessageCallbackType = Callable[[Telegram], None]
 
-SERVICE_KNX_SEND: Final = "send"
-SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
-SERVICE_KNX_ATTR_TYPE: Final = "type"
-SERVICE_KNX_ATTR_RESPONSE: Final = "response"
-SERVICE_KNX_ATTR_REMOVE: Final = "remove"
-SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
-SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
-SERVICE_KNX_READ: Final = "read"
-
 REPAIR_ISSUE_DATA_SECURE_GROUP_KEY: Final = "data_secure_group_key_issue"
+REPAIR_ISSUE_ENTITY_VALIDATION_ERROR: Final = "entity_validation_error"
+REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR: Final = "expose_validation_error"
+REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR: Final = "time_server_validation_error"
 REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR: Final = "telegram_backend_error"
 
 
@@ -164,7 +178,7 @@ class KNXConfigEntryOptions(TypedDict, total=False):
 class ColorTempModes(Enum):
     """Color temperature modes for config validation."""
 
-    # YAML uses Enum.name (with vol.Upper), UI uses Enum.value for lookup
+    # YAML uses Enum.name (with probatio.Upper), UI uses Enum.value for lookup
     ABSOLUTE = "7.600"
     ABSOLUTE_FLOAT = "9"
     RELATIVE = "5.001"
@@ -196,6 +210,11 @@ SUPPORTED_PLATFORMS_YAML: Final = {
     Platform.TIME,
     Platform.WEATHER,
 }
+
+# read-only platforms raising when added with `EntityCategory.CONFIG`
+PLATFORMS_WITHOUT_CONFIG_CATEGORY: Final = frozenset(
+    {Platform.BINARY_SENSOR, Platform.SENSOR}
+)
 
 SUPPORTED_PLATFORMS_UI: Final = {
     Platform.BINARY_SENSOR,

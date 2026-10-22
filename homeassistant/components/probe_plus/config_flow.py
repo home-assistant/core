@@ -4,7 +4,7 @@ import dataclasses
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
@@ -39,6 +39,8 @@ def title(discovery_info: BluetoothServiceInfo) -> str:
 
 class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BT Probe."""
+
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -118,9 +120,9 @@ class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(titles),
+                    probatio.Required(CONF_ADDRESS): probatio.In(titles),
                 }
             ),
         )

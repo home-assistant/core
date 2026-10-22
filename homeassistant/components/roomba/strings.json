@@ -89,14 +89,30 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "continuous": "Continuous",
-          "delay": "Delay"
-        }
-      }
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to Roomba at {host}"
+    },
+    "empty_regions": {
+      "message": "The command {command} needs at least one region. An empty regions list would make the robot clean the whole home."
+    },
+    "invalid_fan_speed": {
+      "message": "Invalid fan speed {fan_speed}. Expected one of: {fan_speeds}."
+    },
+    "invalid_fan_speed_format": {
+      "message": "Invalid fan speed {fan_speed}. Expected the format behavior-spray_amount, for example Standard-1."
+    },
+    "invalid_mop_behavior": {
+      "message": "Invalid mop behavior {behavior}. Expected one of: {behaviors}."
+    },
+    "invalid_spray_amount": {
+      "message": "Invalid spray amount {spray_amount}. Expected one of: {spray_amounts}."
+    },
+    "not_connected": {
+      "message": "The command could not be sent because the robot is not connected."
+    },
+    "spray_amount_not_a_number": {
+      "message": "Invalid spray amount {spray_amount}. Expected a whole number."
     }
   }
 }

@@ -3,14 +3,16 @@
 from unittest.mock import patch
 
 from medcom_ble import MedcomBleDevice, MedcomBleDeviceData
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
-
-def patch_async_setup_entry(return_value=True):
-    """Patch async setup entry to return True."""
+def patch_async_setup_entry(return_value=None):
+    """Patch async setup entry to return None."""
     return patch(
         "homeassistant.components.medcom_ble.async_setup_entry",
         return_value=return_value,

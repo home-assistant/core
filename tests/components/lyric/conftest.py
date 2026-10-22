@@ -8,8 +8,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiolyric import Lyric
 from aiolyric.exceptions import LyricException
 from aiolyric.objects.location import LyricLocation
-from aiolyric.objects.priority import LyricRoom
+from aiolyric.objects.priority import LyricPriority, LyricRoom
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -19,14 +24,13 @@ from homeassistant.components.lyric.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
-
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+
+MAC_ID = "5CFCE1B67035"
+# Second device: has room data but no priority data yet, exercising the
+# defensive "no priority entry" branch of LyricPriorityStatusSensor.
+NO_PRIORITY_DATA_MAC_ID = "5CFCE1B67036"
 
 
 @pytest.fixture
@@ -162,13 +166,28 @@ async def mock_lyric_mixed_devices() -> AsyncGenerator[MagicMock]:
 
 
 @pytest.fixture
-def mock_lyric_api() -> Generator[MagicMock]:
-    """Mock the aiolyric client, backed by a real Location parsed from a live-shaped fixture.
+def mock_lyric_thermostats() -> Generator[MagicMock]:
+    """Yield a mocked Lyric client with an LCC and a TCC thermostat."""
+    location = LyricLocation(
+        MagicMock(),
+        location_json(
+            1,
+            [
+                load_json_object_fixture("thermostat_lcc.json", DOMAIN),
+                load_json_object_fixture("thermostat_tcc.json", DOMAIN),
+            ],
+        ),
+    )
+    lyric = build_mock_lyric([location])
+    lyric.priorities_dict = {}
 
-    get_thermostat_rooms is left as an autospec'd no-op: this test only
-    covers device-level sensors, not the room/priority data it would
-    otherwise populate.
-    """
+    with patch("homeassistant.components.lyric.Lyric", return_value=lyric):
+        yield lyric
+
+
+@pytest.fixture
+def mock_lyric_api() -> Generator[MagicMock]:
+    """Mock the aiolyric client, backed by a real Location and a real LyricPriority."""
     with patch("homeassistant.components.lyric.Lyric", autospec=True) as mock_lyric_cls:
         lyric = mock_lyric_cls.return_value
 
@@ -178,6 +197,13 @@ def mock_lyric_api() -> Generator[MagicMock]:
         ]
         lyric.locations_dict = {
             location.location_id: location for location in lyric.locations
+        }
+
+        priority_json = load_json_object_fixture("priority.json", DOMAIN)
+        lyric.priorities_dict = {MAC_ID: LyricPriority(priority_json)}
+        lyric.rooms_dict = {
+            MAC_ID: {1: MagicMock()},
+            NO_PRIORITY_DATA_MAC_ID: {1: MagicMock()},
         }
 
         yield lyric

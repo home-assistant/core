@@ -12,7 +12,6 @@ from aiohomeconnect.model import (
     ArrayOfCommands,
     ArrayOfEvents,
     ArrayOfHomeAppliances,
-    ArrayOfImages,
     ArrayOfOptions,
     ArrayOfPrograms,
     ArrayOfSettings,
@@ -31,6 +30,7 @@ from aiohomeconnect.model import (
 from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
 from aiohomeconnect.model.program import EnumerateProgram
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -44,8 +44,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_AVAILABLE_COMMANDS, MOCK_PROGRAMS, MOCK_SETTINGS, MOCK_STATUS
-
-from tests.common import MockConfigEntry, load_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -79,7 +77,6 @@ def mock_token_entry(token_expiration_time: float) -> dict[str, Any]:
         "access_token": FAKE_ACCESS_TOKEN,
         "type": "Bearer",
         "expires_at": token_expiration_time,
-        "scope": "Control Monitor Images Settings IdentifyAppliance",
     }
 
 
@@ -123,22 +120,6 @@ def mock_config_entry_v1_2(token_entry: dict[str, Any]) -> MockConfigEntry:
     )
 
 
-@pytest.fixture(name="config_entry_no_images_scope")
-def mock_config_entry_no_image_scope(token_entry: dict[str, Any]) -> MockConfigEntry:
-    """Fixture for a config entry."""
-    _token_entry = token_entry.copy()
-    _token_entry["scope"] = "Control Monitor Settings IdentifyAppliance"
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": FAKE_AUTH_IMPL,
-            "token": _token_entry,
-        },
-        minor_version=3,
-        unique_id="1234567890",
-    )
-
-
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
@@ -167,6 +148,10 @@ async def mock_integration_setup(
     config_entry.add_to_hass(hass)
 
     async def run(client: MagicMock) -> bool:
+        def init_side_effect(auth) -> MagicMock:
+            client._auth = auth
+            return client
+
         assert config_entry.state is ConfigEntryState.NOT_LOADED
         with (
             patch("homeassistant.components.home_connect.PLATFORMS", platforms),
@@ -174,7 +159,7 @@ async def mock_integration_setup(
                 "homeassistant.components.home_connect.HomeConnectClient"
             ) as client_mock,
         ):
-            client_mock.return_value = client
+            client_mock.side_effect = init_side_effect
             result = await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
         return result
@@ -442,7 +427,6 @@ def mock_client(
     mock.get_settings = AsyncMock(side_effect=_get_settings_side_effect)
     mock.get_setting = AsyncMock(side_effect=_get_setting_side_effect)
     mock.get_status = AsyncMock(return_value=copy.deepcopy(MOCK_STATUS))
-    mock.get_images = AsyncMock(return_value=ArrayOfImages([]))
     mock.get_all_programs = AsyncMock(side_effect=_get_all_programs_side_effect)
     mock.get_available_commands = AsyncMock(
         side_effect=_get_available_commands_side_effect
@@ -506,7 +490,6 @@ def mock_client_with_exception(
     mock.get_settings = AsyncMock(side_effect=exception)
     mock.get_setting = AsyncMock(side_effect=exception)
     mock.get_status = AsyncMock(side_effect=exception)
-    mock.get_images = AsyncMock(side_effect=exception)
     mock.get_all_programs = AsyncMock(side_effect=exception)
     mock.get_available_commands = AsyncMock(side_effect=exception)
     mock.put_command = AsyncMock(side_effect=exception)

@@ -36,12 +36,7 @@ from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.async_iterator import AsyncIteratorReader
 
 from . import util as backup_util
-from .agent import (
-    BackupAgent,
-    BackupAgentError,
-    BackupAgentPlatformProtocol,
-    LocalBackupAgent,
-)
+from .agent import BackupAgent, BackupAgentPlatformProtocol, LocalBackupAgent
 from .config import (
     BackupConfig,
     CreateBackupParametersDict,
@@ -60,6 +55,7 @@ from .const import (
 from .models import (
     AddonInfo,
     AgentBackup,
+    BackupAgentError,
     BackupError,
     BackupManagerError,
     BackupNotFound,
@@ -72,8 +68,10 @@ from .store import BackupStore
 from .util import (
     DecryptedBackupStreamer,
     EncryptedBackupStreamer,
+    iter_upload_chunks,
     make_backup_dir,
     read_backup,
+    receive_file,
     validate_password,
     validate_password_stream,
 )
@@ -380,6 +378,7 @@ class BackupManager:
         # Latest backup event and backup event subscribers
         self.last_event: ManagerStateEvent = BlockedEvent()
         self.last_action_event: ManagerStateEvent | None = None
+        self.last_upload_events: dict[str, UploadBackupEvent] = {}
         self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
         self._backup_platform_event_subscriptions: list[
             Callable[[BackupPlatformEvent], None]
@@ -622,12 +621,16 @@ class BackupManager:
                 latest_uploaded_bytes = bytes_uploaded
                 upload_progress_debouncer.async_schedule_call()
 
-            await agent.async_upload_backup(
-                open_stream=open_stream_func,
-                backup=_backup,
-                on_progress=on_upload_progress,
-            )
-            upload_progress_debouncer.async_cancel()
+            # Tell listeners which agents this backup is uploaded to.
+            _emit_upload_progress()
+            try:
+                await agent.async_upload_backup(
+                    open_stream=open_stream_func,
+                    backup=_backup,
+                    on_progress=on_upload_progress,
+                )
+            finally:
+                upload_progress_debouncer.async_cancel()
             self.async_on_backup_event(
                 UploadBackupEvent(
                     manager_state=self.state,
@@ -1004,7 +1007,6 @@ class BackupManager:
         contents: aiohttp.BodyPartReader,
     ) -> str:
         """Receive and store a backup file from upload."""
-        contents.chunk_size = BUF_SIZE
         suggested_filename = contents.filename or "backup.tar"
         safe_filename = PureWindowsPath(suggested_filename).name
         if (
@@ -1022,7 +1024,7 @@ class BackupManager:
         )
         written_backup = await self._reader_writer.async_receive_backup(
             agent_ids=agent_ids,
-            stream=contents,
+            stream=iter_upload_chunks(contents),
             suggested_filename=suggested_filename,
         )
         self.async_on_backup_event(
@@ -1290,6 +1292,9 @@ class BackupManager:
                     # create backup was successful, update
                     # last_completed_automatic_backup
                     self.config.data.last_completed_automatic_backup = dt_util.now()
+                    self.config.data.last_completed_automatic_backup_size = (
+                        written_backup.backup.size
+                    )
                     self.store.save()
                 backup_success = True
 
@@ -1443,9 +1448,13 @@ class BackupManager:
         """Forward event to subscribers."""
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
-        if not isinstance(event, UploadBackupEvent):
+        if isinstance(event, UploadBackupEvent):
+            self.last_upload_events[event.agent_id] = event
+        else:
             self.last_event = event
-            if not isinstance(event, (BlockedEvent, IdleEvent)):
+            if isinstance(event, (BlockedEvent, IdleEvent)):
+                self.last_upload_events.clear()
+            else:
                 self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
@@ -1958,6 +1967,47 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             ) from err
         return (tar_file_path, stat_result.st_size)
 
+    async def _receive_and_move_backup(
+        self,
+        *,
+        agent_ids: list[str],
+        stream: AsyncIterator[bytes],
+        temp_file: Path,
+    ) -> tuple[AgentBackup, Path]:
+        """Receive the upload into temp_file, validate it, and move it into place.
+
+        Remove temp_file on any failure, including cancellation from a client
+        disconnect, so a partial or unparsable upload does not orphan a
+        potentially large temp file.
+        """
+        async_add_executor_job = self._hass.async_add_executor_job
+        try:
+            await receive_file(self._hass, stream, temp_file)
+            try:
+                backup = await async_add_executor_job(read_backup, temp_file)
+            except (
+                OSError,
+                tarfile.TarError,
+                json.JSONDecodeError,
+                KeyError,
+                InvalidBackupFilename,
+            ) as err:
+                LOGGER.warning("Unable to parse backup %s: %s", temp_file, err)
+                raise
+
+            manager = self._hass.data[DATA_MANAGER]
+            if self._local_agent_id in agent_ids:
+                local_agent = manager.local_backup_agents[self._local_agent_id]
+                tar_file_path = local_agent.get_new_backup_path(backup)
+                await async_add_executor_job(make_backup_dir, tar_file_path.parent)
+                await async_add_executor_job(shutil.move, temp_file, tar_file_path)
+            else:
+                tar_file_path = temp_file
+        except Exception, asyncio.CancelledError:
+            await async_add_executor_job(temp_file.unlink, True)
+            raise
+        return backup, tar_file_path
+
     @override
     async def async_receive_backup(
         self,
@@ -1971,33 +2021,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
 
         async_add_executor_job = self._hass.async_add_executor_job
         await async_add_executor_job(make_backup_dir, self.temp_backup_dir)
-        f = await async_add_executor_job(temp_file.open, "wb")
-        try:
-            async for chunk in stream:
-                await async_add_executor_job(f.write, chunk)
-        finally:
-            await async_add_executor_job(f.close)
-
-        try:
-            backup = await async_add_executor_job(read_backup, temp_file)
-        except (
-            OSError,
-            tarfile.TarError,
-            json.JSONDecodeError,
-            KeyError,
-            InvalidBackupFilename,
-        ) as err:
-            LOGGER.warning("Unable to parse backup %s: %s", temp_file, err)
-            raise
-
-        manager = self._hass.data[DATA_MANAGER]
-        if self._local_agent_id in agent_ids:
-            local_agent = manager.local_backup_agents[self._local_agent_id]
-            tar_file_path = local_agent.get_new_backup_path(backup)
-            await async_add_executor_job(make_backup_dir, tar_file_path.parent)
-            await async_add_executor_job(shutil.move, temp_file, tar_file_path)
-        else:
-            tar_file_path = temp_file
+        backup, tar_file_path = await self._receive_and_move_backup(
+            agent_ids=agent_ids, stream=stream, temp_file=temp_file
+        )
 
         async def send_backup() -> AsyncIterator[bytes]:
             f = await async_add_executor_job(tar_file_path.open, "rb")

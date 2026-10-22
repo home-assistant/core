@@ -1,13 +1,17 @@
 """Test ZHA WebSocket API."""
 
+import asyncio
 from binascii import unhexlify
 from collections.abc import Callable, Coroutine
 from copy import deepcopy
-from typing import TYPE_CHECKING
+import logging
+from typing import TYPE_CHECKING, Any
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from zha.application.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
@@ -42,25 +46,28 @@ from homeassistant.components.websocket_api import (
     TYPE_RESULT,
 )
 from homeassistant.components.zha import DOMAIN
-from homeassistant.components.zha.const import EZSP_OVERWRITE_EUI64
+from homeassistant.components.zha.const import (
+    ATTR_DURATION,
+    ATTR_INSTALL_CODE,
+    ATTR_QR_CODE,
+    ATTR_SOURCE_IEEE,
+    EZSP_OVERWRITE_EUI64,
+)
 from homeassistant.components.zha.helpers import (
+    DEBUG_LEVELS,
     ZHADeviceProxy,
     ZHAGatewayProxy,
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
+from homeassistant.components.zha.services import SERVICE_PERMIT
 from homeassistant.components.zha.websocket_api import (
-    ATTR_DURATION,
-    ATTR_INSTALL_CODE,
-    ATTR_QR_CODE,
-    ATTR_SOURCE_IEEE,
     ATTR_TARGET_IEEE,
     BINDINGS,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
     ID,
-    SERVICE_PERMIT,
     TYPE,
     async_load_api,
 )
@@ -70,9 +77,6 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
-
-from tests.common import MockConfigEntry, MockUser
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -257,7 +261,7 @@ async def test_list_devices(zha_client) -> None:
         assert device[ATTR_ENDPOINT_NAMES] is not None
 
         for entity_reference in device["entities"]:
-            assert entity_reference[ATTR_NAME] is not None
+            assert entity_reference[ATTR_NAME] == device[ATTR_NAME]
             assert entity_reference["entity_id"] is not None
 
         await zha_client.send_json(
@@ -791,7 +795,7 @@ async def test_permit_with_install_code_fail(
 ) -> None:
     """Test permit service with install code."""
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
         )
@@ -951,6 +955,48 @@ async def test_ws_permit_ha12(
     assert app_controller.permit.await_args[1]["time_s"] == duration
     assert app_controller.permit.await_args[1]["node"] == node
     assert app_controller.permit_with_link_key.call_count == 0
+
+
+async def test_ws_permit_overlapping_restores_log_levels(
+    zha_client: MockHAClientWebSocket, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test overlapping permit subscriptions restore the original log levels."""
+
+    async def send_and_wait_result(payload: dict[str, Any]) -> None:
+        await zha_client.send_json(payload)
+        msg = await zha_client.receive_json()
+        # Skip the log events relayed to the open permit subscriptions
+        while msg["type"] != TYPE_RESULT:
+            msg = await zha_client.receive_json()
+        assert msg["id"] == payload[ID]
+        assert msg["success"]
+
+    def log_levels() -> dict[str, int]:
+        return {name: logging.getLogger(name).level for name in DEBUG_LEVELS}
+
+    for name in DEBUG_LEVELS:
+        caplog.set_level(logging.INFO, logger=name)
+
+    await send_and_wait_result({ID: 20, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
+    await send_and_wait_result({ID: 21, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
+    assert log_levels() == DEBUG_LEVELS
+
+    # Ending the first session must leave the second one in debug mode
+    await send_and_wait_result({ID: 22, TYPE: "unsubscribe_events", "subscription": 20})
+    assert log_levels() == DEBUG_LEVELS
+
+    # and still relaying logs to it
+    logging.getLogger("zha").debug("still relayed")
+    async with asyncio.timeout(5):
+        while True:
+            msg = await zha_client.receive_json()
+            log_entry = msg.get("event", {}).get("log_entry", {})
+            if msg["id"] == 21 and log_entry.get("message") == ["still relayed"]:
+                break
+
+    # Ending the last session restores the levels from before the first one
+    await send_and_wait_result({ID: 23, TYPE: "unsubscribe_events", "subscription": 21})
+    assert log_levels() == dict.fromkeys(DEBUG_LEVELS, logging.INFO)
 
 
 async def test_get_network_settings(
@@ -1278,7 +1324,7 @@ async def test_websocket_reconfigure(
 
         messages = []
 
-        while len(messages) != 3:
+        while len(messages) != 4:
             msg = await zha_client.receive_json()
 
             if msg[ID] == 6:
@@ -1287,8 +1333,12 @@ async def test_websocket_reconfigure(
     # Ensure the gateway re-interview was triggered with the correct IEEE
     assert reinterview_mock.mock_calls == [call(zha_device_proxy.device.ieee)]
 
+    # Ensure the subscription is confirmed, so the frontend can unsubscribe
+    assert messages[0]["type"] == "result"
+    assert messages[0]["success"]
+
     # Ensure the frontend receives progress events
-    assert {m["event"]["type"] for m in messages} == {
+    assert {m["event"]["type"] for m in messages[1:]} == {
         "zha_channel_configure_reporting",
         "zha_channel_bind",
         "zha_channel_cfg_done",

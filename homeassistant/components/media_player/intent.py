@@ -7,26 +7,17 @@ import logging
 import time
 from typing import cast, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import (
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    STATE_PLAYING,
-)
+from homeassistant.const import STATE_PLAYING
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.entity_component import EntityComponent
 
-from . import MediaPlayerDeviceClass, MediaPlayerEntity
+from . import MediaPlayerEntity
 from .browse_media import SearchMedia
 from .const import (
-    ATTR_MEDIA_FILTER_CLASSES,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
@@ -39,10 +30,11 @@ from .const import (
     INTENT_PLAYER_UNMUTE,
     INTENT_SET_VOLUME,
     INTENT_SET_VOLUME_RELATIVE,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SEARCH_MEDIA,
     MediaClass,
+    MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
 
@@ -86,7 +78,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
         intent.ServiceIntentHandler(
             INTENT_MEDIA_NEXT,
             DOMAIN,
-            SERVICE_MEDIA_NEXT_TRACK,
+            MediaPlayerService.MEDIA_NEXT_TRACK,
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.NEXT_TRACK,
             required_states={MediaPlayerState.PLAYING},
@@ -100,7 +92,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
         intent.ServiceIntentHandler(
             INTENT_MEDIA_PREVIOUS,
             DOMAIN,
-            SERVICE_MEDIA_PREVIOUS_TRACK,
+            MediaPlayerService.MEDIA_PREVIOUS_TRACK,
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.PREVIOUS_TRACK,
             required_states={MediaPlayerState.PLAYING},
@@ -114,15 +106,15 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
         intent.ServiceIntentHandler(
             INTENT_SET_VOLUME,
             DOMAIN,
-            SERVICE_VOLUME_SET,
+            MediaPlayerService.VOLUME_SET,
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.VOLUME_SET,
             required_slots={
                 ATTR_MEDIA_VOLUME_LEVEL: intent.IntentSlotInfo(
                     description="The volume percentage of the media player",
-                    value_schema=vol.All(
-                        vol.Coerce(int),
-                        vol.Range(min=0, max=100),
+                    value_schema=probatio.All(
+                        probatio.Coerce(int),
+                        probatio.Range(min=0, max=100),
                         lambda val: val / 100,
                     ),
                 ),
@@ -146,7 +138,7 @@ class MediaPauseHandler(intent.ServiceIntentHandler):
         super().__init__(
             INTENT_MEDIA_PAUSE,
             DOMAIN,
-            SERVICE_MEDIA_PAUSE,
+            MediaPlayerService.MEDIA_PAUSE,
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.PAUSE,
             required_states={MediaPlayerState.PLAYING},
@@ -184,7 +176,7 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
         super().__init__(
             INTENT_MEDIA_UNPAUSE,
             DOMAIN,
-            SERVICE_MEDIA_PLAY,
+            MediaPlayerService.MEDIA_PLAY,
             required_domains={DOMAIN},
             description="Resumes a media player",
             platforms={DOMAIN},
@@ -247,13 +239,13 @@ class MediaPlayerMuteUnmuteHandler(intent.ServiceIntentHandler):
         super().__init__(
             (INTENT_PLAYER_MUTE if is_volume_muted else INTENT_PLAYER_UNMUTE),
             DOMAIN,
-            SERVICE_VOLUME_MUTE,
+            MediaPlayerService.VOLUME_MUTE,
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.VOLUME_MUTE,
             optional_slots={
                 ATTR_MEDIA_VOLUME_MUTED: intent.IntentSlotInfo(
                     description="Whether the media player should be muted or unmuted",
-                    value_schema=vol.Boolean(),
+                    value_schema=probatio.Boolean(),
                 ),
             },
             description=(
@@ -282,14 +274,16 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
 
     intent_type = INTENT_MEDIA_SEARCH_AND_PLAY
     slot_schema = {
-        vol.Required("search_query"): cv.string,
-        vol.Optional("media_class"): vol.In([cls.value for cls in MediaClass]),
+        probatio.Required("search_query"): cv.string,
+        probatio.Optional("media_class"): probatio.In(
+            [cls.value for cls in MediaClass]
+        ),
         # Optional name/area/floor slots handled by intent matcher
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
-        vol.Optional("floor"): cv.string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
+        probatio.Optional("floor"): cv.string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {DOMAIN}
 
@@ -348,13 +342,15 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
 
         # Add media_filter_classes if media_class is provided
         if media_class_value:
-            search_data[ATTR_MEDIA_FILTER_CLASSES] = [media_class_value]
+            search_data[MediaPlayerServiceArgument.MEDIA_FILTER_CLASSES] = [
+                media_class_value
+            ]
 
         # 1. Search Media
         try:
             search_response = await hass.services.async_call(
                 DOMAIN,
-                SERVICE_SEARCH_MEDIA,
+                MediaPlayerService.SEARCH_MEDIA,
                 search_data,
                 target={
                     "entity_id": target_entity_id,
@@ -383,7 +379,7 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
         try:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_PLAY_MEDIA,
+                MediaPlayerService.PLAY_MEDIA,
                 {
                     "entity_id": target_entity_id,
                     "media_content_id": first_result.media_content_id,
@@ -409,21 +405,21 @@ class MediaSetVolumeRelativeHandler(intent.IntentHandler):
 
     intent_type = INTENT_SET_VOLUME_RELATIVE
     slot_schema = {
-        vol.Required("volume_step"): vol.Any(
+        probatio.Required("volume_step"): probatio.Any(
             "up",
             "down",
-            vol.All(
-                vol.Coerce(int),
-                vol.Range(min=-100, max=100),
+            probatio.All(
+                probatio.Coerce(int),
+                probatio.Range(min=-100, max=100),
                 lambda val: val / 100,
             ),
         ),
         # Optional name/area/floor slots handled by intent matcher
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
-        vol.Optional("floor"): cv.string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
+        probatio.Optional("floor"): cv.string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {DOMAIN}
 

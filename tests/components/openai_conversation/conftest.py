@@ -1,6 +1,6 @@
 """Tests helpers."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -20,15 +20,18 @@ from openai.types.responses import (
 )
 from openai.types.responses.response import IncompleteDetails
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_EVALUATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
+    RECOMMENDED_EVALUATION_OPTIONS,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
 )
@@ -37,8 +40,6 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -59,7 +60,7 @@ def mock_config_entry(
             "api_key": "bla",
         },
         version=2,
-        minor_version=7,
+        minor_version=8,
         subentries_data=[
             ConfigSubentryData(
                 data=mock_conversation_subentry_data,
@@ -71,6 +72,12 @@ def mock_config_entry(
                 data=RECOMMENDED_AI_TASK_OPTIONS,
                 subentry_type="ai_task_data",
                 title=DEFAULT_AI_TASK_NAME,
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=RECOMMENDED_EVALUATION_OPTIONS,
+                subentry_type="ai_task_evaluate",
+                title=DEFAULT_EVALUATION_NAME,
                 unique_id=None,
             ),
             ConfigSubentryData(
@@ -122,13 +129,15 @@ async def mock_config_entry_with_reasoning_model(
 @pytest.fixture
 async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
+) -> AsyncGenerator[None]:
     """Initialize integration."""
     with patch(
         "openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -168,7 +177,7 @@ def mock_create_stream() -> Generator[AsyncMock]:
             ),
             truncation=kwargs.get("truncation", "disabled"),
             usage=None,
-            user=kwargs.get("user"),
+            safety_identifier=kwargs.get("safety_identifier"),
             store=kwargs.get("store", True),
         )
         yield ResponseCreatedEvent(

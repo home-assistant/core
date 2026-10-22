@@ -3,8 +3,17 @@
 import copy
 from unittest.mock import MagicMock
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
 
 from homeassistant.components import notify
 from homeassistant.components.notify import (
@@ -18,16 +27,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
 
 TEST_KWARGS = {notify.ATTR_MESSAGE: "Test message"}
 TEST_KWARGS_TITLE = {notify.ATTR_MESSAGE: "Test message", notify.ATTR_TITLE: "My title"}
@@ -66,19 +65,18 @@ class MockNotifyEntityWithException(MockEntity, NotifyEntity):
 
 async def help_async_setup_entry_init(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
+) -> None:
     """Set up test config entry."""
     await hass.config_entries.async_forward_entry_setups(
         config_entry, [Platform.NOTIFY]
     )
-    return True
 
 
 async def help_async_unload_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
+) -> None:
     """Unload test config emntry."""
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         config_entry, [Platform.NOTIFY]
     )
 
@@ -125,7 +123,7 @@ async def test_send_message_service(
     entity.send_message_mock_calls.reset_mock()
 
     # Test schema: `None` message fails
-    with pytest.raises(vol.Invalid) as exc:
+    with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
             notify.DOMAIN,
             notify.SERVICE_SEND_MESSAGE,
@@ -135,7 +133,7 @@ async def test_send_message_service(
     entity.send_message_mock_calls.assert_not_called()
 
     # Test schema: No message fails
-    with pytest.raises(vol.Invalid) as exc:
+    with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
             notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, {"entity_id": "notify.test"}
         )

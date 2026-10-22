@@ -4,9 +4,12 @@ from datetime import UTC, date, datetime
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
+from caldav.calendarobjectresource import Todo
 from caldav.lib.error import DAVError, NotFoundError
-from caldav.objects import Todo
+from caldav.lib.url import URL
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
@@ -21,9 +24,6 @@ from homeassistant.components.todo import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"
@@ -121,8 +121,10 @@ def mock_supported_components() -> list[str]:
 def mock_calendar(supported_components: list[str]) -> Mock:
     """Fixture to create the primary calendar for the test."""
     calendar = Mock()
+    calendar.client = None
+    calendar.url = URL("https://example.com/calendar/")
     calendar.search = MagicMock(return_value=[])
-    calendar.name = CALENDAR_NAME
+    calendar.get_display_name = MagicMock(return_value=CALENDAR_NAME)
     calendar.get_supported_components = MagicMock(return_value=supported_components)
     return calendar
 
@@ -295,8 +297,8 @@ async def test_add_item(
     # Wait for the fire-and-forget state refresh
     await hass.async_block_till_done()
 
-    assert calendar.save_todo.call_args
-    assert calendar.save_todo.call_args.kwargs == expcted_save_args
+    assert calendar.add_todo.call_args
+    assert calendar.add_todo.call_args.kwargs == expcted_save_args
 
     # Verify state was updated
     state = hass.states.get(TEST_ENTITY)
@@ -312,7 +314,7 @@ async def test_add_item_failure(
     """Test failure when adding an item to the list."""
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    calendar.save_todo.side_effect = DAVError()
+    calendar.add_todo.side_effect = DAVError()
 
     with pytest.raises(HomeAssistantError, match="CalDAV save error"):
         await hass.services.async_call(
@@ -506,7 +508,7 @@ async def test_update_item(
     assert state
     assert state.state == "1"
 
-    calendar.todo_by_uid = MagicMock(return_value=item)
+    calendar.get_todo_by_uid = MagicMock(return_value=item)
 
     dav_client.put.return_value.status = 204
 
@@ -555,7 +557,7 @@ async def test_update_item_failure(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    calendar.todo_by_uid = MagicMock(return_value=item)
+    calendar.get_todo_by_uid = MagicMock(return_value=item)
     dav_client.put.side_effect = DAVError()
 
     with pytest.raises(HomeAssistantError, match="CalDAV save error"):
@@ -590,7 +592,7 @@ async def test_update_item_lookup_failure(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    calendar.todo_by_uid.side_effect = side_effect
+    calendar.get_todo_by_uid.side_effect = side_effect
 
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
@@ -642,7 +644,7 @@ async def test_remove_item(
             return item1
         return item2
 
-    calendar.todo_by_uid = Mock(side_effect=lookup)
+    calendar.get_todo_by_uid = Mock(side_effect=lookup)
     item1.delete = Mock()
     item2.delete = Mock()
 
@@ -676,7 +678,7 @@ async def test_remove_item_lookup_failure(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    calendar.todo_by_uid.side_effect = side_effect
+    calendar.get_todo_by_uid.side_effect = side_effect
 
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
@@ -704,7 +706,7 @@ async def test_remove_item_failure(
     def lookup(uid: str) -> Mock:
         return item
 
-    calendar.todo_by_uid = Mock(side_effect=lookup)
+    calendar.get_todo_by_uid = Mock(side_effect=lookup)
     dav_client.delete.return_value.status = 500
 
     with pytest.raises(HomeAssistantError, match="CalDAV delete error"):
@@ -733,7 +735,7 @@ async def test_remove_item_not_found(
     def lookup(uid: str) -> Mock:
         return item
 
-    calendar.todo_by_uid.side_effect = NotFoundError()
+    calendar.get_todo_by_uid.side_effect = NotFoundError()
 
     with pytest.raises(HomeAssistantError, match="Could not find"):
         await hass.services.async_call(
@@ -782,7 +784,7 @@ async def test_subscribe(
     assert items[0]["status"] == "needs_action"
     assert items[0]["uid"]
 
-    calendar.todo_by_uid = MagicMock(return_value=item)
+    calendar.get_todo_by_uid = MagicMock(return_value=item)
     dav_client.put.return_value.status = 204
     # Reflect update for state refresh after update
     calendar.search.return_value = [

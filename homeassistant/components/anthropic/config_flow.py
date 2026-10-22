@@ -6,12 +6,12 @@ import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
 import anthropic
-from probatio import to_openapi
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -67,13 +67,13 @@ from .const import (
 from .coordinator import async_create_client, model_alias
 
 if TYPE_CHECKING:
-    from . import AnthropicConfigEntry
+    from .coordinator import AnthropicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
 
@@ -86,6 +86,80 @@ DEFAULT_CONVERSATION_OPTIONS = {
 DEFAULT_AI_TASK_OPTIONS = {
     CONF_RECOMMENDED: True,
 }
+
+
+def get_unsupported_tool_options(
+    capabilities: anthropic.types.ModelCapabilities | None,
+) -> set[str]:
+    """Return configuration options for explicitly unsupported server tools."""
+    unsupported_options: set[str] = set()
+    if capabilities is None:
+        return unsupported_options
+
+    if not capabilities.server_tools.code_execution.supported:
+        unsupported_options.add(CONF_CODE_EXECUTION)
+    if not capabilities.server_tools.web_search.supported:
+        unsupported_options.update(
+            {
+                CONF_WEB_SEARCH,
+                CONF_WEB_SEARCH_MAX_USES,
+                CONF_WEB_SEARCH_USER_LOCATION,
+                CONF_WEB_SEARCH_CITY,
+                CONF_WEB_SEARCH_REGION,
+                CONF_WEB_SEARCH_COUNTRY,
+                CONF_WEB_SEARCH_TIMEZONE,
+            }
+        )
+    return unsupported_options
+
+
+def get_supported_thinking_efforts(
+    capabilities: anthropic.types.ModelCapabilities | None,
+) -> list[str]:
+    """Return the effort values supported by a model."""
+    if capabilities is None or not capabilities.effort.supported:
+        return []
+
+    effort_options: list[str] = []
+    if (
+        capabilities.thinking.types.adaptive.supported
+        and capabilities.thinking.types.disabled.supported
+    ):
+        effort_options.append("none")
+
+    effort = capabilities.effort
+    for value, support in (
+        ("low", effort.low),
+        ("medium", effort.medium),
+        ("high", effort.high),
+        ("xhigh", effort.xhigh),
+        ("max", effort.max),
+    ):
+        if support and support.supported:
+            effort_options.append(value)
+    return effort_options
+
+
+def reconcile_model_options(
+    options: dict[str, Any], model_info: anthropic.types.ModelInfo
+) -> None:
+    """Remove saved options incompatible with the selected model."""
+    capabilities = model_info.capabilities
+    for option in get_unsupported_tool_options(capabilities):
+        options.pop(option, None)
+
+    if (
+        capabilities is None
+        or not capabilities.thinking.supported
+        or capabilities.thinking.types.adaptive.supported
+    ):
+        options.pop(CONF_THINKING_BUDGET, None)
+    if options.get(CONF_THINKING_EFFORT) not in get_supported_thinking_efforts(
+        capabilities
+    ):
+        options.pop(CONF_THINKING_EFFORT, None)
+    if model_info.id.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
+        options.pop(CONF_TOOL_SEARCH, None)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
@@ -107,7 +181,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle setup, reauthentication, and API key reconfiguration."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -130,9 +204,18 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if self.source == SOURCE_REAUTH:
+                if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+                    entry = (
+                        self._get_reauth_entry()
+                        if self.source == SOURCE_REAUTH
+                        else self._get_reconfigure_entry()
+                    )
+                    if entry.update_listeners:
+                        return self.async_update_and_abort(
+                            entry, data_updates=user_input
+                        )
                     return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
+                        entry, data_updates=user_input
                     )
                 return self.async_create_entry(
                     title="Claude",
@@ -153,8 +236,15 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                     ],
                 )
 
+        step_id = "user"
+        if self.source == SOURCE_REAUTH:
+            step_id = "reauth_confirm"
+        elif self.source == SOURCE_RECONFIGURE:
+            step_id = "reconfigure"
+
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
-            step_id="user",
+            step_id=step_id,
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors or None,
             description_placeholders={
@@ -172,10 +262,12 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
-            )
+        return await self.async_step_user(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the API key."""
         return await self.async_step_user(user_input)
 
     @classmethod
@@ -250,13 +342,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 default_name = DEFAULT_AI_TASK_NAME
             else:
                 default_name = DEFAULT_CONVERSATION_NAME
-            step_schema[vol.Required(CONF_NAME, default=default_name)] = str
+            step_schema[probatio.Required(CONF_NAME, default=default_name)] = str
 
         if self._subentry_type == "conversation":
             step_schema.update(
                 {
-                    vol.Optional(CONF_PROMPT): TemplateSelector(),
-                    vol.Optional(
+                    probatio.Optional(CONF_PROMPT): TemplateSelector(),
+                    probatio.Optional(
                         CONF_LLM_HASS_API,
                     ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
@@ -265,7 +357,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             )
 
         step_schema[
-            vol.Required(
+            probatio.Required(
                 CONF_RECOMMENDED, default=self.options.get(CONF_RECOMMENDED, False)
             )
         ] = bool
@@ -299,7 +391,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), self.options
+                probatio.Schema(step_schema), self.options
             ),
             errors=errors or None,
         )
@@ -308,17 +400,21 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage additional options."""
+        coordinator = self._get_entry().runtime_data
+        if user_input is None:
+            await coordinator.async_refresh()
+
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
         step_schema: VolDictType = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_CHAT_MODEL,
                 default=DEFAULT[CONF_CHAT_MODEL],
             ): SelectSelector(
                 SelectSelectorConfig(options=self._get_model_list(), custom_value=True)
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_PROMPT_CACHING,
                 default=DEFAULT[CONF_PROMPT_CACHING],
             ): SelectSelector(
@@ -333,7 +429,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             self.options.update(user_input)
 
-            coordinator = self._get_entry().runtime_data
             self.model_info, status = coordinator.get_model_info(
                 self.options[CONF_CHAT_MODEL]
             )
@@ -352,13 +447,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                         err.message if isinstance(err, anthropic.APIError) else str(err)
                     )
 
+            if not errors and self.model_info.lifecycle == "retired":
+                errors[CONF_CHAT_MODEL] = "model_retired"
+
             if not errors:
                 return await self.async_step_model()
 
         return self.async_show_form(
             step_id="additional",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), self.options
+                probatio.Schema(step_schema), self.options
             ),
             errors=errors,
             description_placeholders=description_placeholders,
@@ -369,16 +467,17 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage model-specific options."""
         errors: dict[str, str] = {}
+        reconcile_model_options(self.options, self.model_info)
 
         step_schema: VolDictType = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_MAX_TOKENS,
                 default=DEFAULT[CONF_MAX_TOKENS],
-            ): vol.All(
+            ): probatio.All(
                 NumberSelector(
                     NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
                 ),
-                vol.Coerce(int),
+                probatio.Coerce(int),
             )
             if self.model_info.max_tokens
             else cv.positive_int,
@@ -390,41 +489,25 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             and not self.model_info.capabilities.thinking.types.adaptive.supported
         ):
             step_schema[
-                vol.Optional(
+                probatio.Optional(
                     CONF_THINKING_BUDGET, default=DEFAULT[CONF_THINKING_BUDGET]
                 )
             ] = (
-                vol.All(
+                probatio.All(
                     NumberSelector(
                         NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
                     ),
-                    vol.Coerce(int),
+                    probatio.Coerce(int),
                 )
                 if self.model_info.max_tokens
                 else cv.positive_int
             )
-        else:
-            self.options.pop(CONF_THINKING_BUDGET, None)
 
-        if (
+        if effort_options := get_supported_thinking_efforts(
             self.model_info.capabilities
-            and (effort_capability := self.model_info.capabilities.effort).supported
         ):
-            effort_options: list[str] = []
-            if self.model_info.capabilities.thinking.types.adaptive.supported:
-                effort_options.append("none")
-            if effort_capability.low.supported:
-                effort_options.append("low")
-            if effort_capability.medium.supported:
-                effort_options.append("medium")
-            if effort_capability.high.supported:
-                effort_options.append("high")
-            if effort_capability.xhigh and effort_capability.xhigh.supported:
-                effort_options.append("xhigh")
-            if effort_capability.max.supported:
-                effort_options.append("max")
             step_schema[
-                vol.Optional(
+                probatio.Optional(
                     CONF_THINKING_EFFORT,
                     default=DEFAULT[CONF_THINKING_EFFORT],
                 )
@@ -435,32 +518,43 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             )
-        else:
-            self.options.pop(CONF_THINKING_EFFORT, None)
+
+        unsupported_tool_options = get_unsupported_tool_options(
+            self.model_info.capabilities
+        )
+
+        if CONF_CODE_EXECUTION not in unsupported_tool_options:
+            step_schema[
+                probatio.Optional(
+                    CONF_CODE_EXECUTION, default=DEFAULT[CONF_CODE_EXECUTION]
+                )
+            ] = bool
+
+        if CONF_WEB_SEARCH not in unsupported_tool_options:
+            step_schema.update(
+                {
+                    probatio.Optional(
+                        CONF_WEB_SEARCH,
+                        default=DEFAULT[CONF_WEB_SEARCH],
+                    ): bool,
+                    probatio.Optional(
+                        CONF_WEB_SEARCH_MAX_USES,
+                        default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
+                    ): cv.positive_int,
+                    probatio.Optional(
+                        CONF_WEB_SEARCH_USER_LOCATION,
+                        default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
+                    ): bool,
+                }
+            )
 
         step_schema.update(
             {
-                vol.Optional(
-                    CONF_CODE_EXECUTION,
-                    default=DEFAULT[CONF_CODE_EXECUTION],
-                ): bool,
-                vol.Optional(
-                    CONF_WEB_SEARCH,
-                    default=DEFAULT[CONF_WEB_SEARCH],
-                ): bool,
-                vol.Optional(
-                    CONF_WEB_SEARCH_MAX_USES,
-                    default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
-                ): cv.positive_int,
-                vol.Optional(
-                    CONF_WEB_SEARCH_USER_LOCATION,
-                    default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
-                ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_WEB_FETCH,
                     default=DEFAULT[CONF_WEB_FETCH],
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_WEB_FETCH_MAX_USES,
                     default=DEFAULT[CONF_WEB_FETCH_MAX_USES],
                 ): cv.positive_int,
@@ -472,17 +566,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self.options.pop(CONF_WEB_SEARCH_COUNTRY, None)
         self.options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
 
-        model = self.options[CONF_CHAT_MODEL]
-
-        if not model.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
+        if not self.model_info.id.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
             step_schema[
-                vol.Optional(
+                probatio.Optional(
                     CONF_TOOL_SEARCH,
                     default=DEFAULT[CONF_TOOL_SEARCH],
                 )
             ] = bool
-        else:
-            self.options.pop(CONF_TOOL_SEARCH, None)
 
         if not step_schema:
             # Currently our schema is always present, but if one day it becomes empty,
@@ -523,7 +613,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="model",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), self.options
+                probatio.Schema(step_schema), self.options
             ),
             errors=errors or None,
             last_step=True,
@@ -538,6 +628,15 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 value=model_alias(model_info.id),
             )
             for model_info in coordinator.data or []
+            if coordinator.get_model_info(model_alias(model_info.id))[0].lifecycle
+            != "retired"
+            and (
+                self._subentry_type != "ai_task_data"
+                or (
+                    model_info.capabilities
+                    and model_info.capabilities.structured_outputs.supported
+                )
+            )
         ]
 
     async def _get_location_data(self) -> dict[str, str]:
@@ -548,15 +647,15 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             client = await async_create_client(
                 self.hass, self._get_entry().data[CONF_API_KEY]
             )
-            location_schema = vol.Schema(
+            location_schema = probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_WEB_SEARCH_CITY,
                         description=(
                             "Free text input for the city, e.g. `San Francisco`"
                         ),
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_WEB_SEARCH_REGION,
                         description="Free text input for the region, e.g. `California`",
                     ): str,
@@ -577,7 +676,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     "format": {
                         "type": "json_schema",
                         "schema": {
-                            **to_openapi(location_schema),
+                            **probatio.to_openapi(
+                                location_schema, openapi_version="3.1.0"
+                            ),
                             "additionalProperties": False,
                         },
                     }

@@ -7,7 +7,7 @@ from typing import Any
 import uuid
 
 from aiohttp import web
-from gassist_text import TextAssistant
+from gassist_text import TextAssistantAsync
 from google.oauth2.credentials import Credentials
 from grpc import RpcError
 
@@ -87,20 +87,17 @@ async def async_send_text_commands(
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
     command_response_list = []
-    with TextAssistant(
+    async with TextAssistantAsync(
         credentials, language_code, audio_out=bool(media_players)
     ) as assistant:
         for command in commands:
             try:
-                resp = await hass.async_add_executor_job(assistant.assist, command)
+                resp = await assistant.assist(command)
             except RpcError as err:
-                _LOGGER.error(
-                    "Failed to send command '%s' to Google Assistant: %s",
-                    command,
-                    err,
-                )
                 raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="grpc_error"
+                    translation_domain=DOMAIN,
+                    translation_key="grpc_error",
+                    translation_placeholders={"command": command},
                 ) from err
             text_response = resp[0]
             _LOGGER.debug("command: %s\nresponse: %s", command, text_response)

@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 from pyfronius import FroniusError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.fronius.const import DOMAIN
@@ -14,16 +16,13 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import mock_responses
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-
 
 @pytest.fixture(autouse=True)
 def no_setup():
     """Disable setting up the whole integration in config_flow tests."""
     with patch(
         "homeassistant.components.fronius.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 
@@ -64,6 +63,7 @@ async def assert_finish_flow_with_logger(hass: HomeAssistant, flow_id: str) -> N
         "host": "10.9.8.1",
         "is_logger": True,
         "modbus_port": 502,
+        "auto_revert_power_limit": False,
     }
     assert result["result"].unique_id == "123.4567"
 
@@ -122,6 +122,7 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
             {
                 "host": "10.9.1.1",
                 "modbus_port": 1502,
+                "auto_revert_power_limit": True,
             },
         )
         await hass.async_block_till_done()
@@ -132,6 +133,7 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
         "host": "10.9.1.1",
         "is_logger": False,
         "modbus_port": 1502,
+        "auto_revert_power_limit": True,
     }
     assert result2["result"].unique_id == "1234567"
 
@@ -256,6 +258,7 @@ async def test_config_flow_already_configured(
         "host": old_host,  # not updated from config flow - only from reconfigure flow
         "is_logger": True,
         "modbus_port": 502,  # added by migration
+        "auto_revert_power_limit": False,  # added by migration
     }
 
 
@@ -283,6 +286,7 @@ async def test_dhcp(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
         "host": MOCK_DHCP_DATA.ip,
         "is_logger": True,
         "modbus_port": 502,
+        "auto_revert_power_limit": False,
     }
     assert result["result"].unique_id == "123.4567"
 
@@ -373,6 +377,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         "host": new_host,
         "is_logger": False,
         "modbus_port": 1502,
+        "auto_revert_power_limit": False,
     }
 
 
