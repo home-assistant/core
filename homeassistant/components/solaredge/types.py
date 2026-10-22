@@ -1,6 +1,9 @@
 """Typing for the SolarEdge Monitoring API."""
 
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
+
+if TYPE_CHECKING:
+    from .v2_runtime import SolarEdgeV2Coordinator
 
 from aiosolaredge import SolarEdge
 
@@ -16,3 +19,4 @@ class SolarEdgeData(TypedDict, total=False):
 
     api_client: SolarEdge
     modules_coordinator: SolarEdgeModulesCoordinator
+    v2_coordinator: SolarEdgeV2Coordinator

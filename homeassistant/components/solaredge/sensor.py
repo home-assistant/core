@@ -12,8 +12,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -32,6 +32,7 @@ from .coordinator import (
     SolarEdgeStorageDataService,
 )
 from .types import SolarEdgeConfigEntry
+from .v2_sensor import POWER, SUPPORTED, SolarEdgeV2Sensor
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -289,6 +290,59 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add an solarEdge entry."""
+    if "v2_coordinator" in entry.runtime_data:
+        coordinator = entry.runtime_data["v2_coordinator"]
+        entities_v2 = [
+            SolarEdgeV2Sensor(coordinator, description)
+            for description in SENSOR_TYPES
+            if description.key in SUPPORTED
+        ]
+        entities_v2.append(SolarEdgeV2Sensor(coordinator, POWER))
+        discovered: set[tuple[str, str]] = set()
+
+        @callback
+        def discover_batteries() -> None:
+            """Add serial-bound entities once, including recovered inventory."""
+            battery_entities = []
+            for device in (coordinator.state["inventory"] or {}).get("batteries", []):
+                serial = device["serialNumber"]
+                for description in BATTERY_SENSOR_TYPES:
+                    identity = (serial, description.key)
+                    if identity in discovered:
+                        continue
+                    discovered.add(identity)
+                    battery_entities.append(
+                        SolarEdgeV2Sensor(
+                            coordinator,
+                            description,
+                            serial=serial,
+                            unsupported=description.key
+                            not in {
+                                "battery_charge_energy",
+                                "battery_discharge_energy",
+                            },
+                        )
+                    )
+            if battery_entities:
+                async_add_entities(battery_entities)
+
+        entry.async_on_unload(coordinator.async_add_listener(discover_batteries))
+        discover_batteries()
+        existing = {
+            entity.unique_id
+            for entity in er.async_entries_for_config_entry(
+                er.async_get(hass), entry.entry_id
+            )
+        }
+        entities_v2.extend(
+            SolarEdgeV2Sensor(coordinator, description, unsupported=True)
+            for description in SENSOR_TYPES
+            if description.key not in SUPPORTED
+            and f"{coordinator.site_id}_{description.key}" in existing
+        )
+        async_add_entities(entities_v2)
+        return
+
     # Add sensor entities only if API key is configured
     if DATA_API_CLIENT not in entry.runtime_data:
         return
