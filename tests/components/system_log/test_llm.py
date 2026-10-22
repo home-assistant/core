@@ -473,6 +473,25 @@ async def test_get_logs_file_line_limit(
     }
 
 
+async def test_get_logs_file_error(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    logs_tool: llm.Tool,
+    tmp_path: Path,
+) -> None:
+    """Test a log file that cannot be read is reported as an error."""
+    (tmp_path / "home-assistant.log").unlink()
+
+    result = await logs_tool.async_call(
+        hass, llm.ToolInput(logs_tool.name, {}), llm_context
+    )
+
+    assert result.data == {
+        "records": [],
+        "errors": {"core": "Could not read the log file"},
+    }
+
+
 async def _async_call_with_logs(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,

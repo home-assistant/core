@@ -228,8 +228,8 @@ def _read_log_file(path: str, start_time: datetime, lines: int) -> list[str]:
                 result.append(line.rstrip("\n"))
                 if len(result) >= lines:
                     break
-    except OSError:
-        return []
+    except OSError as err:
+        raise HomeAssistantError("Could not read the log file") from err
     return result
 
 
