@@ -32,6 +32,7 @@ from homeassistant.components.homeassistant.services import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_EXCLUDE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     EVENT_CORE_CONFIG_UPDATE,
@@ -348,6 +349,51 @@ async def test_turn_on_off_toggle_schema(
                     context=ha.Context(user_id=hass_read_only_user.id),
                     blocking=True,
                 )
+
+
+async def test_turn_on_exclude(hass: HomeAssistant) -> None:
+    """Test turn_on skips entities matched by the exclude block."""
+    await async_setup_component(hass, DOMAIN, {})
+    calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
+
+    await hass.services.async_call(
+        ha.DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ["light.ceiling", "light.kitchen"],
+            CONF_EXCLUDE: {ATTR_ENTITY_ID: "light.kitchen"},
+        },
+        blocking=True,
+    )
+    assert len(calls) == 1
+    assert calls[0].data[ATTR_ENTITY_ID] == ["light.ceiling"]
+
+
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE])
+@pytest.mark.parametrize(
+    "exclude",
+    [
+        pytest.param("light.kitchen", id="string"),
+        pytest.param(["light.kitchen"], id="list"),
+        pytest.param({ATTR_ENTITY_ID: ENTITY_MATCH_ALL}, id="entity_id_all"),
+        pytest.param({CONF_EXCLUDE: {}}, id="nested_exclude"),
+    ],
+)
+async def test_turn_on_off_toggle_invalid_exclude(
+    hass: HomeAssistant, service: str, exclude: object
+) -> None:
+    """Test an invalid exclude is rejected before any entity is acted on."""
+    await async_setup_component(hass, DOMAIN, {})
+    calls = async_mock_service(hass, "light", service)
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            ha.DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ["light.ceiling", "light.kitchen"], CONF_EXCLUDE: exclude},
+            blocking=True,
+        )
+    assert not calls
 
 
 async def test_not_allowing_recursion(

@@ -85,13 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> Non
         pyvlx=pyvlx, limitation_coordinators=limitation_coordinators
     )
 
-    connections = None
-    if (mac := entry.data.get(CONF_MAC)) is not None:
-        connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
-
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
+    device_info = dr.DeviceInfo(
         identifiers={(DOMAIN, f"gateway_{entry.entry_id}")},
         name="KLF 200 Gateway",
         manufacturer="Velux",
@@ -102,7 +96,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> Non
         sw_version=(
             str(pyvlx.klf200.version.softwareversion) if pyvlx.klf200.version else None
         ),
-        connections=connections,
+    )
+    if (mac := entry.data.get(CONF_MAC)) is not None:
+        device_info.connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=device_info
     )
 
     async def on_hass_stop(_: Event) -> None:

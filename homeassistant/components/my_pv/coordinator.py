@@ -55,7 +55,7 @@ def _handle_device_errors[**P](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_unavailable",
-                translation_placeholders={"uri": self.device.uri},
+                translation_placeholders={"uri": str(self.device.uri)},
             ) from exc
 
     return wrapper
@@ -178,5 +178,12 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
     async def turn_off(self) -> bool:
         """Turn off the device."""
         result = await self.device.turn_off()
+        self.async_update_listeners()
+        return result
+
+    @_handle_device_errors
+    async def update_firmware(self) -> bool:
+        """Send command."""
+        result = await self.device.update_firmware()
         self.async_update_listeners()
         return result

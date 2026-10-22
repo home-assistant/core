@@ -24,12 +24,12 @@ from homeassistant.util import dt as dt_util
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
+    PortainerCoordinatorData,
     PortainerStackData,
     PortainerVolumeData,
 )
 from .entity import (
     PortainerContainerEntity,
-    PortainerCoordinatorData,
     PortainerDockerSystemDiskSpaceEndpointEntity,
     PortainerEndpointEntity,
     PortainerStackEntity,

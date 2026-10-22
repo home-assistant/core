@@ -20,7 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
+from .coordinator import JewishCalendarConfigEntry
+from .entity import JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0

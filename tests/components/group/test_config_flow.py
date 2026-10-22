@@ -12,7 +12,7 @@ from homeassistant.components.group import DOMAIN, async_setup_entry
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 
 @pytest.mark.parametrize(
@@ -140,6 +140,7 @@ async def test_config_flow(
     [
         ("binary_sensor", {"all": False}),
         ("button", {}),
+        ("calendar", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),
@@ -392,6 +393,7 @@ async def test_all_options(
     [
         ("binary_sensor", {"all": False}),
         ("button", {}),
+        ("calendar", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),
@@ -589,6 +591,72 @@ async def test_config_flow_preview(
         "state": group_state,
     }
     assert len(hass.states.async_all()) == 2
+
+
+@pytest.mark.parametrize(
+    "member_attributes",
+    [
+        pytest.param(
+            [
+                {
+                    "device_class": "energy",
+                    "state_class": "total",
+                    "unit_of_measurement": "kWh",
+                },
+                {
+                    "device_class": "current",
+                    "state_class": "measurement",
+                    "unit_of_measurement": "A",
+                },
+            ],
+            id="classes_and_units_not_matching",
+        ),
+        pytest.param(
+            [
+                {"device_class": "energy", "unit_of_measurement": "kWh"},
+                {"device_class": "energy", "unit_of_measurement": "A"},
+            ],
+            id="units_not_matching_device_class",
+        ),
+    ],
+)
+async def test_config_flow_sensor_preview_creates_no_issues(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
+    member_attributes: list[dict[str, str]],
+) -> None:
+    """Test a sensor preview over mismatching members raises no repair issues."""
+    client = await hass_ws_client(hass)
+    input_entities = ["sensor.input_one", "sensor.input_two"]
+    for entity_id, attributes in zip(input_entities, member_attributes, strict=True):
+        hass.states.async_set(entity_id, "10", attributes)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "sensor"}
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {
+                "name": "My group",
+                "entities": input_entities,
+                "type": "sum",
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "20.0"
+
+    assert not issue_registry.issues
 
 
 @pytest.mark.parametrize(

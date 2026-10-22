@@ -323,9 +323,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> Non
 
     # Register the ElkM1 system device before forwarding platforms so entities
     # on any platform can deterministically resolve it as their via_device.
-    dr.async_get(hass).async_get_or_create(
+    dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
-        **create_elk_system_device_info(elk, prefix, entry.unique_id),
+        device_info=create_elk_system_device_info(elk, prefix, entry.unique_id),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
