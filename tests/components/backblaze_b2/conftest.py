@@ -28,7 +28,7 @@ from .const import BACKUP_METADATA, TEST_BACKUP, USER_INPUT
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.backblaze_b2.async_setup_entry", return_value=True
+        "homeassistant.components.backblaze_b2.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -258,15 +258,18 @@ def b2_fixture():
             file_name,
             content_type=None,
             file_info=None,
+            *,
+            progress_listener,
         ):
             """Mock upload_unbound_stream for backup uploads."""
-            # Read all data from the stream
+            # Read all data from the stream, reporting progress like b2sdk does
             data = b""
             while True:
                 chunk = stream_reader.read(8192)
                 if not chunk:
                     break
                 data += chunk
+                progress_listener.bytes_completed(len(data))
 
             stream = io.BytesIO(data)
             stream.seek(0)

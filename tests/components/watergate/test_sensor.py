@@ -12,8 +12,9 @@ from pytest_homeassistant.common import (
 )
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
+from watergate_local_api import WatergateApiException
 
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -59,6 +60,46 @@ async def test_diagnostics_are_disabled_by_default(
     assert len(entries) == 5
     for entry in entries:
         assert entry.disabled
+
+
+@pytest.mark.parametrize(
+    ("device_state_v2_side_effect", "negative_volume", "negative_duration"),
+    [
+        pytest.param(None, "0.3", "25", id="firmware_with_device_state_v2"),
+        pytest.param(
+            WatergateApiException("Unsupported media type"),
+            STATE_UNAVAILABLE,
+            STATE_UNAVAILABLE,
+            id="firmware_without_device_state_v2",
+        ),
+    ],
+)
+async def test_water_meter_sensors(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+    device_state_v2_side_effect: WatergateApiException | None,
+    negative_volume: str,
+    negative_duration: str,
+) -> None:
+    """Test the water meter sensors on firmware with and without device state v2."""
+    mock_watergate_client.async_get_device_state_v2.side_effect = (
+        device_state_v2_side_effect
+    )
+
+    with patch("homeassistant.components.watergate.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_entry)
+
+    def assert_state(entity_id: str, expected_state: str) -> None:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_state
+
+    # Firmware without v2 reports a single differential meter, surfaced as the positive one.
+    assert_state("sensor.sonic_water_meter_volume", "1.2")
+    assert_state("sensor.sonic_water_meter_duration", "100")
+    assert_state("sensor.sonic_water_meter_negative_volume", negative_volume)
+    assert_state("sensor.sonic_water_meter_negative_duration", negative_duration)
 
 
 async def test_telemetry_webhook(

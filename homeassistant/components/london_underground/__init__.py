@@ -1,11 +1,13 @@
 """The london_underground component."""
 
+from london_tube_status import TubeData
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN as DOMAIN
-from .coordinator import LondonTubeCoordinator, LondonUndergroundConfigEntry, TubeData
+from .coordinator import LondonTubeCoordinator, LondonUndergroundConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 

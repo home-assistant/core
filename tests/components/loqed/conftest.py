@@ -131,7 +131,7 @@ def patch_lock_creation_flow_fixture() -> PatchLockCreationFlow:
             ),
             patch(
                 "homeassistant.components.loqed.async_setup_entry",
-                return_value=True,
+                return_value=None,
             ),
             patch(
                 "homeassistant.components.webhook.async_generate_id",

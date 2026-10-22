@@ -35,6 +35,7 @@ from homematicip.device import (
     TemperatureHumiditySensorOutdoor,
     TemperatureHumiditySensorWithoutDisplay,
     TiltVibrationSensor,
+    UltrasonicDistanceSensor,
     WateringActuator,
     WeatherSensor,
     WeatherSensorPlus,
@@ -53,6 +54,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     UnitOfDensity,
     UnitOfEnergy,
+    UnitOfLength,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfRatio,
@@ -415,6 +417,25 @@ TILT_TEMPERATURE_DESC = HmipSensorDescription[Device](
     channel_type=FunctionalChannelType.TEMPERATURE_SENSOR_CHANNEL,
 )
 
+DISTANCE_DESC = HmipSensorDescription[Device](
+    key="distance",
+    device_class=SensorDeviceClass.DISTANCE,
+    native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.distance,
+    channel=1,
+)
+
+HEIGHT_DESC = HmipSensorDescription[Device](
+    key="height",
+    translation_key="height",
+    device_class=SensorDeviceClass.DISTANCE,
+    native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.calculatedHeight,
+    channel=1,
+)
+
 
 # Keys must not subclass each other so each device matches one key; the setup
 # loop breaks after the first match (enforced by
@@ -454,6 +475,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
         TEMPERATURE_EXTERNAL_DELTA_DESC,
     ),
     TiltVibrationSensor: (TILT_ANGLE_DESC, TILT_TEMPERATURE_DESC),
+    UltrasonicDistanceSensor: (DISTANCE_DESC, HEIGHT_DESC),
     WeatherSensor: (
         TEMPERATURE_DESC,
         HUMIDITY_DESC,

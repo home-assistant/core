@@ -108,8 +108,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
             ),
             is_dynamic=is_dynamic,
         )
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id, **household.prices.device_info
+        device_registry.async_get_or_create_from_info(
+            config_entry_id=entry.entry_id, device_info=household.prices.device_info
         )
         return household
 

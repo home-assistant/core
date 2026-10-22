@@ -27,7 +27,7 @@ from .util import (
 )
 
 if TYPE_CHECKING:
-    from . import OTBRConfigEntry
+    from .types import OTBRConfigEntry
 
 
 @callback

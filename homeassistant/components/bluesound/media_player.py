@@ -38,7 +38,7 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from . import BluesoundConfigEntry
+    from .coordinator import BluesoundConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

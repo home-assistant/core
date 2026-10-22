@@ -158,7 +158,7 @@ async def test_speed_sensor_metric_display(
     ("speed_kmh", "expected_state"),
     [
         pytest.param(0.0, "0.0", id="zero"),
-        pytest.param(None, STATE_UNAVAILABLE, id="missing"),
+        pytest.param(None, STATE_UNKNOWN, id="missing"),
     ],
 )
 async def test_speed_sensor_availability(
@@ -169,7 +169,7 @@ async def test_speed_sensor_availability(
     speed_kmh: float | None,
     expected_state: str,
 ) -> None:
-    """Test zero is valid and missing speed is unavailable."""
+    """Test zero is valid and missing speed is unknown."""
     vehicle = mock_share.vehicles[0]
     mock_scorpiontrack_client.async_get_share.return_value = replace(
         mock_share,

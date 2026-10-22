@@ -23,9 +23,8 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import SIGNAL_KNX_TELEGRAM
-from .schema import ga_validator
 from .telegrams import TelegramDict, decode_telegram_payload
-from .validation import dpt_base_type_validator
+from .validation import dpt_base_type_validator, ga_validator
 
 TRIGGER_TELEGRAM: Final = "telegram"
 

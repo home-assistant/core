@@ -38,9 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> N
     # (VMs, containers, storages) can deterministically resolve their via_device.
     device_registry = dr.async_get(hass)
     for node_data in coordinator.data.values():
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=entry.entry_id,
-            **node_device_info(coordinator, node_data),
+            device_info=node_device_info(coordinator, node_data),
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

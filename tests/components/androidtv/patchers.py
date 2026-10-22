@@ -208,7 +208,7 @@ PATCH_SCREENCAP = patch(
 )
 PATCH_SETUP_ENTRY = patch(
     "homeassistant.components.androidtv.async_setup_entry",
-    return_value=True,
+    return_value=None,
 )
 PATCH_ACCESS = patch("homeassistant.components.androidtv.os.access", return_value=True)
 PATCH_ISFILE = patch("homeassistant.components.androidtv.os.path.isfile", isfile)
