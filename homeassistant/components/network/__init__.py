@@ -37,6 +37,7 @@ __all__ = [
     "async_get_loaded_adapters",
     "async_get_source_ip",
     "async_only_default_interface_enabled",
+    "async_reload_adapters",
 ]
 
 
@@ -63,6 +64,12 @@ async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
 def async_get_loaded_adapters(hass: HomeAssistant) -> list[Adapter]:
     """Get the network adapter configuration."""
     return async_get_loaded_network(hass).adapters
+
+
+async def async_reload_adapters(hass: HomeAssistant) -> None:
+    """Reload the network adapters."""
+    network = await async_get_network(hass)
+    await network.async_reload_adapters()
 
 
 async def async_get_source_ip(
