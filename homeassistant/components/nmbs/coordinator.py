@@ -8,8 +8,14 @@ from functools import partial
 import logging
 from typing import override
 
-from pyrail import iRail
-from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
+from pyrail import IRail, PyRailError
+from pyrail.models import (
+    ConnectionDetails,
+    ConnectionsApiResponse,
+    LiveboardApiResponse,
+    LiveboardDeparture,
+    StationDetails,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -45,6 +51,14 @@ class NMBSData:
     failed_feeds: set[str]
 
 
+@dataclass
+class FeedResult[T]:
+    """Result of one pyrail feed request."""
+
+    data: T | None
+    failed: bool
+
+
 def _find_station(hass: HomeAssistant, station_id: str) -> StationDetails | None:
     """Return the station with the given station ID, if it exists."""
     return next(
@@ -71,7 +85,7 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
             config_entry=entry,
             update_interval=UPDATE_INTERVAL,
         )
-        self.client = iRail(session=async_get_clientsession(hass))
+        self.client = IRail(session=async_get_clientsession(hass))
         station_from = _find_station(hass, entry.data[CONF_STATION_FROM])
         station_to = _find_station(hass, entry.data[CONF_STATION_TO])
         if station_from is None or station_to is None:
@@ -82,19 +96,18 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
         self.station_from = station_from
         self.station_to = station_to
         self.exclude_vias = entry.data.get(CONF_EXCLUDE_VIAS, False)
+        self._connection_response: ConnectionsApiResponse | None = None
+        self._liveboard_responses: dict[str, LiveboardApiResponse] = {}
 
     async def _async_fetch_feed[T](
         self, feed: str, fetch: Callable[[], Awaitable[T | None]]
-    ) -> T | None:
-        """Fetch a feed, returning None on a timeout or a parse error."""
+    ) -> FeedResult[T]:
+        """Fetch one feed and record whether the request failed."""
         try:
-            return await fetch()
-        except TimeoutError:
-            _LOGGER.debug("Timeout while fetching %s", feed)
-            return None
-        except (ValueError, LookupError) as err:
-            _LOGGER.debug("Unable to parse %s: %s", feed, err)
-            return None
+            return FeedResult(await fetch(), False)
+        except (PyRailError, TimeoutError, ValueError, LookupError) as err:
+            _LOGGER.warning("Unable to fetch %s: %s", feed, err)
+            return FeedResult(None, True)
 
     def _connection_entity_enabled(self, entries: list[er.RegistryEntry]) -> bool:
         """Return True if the connection entity is enabled or not registered."""
@@ -149,17 +162,22 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
                 station.id: task_group.create_task(
                     self._async_fetch_feed(
                         f"the liveboard of {station.standard_name}",
-                        partial(self.client.get_liveboard, station.id),
+                        partial(self.client.get_liveboard, station_id=station.id),
                     )
                 )
                 for station in stations
             }
-        connections_response = (
-            connection_task.result() if connection_task is not None else None
-        )
         failed_feeds: set[str] = set()
-        if fetch_connection and connections_response is None:
-            failed_feeds.add(CONNECTION_FEED)
+        if connection_task is not None:
+            connection_result = connection_task.result()
+            if connection_result.failed:
+                failed_feeds.add(CONNECTION_FEED)
+            elif connection_result.data is not None:
+                self._connection_response = connection_result.data
+            elif self._connection_response is None:
+                failed_feeds.add(CONNECTION_FEED)
+
+        connections_response = self._connection_response
 
         upcoming: list[ConnectionDetails] = []
         if connections_response is not None:
@@ -178,8 +196,17 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
             if (liveboard_task := liveboard_tasks.get(station.id)) is None:
                 next_departures[station.id] = None
                 continue
-            liveboard = liveboard_task.result()
-            if liveboard is None:
+            liveboard_result = liveboard_task.result()
+            if liveboard_result.failed:
+                failed_feeds.add(station.id)
+            elif liveboard_result.data is not None:
+                self._liveboard_responses[station.id] = liveboard_result.data
+            elif station.id not in self._liveboard_responses:
+                failed_feeds.add(station.id)
+                next_departures[station.id] = None
+                continue
+            liveboard = self._liveboard_responses.get(station.id)
+            if liveboard is None or liveboard.departures is None:
                 failed_feeds.add(station.id)
                 next_departures[station.id] = None
                 continue

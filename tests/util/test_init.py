@@ -1,6 +1,7 @@
 """Test Home Assistant util methods."""
 
 from datetime import datetime, timedelta
+import math
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -87,6 +88,19 @@ def test_convert() -> None:
     assert util.convert(object, int, 1) == 1
 
 
+@pytest.mark.parametrize(
+    ("value", "to_type"),
+    [
+        pytest.param(math.inf, int, id="inf_to_int"),
+        pytest.param(-math.inf, int, id="negative_inf_to_int"),
+        pytest.param(10**400, float, id="huge_int_to_float"),
+    ],
+)
+def test_convert_overflow_returns_default(value: float, to_type: type) -> None:
+    """Test convert returns the default when the conversion overflows."""
+    assert util.convert(value, to_type, 1) == 1
+
+
 def test_ensure_unique_string() -> None:
     """Test ensure_unique_string."""
     assert util.ensure_unique_string("Beer", ["Beer", "Beer_2"]) == "Beer_3"
@@ -144,6 +158,30 @@ def test_throttle() -> None:
 
     assert len(calls1) == 3
     assert len(calls2) == 2
+
+
+def test_throttle_refused_no_throttle_call_keeps_cooldown() -> None:
+    """Test a no_throttle call refused by limit_no_throttle keeps the cooldown."""
+    calls = []
+
+    @util.Throttle(timedelta(seconds=10), timedelta(seconds=5))
+    def test_throttle():
+        calls.append(1)
+        return True
+
+    now = dt_util.utcnow()
+
+    with patch("homeassistant.util.utcnow", return_value=now):
+        assert test_throttle() is True
+
+    # Refused by limit_no_throttle, must not restart the min_time cooldown
+    with patch("homeassistant.util.utcnow", return_value=now + timedelta(seconds=2)):
+        assert test_throttle(no_throttle=True) is None
+
+    with patch("homeassistant.util.utcnow", return_value=now + timedelta(seconds=11)):
+        assert test_throttle() is True
+
+    assert len(calls) == 2
 
 
 def test_throttle_per_instance() -> None:

@@ -25,7 +25,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.eq3btsmart.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -49,7 +49,7 @@ async def test_user_flow_invalid_mac(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.eq3btsmart.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -87,7 +87,7 @@ async def test_bluetooth_flow(
 
     with patch(
         "homeassistant.components.eq3btsmart.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -120,7 +120,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.eq3btsmart.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

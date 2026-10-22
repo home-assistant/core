@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 from mashumaro.exceptions import MissingField
+from pyrail import PyRailError
 from pyrail.models import ConnectionsApiResponse, LiveboardApiResponse
 import pytest
 from pytest_homeassistant.common import (
@@ -331,7 +332,7 @@ async def test_liveboard_sensor_no_departures(
         await async_load_json_object_fixture(hass, "liveboard.json", DOMAIN)
     )
     liveboard.departures = []
-    mock_nmbs_client.get_liveboard.side_effect = lambda station: liveboard
+    mock_nmbs_client.get_liveboard.side_effect = lambda station_id: liveboard
     await _setup_entry(hass, mock_config_entry)
     await _enable_liveboards(hass, entity_registry, mock_config_entry)
 
@@ -353,7 +354,7 @@ async def test_liveboard_sensor_no_delay(
         await async_load_json_object_fixture(hass, "liveboard.json", DOMAIN)
     )
     liveboard.departures[0].delay = 0
-    mock_nmbs_client.get_liveboard.side_effect = lambda station: liveboard
+    mock_nmbs_client.get_liveboard.side_effect = lambda station_id: liveboard
     await _setup_entry(hass, mock_config_entry)
     await _enable_liveboards(hass, entity_registry, mock_config_entry)
 
@@ -391,8 +392,10 @@ async def test_liveboard_failure_only_affects_its_sensor(
             await async_load_json_object_fixture(hass, "liveboard.json", DOMAIN)
         ),
     }
-    mock_nmbs_client.get_liveboard.side_effect = lambda station: (
-        destination_liveboard_result() if station == STATION_TO else liveboards[station]
+    mock_nmbs_client.get_liveboard.side_effect = lambda station_id: (
+        destination_liveboard_result()
+        if station_id == STATION_TO
+        else liveboards[station_id]
     )
     await _enable_liveboards(hass, entity_registry, mock_config_entry)
 
@@ -415,7 +418,9 @@ async def test_liveboard_failure_only_affects_its_sensor(
     liveboards[STATION_TO] = LiveboardApiResponse.from_dict(
         await async_load_json_object_fixture(hass, "liveboard_zuid.json", DOMAIN)
     )
-    mock_nmbs_client.get_liveboard.side_effect = lambda station: liveboards[station]
+    mock_nmbs_client.get_liveboard.side_effect = lambda station_id: liveboards[
+        station_id
+    ]
     freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -454,13 +459,13 @@ async def test_enabled_liveboard_is_fetched(
     await hass.async_block_till_done()
 
     assert mock_nmbs_client.get_liveboard.call_count == 1
-    mock_nmbs_client.get_liveboard.assert_called_once_with(STATION_FROM)
+    mock_nmbs_client.get_liveboard.assert_called_once_with(station_id=STATION_FROM)
 
 
 @pytest.mark.parametrize(
     "connection_side_effect",
     [
-        pytest.param(None, id="api_failure"),
+        pytest.param(PyRailError("API unavailable"), id="api_failure"),
         pytest.param(TimeoutError, id="timeout"),
         pytest.param(ValueError("Unexpected response schema"), id="decoding_error"),
         pytest.param(
@@ -473,7 +478,7 @@ async def test_connection_failure_only_affects_its_sensor(
     mock_nmbs_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    connection_side_effect: Exception | type[Exception] | None,
+    connection_side_effect: Exception | type[Exception],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a failed connection only affects the connection sensor and recovers."""
@@ -487,7 +492,6 @@ async def test_connection_failure_only_affects_its_sensor(
     assert from_state.state == "Track 3 - Blankenberge"
 
     mock_nmbs_client.get_connections.side_effect = connection_side_effect
-    mock_nmbs_client.get_connections.return_value = None
     freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -596,7 +600,7 @@ async def test_connection_sensor_unavailable_when_api_fails(
     assert state is not None
     assert state.state == "20"
 
-    mock_nmbs_client.get_connections.return_value = None
+    mock_nmbs_client.get_connections.side_effect = PyRailError("API unavailable")
     freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -604,6 +608,29 @@ async def test_connection_sensor_unavailable_when_api_fails(
     state = hass.states.get(connection_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@freeze_time(FROZEN_TIME)
+async def test_connection_sensor_keeps_data_when_api_is_not_modified(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the connection sensor keeps data when the API returns 304."""
+    await _setup_entry(hass, mock_config_entry)
+    connection_id = _get_entity_id(entity_registry, CONNECTION_UNIQUE_ID)
+
+    mock_nmbs_client.get_connections.return_value = None
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(connection_id)
+    assert state is not None
+    assert state.state == "20"
+    assert state.attributes["departure_minutes"] == 10
 
 
 async def test_departure_minutes_decrease_with_unchanged_data(

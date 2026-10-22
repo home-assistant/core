@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    CONF_EXCLUDE,
     SERVICE_RELOAD,
 )
 from homeassistant.core import (
@@ -54,7 +55,7 @@ SCHEMA_RELOAD_CONFIG_ENTRY = probatio.All(
             **cv.ENTITY_SERVICE_FIELDS,
         },
     ),
-    probatio.AtLeastOne(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
+    probatio.AtLeastOne(ATTR_ENTRY_ID, *cv.TARGET_ID_KEYS),
 )
 SCHEMA_RESTART = probatio.Schema(
     {probatio.Optional(ATTR_SAFE_MODE, default=False): bool}
@@ -314,7 +315,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     service_schema = probatio.Schema(
-        {ATTR_ENTITY_ID: cv.entity_ids}, extra=probatio.ALLOW_EXTRA
+        {
+            ATTR_ENTITY_ID: cv.entity_ids,
+            probatio.Optional(CONF_EXCLUDE): cv.ENTITY_SERVICE_EXCLUDE_SCHEMA,
+        },
+        extra=probatio.ALLOW_EXTRA,
     )
 
     hass.services.async_register(

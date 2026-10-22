@@ -1,6 +1,6 @@
 """The NMBS component."""
 
-from pyrail import iRail
+from pyrail import IRail, PyRailError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -16,14 +16,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup_entry(hass: HomeAssistant, entry: NMBSConfigEntry) -> None:
     """Set up NMBS from a config entry."""
 
-    # The station list is shared by all entries, so fetch and cache it only
-    # once. Raise ConfigEntryNotReady if the API is unavailable so setup is
-    # retried instead of failing permanently.
     if not hass.data.get(NMBS_STATION_DATA):
-        api_client = iRail(session=async_get_clientsession(hass))
+        api_client = IRail(session=async_get_clientsession(hass))
         try:
             station_response = await api_client.get_stations()
-        except (TimeoutError, ValueError, LookupError) as err:
+        except (PyRailError, TimeoutError, ValueError, LookupError) as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="station_list_unavailable",

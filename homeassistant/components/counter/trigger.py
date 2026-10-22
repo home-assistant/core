@@ -11,8 +11,7 @@ from homeassistant.helpers.trigger import (
     Trigger,
 )
 
-from . import DOMAIN
-from .const import CounterEntityStateAttribute
+from .const import DOMAIN, CounterEntityStateAttribute
 
 
 def _is_integer_state(state: State) -> bool:

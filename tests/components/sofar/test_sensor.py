@@ -35,9 +35,18 @@ from . import (
     MOCK_HYBRID_SERIAL,
     MOCK_MODEL,
     MOCK_SERIAL,
+    deny_charge_cutoff,
+    refuse_battery_config_mask,
     seed_hybrid_inverter,
     seed_pv_inverter,
 )
+
+# Values the app shows, worked out from other battery_config fields.
+DERIVED_KEYS = {
+    "on_grid_discharge_cutoff_soc",
+    "off_grid_discharge_cutoff_soc",
+    "off_grid_recovery_soc",
+}
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -78,7 +87,7 @@ def test_sensor_description_components_are_real() -> None:
     for description in (*SENSOR_DESCRIPTIONS, *TOTAL_SENSOR_DESCRIPTIONS):
         component = getattr(inverter, description.component, None)
         assert component is not None, f"unknown component {description.component!r}"
-        assert hasattr(component, description.key), (
+        assert description.key in DERIVED_KEYS or hasattr(component, description.key), (
             f"{description.component}.{description.key} does not exist"
         )
 
@@ -112,7 +121,7 @@ async def test_sensor_entities_created_and_state(
             MOCK_HYBRID_SERIAL,
             MOCK_HYBRID_MODEL,
             seed_hybrid_inverter,
-            145,
+            149,
             44,
             id="hybrid",
         ),
@@ -333,6 +342,7 @@ async def test_sensor_availability_on_component_failure(
     [
         pytest.param(description, id=description.key)
         for description in SENSOR_DESCRIPTIONS
+        if description.key not in DERIVED_KEYS
     ],
 )
 async def test_value_fn_reads_the_field_its_key_names(
@@ -344,6 +354,114 @@ async def test_value_fn_reads_the_field_its_key_names(
     sentinel = object()
     with patch.dict(component._values, {description.key: sentinel}):
         assert description.value_fn(device) is sentinel
+
+
+@pytest.mark.parametrize(
+    ("key", "values", "expected"),
+    [
+        pytest.param(
+            "on_grid_discharge_cutoff_soc",
+            {"bat_config_depth_of_discharge": 73},
+            27,
+            id="on_grid",
+        ),
+        pytest.param(
+            "on_grid_discharge_cutoff_soc",
+            {"bat_config_depth_of_discharge": None},
+            None,
+            id="on_grid_unread",
+        ),
+        pytest.param(
+            "off_grid_discharge_cutoff_soc",
+            {"bat_config_end_of_discharge": 90},
+            10,
+            id="off_grid",
+        ),
+        pytest.param(
+            "off_grid_discharge_cutoff_soc",
+            {"bat_config_end_of_discharge": None},
+            None,
+            id="off_grid_unread",
+        ),
+        pytest.param(
+            "off_grid_recovery_soc",
+            {"bat_config_end_of_discharge": 90, "bat_config_eps_buffer": 5},
+            15,
+            id="recovery",
+        ),
+        pytest.param(
+            "off_grid_recovery_soc",
+            {"bat_config_end_of_discharge": None, "bat_config_eps_buffer": 5},
+            None,
+            id="recovery_end_of_discharge_unread",
+        ),
+        pytest.param(
+            "off_grid_recovery_soc",
+            {"bat_config_end_of_discharge": 90, "bat_config_eps_buffer": None},
+            None,
+            id="recovery_eps_buffer_unread",
+        ),
+    ],
+)
+async def test_derived_cutoff_soc(
+    init_integration: MockConfigEntry,
+    key: str,
+    values: dict[str, int | None],
+    expected: int | None,
+) -> None:
+    """Test cut-off sensors show what the SofarCloud app shows."""
+    device = init_integration.runtime_data.readings.device
+    with patch.dict(device.battery_config._values, values):
+        assert (
+            next(d for d in SENSOR_DESCRIPTIONS if d.key == key).value_fn(device)
+            == expected
+        )
+
+
+@pytest.mark.parametrize(
+    "hide_charge_cutoff",
+    [
+        pytest.param(deny_charge_cutoff, id="mask_denies"),
+        pytest.param(refuse_battery_config_mask, id="no_mask"),
+    ],
+)
+async def test_charge_cutoff_needs_a_declaring_mask(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hide_charge_cutoff: Callable[[MockModbusUnit], None],
+) -> None:
+    """Test a hybrid gets no charge cut-off unless its mask declares it."""
+    connection = MockModbusConnection()
+    unit = connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    hide_charge_cutoff(unit)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_ENTRY_DATA,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_bat_config_charge_cutoff_soc"
+        )
+        is None
+    )
+    # The rest of the battery config does not need the mask.
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_on_grid_discharge_cutoff_soc"
+        )
+        is not None
+    )
 
 
 @pytest.mark.parametrize(

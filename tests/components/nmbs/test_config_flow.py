@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 from mashumaro.exceptions import MissingField
+from pyrail import ApiUnavailableError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -165,6 +166,7 @@ async def test_unavailable_api(
 @pytest.mark.parametrize(
     "stations_side_effect",
     [
+        pytest.param(ApiUnavailableError("API unavailable"), id="api_unavailable"),
         pytest.param(TimeoutError, id="timeout"),
         pytest.param(ValueError("Unexpected response schema"), id="decoding_error"),
         pytest.param(MissingField("name", "str", "StationDetails"), id="missing_field"),
@@ -184,3 +186,11 @@ async def test_unavailable_api_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "api_unavailable"
+
+    mock_nmbs_client.get_stations.side_effect = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM

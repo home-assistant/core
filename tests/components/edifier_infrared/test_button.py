@@ -1,5 +1,6 @@
 """Tests for the Edifier Infrared button platform."""
 
+from infrared_protocols.codes.edifier.models import EdifierCommandSet
 from infrared_protocols.codes.edifier.r1700bts import EdifierR1700BTsCode
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -11,6 +12,8 @@ from pytest_homeassistant.components.infrared.common import MockInfraredEmitterE
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.edifier_infrared.button import COMMAND_SET_BUTTONS
+from homeassistant.components.edifier_infrared.const import SUPPORTED_COMMAND_SETS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -72,3 +75,11 @@ async def test_button_availability_follows_ir_entity(
     await assert_availability_follows_source_entity(
         hass, BLUETOOTH_BUTTON_ENTITY_ID, [EMITTER_ENTITY_ID]
     )
+
+
+def test_command_sets_match_supported_command_sets() -> None:
+    """Test that the button platform implements every supported command set."""
+    # R1280T only has volume and mute codes, which are covered by the media player
+    assert set(COMMAND_SET_BUTTONS) == set(SUPPORTED_COMMAND_SETS) - {
+        EdifierCommandSet.R1280T
+    }

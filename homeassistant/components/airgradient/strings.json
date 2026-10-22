@@ -45,6 +45,13 @@
       }
     },
     "select": {
+      "altitude_unit": {
+        "name": "Altitude unit",
+        "state": {
+          "ft": "Feet",
+          "m": "Meters"
+        }
+      },
       "back_led_brightness": {
         "name": "Back LED brightness",
         "state": {

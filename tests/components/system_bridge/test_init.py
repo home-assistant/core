@@ -71,7 +71,7 @@ async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.system_bridge.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -164,7 +164,7 @@ async def test_migration_minor_future_version(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.system_bridge.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)

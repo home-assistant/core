@@ -1,9 +1,16 @@
 """Tests for ESPHome websocket API."""
 
+import asyncio
 from typing import Any
 
-from aioesphomeapi import APIClient
-from aioesphomeapi.model import SerialProxyInfo, SerialProxyPortType, SubDeviceInfo
+from aioesphomeapi import (
+    APIClient,
+    APIVersion,
+    DeviceCapabilities,
+    DeviceInfo,
+    SendspinFeature,
+)
+from aioesphomeapi.model import SerialProxyPortType, SubDeviceInfo
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
@@ -12,6 +19,7 @@ from homeassistant.components.esphome.const import CONF_NOISE_PSK, DOMAIN
 from homeassistant.components.esphome.serial_proxy import build_url
 from homeassistant.components.esphome.websocket_api import DEVICE_ID, ENTRY_ID, TYPE
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntryDisabler
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -61,20 +69,20 @@ async def test_get_device_capabilities(
     mock_esphome_device: MockESPHomeDeviceType,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test capabilities from cached DeviceInfo."""
+    """Test the cached device capabilities."""
     mock_client.connected_address = "192.168.1.2"
     device = await mock_esphome_device(
         mock_client=mock_client,
-        device_info={
-            "bluetooth_proxy_feature_flags": 1,
-            "zwave_proxy_feature_flags": 1,
-            "zwave_home_id": 1234567890,
+        device_capabilities={
+            "bluetooth_proxy": {"feature_flags": 1},
+            "zwave_proxy": {"feature_flags": 1, "home_id": 1234567890},
             "serial_proxies": [
-                SerialProxyInfo(name="uart0", port_type=SerialProxyPortType.TTL),
-                SerialProxyInfo(name="amp", port_type=SerialProxyPortType.RS232),
-                SerialProxyInfo(name="bus", port_type=SerialProxyPortType.RS485),
-                SerialProxyInfo(name="unknown", port_type=None),
+                {"name": "uart0", "port_type": SerialProxyPortType.TTL},
+                {"name": "amp", "port_type": SerialProxyPortType.RS232},
+                {"name": "bus", "port_type": SerialProxyPortType.RS485},
+                {"name": "unknown", "port_type": None},
             ],
+            "sendspin": {"feature_flags": SendspinFeature.PAIRING_TOKEN},
         },
     )
 
@@ -86,6 +94,7 @@ async def test_get_device_capabilities(
         }
     )
 
+    mock_client.device_capabilities_compat.assert_awaited_once_with(device.device_info)
     response = await websocket_client.receive_json()
     assert response["success"] is True
     assert response["result"] == {
@@ -99,24 +108,25 @@ async def test_get_device_capabilities(
             {
                 "name": "uart0",
                 "port_type": "TTL",
-                "url": str(build_url(device.entry.entry_id, "uart0")),
+                "url": str(build_url(device.entry.entry_id, port_name="uart0")),
             },
             {
                 "name": "amp",
                 "port_type": "RS232",
-                "url": str(build_url(device.entry.entry_id, "amp")),
+                "url": str(build_url(device.entry.entry_id, port_name="amp")),
             },
             {
                 "name": "bus",
                 "port_type": "RS485",
-                "url": str(build_url(device.entry.entry_id, "bus")),
+                "url": str(build_url(device.entry.entry_id, port_name="bus")),
             },
             {
                 "name": "unknown",
                 "port_type": None,
-                "url": str(build_url(device.entry.entry_id, "unknown")),
+                "url": str(build_url(device.entry.entry_id, port_name="unknown")),
             },
         ],
+        "sendspin": {"supported": True},
     }
 
 
@@ -210,69 +220,136 @@ async def test_get_device_capabilities_unavailable(
     mock_esphome_device: MockESPHomeDeviceType,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test cached capabilities are returned when the device is unavailable."""
-    mock_client.connected_address = "192.168.1.2"
+    """Test capabilities are kept while disconnected and fetched again on reconnect."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        device_info={
-            "bluetooth_proxy_feature_flags": 1,
-            "zwave_proxy_feature_flags": 1,
-            "zwave_home_id": 1234567890,
+        device_capabilities={
+            "bluetooth_proxy": {"feature_flags": 1},
+            "sendspin": {"feature_flags": SendspinFeature.PAIRING_TOKEN},
         },
     )
-    device.entry.runtime_data.available = False
-
-    websocket_client = await hass_ws_client()
-    await websocket_client.send_json_auto_id(
-        {
-            TYPE: "esphome/get_device_capabilities",
-            DEVICE_ID: _device_id_for_mac(device_registry, device.entry),
-        }
-    )
-
-    response = await websocket_client.receive_json()
-    assert response["success"] is True
-    assert response["result"] == {
-        "bluetooth_proxy": {"supported": True},
-        "zwave_proxy": {
-            "supported": True,
-            "home_id": 1234567890,
-            "config_entry_id": None,
-        },
-        "serial_proxies": [],
+    get_capabilities = {
+        TYPE: "esphome/get_device_capabilities",
+        DEVICE_ID: _device_id_for_mac(device_registry, device.entry),
     }
+    websocket_client = await hass_ws_client()
+
+    # Sendspin is only in the capabilities, not in the stored DeviceInfo
+    await device.mock_disconnect(False)
+    await websocket_client.send_json_auto_id(get_capabilities)
+    response = await websocket_client.receive_json()
+    assert response["result"]["bluetooth_proxy"] == {"supported": True}
+    assert response["result"]["sendspin"] == {"supported": True}
+
+    # A firmware update can change them while the device is away
+    mock_client.device_capabilities_compat.return_value = DeviceCapabilities()
+    await device.mock_connect()
+    await websocket_client.send_json_auto_id(get_capabilities)
+    response = await websocket_client.receive_json()
+    assert response["result"]["bluetooth_proxy"] == {"supported": False}
+    assert response["result"]["sendspin"] == {"supported": False}
 
 
-async def test_get_device_capabilities_no_device_info(
+@pytest.mark.parametrize(
+    ("stored_data", "expected"),
+    [
+        pytest.param(
+            {
+                "device_capabilities": {
+                    "zwave_proxy": {"feature_flags": 1, "home_id": 1234567890},
+                    "serial_proxies": [
+                        {"name": "uart0", "port_type": SerialProxyPortType.TTL}
+                    ],
+                    "sendspin": {"feature_flags": SendspinFeature.PAIRING_TOKEN},
+                }
+            },
+            {
+                "bluetooth_proxy": {"supported": False},
+                "zwave_proxy": {
+                    "supported": True,
+                    "home_id": 1234567890,
+                    "config_entry_id": None,
+                },
+                "serial_proxies": [
+                    {
+                        "name": "uart0",
+                        "port_type": "TTL",
+                        "url": "esphome-hass://esphome/restored_entry?port_name=uart0",
+                    }
+                ],
+                "sendspin": {"supported": True},
+            },
+            id="stored",
+        ),
+        pytest.param(
+            {},
+            {
+                "bluetooth_proxy": {"supported": False},
+                "zwave_proxy": {
+                    "supported": False,
+                    "home_id": 0,
+                    "config_entry_id": None,
+                },
+                "serial_proxies": [],
+                "sendspin": {"supported": False},
+            },
+            id="stored_before_capabilities",
+        ),
+    ],
+)
+async def test_get_device_capabilities_restored(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
     hass_ws_client: WebSocketGenerator,
+    stored_data: dict[str, Any],
+    expected: dict[str, Any],
 ) -> None:
-    """Test a useful empty payload when cached DeviceInfo is missing."""
-    device = await mock_esphome_device(mock_client=mock_client)
-    device.entry.runtime_data.device_info = None
+    """Test capabilities are restored from storage before the device connects."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="restored_entry",
+        unique_id="11:22:33:44:55:aa",
+        data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+    )
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")},
+    )
+    device_info = DeviceInfo(name="test", mac_address="11:22:33:44:55:AA")
+    storage_key = f"{DOMAIN}.{entry.entry_id}"
+    hass_storage[storage_key] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": storage_key,
+        "data": {
+            "device_info": device_info.to_dict(),
+            "api_version": APIVersion(1, 15).to_dict(),
+            **stored_data,
+        },
+    }
+    connect_event = asyncio.Event()
+
+    async def _blocked_connect() -> tuple[DeviceInfo, list[Any], list[Any]]:
+        await connect_event.wait()
+        return (device_info, [], [])
+
+    mock_client.device_info_and_list_entities = _blocked_connect
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     websocket_client = await hass_ws_client()
     await websocket_client.send_json_auto_id(
-        {
-            TYPE: "esphome/get_device_capabilities",
-            DEVICE_ID: _device_id_for_mac(device_registry, device.entry),
-        }
+        {TYPE: "esphome/get_device_capabilities", DEVICE_ID: device.id}
     )
 
     response = await websocket_client.receive_json()
     assert response["success"] is True
-    assert response["result"] == {
-        "bluetooth_proxy": {"supported": False},
-        "zwave_proxy": {
-            "supported": False,
-            "home_id": 0,
-            "config_entry_id": None,
-        },
-        "serial_proxies": [],
-    }
+    assert response["result"] == expected
+
+    connect_event.set()
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -331,10 +408,7 @@ async def test_get_device_capabilities_zwave_js_config_entry(
     mock_client.connected_address = "192.168.1.2"
     device = await mock_esphome_device(
         mock_client=mock_client,
-        device_info={
-            "zwave_proxy_feature_flags": 1,
-            "zwave_home_id": home_id,
-        },
+        device_capabilities={"zwave_proxy": {"feature_flags": 1, "home_id": home_id}},
     )
 
     websocket_client = await hass_ws_client()

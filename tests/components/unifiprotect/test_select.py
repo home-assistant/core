@@ -16,6 +16,7 @@ from uiprotect.data import (
     IRLEDMode,
     Light,
     LightModeEnableType,
+    LightModePreset,
     LightModeType,
     Liveview,
     ModelType,
@@ -76,6 +77,8 @@ from .utils import (
     setup_public_camera,
     setup_public_light,
 )
+
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
 
 
 async def test_select_camera_remove(
@@ -472,7 +475,9 @@ async def test_select_set_option_light_motion(
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
-    with patch.object(public, "set_light_mode", new_callable=AsyncMock) as mock_method:
+    with patch.object(
+        public, "set_light_mode_preset", new_callable=AsyncMock
+    ) as mock_method:
         await hass.services.async_call(
             "select",
             "select_option",
@@ -480,7 +485,7 @@ async def test_select_set_option_light_motion(
             blocking=True,
         )
 
-        mock_method.assert_called_once_with(LightModeType.MANUAL, enable_at=None)
+        mock_method.assert_called_once_with(LightModePreset.OFF)
 
 
 async def test_select_light_motion_public_value(
@@ -1365,8 +1370,8 @@ def _make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
             "light_motion",
             "when_dark",
             "motion",
-            "set_light_mode",
-            ((LightModeType.MOTION,), {"enable_at": LightModeEnableType.ALWAYS}),
+            "set_light_mode_preset",
+            ((LightModePreset.MOTION,), {}),
             id="light",
         ),
     ],

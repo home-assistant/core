@@ -67,7 +67,7 @@ from .const import (
 from .coordinator import async_create_client, model_alias
 
 if TYPE_CHECKING:
-    from . import AnthropicConfigEntry
+    from .coordinator import AnthropicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -400,6 +400,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage additional options."""
+        coordinator = self._get_entry().runtime_data
+        if user_input is None:
+            await coordinator.async_refresh()
+
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
@@ -425,7 +429,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             self.options.update(user_input)
 
-            coordinator = self._get_entry().runtime_data
             self.model_info, status = coordinator.get_model_info(
                 self.options[CONF_CHAT_MODEL]
             )
@@ -627,6 +630,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             for model_info in coordinator.data or []
             if coordinator.get_model_info(model_alias(model_info.id))[0].lifecycle
             != "retired"
+            and (
+                self._subentry_type != "ai_task_data"
+                or (
+                    model_info.capabilities
+                    and model_info.capabilities.structured_outputs.supported
+                )
+            )
         ]
 
     async def _get_location_data(self) -> dict[str, str]:

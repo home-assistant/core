@@ -21,7 +21,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.profiler.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

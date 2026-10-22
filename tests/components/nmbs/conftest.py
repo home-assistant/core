@@ -26,7 +26,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.nmbs.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -36,15 +36,15 @@ def mock_nmbs_client() -> Generator[AsyncMock]:
     """Mock a NMBS client."""
     with (
         patch(
-            "homeassistant.components.nmbs.iRail",
+            "homeassistant.components.nmbs.IRail",
             autospec=True,
         ) as mock_client,
         patch(
-            "homeassistant.components.nmbs.config_flow.iRail",
+            "homeassistant.components.nmbs.config_flow.IRail",
             new=mock_client,
         ),
         patch(
-            "homeassistant.components.nmbs.coordinator.iRail",
+            "homeassistant.components.nmbs.coordinator.IRail",
             new=mock_client,
         ),
     ):
@@ -63,7 +63,7 @@ def mock_nmbs_client() -> Generator[AsyncMock]:
                 load_json_object_fixture("liveboard_zuid.json", DOMAIN)
             ),
         }
-        client.get_liveboard.side_effect = lambda station: liveboards[station]
+        client.get_liveboard.side_effect = lambda station_id: liveboards[station_id]
         yield client
 
 

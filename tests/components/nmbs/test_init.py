@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from mashumaro.exceptions import MissingField
+from pyrail import ApiUnavailableError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -82,6 +83,7 @@ async def test_setup_entry_api_timeout(
 @pytest.mark.parametrize(
     "stations_side_effect",
     [
+        pytest.param(ApiUnavailableError("API unavailable"), id="api_unavailable"),
         pytest.param(ValueError("Unexpected response schema"), id="decoding_error"),
         pytest.param(MissingField("name", "str", "StationDetails"), id="missing_field"),
     ],
