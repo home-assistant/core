@@ -10,6 +10,12 @@
       "message": "Username \"{new_username}\" is not normalized. Please make sure the username is lowercase and does not contain any whitespace."
     }
   },
+  "issues": {
+    "deprecated_long_lived_access_token_without_step_up": {
+      "description": "\"{client}\" created a long-lived access token without a recent sign-in or a confirmation of your identity. From Home Assistant 2027.5, creating a long-lived access token needs one of them.\n\nIf a tool created this token, check if it supports signing in right before creating it. In **Profile** > **Security**, Home Assistant asks you to confirm your identity when needed.",
+      "title": "Creating long-lived access tokens will need a recent sign-in"
+    }
+  },
   "mfa_setup": {
     "notify": {
       "abort": {

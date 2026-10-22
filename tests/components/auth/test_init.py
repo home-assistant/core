@@ -25,6 +25,7 @@ from homeassistant.auth.providers import homeassistant as prov_ha
 from homeassistant.components import auth
 from homeassistant.components.auth import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -555,6 +556,48 @@ async def test_ws_long_lived_access_token(
     assert refresh_token.client_id is None
     assert refresh_token.client_name == "GPS Logger"
     assert refresh_token.client_icon is None
+
+
+async def test_ws_long_lived_access_token_without_step_up_is_deprecated(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test creating a token without a step up still works, raising a repair issue."""
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
+    session = hass.auth.async_validate_access_token(hass_access_token)
+    ws_client = await hass_ws_client(hass, hass_access_token)
+    issue_id = f"deprecated_long_lived_access_token_without_step_up_{session.id}"
+
+    # Right after signing in, as clients usually do, nothing is deprecated.
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "auth/long_lived_access_token",
+            "client_name": "Now",
+            "lifespan": 1,
+        }
+    )
+    assert (await ws_client.receive_json())["success"]
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    freezer.tick(STEP_UP_VALIDITY)
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "auth/long_lived_access_token",
+            "client_name": "Later",
+            "lifespan": 1,
+        }
+    )
+    assert (await ws_client.receive_json())["success"]
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.5.0"
+    assert issue.translation_placeholders == {"client": CLIENT_ID}
 
 
 async def test_ws_refresh_tokens(

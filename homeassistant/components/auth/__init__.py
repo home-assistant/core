@@ -155,7 +155,7 @@ from homeassistant.components.http.auth_util import async_user_not_allowed_do_au
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -650,6 +650,9 @@ async def websocket_create_long_lived_access_token(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Create or a long-lived access token."""
+    if not hass.auth.async_has_step_up(connection.refresh_token_id):
+        _async_deprecated_long_lived_access_token_without_step_up(hass, connection)
+
     refresh_token = await hass.auth.async_create_refresh_token(
         connection.user,
         client_name=msg["client_name"],
@@ -665,6 +668,29 @@ async def websocket_create_long_lived_access_token(
         return
 
     connection.send_result(msg["id"], access_token)
+
+
+@callback
+def _async_deprecated_long_lived_access_token_without_step_up(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection
+) -> None:
+    """Raise a repair issue for a session creating a token without a step up."""
+    session = hass.auth.async_get_refresh_token(connection.refresh_token_id or "")
+    # Deprecated in 2026.11, creating a token will need a step up.
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_long_lived_access_token_without_step_up_{connection.refresh_token_id}",
+        breaks_in_ha_version="2027.5.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_long_lived_access_token_without_step_up",
+        translation_placeholders={
+            "client": (session.client_name or session.client_id or "")
+            if session
+            else ""
+        },
+    )
 
 
 STEP_UP_HANDLER_SCHEMA = probatio.All(
