@@ -355,7 +355,7 @@ def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> N
 
 
 def _async_process_entry_method_result(
-    domain: str, method: str, result: object
+    domain: str, method: str, result: bool | None
 ) -> None:
     """Raise if the return value of a config entry method means it failed.
 
