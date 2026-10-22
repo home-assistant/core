@@ -1,0 +1,19 @@
+{
+  "domain": "busy",
+  "name": "BUSY Bar",
+  "categories": ["sensors"],
+  "codeowners": ["@truetug", "@gornekich"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/busy",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["busylib"],
+  "quality_scale": "bronze",
+  "requirements": ["busylib[aiohttp]==2.6.1"],
+  "zeroconf": [
+    {
+      "name": "busybar-*",
+      "type": "_http._tcp.local."
+    }
+  ]
+}
