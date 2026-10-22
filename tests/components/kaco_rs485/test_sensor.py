@@ -4,22 +4,22 @@ from freezegun.api import FrozenDateTimeFactory
 from kaco_rs485 import BusError
 from kaco_rs485.testing import POWADOR_6400XI, CannedInverter, FakeBus
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    snapshot_platform,
-)
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.kaco_rs485.const import DOMAIN
-from homeassistant.components.kaco_rs485.coordinator import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-# The library calls an inverter asleep after three consecutive misses.
-CYCLES_UNTIL_DARK = 4
+from . import CYCLES_UNTIL_DARK, run_cycles
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Only set up the sensor platform."""
+    return [Platform.SENSOR]
 
 
 def _entity_id(
@@ -31,16 +31,6 @@ def _entity_id(
     )
     assert entity_id is not None, f"address {address} {key} was not created"
     return entity_id
-
-
-async def _run_cycles(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, count: int
-) -> None:
-    """Let the coordinator poll `count` times."""
-    for _ in range(count):
-        freezer.tick(SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -67,7 +57,7 @@ async def test_an_inverter_that_goes_dark_becomes_unavailable(
     still_lit = _entity_id(entity_registry, entry_id, 4, "ac_power")
 
     mock_bus.silence(1)
-    await _run_cycles(hass, freezer, CYCLES_UNTIL_DARK)
+    await run_cycles(hass, freezer, CYCLES_UNTIL_DARK)
 
     assert hass.states.get(dark).state == STATE_UNAVAILABLE
     assert hass.states.get(still_lit).state == "681"
@@ -85,11 +75,11 @@ async def test_an_inverter_that_returns_reports_again(
     ac_power = _entity_id(entity_registry, entry_id, 1, "ac_power")
 
     mock_bus.silence(1)
-    await _run_cycles(hass, freezer, CYCLES_UNTIL_DARK)
+    await run_cycles(hass, freezer, CYCLES_UNTIL_DARK)
     assert hass.states.get(ac_power).state == STATE_UNAVAILABLE
 
     mock_bus.wake(1, POWADOR_6400XI)
-    await _run_cycles(hass, freezer, 2)
+    await run_cycles(hass, freezer, 2)
 
     assert hass.states.get(ac_power).state == "635"
 
@@ -116,7 +106,7 @@ async def test_a_half_answered_cycle_keeps_the_last_counters(
             replies={k: v for k, v in POWADOR_6400XI.replies.items() if k != "3"},
         ),
     )
-    await _run_cycles(hass, freezer, 1)
+    await run_cycles(hass, freezer, 1)
 
     assert hass.states.get(total_yield).state == "112706"
     assert hass.states.get(daily_peak_power).state == "4899"
@@ -137,16 +127,16 @@ async def test_a_lost_bus_is_reopened(
     ac_power = _entity_id(entity_registry, init_integration.entry_id, 1, "ac_power")
 
     mock_bus.request_error = BusError("connection closed")
-    await _run_cycles(hass, freezer, 1)
+    await run_cycles(hass, freezer, 1)
     assert hass.states.get(ac_power).state == STATE_UNAVAILABLE
     assert not mock_bus.opened
 
     mock_bus.open_error = BusError("could not open /dev/ttyUSB0")
-    await _run_cycles(hass, freezer, 1)
+    await run_cycles(hass, freezer, 1)
     assert hass.states.get(ac_power).state == STATE_UNAVAILABLE
 
     mock_bus.request_error = None
     mock_bus.open_error = None
-    await _run_cycles(hass, freezer, 1)
+    await run_cycles(hass, freezer, 1)
     assert mock_bus.opened
     assert hass.states.get(ac_power).state == "635"
