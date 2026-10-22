@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock
 from devolo_plc_api.exceptions.device import DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_network.const import SHORT_UPDATE_INTERVAL
@@ -19,9 +21,6 @@ from homeassistant.util import dt as dt_util
 from . import configure_integration
 from .const import GUEST_WIFI_CHANGED
 from .mock import MockDevice
-
-from tests.common import async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("mock_device")

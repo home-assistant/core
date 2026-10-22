@@ -1,11 +1,14 @@
 """Tests for the Synology DSM backup agent."""
 
+from collections.abc import AsyncIterator
 from io import StringIO
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from synology_dsm.api.file_station.models import SynoFileFile, SynoFileSharedFolder
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
@@ -18,6 +21,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     Folder,
 )
+from homeassistant.components.synology_dsm.backup import async_get_backup_agents
 from homeassistant.components.synology_dsm.const import (
     CONF_BACKUP_PATH,
     CONF_BACKUP_SHARE,
@@ -37,9 +41,6 @@ from homeassistant.util.aiohttp import MockStreamReader, MockStreamReaderChunked
 
 from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 BASE_FILENAME = "Automatic_backup_2025.2.0.dev0_2025-01-09_20.14_35457323"
 
@@ -615,6 +616,52 @@ async def test_agents_upload(
     assert mock.call_args_list[0].kwargs["path"] == "/ha_backup/my_backup_path"
     assert mock.call_args_list[1].kwargs["filename"] == f"{base_filename}_meta.json"
     assert mock.call_args_list[1].kwargs["path"] == "/ha_backup/my_backup_path"
+
+
+async def test_agents_upload_progress(
+    hass: HomeAssistant,
+    setup_dsm_with_filestation: MagicMock,
+) -> None:
+    """Test that upload progress is reported as the backup stream is read."""
+
+    async def backup_stream() -> AsyncIterator[bytes]:
+        yield b"abc"
+        yield b"defgh"
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        return backup_stream()
+
+    backup = AgentBackup(
+        addons=[],
+        backup_id="test-backup",
+        database_included=True,
+        date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
+        name="Test",
+        protected=False,
+        size=8,
+    )
+    on_progress = Mock()
+    (agent,) = await async_get_backup_agents(hass)
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=backup,
+        on_progress=on_progress,
+    )
+
+    # The library reads the stream while sending it
+    source = setup_dsm_with_filestation.file.upload_file.call_args_list[0].kwargs[
+        "source"
+    ]
+    assert [chunk async for chunk in source] == [b"abc", b"defgh"]
+    assert on_progress.call_args_list == [
+        call(bytes_uploaded=3),
+        call(bytes_uploaded=8),
+    ]
 
 
 async def test_agents_upload_error(

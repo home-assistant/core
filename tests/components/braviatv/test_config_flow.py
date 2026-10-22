@@ -9,6 +9,7 @@ from pybravia import (
     BraviaNotSupported,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.braviatv.const import (
     CONF_NICKNAME,
@@ -28,8 +29,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 BRAVIA_SYSTEM_INFO = {
     "product": "TV",

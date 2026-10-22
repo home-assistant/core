@@ -151,11 +151,15 @@ def async_entry_has_scopes(entry: GoogleConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.store.async_flush()
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Handle removal of a local storage."""
-    store = LocalCalendarStore(hass, entry.entry_id)
+    if hasattr(entry, "runtime_data"):
+        store = entry.runtime_data.store
+    else:
+        store = LocalCalendarStore(hass, entry.entry_id)
     await store.async_remove()
 
 
