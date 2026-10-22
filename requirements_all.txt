@@ -532,7 +532,7 @@ airpatrol==0.1.0
 airthings-ble==1.3.1
 
 # homeassistant.components.airthings
-airthings-cloud==0.2.0
+airthings-cloud==0.3.1
 
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
