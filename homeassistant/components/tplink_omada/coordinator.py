@@ -221,7 +221,13 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
     @override
     async def poll_update(self) -> dict[str, OmadaListDevice]:
         """Poll the site's current registered Omada devices."""
-        devices = {d.mac: d for d in await self.omada_client.get_devices()}
+        try:
+            devices = {d.mac: d for d in await self.omada_client.get_devices()}
+        except OmadaClientException:
+            # A failed poll says nothing about the devices, so the empty
+            # counter must not accumulate across it.
+            self.consecutive_empty_updates = 0
+            raise
         if devices:
             self.consecutive_empty_updates = 0
         else:

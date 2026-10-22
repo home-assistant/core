@@ -560,6 +560,45 @@ async def test_cleanup_devices_empty_count_resets_on_data(
     )
 
 
+async def test_cleanup_devices_empty_count_resets_on_failure(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed poll stops empty responses from accumulating."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    controller = hass.config_entries.async_get_entry(
+        mock_config_entry.entry_id
+    ).runtime_data
+
+    switch_mac = "54-AF-97-00-00-01"
+    site_client = mock_omada_client.get_site_client.return_value
+
+    site_client.get_devices = AsyncMock(return_value=[])
+    for _ in range(EMPTY_DEVICE_LIMIT - 1):
+        await _async_poll_devices(hass, freezer)
+        await async_cleanup_devices(hass, controller)
+
+    site_client.get_devices = AsyncMock(side_effect=OmadaClientException)
+    await _async_poll_devices(hass, freezer)
+    await async_cleanup_devices(hass, controller)
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, switch_mac), mock_config_entry.entry_id
+    )
+
+    site_client.get_devices = AsyncMock(return_value=[])
+    await _async_poll_devices(hass, freezer)
+    await async_cleanup_devices(hass, controller)
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, switch_mac), mock_config_entry.entry_id
+    )
+
+
 async def test_cleanup_skipped_when_polling_disabled(
     hass: HomeAssistant,
     mock_omada_clients_only_client: MagicMock,
