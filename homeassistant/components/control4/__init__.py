@@ -103,16 +103,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     director_model = model.upper()
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, controller_unique_id)},
-            connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
-            manufacturer="Control4",
-            name=controller_unique_id,
-            model=director_model,
-            sw_version=director_sw_version,
-        ),
+        identifiers={(DOMAIN, controller_unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
+        manufacturer="Control4",
+        name=controller_unique_id,
+        model=director_model,
+        sw_version=director_sw_version,
     )
 
     # Store all items found on controller for platforms to use

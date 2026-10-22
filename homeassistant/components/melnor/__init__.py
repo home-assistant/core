@@ -60,15 +60,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelnorConfigEntry) -> No
 
     # Register the parent device up front so zone entities can deterministically
     # resolve its via_device_id, regardless of platform setup order.
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, device.mac)},
-            connections={(CONNECTION_BLUETOOTH, device.mac)},
-            manufacturer="Melnor",
-            model=device.model,
-            name=device.name,
-        ),
+        identifiers={(DOMAIN, device.mac)},
+        connections={(CONNECTION_BLUETOOTH, device.mac)},
+        manufacturer="Melnor",
+        model=device.model,
+        name=device.name,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
