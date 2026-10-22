@@ -6,7 +6,8 @@ import threading
 import time
 from unittest.mock import MagicMock, patch
 
-from openaq import NotAuthorizedError, ServerError
+from openaq import ApiKeyMissingError, ForbiddenError, NotAuthorizedError, ServerError
+import pytest
 
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryDataWithId
@@ -46,19 +47,28 @@ async def test_setup_retry_on_first_refresh_failure(
     mock_openaq_client.close.assert_called_once()
 
 
-async def test_setup_retries_on_first_refresh_auth_failure(
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(ApiKeyMissingError("Missing API key"), id="missing-key"),
+        pytest.param(ForbiddenError("Forbidden"), id="forbidden"),
+        pytest.param(NotAuthorizedError("Invalid API key"), id="unauthorized"),
+    ],
+)
+@pytest.mark.parametrize("endpoint", ["get", "latest", "sensors"])
+async def test_setup_stops_on_first_refresh_auth_failure(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    endpoint: str,
 ) -> None:
-    """Test setup retries when first coordinator refresh has an auth error."""
-    mock_openaq_client.locations.latest.side_effect = NotAuthorizedError(
-        "Invalid API key"
-    )
+    """Test invalid credentials stop setup instead of retrying."""
+    getattr(mock_openaq_client.locations, endpoint).side_effect = exception
 
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     mock_openaq_client.close.assert_called_once()
 
 

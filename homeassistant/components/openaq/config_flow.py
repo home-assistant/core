@@ -1,12 +1,11 @@
 """Config flow for the OpenAQ integration."""
 
-from collections.abc import Sequence
 from dataclasses import dataclass
 from math import inf
 from typing import Any, override
 
 from openaq.core.responses import Location
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -40,12 +39,11 @@ from .const import (
     OPENAQ_API_EXCEPTIONS,
     OPENAQ_AUTH_EXCEPTIONS,
     OPENAQ_RATE_LIMIT_EXCEPTIONS,
-    PARAMETER_DEVICE_CLASSES,
     SUBENTRY_TYPE_LOCATION,
 )
-from .coordinator import create_openaq_client, normalize_parameter
+from .coordinator import build_sensor_metadata, create_openaq_client
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
 LOCATION_FETCH_LIMIT = 100
 LOCATION_SEARCH_RADII = (5000, 10000, MAX_RADIUS)
 MAX_LOCATION_OPTIONS = 10
@@ -128,11 +126,7 @@ def _search_radii(max_radius: int) -> tuple[int, ...]:
 
 def _supported_parameters(location: Location) -> tuple[str, ...]:
     """Return supported sensor parameters for an OpenAQ location."""
-    parameters: set[str] = set()
-    for sensor in location.sensors:
-        parameter_name = normalize_parameter(sensor.parameter)
-        if parameter_name in PARAMETER_DEVICE_CLASSES:
-            parameters.add(parameter_name)
+    _, parameters = build_sensor_metadata(location.sensors)
     return tuple(sorted(parameters))
 
 
@@ -235,22 +229,17 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                 ),
             )
             try:
-                locations: dict[int, OpenAQLocationFlowData] = {}
-                for result_locations in await self.hass.async_add_executor_job(
+                locations = await self.hass.async_add_executor_job(
                     _search_locations,
                     self._get_entry().data[CONF_API_KEY],
                     coordinates,
                     _search_radii(max_radius),
-                ):
-                    for result_location in result_locations:
-                        location_data = _location_from_result(result_location)
-                        if location_data is None or _is_location_configured(
-                            self.hass, location_data.location_id
-                        ):
-                            continue
-                        locations.setdefault(location_data.location_id, location_data)
-                    if len(locations) >= MAX_LOCATION_OPTIONS:
-                        break
+                    {
+                        subentry.unique_id
+                        for entry in self.hass.config_entries.async_entries(DOMAIN)
+                        for subentry in entry.subentries.values()
+                    },
+                )
             except OPENAQ_AUTH_EXCEPTIONS:
                 errors["base"] = "invalid_auth"
             except OPENAQ_RATE_LIMIT_EXCEPTIONS:
@@ -274,9 +263,9 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_LOCATION): LocationSelector(
+                        probatio.Required(CONF_LOCATION): LocationSelector(
                             LocationSelectorConfig(radius=True)
                         ),
                     }
@@ -309,9 +298,9 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="select",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_LOCATION_ID): SelectSelector(
+                    probatio.Required(CONF_LOCATION_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(
@@ -343,15 +332,35 @@ def _search_locations(
     api_key: str,
     coordinates: tuple[float, float],
     radii: tuple[int, ...],
-) -> list[Sequence[Location]]:
-    """Search all requested radii with a temporary OpenAQ client."""
+    configured_ids: set[str | None],
+) -> dict[int, OpenAQLocationFlowData]:
+    """Expand the search until enough useful locations have been found."""
     client = create_openaq_client(api_key)
     try:
-        return [
-            client.locations.list(
-                coordinates=coordinates, radius=radius, limit=LOCATION_FETCH_LIMIT
-            ).results
-            for radius in radii
-        ]
+        locations: dict[int, OpenAQLocationFlowData] = {}
+        for radius in radii:
+            page = 1
+            # API pages are not ordered by distance; finish the radius before ranking.
+            while True:
+                results = client.locations.list(
+                    coordinates=coordinates,
+                    radius=radius,
+                    limit=LOCATION_FETCH_LIMIT,
+                    page=page,
+                ).results
+                for location in results:
+                    location_data = _location_from_result(location)
+                    if (
+                        location_data is None
+                        or str(location_data.location_id) in configured_ids
+                    ):
+                        continue
+                    locations.setdefault(location_data.location_id, location_data)
+                if len(results) < LOCATION_FETCH_LIMIT:
+                    break
+                page += 1
+            if len(locations) >= MAX_LOCATION_OPTIONS:
+                break
+        return locations
     finally:
         client.close()

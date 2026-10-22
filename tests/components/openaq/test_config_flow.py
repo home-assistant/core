@@ -32,7 +32,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.selector import SelectOptionDict, SelectSelector
 
-from .conftest import API_KEY, make_location, make_response
+from .conftest import API_KEY, make_location, make_response, make_sensor_base
 
 from tests.common import MockConfigEntry
 
@@ -208,6 +208,7 @@ async def test_location_subentry_map_flow(
         coordinates=(35.1, -106.6),
         radius=5000,
         limit=LOCATION_FETCH_LIMIT,
+        page=1,
     )
     mock_openaq_client.close.assert_called_once()
 
@@ -349,8 +350,12 @@ async def test_location_subentry_map_flow_sorts_by_distance_before_sensor_count(
         ),
     ]
     assert mock_openaq_client.locations.list.call_args_list == [
-        call(coordinates=(35.1, -106.6), radius=5000, limit=LOCATION_FETCH_LIMIT),
-        call(coordinates=(35.1, -106.6), radius=10000, limit=LOCATION_FETCH_LIMIT),
+        call(
+            coordinates=(35.1, -106.6), radius=5000, limit=LOCATION_FETCH_LIMIT, page=1
+        ),
+        call(
+            coordinates=(35.1, -106.6), radius=10000, limit=LOCATION_FETCH_LIMIT, page=1
+        ),
     ]
 
 
@@ -429,7 +434,7 @@ async def test_location_subentry_map_flow_limits_to_top_ten_locations(
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test map search only shows the top ten useful locations."""
+    """Test map search stops after finding ten useful locations nearby."""
     mock_config_entry.add_to_hass(hass)
     mock_openaq_client.locations.list.return_value = make_response(
         [
@@ -456,7 +461,7 @@ async def test_location_subentry_map_flow_limits_to_top_ten_locations(
             ATTR_LOCATION: {
                 ATTR_LATITUDE: 35.1,
                 ATTR_LONGITUDE: -106.6,
-                CONF_RADIUS: 5000,
+                CONF_RADIUS: 25000,
             },
         },
     )
@@ -473,22 +478,32 @@ async def test_location_subentry_map_flow_limits_to_top_ten_locations(
         "9999",
         "10000",
     ]
+    mock_openaq_client.locations.list.assert_called_once_with(
+        coordinates=(35.1, -106.6), radius=5000, limit=LOCATION_FETCH_LIMIT, page=1
+    )
 
 
+@pytest.mark.parametrize(
+    ("parameter", "unit"),
+    [
+        pytest.param("temperature", "°C", id="unsupported-parameter"),
+        pytest.param("pm10", "mg/m³", id="unsupported-unit"),
+    ],
+)
 async def test_location_subentry_map_flow_omits_locations_without_supported_sensors(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    parameter: str,
+    unit: str,
 ) -> None:
     """Test map search omits locations with only unsupported sensors."""
     mock_config_entry.add_to_hass(hass)
+    unsupported_location = make_location(location_id=9998, name="Unsupported")
+    unsupported_location.sensors = [make_sensor_base(1, parameter, unit)]
     mock_openaq_client.locations.list.return_value = make_response(
         [
-            make_location(
-                location_id=9998,
-                name="Unsupported",
-                sensor_parameters=("temperature",),
-            ),
+            unsupported_location,
             make_location(location_id=9999, name="Supported"),
         ]
     )
@@ -583,15 +598,29 @@ async def test_location_subentry_map_flow_expands_radius_for_useful_locations(
 
     assert [option["value"] for option in _get_select_options(result)] == ["9999"]
     assert mock_openaq_client.locations.list.call_args_list == [
-        call(coordinates=(35.1, -106.6), radius=5000, limit=LOCATION_FETCH_LIMIT),
-        call(coordinates=(35.1, -106.6), radius=10000, limit=LOCATION_FETCH_LIMIT),
+        call(
+            coordinates=(35.1, -106.6), radius=5000, limit=LOCATION_FETCH_LIMIT, page=1
+        ),
+        call(
+            coordinates=(35.1, -106.6), radius=10000, limit=LOCATION_FETCH_LIMIT, page=1
+        ),
     ]
 
 
+@pytest.mark.parametrize(
+    ("radius", "expected_radius"),
+    [
+        pytest.param(0, 1, id="minimum-radius"),
+        pytest.param(5000, 5000, id="valid-radius"),
+        pytest.param(50000, MAX_RADIUS, id="maximum-radius"),
+    ],
+)
 async def test_location_subentry_no_locations_found(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    radius: int,
+    expected_radius: int,
 ) -> None:
     """Test map search with no matching OpenAQ locations."""
     mock_config_entry.add_to_hass(hass)
@@ -606,7 +635,7 @@ async def test_location_subentry_no_locations_found(
             ATTR_LOCATION: {
                 ATTR_LATITUDE: 35.1,
                 ATTR_LONGITUDE: -106.6,
-                CONF_RADIUS: 5000,
+                CONF_RADIUS: radius,
             },
         },
     )
@@ -617,8 +646,11 @@ async def test_location_subentry_no_locations_found(
     assert _get_suggested_values(result) == {
         ATTR_LATITUDE: 35.1,
         ATTR_LONGITUDE: -106.6,
-        CONF_RADIUS: 5000,
+        CONF_RADIUS: expected_radius,
     }
+    assert (
+        mock_openaq_client.locations.list.call_args.kwargs["radius"] == expected_radius
+    )
 
 
 def test_location_select_label_without_supported_parameters() -> None:
@@ -736,3 +768,60 @@ async def test_duplicate_location_subentry_across_entries(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "no_locations_found"}
+
+
+@pytest.mark.parametrize(
+    "sensor_parameters",
+    [
+        pytest.param(("pm25",), id="enough-useful-first-page"),
+        pytest.param(("temperature",), id="unsupported-first-page"),
+    ],
+)
+async def test_location_search_reads_later_pages_before_ranking(
+    hass: HomeAssistant,
+    mock_openaq_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    sensor_parameters: tuple[str, ...],
+) -> None:
+    """Test a closer location on a later page is offered before expanding."""
+    mock_config_entry.add_to_hass(hass)
+    mock_openaq_client.locations.list.side_effect = [
+        make_response(
+            [
+                make_location(
+                    location_id=10000 + index,
+                    distance=4000,
+                    sensor_parameters=sensor_parameters,
+                )
+                for index in range(LOCATION_FETCH_LIMIT)
+            ]
+        ),
+        make_response([make_location(location_id=9999, distance=100)]),
+    ]
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select"
+    assert _get_select_options(result)[0]["value"] == "9999"
+    assert mock_openaq_client.locations.list.call_args_list == [
+        call(
+            coordinates=(35.1, -106.6), radius=5000, limit=LOCATION_FETCH_LIMIT, page=1
+        ),
+        call(
+            coordinates=(35.1, -106.6), radius=5000, limit=LOCATION_FETCH_LIMIT, page=2
+        ),
+    ]
+    mock_openaq_client.close.assert_called_once()

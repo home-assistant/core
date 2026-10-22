@@ -3,7 +3,6 @@
 from typing import override
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -14,78 +13,20 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN
+from .const import ATTRIBUTION, DOMAIN, PARAMETER_DEVICE_CLASSES
 from .coordinator import OpenAQConfigEntry, OpenAQDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
-    "pm1": SensorEntityDescription(
-        key="pm1",
-        device_class=SensorDeviceClass.PM1,
+    parameter: SensorEntityDescription(
+        key=parameter,
+        device_class=device_class,
+        translation_key=parameter if device_class is None else None,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
-    "pm25": SensorEntityDescription(
-        key="pm25",
-        device_class=SensorDeviceClass.PM25,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
-    "pm10": SensorEntityDescription(
-        key="pm10",
-        device_class=SensorDeviceClass.PM10,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
-    "co": SensorEntityDescription(
-        key="co",
-        device_class=SensorDeviceClass.CO,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    "co2": SensorEntityDescription(
-        key="co2",
-        device_class=SensorDeviceClass.CO2,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
-    "no2": SensorEntityDescription(
-        key="no2",
-        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
-    "o3": SensorEntityDescription(
-        key="o3",
-        device_class=SensorDeviceClass.OZONE,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
-    "so2": SensorEntityDescription(
-        key="so2",
-        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
-    "no": SensorEntityDescription(
-        key="no",
-        device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
-    "nox": SensorEntityDescription(
-        key="nox",
-        translation_key="nox",
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
-    "bc": SensorEntityDescription(
-        key="bc",
-        translation_key="bc",
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
+        suggested_display_precision=2 if parameter == "co" else 1,
+    )
+    for parameter, device_class in PARAMETER_DEVICE_CLASSES.items()
 }
 
 
@@ -100,7 +41,6 @@ async def async_setup_entry(
             [
                 OpenAQSensor(coordinator, SENSOR_DESCRIPTIONS[parameter])
                 for parameter in coordinator.data.sensor_metadata
-                if parameter in SENSOR_DESCRIPTIONS
             ],
             config_subentry_id=subentry_id,
         )

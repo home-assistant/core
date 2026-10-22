@@ -10,13 +10,14 @@ import pytest
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.components.openaq.coordinator import (
     OpenAQDataUpdateCoordinator,
-    _build_sensor_metadata,
+    build_sensor_metadata,
     create_openaq_client,
     normalize_latest_measurements,
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, UnitOfDensity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import API_KEY, LOCATION_ID, make_latest, make_sensor
@@ -85,11 +86,11 @@ async def test_initial_refresh_sdk_error_raises_update_failed(
     assert err.value.translation_key == "unable_to_fetch"
 
 
-async def test_initial_refresh_auth_error_raises_update_failed(
+async def test_initial_refresh_auth_error_raises_auth_failed(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
 ) -> None:
-    """Test initial refresh auth errors raise UpdateFailed."""
+    """Test initial refresh auth errors stop setup."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="OpenAQ",
@@ -115,12 +116,12 @@ async def test_initial_refresh_auth_error_raises_update_failed(
     auth_error = NotAuthorizedError("Invalid API key")
     mock_openaq_client.locations.get.side_effect = auth_error
 
-    with pytest.raises(UpdateFailed) as err:
+    with pytest.raises(ConfigEntryAuthFailed) as err:
         await coordinator._async_update_data()
 
     assert err.value.__cause__ is auth_error
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "unable_to_fetch"
+    assert err.value.translation_key == "invalid_auth"
 
 
 async def test_initial_refresh_runs_sdk_calls_in_executor(
@@ -147,7 +148,7 @@ async def test_initial_refresh_runs_sdk_calls_in_executor(
 
 def test_normalize_latest_measurements() -> None:
     """Test normalizing latest measurements by sensor metadata."""
-    by_id, _ = _build_sensor_metadata(
+    by_id, _ = build_sensor_metadata(
         [
             make_sensor(1, "pm2.5", "µg/m3"),
             make_sensor(2, "pm10"),
@@ -166,7 +167,7 @@ def test_normalize_latest_measurements() -> None:
 
 def test_build_sensor_metadata() -> None:
     """Test normalizing sensor metadata by parameter."""
-    _, units = _build_sensor_metadata(
+    _, units = build_sensor_metadata(
         [
             make_sensor(1, "pm2.5", "µg/m3"),
             make_sensor(2, "pm10"),
@@ -194,7 +195,7 @@ def test_normalize_latest_measurements_normalizes_unit_aliases(
     parameter: str, unit: str, expected_unit: str
 ) -> None:
     """Test normalizing measurement unit aliases."""
-    by_id, units = _build_sensor_metadata([make_sensor(1, parameter, unit)])
+    by_id, units = build_sensor_metadata([make_sensor(1, parameter, unit)])
     measurements = normalize_latest_measurements(
         [make_latest(1, 12.1)],
         by_id,
@@ -207,7 +208,7 @@ def test_normalize_latest_measurements_normalizes_unit_aliases(
 def test_build_sensor_metadata_skips_invalid_unit_for_device_class() -> None:
     """Test that sensors with units invalid for their device class are skipped."""
     # PM10 only accepts μg/m³; mg/m³ is invalid
-    by_id, units = _build_sensor_metadata([make_sensor(1, "pm10", "mg/m³")])
+    by_id, units = build_sensor_metadata([make_sensor(1, "pm10", "mg/m³")])
 
     assert by_id == {}
     assert units == MappingProxyType({})
@@ -215,18 +216,18 @@ def test_build_sensor_metadata_skips_invalid_unit_for_device_class() -> None:
 
 def test_build_sensor_metadata_skips_unsupported_parameters() -> None:
     """Test that sensors for unsupported parameters are skipped."""
-    by_id, units = _build_sensor_metadata([make_sensor(1, "unsupported")])
+    by_id, units = build_sensor_metadata([make_sensor(1, "unsupported")])
 
     assert by_id == {}
     assert units == MappingProxyType({})
 
 
-async def test_update_data_auth_error_raises_update_failed(
+async def test_update_data_auth_error_raises_auth_failed(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test refresh auth errors raise UpdateFailed."""
+    """Test refresh auth errors remain authentication failures."""
     coordinator = OpenAQDataUpdateCoordinator(
         hass,
         mock_config_entry,
@@ -239,8 +240,8 @@ async def test_update_data_auth_error_raises_update_failed(
         "Invalid API key"
     )
 
-    with pytest.raises(UpdateFailed) as err:
+    with pytest.raises(ConfigEntryAuthFailed) as err:
         await coordinator._async_update_data()
 
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "unable_to_fetch"
+    assert err.value.translation_key == "invalid_auth"

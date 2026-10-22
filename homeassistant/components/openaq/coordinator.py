@@ -8,12 +8,20 @@ from types import MappingProxyType
 from typing import override
 
 from openaq import OpenAQ
-from openaq.core.responses import Latest, Location, Parameter, ParameterBase, Sensor
+from openaq.core.responses import (
+    Latest,
+    Location,
+    Parameter,
+    ParameterBase,
+    Sensor,
+    SensorBase,
+)
 
 from homeassistant.components.sensor import DEVICE_CLASS_UNITS
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import UnitOfDensity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -28,9 +36,7 @@ from .const import (
 
 UPDATE_INTERVAL = timedelta(minutes=10)
 
-OPENAQ_FETCH_EXCEPTIONS = (
-    OPENAQ_AUTH_EXCEPTIONS + OPENAQ_RATE_LIMIT_EXCEPTIONS + OPENAQ_API_EXCEPTIONS
-)
+OPENAQ_FETCH_EXCEPTIONS = OPENAQ_RATE_LIMIT_EXCEPTIONS + OPENAQ_API_EXCEPTIONS
 
 OPENAQ_UNIT_ALIASES = {
     "µg/m³": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
@@ -76,8 +82,8 @@ def normalize_parameter(parameter: Parameter | ParameterBase) -> str:
     return parameter.name.lower().replace(".", "").replace("_", "")
 
 
-def _build_sensor_metadata(
-    sensors: Sequence[Sensor],
+def build_sensor_metadata(
+    sensors: Sequence[Sensor | SensorBase],
 ) -> tuple[dict[int, str], MappingProxyType[str, str]]:
     """Return sensor parameter name and unit mappings keyed by sensor id."""
     by_id: dict[int, str] = {}
@@ -168,6 +174,11 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                     ) = await self.hass.async_add_executor_job(
                         _fetch_initial_location_data, self.client, self.location_id
                     )
+                except OPENAQ_AUTH_EXCEPTIONS as err:
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_auth",
+                    ) from err
                 except OPENAQ_FETCH_EXCEPTIONS as err:
                     raise UpdateFailed(
                         translation_domain=DOMAIN,
@@ -179,7 +190,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                     translation_key="unable_to_fetch",
                 )
             self._location = location_results[0]
-            self._sensors_by_id, self._sensor_metadata = _build_sensor_metadata(sensors)
+            self._sensors_by_id, self._sensor_metadata = build_sensor_metadata(sensors)
         else:
             async with self._client_lock:
                 try:
@@ -188,6 +199,11 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                             self.client.locations.latest, self.location_id
                         )
                     ).results
+                except OPENAQ_AUTH_EXCEPTIONS as err:
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_auth",
+                    ) from err
                 except OPENAQ_FETCH_EXCEPTIONS as err:
                     raise UpdateFailed(
                         translation_domain=DOMAIN,

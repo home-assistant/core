@@ -46,6 +46,9 @@
           "data": {
             "location": "[%key:common::config_flow::data::location%]"
           },
+          "data_description": {
+            "location": "Select the area you want to search. OpenAQ limits the search radius to 25 km."
+          },
           "description": "Select a monitoring location."
         }
       }
@@ -62,6 +65,9 @@
     }
   },
   "exceptions": {
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
     "unable_to_fetch": {
       "message": "Unable to fetch data from OpenAQ"
     }

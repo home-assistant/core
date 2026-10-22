@@ -4,7 +4,7 @@ import asyncio
 
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import SUBENTRY_TYPE_LOCATION
 from .coordinator import (
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bo
     try:
         for coordinator in coordinators.values():
             await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
+    except ConfigEntryAuthFailed, ConfigEntryNotReady:
         await hass.async_add_executor_job(client.close)
         raise
 
