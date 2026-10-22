@@ -1,0 +1,155 @@
+"""Test Google Docs actions through Home Assistant's service registry."""
+
+from unittest.mock import MagicMock
+
+import probatio
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
+from homeassistant.components.google_docs.const import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+
+from .common import DOCUMENT_ID, TOKEN_URI, http_error
+
+
+async def test_append_text(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    mock_api: dict[str, MagicMock],
+) -> None:
+    """The document is selected through its config entry and text is preserved."""
+    await hass.services.async_call(
+        DOMAIN,
+        "append_text",
+        {"config_entry": setup_integration.entry_id, "text": "שלום 🌍\n"},
+        blocking=True,
+    )
+    mock_api["append_text"].assert_called_once_with(
+        "mock-access-token", DOCUMENT_ID, "שלום 🌍\n"
+    )
+
+
+async def test_get_text(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
+    """A read returns data directly to the calling script or automation."""
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_text",
+        {"config_entry": setup_integration.entry_id},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {
+        "document_id": DOCUMENT_ID,
+        "title": "Home Assistant",
+        "text": "Hello",
+    }
+
+
+@pytest.mark.parametrize(
+    ("action", "fields", "return_response"),
+    [("append_text", {"text": "Entry"}, False), ("get_text", {}, True)],
+)
+@pytest.mark.parametrize(
+    ("status", "reauth_count"), [(401, 1), (403, 0), (404, 0), (429, 0), (503, 0)]
+)
+async def test_action_http_error(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    mock_api: dict[str, MagicMock],
+    action: str,
+    fields: dict[str, str],
+    return_response: bool,
+    status: int,
+    reauth_count: int,
+) -> None:
+    """Auth failures reauthenticate and access/server failures surface clearly."""
+    mock_api["append_text"].side_effect = http_error(status)
+    mock_api["get_document"].side_effect = http_error(status)
+    data = {"config_entry": setup_integration.entry_id, **fields}
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            action,
+            data,
+            blocking=True,
+            return_response=return_response,
+        )
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == reauth_count
+
+
+async def test_append_rejects_empty_text(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
+    """An empty write is rejected before it reaches Google."""
+    with pytest.raises(probatio.Invalid, match="length of value"):
+        await hass.services.async_call(
+            DOMAIN,
+            "append_text",
+            {"config_entry": setup_integration.entry_id, "text": ""},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("entry_id", ["unknown", "wrong-domain"])
+async def test_invalid_config_entry(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    entry_id: str,
+) -> None:
+    """An action cannot access a different integration's configuration entry."""
+    other = MockConfigEntry(domain="google_sheets", entry_id="wrong-domain", data={})
+    other.add_to_hass(hass)
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "append_text",
+            {"config_entry": entry_id, "text": "Entry"},
+            blocking=True,
+        )
+
+
+async def test_unloaded_entry(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
+    """An unloaded document entry is unavailable to actions."""
+    assert await hass.config_entries.async_unload(setup_integration.entry_id)
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "get_text",
+            {"config_entry": setup_integration.entry_id},
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize(("status", "reauth_count"), [(400, 1), (503, 0)])
+async def test_action_refresh_failure(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_api: dict[str, MagicMock],
+    status: int,
+    reauth_count: int,
+) -> None:
+    """A failed token refresh prevents a write and only invalid grants reauth."""
+    token = {**setup_integration.data["token"], "expires_at": 0}
+    hass.config_entries.async_update_entry(
+        setup_integration, data={**setup_integration.data, "token": token}
+    )
+    aioclient_mock.post(TOKEN_URI, status=status, json={"error": "invalid_grant"})
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "append_text",
+            {"config_entry": setup_integration.entry_id, "text": "Entry"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+    mock_api["append_text"].assert_not_called()
+    assert len(hass.config_entries.flow.async_progress()) == reauth_count

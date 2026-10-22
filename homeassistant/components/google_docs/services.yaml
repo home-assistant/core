@@ -1,0 +1,20 @@
+append_text:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: google_docs
+    text:
+      required: true
+      example: "The washing machine finished.\n"
+      selector:
+        text:
+          multiline: true
+get_text:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: google_docs
