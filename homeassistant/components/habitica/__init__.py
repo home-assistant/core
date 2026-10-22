@@ -78,18 +78,16 @@ async def async_setup_entry(
 
     # Register the user device so children (party device) can resolve it
     # deterministically as their via_device parent before platforms are set up.
-    device_reg.async_get_or_create_device(
+    device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        device_info=dr.DeviceInfo(
-            entry_type=dr.DeviceEntryType.SERVICE,
-            manufacturer=MANUFACTURER,
-            model=NAME,
-            name=coordinator.data.user.profile.name,
-            configuration_url=(
-                URL(config_entry.data[CONF_URL]) / "profile" / config_entry.unique_id
-            ),
-            identifiers={(DOMAIN, config_entry.unique_id)},
+        entry_type=dr.DeviceEntryType.SERVICE,
+        manufacturer=MANUFACTURER,
+        model=NAME,
+        name=coordinator.data.user.profile.name,
+        configuration_url=(
+            URL(config_entry.data[CONF_URL]) / "profile" / config_entry.unique_id
         ),
+        identifiers={(DOMAIN, config_entry.unique_id)},
     )
 
     party = coordinator.data.user.party.id
@@ -105,19 +103,17 @@ async def async_setup_entry(
     if party is not None:
         # Register the party device so party member devices can resolve it
         # deterministically as their via_device parent.
-        device_reg.async_get_or_create_device(
+        device_reg.async_get_or_create(
             config_entry_id=config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                entry_type=dr.DeviceEntryType.SERVICE,
-                manufacturer=MANUFACTURER,
-                model=NAME,
-                name=hass.data[HABITICA_KEY][party].data.party.summary,
-                identifiers={(DOMAIN, f"{config_entry.unique_id}_{party!s}")},
-                via_device_id=dr.async_get_device_id_by_identifier(
-                    hass,
-                    (DOMAIN, config_entry.unique_id),
-                    config_entry_id=config_entry.entry_id,
-                ),
+            entry_type=dr.DeviceEntryType.SERVICE,
+            manufacturer=MANUFACTURER,
+            model=NAME,
+            name=hass.data[HABITICA_KEY][party].data.party.summary,
+            identifiers={(DOMAIN, f"{config_entry.unique_id}_{party!s}")},
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, config_entry.unique_id),
+                config_entry_id=config_entry.entry_id,
             ),
         )
 

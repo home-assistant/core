@@ -21,6 +21,14 @@
         },
         "title": "[%key:component::group::config::step::user::title%]"
       },
+      "calendar": {
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "title": "[%key:component::group::config::step::user::title%]"
+      },
       "cover": {
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
@@ -115,6 +123,7 @@
         "menu_options": {
           "binary_sensor": "Binary sensor group",
           "button": "Button group",
+          "calendar": "Calendar group",
           "cover": "Cover group",
           "event": "Event group",
           "fan": "Fan group",
@@ -195,6 +204,12 @@
         }
       },
       "button": {
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        }
+      },
+      "calendar": {
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"

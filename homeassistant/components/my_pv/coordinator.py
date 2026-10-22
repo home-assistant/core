@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import functools
 import logging
-from typing import Any, Final, override
+from typing import Any, Concatenate, Final, override
 
 from my_pv import MyPVDevice
 from my_pv.exceptions import (
@@ -26,11 +26,13 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(seconds=5)
 
 
-def _my_pv_connection[T](
-    func: Callable[..., Coroutine[Any, Any, bool]],
-) -> Callable[..., Coroutine[Any, Any, bool]]:
+def _handle_device_errors[**P](
+    func: Callable[Concatenate[MyPVCoordinator, P], Coroutine[Any, Any, bool]],
+) -> Callable[Concatenate[MyPVCoordinator, P], Coroutine[Any, Any, bool]]:
+    """Connect if needed and handle device errors."""
+
     @functools.wraps(func)
-    async def wrapper(self, *args: Any, **kwargs: Any) -> bool:
+    async def wrapper(self: MyPVCoordinator, *args: P.args, **kwargs: P.kwargs) -> bool:
         try:
             if not self.device.connected and not await self.device.connect():
                 raise HomeAssistantError(
@@ -44,6 +46,7 @@ def _my_pv_connection[T](
                 translation_domain=DOMAIN, translation_key="rate_limiting"
             ) from exc
         except MyPVAuthenticationError as exc:
+            self.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_error",
@@ -52,7 +55,7 @@ def _my_pv_connection[T](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_unavailable",
-                translation_placeholders={"uri": self.device.uri},
+                translation_placeholders={"uri": str(self.device.uri)},
             ) from exc
 
     return wrapper
@@ -141,21 +144,21 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
                 translation_placeholders={"uri": self.device.uri},
             ) from exc
 
-    @_my_pv_connection
+    @_handle_device_errors
     async def set_setup_value(self, key: str, value: Any) -> bool:
         """Set a setup value."""
         result = await self.device.set_setup_value(key, value)
         self.async_update_listeners()
         return result
 
-    @_my_pv_connection
+    @_handle_device_errors
     async def set_target_temperature(self, temperature: float) -> bool:
         """Set target temperature."""
         result = await self.device.set_target_temperature(temperature)
         self.async_update_listeners()
         return result
 
-    @_my_pv_connection
+    @_handle_device_errors
     async def send_command(
         self, key: str, value: bool | float | str | None = None
     ) -> bool:
@@ -164,16 +167,23 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         self.async_update_listeners()
         return result
 
-    @_my_pv_connection
+    @_handle_device_errors
     async def turn_on(self) -> bool:
         """Turn on the device."""
         result = await self.device.turn_on()
         self.async_update_listeners()
         return result
 
-    @_my_pv_connection
+    @_handle_device_errors
     async def turn_off(self) -> bool:
         """Turn off the device."""
         result = await self.device.turn_off()
+        self.async_update_listeners()
+        return result
+
+    @_handle_device_errors
+    async def update_firmware(self) -> bool:
+        """Send command."""
+        result = await self.device.update_firmware()
         self.async_update_listeners()
         return result

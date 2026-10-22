@@ -538,7 +538,8 @@ class EntityPlatform:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
-            return False
+            # Not a failure, setup is retried in the background
+            return True
         except TimeoutError:
             logger.error(
                 (
@@ -849,7 +850,7 @@ class EntityPlatform:
             return entity.device_entry
         dev_reg = dr.async_get(self.hass)
         if isinstance(device_info, dr.ChildDeviceInfo):
-            return dev_reg.async_get_or_create_child_device(
+            return dev_reg.async_get_or_create_child_from_info(
                 config_entry_id=config_entry_id,
                 config_subentry_id=config_subentry_id,
                 device_info=device_info,
@@ -858,7 +859,7 @@ class EntityPlatform:
             # A device info without any field means no device
             if not device_info.as_dict():
                 return entity.device_entry
-            return dev_reg.async_get_or_create_device(
+            return dev_reg.async_get_or_create_from_info(
                 config_entry_id=config_entry_id,
                 config_subentry_id=config_subentry_id,
                 device_info=device_info,

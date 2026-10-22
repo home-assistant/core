@@ -77,7 +77,7 @@ async def test_found(
     with (
         patch(
             "homeassistant.components.escea.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup,
         patch(
             "homeassistant.components.escea.discovery.pescea_discovery_service"

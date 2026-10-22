@@ -39,6 +39,6 @@ def mock_deako_setup() -> Generator[MagicMock]:
     """Mock async_setup_entry for config flow tests."""
     with patch(
         "homeassistant.components.deako.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup

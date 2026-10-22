@@ -17,7 +17,13 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_URL
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LLM_HASS_API,
+    CONF_MODEL,
+    CONF_PROMPT,
+    CONF_URL,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
@@ -31,7 +37,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_PROMPT,
     CONF_STT_CUSTOM_PROMPT_KEYWORDS,
     CONF_STT_KEYWORDS,
     CONF_STT_PROMPT,
