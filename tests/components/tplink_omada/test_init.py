@@ -27,7 +27,7 @@ from homeassistant.components.tplink_omada.coordinator import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -107,6 +107,37 @@ async def test_coordinator_update_failure_is_translated(
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "api_error"
+
+
+async def test_missing_devices_removed_at_startup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test missing devices are removed at startup."""
+    mock_config_entry = MockConfigEntry(
+        title="Test Omada Controller",
+        domain=DOMAIN,
+        data=dict(MOCK_ENTRY_DATA),
+        unique_id="12345_SiteId",
+        version=2,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "AA:BB:CC:DD:EE:FF")},
+        manufacturer="TPLink",
+        name="Old Device",
+        model="Some old model",
+    )
+
+    assert device_registry.async_get(device_entry.id) == device_entry
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device_entry.id) is None
 
 
 async def test_automatic_missing_client_cleanup(
@@ -400,6 +431,56 @@ async def test_cleanup_recreates_tracker_when_client_reappears(
         entity_registry.async_get_entity_id("device_tracker", DOMAIN, tracker_unique_id)
         is not None
     )
+
+
+async def test_recreated_tracker_enabled_when_device_registered(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a recreated tracker is enabled when its device is registered."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    removed_mac = "2C-71-FF-ED-34-83"
+    tracker_unique_id = f"scanner_Default_{removed_mac}"
+    site_client = mock_omada_clients_only_client.get_site_client.return_value
+
+    # Remove the client from the controller's known-clients list and clean up
+    site_client.get_known_clients.side_effect = partial(
+        _get_known_clients_without, hass, removed_mac
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert (
+        entity_registry.async_get_entity_id("device_tracker", DOMAIN, tracker_unique_id)
+        is None
+    )
+
+    # Another integration registers the client's device while it is absent
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "registered-client-device")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "2c:71:ff:ed:34:83")},
+    )
+
+    # The client returns; the tracker is recreated enabled by default
+    site_client.get_known_clients.side_effect = partial(
+        _get_known_clients_without, hass, ""
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, tracker_unique_id
+    )
+    assert entity_id is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.disabled_by is None
 
 
 async def test_preserved_tracker_recreated_when_client_returns(

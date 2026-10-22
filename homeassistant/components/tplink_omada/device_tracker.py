@@ -9,7 +9,7 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -35,7 +35,53 @@ async def async_setup_entry(
 
     added_unique_ids: set[str] = set()
 
-    def _should_add(unique_id: str) -> bool:
+    def _is_device_registered(mac: str) -> bool:
+        """Return if a device with the client's MAC address is registered."""
+        return bool(
+            dr.async_get(hass).async_get_devices(
+                connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))}
+            )
+        )
+
+    def _reenable_if_device_known(unique_id: str, mac: str) -> bool:
+        """Enable a tracker disabled by the integration when its device is known.
+
+        Stale tracker cleanup removes the registry entry, and recreating it
+        restores the saved integration disable. If another integration has
+        registered a device with the client's MAC in the meantime, the scanner
+        is enabled by default again, so drop the restored disable. User
+        disables and disabled new entities are left alone.
+        """
+        entity_registry = er.async_get(hass)
+        entity_id = entity_registry.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
+        )
+        if entity_id is None:
+            deleted_entry = entity_registry.deleted_entities.get(
+                (DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id)
+            )
+            if deleted_entry is None:
+                return False
+            disabled_by = deleted_entry.disabled_by
+        else:
+            entity_entry = entity_registry.async_get(entity_id)
+            disabled_by = entity_entry.disabled_by if entity_entry else None
+
+        if disabled_by is not er.RegistryEntryDisabler.INTEGRATION:
+            return False
+        if config_entry.pref_disable_new_entities or not _is_device_registered(mac):
+            return False
+
+        if entity_id is None:
+            # Recreate the entry so the restored disable can be cleared before
+            # the entity platform adds the tracker.
+            entity_id = entity_registry.async_get_or_create(
+                DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id, config_entry=config_entry
+            ).entity_id
+        entity_registry.async_update_entity(entity_id, disabled_by=None)
+        return True
+
+    def _should_add(unique_id: str, mac: str) -> bool:
         """Return if a tracker should be added by this platform run.
 
         Existing registry entries are submitted again, so the entity platform
@@ -46,15 +92,16 @@ async def async_setup_entry(
         again when their client returns.
         """
         entity_registry = er.async_get(hass)
-        if unique_id in added_unique_ids:
-            entity_id = entity_registry.async_get_entity_id(
-                DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
-            )
-            if entity_id is not None:
-                return False
-            # Stale tracker cleanup removed the entry, so allow the tracker to
-            # be created again.
+        enabled = _reenable_if_device_known(unique_id, mac)
+        entity_id = entity_registry.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
+        )
+        if enabled or entity_id is None:
+            # The tracker is created or enabled again in this run, so it is
+            # added even if this platform run submitted it before.
             added_unique_ids.discard(unique_id)
+        if unique_id in added_unique_ids:
+            return False
         added_unique_ids.add(unique_id)
         return True
 
@@ -63,9 +110,8 @@ async def async_setup_entry(
         entities: list[OmadaClientScannerEntity] = []
         for client in (known_clients_coordinator.data or {}).values():
             unique_id = f"scanner_{site_id}_{client.mac}"
-            if not _should_add(unique_id):
+            if not _should_add(unique_id, client.mac):
                 continue
-            added_unique_ids.add(unique_id)
             entities.append(
                 OmadaClientScannerEntity(
                     site_id, client.mac, client.name, controller.clients_coordinator
