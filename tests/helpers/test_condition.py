@@ -47,6 +47,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_EXCLUDE,
     CONF_FOR,
     CONF_OPTIONS,
     CONF_TARGET,
@@ -6739,6 +6740,97 @@ async def test_state_condition_primary_entities_only_with_duration(
     # has also been matching for >= 5s → True regardless of flag.
     freezer.tick(timedelta(seconds=3))
     assert test.async_check() is True
+
+
+_INCLUDED_ENTITY_ID = "test.included"
+_EXCLUDED_ENTITY_ID = "test.excluded"
+
+
+@pytest.mark.parametrize(
+    "exclude",
+    [
+        pytest.param({CONF_ENTITY_ID: _EXCLUDED_ENTITY_ID}, id="exclude_entity"),
+        pytest.param({ATTR_LABEL_ID: "excluded"}, id="exclude_label"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("behavior", "included_state", "excluded_state", "expected"),
+    [
+        pytest.param(BEHAVIOR_ALL, STATE_ON, STATE_OFF, True, id="all"),
+        pytest.param(BEHAVIOR_ANY, STATE_OFF, STATE_ON, False, id="any"),
+    ],
+)
+async def test_state_condition_target_exclude(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+    exclude: dict[str, str],
+    behavior: str,
+    included_state: str,
+    excluded_state: str,
+    expected: bool,
+) -> None:
+    """Test entities matched by the exclude block are ignored by the condition."""
+    label = label_registry.async_create("Targeted")
+    excluded_label = label_registry.async_create("Excluded")
+    for object_id, labels in (
+        ("included", {label.label_id}),
+        ("excluded", {label.label_id, excluded_label.label_id}),
+    ):
+        entry = entity_registry.async_get_or_create(
+            "test", "test", object_id, suggested_object_id=object_id
+        )
+        entity_registry.async_update_entity(entry.entity_id, labels=labels)
+
+    test = await _setup_state_condition(
+        hass,
+        target_config={ATTR_LABEL_ID: label.label_id, CONF_EXCLUDE: exclude},
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: behavior},
+    )
+
+    hass.states.async_set(_INCLUDED_ENTITY_ID, included_state)
+    hass.states.async_set(_EXCLUDED_ENTITY_ID, excluded_state)
+    await hass.async_block_till_done()
+    assert test.async_check() is expected
+
+
+async def test_state_condition_target_exclude_registry_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test a registry change of the excluded entities is taken into account."""
+    excluded_label = label_registry.async_create("Excluded")
+    for object_id in ("included", "excluded"):
+        entity_registry.async_get_or_create(
+            "test", "test", object_id, suggested_object_id=object_id
+        )
+
+    test = await _setup_state_condition(
+        hass,
+        target_config={
+            CONF_ENTITY_ID: [_INCLUDED_ENTITY_ID, _EXCLUDED_ENTITY_ID],
+            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+        },
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
+    )
+
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    hass.states.async_set(_EXCLUDED_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+    assert test.async_check() is False
+
+    entity_registry.async_update_entity(
+        _EXCLUDED_ENTITY_ID, labels={excluded_label.label_id}
+    )
+    await hass.async_block_till_done()
+    assert test.async_check() is True
+
+    entity_registry.async_update_entity(_EXCLUDED_ENTITY_ID, labels=set())
+    await hass.async_block_till_done()
+    assert test.async_check() is False
 
 
 async def test_async_from_config_calls_async_setup_on_checker(
