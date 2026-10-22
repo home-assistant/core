@@ -1,6 +1,12 @@
 {
   "entity": {
     "binary_sensor": {
+      "automatic_charging_paused": {
+        "default": "mdi:ev-station",
+        "state": {
+          "on": "mdi:pause-circle-outline"
+        }
+      },
       "backup_power_active": {
         "default": "mdi:battery-alert-variant-outline",
         "state": {

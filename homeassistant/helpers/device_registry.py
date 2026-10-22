@@ -2505,7 +2505,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "async_get_or_create() got unexpected keyword arguments "
                 f"{', '.join(map(repr, kwargs))}"
             )
-        return self.async_get_or_create_device(
+        return self.async_get_or_create_from_info(
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
             disabled_by=disabled_by,
@@ -2531,7 +2531,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
 
     @callback
-    def async_get_or_create_device(  # noqa: C901
+    def async_get_or_create_from_info(  # noqa: C901
         self,
         *,
         config_entry_id: str,
@@ -2542,7 +2542,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist.
 
-        To create or update a child device, use async_get_or_create_child_device.
+        To create or update a child device, use async_get_or_create_child_from_info.
 
         If identifiers overlap with a child device, the method raises.
         """
@@ -2839,7 +2839,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         device = self._async_update_device(
             device.id,
-            disabled_by=disabled_by,
+            disabled_by=disabled_by if is_new else UNDEFINED,
             entry_type=entry_type,
             is_new=is_new,
             name=name,
@@ -2900,6 +2900,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        # To disable a device if it gets created, does not affect existing devices
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         identifiers: set[tuple[str, str]],
         name: str | UndefinedType | None = UNDEFINED,
@@ -2913,7 +2914,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         If identifiers match those of an existing device, that device is converted to
         a child device, preserving its id.
         """
-        return self.async_get_or_create_child_device(
+        return self.async_get_or_create_child_from_info(
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
             disabled_by=disabled_by,
@@ -2928,11 +2929,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
 
     @callback
-    def async_get_or_create_child_device(
+    def async_get_or_create_child_from_info(
         self,
         *,
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        # To disable a device if it gets created, does not affect existing devices
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         device_info: ChildDeviceInfo,
     ) -> ChildDeviceEntry:
@@ -3114,7 +3116,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         updated_child_device = self._async_update_child_device(
             child_device.id,
-            disabled_by=disabled_by,
+            disabled_by=disabled_by if is_new else UNDEFINED,
             is_new=is_new,
             merge_identifiers=identifiers,
             name=name,

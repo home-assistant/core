@@ -1,6 +1,6 @@
 """Base entity for Zonneplan."""
 
-from pyzonneplan import Battery, Contract
+from pyzonneplan import Battery, ChargePoint, Contract
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -10,6 +10,7 @@ from .const import DOMAIN
 from .coordinator import (
     ZonneplanBatteryControlCoordinator,
     ZonneplanBatteryCoordinator,
+    ZonneplanChargePointCoordinator,
     ZonneplanCoordinator,
 )
 
@@ -35,10 +36,12 @@ class ZonneplanEntity(CoordinatorEntity[ZonneplanCoordinator]):
         )
 
 
-class ZonneplanBatteryDeviceEntity[
-    _CoordinatorT: ZonneplanBatteryCoordinator | ZonneplanBatteryControlCoordinator
+class ZonneplanContractEntity[
+    _CoordinatorT: ZonneplanBatteryCoordinator
+    | ZonneplanBatteryControlCoordinator
+    | ZonneplanChargePointCoordinator
 ](CoordinatorEntity[_CoordinatorT]):
-    """Base entity on the device of a Zonneplan home battery."""
+    """Base entity on the device of a Zonneplan contract, like a home battery."""
 
     _attr_has_entity_name = True
 
@@ -63,7 +66,7 @@ class ZonneplanBatteryDeviceEntity[
         )
 
 
-class ZonneplanBatteryEntity(ZonneplanBatteryDeviceEntity[ZonneplanBatteryCoordinator]):
+class ZonneplanBatteryEntity(ZonneplanContractEntity[ZonneplanBatteryCoordinator]):
     """Base entity for a Zonneplan home battery."""
 
     def __init__(
@@ -84,3 +87,28 @@ class ZonneplanBatteryEntity(ZonneplanBatteryDeviceEntity[ZonneplanBatteryCoordi
     def battery(self) -> Battery:
         """Return the battery of this entity."""
         return self.coordinator.data[self._contract_uuid].battery
+
+
+class ZonneplanChargePointEntity(
+    ZonneplanContractEntity[ZonneplanChargePointCoordinator]
+):
+    """Base entity for a Zonneplan charge point."""
+
+    def __init__(
+        self,
+        coordinator: ZonneplanChargePointCoordinator,
+        contract_uuid: str,
+        entity_description: EntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(
+            coordinator,
+            contract_uuid,
+            coordinator.data[contract_uuid],
+            entity_description,
+        )
+
+    @property
+    def charge_point(self) -> ChargePoint:
+        """Return the charge point of this entity."""
+        return self.coordinator.data[self._contract_uuid]

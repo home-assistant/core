@@ -17,13 +17,11 @@ def async_create_device(
 ) -> dr.DeviceEntry:
     """Create a device."""
     device_registry = dr.async_get(hass)
-    return device_registry.async_get_or_create_device(
+    return device_registry.async_get_or_create(
         config_entry_id=config_entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=device_name,
-            translation_key=device_translation_key,
-            translation_placeholders=device_translation_placeholders,
-            via_device_id=via_device_id,
-        ),
+        identifiers={(DOMAIN, unique_id)},
+        name=device_name,
+        translation_key=device_translation_key,
+        translation_placeholders=device_translation_placeholders,
+        via_device_id=via_device_id,
     )
