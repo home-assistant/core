@@ -1,6 +1,7 @@
 """Tests for the Hass.io LLM tools."""
 
-from unittest.mock import AsyncMock, Mock, call
+from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import probatio
@@ -99,7 +100,7 @@ async def test_get_logs_default(
             method="get",
             return_text=True,
             params={"format": "plain", "no_colors": ""},
-            range_header="realtime=1792496700:1792497600:2000",
+            range_header="realtime=1792496700.000000:1792497600:2000",
         )
         for source in ("core", "supervisor")
     ]
@@ -113,7 +114,7 @@ async def test_get_logs_default(
                 "start_time": "2026-10-20T02:45:00+02:00",
                 "end_time": "2026-10-20T03:00:00+02:00",
             },
-            "realtime=1792457100:1792458000:2000",
+            "realtime=1792457100.000000:1792458000:2000",
             id="whole_seconds",
         ),
         pytest.param(
@@ -121,8 +122,8 @@ async def test_get_logs_default(
                 "start_time": "2026-10-20T02:45:00.500+02:00",
                 "end_time": "2026-10-20T03:00:00.500+02:00",
             },
-            "realtime=1792457100:1792458001:2000",
-            id="rounded_outwards",
+            "realtime=1792457100.500000:1792458001:2000",
+            id="fractions",
         ),
     ],
 )
@@ -212,3 +213,55 @@ async def test_get_logs_invalid_source(
         )
 
     send_command.assert_not_called()
+
+
+async def test_get_logs_pages_through_busy_second(
+    hass: HomeAssistant, llm_context: llm.LLMContext, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test pages within a second with more lines than one read continue."""
+    freezer.move_to("2026-10-20 12:00:00+00:00")
+    journal = [
+        f"2026-10-20 13:50:00.{millisecond}+02:00 INFO (MainThread) [core] {millisecond}"
+        for millisecond in ("100", "200", "300")
+    ]
+
+    async def _send_command(
+        command: str, *, range_header: str, **kwargs: object
+    ) -> str:
+        """Return the lines from the start time like the journal."""
+        start, _, lines = range_header.removeprefix("realtime=").split(":")
+        start_microseconds = int(start.replace(".", ""))
+        return "\n".join(
+            [
+                line
+                for line in journal
+                if (
+                    datetime.fromisoformat(line[:29]) - datetime(1970, 1, 1, tzinfo=UTC)
+                )
+                // timedelta(microseconds=1)
+                >= start_microseconds
+            ][: int(lines)]
+        )
+
+    hass.data[DATA_COMPONENT] = Mock(send_command=AsyncMock(side_effect=_send_command))
+    tool = SupervisorGetLogsTool({})
+    start_time = "2026-10-20T13:45:00+02:00"
+
+    with patch("homeassistant.components.system_log.llm.LOG_QUERY_READ_LINES", 2):
+        for expected_message, expected_next_start_time in (
+            ("100", "2026-10-20T04:50:00.200-07:00"),
+            ("200", "2026-10-20T04:50:00.300-07:00"),
+            ("300", None),
+        ):
+            result = await tool.async_call(
+                hass,
+                llm.ToolInput(
+                    tool.name, {"source": ["core"], "start_time": start_time}
+                ),
+                llm_context,
+            )
+            assert [record["message"] for record in result.data["records"]] == [
+                f"INFO (MainThread) [core] {expected_message}"
+            ]
+            assert result.data.get("next_start_time") == expected_next_start_time
+            start_time = expected_next_start_time

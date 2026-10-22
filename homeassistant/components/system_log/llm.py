@@ -413,11 +413,12 @@ class SystemLogGetLogsTool(Tool):
             records = _parse_log_records(result)
             if len(result) >= LOG_QUERY_READ_LINES and records:
                 # The last record can miss lines and moves to the next page.
-                # A single record that fills all lines is kept, so pages move on.
+                # When all records read after the start have the same time,
+                # they are kept, so the next page starts later.
                 source_end = (
                     records[-1].time
-                    if len(records) > 1
-                    else records[-1].time + timedelta(milliseconds=1)
+                    if records[-1].time > max(records[0].time, start_time)
+                    else max(records[-1].time, start_time) + timedelta(milliseconds=1)
                 )
                 complete_end = min(complete_end or source_end, source_end)
             merged.extend(

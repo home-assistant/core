@@ -1,6 +1,6 @@
 """LLM tools for the Hass.io integration."""
 
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 import math
 from typing import override
 
@@ -25,6 +25,18 @@ _SYSTEM_SOURCES = {
     "audio": "the audio plugin, records have no level",
     "multicast": "the multicast plugin, records have no level",
 }
+
+
+def _journal_time(time: datetime) -> str:
+    """Return the time in seconds with microseconds for the journal.
+
+    The exact time lets the next page start within a second that has more
+    lines than one read.
+    """
+    microseconds = (time - datetime(1970, 1, 1, tzinfo=UTC)) // timedelta(
+        microseconds=1
+    )
+    return f"{microseconds // 1_000_000}.{microseconds % 1_000_000:06d}"
 
 
 class SupervisorGetLogsTool(SystemLogGetLogsTool):
@@ -73,7 +85,7 @@ class SupervisorGetLogsTool(SystemLogGetLogsTool):
                     "no_colors": "",
                 },
                 range_header=(
-                    f"realtime={math.floor(start_time.timestamp())}"
+                    f"realtime={_journal_time(start_time)}"
                     f":{math.ceil(end_time.timestamp())}:{lines}"
                 ),
             )

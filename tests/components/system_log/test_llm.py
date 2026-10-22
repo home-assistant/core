@@ -581,27 +581,71 @@ async def test_get_logs_source_line_limit(
     assert result.data["next_start_time"] == "2026-10-20T04:52:00.000-07:00"
 
 
+@pytest.mark.parametrize(
+    "lines",
+    [
+        pytest.param(
+            [
+                "2026-10-20 13:50:00.000+02:00 ERROR (MainThread) [core] Deep",
+                "  File one",
+                "  File two",
+            ],
+            id="one_record",
+        ),
+        pytest.param(
+            [
+                f"2026-10-20 13:50:00.000+02:00 INFO (MainThread) [core] {index}"
+                for index in range(3)
+            ],
+            id="records_with_same_time",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("frozen_time")
-async def test_get_logs_record_fills_line_limit(
-    hass: HomeAssistant, llm_context: llm.LLMContext
+async def test_get_logs_records_fill_line_limit(
+    hass: HomeAssistant, llm_context: llm.LLMContext, lines: list[str]
 ) -> None:
-    """Test a record that fills all lines read is returned, so pages move on."""
+    """Test records with one time that fill all lines are returned."""
     with patch("homeassistant.components.system_log.llm.LOG_QUERY_READ_LINES", 3):
-        result = await _async_call_with_logs(
-            hass,
-            llm_context,
-            {
-                "core": [
-                    "2026-10-20 13:50:00.000+02:00 ERROR (MainThread) [core] Deep",
-                    "  File one",
-                    "  File two",
-                ]
-            },
-            {},
-        )
+        result = await _async_call_with_logs(hass, llm_context, {"core": lines}, {})
 
-    assert len(result.data["records"]) == 1
+    assert result.data["records"]
+    # The next page starts after them, so pages move on
     assert result.data["next_start_time"] == "2026-10-20T04:50:00.001-07:00"
+
+
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_pages(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    logs_tool: llm.Tool,
+    tmp_path: Path,
+) -> None:
+    """Test following next_start_time returns every record once."""
+    (tmp_path / "home-assistant.log").write_text(
+        "2026-10-20 13:50:00.000+02:00 INFO (MainThread) [core] First\n"
+        "2026-10-20 13:50:00.000+02:00 INFO (MainThread) [core] Same time\n"
+        "2026-10-20 13:50:00.500+02:00 INFO (MainThread) [core] Second\n"
+        "2026-10-20 13:51:00.000+02:00 INFO (MainThread) [core] Third\n"
+    )
+    start_time = "2026-10-20T13:45:00+02:00"
+
+    with patch("homeassistant.components.system_log.llm.LOG_QUERY_READ_LINES", 2):
+        for expected_messages, expected_next_start_time in (
+            (["First", "Same time"], "2026-10-20T04:50:00.001-07:00"),
+            (["Second"], "2026-10-20T04:51:00.000-07:00"),
+            (["Third"], None),
+        ):
+            result = await logs_tool.async_call(
+                hass,
+                llm.ToolInput(logs_tool.name, {"start_time": start_time}),
+                llm_context,
+            )
+            assert [record["message"] for record in result.data["records"]] == [
+                f"INFO (MainThread) [core] {message}" for message in expected_messages
+            ]
+            assert result.data.get("next_start_time") == expected_next_start_time
+            start_time = expected_next_start_time
 
 
 @pytest.mark.usefixtures("frozen_time")
