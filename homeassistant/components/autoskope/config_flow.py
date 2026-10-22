@@ -22,7 +22,7 @@ from .const import DEFAULT_HOST, DOMAIN, SECTION_ADDITIONAL_SETTINGS
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         probatio.Required(SECTION_ADDITIONAL_SETTINGS): section(
@@ -40,7 +40,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }

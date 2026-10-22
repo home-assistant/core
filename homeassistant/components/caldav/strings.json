@@ -29,5 +29,10 @@
         "description": "Please enter your CalDAV server credentials"
       }
     }
+  },
+  "exceptions": {
+    "unexpected_response": {
+      "message": "Unexpected response from the CalDAV server"
+    }
   }
 }

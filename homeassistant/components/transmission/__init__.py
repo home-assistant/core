@@ -72,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: TransmissionConfigEntry
-) -> bool:
+) -> None:
     """Set up the Transmission Component."""
 
     @callback
@@ -114,14 +114,16 @@ async def async_setup_entry(
 
     protocol: Final = "https" if config_entry.data[CONF_SSL] else "http"
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, config_entry.entry_id)},
-        manufacturer="Transmission",
-        entry_type=DeviceEntryType.SERVICE,
-        sw_version=api.server_version,
-        configuration_url=(
-            f"{protocol}://{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}"
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            manufacturer="Transmission",
+            entry_type=DeviceEntryType.SERVICE,
+            sw_version=api.server_version,
+            configuration_url=(
+                f"{protocol}://{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}"
+            ),
         ),
     )
 
@@ -133,19 +135,17 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: TransmissionConfigEntry
-) -> bool:
+) -> None:
     """Unload Transmission Entry from config_entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TransmissionConfigEntry
-) -> bool:
+) -> None:
     """Migrate an old config entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s",
@@ -168,8 +168,6 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True
 
 
 async def get_api(

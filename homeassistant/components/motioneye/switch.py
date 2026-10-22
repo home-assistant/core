@@ -128,6 +128,7 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         if camera:
             camera[self.entity_description.key] = value
             await self._client.async_set_camera(self._camera_id, camera)
+            await self.coordinator.async_refresh()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

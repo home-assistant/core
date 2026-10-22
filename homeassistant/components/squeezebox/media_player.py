@@ -156,17 +156,21 @@ async def async_setup_entry(
             # the server device itself; don't link it to itself.
             via_device_id = None
 
-        device = device_registry.async_get_or_create(
+        device = device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, player.player_id)},
-            connections={(CONNECTION_NETWORK_MAC, player.player_id)},
-            name=name,
-            model=model,
-            manufacturer=manufacturer,
-            model_id=model_id,
-            hw_version=str(player.firmware) if player.firmware is not None else None,
-            sw_version=sw_version,
-            via_device_id=via_device_id,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, player.player_id)},
+                connections={(CONNECTION_NETWORK_MAC, player.player_id)},
+                name=name,
+                model=model,
+                manufacturer=manufacturer,
+                model_id=model_id,
+                hw_version=str(player.firmware)
+                if player.firmware is not None
+                else None,
+                sw_version=sw_version,
+                via_device_id=via_device_id,
+            ),
         )
         _LOGGER.debug("Creating / Updating player device %s", device)
         async_add_entities([SqueezeBoxMediaPlayerEntity(coordinator)])
@@ -665,7 +669,8 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         _valid_type_list = [
             key
             for key in self._browse_data.content_type_media_class
-            if key not in ["apps", "app", "radios", "radio"]
+            if key
+            not in ["apps", "app", "radios", "radio", "artist tracks", "genre tracks"]
         ]
 
         _media_content_type_list = (
@@ -686,6 +691,14 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                     "media_content_type": ", ".join(_valid_type_list)
                 },
             )
+
+        if query.media_content_id:
+            # Without full text search, LMS matches only album titles inside an
+            # artist and only artist names inside a genre
+            if MediaType.ARTIST in _media_content_type_list:
+                _media_content_type_list.append("artist tracks")
+            if MediaType.GENRE in _media_content_type_list:
+                _media_content_type_list.append("genre tracks")
 
         search_response_list: list[BrowseMedia] = []
 

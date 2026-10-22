@@ -70,6 +70,7 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
     ) -> None:
         """Initialize the presentation light entity."""
         super().__init__(coordinator)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{coordinator.device_id}_presentation_light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property

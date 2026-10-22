@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.collection_image.const import DOMAIN
 from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
@@ -24,8 +25,6 @@ from .const import (
 )
 from .helpers import directory, image
 
-from tests.common import MockConfigEntry
-
 
 @dataclass
 class MediaSourceState:
@@ -43,7 +42,9 @@ class MediaSourceMocks:
 
     config_flow_browse: AsyncMock
     image_browse: AsyncMock
+    diagnostics_browse: AsyncMock
     resolve: AsyncMock
+    diagnostics_resolve: AsyncMock
 
 
 @pytest.fixture
@@ -152,12 +153,22 @@ def mock_media_source(
             new=AsyncMock(side_effect=browse_side_effect),
         ) as image_browse,
         patch(
+            "homeassistant.components.collection_image.diagnostics.async_browse_media",
+            new=AsyncMock(side_effect=browse_side_effect),
+        ) as diagnostics_browse,
+        patch(
             "homeassistant.components.collection_image.image.async_resolve_media",
             new=AsyncMock(side_effect=resolve_side_effect),
         ) as resolve,
+        patch(
+            "homeassistant.components.collection_image.diagnostics.async_resolve_media",
+            new=AsyncMock(side_effect=resolve_side_effect),
+        ) as diagnostics_resolve,
     ):
         yield MediaSourceMocks(
             config_flow_browse=config_flow_browse,
             image_browse=image_browse,
+            diagnostics_browse=diagnostics_browse,
             resolve=resolve,
+            diagnostics_resolve=diagnostics_resolve,
         )

@@ -34,6 +34,8 @@ from aiohasupervisor.models.mounts import MountsInfo
 from aiohttp import FormData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture, mock_platform
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import (
@@ -53,9 +55,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
-
-from tests.common import async_load_json_object_fixture, mock_platform
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_BACKUP = supervisor_backups.Backup(
     compressed=False,
@@ -456,6 +455,25 @@ async def _setup_backup_platform(
             ),
             [mock_backup_agent("local", DOMAIN)],
         ),
+        pytest.param(
+            MountsInfo(
+                default_backup_mount=None,
+                mounts=[
+                    supervisor_mounts.DiskMountResponse(
+                        uuid="0a1b2c3d-4e5f-6789-abcd-ef0123456789",
+                        filesystem="ext4",
+                        name="test",
+                        read_only=False,
+                        state=supervisor_mounts.MountState.ACTIVE,
+                        user_path=None,
+                        usage=supervisor_mounts.MountUsage.BACKUP,
+                        type=supervisor_mounts.MountType.DISK,
+                    )
+                ],
+            ),
+            [mock_backup_agent("local", DOMAIN), mock_backup_agent("test", DOMAIN)],
+            id="disk_backup_mount",
+        ),
     ],
 )
 async def test_agent_info(
@@ -746,6 +764,7 @@ async def test_agent_get_backup(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {},
         "backup": {
             "addons": [
@@ -777,14 +796,22 @@ async def test_agent_get_backup(
             SupervisorBadRequestError("blah"),
             {
                 "success": True,
-                "result": {"agent_errors": {"hassio.local": "blah"}, "backup": None},
+                "result": {
+                    "agent_error_translations": {},
+                    "agent_errors": {"hassio.local": "blah"},
+                    "backup": None,
+                },
             },
         ),
         (
             SupervisorNotFoundError(),
             {
                 "success": True,
-                "result": {"agent_errors": {}, "backup": None},
+                "result": {
+                    "agent_error_translations": {},
+                    "agent_errors": {},
+                    "backup": None,
+                },
             },
         ),
     ],
@@ -832,7 +859,7 @@ async def test_agent_delete_backup(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     supervisor_client.backups.remove_backup.assert_called_once_with(
         backup_id,
         options=supervisor_backups.RemoveBackupOptions(
@@ -849,14 +876,17 @@ async def test_agent_delete_backup(
             SupervisorBadRequestError("blah"),
             {
                 "success": True,
-                "result": {"agent_errors": {"hassio.local": "blah"}},
+                "result": {
+                    "agent_error_translations": {},
+                    "agent_errors": {"hassio.local": "blah"},
+                },
             },
         ),
         (
             SupervisorNotFoundError(),
             {
                 "success": True,
-                "result": {"agent_errors": {}},
+                "result": {"agent_error_translations": {}, "agent_errors": {}},
             },
         ),
     ],
@@ -2975,6 +3005,7 @@ async def test_restore_progress_after_restart_unknown_job(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -3007,6 +3038,7 @@ async def test_restore_progress_after_restart_unknown_job(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",

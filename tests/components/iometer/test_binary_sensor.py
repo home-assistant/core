@@ -5,6 +5,11 @@ from unittest.mock import MagicMock
 
 from iometer import Status
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.iometer.const import DOMAIN
@@ -13,12 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import get_status_callback, setup_platform
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

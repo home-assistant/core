@@ -5,10 +5,23 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from uiprotect import NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
-from uiprotect.data import NVR, Bootstrap, CloudAccount, Light, Version
+from uiprotect.data import (
+    NVR,
+    Bootstrap,
+    CloudAccount,
+    Fob,
+    Light,
+    LinkStation,
+    NvrArmModeStatus,
+    Relay,
+    Siren,
+    Version,
+)
 from uiprotect.data.public_devices import PublicCamera
 from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
@@ -30,14 +43,12 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntry
 from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from . import _patch_discovery
 from .conftest import PUBLIC_ONLY_ALARM_ENTITY_ID, UNIFI_MAC
 from .utils import MockUFPFixture, init_entry, make_public_light, time_changed
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 def _reauth_flow_started(hass: HomeAssistant) -> bool:
@@ -441,6 +452,39 @@ async def test_device_remove_devices_nvr(
     assert not response["success"]
 
 
+@pytest.mark.parametrize(
+    ("store", "model"),
+    [
+        pytest.param("fobs", Fob, id="fob"),
+        pytest.param("relays", Relay, id="relay"),
+        pytest.param("sirens", Siren, id="siren"),
+        pytest.param("alarm_hubs", LinkStation, id="alarm_hub"),
+    ],
+)
+async def test_device_remove_public_only_family(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+    store: str,
+    model: type,
+) -> None:
+    """A device only the public cache knows refuses removal while it exists."""
+    await init_entry(hass, ufp, [light])
+    device = Mock(spec=model)
+    device.mac = "aa:bb:cc:dd:ee:02"
+    setattr(ufp.api.public_bootstrap, store, {"device-id": device})
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=ufp.entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "AABBCCDDEE02")},
+    )
+
+    assert not await async_remove_config_entry_device(hass, ufp.entry, device_entry)
+
+    setattr(ufp.api.public_bootstrap, store, {})
+    assert await async_remove_config_entry_device(hass, ufp.entry, device_entry)
+
+
 async def test_remove_config_entry_device_rejects_child_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -604,7 +648,7 @@ async def test_migrate_entry_version_2(hass: HomeAssistant) -> None:
     """Test remove CONF_ALLOW_EA from options while migrating a 1 config entry to 2."""
     with (
         patch(
-            "homeassistant.components.unifiprotect.async_setup_entry", return_value=True
+            "homeassistant.components.unifiprotect.async_setup_entry", return_value=None
         ),
     ):
         entry = MockConfigEntry(
@@ -706,6 +750,26 @@ async def test_public_only_setup(
     state = hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID)
     assert state is not None
     assert state.state == AlarmControlPanelState.DISARMED
+
+
+async def test_public_only_setup_nameless_nvr(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A public NVR without name or type keeps a nameless device, not an empty name."""
+    nvr = ufp_public_only.api.public_bootstrap.nvr
+    nvr.name = nvr.device_type = nvr.type = None
+    nvr.display_name = ""
+
+    await setup_public_only()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
+    )
+    assert device is not None
+    assert device.name is None
 
 
 async def test_public_only_forwards_only_public_platforms(
@@ -890,17 +954,24 @@ async def test_public_only_manual_refresh(
 ) -> None:
     """A manual refresh (update_entity action) runs publicly and stays healthy."""
     await setup_public_only()
-    ufp_public_only.api.update_public.reset_mock()
+    api = ufp_public_only.api
+    api.update_public.reset_mock()
 
-    await ufp_public_only.entry.runtime_data.async_refresh()
+    async def _arm_on_refresh() -> None:
+        api.public_bootstrap.arm_mode.status = NvrArmModeStatus.ARMED
+
+    api.update_public.side_effect = _arm_on_refresh
+
+    await async_update_entity(hass, PUBLIC_ONLY_ALARM_ENTITY_ID)
     await hass.async_block_till_done()
 
-    ufp_public_only.api.update_public.assert_awaited_once()
+    api.update_public.assert_awaited_once()
     # The private update path must not run (it would poison the health flag).
     assert ufp_public_only.entry.runtime_data.last_update_success is True
+    # The entity update swallows errors, so check the refresh reached the entity.
     assert (
         hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID).state
-        == AlarmControlPanelState.DISARMED
+        == AlarmControlPanelState.ARMED_AWAY
     )
 
 
@@ -914,10 +985,10 @@ async def test_public_only_manual_refresh_revoked_key_triggers_reauth(
     ufp_public_only.api.update_public = AsyncMock(side_effect=NotAuthorized)
 
     for _ in range(AUTH_RETRIES):
-        await ufp_public_only.entry.runtime_data.async_refresh()
+        await async_update_entity(hass, PUBLIC_ONLY_ALARM_ENTITY_ID)
         assert not _reauth_flow_started(hass)
 
-    await ufp_public_only.entry.runtime_data.async_refresh()
+    await async_update_entity(hass, PUBLIC_ONLY_ALARM_ENTITY_ID)
     await hass.async_block_till_done()
 
     assert _reauth_flow_started(hass)

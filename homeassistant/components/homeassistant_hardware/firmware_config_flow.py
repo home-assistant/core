@@ -8,9 +8,6 @@ from typing import Any, override
 
 from aiohttp import ClientError
 from ha_silabs_firmware_client import FirmwareUpdateClient, ManifestMissing
-from universal_silabs_flasher.common import Version
-from universal_silabs_flasher.firmware import NabuCasaMetadata
-from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -31,15 +28,20 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
+from homeassistant.helpers.importlib import async_import_module
 
 from .const import DOMAIN, OTBR_DOMAIN, Z2M_EMBER_DOCS_URL, ZHA_DOMAIN
 from .util import (
+    COMMON_MODULE,
+    FIRMWARE_MODULE,
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
     OwningAddon,
     OwningIntegration,
     async_firmware_flashing_context,
     async_flash_silabs_firmware,
+    async_get_flasher_cls,
     get_otbr_addon_manager,
     guess_firmware_info,
     guess_hardware_owners,
@@ -79,7 +81,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
     ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
-    _flasher_cls: type[DeviceSpecificFlasher]
+    _flasher_type: FlasherType
 
     _picked_firmware_type: PickedFirmwareType
     _zigbee_flow_strategy: ZigbeeFlowStrategy = ZigbeeFlowStrategy.RECOMMENDED
@@ -234,9 +236,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             # Installing new firmware is only truly required if the wrong type is
             # installed: upgrading to the latest release of the current firmware type
             # isn't strictly necessary for functionality.
+            flasher_cls = await async_get_flasher_cls(self.hass, self._flasher_type)
             self._probed_firmware_info = await probe_silabs_firmware_info(
                 self._device,
-                flasher_cls=self._flasher_cls,
+                flasher_cls=flasher_cls,
             )
 
             firmware_install_required = self._probed_firmware_info is None or (
@@ -273,9 +276,15 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 assert self._probed_firmware_info is not None
 
                 # Make sure we do not downgrade the firmware
-                fw_metadata = NabuCasaMetadata.from_json(fw_manifest.metadata)
+                firmware_module = await async_import_module(self.hass, FIRMWARE_MODULE)
+                common_module = await async_import_module(self.hass, COMMON_MODULE)
+                fw_metadata = firmware_module.NabuCasaMetadata.from_json(
+                    fw_manifest.metadata
+                )
                 fw_version = fw_metadata.get_public_version()
-                probed_fw_version = Version(self._probed_firmware_info.firmware_version)
+                probed_fw_version = common_module.Version(
+                    self._probed_firmware_info.firmware_version
+                )
 
                 if probed_fw_version >= fw_version:
                     _LOGGER.debug(
@@ -308,7 +317,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 hass=self.hass,
                 device=self._device,
                 fw_data=fw_data,
-                flasher_cls=self._flasher_cls,
+                flasher_cls=flasher_cls,
                 expected_installed_firmware_type=expected_installed_firmware_type,
                 progress_callback=lambda offset, total: self.async_update_progress(
                     offset / total
@@ -499,12 +508,37 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Continue the ZHA flow."""
         raise NotImplementedError
 
+    def _is_proxied_device(self) -> bool:
+        """Whether the adapter is reached through another device, not a local port."""
+        return self._device is not None and self._device.startswith("esphome-hass://")
+
     async def async_step_pick_firmware_thread(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Thread firmware."""
+        if self._is_proxied_device():
+            return await self.async_step_thread_not_supported()
+
         self._picked_firmware_type = PickedFirmwareType.THREAD
         return await self._async_continue_picked_firmware()
+
+    async def async_step_thread_not_supported(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Explain that Thread needs the adapter on the host, then offer the choice again.
+
+        The OpenThread Border Router drives the 802.15.4 radio directly and needs a
+        low-latency link to it, which an adapter reached over Wi-Fi or Ethernet through an
+        ESPHome device cannot guarantee. Zigbee is unaffected. The option stays on the menu
+        so the reason is discoverable instead of the choice silently missing.
+        """
+        if user_input is not None:
+            return await self.async_step_pick_firmware()
+
+        return self.async_show_form(
+            step_id="thread_not_supported",
+            description_placeholders=self._get_translation_placeholders(),
+        )
 
     async def async_step_pick_firmware_thread_migrate(
         self, user_input: dict[str, Any] | None = None
@@ -727,6 +761,10 @@ class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlow):
     ) -> ConfigFlowResult:
         """Pick Thread firmware."""
         assert self._device is not None
+
+        # Settled before asking who owns the port: Thread is impossible here whoever does
+        if self._is_proxied_device():
+            return await self.async_step_thread_not_supported()
 
         owners = await guess_hardware_owners(self.hass, self._device)
 

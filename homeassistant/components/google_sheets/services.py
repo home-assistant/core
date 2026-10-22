@@ -43,7 +43,7 @@ SHEET_SERVICE_SCHEMA = probatio.All(
         ),
         probatio.Optional(WORKSHEET): cv.string,
         probatio.Optional(ADD_CREATED_COLUMN, default=True): cv.boolean,
-        probatio.Required(DATA): probatio.Any(cv.ensure_list, [dict]),
+        probatio.Required(DATA): probatio.Any(probatio.EnsureList(), [dict]),
     },
 )
 
@@ -86,6 +86,8 @@ def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
         for key, value in row_data.items():
             if key not in columns:
                 columns.append(key)
+                if len(columns) > worksheet.col_count:
+                    worksheet.add_cols(len(columns) - worksheet.col_count)
                 worksheet.update_cell(1, len(columns), key)
                 row.append(value)
         rows.append(row)

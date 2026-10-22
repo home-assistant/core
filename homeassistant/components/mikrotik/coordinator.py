@@ -363,10 +363,10 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         config_entry: MikrotikConfigEntry,
-        api: librouteros.Api,
+        mk_data: MikrotikData,
     ) -> None:
         """Initialize the Mikrotik Client."""
-        self._mk_data = MikrotikData(hass, config_entry, api)
+        self._mk_data = mk_data
         super().__init__(
             hass,
             LOGGER,
@@ -445,11 +445,11 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
             )
             _error = None
             break
-        except (
-            librouteros.exceptions.LibRouterosError,
-            OSError,
-            TimeoutError,
-        ) as api_error:
+        except CONNECTION_ERRORS as api_error:
+            LOGGER.debug("Mikrotik %s error: %s", entry[CONF_HOST], api_error)
+            # Falling back to token login would mask this with a bogus auth error
+            raise CannotConnect from api_error
+        except librouteros.exceptions.LibRouterosError as api_error:
             _error = api_error
 
     if _error is not None:
