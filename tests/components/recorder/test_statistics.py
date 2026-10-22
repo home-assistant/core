@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from datetime import timedelta
 import re
-from typing import Any
+from typing import Any, Literal
 from unittest.mock import ANY, Mock, patch
 
 import probatio
@@ -1759,6 +1759,66 @@ async def test_daily_statistics_sum(
         hass, start_time=future, end_time=future, period="day"
     )
     assert stats == {}
+
+
+@pytest.mark.parametrize(
+    ("period", "period_start", "period_end"),
+    [
+        pytest.param("day", "2022-10-30 00:00:00", "2022-10-31 00:00:00", id="day"),
+        pytest.param("week", "2022-10-24 00:00:00", "2022-10-31 00:00:00", id="week"),
+        pytest.param("month", "2022-10-01 00:00:00", "2022-11-01 00:00:00", id="month"),
+    ],
+)
+@pytest.mark.freeze_time("2022-11-15 00:00:00+00:00")
+async def test_statistics_period_containing_dst_fall_back(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    period: Literal["day", "week", "month"],
+    period_start: str,
+    period_end: str,
+) -> None:
+    """Test a period lasting an extra hour due to DST fall-back is not dropped.
+
+    Only the first hour of the period has data.
+    """
+    await hass.config.async_set_time_zone("Europe/Vienna")
+    await async_wait_recording_done(hass)
+
+    start = dt_util.as_utc(dt_util.parse_datetime(period_start))
+    end = dt_util.as_utc(dt_util.parse_datetime(period_end))
+    external_metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+    async_add_external_statistics(
+        hass,
+        external_metadata,
+        ({"start": start, "last_reset": None, "state": 1, "sum": 2},),
+    )
+    await async_wait_recording_done(hass)
+
+    stats = statistics_during_period(
+        hass,
+        start - timedelta(days=1),
+        period=period,
+        statistic_ids={"test:total_energy_import"},
+    )
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": start.timestamp(),
+                "end": end.timestamp(),
+                "last_reset": None,
+                "state": 1.0,
+                "sum": 2.0,
+            }
+        ]
+    }
 
 
 @pytest.mark.usefixtures("multiple_start_time_chunk_sizes")

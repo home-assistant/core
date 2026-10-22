@@ -3,18 +3,36 @@
 import asyncio
 from collections.abc import AsyncIterator
 from concurrent.futures import CancelledError, Future
-from typing import Self
+import logging
+from typing import Any, Self
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Abort(Exception):
     """Raised when abort is requested."""
 
 
+async def async_close_iterator(iterator: AsyncIterator[Any]) -> None:
+    """Close an async iterator if it supports it.
+
+    An iterator which is not fully consumed may hold resources, such as an HTTP
+    connection, until it is closed. Errors are logged, not raised, so this can be
+    used to clean up after another error.
+    """
+    if (aclose := getattr(iterator, "aclose", None)) is None:
+        return
+    try:
+        await aclose()
+    except Exception:
+        _LOGGER.debug("Error closing %s", iterator, exc_info=True)
+
+
 class AsyncIteratorReader:
     """Allow reading from an AsyncIterator using blocking I/O.
 
     The class implements a blocking read method reading from the async iterator,
-    and a close method.
+    and a close method which closes the async iterator.
 
     In addition, the abort method can be used to abort any ongoing read operation.
     """
@@ -30,12 +48,15 @@ class AsyncIteratorReader:
         self._loop = loop
         self._stream = stream
         self._buffer: bytes | None = None
+        # Held while reading, an async generator can't be closed during a read
+        self._lock = asyncio.Lock()
         self._next_future: Future[bytes | None] | None = None
         self._pos: int = 0
 
     async def _next(self) -> bytes | None:
         """Get the next chunk from the iterator."""
-        return await anext(self._stream, None)
+        async with self._lock:
+            return await anext(self._stream, None)
 
     def abort(self) -> None:
         """Abort the reader."""
@@ -64,20 +85,35 @@ class AsyncIteratorReader:
                 except CancelledError as err:
                     raise Abort from err
                 self._pos = 0
-            if not self._buffer:
+            if self._buffer is None:
                 # The stream is exhausted
                 self._exhausted = True
                 break
-            chunk = self._buffer[self._pos : self._pos + n]
+            if n < 0:
+                chunk = self._buffer[self._pos :]
+            else:
+                chunk = self._buffer[self._pos : self._pos + n]
+                n -= len(chunk)
             result.extend(chunk)
-            n -= len(chunk)
             self._pos += len(chunk)
             if self._pos == len(self._buffer):
                 self._buffer = None
         return bytes(result)
 
     def close(self) -> None:
-        """Close the iterator."""
+        """Abort any ongoing read and close the iterator.
+
+        The iterator is closed asynchronously on the event loop, this method may be
+        called from any thread.
+        """
+        self.abort()
+        asyncio.run_coroutine_threadsafe(self.aclose(), self._loop)
+
+    async def aclose(self) -> None:
+        """Abort any ongoing read and close the iterator."""
+        self.abort()
+        async with self._lock:
+            await async_close_iterator(self._stream)
 
 
 class AsyncIteratorWriter:
@@ -112,6 +148,10 @@ class AsyncIteratorWriter:
         self._aborted = True
         if self._write_future is not None:
             self._write_future.cancel()
+
+    async def aclose(self) -> None:
+        """Abort the writer, which unblocks the thread writing to it."""
+        self.abort()
 
     def tell(self) -> int:
         """Return the current position in the iterator."""

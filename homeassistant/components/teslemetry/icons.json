@@ -49,6 +49,9 @@
           "on": "mdi:snowflake-melt"
         }
       },
+      "escan_firmware_updating": {
+        "default": "mdi:update"
+      },
       "grid_services_active": {
         "state": {
           "off": "mdi:transmission-tower-off",
@@ -78,6 +81,9 @@
           "off": "mdi:car-light-dimmed",
           "on": "mdi:car-light-high"
         }
+      },
+      "pw3can_firmware_updating": {
+        "default": "mdi:update"
       },
       "remote_start_enabled": {
         "state": {

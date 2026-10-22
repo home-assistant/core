@@ -55,7 +55,7 @@ async def async_unload_entry(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: MetWeatherConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entry."""
     if config_entry.minor_version < 2:
         data = dict(config_entry.data)
@@ -66,5 +66,3 @@ async def async_migrate_entry(
             data=data,
             minor_version=2,
         )
-
-    return True

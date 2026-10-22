@@ -36,7 +36,7 @@ async def _patch_success(hass: HomeAssistant) -> AsyncGenerator[None]:
         ),
         patch(
             "homeassistant.components.switchbee.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
@@ -75,7 +75,7 @@ async def test_form(
         ),
         patch(
             "homeassistant.components.switchbee.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
@@ -218,7 +218,7 @@ async def test_form_entry_exists(hass: HomeAssistant) -> None:
         patch("switchbee.api.polling.CentralUnitPolling._login", return_value=None),
         patch(
             "homeassistant.components.switchbee.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "switchbee.api.polling.CentralUnitPolling.get_configuration",

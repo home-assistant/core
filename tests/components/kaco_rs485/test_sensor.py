@@ -33,6 +33,7 @@ def _entity_id(
     return entity_id
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -83,7 +84,7 @@ async def test_an_inverter_that_returns_reports_again(
     assert hass.states.get(ac_power).state == "635"
 
 
-async def test_a_half_answered_cycle_keeps_the_missing_half_unknown(
+async def test_a_half_answered_cycle_keeps_the_last_counters(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
@@ -93,7 +94,9 @@ async def test_a_half_answered_cycle_keeps_the_missing_half_unknown(
     """Test command `3` going quiet keeps the last total rather than blanking it."""
     entry_id = init_integration.entry_id
     total_yield = _entity_id(entity_registry, entry_id, 1, "total_yield")
+    daily_peak_power = _entity_id(entity_registry, entry_id, 1, "daily_peak_power")
     assert hass.states.get(total_yield).state == "112706"
+    assert hass.states.get(daily_peak_power).state == "4899"
 
     # Same unit, but now silent on command `3` only.
     mock_bus.wake(
@@ -106,6 +109,7 @@ async def test_a_half_answered_cycle_keeps_the_missing_half_unknown(
     await run_cycles(hass, freezer, 1)
 
     assert hass.states.get(total_yield).state == "112706"
+    assert hass.states.get(daily_peak_power).state == "4899"
     assert (
         hass.states.get(_entity_id(entity_registry, entry_id, 1, "ac_power")).state
         == "635"

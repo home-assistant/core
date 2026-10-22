@@ -5,8 +5,8 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import VesyncConfigEntry
 from .const import DOMAIN, SERVICE_UPDATE_DEVS, VS_DEVICES, VS_DISCOVERY
+from .coordinator import VesyncConfigEntry
 
 
 @callback
