@@ -112,6 +112,10 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
             and TWIST_SERVICE_UUID.lower() not in service_uuids
         ):
             return False
+        # After a Bluetooth discovery fell back to scanning, only the confirmed
+        # device may be paired
+        if self.unique_id is not None and service_info.address != self.unique_id:
+            return False
         return service_info.address not in self._async_current_ids(include_ignore=False)
 
     @override
@@ -134,12 +138,6 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_task = None
 
             return self.async_show_progress_done(next_step_id="discovery_done")
-
-        # Already found a device — go straight to pairing
-        if self._discovery_info is not None:
-            return await self._async_set_device_and_pair(
-                self._discovery_info, start_pairing=True
-            )
 
         # No device yet — start waiting for one to appear
         self._discovery_task = self.hass.async_create_task(
@@ -226,8 +224,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle bluetooth confirmation step."""
-        if self._discovery_info is None:
-            return self.async_abort(reason="no_devices_found")
+        assert self._discovery_info is not None
 
         self._abort_if_unique_id_configured()
 
@@ -256,8 +253,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle pairing step."""
-        if self._discovery_info is None:
-            return self.async_abort(reason="no_devices_found")
+        assert self._discovery_info is not None
 
         errors: dict[str, str] = {}
 

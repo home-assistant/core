@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Generator
+from contextlib import suppress
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak import BleakError
@@ -13,6 +14,7 @@ from pyflic_ble import (
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.flic_button.config_flow import FlicButtonConfigFlow
 from homeassistant.components.flic_button.const import (
@@ -29,6 +31,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import (
     ADDRESS_FOR_DEVICE_TYPE,
     DUO_SERIAL,
+    FLIC2_ADDRESS,
     FLIC2_SERIAL,
     MODEL_NAME_FOR_DEVICE_TYPE,
     TEST_BATTERY_LEVEL,
@@ -36,9 +39,13 @@ from . import (
     TEST_PAIRING_ID,
     TEST_PAIRING_KEY,
     TEST_SIG_BITS,
+    _service_info,
+    create_duo_service_info,
     create_flic2_service_info,
     service_info_for_device_type,
 )
+
+BATTERY_SERVICE_UUID = "0000180f-0000-1000-8000-00805f9b34fb"
 
 
 @pytest.fixture
@@ -296,3 +303,154 @@ async def test_bluetooth_confirm_device_no_longer_advertising(
 
     hass.config_entries.flow.async_abort(result["flow_id"])
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize("device_type", [DeviceType.FLIC2, DeviceType.TWIST])
+async def test_user_flow_pairs_discovered_device(
+    hass: HomeAssistant,
+    mock_flic_client: MagicMock,
+    device_type: DeviceType,
+) -> None:
+    """Test user-initiated flow pairs the first Flic device that advertises."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    # A device without a Flic service is ignored
+    inject_bluetooth_service_info(
+        hass, _service_info("Other", "AA:BB:CC:DD:EE:FF", BATTERY_SERVICE_UUID)
+    )
+    inject_bluetooth_service_info(hass, service_info_for_device_type(device_type))
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == ADDRESS_FOR_DEVICE_TYPE[device_type]
+    assert result["data"][CONF_ADDRESS] == ADDRESS_FOR_DEVICE_TYPE[device_type]
+    assert result["data"][CONF_DEVICE_TYPE] == device_type.value
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_bluetooth_fallback_only_pairs_confirmed_device(
+    hass: HomeAssistant,
+    mock_flic_client: MagicMock,
+) -> None:
+    """Test the scanner fallback ignores devices other than the confirmed one."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=create_flic2_service_info(),
+    )
+    with patch(
+        "homeassistant.components.flic_button.config_flow.async_discovered_service_info",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    # Not awaiting completion, as the scan keeps running until its timeout
+    inject_bluetooth_service_info(hass, create_duo_service_info())
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    inject_bluetooth_service_info(hass, create_flic2_service_info())
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == FLIC2_ADDRESS
+    assert result["data"][CONF_ADDRESS] == FLIC2_ADDRESS
+
+
+@pytest.mark.usefixtures("mock_discovered_service_info", "mock_setup_entry")
+@pytest.mark.parametrize(
+    "disconnect_side_effect",
+    [BleakError("Disconnect failed"), RuntimeError("Unexpected error")],
+)
+async def test_pairing_disconnect_error_ignored(
+    hass: HomeAssistant,
+    mock_flic_client: MagicMock,
+    disconnect_side_effect: Exception,
+) -> None:
+    """Test a failing disconnect after pairing does not block entry creation."""
+    mock_flic_client.disconnect.side_effect = disconnect_side_effect
+
+    result = await _init_bt_flow(hass, DeviceType.FLIC2)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == FLIC2_ADDRESS
+
+
+@pytest.mark.usefixtures("mock_discovered_service_info", "mock_setup_entry")
+async def test_pairing_duplicate_submission_ignored(
+    hass: HomeAssistant,
+    mock_flic_client: MagicMock,
+) -> None:
+    """Test a second pair submission while pairing runs does not start pairing again."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _connect() -> None:
+        started.set()
+        await release.wait()
+
+    mock_flic_client.connect.side_effect = _connect
+
+    result = await _init_bt_flow(hass, DeviceType.FLIC2)
+    flow_id = result["flow_id"]
+    first = asyncio.create_task(
+        hass.config_entries.flow.async_configure(flow_id, user_input={})
+    )
+    await started.wait()
+
+    result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+
+    release.set()
+    result = await first
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == FLIC2_ADDRESS
+    mock_flic_client.connect.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_discovered_service_info")
+async def test_abort_during_pairing_disconnects_client(
+    hass: HomeAssistant,
+    mock_flic_client: MagicMock,
+) -> None:
+    """Test aborting the flow while pairing disconnects the BLE client."""
+    started = asyncio.Event()
+
+    async def _connect() -> None:
+        started.set()
+        await asyncio.Event().wait()
+
+    mock_flic_client.connect.side_effect = _connect
+
+    result = await _init_bt_flow(hass, DeviceType.FLIC2)
+    pairing = asyncio.create_task(
+        hass.config_entries.flow.async_configure(result["flow_id"], user_input={})
+    )
+    await started.wait()
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_flic_client.disconnect.assert_awaited_once()
+
+    pairing.cancel()
+    with suppress(asyncio.CancelledError):
+        await pairing
