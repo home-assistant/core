@@ -153,6 +153,9 @@
     "switch_action_failed": {
       "message": "Failed to update the switch."
     },
+    "switch_unavailable": {
+      "message": "Switch data for device with MAC {mac} is not available."
+    },
     "unexpected_error": {
       "message": "Unexpected error connecting to Omada controller."
     },

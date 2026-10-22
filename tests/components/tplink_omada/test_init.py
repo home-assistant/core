@@ -591,12 +591,20 @@ async def test_cleanup_devices_empty_count_resets_on_data(
     )
 
 
+@pytest.mark.parametrize(
+    "poll_failure",
+    [
+        pytest.param(OmadaClientException, id="api_error"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
 async def test_cleanup_devices_empty_count_resets_on_failure(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
+    poll_failure: type[Exception],
 ) -> None:
     """Test a failed poll stops empty responses from accumulating."""
     mock_config_entry.add_to_hass(hass)
@@ -615,9 +623,10 @@ async def test_cleanup_devices_empty_count_resets_on_failure(
         await _async_poll_devices(hass, freezer)
         await async_cleanup_devices(hass, controller)
 
-    site_client.get_devices = AsyncMock(side_effect=OmadaClientException)
+    site_client.get_devices = AsyncMock(side_effect=poll_failure)
     await _async_poll_devices(hass, freezer)
     await async_cleanup_devices(hass, controller)
+    assert controller.devices_coordinator.consecutive_empty_updates == 0
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, switch_mac), mock_config_entry.entry_id
     )
@@ -625,6 +634,7 @@ async def test_cleanup_devices_empty_count_resets_on_failure(
     site_client.get_devices = AsyncMock(return_value=[])
     await _async_poll_devices(hass, freezer)
     await async_cleanup_devices(hass, controller)
+    assert controller.devices_coordinator.consecutive_empty_updates == 1
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, switch_mac), mock_config_entry.entry_id
     )

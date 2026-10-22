@@ -63,6 +63,15 @@ async def async_setup_entry(
         switch = await omada_client.get_switch(device)
         coordinator = controller.get_switch_port_coordinator(switch)
         await coordinator.async_refresh()
+        if not coordinator.last_update_success:
+            # A failed refresh keeps the previous data, so building entities
+            # from it would register stale ports. Raise so registration retries
+            # on a later device update.
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_unavailable",
+                translation_placeholders={"mac": device.mac},
+            )
 
         entities: list[Entity] = []
         entities.extend(

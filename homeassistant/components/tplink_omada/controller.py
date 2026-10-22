@@ -206,29 +206,36 @@ class OmadaSiteController:
 
     async def async_get_gateway_coordinator(self, mac: str) -> OmadaGatewayCoordinator:
         """Get the gateway coordinator, creating it for the given MAC."""
+        formatted_mac = dr.format_mac(mac)
         async with self._gateway_coordinator_lock:
             coordinator = self._gateway_coordinator
-            if coordinator is None or dr.format_mac(coordinator.mac) != dr.format_mac(
-                mac
-            ):
+            if coordinator is None or dr.format_mac(coordinator.mac) != formatted_mac:
                 coordinator = OmadaGatewayCoordinator(
                     self._hass, self._config_entry, self._omada_client, mac
                 )
                 self._gateway_coordinator = coordinator
                 await coordinator.async_refresh()
-            elif (
-                not coordinator.data or dr.format_mac(mac) in self._removed_device_macs
-            ):
+            elif not coordinator.data or formatted_mac in self._removed_device_macs:
                 # Refresh so a re-registered gateway is not rebuilt from stale
                 # data, and so a previous failed fetch can recover.
                 await coordinator.async_refresh()
-                if not coordinator.last_update_success:
+                current_macs = {
+                    dr.format_mac(device.mac)
+                    for device in (self._devices_coordinator.data or {}).values()
+                }
+                if (
+                    not coordinator.last_update_success
+                    or formatted_mac not in current_macs
+                ):
+                    # Cleanup may have removed the gateway while the refresh was
+                    # in flight, so keep its removal marker and let the platform
+                    # callback retry on a later device update.
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="gateway_unavailable",
                         translation_placeholders={"mac": mac},
                     )
-                self._removed_device_macs.discard(dr.format_mac(mac))
+                self._removed_device_macs.discard(formatted_mac)
             return coordinator
 
     @property
