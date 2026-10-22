@@ -246,7 +246,7 @@ def verify_event_loop_thread[**_P, _R](
 
         def resolve_get_hass(obj: Any) -> HomeAssistant:
             nonlocal get_hass
-            if isinstance(obj, HomeAssistant):
+            if isinstance(obj, _HomeAssistant):
                 get_hass = _get_hass_identity
             elif hasattr(obj, "hass"):
                 get_hass = _get_hass_public
@@ -1339,6 +1339,11 @@ class HomeAssistant:
         """Log all running tasks."""
         for task in self._tasks:
             _LOGGER.warning("Shutdown stage '%s': still running: %s", stage, task)
+
+
+# Tests patch homeassistant.core.HomeAssistant with a function.
+# verify_event_loop_thread uses this reference so isinstance keeps working.
+_HomeAssistant = HomeAssistant
 
 
 class Context:
