@@ -2140,6 +2140,9 @@ pyaprilaire==0.9.1
 # homeassistant.components.aqvify
 pyaqvify==0.0.12
 
+# homeassistant.components.ialarm
+pyasyncialarm==3.1.1
+
 # homeassistant.components.atag
 pyatag==0.3.7.1
 
@@ -2356,9 +2359,6 @@ pyhomematic==0.1.78
 
 # homeassistant.components.homeworks
 pyhomeworks==1.1.2
-
-# homeassistant.components.ialarm
-pyialarm==2.2.0
 
 # homeassistant.components.icloud
 pyicloud==2026.10.1
