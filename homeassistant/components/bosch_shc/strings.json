@@ -85,6 +85,9 @@
       "impulse_length": {
         "name": "Pulse length"
       },
+      "led_brightness": {
+        "name": "LED brightness"
+      },
       "offset": {
         "name": "Temperature offset"
       }
