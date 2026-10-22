@@ -405,6 +405,13 @@
       "temperature_level": {
         "name": "Temperature level"
       },
+      "travel_time_mode": {
+        "name": "Travel time mode",
+        "state": {
+          "automatic": "Automatic",
+          "manual": "Manual"
+        }
+      },
       "water_heater_mode": {
         "name": "Water heater mode"
       }
