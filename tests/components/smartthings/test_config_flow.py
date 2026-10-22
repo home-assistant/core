@@ -1,5 +1,6 @@
 """Tests for the SmartThings config flow module."""
 
+import asyncio
 from http import HTTPStatus
 from types import SimpleNamespace
 from typing import Any
@@ -195,6 +196,54 @@ async def test_pat_flow_only_reuses_owned_app(
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert f"client_id={expected_client_id}" in result["url"]
     assert hass_storage[STORAGE_KEY]["data"]["apps"][expected_app_id] == REDIRECT_URI
+
+
+@pytest.mark.usefixtures("current_request_with_host", "without_stored_credentials")
+async def test_concurrent_pat_flows_share_app(
+    hass: HomeAssistant,
+    mock_smartthings: AsyncMock,
+) -> None:
+    """Check concurrent PAT flows share one app without rotating its credentials."""
+    apps: list[SimpleNamespace] = []
+
+    async def list_apps() -> list[SimpleNamespace]:
+        # Yield, so the other flow can run while this one is provisioning.
+        await asyncio.sleep(0)
+        return list(apps)
+
+    async def create_app(**kwargs: Any) -> SimpleNamespace:
+        apps.append(SimpleNamespace(app_id="mock-app-id", app_name=kwargs["app_name"]))
+        return SimpleNamespace(
+            app_id="mock-app-id",
+            client_id="mock-client-id",
+            client_secret="mock-client-secret",
+        )
+
+    mock_smartthings.list_apps.side_effect = list_apps
+    mock_smartthings.create_app.side_effect = create_app
+
+    flow_ids = []
+    for _ in range(2):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["step_id"] == "pat"
+        flow_ids.append(result["flow_id"])
+
+    results = await asyncio.gather(
+        *(
+            hass.config_entries.flow.async_configure(
+                flow_id, {CONF_PAT_TOKEN: "pat-token"}
+            )
+            for flow_id in flow_ids
+        )
+    )
+
+    for result in results:
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        assert "client_id=mock-client-id" in result["url"]
+    mock_smartthings.create_app.assert_awaited_once()
+    mock_smartthings.regenerate_oauth.assert_not_called()
 
 
 @pytest.mark.usefixtures(

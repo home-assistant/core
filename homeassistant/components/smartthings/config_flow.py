@@ -185,50 +185,63 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         ledger = await async_get_app_ledger(self.hass)
 
-        apps = await client.list_apps()
-        # Apps from another instance on the same account must not be reused, as
-        # regenerating their OAuth credentials would break that instance.
-        existing_app = next(
-            (
-                app
-                for app in apps
-                if app.app_name.startswith(APP_NAME_PREFIX)
-                and ledger.is_reusable(app.app_id, redirect_uri)
-            ),
-            None,
-        )
-
-        if existing_app is not None:
-            self._app_id = existing_app.app_id
-            regenerated = await client.regenerate_oauth(
-                existing_app.app_id, "Home Assistant", REQUESTED_SCOPES
+        # Serialize provisioning, so concurrent flows don't rotate the
+        # credentials of an app another flow is still authorizing with.
+        async with ledger.provisioning_lock:
+            apps = await client.list_apps()
+            # Apps from another instance on the same account must not be reused, as
+            # regenerating their OAuth credentials would break that instance.
+            existing_app = next(
+                (
+                    app
+                    for app in apps
+                    if app.app_name.startswith(APP_NAME_PREFIX)
+                    and ledger.is_reusable(app.app_id, redirect_uri)
+                ),
+                None,
             )
-            client_id = regenerated.client_id
-            client_secret = regenerated.client_secret
-        else:
-            app = await client.create_app(
-                app_name=APP_NAME_PREFIX + str(uuid4()),
-                display_name="Home Assistant",
-                description=self.hass.config.location_name,
-                redirect_uris=[redirect_uri],
-                scopes=REQUESTED_SCOPES,
+
+            if existing_app is not None:
+                self._app_id = existing_app.app_id
+                # Another flow may have just provisioned this app; regenerating its
+                # credentials would invalidate the secret that flow still uses.
+                implementations = await async_get_implementations(self.hass, DOMAIN)
+                if (
+                    implementation := implementations.get(app_auth_domain(self._app_id))
+                ) is not None:
+                    self.flow_impl = implementation
+                    return
+                regenerated = await client.regenerate_oauth(
+                    existing_app.app_id, "Home Assistant", REQUESTED_SCOPES
+                )
+                client_id = regenerated.client_id
+                client_secret = regenerated.client_secret
+            else:
+                app = await client.create_app(
+                    app_name=APP_NAME_PREFIX + str(uuid4()),
+                    display_name="Home Assistant",
+                    description=self.hass.config.location_name,
+                    redirect_uris=[redirect_uri],
+                    scopes=REQUESTED_SCOPES,
+                )
+                self._app_id = app.app_id
+                client_id = app.client_id
+                client_secret = app.client_secret
+
+            auth_domain = app_auth_domain(self._app_id)
+
+            await ledger.async_record(self._app_id, redirect_uri)
+
+            created_at = dt_util.now().strftime("%b %d, %Y at %H:%M")
+            await ledger.async_replace_credential(
+                auth_domain,
+                ClientCredential(
+                    client_id, client_secret, name=f"Created {created_at}"
+                ),
             )
-            self._app_id = app.app_id
-            client_id = app.client_id
-            client_secret = app.client_secret
 
-        auth_domain = app_auth_domain(self._app_id)
-
-        await ledger.async_record(self._app_id, redirect_uri)
-
-        created_at = dt_util.now().strftime("%b %d, %Y at %H:%M")
-        await ledger.async_replace_credential(
-            auth_domain,
-            ClientCredential(client_id, client_secret, name=f"Created {created_at}"),
-        )
-
-        implementations = await async_get_implementations(self.hass, DOMAIN)
-        self.flow_impl = implementations[auth_domain]
+            implementations = await async_get_implementations(self.hass, DOMAIN)
+            self.flow_impl = implementations[auth_domain]
 
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:

@@ -1,5 +1,6 @@
 """Track per-user SmartThings apps provisioned during config flow setup."""
 
+import asyncio
 import logging
 from typing import Any, TypedDict, override
 
@@ -55,6 +56,7 @@ class SmartThingsAppLedger:
             hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_MINOR_VERSION
         )
         self._data: AppLedgerData | None = None
+        self.provisioning_lock = asyncio.Lock()
 
     async def async_load(self) -> None:
         """Load the ledger from storage."""
