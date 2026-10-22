@@ -35,6 +35,10 @@ _MAX_LIMIT = 50
 
 # Lines read from each source, the oldest ones in the time window
 LOG_QUERY_READ_LINES = 2000
+# Characters of the messages on a page, more records go to the next page
+LOG_QUERY_MAX_CHARACTERS = 10000
+# Longer messages keep their start and end, like the logger and the exception
+_LOG_QUERY_MAX_RECORD_CHARACTERS = 2000
 _LOG_QUERY_DEFAULT_SPAN = timedelta(minutes=15)
 _LOG_QUERY_DEFAULT_LIMIT = 100
 _LOG_QUERY_MAX_LIMIT = 500
@@ -227,6 +231,17 @@ def _read_log_file(path: str, start_time: datetime, lines: int) -> list[str]:
     return result
 
 
+def _shorten(message: str) -> str:
+    """Shorten a long message in the middle."""
+    if len(message) <= _LOG_QUERY_MAX_RECORD_CHARACTERS:
+        return message
+    half = _LOG_QUERY_MAX_RECORD_CHARACTERS // 2
+    return (
+        f"{message[:half]}\n… {len(message) - 2 * half} characters left out …\n"
+        f"{message[-half:]}"
+    )
+
+
 def _parse_time(value: str) -> datetime | None:
     """Parse a datetime string, assuming local time when no offset is given."""
     try:
@@ -247,8 +262,9 @@ class SystemLogGetLogsTool(Tool):
         "a summary of Home Assistant errors and warnings. Use this tool to see "
         "what happened around a specific time, or to find the cause of an error. "
         "Records are sorted oldest first, with times in local time, starting at "
-        "start_time. If 'next_start_time' is set, the records stop before it: "
-        "call the tool again with it as start_time to read the records after."
+        "start_time. Long messages are shortened in the middle. If "
+        "'next_start_time' is set, the records stop before it: call the tool "
+        "again with it as start_time to read the records after."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -411,11 +427,26 @@ class SystemLogGetLogsTool(Tool):
         if complete_end is not None:
             merged = [item for item in merged if item[1].time < complete_end]
         merged.sort(key=lambda item: item[1].time)
+        for _, record in merged:
+            record.message = _shorten(record.message)
 
-        # Keep the records with the same time together, so pages never split them
-        end = args["limit"]
-        while end < len(merged) and merged[end][1].time == merged[end - 1][1].time:
-            end += 1
+        # Add records with the same time together, so pages never split them.
+        # The first ones are always added, so the next page starts later.
+        end = characters = 0
+        while end < min(len(merged), args["limit"]):
+            group_end = end + 1
+            while (
+                group_end < len(merged)
+                and merged[group_end][1].time == merged[end][1].time
+            ):
+                group_end += 1
+            group_characters = sum(
+                len(record.message) for _, record in merged[end:group_end]
+            )
+            if end and characters + group_characters > LOG_QUERY_MAX_CHARACTERS:
+                break
+            characters += group_characters
+            end = group_end
         next_start_time = merged[end][1].time if end < len(merged) else complete_end
 
         data: JsonObjectType = {

@@ -585,6 +585,105 @@ async def test_get_logs_record_fills_line_limit(
     assert result.data["next_start_time"] == "2026-10-20T04:50:00.001-07:00"
 
 
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_shorten_record(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test a long record keeps its start and its end."""
+    result = await _async_call_with_logs(
+        hass,
+        llm_context,
+        {
+            "core": [
+                "2026-10-20 13:50:00.000+02:00 ERROR (MainThread) [core] Failed",
+                "Traceback (most recent call last):",
+                *(f'  File "frame_{index}.py", line 1, in run' for index in range(200)),
+                "ValueError: Boom",
+            ]
+        },
+        {},
+    )
+
+    message = result.data["records"][0]["message"]
+    assert message.startswith("ERROR (MainThread) [core] Failed\nTraceback")
+    assert "characters left out" in message
+    assert message.endswith("in run\nValueError: Boom")
+    assert len(message) < 2100
+
+
+@pytest.mark.parametrize(
+    ("max_characters", "expected_messages", "next_start_time"),
+    [
+        pytest.param(
+            25,
+            ["INFO (MainThread) [busy] Message 0"],
+            "2026-10-20T04:51:00.000-07:00",
+            id="first_record_over_budget",
+        ),
+        pytest.param(
+            70,
+            [
+                "INFO (MainThread) [busy] Message 0",
+                "INFO (MainThread) [busy] Message 1",
+            ],
+            "2026-10-20T04:52:00.000-07:00",
+            id="two_records",
+        ),
+        pytest.param(
+            100,
+            [
+                "INFO (MainThread) [busy] Message 0",
+                "INFO (MainThread) [busy] Message 1",
+            ],
+            "2026-10-20T04:52:00.000-07:00",
+            id="records_with_same_time_not_split",
+        ),
+        pytest.param(
+            125,
+            [
+                "INFO (MainThread) [busy] Message 0",
+                "INFO (MainThread) [busy] Message 1",
+                "INFO (MainThread) [busy] Message 2",
+                "quiet[1]: Same time",
+            ],
+            "2026-10-20T04:53:00.000-07:00",
+            id="records_with_same_time",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_character_budget(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    max_characters: int,
+    expected_messages: list[str],
+    next_start_time: str,
+) -> None:
+    """Test a page ends when its messages reach the character budget."""
+    with patch(
+        "homeassistant.components.system_log.llm.LOG_QUERY_MAX_CHARACTERS",
+        max_characters,
+    ):
+        result = await _async_call_with_logs(
+            hass,
+            llm_context,
+            {
+                "busy": [
+                    f"2026-10-20 13:5{minute}:00.000+02:00 INFO (MainThread) "
+                    f"[busy] Message {minute}"
+                    for minute in range(4)
+                ],
+                "quiet": ["2026-10-20 13:52:00.000+02:00 quiet[1]: Same time"],
+            },
+            {},
+        )
+
+    assert [record["message"] for record in result.data["records"]] == (
+        expected_messages
+    )
+    assert result.data["next_start_time"] == next_start_time
+
+
 @pytest.mark.parametrize(
     "source",
     [
