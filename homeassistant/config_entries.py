@@ -143,7 +143,7 @@ HANDLERS: Registry[str, type[ConfigFlow]] = Registry()
 
 STORAGE_KEY = "core.config_entries"
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 5
+STORAGE_VERSION_MINOR = 6
 
 SAVE_DELAY = 1
 
@@ -175,6 +175,8 @@ class ConfigEntryState(Enum):
     """The config entry is setting up."""
     UNLOAD_IN_PROGRESS = "unload_in_progress", False
     """The config entry is being unloaded."""
+    PAUSED = "paused", True
+    """The config entry has been paused by the user and is not loaded"""
 
     _recoverable: bool
 
@@ -431,6 +433,7 @@ class ConfigEntry[_DataT = Any]:
     source: str
     minor_version: int
     disabled_by: ConfigEntryDisabler | None
+    paused: bool
     supports_unload: bool | None
     supports_remove_device: bool | None
     _supports_options: bool | None
@@ -462,6 +465,7 @@ class ConfigEntry[_DataT = Any]:
         minor_version: int,
         modified_at: datetime | None = None,
         options: Mapping[str, Any] | None,
+        paused: bool = False,
         pref_disable_new_entities: bool | None = None,
         pref_disable_polling: bool | None = None,
         source: str,
@@ -534,6 +538,8 @@ class ConfigEntry[_DataT = Any]:
         # Config entry is disabled
         _validate_item(disabled_by=disabled_by)
         _setter(self, "disabled_by", disabled_by)
+
+        _setter(self, "paused", paused)
 
         # Supports unload
         _setter(self, "supports_unload", None)
@@ -721,6 +727,10 @@ class ConfigEntry[_DataT = Any]:
     ) -> None:
         """Set up an entry."""
         if self.source == SOURCE_IGNORE or self.disabled_by:
+            return
+
+        if self.paused:
+            self._async_set_state(hass, ConfigEntryState.PAUSED, None)
             return
 
         current_entry.set(self)
@@ -1356,6 +1366,7 @@ class ConfigEntry[_DataT = Any]:
             "minor_version": self.minor_version,
             "modified_at": self.modified_at.isoformat(),
             "options": dict(self.options),
+            "paused": self.paused,
             "pref_disable_new_entities": self.pref_disable_new_entities,
             "pref_disable_polling": self.pref_disable_polling,
             "source": self.source,
@@ -2272,6 +2283,11 @@ class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 for entry in data["entries"]:
                     entry.setdefault("subentries", entry.get("subentries", {}))
 
+            if old_minor_version < 6:
+                # Version 1.6 adds paused
+                for entry in data["entries"]:
+                    entry["paused"] = False
+
         if old_major_version > 1:
             raise NotImplementedError
         return data
@@ -2297,7 +2313,10 @@ class ConfigEntries:
 
     @callback
     def async_domains(
-        self, include_ignore: bool = False, include_disabled: bool = False
+        self,
+        include_ignore: bool = False,
+        include_disabled: bool = False,
+        include_paused: bool = False,
     ) -> list[str]:
         """Return domains for which we have entries."""
         return list(
@@ -2306,6 +2325,7 @@ class ConfigEntries:
                 for entry in self._entries.values()
                 if (include_ignore or entry.source != SOURCE_IGNORE)
                 and (include_disabled or not entry.disabled_by)
+                and (include_paused or not entry.paused)
             }
         )
 
@@ -2484,10 +2504,11 @@ class ConfigEntries:
                 migrated_domains.add(entry_domain)
                 entry_domain = replacement
 
+            disabled_by = try_parse_enum(ConfigEntryDisabler, entry["disabled_by"])
             config_entry = ConfigEntry(
                 created_at=datetime.fromisoformat(entry["created_at"]),
                 data=entry["data"],
-                disabled_by=try_parse_enum(ConfigEntryDisabler, entry["disabled_by"]),
+                disabled_by=disabled_by,
                 discovery_keys=MappingProxyType(
                     {
                         domain: tuple(DiscoveryKey.from_json_dict(key) for key in keys)
@@ -2499,9 +2520,16 @@ class ConfigEntries:
                 minor_version=entry["minor_version"],
                 modified_at=datetime.fromisoformat(entry["modified_at"]),
                 options=entry["options"],
+                paused=entry["paused"],
                 pref_disable_new_entities=entry["pref_disable_new_entities"],
                 pref_disable_polling=entry["pref_disable_polling"],
                 source=entry["source"],
+                # Paused entries are not set up, their integration may never load
+                state=(
+                    ConfigEntryState.PAUSED
+                    if entry["paused"] and not disabled_by
+                    else ConfigEntryState.NOT_LOADED
+                ),
                 subentries_data=entry["subentries"],
                 title=entry["title"],
                 unique_id=entry["unique_id"],
@@ -2738,6 +2766,38 @@ class ConfigEntries:
             er.async_config_entry_disabled_by_changed(ent_reg, entry)
 
         return reload_result
+
+    async def async_set_paused(self, entry_id: str, paused: bool) -> bool:
+        """Pause or unpause an entry.
+
+        A paused entry is unloaded and stays unloaded across restarts, while
+        its entities remain in the state machine as unavailable.
+        """
+        entry = self.async_get_known_entry(entry_id)
+
+        if entry.disabled_by:
+            raise OperationNotAllowed(
+                f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
+                f" '{entry.entry_id}' cannot be paused or unpaused as it is"
+                f" disabled by {entry.disabled_by}"
+            )
+        if entry.paused is paused:
+            return True
+
+        entry.paused = paused
+        self._async_schedule_save()
+        self._async_dispatch(ConfigEntryChange.UPDATED, entry)
+
+        if not paused:
+            return await self.async_reload(entry_id)
+
+        entry.async_cancel_retry_setup()
+        _abort_reauth_flows(self.hass, entry.domain, entry_id)
+        async with entry.setup_lock:
+            if not await self.async_unload(entry_id, _lock=False):
+                return False
+            entry._async_set_state(self.hass, ConfigEntryState.PAUSED, None)  # noqa: SLF001
+        return True
 
     @callback
     def async_update_entry(

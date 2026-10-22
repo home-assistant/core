@@ -64,6 +64,7 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, config_entries_get)
     websocket_api.async_register_command(hass, config_entry_disable)
     websocket_api.async_register_command(hass, config_entry_get_single)
+    websocket_api.async_register_command(hass, config_entry_pause)
     websocket_api.async_register_command(hass, config_entry_update)
     websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_flow_progress)
@@ -572,6 +573,41 @@ async def config_entry_update(
             )
 
     connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config_entries/pause",
+        "entry_id": str,
+        "paused": bool,
+    }
+)
+@websocket_api.async_response
+async def config_entry_pause(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Pause or unpause config entry."""
+    try:
+        await hass.config_entries.async_set_paused(msg["entry_id"], msg["paused"])
+        # The entry may have been removed while it was reloading
+        entry = hass.config_entries.async_get_known_entry(msg["entry_id"])
+    except config_entries.OperationNotAllowed as err:
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_ALLOWED, str(err))
+        return
+    except config_entries.UnknownEntry:
+        send_entry_not_found(connection, msg["id"])
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "require_restart": entry.state
+            is config_entries.ConfigEntryState.FAILED_UNLOAD
+        },
+    )
 
 
 @websocket_api.require_admin
