@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import struct
+import zlib
 
 import pytest
 
@@ -11,11 +12,12 @@ from script.hassfest.model import Config, Integration
 
 def _png(width: int, height: int, content: bytes = b"") -> bytes:
     """Return a PNG header with the given size, followed by some content."""
+    ihdr = b"IHDR" + struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
     return (
         brand_images.PNG_SIGNATURE
         + struct.pack(">I", 13)
-        + b"IHDR"
-        + struct.pack(">II", width, height)
+        + ihdr
+        + struct.pack(">I", zlib.crc32(ihdr))
         + content
     )
 
@@ -134,6 +136,20 @@ def test_no_brand_folder(tmp_path: Path, config: Config) -> None:
             {"icon.png": _png(256, 256)[:18]},
             "brand/icon.png is not a PNG image",
             id="truncated_png",
+        ),
+        pytest.param(
+            {"icon.png": _png(256, 256)[:24]},
+            "brand/icon.png is not a PNG image",
+            id="truncated_ihdr",
+        ),
+        pytest.param(
+            {
+                "icon.png": brand_images.PNG_SIGNATURE
+                + struct.pack(">I", 12)
+                + _png(256, 256)[12:]
+            },
+            "brand/icon.png is not a PNG image",
+            id="malformed_ihdr_length",
         ),
         pytest.param(
             {"icon.png": _png(256, 256), "icon.svg": b"<svg></svg>"},

@@ -8,6 +8,9 @@ from homeassistant.components.brands.const import ALLOWED_IMAGES, IMAGE_FALLBACK
 from .model import Config, Integration
 
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+# Signature, then the IHDR chunk: length, type, 13 bytes of data and its CRC.
+PNG_HEADER_SIZE = 33
+IHDR_START = b"\x00\x00\x00\x0dIHDR"
 
 # Same size rules as the home-assistant/brands repository; dark_ variants share them.
 ICON_SIZE = {"icon.png": 256, "icon@2x.png": 512}
@@ -25,8 +28,12 @@ def _report(integration: Integration, message: str) -> None:
 def _png_size(path: Path) -> tuple[int, int] | None:
     """Return the width and height from a PNG header, or None if it is no PNG."""
     with path.open("rb") as file:
-        header = file.read(24)
-    if len(header) < 24 or header[:8] != PNG_SIGNATURE or header[12:16] != b"IHDR":
+        header = file.read(PNG_HEADER_SIZE)
+    if (
+        len(header) < PNG_HEADER_SIZE
+        or header[:8] != PNG_SIGNATURE
+        or header[8:16] != IHDR_START
+    ):
         return None
     width, height = struct.unpack(">II", header[16:24])
     return width, height
