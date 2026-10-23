@@ -2258,3 +2258,125 @@ async def test_stale_context_not_used_as_parent(
     # The keepalive call's context should have no parent,
     # because the original context expired long ago
     assert calls[0].context.parent_id is None
+
+
+async def _setup_thermostat_with_tolerances(
+    hass: HomeAssistant,
+    hvac_mode: HVACMode,
+    target: float,
+    cold_tolerance: float,
+    hot_tolerance: float,
+) -> None:
+    """Set up a thermostat with the given tolerances."""
+    hass.config.units = METRIC_SYSTEM
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": cold_tolerance,
+                "hot_tolerance": hot_tolerance,
+                "target_temp": target,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "ac_mode": hvac_mode == HVACMode.COOL,
+                "initial_hvac_mode": hvac_mode,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("hvac_mode", "target", "cold", "hot", "is_on", "temp", "services"),
+    [
+        pytest.param(
+            HVACMode.HEAT,
+            22,
+            0.5,
+            0,
+            False,
+            21.5,
+            [SERVICE_TURN_ON],
+            id="heat_on_at_limit",
+        ),
+        pytest.param(HVACMode.HEAT, 22, 0.5, 0, False, 21.6, [], id="heat_on_inside"),
+        pytest.param(
+            HVACMode.HEAT,
+            22,
+            0.5,
+            0,
+            True,
+            22.0,
+            [SERVICE_TURN_OFF],
+            id="heat_off_at_limit",
+        ),
+        pytest.param(HVACMode.HEAT, 22, 0.5, 0, True, 21.9, [], id="heat_off_inside"),
+        pytest.param(
+            HVACMode.HEAT,
+            15.1,
+            0.3,
+            0.3,
+            False,
+            14.8,
+            [SERVICE_TURN_ON],
+            id="heat_on_at_limit_float_rounding",
+        ),
+        pytest.param(
+            HVACMode.COOL,
+            25,
+            0,
+            0.5,
+            False,
+            25.5,
+            [SERVICE_TURN_ON],
+            id="cool_on_at_limit",
+        ),
+        pytest.param(HVACMode.COOL, 25, 0, 0.5, False, 25.4, [], id="cool_on_inside"),
+        pytest.param(
+            HVACMode.COOL,
+            25,
+            0.5,
+            0,
+            True,
+            24.5,
+            [SERVICE_TURN_OFF],
+            id="cool_off_at_limit",
+        ),
+        pytest.param(HVACMode.COOL, 25, 0.5, 0, True, 24.6, [], id="cool_off_inside"),
+    ],
+)
+async def test_tolerance_band_limits_are_inclusive(
+    hass: HomeAssistant,
+    hvac_mode: HVACMode,
+    target: float,
+    cold: float,
+    hot: float,
+    is_on: bool,
+    temp: float,
+    services: list[str],
+) -> None:
+    """Test that the switch toggles exactly at the tolerance limits."""
+    _setup_sensor(hass, target)
+    await _setup_thermostat_with_tolerances(hass, hvac_mode, target, cold, hot)
+    calls = _setup_switch(hass, is_on)
+    _setup_sensor(hass, temp)
+    await hass.async_block_till_done()
+    assert [call.service for call in calls] == services
+
+
+@pytest.mark.parametrize("hvac_mode", [HVACMode.HEAT, HVACMode.COOL])
+@pytest.mark.parametrize("is_on", [False, True])
+async def test_no_flip_flop_with_band_narrower_than_epsilon(
+    hass: HomeAssistant, hvac_mode: HVACMode, is_on: bool
+) -> None:
+    """Test that a band narrower than the epsilon keeps the strict comparison."""
+    _setup_sensor(hass, 25)
+    await _setup_thermostat_with_tolerances(hass, hvac_mode, 25, 0, 1e-6)
+    calls = _setup_switch(hass, is_on)
+    _setup_sensor(hass, 25.0)
+    await hass.async_block_till_done()
+    assert calls == []
+    
