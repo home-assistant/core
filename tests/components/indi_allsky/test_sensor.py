@@ -624,6 +624,58 @@ async def test_dynamic_hardware_sensor_discovery(
     assert state.attributes.get("device_class") == "temperature"
     assert state.attributes.get("state_class") == "measurement"
 
+    # Verify unit-only update clears cached value so old reading is not relabeled in new unit
+    unit_only_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": {"unit": "°F"},
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(unit_only_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_sht4x_i2c_sht40_temperature")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("unit_of_measurement") == "°C"
+    assert state.attributes.get("device_class") == "temperature"
+
+    # Verify incompatible unit update clears device_class so conversion does not fail
+    incompatible_unit_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": {"value": 100.0, "unit": "rpm"},
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(incompatible_unit_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_sht4x_i2c_sht40_temperature")
+    assert state is not None
+    assert state.state == "100.0"
+    assert state.attributes.get("unit_of_measurement") == "rpm"
+    assert state.attributes.get("device_class") is None
+
+    # Restore °C metadata and verify explicit None value transitions state to unknown
+    restore_celsius_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": {
+                    "value": 22.5,
+                    "unit": "°C",
+                    "device_class": "temperature",
+                },
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(restore_celsius_update)
+    await hass.async_block_till_done()
+
     # Verify explicit None value in dictionary update transitions state to unknown while retaining metadata
     null_value_dict_update = SensorData.from_dict(
         {
