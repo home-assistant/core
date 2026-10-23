@@ -290,8 +290,19 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             if sensor.raw_data:
                 merged_data.update(sensor.raw_data)
 
-            has_explicit_temp_unit = bool(
-                sensor.raw_data and "temp_unit" in sensor.raw_data
+            has_declared_temp_unit = (
+                bool(sensor.raw_data and sensor.raw_data.get("temp_unit"))
+                or any(
+                    isinstance(entry := sensor.sensors.get(key), dict)
+                    and bool(entry.get("unit"))
+                    for key in (
+                        "dew_point",
+                        "frost_point",
+                        "heat_index",
+                        "camera_temp",
+                    )
+                )
+                or sensor.temp_unit != "°C"
             )
 
             self.latest_sensor = SensorData(
@@ -301,7 +312,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 raw_user=merged_user,
                 raw_data=merged_data,
                 temp_unit=sensor.temp_unit
-                if has_explicit_temp_unit or sensor.temp_unit != "°C"
+                if has_declared_temp_unit
                 else self.latest_sensor.temp_unit,
                 dew_heater=sensor.dew_heater
                 if sensor.dew_heater is not None

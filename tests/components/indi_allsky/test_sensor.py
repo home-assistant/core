@@ -457,6 +457,30 @@ async def test_hardware_sensor_fahrenheit_units(
         dew_state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
     )
 
+    # Verify update with per-sensor °C metadata (without top-level temp_unit) switches to °C
+    celsius_metadata_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "dew_point": {
+                    "name": "Dew Point",
+                    "value": 20.0,
+                    "unit": "°C",
+                },
+            },
+            "sensor_user": [0, 0, 20.0],
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(celsius_metadata_update)
+    await hass.async_block_till_done()
+
+    dew_state = hass.states.get("sensor.indi_allsky_dew_point")
+    assert dew_state is not None
+    assert dew_state.state == "68.0"
+    assert (
+        dew_state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
+    )
+
 
 async def test_dynamic_hardware_sensor_discovery(
     hass: HomeAssistant,
@@ -555,6 +579,25 @@ async def test_dynamic_hardware_sensor_discovery(
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("state_class") is None
     assert state.attributes.get("unit_of_measurement") is None
+
+    # Verify subsequent scalar update preserves previously discovered metadata
+    scalar_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": 21.0,
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(scalar_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_sht4x_i2c_sht40_temperature")
+    assert state is not None
+    assert state.state == "21.0"
+    assert state.attributes.get("unit_of_measurement") == "°C"
+    assert state.attributes.get("device_class") == "temperature"
+    assert state.attributes.get("state_class") == "measurement"
 
 
 async def test_initial_sensor_fetch_preserved(
