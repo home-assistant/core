@@ -29,6 +29,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -394,11 +395,25 @@ async def async_setup_entry(
     )
 
     coordinator = entry.runtime_data.coordinator
+    device_registry = dr.async_get(hass)
     known_packs: set[str] = set()
 
     @callback
     def _async_add_new_packs() -> None:
         """Add the packs seen for the first time, told apart by serial number."""
+        # A pack whose device was deleted is added again once it answers.
+        known_packs.difference_update(
+            [
+                pack_serial
+                for pack_serial in known_packs
+                if device_registry.async_get_device_by_identifier(
+                    (DOMAIN, pack_serial), entry.entry_id
+                )
+                is None
+            ]
+        )
+        for values in coordinator.pack_values.values():
+            _async_update_pack_device(device_registry, entry, values)
         new_packs = {
             pack_serial: (unit_id, values)
             for unit_id, values in coordinator.pack_values.items()
@@ -419,6 +434,37 @@ async def async_setup_entry(
 
     _async_add_new_packs()
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_packs))
+
+
+def _pack_model(values: dict[str, Any]) -> str | None:
+    return values["b_type"] or None
+
+
+def _pack_firmware(values: dict[str, Any]) -> str | None:
+    return values["b_ver_1"] if values["b_ver_count"] else None
+
+
+@callback
+def _async_update_pack_device(
+    device_registry: dr.DeviceRegistry,
+    entry: BluettiModbusConfigEntry,
+    values: dict[str, Any],
+) -> None:
+    """Fill in a pack's model and firmware once it reports them.
+
+    A pack first seen reporting only its serial number gets a device without
+    them, and its firmware can change later.
+    """
+    if not pack_is_reporting(values):
+        return
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(values["b_serial"])), entry.entry_id
+    )
+    if device is None:
+        return
+    model, firmware = _pack_model(values), _pack_firmware(values)
+    if (device.model, device.sw_version) != (model, firmware):
+        device_registry.async_update_device(device.id, model=model, sw_version=firmware)
 
 
 # The built-in pack's sensors, which each expansion pack has too.
@@ -487,11 +533,11 @@ class BluettiModbusPackSensor(BluettiModbusEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, pack_serial)},
             manufacturer="BLUETTI",
-            model=values["b_type"] or None,
+            model=_pack_model(values),
             # The built-in pack is pack 1.
             name=f"Pack {unit_id - EXPANSION_PACK_FIRST_SLAVE_ID + 2}",
             serial_number=pack_serial,
-            sw_version=values["b_ver_1"] if values["b_ver_count"] else None,
+            sw_version=_pack_firmware(values),
             via_device_id=entry.runtime_data.device_id,
         )
 

@@ -239,3 +239,75 @@ async def test_remove_a_pack_while_not_loaded(
     assert response["success"] is False
     # Rejected by the integration, not an error raised while checking.
     assert response["error"]["code"] == "home_assistant_error"
+
+
+@pytest.mark.usefixtures("three_packs")
+async def test_deleted_pack_comes_back_when_reconnected(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_modbus_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A pack deleted while away gets its device back once it answers again."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, mock_config_entry)
+    pack = mock_modbus_connection.for_unit(43)
+    pack.fail_requests(ModbusTimeoutError("timed out"))
+    await _tick(hass, freezer)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "4301"), mock_config_entry.entry_id
+    )
+    assert device is not None
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device.id)
+    assert response["success"]
+    assert hass.states.get(PACK_4_SOC_ENTITY) is None
+
+    pack.fail_requests(None)
+    await _tick(hass, freezer)
+
+    state = hass.states.get(PACK_4_SOC_ENTITY)
+    assert state is not None
+    assert state.state == "79"
+
+
+@pytest.mark.usefixtures("three_packs")
+async def test_silent_pack_gets_its_model_once_it_reports(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_modbus_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A pack first seen with its serial number only gets its model and firmware."""
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "4101"), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert (device.model, device.sw_version) == (None, None)
+
+    # The pack at unit 41 starts reporting: the full block, its own serial kept.
+    registers = await async_load_json_object_fixture(
+        hass, "balco260_expansion_packs_registers.json", DOMAIN
+    )
+    serial = {
+        address: registers["41"]["holding"][address]
+        for address in ("51206", "51207", "51208", "51209")
+    }
+    mock_modbus_connection.for_unit(41).load_raw(
+        {"holding": registers["42"]["holding"] | serial}
+    )
+    await _tick(hass, freezer)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "4101"), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert (device.model, device.sw_version) == ("BC260", "20113.01.06")
+    state = hass.states.get(PACK_2_SOC_ENTITY)
+    assert state is not None
+    assert state.state == "85"
