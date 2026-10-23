@@ -1,5 +1,6 @@
 """Tests for the BLUETTI Modbus config flow."""
 
+from ipaddress import ip_address
 from typing import Any
 from unittest.mock import patch
 
@@ -15,12 +16,19 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bluetti_modbus.const import CONF_UNIT_ID, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import setup_integration
 from .conftest import (
     HOST,
     PORT,
@@ -32,6 +40,7 @@ from .conftest import (
 )
 
 TITLE = "Balco 260"
+NEW_HOST = "5.6.7.8"
 
 
 def _user_input(host: str = HOST, unit_id: int = UNIT_ID) -> dict[str, Any]:
@@ -301,3 +310,173 @@ async def test_user_flow_rejects_the_same_serial_at_a_different_endpoint(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+def _zeroconf_info(
+    host: str = HOST, hostname: str = "blhems-1a2b3c4d5e6f.local."
+) -> ZeroconfServiceInfo:
+    """What a Balco 260 announces over mDNS."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        hostname=hostname,
+        name="Bluetti HEMS._http._tcp.local.",
+        port=80,
+        type="_http._tcp.local.",
+        properties={"path": "/"},
+    )
+
+
+@pytest.mark.parametrize(
+    "hostname",
+    [
+        pytest.param("blhems-1a2b3c4d5e6f.local.", id="mac_in_hostname"),
+        pytest.param("bluetti.local.", id="no_mac_in_hostname"),
+    ],
+)
+async def test_zeroconf_flow(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit, hostname: str
+) -> None:
+    """A discovered power station is probed, confirmed and added."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_info(hostname=hostname),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TITLE
+    assert result["data"] == bluetti_data()
+    assert result["result"].unique_id == SERIAL
+
+
+async def test_zeroconf_known_address_is_not_probed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """An address an entry already uses aborts without a Modbus read."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert not mock_modbus_unit.read_events
+
+
+async def test_zeroconf_ignored_device_is_not_probed(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A power station the user ignored aborts without a Modbus read."""
+    MockConfigEntry(
+        domain=DOMAIN, source=SOURCE_IGNORE, unique_id="1a:2b:3c:4d:5e:6f"
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert not mock_modbus_unit.read_events
+
+
+async def test_zeroconf_ignoring_keeps_the_device_unprobed(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """Ignoring a discovery stores the MAC, so the next announcement is not probed."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IGNORE},
+        data={"unique_id": "1a:2b:3c:4d:5e:6f", "title": TITLE},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1a:2b:3c:4d:5e:6f"
+    mock_modbus_unit.read_events.clear()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert not mock_modbus_unit.read_events
+
+
+async def test_zeroconf_discovery_in_progress_is_not_probed(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A repeated announcement during a pending discovery aborts without a read."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+    )
+    assert result["type"] is FlowResultType.FORM
+    mock_modbus_unit.read_events.clear()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+    assert not mock_modbus_unit.read_events
+
+
+async def test_zeroconf_updates_a_moved_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """The same power station announced at a new address updates its entry."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info(NEW_HOST)
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == {**bluetti_data(), CONF_HOST: NEW_HOST}
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_zeroconf_ignored_by_serial(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A power station ignored under its serial number is not offered again."""
+    MockConfigEntry(domain=DOMAIN, source=SOURCE_IGNORE, unique_id=SERIAL).add_to_hass(
+        hass
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_cannot_connect(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A discovered device that can't be read aborts with the probe's reason."""
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("timed out"))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
