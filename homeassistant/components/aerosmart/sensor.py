@@ -537,7 +537,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         component="heat_pump",
         attribute="wp_zentralgeraet_adresse",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
         key="heat_pump_wp_betriebsstunden_kompressormotor",

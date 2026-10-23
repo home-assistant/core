@@ -43,3 +43,10 @@ def test_volume_limit_has_no_state_class() -> None:
         descriptions["coarse_dust_filter_grobstaubfilter_max_foerdervolume"].state_class
         is None
     )
+
+
+def test_central_unit_address_has_no_state_class() -> None:
+    """A controller address is an identifier, not a measurement."""
+    descriptions = {description.key: description for description in SENSOR_DESCRIPTIONS}
+
+    assert descriptions["heat_pump_wp_zentralgeraet_adresse"].state_class is None
