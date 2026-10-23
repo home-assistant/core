@@ -235,3 +235,31 @@
     }),
   })
 # ---
+# name: test_diagnostics_before_the_first_poll
+  dict({
+    'entry_data': dict({
+      'addresses': list([
+        1,
+        2,
+        4,
+      ]),
+      'inverters': dict({
+        '1': dict({
+          'model': '6400xi',
+          'sw_version': 'K222.36DE 6817',
+        }),
+        '2': dict({
+          'model': '6400xi',
+          'sw_version': 'K222.36DE 6817',
+        }),
+        '4': dict({
+          'model': '8000xi',
+          'sw_version': 'K222.36DE 1C5F',
+        }),
+      }),
+      'port': '/dev/ttyUSB0',
+    }),
+    'inverters': dict({
+    }),
+  })
+# ---
