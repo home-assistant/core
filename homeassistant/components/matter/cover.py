@@ -763,24 +763,44 @@ class MatterClosure(MatterEntity, CoverEntity):
                 == clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed
             ):
                 self._attr_is_closing = True
-            else:
-                # Infer movement direction from child panel target positions
-                for panel in closure_panels.values():
-                    panel_state = panel.get_attribute_value(
-                        None, clusters.ClosureDimension.Attributes.CurrentState
-                    )
-                    panel_target = panel.get_attribute_value(
-                        None, clusters.ClosureDimension.Attributes.TargetState
-                    )
-                    current_pos = _extract_struct_field(panel_state, "position")
-                    target_pos = _extract_struct_field(panel_target, "position")
-                    if isinstance(current_pos, int) and isinstance(target_pos, int):
-                        if target_pos < current_pos:
-                            self._attr_is_opening = True
-                            break
-                        if target_pos > current_pos:
-                            self._attr_is_closing = True
-                            break
+            elif direction_panel := (
+                closure_panels.get(ClosurePanelRole.POSITION)
+                or closure_panels.get(ClosurePanelRole.TILT)
+            ):
+                # Prefer the primary (position) panel: Tilt is a secondary
+                # axis, so a closed venetian blind whose slats are moving
+                # isn't opening or closing. Fall back to Tilt only when it's
+                # the sole panel, i.e. Tilt is the closure's only motion axis.
+                panel_state = direction_panel.get_attribute_value(
+                    None, clusters.ClosureDimension.Attributes.CurrentState
+                )
+                panel_target = direction_panel.get_attribute_value(
+                    None, clusters.ClosureDimension.Attributes.TargetState
+                )
+                current_pos = _extract_struct_field(panel_state, "position")
+                target_pos = _extract_struct_field(panel_target, "position")
+                if isinstance(current_pos, int) and isinstance(target_pos, int):
+                    if target_pos < current_pos:
+                        self._attr_is_opening = True
+                    elif target_pos > current_pos:
+                        self._attr_is_closing = True
+            elif target_position in (
+                clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToPedestrianPosition,
+                clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToVentilationPosition,
+                clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToSignaturePosition,
+            ):
+                # No panels and no percent100ths position to compare against:
+                # only the unambiguous extremes give a direction.
+                if (
+                    position
+                    == clusters.ClosureControl.Enums.CurrentPositionEnum.kFullyClosed
+                ):
+                    self._attr_is_opening = True
+                elif (
+                    position
+                    == clusters.ClosureControl.Enums.CurrentPositionEnum.kFullyOpened
+                ):
+                    self._attr_is_closing = True
 
         supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         # Stop is non-conformant (and rejected) on Instantaneous closures:

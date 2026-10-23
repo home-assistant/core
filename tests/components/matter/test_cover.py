@@ -1959,6 +1959,133 @@ async def test_closure_cover_infer_movement_from_child_panels(
     assert state.state == CoverState.CLOSING
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
+async def test_closure_cover_tilt_movement_is_not_opening_or_closing(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that only the Tilt panel moving doesn't report opening/closing.
+
+    Tilt is a secondary axis: a closed venetian blind whose slats are moving
+    isn't opening or closing, so direction must be inferred from the primary
+    (Lift) panel, never the Tilt one.
+    """
+    cover_states = hass.states.async_all(Platform.COVER)
+    assert len(cover_states) == 1
+    entity_id = cover_states[0].entity_id
+
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.MainState.attribute_id,
+        clusters.ClosureControl.Enums.MainStateEnum.kMoving.value,
+    )
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.OverallTargetState.attribute_id,
+        {0: clusters.ClosureControl.Enums.TargetPositionEnum.kUnknownEnumValue.value},
+    )
+    # Lift panel (endpoint 2) is stationary: current == target.
+    set_node_attribute(
+        matter_node,
+        2,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
+        {0: 10000, 1: True, 2: 0},
+    )
+    set_node_attribute(
+        matter_node,
+        2,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.TargetState.attribute_id,
+        {0: 10000, 1: True, 2: 0},
+    )
+    # Only the Tilt panel (endpoint 3) is moving.
+    set_node_attribute(
+        matter_node,
+        3,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
+        {0: 5000, 1: False, 2: 0},
+    )
+    set_node_attribute(
+        matter_node,
+        3,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.TargetState.attribute_id,
+        {0: 0, 1: False, 2: 0},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSED
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_garage_door"])
+async def test_closure_cover_movement_direction_without_panels(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test direction inference for a panel-less closure moving to a partial target.
+
+    Pedestrian/Ventilation/Signature targets have no percent100ths position
+    to compare against on a closure without panels, so direction can only be
+    inferred from the unambiguous extremes of the current position.
+    """
+    cover_states = hass.states.async_all(Platform.COVER)
+    assert len(cover_states) == 1
+    entity_id = cover_states[0].entity_id
+
+    ctrl = clusters.ClosureControl
+
+    # Fully closed, moving to a Ventilation position: must read as opening.
+    set_node_attribute(
+        matter_node,
+        1,
+        ctrl.id,
+        ctrl.Attributes.OverallCurrentState.attribute_id,
+        {0: ctrl.Enums.CurrentPositionEnum.kFullyClosed.value},
+    )
+    set_node_attribute(
+        matter_node,
+        1,
+        ctrl.id,
+        ctrl.Attributes.MainState.attribute_id,
+        ctrl.Enums.MainStateEnum.kMoving.value,
+    )
+    set_node_attribute(
+        matter_node,
+        1,
+        ctrl.id,
+        ctrl.Attributes.OverallTargetState.attribute_id,
+        {0: ctrl.Enums.TargetPositionEnum.kMoveToVentilationPosition.value},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPENING
+
+    # Fully open, moving to a Ventilation position: must read as closing.
+    set_node_attribute(
+        matter_node,
+        1,
+        ctrl.id,
+        ctrl.Attributes.OverallCurrentState.attribute_id,
+        {0: ctrl.Enums.CurrentPositionEnum.kFullyOpened.value},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
+
+
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id", "feature_map", "expected_state"),
     [
