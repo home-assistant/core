@@ -8,15 +8,13 @@ import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sensor import SensorExtraStoredData
 from homeassistant.components.victron_modbus.const import DOMAIN, READINGS_SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant, State
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import SERIAL, VM_3P75CT, set_identity, set_readings
@@ -29,56 +27,14 @@ async def _next_poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
     await hass.async_block_till_done()
 
 
-async def test_total_sensor_restores_last_value(
+async def test_total_sensor_follows_the_device(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_unit,
 ) -> None:
-    """A total sensor restores its last value across a restart.
-
-    The meter can't be read at setup, so the restored state is the only source
-    of the value until the meter answers.
-    """
-    mock_unit.fail_read(0x3034, IllegalDataAddressError())
-    mock_config_entry.add_to_hass(hass)
-    unique_id = f"{SERIAL}_total_forward_energy"
-    entity_id = entity_registry.async_get_or_create(
-        "sensor", DOMAIN, unique_id, config_entry=mock_config_entry
-    ).entity_id
-
-    mock_restore_cache_with_extra_data(
-        hass,
-        (
-            (
-                State(entity_id, "123.4"),
-                SensorExtraStoredData(123.4, "kWh").as_dict(),
-            ),
-        ),
-    )
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == "123.4"
-
-    # The device's own value takes over as soon as it can be read.
-    mock_unit.fail_read(0x3034, None)
-    mock_unit.holding[0x3034] = 0
-    mock_unit.holding[0x3035] = 12350  # 123.50 kWh
-    await _next_poll(hass, freezer)
-    assert hass.states.get(entity_id).state == "123.5"
-
-
-async def test_total_sensor_holds_its_value_while_unreadable(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
-    mock_unit,
-) -> None:
-    """A total follows the device, but keeps its last value when it can't be read."""
+    """A total follows the device, and is unavailable while it can't be read."""
     mock_unit.holding[0x3034] = 0
     mock_unit.holding[0x3035] = 1200  # total_forward_energy: 12.00 kWh
     mock_config_entry.add_to_hass(hass)
@@ -98,17 +54,25 @@ async def test_total_sensor_holds_its_value_while_unreadable(
     await _next_poll(hass, freezer)
     assert hass.states.get(entity_id).state == "11.9"
 
-    # An unavailable reading (sentinel value decoded as None) is ignored.
+    # A reading the device reports as unavailable (sentinel value decoded as
+    # None) has no value.
     mock_unit.holding[0x3034] = 0xFFFF
     mock_unit.holding[0x3035] = 0xFFFF
     await _next_poll(hass, freezer)
-    assert hass.states.get(entity_id).state == "11.9"
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
-    # So is a device that stops answering altogether.
+    # A device that stops answering makes the sensor unavailable.
     mock_unit.fail_requests(ModbusTimeoutError())
     await _next_poll(hass, freezer)
     assert not coordinator.last_update_success
-    assert hass.states.get(entity_id).state == "11.9"
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # It comes back with the device.
+    mock_unit.fail_requests(None)
+    mock_unit.holding[0x3034] = 0
+    mock_unit.holding[0x3035] = 1250  # 12.50 kWh
+    await _next_poll(hass, freezer)
+    assert hass.states.get(entity_id).state == "12.5"
 
 
 async def test_failed_sub_system_is_unavailable(
@@ -138,8 +102,7 @@ async def test_failed_sub_system_is_unavailable(
 
     assert state("phase_1_voltage") == STATE_UNAVAILABLE
     assert state("total_power") == "0"
-    # Energy totals hold their last value instead.
-    assert state("phase_1_forward_energy") != STATE_UNAVAILABLE
+    assert state("phase_1_forward_energy") == STATE_UNAVAILABLE
 
     mock_unit.fail_read(0x3040, None)
     await _next_poll(hass, freezer)

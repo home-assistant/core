@@ -49,8 +49,6 @@ class VictronModbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a device discovered through mDNS."""
         self._host = str(discovery_info.ip_address)
-        # Skip probing a device that is already set up at this address.
-        self._async_abort_entries_match({CONF_HOST: self._host})
         try:
             self._model, serial = await self._async_identify(self._host)
         except IdentifyError as err:
@@ -60,12 +58,15 @@ class VictronModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         # or a new DHCP lease) moves the entry only if its address stopped working.
         updates = None
         if (
-            entry := self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, serial
+            (
+                entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                    DOMAIN, serial
+                )
             )
-        ) is not None and not (
-            entry.source == SOURCE_IGNORE
-            or await self._async_answers(entry.data[CONF_HOST], serial)
+            is not None
+            and entry.source != SOURCE_IGNORE
+            and entry.data[CONF_HOST] != self._host
+            and not await self._async_answers(entry.data[CONF_HOST], serial)
         ):
             updates = {CONF_HOST: self._host}
         self._abort_if_unique_id_configured(updates=updates)

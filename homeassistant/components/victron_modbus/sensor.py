@@ -9,16 +9,12 @@ PE-N voltage or frequency), and the device must report a value for it. A
 device reports a reading it lacks, such as a phase missing from a single-phase
 connection, as unavailable, so such sensors are skipped at setup; sensors of
 the phases the meter's configuration says aren't connected are skipped too.
-
-Energy sensors are long-term statistics: they stay available across a
-temporary Modbus drop and restore their last value across a restart.
 """
 
 from dataclasses import dataclass, replace
 from typing import override
 
 from homeassistant.components.sensor import (
-    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -157,7 +153,7 @@ async def async_setup_entry(
     """Set up Victron Modbus sensors."""
     data = entry.runtime_data
     device = data.power.device
-    entities: list[VictronModbusSensor | VictronModbusTotalSensor] = []
+    entities: list[VictronModbusSensor] = []
 
     def add(
         description: VictronModbusSensorDescription,
@@ -176,12 +172,9 @@ async def async_setup_entry(
             and getattr(library_component, attribute) is None
         ):
             return
-        entity_class = (
-            VictronModbusTotalSensor
-            if description.state_class is SensorStateClass.TOTAL_INCREASING
-            else VictronModbusSensor
+        entities.append(
+            VictronModbusSensor(data, description, component, attribute, phase)
         )
-        entities.append(entity_class(data, description, component, attribute, phase))
 
     add(_TOTAL_POWER, "power", "total")
     for description in _METER:
@@ -210,34 +203,3 @@ class VictronModbusSensor(VictronModbusEntity, SensorEntity):
     def native_value(self) -> float | None:
         """Return the current value."""
         return self._value
-
-
-class VictronModbusTotalSensor(VictronModbusEntity, RestoreSensor):
-    """A long-term statistic: it holds its last value and may outlive the device."""
-
-    entity_description: VictronModbusSensorDescription
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Stay available across a temporary Modbus drop."""
-        return True
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Restore the last known value across a restart."""
-        await super().async_added_to_hass()
-        if (last_data := await self.async_get_last_sensor_data()) is not None:
-            self._attr_native_value = last_data.native_value
-        self._process_data()
-
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._process_data()
-        super()._handle_coordinator_update()
-
-    def _process_data(self) -> None:
-        """Keep the last value while the device can't be read."""
-        if (value := self._value) is not None:
-            self._attr_native_value = value

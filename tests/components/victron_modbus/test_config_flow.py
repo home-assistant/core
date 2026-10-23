@@ -72,8 +72,8 @@ def _devices_at(
         probed.append(params.host)
         if params.host in down:
             raise ModbusTimeoutError
-        if params.host in replaced:
-            set_identity(mock_unit, VM_3P75CT, serial=OTHER_SERIAL)
+        serial = OTHER_SERIAL if params.host in replaced else SERIAL
+        set_identity(mock_unit, VM_3P75CT, serial=serial)
         yield mock_unit
 
     with patch(
@@ -233,19 +233,21 @@ async def test_zeroconf_flow_no_serial(hass: HomeAssistant, mock_unit) -> None:
     assert result["reason"] == "no_serial"
 
 
-async def test_zeroconf_flow_known_host_aborts_without_probing(
+async def test_zeroconf_flow_known_device_at_its_address(
     hass: HomeAssistant, mock_unit, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Rediscovering a device at its configured address does not probe it."""
+    """Rediscovering a device at its configured address changes nothing."""
     mock_config_entry.add_to_hass(hass)
 
-    with _failing_identify(AssertionError("must not probe")):
+    with _devices_at(mock_unit) as probed:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery()
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert probed == [HOST]
+    assert mock_config_entry.data["host"] == HOST
 
 
 async def _discover(hass: HomeAssistant, host: str):
@@ -308,6 +310,35 @@ async def test_zeroconf_flow_updates_host_that_stopped_answering(
     assert probed == ["192.168.1.110", HOST]
     assert mock_config_entry.data["host"] == "192.168.1.110"
     assert len(mock_setup_entry.mock_calls) == 2  # reloaded
+
+
+async def test_zeroconf_flow_follows_devices_that_swapped_addresses(
+    hass: HomeAssistant,
+    mock_unit,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Two devices that exchange addresses each move their own entry."""
+    other_host = "192.168.1.110"
+    mock_config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"VM-3P75CT ({OTHER_SERIAL})",
+        data={"host": other_host, "model": "vm_3p75ct"},
+        unique_id=OTHER_SERIAL,
+    )
+    other_entry.add_to_hass(hass)
+
+    # The first device now answers at the second one's address, and the second
+    # device at the first one's.
+    with _devices_at(mock_unit, replaced=(HOST,)):
+        first = await _discover(hass, other_host)
+        second = await _discover(hass, HOST)
+    await hass.async_block_till_done()
+
+    assert first["reason"] == second["reason"] == "already_configured"
+    assert mock_config_entry.data["host"] == other_host
+    assert other_entry.data["host"] == HOST
 
 
 async def test_zeroconf_flow_ignored_device(hass: HomeAssistant, mock_unit) -> None:

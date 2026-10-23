@@ -50,12 +50,7 @@ rules:
     status: exempt
     comment: The integration has no options flow.
   docs-installation-parameters: done
-  entity-unavailable:
-    status: done
-    comment: |
-      Measurements go unavailable when their sub-system can't be read. The
-      energy counters deliberately hold their last value instead, and restore it
-      across a restart (RestoreSensor semantics), as long-term statistics do.
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
