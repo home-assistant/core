@@ -22,8 +22,6 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     VRCHAT_USER_STATE_OPTIONS,
     VRCHAT_USER_STATUS_ICON_MAP,
-    VRCHAT_USER_STATUS_INDICATOR_MAP_IN_GAME,
-    VRCHAT_USER_STATUS_INDICATOR_MAP_NOT_IN_GAME,
     VRCHAT_USER_STATUS_OPTIONS,
     VRChatUserState,
 )
@@ -124,18 +122,6 @@ class VRChatUserStatusSensor(VRChatUserDataSensorEntity):
             super().get_state_from_user_data(user_data, key)
         )
         return status if status in VRCHAT_USER_STATUS_OPTIONS else None
-
-    @property
-    @override
-    def entity_picture(self) -> str | None:
-        """Return the user status indicator."""
-        status = self.vrchat_user_data_state
-        if status is None:
-            return None
-        # VRChat renders offline and in-game states with the same solid-circle indicator.
-        if status == VRChatUserState.OFFLINE or is_user_in_game(dict(self.user_data)):
-            return VRCHAT_USER_STATUS_INDICATOR_MAP_IN_GAME.get(status)
-        return VRCHAT_USER_STATUS_INDICATOR_MAP_NOT_IN_GAME.get(status)
 
 
 class VRChatUserStatusDescriptionSensor(VRChatUserDataSensorEntity):

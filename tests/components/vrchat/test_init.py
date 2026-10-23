@@ -216,7 +216,7 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
             entity_registry, f"status.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
         )
         assert hass.states.get(status_entity_id).state == "active"
-        assert "entity_picture" in hass.states.get(status_entity_id).attributes
+        assert "entity_picture" not in hass.states.get(status_entity_id).attributes
 
         coordinator = entry.runtime_data
         assert coordinator.client.api.api_client.user_agent == USER_AGENT

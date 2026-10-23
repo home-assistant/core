@@ -267,7 +267,7 @@ def test_state_sensor_returns_strings(hass: HomeAssistant) -> None:
 
 
 def test_status_sensor_picture_and_description_icon(hass: HomeAssistant) -> None:
-    """Test status indicator and description icon selection."""
+    """Test status pictures are omitted and description icons are retained."""
     user = cast(
         VRChatUser,
         SimpleNamespace(
@@ -281,7 +281,7 @@ def test_status_sensor_picture_and_description_icon(hass: HomeAssistant) -> None
         _coordinator(hass, user), USER_ID
     )
 
-    assert status_sensor.entity_picture is not None
+    assert status_sensor.entity_picture is None
     assert description_sensor.icon == "mdi:account-badge"
 
     user.data = {"status": "unknown", "location": "offline"}
