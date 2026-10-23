@@ -27,6 +27,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
@@ -157,6 +158,23 @@ async def test_climate_entity_loads_without_static_values(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes["current_temperature"] is not None
+
+
+async def test_climate_without_presets_on_pps(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test PPS devices do not offer presets."""
+    device = mock_bsblan.device.return_value
+    mock_bsblan.device.return_value = device.model_copy(update={"bus": "PPS"})
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert "preset_modes" not in state.attributes
+    assert not state.attributes["supported_features"] & ClimateEntityFeature.PRESET_MODE
 
 
 async def test_climate_entity_properties(
