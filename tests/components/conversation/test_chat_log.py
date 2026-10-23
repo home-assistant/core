@@ -132,6 +132,42 @@ async def test_unknown_llm_api(
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
 
 
+@pytest.mark.parametrize(
+    "user_id",
+    [
+        pytest.param("other-user-id", id="other_user"),
+        pytest.param(None, id="no_user"),
+    ],
+)
+async def test_chat_log_other_user(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_conversation_input: ConversationInput,
+    user_id: str | None,
+) -> None:
+    """Test a user cannot continue the chat log of another user."""
+    mock_conversation_input.context = Context(user_id=hass_admin_user.id)
+    with chat_session.async_get_chat_session(hass) as session:
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+
+        mock_conversation_input.context = Context(user_id=user_id)
+        with (
+            pytest.raises(Unauthorized),
+            async_get_chat_log(hass, session, mock_conversation_input),
+        ):
+            pass
+
+        mock_conversation_input.context = Context(user_id=hass_admin_user.id)
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            assert len(chat_log.content) == 4
+
+        with async_get_chat_log(hass, session) as chat_log:
+            assert len(chat_log.content) == 3
+
+
 class AdminAPI(llm.API):
     """Test API that requires an admin user."""
 
