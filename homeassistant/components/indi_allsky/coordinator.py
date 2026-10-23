@@ -278,7 +278,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 existing = merged_sensors.get(key)
                 if isinstance(existing, dict):
                     if isinstance(val, dict):
-                        merged_sensors[key] = {
+                        merged_entry = {
                             **existing,
                             **{
                                 k: v
@@ -286,6 +286,13 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                                 if k == "value" or v is not None
                             },
                         }
+                        if (
+                            val.get("unit") is not None
+                            and val.get("unit") != existing.get("unit")
+                            and "value" not in val
+                        ):
+                            merged_entry["value"] = None
+                        merged_sensors[key] = merged_entry
                     else:
                         merged_sensors[key] = {**existing, "value": val}
                 else:
