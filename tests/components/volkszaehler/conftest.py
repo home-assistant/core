@@ -48,7 +48,7 @@ def mock_client_api() -> Generator[Mock]:
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Fixture for a config entry with one existing channel subentry."""
-    return _mock_config_entry(middleware=True)
+    return _mock_config_entry()
 
 
 @pytest.fixture
@@ -57,16 +57,18 @@ def mock_config_entry_without_middleware() -> MockConfigEntry:
     return _mock_config_entry(middleware=False)
 
 
-def _mock_config_entry(*, middleware: bool) -> MockConfigEntry:
+def _mock_config_entry(*, middleware: bool | None = None) -> MockConfigEntry:
     """Create a Volkszaehler config entry for testing."""
+    data = {
+        CONF_HOST: "localhost",
+        CONF_PORT: 80,
+    }
+    if middleware is not None:
+        data[CONF_MIDDLEWARE] = middleware
     return MockConfigEntry(
         domain=DOMAIN,
         title="localhost",
-        data={
-            CONF_HOST: "localhost",
-            CONF_PORT: 80,
-            CONF_MIDDLEWARE: middleware,
-        },
+        data=data,
         subentries_data=[
             ConfigSubentryData(
                 subentry_type=SUBENTRY_TYPE_CHANNEL,
