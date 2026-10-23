@@ -58,27 +58,32 @@ _LEVEL_NUMBERS = logging.getLevelNamesMapping()
 # Best effort, as logs can hold credentials that an LLM does not need. The
 # patterns only start at a word boundary, so they take linear time.
 _AUTHORIZATION = re.compile(r"(\b(?:bearer|basic)\s+)[\w.~+/-]+=*", re.IGNORECASE)
-_KEY_VALUE = re.compile(
-    r"(?<![\w.-])([\w.-]+)([\"']?\s*[:=]\s*)"
-    r"(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*'|[\"']?[^\s\"',;&}?=]+)"
+# A key is a whole word before : or =, possessive so it is never rescanned
+_KEY = re.compile(r"(?<![\w.-])[\w.-]++(?=[\"']?\s*+[:=])")
+_SEPARATOR_VALUE = re.compile(
+    r"[\"']?\s*+[:=]\s*+"
+    r"(\"(?:[^\"\\]|\\.)*+\"|'(?:[^'\\]|\\.)*+'|[\"']?[^\s\"',;&}?=]++)"
 )
 _SECRET_KEY = re.compile(r"token|password|passwd|secret|api[_-]?key", re.IGNORECASE)
-
-
-def _mask_value(match: re.Match[str]) -> str:
-    """Mask the value of a key that names a secret, keeping its quotes."""
-    key, separator, value = match.groups()
-    if not _SECRET_KEY.search(key):
-        return match[0]
-    quote = value[0] if value[0] in "\"'" else ""
-    end_quote = quote if len(value) > 1 and value.endswith(quote) else ""
-    return f"{key}{separator}{quote}***{end_quote}"
 
 
 def _mask_secrets(line: str) -> str:
     """Mask the values of authorization schemes and keys that name a secret."""
     line = _AUTHORIZATION.sub(r"\1***", line)
-    return _KEY_VALUE.sub(_mask_value, line)
+    parts: list[str] = []
+    position = 0
+    for key in _KEY.finditer(line):
+        # Keys inside a masked value were masked with it
+        if key.start() < position or not _SECRET_KEY.search(key[0]):
+            continue
+        if not (value := _SEPARATOR_VALUE.match(line, key.end())):
+            continue
+        quote = value[1][0] if value[1][0] in "\"'" else ""
+        end_quote = quote if len(value[1]) > 1 and value[1].endswith(quote) else ""
+        parts.append(f"{line[position : value.start(1)]}{quote}***{end_quote}")
+        position = value.end()
+    parts.append(line[position:])
+    return "".join(parts)
 
 
 def _filter_log_entries(

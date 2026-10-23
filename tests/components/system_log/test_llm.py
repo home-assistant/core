@@ -758,6 +758,16 @@ async def test_get_logs_pages_to_end_time(
             id="quoted_with_escaped_quote",
         ),
         pytest.param(
+            "ValueError: password=hunter2",
+            "ValueError: password=***",
+            id="after_other_key",
+        ),
+        pytest.param(
+            "{'url': 'https://example.com/?api_key=XYZ123', 'user': 'paulus'}",
+            "{'url': 'https://example.com/?api_key=***', 'user': 'paulus'}",
+            id="in_other_value",
+        ),
+        pytest.param(
             "Invalid token for device kitchen",
             "Invalid token for device kitchen",
             id="prose",
@@ -807,12 +817,17 @@ async def test_get_logs_contains_secret(
     assert result.data["records"] == []
 
 
-@pytest.mark.usefixtures("frozen_time")
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param("a" * 200_000, id="word"),
+        pytest.param("token" * 40_000, id="word_of_secret_names"),
+    ],
+)
 async def test_get_logs_mask_long_payload(
-    hass: HomeAssistant, llm_context: llm.LLMContext
+    hass: HomeAssistant, llm_context: llm.LLMContext, payload: str
 ) -> None:
     """Test masking a long payload without secrets takes linear time."""
-    payload = "a" * 200_000
 
     start = time.monotonic()
     result = await _async_call_with_logs(
@@ -823,13 +838,17 @@ async def test_get_logs_mask_long_payload(
                 f"2026-10-20 13:50:00.000+02:00 DEBUG (MainThread) [core] {payload}"
             ]
         },
-        {},
+        # The time is not frozen, so it can be measured
+        {
+            "start_time": "2026-10-20T13:45:00+02:00",
+            "end_time": "2026-10-20T14:00:00+02:00",
+        },
     )
 
     # Quadratic masking takes minutes for this payload
     assert time.monotonic() - start < 2
     assert result.data["records"][0]["message"].startswith(
-        "DEBUG (MainThread) [core] aaa"
+        f"DEBUG (MainThread) [core] {payload[:100]}"
     )
 
 
