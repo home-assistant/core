@@ -178,9 +178,6 @@ async def test_unit_of_measurement(
             error_msg=None,
             error_type=None,
             scale=scale,
-            feature_name="sensor",
-            property_name="sensor",
-            instance="1",
         )
     }
 
@@ -211,9 +208,6 @@ async def test_sensor_unavailable(
             error_msg=None,
             error_type=None,
             scale=None,
-            feature_name="lightSensor",
-            property_name="illuminance",
-            instance="1",
         )
     }
 
