@@ -36,6 +36,7 @@ from tuya_device_handlers.device_wrapper.sensor import (
     ElectricityVoltageHexStringWrapper,
     ElectricityVoltageJsonWrapper,
     ElectricityVoltageRawWrapper,
+    RemainingTimeTimestampWrapper,
     WindDirectionEnumWrapper,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -1011,6 +1012,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     ),
     DeviceCategory.MC: BATTERY_SENSORS,
     DeviceCategory.MCS: BATTERY_SENSORS,
+    DeviceCategory.MJJ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.COUNTDOWN_LEFT,
+            translation_key="countdown_end",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            wrapper_class=(RemainingTimeTimestampWrapper,),
+        ),
+    ),
     DeviceCategory.MSP: (
         TuyaSensorEntityDescription(
             key=DPCode.CAT_WEIGHT,
@@ -2070,9 +2079,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
-        if (
-            device_class := self.entity_description.device_class
-        ) is SensorDeviceClass.ENUM:
+        if (device_class := self.entity_description.device_class) in (
+            SensorDeviceClass.ENUM,
+            SensorDeviceClass.TIMESTAMP,
+        ):
             self._attr_native_unit_of_measurement = None
             return
         if (
