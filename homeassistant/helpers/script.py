@@ -1353,15 +1353,19 @@ class _ScriptRun:
         await self._async_run_wait_for_trigger_branch(CONF_ON_TIMEOUT)
         self._async_abort_unless_continue_on_timeout()
 
-    async def _async_run_wait_for_trigger_branch(self, branch: str) -> None:
+    async def _async_run_wait_for_trigger_branch(
+        self, branch: Literal["on_complete", "on_timeout"]
+    ) -> None:
         """Run the on_complete or on_timeout actions of a wait_for_trigger."""
         if branch not in self._action:
             return
-        scripts = await self._script._async_get_wait_for_trigger_scripts(  # noqa: SLF001
+        wait_data = await self._script._async_get_wait_for_trigger_data(  # noqa: SLF001
             self._step
         )
+        if (script := wait_data[branch]) is None:
+            return
         with trace_path(branch):
-            await self._async_run_script(scripts[branch])
+            await self._async_run_script(script)
 
     async def _async_step_wait_template(self) -> None:
         """Handle a wait template."""
@@ -1539,6 +1543,11 @@ class _IfData(TypedDict):
     if_else: Script | None
 
 
+class _WaitForTriggerData(TypedDict):
+    on_complete: Script | None
+    on_timeout: Script | None
+
+
 @dataclass
 class ScriptRunResult:
     """Container with the result of a script run."""
@@ -1616,7 +1625,7 @@ class Script:
         self._repeat_script: dict[int, Script] = {}
         self._choose_data: dict[int, _ChooseData] = {}
         self._if_data: dict[int, _IfData] = {}
-        self._wait_for_trigger_scripts: dict[int, dict[str, Script]] = {}
+        self._wait_for_trigger_data: dict[int, _WaitForTriggerData] = {}
         self._parallel_scripts: dict[int, list[Script]] = {}
         self._sequence_scripts: dict[int, Script] = {}
         self._unloaded = False
@@ -1669,9 +1678,11 @@ class Script:
             if_data["if_then"].update_logger(self._logger)
             if if_data["if_else"] is not None:
                 if_data["if_else"].update_logger(self._logger)
-        for wait_scripts in self._wait_for_trigger_scripts.values():
-            for script in wait_scripts.values():
-                script.update_logger(self._logger)
+        for wait_data in self._wait_for_trigger_data.values():
+            if wait_data["on_complete"] is not None:
+                wait_data["on_complete"].update_logger(self._logger)
+            if wait_data["on_timeout"] is not None:
+                wait_data["on_timeout"].update_logger(self._logger)
 
     def _changed(self) -> None:
         if self._change_listener_job:
@@ -2150,10 +2161,12 @@ class Script:
                 if_data["if_else"]._async_unload()  # noqa: SLF001
         self._if_data.clear()
 
-        for wait_scripts in self._wait_for_trigger_scripts.values():
-            for sub_script in wait_scripts.values():
-                sub_script._async_unload()  # noqa: SLF001
-        self._wait_for_trigger_scripts.clear()
+        for wait_data in self._wait_for_trigger_data.values():
+            if wait_data["on_complete"] is not None:
+                wait_data["on_complete"]._async_unload()  # noqa: SLF001
+            if wait_data["on_timeout"] is not None:
+                wait_data["on_timeout"]._async_unload()  # noqa: SLF001
+        self._wait_for_trigger_data.clear()
 
         for scripts in self._parallel_scripts.values():
             for sub_script in scripts:
@@ -2299,16 +2312,14 @@ class Script:
             self._if_data[step] = if_data
         return if_data
 
-    async def _async_prep_wait_for_trigger_scripts(
-        self, step: int
-    ) -> dict[str, Script]:
+    async def _async_prep_wait_for_trigger_data(self, step: int) -> _WaitForTriggerData:
         """Prepare the on_complete and on_timeout scripts of a wait_for_trigger."""
         action = self.sequence[step]
         step_name = action.get(CONF_ALIAS, f"Wait for trigger at step {step + 1}")
-        scripts: dict[str, Script] = {}
-        for branch in (CONF_ON_COMPLETE, CONF_ON_TIMEOUT):
+
+        def prep_branch(branch: str) -> Script | None:
             if branch not in action:
-                continue
+                return None
             sub_script = Script(
                 self._hass,
                 action[branch],
@@ -2323,14 +2334,18 @@ class Script:
             sub_script.change_listener = partial(
                 self._chain_change_listener, sub_script
             )
-            scripts[branch] = sub_script
-        return scripts
+            return sub_script
 
-    async def _async_get_wait_for_trigger_scripts(self, step: int) -> dict[str, Script]:
-        if not (scripts := self._wait_for_trigger_scripts.get(step)):
-            scripts = await self._async_prep_wait_for_trigger_scripts(step)
-            self._wait_for_trigger_scripts[step] = scripts
-        return scripts
+        return _WaitForTriggerData(
+            on_complete=prep_branch(CONF_ON_COMPLETE),
+            on_timeout=prep_branch(CONF_ON_TIMEOUT),
+        )
+
+    async def _async_get_wait_for_trigger_data(self, step: int) -> _WaitForTriggerData:
+        if not (wait_data := self._wait_for_trigger_data.get(step)):
+            wait_data = await self._async_prep_wait_for_trigger_data(step)
+            self._wait_for_trigger_data[step] = wait_data
+        return wait_data
 
     async def _async_prep_parallel_scripts(self, step: int) -> list[Script]:
         action = self.sequence[step]
