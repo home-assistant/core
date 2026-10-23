@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
+import httpx2
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -1640,90 +1641,6 @@ async def test_send_video(
     assert err.value.translation_key == "missing_input"
     assert err.value.translation_placeholders == {"field": "Password"}
 
-    # test: 404 error
-
-    with (
-        patch(
-            "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
-        ) as mock_get,
-        patch("homeassistant.components.telegram_bot.bot._RETRY_DELAY", 0),
-    ):
-        mock_get.return_value = AsyncMock(status_code=404, text="Success")
-
-        with pytest.raises(HomeAssistantError) as err:
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_SEND_VIDEO,
-                {
-                    ATTR_URL: "https://mock",
-                    ATTR_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-                    ATTR_USERNAME: "mock_bot",
-                    ATTR_PASSWORD: "mock password",
-                },
-                blocking=True,
-            )
-
-    await hass.async_block_till_done()
-
-    assert mock_get.call_count > 0
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "failed_to_load_url_status"
-    assert err.value.translation_placeholders == {"status_code": "404"}
-
-    # test: empty response
-
-    with (
-        patch(
-            "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
-        ) as mock_get,
-        patch("homeassistant.components.telegram_bot.bot._RETRY_DELAY", 0),
-    ):
-        mock_get.return_value = AsyncMock(status_code=200, content=b"")
-
-        with pytest.raises(HomeAssistantError) as err:
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_SEND_VIDEO,
-                {
-                    ATTR_URL: "https://mock",
-                    ATTR_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-                    ATTR_USERNAME: "mock_bot",
-                    ATTR_PASSWORD: "mock password",
-                },
-                blocking=True,
-            )
-
-    await hass.async_block_till_done()
-
-    assert mock_get.call_count == 5
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "failed_to_load_url_empty"
-    assert err.value.translation_placeholders is None
-
-    # test: invalid url
-
-    with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEND_VIDEO,
-            {
-                ATTR_URL: "invalid url",
-                ATTR_VERIFY_SSL: True,
-                ATTR_AUTHENTICATION: HTTP_BEARER_AUTHENTICATION,
-                ATTR_PASSWORD: "mock password",
-            },
-            blocking=True,
-        )
-
-    await hass.async_block_till_done()
-
-    assert mock_get.call_count > 0
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "failed_to_load_url"
-    assert err.value.translation_placeholders == {
-        "error": "Request URL is missing an 'http://' or 'https://' protocol."
-    }
-
     # test: no url/file input
 
     with pytest.raises(ServiceValidationError) as err:
@@ -1817,6 +1734,94 @@ async def test_send_video(
             }
         ]
     }
+
+
+@pytest.mark.parametrize(
+    ("service_data", "get_kwargs", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            {ATTR_URL: "http://10.0.0.1:10443/webhook/secret-token/takePicture"},
+            {
+                "side_effect": httpx2.RemoteProtocolError(
+                    "Server disconnected without sending a response."
+                )
+            },
+            "failed_to_load_url",
+            {
+                "url": "http://10.0.0.1:10443",
+                "error": "Server disconnected without sending a response.",
+            },
+            id="server_disconnected",
+        ),
+        pytest.param(
+            {
+                ATTR_URL: "https://user:secret@mock:8443/path?token=secret",
+                ATTR_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+                ATTR_USERNAME: "mock_bot",
+                ATTR_PASSWORD: "mock password",
+            },
+            {"return_value": AsyncMock(status_code=404, text="Success")},
+            "failed_to_load_url_status",
+            {"url": "https://mock:8443", "status_code": "404"},
+            id="status_code",
+        ),
+        pytest.param(
+            {ATTR_URL: "https://mock"},
+            {"return_value": AsyncMock(status_code=200, content=b"")},
+            "failed_to_load_url_empty",
+            {"url": "https://mock"},
+            id="empty_response",
+        ),
+        pytest.param(
+            {
+                ATTR_URL: "invalid url",
+                ATTR_VERIFY_SSL: True,
+                ATTR_AUTHENTICATION: HTTP_BEARER_AUTHENTICATION,
+                ATTR_PASSWORD: "mock password",
+            },
+            {
+                "side_effect": httpx2.UnsupportedProtocol(
+                    "Request URL is missing an 'http://' or 'https://' protocol."
+                )
+            },
+            "failed_to_load_url",
+            {
+                "url": "invalid url",
+                "error": "Request URL is missing an 'http://' or 'https://' protocol.",
+            },
+            id="invalid_url",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_external_calls")
+async def test_send_video_url_error(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    service_data: dict[str, Any],
+    get_kwargs: dict[str, Any],
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> None:
+    """Test loading a URL fails with the origin of the URL in the error."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get",
+            **get_kwargs,
+        ),
+        patch("homeassistant.components.telegram_bot.bot._RETRY_DELAY", 0),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SEND_VIDEO, service_data, blocking=True
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == translation_placeholders
 
 
 async def test_set_message_reaction(

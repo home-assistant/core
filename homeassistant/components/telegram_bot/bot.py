@@ -36,6 +36,7 @@ from telegram.constants import InputMediaType, ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
 from telegram.request import HTTPXRequest
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -1200,6 +1201,15 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
     )
 
 
+def _url_origin(url: str) -> str:
+    """Return scheme, host and port of a URL, without credentials, path or query."""
+    try:
+        return str(URL(url).origin())
+    except ValueError:
+        # Not an absolute URL
+        return url
+
+
 async def load_data(
     hass: HomeAssistant,
     url: str | None,
@@ -1234,7 +1244,10 @@ async def load_data(
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="failed_to_load_url",
-                        translation_placeholders={"error": str(err)},
+                        translation_placeholders={
+                            "url": _url_origin(url),
+                            "error": str(err),
+                        },
                     ) from err
 
                 if response.status_code != 200:
@@ -1262,11 +1275,15 @@ async def load_data(
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="failed_to_load_url_empty",
+                    translation_placeholders={"url": _url_origin(url)},
                 )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_load_url_status",
-                translation_placeholders={"status_code": str(response.status_code)},
+                translation_placeholders={
+                    "url": _url_origin(url),
+                    "status_code": str(response.status_code),
+                },
             )
     elif filepath is not None:
         if hass.config.is_allowed_path(filepath):
