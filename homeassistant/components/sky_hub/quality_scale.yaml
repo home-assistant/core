@@ -76,15 +76,11 @@ rules:
   entity-translations:
     status: exempt
     comment: Device tracker entities are named after the tracked client's hostname.
-  exception-translations:
-    status: exempt
-    comment: This integration does not raise custom user-facing exceptions.
+  exception-translations: todo
   icon-translations:
     status: exempt
     comment: This integration does not define custom icons for entities.
-  reconfiguration-flow:
-    status: exempt
-    comment: Changing the host represents configuring a different router and requires a separate config entry.
+  reconfiguration-flow: todo
   repair-issues: done
   stale-devices: todo
 
