@@ -94,7 +94,11 @@ class SatelIntegraSwitch(
 
     async def _async_set_output(self, state: bool) -> None:
         """Set the output state and validate the result returned by the panel."""
-        assert self._code is not None
+        if self._code is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_output_access_code",
+            )
 
         try:
             await self._controller.set_output(
@@ -130,12 +134,6 @@ class SatelIntegraSwitch(
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        if self._code is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="missing_output_access_code",
-            )
-
         await self._async_set_output(True)
         self._attr_is_on = True
         self.async_write_ha_state()
@@ -143,12 +141,6 @@ class SatelIntegraSwitch(
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self._code is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="missing_output_access_code",
-            )
-
         await self._async_set_output(False)
         self._attr_is_on = False
         self.async_write_ha_state()
