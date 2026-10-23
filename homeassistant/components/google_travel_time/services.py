@@ -3,7 +3,7 @@
 from typing import cast
 
 from google.api_core.client_options import ClientOptions
-from google.api_core.exceptions import GoogleAPIError, PermissionDenied
+from google.api_core.exceptions import PermissionDenied
 from google.maps.routing_v2 import RoutesAsyncClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -73,13 +73,17 @@ def _raise_service_error(
             translation_domain=DOMAIN,
             translation_key="permission_denied",
         ) from exc
-    if isinstance(exc, GoogleAPIError):
+    if isinstance(exc, TimeoutError):
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="api_error",
-            translation_placeholders={"error": str(exc)},
+            translation_key="timeout",
         ) from exc
-    raise exc
+    # Wrap any other error too, so that continue_on_error works for all failures
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="api_error",
+        translation_placeholders={"error": str(exc) or type(exc).__name__},
+    ) from exc
 
 
 @callback

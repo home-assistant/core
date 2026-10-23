@@ -120,6 +120,8 @@ async def test_service_get_travel_times_empty_response(
             "The Routes API is not enabled for this API key",
         ),
         (GoogleAPIError("test"), "Google API error"),
+        (TimeoutError(), "Timed out getting travel times"),
+        (ValueError("boom"), "Google API error: boom"),
     ],
 )
 async def test_service_get_travel_times_errors(
@@ -228,6 +230,8 @@ async def test_service_get_transit_times_with_all_options(
             "The Routes API is not enabled for this API key",
         ),
         (GoogleAPIError("test"), "Google API error"),
+        (TimeoutError(), "Timed out getting travel times"),
+        (ValueError("boom"), "Google API error: boom"),
     ],
 )
 async def test_service_get_transit_times_errors(
