@@ -14,6 +14,12 @@ from pyportainer.models.docker import DockerContainer, EndpointStatus
 from pyportainer.models.portainer import Endpoint
 from pyportainer.models.stacks import Stack
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN
@@ -35,13 +41,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .conftest import MOCK_TEST_CONFIG, TEST_INSTANCE_ID
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_array_fixture,
-)
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(

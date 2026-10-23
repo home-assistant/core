@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from pyimouapi.const import PARAM_SIREN_START, PARAM_SIREN_STOP
 from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenEntityFeature
@@ -23,8 +24,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .const import create_online_device
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 SIREN_DEVICES = [
     create_online_device(

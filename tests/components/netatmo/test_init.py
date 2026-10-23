@@ -16,6 +16,12 @@ from freezegun.api import FrozenDateTimeFactory
 import pyatmo
 from pyatmo.const import ALL_SCOPES
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud, netatmo, webhook
@@ -57,9 +63,7 @@ from .common import (
     simulate_webhook,
 )
 
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 from tests.components.cloud import mock_cloud
-from tests.typing import WebSocketGenerator
 
 # Fake webhook thermostat mode change to "Max"
 FAKE_WEBHOOK = {

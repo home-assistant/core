@@ -2,8 +2,8 @@
 
 from typing import Any, cast
 
+from uiprotect.anonymize import anonymize_data
 from uiprotect.data.public_bootstrap import PublicBootstrap
-from uiprotect.test_util.anonymize import anonymize_data
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant

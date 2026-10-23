@@ -12,6 +12,12 @@ from aioshelly.const import (
 )
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
+from pytest_homeassistant.common import (
+    async_load_json_object_fixture,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -74,13 +80,6 @@ from . import (
     register_entity,
 )
 from .conftest import MOCK_STATUS_COAP
-
-from tests.common import (
-    async_load_json_object_fixture,
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
 
 SENSOR_BLOCK_ID = 3
 DEVICE_BLOCK_ID = 4

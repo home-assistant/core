@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from synology_dsm.api.core.hardware import FanSpeed
 from syrupy.assertion import SnapshotAssertion
 
@@ -26,8 +27,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture

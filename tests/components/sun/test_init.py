@@ -7,6 +7,7 @@ from astral import LocationInfo
 import astral.sun
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import sun
 from homeassistant.components.sun import entity
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setting_rising(hass: HomeAssistant) -> None:

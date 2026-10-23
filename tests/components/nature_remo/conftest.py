@@ -7,12 +7,11 @@ from unittest.mock import AsyncMock, patch
 
 from aionatureremo import Appliance, Device, NatureRemoClient, RateLimit, User
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.nature_remo.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_array_fixture
 
 
 @pytest.fixture

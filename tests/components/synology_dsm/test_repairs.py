@@ -3,6 +3,12 @@
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import ANY, MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
 
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
@@ -25,10 +31,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
-
-from tests.common import ANY, MockConfigEntry
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture

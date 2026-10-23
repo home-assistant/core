@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tailscale import TailscaleAuthenticationError, TailscaleConnectionError
 
 from homeassistant.components.tailscale.const import (
@@ -15,8 +16,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 OAUTH_INPUT = {
     CONF_OAUTH_CLIENT_ID: "tskey-client-FAKE",

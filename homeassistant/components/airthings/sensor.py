@@ -27,9 +27,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirthingsConfigEntry
 from .const import DOMAIN
-from .coordinator import AirthingsDataUpdateCoordinator
+from .coordinator import AirthingsConfigEntry, AirthingsDataUpdateCoordinator
 
 SENSORS: dict[str, SensorEntityDescription] = {
     "radonShortTermAvg": SensorEntityDescription(

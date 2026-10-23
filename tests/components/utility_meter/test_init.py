@@ -5,6 +5,11 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_platform_setup_creates_issue,
+    mock_restore_cache,
+)
 
 from homeassistant.components import utility_meter
 from homeassistant.components.select import (
@@ -18,7 +23,8 @@ from homeassistant.components.utility_meter import (
     sensor as um_sensor,
 )
 from homeassistant.components.utility_meter.config_flow import ConfigFlowHandler
-from homeassistant.components.utility_meter.const import DOMAIN, SERVICE_RESET
+from homeassistant.components.utility_meter.const import DOMAIN
+from homeassistant.components.utility_meter.services import UtilityMeterService
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -36,12 +42,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    assert_platform_setup_creates_issue,
-    mock_restore_cache,
-)
 
 
 @pytest.fixture
@@ -275,7 +275,7 @@ async def test_services(hass: HomeAssistant, meter) -> None:
 
     # Reset meters
     data = {ATTR_ENTITY_ID: meter}
-    await hass.services.async_call(DOMAIN, SERVICE_RESET, data)
+    await hass.services.async_call(DOMAIN, UtilityMeterService.RESET, data)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill_peak")
@@ -401,7 +401,7 @@ async def test_services_config_entry(hass: HomeAssistant) -> None:
 
     # Reset meters
     data = {ATTR_ENTITY_ID: "select.energy_bill"}
-    await hass.services.async_call(DOMAIN, SERVICE_RESET, data)
+    await hass.services.async_call(DOMAIN, UtilityMeterService.RESET, data)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill_peak")

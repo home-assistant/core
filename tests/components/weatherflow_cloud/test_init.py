@@ -3,13 +3,12 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from websockets.exceptions import ConnectionClosedError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util.ssl import client_context
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_rest_api")

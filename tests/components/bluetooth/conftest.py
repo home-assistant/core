@@ -1,19 +1,11 @@
 """Tests for the bluetooth component."""
 
-# ruff: noqa: PLC0414
-
 from collections.abc import Generator
 from unittest.mock import patch
 
 from dbus_fast.aio import message_bus
 import habluetooth.util as habluetooth_utils
 import pytest
-from pytest_homeassistant.plugins import (
-    macos_adapter as macos_adapter,
-    register_hci0_scanner as register_hci0_scanner,
-    register_hci1_scanner as register_hci1_scanner,
-    register_non_connectable_scanner as register_non_connectable_scanner,
-)
 
 
 @pytest.fixture(name="disable_dbus_socket", autouse=True, scope="package")

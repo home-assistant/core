@@ -4,6 +4,8 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import mikrotik
 from homeassistant.core import HomeAssistant
 
@@ -18,8 +20,6 @@ from .const import (
     WIFIWAVE2_DATA,
     WIRELESS_DATA,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _build_command_responses(

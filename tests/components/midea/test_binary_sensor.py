@@ -12,6 +12,7 @@ from midealocal.devices.e2 import DeviceAttributes as E2Attributes
 from midealocal.devices.e3 import DeviceAttributes as E3Attributes
 from midealocal.devices.x26 import DeviceAttributes as X26Attributes
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -21,8 +22,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DummyDevice, SetDeviceAttribute, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 def _ac_device() -> DummyDevice:

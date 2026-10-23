@@ -4,6 +4,7 @@ from json import loads
 from unittest.mock import AsyncMock, Mock, patch
 
 from electrasmart.api import ElectraIntruderLockoutError
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
@@ -11,8 +12,6 @@ from homeassistant.components.electrasmart.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_device_registry(

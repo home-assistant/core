@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from openhomedevice.device import Device
 from openhomedevice.exceptions import OpenhomeConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -51,8 +52,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import async_poll, setup_integration
 from .conftest import TRACK_INFO
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "media_player.friendly_name"
 MEDIA_ID = "http://localhost/track.flac"

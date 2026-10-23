@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components.input_datetime import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.const import ATTR_EDITABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("recorder_mock", "enable_custom_integrations")

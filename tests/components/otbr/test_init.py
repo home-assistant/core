@@ -6,6 +6,8 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 import python_otbr_api
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -28,9 +30,6 @@ from . import (
     TEST_BORDER_AGENT_ID,
     TEST_COPROCESSOR_VERSION,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 DATASET_NO_CHANNEL = bytes.fromhex(
     "0E08000000000001000035060004001FFFE00208F642646DA209B1C00708FDF57B5A"

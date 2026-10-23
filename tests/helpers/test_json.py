@@ -14,6 +14,7 @@ from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import json_round_trip
 
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers.json import (
@@ -34,8 +35,6 @@ from homeassistant.helpers.json import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
 from homeassistant.util.json import SerializationError, load_json
-
-from tests.common import json_round_trip
 
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}
