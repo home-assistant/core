@@ -21,7 +21,6 @@ def async_deprecated_notify_action_call(hass: HomeAssistant, service_name: str) 
             "action": f"notify.{service_name}",
             "new_action_1": "notify.send_message",
             "new_action_2": "prowl.send_message",
-            "url": f"/config/integrations/dashboard/add?domain={DOMAIN}",
             "example_yaml_1": """
 ```yaml
 action: notify.send_message
