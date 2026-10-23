@@ -32,29 +32,36 @@ class TuyaValveEntityDescription(TuyaEntityDescription, ValveEntityDescription):
 
 
 def _water_valves(channels: int) -> tuple[TuyaValveEntityDescription, ...]:
-    """Build water valve descriptions for a device with indexed channels."""
-    return (
+    """Build water valve descriptions for indexed channels."""
+    return tuple(
+        TuyaValveEntityDescription(
+            key=DPCode(f"switch_{channel}"),
+            translation_key="valve",
+            device_class=ValveDeviceClass.WATER,
+            channel_index=channel,
+            channel_condition=lambda device: DPCode.SWITCH_2 in device.status_range,
+        )
+        for channel in range(1, channels + 1)
+    )
+
+
+VALVES: dict[DeviceCategory, tuple[TuyaValveEntityDescription, ...]] = {
+    DeviceCategory.GGQ: (
         TuyaValveEntityDescription(
             key=DPCode.SWITCH,
             translation_key="valve",
             device_class=ValveDeviceClass.WATER,
         ),
-        *(
-            TuyaValveEntityDescription(
-                key=DPCode(f"switch_{channel}"),
-                translation_key="valve",
-                device_class=ValveDeviceClass.WATER,
-                channel_index=channel,
-                channel_condition=lambda device: DPCode.SWITCH_2 in device.status_range,
-            )
-            for channel in range(1, channels + 1)
+        *_water_valves(8),
+    ),
+    DeviceCategory.SFKZQ: (
+        TuyaValveEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="valve",
+            device_class=ValveDeviceClass.WATER,
         ),
-    )
-
-
-VALVES: dict[DeviceCategory, tuple[TuyaValveEntityDescription, ...]] = {
-    DeviceCategory.GGQ: _water_valves(8),
-    DeviceCategory.SFKZQ: _water_valves(8),
+        *_water_valves(8),
+    ),
 }
 
 
