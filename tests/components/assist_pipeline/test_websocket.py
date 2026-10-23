@@ -25,7 +25,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
     async_get_pipelines,
     async_update_pipeline,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, device_registry as dr
 
@@ -577,6 +577,48 @@ async def test_text_pipeline_timeout(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"events": events}
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_intent_unauthorized(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test continuing a conversation of another user ends with a clean error."""
+    await conversation.async_converse(
+        hass,
+        "Are the lights on?",
+        "koala",
+        Context(user_id="other-user-id"),
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "intent",
+            "end_stage": "intent",
+            "input": {"text": "Are the lights on?"},
+            "conversation_id": "koala",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    for event_type in ("run-start", "intent-start"):
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == event_type
+
+    msg = await client.receive_json()
+    assert msg["event"]["type"] == "error"
+    assert msg["event"]["data"]["code"] == "intent-unauthorized"
+
+    msg = await client.receive_json()
+    assert msg["event"]["type"] == "run-end"
+
+    assert "Unexpected error during intent recognition" not in caplog.text
 
 
 async def test_intent_failed(
