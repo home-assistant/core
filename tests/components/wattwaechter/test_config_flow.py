@@ -14,7 +14,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.wattwaechter.const import CONF_FW_VERSION, DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+    ConfigEntryDisabler,
+)
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_HOST,
@@ -27,6 +32,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import (
+    MOCK_CONFIG_DATA,
     MOCK_DEVICE_ID,
     MOCK_DEVICE_NAME,
     MOCK_FW_VERSION,
@@ -661,6 +667,44 @@ async def test_zeroconf_gw_already_configured_by_user_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == new_host
+
+
+@pytest.mark.parametrize(
+    ("source", "disabled_by"),
+    [
+        (SOURCE_IGNORE, None),
+        (SOURCE_USER, ConfigEntryDisabler.USER),
+    ],
+    ids=["ignored", "disabled"],
+)
+async def test_zeroconf_gw_matches_unmigrated_legacy_entry(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    source: str,
+    disabled_by: ConfigEntryDisabler | None,
+) -> None:
+    """Test discovery matches an entry that kept its WWGW-<MAC> unique ID.
+
+    Ignored and disabled entries are not set up, so they are not migrated.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG_DATA, CONF_DEVICE_ID: f"WWGW-{MOCK_DEVICE_ID}"},
+        unique_id=f"WWGW-{MOCK_DEVICE_ID}",
+        source=source,
+        disabled_by=disabled_by,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_discovery({"id": f"WWGW-{MOCK_DEVICE_ID}"}),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_zeroconf_gw_model_from_system_info(

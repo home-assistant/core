@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -11,14 +12,15 @@ from aio_wattwaechter import (
     WattwaechterError,
     WattwaechterNoDataError,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
-from homeassistant.components.wattwaechter.const import DOMAIN
+from homeassistant.components.wattwaechter.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_DEVICE_ID
+from homeassistant.const import CONF_DEVICE_ID, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -26,6 +28,7 @@ from .conftest import (
     MOCK_CONFIG_DATA,
     MOCK_DEVICE_ID,
     MOCK_HOST,
+    MOCK_SYSTEM_INFO_GAS,
     MOCK_SYSTEM_INFO_WATER,
 )
 
@@ -167,6 +170,47 @@ async def test_device_model(
     assert device.model == expected_model
     # The legacy mDNS model "WW-Plus" stored in the entry maps to the model ID
     assert device.model_id == "ww_plus"
+
+
+async def test_device_model_follows_system_info(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the model is updated once the system info arrives or changes."""
+    mock_client.system_info.side_effect = WattwaechterConnectionError("offline")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG_DATA, CONF_MODEL: "WW-GW-MF"},
+        unique_id=MOCK_DEVICE_ID,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_DEVICE_ID), entry.entry_id
+    )
+    assert device is not None
+    assert device.model == "WattWächter Gas/Wasser"
+
+    mock_client.system_info.side_effect = None
+    mock_client.system_info.return_value = MOCK_SYSTEM_INFO_WATER
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    device = device_registry.async_get(device.id)
+    assert device.model == "WattWächter Wasser"
+    assert device.model_id == "ww_gw_mf"
+
+    # The device is switched to gas
+    mock_client.system_info.return_value = MOCK_SYSTEM_INFO_GAS
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert device_registry.async_get(device.id).model == "WattWächter Gas"
 
 
 async def test_migrate_gw_entry_to_bare_device_id(

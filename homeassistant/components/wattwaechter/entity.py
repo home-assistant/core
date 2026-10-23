@@ -3,7 +3,7 @@
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, MODEL_NAMES
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import WattwaechterCoordinator
 
 
@@ -19,12 +19,7 @@ class WattwaechterEntity(CoordinatorEntity[WattwaechterCoordinator]):
         # DHCP changes); fall back to the host/IP when system info is missing.
         system = coordinator.data.system
         mdns_name = system.get_value("wifi", "mdns_name") if system else None
-        # Gas/water devices report the product name for the configured medium
-        # (WattWächter Gas / WattWächter Wasser); older firmware reports none.
-        model_id = (system.model_id if system else None) or coordinator.model_id
-        model = (system.product_name if system else None) or MODEL_NAMES.get(
-            model_id or ""
-        )
+        model, model_id = coordinator.device_model(system)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.device_id)},
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},

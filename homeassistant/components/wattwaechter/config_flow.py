@@ -130,6 +130,16 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         self._mac = properties.get("mac", "")
         self._device_id = _device_id_from_discovery(properties)
 
+        # Ignored and disabled entries are not set up, so the migration to the
+        # bare MAC never ran for them: match their old WWGW-<MAC> ID as well.
+        legacy_id = str(properties.get("id", ""))
+        if legacy_id != self._device_id and any(
+            entry.unique_id == legacy_id
+            for entry in self._async_current_entries(include_ignore=True)
+        ):
+            await self.async_set_unique_id(legacy_id)
+            self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+
         await self.async_set_unique_id(self._device_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
