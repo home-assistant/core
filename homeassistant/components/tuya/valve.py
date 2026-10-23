@@ -31,31 +31,27 @@ class TuyaValveEntityDescription(TuyaEntityDescription, ValveEntityDescription):
     """Describes a Tuya valve entity."""
 
 
+WATER_VALVES: tuple[TuyaValveEntityDescription, ...] = (
+    TuyaValveEntityDescription(
+        key=DPCode.SWITCH,
+        translation_key="valve",
+        device_class=ValveDeviceClass.WATER,
+    ),
+    *(
+        TuyaValveEntityDescription(
+            key=DPCode(f"switch_{channel}"),
+            translation_key="valve",
+            device_class=ValveDeviceClass.WATER,
+            channel_index=channel,
+            channel_condition=lambda device: DPCode.SWITCH_2 in device.status_range,
+        )
+        for channel in range(1, 9)
+    ),
+)
+
 VALVES: dict[DeviceCategory, tuple[TuyaValveEntityDescription, ...]] = {
-    DeviceCategory.GGQ: (
-        TuyaValveEntityDescription(
-            key=DPCode.SWITCH,
-            translation_key="valve",
-            device_class=ValveDeviceClass.WATER,
-        ),
-    ),
-    DeviceCategory.SFKZQ: (
-        TuyaValveEntityDescription(
-            key=DPCode.SWITCH,
-            translation_key="valve",
-            device_class=ValveDeviceClass.WATER,
-        ),
-        *(
-            TuyaValveEntityDescription(
-                key=DPCode(f"switch_{channel}"),
-                translation_key="valve",
-                device_class=ValveDeviceClass.WATER,
-                channel_index=channel,
-                channel_condition=lambda device: DPCode.SWITCH_2 in device.status_range,
-            )
-            for channel in range(1, 9)
-        ),
-    ),
+    DeviceCategory.GGQ: WATER_VALVES,
+    DeviceCategory.SFKZQ: WATER_VALVES,
 }
 
 
