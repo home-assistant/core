@@ -126,6 +126,10 @@ def _get_closure_device_class(tag_list: Any) -> CoverDeviceClass | None:
     """
     fallback_device_class: CoverDeviceClass | None = None
     for tag in tag_list or ():
+        # A non-null mfgCode scopes namespaceID/tag to that manufacturer: our
+        # tables only cover the standard (mfgCode-less) namespaces.
+        if _extract_struct_field(tag, "mfgCode") is not None:
+            continue
         namespace_id = _extract_struct_field(tag, "namespaceID")
         tag_id = _extract_struct_field(tag, "tag")
         if namespace_id == NAMESPACE_CLOSURE_COVERING:
@@ -149,6 +153,10 @@ CLOSURE_PANEL_TAG_TO_ROLE = {
 def _get_closure_panel_role(tag_list: Any) -> ClosurePanelRole | None:
     """Return the functional role of a ClosurePanel endpoint from its TagList."""
     for tag in tag_list or ():
+        # A non-null mfgCode scopes namespaceID/tag to that manufacturer: our
+        # table only covers the standard (mfgCode-less) ClosurePanel namespace.
+        if _extract_struct_field(tag, "mfgCode") is not None:
+            continue
         if _extract_struct_field(tag, "namespaceID") != NAMESPACE_CLOSURE_PANEL:
             continue
         role = CLOSURE_PANEL_TAG_TO_ROLE.get(_extract_struct_field(tag, "tag"))

@@ -22,11 +22,13 @@ from homeassistant.components.cover import (
 )
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.components.matter.cover import (
+    NAMESPACE_CLOSURE,
     NAMESPACE_CLOSURE_PANEL,
     STATE_WRITE_DEBOUNCE_COOLDOWN,
     ClosurePanelRole,
     _extract_struct_field,
     _feature_supported,
+    _get_closure_device_class,
     _get_closure_panel_role,
     _ha_position_to_percent100ths,
     _percent100ths_to_ha_position,
@@ -142,6 +144,15 @@ def test_extract_struct_field(value: Any, attr_name: str, expected: Any) -> None
             ClosurePanelRole.TILT,
             id="skips_other_namespace_tag_then_matches",
         ),
+        pytest.param(
+            [
+                clusters.Globals.Structs.semtag(
+                    mfgCode=1234, namespaceID=NAMESPACE_CLOSURE_PANEL, tag=0
+                )
+            ],
+            None,
+            id="manufacturer_specific_tag_is_ignored",
+        ),
     ],
 )
 def test_get_closure_panel_role(
@@ -149,6 +160,32 @@ def test_get_closure_panel_role(
 ) -> None:
     """Test resolving a ClosurePanel child endpoint's functional role from its TagList."""
     assert _get_closure_panel_role(tag_list) == expected
+
+
+@pytest.mark.parametrize(
+    ("tag_list", "expected"),
+    [
+        pytest.param(
+            [clusters.Globals.Structs.semtag(namespaceID=NAMESPACE_CLOSURE, tag=5)],
+            CoverDeviceClass.GARAGE,
+            id="garage_door_tag",
+        ),
+        pytest.param(
+            [
+                clusters.Globals.Structs.semtag(
+                    mfgCode=1234, namespaceID=NAMESPACE_CLOSURE, tag=5
+                )
+            ],
+            None,
+            id="manufacturer_specific_tag_is_ignored",
+        ),
+    ],
+)
+def test_get_closure_device_class(
+    tag_list: list[Any], expected: CoverDeviceClass | None
+) -> None:
+    """Test resolving a Closure endpoint's HA device class from its TagList."""
+    assert _get_closure_device_class(tag_list) == expected
 
 
 @pytest.mark.parametrize(
