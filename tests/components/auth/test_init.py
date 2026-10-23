@@ -272,6 +272,25 @@ def test_auth_code_store_expiration(
     assert entry.credentials == mock_credential
 
 
+def test_auth_code_store_prunes_expired(
+    mock_credential, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that storing a code removes expired codes."""
+    store, retrieve = auth._create_auth_code_store()
+    client_id = "bla"
+    now = utcnow()
+
+    freezer.move_to(now)
+    code = store(client_id, mock_credential)
+
+    freezer.move_to(now + timedelta(minutes=10))
+    store(client_id, mock_credential)
+
+    # Moving back in time shows the expired code is gone, not just rejected.
+    freezer.move_to(now)
+    assert retrieve(client_id, code) is None
+
+
 def test_auth_code_store_requires_credentials(mock_credential) -> None:
     """Test we require credentials."""
     store, _retrieve = auth._create_auth_code_store()

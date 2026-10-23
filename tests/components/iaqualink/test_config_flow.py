@@ -79,7 +79,7 @@ async def test_dhcp_discovery_starts_user_flow(
         ),
         patch(
             "homeassistant.components.iaqualink.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

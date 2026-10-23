@@ -160,7 +160,7 @@ def mock_helper_integration(
 ) -> None:
     """Mock the helper integration."""
 
-    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setup entry."""
         async_handle_source_entity_changes(
             hass,
@@ -170,7 +170,6 @@ def mock_helper_integration(
             source_entity_id_or_uuid=helper_config_entry.options["source"],
             source_entity_removed=source_entity_removed,
         )
-        return True
 
     mock_integration(
         hass,

@@ -11,6 +11,7 @@ from yarl import URL
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
+    CONF_API_VERSION,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PATH,
@@ -31,10 +32,9 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from . import DOMAIN, create_influx_url, get_influx_connection
+from . import create_influx_url, get_influx_connection
 from .const import (
     API_VERSION_2,
-    CONF_API_VERSION,
     CONF_BUCKET,
     CONF_DB_NAME,
     CONF_ORG,
@@ -45,6 +45,7 @@ from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_VERIFY_SSL,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
