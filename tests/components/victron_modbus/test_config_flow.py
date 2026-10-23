@@ -109,6 +109,26 @@ async def test_user_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_user_flow_while_discovery_is_pending(
+    hass: HomeAssistant, mock_unit, mock_setup_entry: AsyncMock
+) -> None:
+    """Adding a device by hand works while its discovery waits for confirmation."""
+    discovered = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery()
+    )
+    assert discovered["step_id"] == "confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
+
+
 @IDENTIFY_ERRORS
 async def test_user_flow_errors(
     hass: HomeAssistant, mock_unit, error: Exception, reason: str

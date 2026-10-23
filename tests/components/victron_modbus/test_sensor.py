@@ -237,6 +237,32 @@ async def test_only_reported_readings_get_a_sensor(
     assert hass.states.get(entity_id).state == "23.0"
 
 
+async def test_unloaded_entry_adds_no_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_unit,
+) -> None:
+    """A reading that recovers after the entry unloaded gets no sensor."""
+    set_readings(mock_unit)
+    mock_unit.holding[0x3048] = 0x7FFF  # L2 voltage: not available
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    mock_unit.holding[0x3048] = 2300
+    await _next_poll(hass, freezer)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{SERIAL}_phase_2_voltage"
+        )
+        is None
+    )
+
+
 async def test_failed_read_at_setup_keeps_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

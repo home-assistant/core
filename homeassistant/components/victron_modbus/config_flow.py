@@ -113,7 +113,7 @@ class VictronModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             except IdentifyError as err:
                 errors["base"] = err.reason
             else:
-                await self.async_set_unique_id(serial)
+                await self.async_set_unique_id(serial, raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self._async_create_entry()
         return self.async_show_form(

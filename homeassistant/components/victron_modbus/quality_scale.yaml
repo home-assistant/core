@@ -10,7 +10,7 @@ rules:
       Listed under the victron brand in homeassistant/brands/victron.json. The
       entry in the home-assistant/brands repository
       (core_integrations/victron_modbus -> ../core_brands/victron, like the other
-      Victron integrations) is to be added in the brands PR.
+      Victron integrations) is added in home-assistant/brands pull request 11362.
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
@@ -31,7 +31,9 @@ rules:
     status: exempt
     comment: |
       Entities read cached state from the coordinator; they subscribe via
-      CoordinatorEntity and register no other event handlers.
+      CoordinatorEntity and register no other event handlers. The sensor
+      platform's own coordinator listener only adds sensors for readings that
+      were unavailable at setup, and is removed when the entry unloads.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
