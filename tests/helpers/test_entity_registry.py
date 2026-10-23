@@ -3482,7 +3482,6 @@ async def test_update_entity_disabled_by(
         config_entry=config_entry_1,
         config_subentry_id=None,
         device_id=device_entry.id,
-        disabled_by=entity_disabled_by_initial,
         entity_category=EntityCategory.DIAGNOSTIC,
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
@@ -3495,6 +3494,9 @@ async def test_update_entity_disabled_by(
         supported_features=1,
         translation_key="translation_key_1",
         unit_of_measurement="unit_1",
+    )
+    entry = entity_registry._async_update_entity(
+        entry.entity_id, disabled_by=entity_disabled_by_initial
     )
 
     # Update entity
@@ -3606,7 +3608,6 @@ async def test_update_entity_disabled_by_2(
         config_entry=config_entry,
         config_subentry_id=None,
         device_id=device_entry.id,
-        disabled_by=entity_disabled_by_initial,
         entity_category=EntityCategory.DIAGNOSTIC,
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
@@ -3619,6 +3620,9 @@ async def test_update_entity_disabled_by_2(
         supported_features=1,
         translation_key="translation_key_1",
         unit_of_measurement="unit_1",
+    )
+    entry = entity_registry._async_update_entity(
+        entry.entity_id, disabled_by=entity_disabled_by_initial
     )
 
     # Update entity
@@ -3875,6 +3879,12 @@ async def test_disabled_by_config_entry_pref(
     )
     assert entry2.disabled_by is er.RegistryEntryDisabler.USER
 
+    # An explicit None takes precedence over the preference
+    entry3 = entity_registry.async_get_or_create(
+        "light", "hue", "CCCC", config_entry=mock_config, disabled_by=None
+    )
+    assert entry3.disabled_by is None
+
 
 async def test_disabled_by_config_entry_pref_on_disabled_device(
     hass: HomeAssistant,
@@ -3899,6 +3909,116 @@ async def test_disabled_by_config_entry_pref_on_disabled_device(
     await hass.async_block_till_done()
     entry = entity_registry.async_get(entry.entity_id)
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize(
+    (
+        "entity_disabled_by_initial",
+        "device_disabled_by_removal",
+        "entity_disabled_by_restored",
+    ),
+    [
+        pytest.param(None, None, None, id="enabled"),
+        pytest.param(None, dr.DeviceEntryDisabler.USER, None, id="disabled_by_device"),
+        pytest.param(
+            er.RegistryEntryDisabler.USER,
+            None,
+            er.RegistryEntryDisabler.USER,
+            id="disabled_by_user",
+        ),
+        pytest.param(
+            er.RegistryEntryDisabler.INTEGRATION,
+            None,
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="disabled_by_integration",
+        ),
+    ],
+)
+async def test_restore_entity_disabled_by_config_entry_pref(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_disabled_by_initial: er.RegistryEntryDisabler | None,
+    device_disabled_by_removal: dr.DeviceEntryDisabler | None,
+    entity_disabled_by_restored: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test the config entry preference does not apply to a restored entity."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        disabled_by=entity_disabled_by_initial,
+    )
+    assert entry.disabled_by is entity_disabled_by_initial
+
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=device_disabled_by_removal
+    )
+    await hass.async_block_till_done()
+    entity_registry.async_remove(entry.entity_id)
+    device_registry.async_update_device(device_entry.id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    hass.config_entries.async_update_entry(config_entry, pref_disable_new_entities=True)
+    entry_restored = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    assert entry_restored.id == entry.id
+    assert entry_restored.disabled_by is entity_disabled_by_restored
+
+
+async def test_restore_entity_disabled_by_undefined_config_entry_pref(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the config entry preference applies to a restored legacy entity.
+
+    Deleted entities stored before disabled_by was tracked have no recorded
+    value, so the entity is treated like a new one.
+    """
+    config_entry = MockConfigEntry(domain="light", pref_disable_new_entities=True)
+    config_entry.add_to_hass(hass)
+    entity_registry.deleted_entities[("light", "hue", "1234")] = (
+        er.DeletedRegistryEntry(
+            entity_id="light.legacy",
+            unique_id="1234",
+            platform="hue",
+            aliases=[],
+            area_id=None,
+            categories={},
+            config_entry_id=config_entry.entry_id,
+            config_subentry_id=None,
+            created_at=utcnow(),
+            device_class=None,
+            disabled_by=UNDEFINED,
+            hidden_by=UNDEFINED,
+            icon=None,
+            id="legacy-id",
+            labels=set(),
+            modified_at=utcnow(),
+            name=None,
+            options=UNDEFINED,
+            orphaned_timestamp=None,
+        )
+    )
+
+    entry_restored = entity_registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry
+    )
+    assert entry_restored.id == "legacy-id"
+    assert entry_restored.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_hidden_by(entity_registry: er.EntityRegistry) -> None:
@@ -4780,7 +4900,9 @@ async def test_disable_device_disables_entities(
         "EFGH",
         config_entry=config_entry,
         device_id=device_entry.id,
-        disabled_by=er.RegistryEntryDisabler.CONFIG_ENTRY,
+    )
+    entry3 = entity_registry._async_update_entity(
+        entry3.entity_id, disabled_by=er.RegistryEntryDisabler.CONFIG_ENTRY
     )
 
     assert not entry1.disabled
@@ -4850,7 +4972,9 @@ async def test_disable_config_entry_disables_entities(
         "EFGH",
         config_entry=config_entry,
         device_id=device_entry.id,
-        disabled_by=er.RegistryEntryDisabler.DEVICE,
+    )
+    entry3 = entity_registry._async_update_entity(
+        entry3.entity_id, disabled_by=er.RegistryEntryDisabler.DEVICE
     )
 
     assert not entry1.disabled
@@ -4884,6 +5008,62 @@ async def test_disable_config_entry_disables_entities(
     # Neither the config entry nor the device is disabled anymore
     entry3 = entity_registry.async_get(entry3.entity_id)
     assert not entry3.disabled_by
+
+
+@pytest.mark.parametrize(
+    "disabled_by",
+    [er.RegistryEntryDisabler.CONFIG_ENTRY, er.RegistryEntryDisabler.DEVICE],
+)
+async def test_derived_disabled_by_ignored(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    disabled_by: er.RegistryEntryDisabler,
+) -> None:
+    """Test a derived disabled_by passed to the public API is derived instead."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        disabled_by=disabled_by,
+    )
+    assert entry.disabled_by is None
+
+    entity_registry.async_update_entity(
+        entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, disabled_by=disabled_by
+    )
+    assert entry.disabled_by is None
+
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, disabled_by=disabled_by
+    )
+    assert entry.disabled_by is er.RegistryEntryDisabler.DEVICE
+
+    entry2 = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        disabled_by=disabled_by,
+    )
+    assert entry2.disabled_by is er.RegistryEntryDisabler.DEVICE
 
 
 async def test_enable_config_entry_with_user_disabled_device(
@@ -5837,14 +6017,14 @@ async def test_restore_entity(
 
 
 @pytest.mark.parametrize(
-    ("entity_disabled_by"),
+    ("entity_disabled_by", "entity_disabled_by_restored"),
     [
-        None,
-        er.RegistryEntryDisabler.CONFIG_ENTRY,
-        er.RegistryEntryDisabler.DEVICE,
-        er.RegistryEntryDisabler.HASS,
-        er.RegistryEntryDisabler.INTEGRATION,
-        er.RegistryEntryDisabler.USER,
+        (None, None),
+        (er.RegistryEntryDisabler.CONFIG_ENTRY, None),
+        (er.RegistryEntryDisabler.DEVICE, None),
+        (er.RegistryEntryDisabler.HASS, er.RegistryEntryDisabler.HASS),
+        (er.RegistryEntryDisabler.INTEGRATION, er.RegistryEntryDisabler.INTEGRATION),
+        (er.RegistryEntryDisabler.USER, er.RegistryEntryDisabler.USER),
     ],
 )
 @pytest.mark.usefixtures("freezer")
@@ -5853,6 +6033,7 @@ async def test_restore_migrated_entity_disabled_by(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     entity_disabled_by: er.RegistryEntryDisabler | None,
+    entity_disabled_by_restored: er.RegistryEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when restoring an entity."""
     update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
@@ -5935,7 +6116,7 @@ async def test_restore_migrated_entity_disabled_by(
         created_at=utcnow(),
         device_class=None,
         device_id=device_entry.id,
-        disabled_by=entity_disabled_by,
+        disabled_by=entity_disabled_by_restored,
         entity_category=EntityCategory.CONFIG,
         has_entity_name=False,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
@@ -6289,7 +6470,6 @@ async def test_restore_entity_disabled_by(
     entity_disabled_by_restored: er.RegistryEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when restoring an entity."""
-    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     config_entry = MockConfigEntry(domain="light", disabled_by=config_entry_disabled_by)
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
@@ -6304,7 +6484,6 @@ async def test_restore_entity_disabled_by(
         config_entry=config_entry,
         config_subentry_id=None,
         device_id=device_entry.id,
-        disabled_by=entity_disabled_by_initial,
         entity_category=EntityCategory.DIAGNOSTIC,
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
@@ -6318,10 +6497,15 @@ async def test_restore_entity_disabled_by(
         translation_key="translation_key_1",
         unit_of_measurement="unit_1",
     )
+    entry = entity_registry._async_update_entity(
+        entry.entity_id, disabled_by=entity_disabled_by_initial
+    )
 
     entity_registry.async_remove(entry.entity_id)
     assert len(entity_registry.entities) == 0
     assert len(entity_registry.deleted_entities) == 1
+
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
 
     # Re-add entity, integration has changed
     entry_restored = entity_registry.async_get_or_create(
@@ -6387,10 +6571,8 @@ async def test_restore_entity_disabled_by(
 
     # Check the events
     await hass.async_block_till_done()
-    assert len(update_events) == 3
+    assert len(update_events) == 1
     assert update_events[0].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[1].data == {"action": "remove", "entity_id": "light.hue_5678"}
-    assert update_events[2].data == {"action": "create", "entity_id": "light.hue_5678"}
 
 
 @pytest.mark.parametrize(
@@ -6418,7 +6600,6 @@ async def test_restore_entity_disabled_by_2(
 
     In this test, the entity is restored without a config entry.
     """
-    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     config_entry = MockConfigEntry(domain="light")
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
@@ -6433,7 +6614,6 @@ async def test_restore_entity_disabled_by_2(
         config_entry=config_entry,
         config_subentry_id=None,
         device_id=device_entry.id,
-        disabled_by=entity_disabled_by_initial,
         entity_category=EntityCategory.DIAGNOSTIC,
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
@@ -6447,10 +6627,15 @@ async def test_restore_entity_disabled_by_2(
         translation_key="translation_key_1",
         unit_of_measurement="unit_1",
     )
+    entry = entity_registry._async_update_entity(
+        entry.entity_id, disabled_by=entity_disabled_by_initial
+    )
 
     entity_registry.async_remove(entry.entity_id)
     assert len(entity_registry.entities) == 0
     assert len(entity_registry.deleted_entities) == 1
+
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
 
     # Re-add entity, integration has changed
     entry_restored = entity_registry.async_get_or_create(
@@ -6516,10 +6701,8 @@ async def test_restore_entity_disabled_by_2(
 
     # Check the events
     await hass.async_block_till_done()
-    assert len(update_events) == 3
+    assert len(update_events) == 1
     assert update_events[0].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[1].data == {"action": "remove", "entity_id": "light.hue_5678"}
-    assert update_events[2].data == {"action": "create", "entity_id": "light.hue_5678"}
 
 
 @pytest.mark.parametrize(
