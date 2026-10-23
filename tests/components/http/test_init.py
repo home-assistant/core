@@ -16,6 +16,16 @@ from unittest.mock import ANY, AsyncMock, Mock, call, patch
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_call_logger_set_level,
+    async_fire_time_changed,
+    async_mock_service,
+)
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import cloud, http, onboarding
@@ -50,14 +60,6 @@ from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import SSLProfile, server_context
-
-from tests.common import (
-    async_call_logger_set_level,
-    async_fire_time_changed,
-    async_mock_service,
-)
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

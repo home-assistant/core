@@ -32,7 +32,7 @@
       'source': 'user',
       'subentries': list([
       ]),
-      'title': 'Mock Title',
+      'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
       'version': 1,
     }),

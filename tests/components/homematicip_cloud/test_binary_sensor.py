@@ -10,6 +10,10 @@ from homematicip.base.enums import (
     WindowState,
 )
 import pytest
+from pytest_homeassistant.common import (
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -45,8 +49,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
-
-from tests.common import async_load_json_object_fixture, snapshot_platform
 
 
 async def test_hmip_full_flush_lock_controller_binary_sensors(
@@ -595,6 +597,33 @@ async def test_hmip_heating_output_sensor_output_disabled(
     )
 
     assert hass.states.get("binary_sensor.bwth_1_heating") is None
+
+
+async def test_hmip_motion_detector_switch_outdoor(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the motion sensor of a motion detector with switching actuator."""
+    entity_id = "binary_sensor.bewegungsmelder_haustur_motion"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Bewegungsmelder Haustür"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass, hmip_device, "motionDetected", True, channel=0, channel_real_index=1
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
 
 
 async def test_hmip_rain_sensor(

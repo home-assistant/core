@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from wled import WLEDConnectionError, WLEDError, WLEDUnsupportedVersionError
 
 from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 CONFIG = {CONF_HOST: "10.10.0.10"}
 

@@ -1,6 +1,7 @@
 {
   "domain": "zeversolar",
   "name": "Zeversolar",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@kvanzuijlen", "@mhuiskes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zeversolar",

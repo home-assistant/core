@@ -1,6 +1,6 @@
 """Support for Envisalink zone states- represented as binary sensors."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import Any, override
 
@@ -101,7 +101,7 @@ class EnvisalinkBinarySensor(EnvisalinkEntity, BinarySensorEntity):
         seconds_ago = self._info["last_fault"]
         if seconds_ago < 65536 * 5:
             now = dt_util.now().replace(microsecond=0)
-            delta = datetime.timedelta(seconds=seconds_ago)
+            delta = dt.timedelta(seconds=seconds_ago)
             last_trip_time = (now - delta).isoformat()
         else:
             last_trip_time = None

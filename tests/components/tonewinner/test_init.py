@@ -2,12 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.tonewinner.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(

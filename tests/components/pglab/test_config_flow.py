@@ -1,5 +1,8 @@
 """Test the PG LAB Electronics config flow."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant.components.mqtt import MQTT_CONNECTION_STATE
 from homeassistant.components.pglab.const import DOMAIN
 from homeassistant.config_entries import SOURCE_MQTT, SOURCE_USER
@@ -7,9 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-
-from tests.common import MockConfigEntry
-from tests.typing import MqttMockHAClient
 
 
 async def test_mqtt_config_single_instance(

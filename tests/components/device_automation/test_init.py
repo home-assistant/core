@@ -6,6 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import attr
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant import loader
@@ -33,9 +40,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import RequirementsNotFound
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
-from tests.typing import WebSocketGenerator
 
 
 @attr.s(frozen=True, slots=True)

@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import EventType, MatterNodeData
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.matter import DOMAIN
@@ -16,11 +17,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, load_fixture
-
 FIXTURES = [
     "air_quality_sensor",
     "aqara_door_window_p2",
+    "aqara_light_switch_h2_us_4099",
+    "aqara_light_switch_h2_us_4100",
+    "aqara_light_switch_h2_us_4101",
     "aqara_motion_p2",
     "aqara_multi_state_p100",
     "aqara_presence_fp300",
@@ -31,6 +33,9 @@ FIXTURES = [
     "aqara_u200",
     "atios_knx_bridge",
     "color_temperature_light",
+    "cync_keypad_dimmer",
+    "dewenwils_3_zone_transformer",
+    "ductech_smartwings_levitate",
     "eberle_ute3000",
     "ecovacs_deebot",
     "eufy_vacuum_omni_e28",
@@ -52,10 +57,13 @@ FIXTURES = [
     "ikea_scroll_wheel",
     "inovelli_vtm30",
     "inovelli_vtm31",
+    "lifx_switch_115",
+    "lifx_switch_89",
     "longan_link_thermostat",
     "mock_air_purifier",
     "mock_basic_video_player",
     "mock_battery_storage",
+    "mock_camera",
     "mock_chime",
     "mock_closure_covering_lift",
     "mock_closure_roof_window",
@@ -102,6 +110,7 @@ FIXTURES = [
     "mock_window_covering_pa_lift_null_tilt",
     "mock_window_covering_pa_tilt",
     "mock_window_covering_tilt",
+    "nanoleaf_nl77k1",
     "onoff_light_with_levelcontrol_present",
     "resideo_x2s_thermostat",
     "roborock_saros_10",
@@ -116,6 +125,12 @@ FIXTURES = [
     "silabs_water_heater",
     "switchbot_k11_plus",
     "tado_smart_radiator_thermostat_x",
+    "tapo_smart_outdoor_plug_in_dimmer",
+    "tapo_smart_wi_fi_outlet",
+    "tapo_smart_wi_fi_plug_265",
+    "tapo_smart_wi_fi_power_strip",
+    "tp_link_smart_outdoor_plug",
+    "uascent_smart_switch",
     "wago_home_blind_control",
     "wago_home_relay_16a",
     "yandex_smart_socket",

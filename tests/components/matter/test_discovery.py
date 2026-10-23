@@ -100,7 +100,7 @@ def test_async_discover_entities_filters_by_cluster_revision(
     )
     endpoint = node.endpoints[1]
 
-    assert bool(list(async_discover_entities(endpoint))) is expected_discovered
+    assert bool(list(async_discover_entities(endpoint, 1))) is expected_discovered
 
 
 @pytest.mark.parametrize(
@@ -133,6 +133,6 @@ def test_async_discover_entities_video_player_power(
 
     assert {
         (info.platform, info.entity_description.key)
-        for info in async_discover_entities(node.endpoints[1])
+        for info in async_discover_entities(node.endpoints[1], 1)
         if clusters.OnOff.Attributes.OnOff in info.discovery_schema.required_attributes
     } == expected

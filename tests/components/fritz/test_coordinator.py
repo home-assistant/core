@@ -14,6 +14,7 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.fritz.const import (
     CONF_FEATURE_DEVICE_TRACKING,
@@ -51,8 +52,6 @@ from .const import (
     MOCK_STATUS_DEVICE_INFO_DATA,
     MOCK_USER_DATA,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="mock_config_entry")

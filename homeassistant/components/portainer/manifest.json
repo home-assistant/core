@@ -1,6 +1,7 @@
 {
   "domain": "portainer",
   "name": "Portainer",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@erwindouna"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/portainer",

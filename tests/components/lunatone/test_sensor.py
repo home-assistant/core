@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from lunatone_rest_api_client.models import LineStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lunatone.coordinator import DEFAULT_INFO_UPDATE_INTERVAL
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(
