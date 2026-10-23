@@ -41,7 +41,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: This integration does not use any form of authentication.
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: todo
