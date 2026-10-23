@@ -133,7 +133,9 @@ async def test_empty_secret(hass: HomeAssistant, mock_client: AsyncMock) -> None
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_concurrent_duplicate(hass: HomeAssistant, mock_client: AsyncMock) -> None:
+async def test_concurrent_duplicate(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
     """Recheck the host when another flow finishes during API validation."""
     first = await hass.config_entries.flow.async_init(
         "dobiss", context={"source": SOURCE_USER}
