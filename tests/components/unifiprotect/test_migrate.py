@@ -13,9 +13,11 @@ from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.components.unifiprotect.migrate import (
     LIGHT_SETTING_MIRROR_BREAKS_IN,
+    PRIVATE_ONLY_BREAKS_IN,
     async_deprecate_light_setting_mirrors,
     async_deprecate_private_only_entities,
     async_is_new_private_only_entity,
+    async_is_new_ring_or_motion_sensor,
     async_migrate_sensor_signal_strength,
     async_remove_hdr_switch,
     async_remove_sense_setting_mirrors,
@@ -1342,3 +1344,209 @@ async def test_private_only_entities_kept_on_existing_install(
 
     for entity in kept:
         assert hass.states.get(entity.entity_id) is not None
+
+
+RING_AND_MOTION_SENSORS = [
+    pytest.param(
+        Platform.BINARY_SENSOR,
+        "doorbell",
+        "doorbell",
+        "doorbell_sensor_deprecated",
+        id="doorbell_binary_sensor",
+    ),
+    pytest.param(
+        Platform.SENSOR,
+        "doorbell_last_trip_time",
+        "doorbell",
+        "last_event_sensor_deprecated",
+        id="last_ring_sensor",
+    ),
+    pytest.param(
+        Platform.SENSOR,
+        "motion_last_trip_time",
+        "motion_detection",
+        "last_event_sensor_deprecated",
+        id="last_motion_sensor",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("platform", "key", "replacement_key", "translation_key"),
+    RING_AND_MOTION_SENSORS,
+)
+async def test_deprecate_ring_and_motion_sensor_in_use(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    platform: Platform,
+    key: str,
+    replacement_key: str,
+    translation_key: str,
+) -> None:
+    """A used ring or motion sensor gets a repair naming its event entity."""
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{doorbell.mac}_{key}", config_entry=ufp.entry
+    )
+    await _load_automation(hass, entity.entity_id)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert hass.states.get(entity.entity_id) is not None
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"setting_mirror_deprecated_{doorbell.mac}_{key}"
+    )
+    assert issue is not None
+    assert issue.translation_key == translation_key
+    assert issue.breaks_in_ha_version == PRIVATE_ONLY_BREAKS_IN
+    assert issue.translation_placeholders["entity_id"] == entity.entity_id
+    replacement_id = entity_registry.async_get_entity_id(
+        Platform.EVENT, DOMAIN, f"{doorbell.mac}_{replacement_key}"
+    )
+    assert replacement_id is not None
+    assert issue.translation_placeholders["replacement"] == replacement_id
+
+
+@pytest.mark.parametrize(
+    ("platform", "key", "replacement_key", "translation_key"),
+    RING_AND_MOTION_SENSORS,
+)
+async def test_deprecate_ring_and_motion_sensor_unused(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    platform: Platform,
+    key: str,
+    replacement_key: str,
+    translation_key: str,
+) -> None:
+    """An unused ring or motion sensor keeps working without a repair."""
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{doorbell.mac}_{key}", config_entry=ufp.entry
+    )
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert hass.states.get(entity.entity_id) is not None
+    assert not issue_registry.issues
+
+
+async def test_deprecate_ring_and_motion_sensor_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A disabled sensor is not active in any automation, so it gets no repair."""
+    entity = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_motion_last_trip_time",
+        config_entry=ufp.entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+    await _load_automation(hass, entity.entity_id)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert not issue_registry.issues
+
+
+async def test_deprecate_ring_and_motion_sensor_repair_clears_when_unused(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """The deprecation repair goes away once the last usage is gone."""
+    entity = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_doorbell",
+        config_entry=ufp.entry,
+    )
+    issue_id = f"setting_mirror_deprecated_{doorbell.mac}_doorbell"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        breaks_in_ha_version=PRIVATE_ONLY_BREAKS_IN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="doorbell_sensor_deprecated",
+        translation_placeholders={
+            "entity_id": entity.entity_id,
+            "replacement": "event.test_camera_doorbell",
+            "items": "* `automation.gone`\n",
+        },
+    )
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert entity_registry.async_get(entity.entity_id) is not None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_ring_and_motion_sensors_skipped_on_new_install(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A new install gets the event entities but not the deprecated sensors."""
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    for platform, key in (
+        (Platform.BINARY_SENSOR, "doorbell"),
+        (Platform.SENSOR, "doorbell_last_trip_time"),
+        (Platform.SENSOR, "motion_last_trip_time"),
+    ):
+        assert (
+            entity_registry.async_get_entity_id(
+                platform, DOMAIN, f"{doorbell.mac}_{key}"
+            )
+            is None
+        )
+    for key in ("doorbell", "motion_detection"):
+        assert entity_registry.async_get_entity_id(
+            Platform.EVENT, DOMAIN, f"{doorbell.mac}_{key}"
+        )
+    assert entity_registry.async_get_entity_id(
+        Platform.TEXT, DOMAIN, f"{doorbell.mac}_doorbell"
+    )
+
+
+@pytest.mark.parametrize(
+    ("platform", "key", "expected"),
+    [
+        pytest.param(Platform.BINARY_SENSOR, "doorbell", True, id="deprecated"),
+        pytest.param(Platform.TEXT, "doorbell", False, id="shared_key"),
+        pytest.param(Platform.SENSOR, "last_ring", False, id="not_deprecated"),
+    ],
+)
+async def test_is_new_ring_or_motion_sensor(
+    hass: HomeAssistant, platform: Platform, key: str, expected: bool
+) -> None:
+    """Only a deprecated sensor on its own platform counts as new."""
+    assert (
+        async_is_new_ring_or_motion_sensor(hass, platform, CAMERA_MAC, key) is expected
+    )
+
+
+async def test_is_new_ring_or_motion_sensor_registered(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, ufp: MockUFPFixture
+) -> None:
+    """A sensor the user already has is kept."""
+    entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR, DOMAIN, f"{CAMERA_MAC}_doorbell", config_entry=ufp.entry
+    )
+
+    assert not async_is_new_ring_or_motion_sensor(
+        hass, Platform.BINARY_SENSOR, CAMERA_MAC, "doorbell"
+    )

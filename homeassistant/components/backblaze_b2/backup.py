@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
+from contextlib import suppress
 import functools
 import json
 import logging
@@ -167,7 +168,9 @@ class _ProgressListener(AbstractProgressListener):  # type: ignore[misc]
 
     def bytes_completed(self, byte_count: int) -> None:
         """Report the number of bytes uploaded so far."""
-        self._hass.loop.call_soon_threadsafe(self._report, byte_count)
+        # The loop is closed if Home Assistant stops during the upload
+        with suppress(RuntimeError):
+            self._hass.loop.call_soon_threadsafe(self._report, byte_count)
 
     @callback
     def _report(self, byte_count: int) -> None:

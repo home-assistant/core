@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import partial
+import hashlib
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final, override
 
@@ -93,6 +94,7 @@ from .const import (
     CONF_VIA_DEVICE,
     CONF_VISIBLE_BY_DEFAULT,
     DOMAIN,
+    INVALID_PLATFORM_CONFIG_ISSUE_PREFIX,
     MQTT_CONNECTION_STATE,
 )
 from .debug_info import log_message
@@ -168,6 +170,11 @@ def async_handle_schema_error(
     )
 
 
+def _log_device_info_error(err: dr.DeviceInfoError) -> None:
+    """Log a device that could not be registered."""
+    _LOGGER.warning("Unable to register MQTT device: %s", err)
+
+
 def _handle_discovery_failure(
     hass: HomeAssistant,
     discovery_payload: MQTTDiscoveryPayload,
@@ -227,6 +234,9 @@ def async_setup_non_entity_entry_helper(
         except probatio.Invalid as err:
             _handle_discovery_failure(hass, discovery_payload)
             async_handle_schema_error(discovery_payload, err)
+        except dr.DeviceInfoError as err:
+            _handle_discovery_failure(hass, discovery_payload)
+            _log_device_info_error(err)
         except Exception:
             _handle_discovery_failure(hass, discovery_payload)
             raise
@@ -450,12 +460,17 @@ def async_setup_entity_entry_helper(  # noqa: C901
                 error = str(exc)
                 config_file = getattr(yaml_config, "__config_file__", "?")
                 line = getattr(yaml_config, "__line__", "?")
-                issue_id = hex(hash(frozenset(yaml_config)))
                 yaml_config_str = yaml_dump(yaml_config)
+                # A stable id lets a reload keep a still invalid item's issue
+                digest = hashlib.sha256(
+                    f"{domain}\n{yaml_config_str}".encode()
+                ).hexdigest()[:16]
+                issue_id = f"{INVALID_PLATFORM_CONFIG_ISSUE_PREFIX}{digest}"
                 async_create_issue(
                     hass,
                     DOMAIN,
                     issue_id,
+                    config_entry_id=entry.entry_id,
                     issue_domain=domain,
                     is_fixable=False,
                     severity=IssueSeverity.ERROR,
@@ -1006,6 +1021,10 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
                 # when it is received again
                 async_handle_schema_error(discovery_payload, err)
                 return
+            except dr.DeviceInfoError as err:
+                # Cancel the update, the current config remains active
+                _log_device_info_error(err)
+                return
             finally:
                 send_discovery_done(self.hass, self._discovery_data)
             self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
@@ -1476,16 +1495,20 @@ def _resolve_via_device_id(
 class MqttEntityDeviceInfo(Entity):
     """Mixin used for mqtt platforms that support the device registry."""
 
-    def __init__(
-        self, specifications: dict[str, Any] | None, config_entry: ConfigEntry
-    ) -> None:
+    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize the device mixin."""
-        self._device_specifications = specifications
+        self._set_device_specifications(config)
         self._config_entry = config_entry
+
+    def _set_device_specifications(self, config: ConfigType) -> None:
+        """Set the device specifications, a device requires a unique ID."""
+        self._device_specifications: dict[str, Any] | None = (
+            config.get(CONF_DEVICE) if self.unique_id is not None else None
+        )
 
     def device_info_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
-        self._device_specifications = config.get(CONF_DEVICE)
+        self._set_device_specifications(config)
         device_registry = dr.async_get(self.hass)
         config_entry_id = self._config_entry.entry_id
         ensure_via_device_exists(
@@ -1556,7 +1579,7 @@ class MqttEntity(
         MqttDiscoveryUpdateMixin.__init__(
             self, hass, discovery_data, self.discovery_update
         )
-        MqttEntityDeviceInfo.__init__(self, config.get(CONF_DEVICE), config_entry)
+        MqttEntityDeviceInfo.__init__(self, config, config_entry)
         ensure_via_device_exists(
             self.hass, self._device_specifications, self._config_entry
         )
