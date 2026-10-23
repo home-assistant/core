@@ -37,8 +37,8 @@ def consumer_fixture(hass: HomeAssistant) -> Generator[ConsumerFactory]:
         hass,
         MockModule(
             "test",
-            async_setup_entry=AsyncMock(return_value=True),
-            async_unload_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
+            async_unload_entry=AsyncMock(return_value=None),
         ),
     )
     mock_platform(hass, "test.config_flow")

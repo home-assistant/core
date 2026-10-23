@@ -40,3 +40,17 @@ class LockEntityFeature(IntFlag):
     """Supported features of the lock entity."""
 
     OPEN = 1
+
+
+class LockService(StrEnum):
+    """Store keys for lock services."""
+
+    LOCK = "lock"
+    OPEN = "open"
+    UNLOCK = "unlock"
+
+
+class LockServiceArgument(StrEnum):
+    """Store keys for lock service arguments."""
+
+    CODE = "code"

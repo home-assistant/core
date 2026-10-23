@@ -289,6 +289,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
+            step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(

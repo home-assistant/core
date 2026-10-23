@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import CONF_HVAC_MODES, DEFAULT_HVAC_MODES, HA_MODE_TO_LIB
 
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 
 
 @dataclass(frozen=True, kw_only=True)

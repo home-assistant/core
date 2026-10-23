@@ -1,6 +1,8 @@
 """Define tests for SimpliSafe setup."""
 
+import asyncio
 import copy
+import logging
 from unittest.mock import AsyncMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -11,6 +13,7 @@ from simplipy.errors import (
     InvalidCredentialsError,
     RequestError,
     SimplipyError,
+    WebsocketError,
 )
 from simplipy.system.v3 import SystemV3
 from simplipy.websocket import WebsocketEvent
@@ -19,7 +22,7 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.simplisafe import DOMAIN
+from homeassistant.components.simplisafe import DOMAIN, WEBSOCKET_RETRY_DELAY
 from homeassistant.components.simplisafe.coordinator import DEFAULT_SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
@@ -221,3 +224,104 @@ async def test_websocket_event_updates_entity_state(
     await hass.async_block_till_done()
 
     assert hass.states.get("lock.front_door_lock").state == "unlocked"
+
+
+async def test_websocket_retry_delay_resets_after_successful_listen(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+    websocket: Mock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test websocket retries restart at the initial delay after a successful listen."""
+    patch_simplisafe_api.stop()
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.simplisafe")
+
+    websocket.async_connect.side_effect = [
+        WebsocketError("first failure"),
+        None,
+        WebsocketError("second failure"),
+        WebsocketError("third failure"),
+        WebsocketError("fourth failure"),
+    ]
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for delay in (
+        WEBSOCKET_RETRY_DELAY,
+        WEBSOCKET_RETRY_DELAY,
+        WEBSOCKET_RETRY_DELAY * 2,
+        WEBSOCKET_RETRY_DELAY * 4,
+    ):
+        freezer.tick(delay)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert [
+        message for message in caplog.messages if message.startswith("Websocket error")
+    ] == [
+        f"Websocket error (1/3): first failure; retrying in {WEBSOCKET_RETRY_DELAY} seconds",
+        f"Websocket error (1/3): second failure; retrying in {WEBSOCKET_RETRY_DELAY} seconds",
+        f"Websocket error (2/3): third failure; retrying in {WEBSOCKET_RETRY_DELAY * 2} seconds",
+        f"Websocket error (3/3): fourth failure; retrying in {WEBSOCKET_RETRY_DELAY * 4} seconds",
+    ]
+    assert (
+        "Websocket connection failed, task exiting (3/3): fourth failure"
+        in caplog.messages
+    )
+
+
+async def test_websocket_listener_failures_are_capped(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+    websocket: Mock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test repeated websocket listener failures stop after three attempts."""
+    patch_simplisafe_api.stop()
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.simplisafe")
+
+    websocket.async_listen.side_effect = WebsocketError("listener failure")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for delay in (
+        WEBSOCKET_RETRY_DELAY,
+        WEBSOCKET_RETRY_DELAY * 2,
+        WEBSOCKET_RETRY_DELAY * 4,
+    ):
+        freezer.tick(delay)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert websocket.async_connect.await_count == 3
+    assert (
+        "Websocket connection failed, task exiting (3/3): listener failure"
+        in caplog.messages
+    )
+
+
+async def test_websocket_start_and_restart_are_logged(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+    websocket: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test initial websocket starts and restarts are logged distinctly."""
+    patch_simplisafe_api.stop()
+
+    async def stop_listening() -> None:
+        raise asyncio.CancelledError
+
+    websocket.async_listen.side_effect = stop_listening
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.simplisafe")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Starting websocket loop task" in caplog.messages
+    assert "Restarting websocket loop task" in caplog.messages
