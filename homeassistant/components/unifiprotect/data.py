@@ -527,14 +527,12 @@ class ProtectData:
 
     @callback
     def _async_public_resync_done(self, success: bool) -> None:
-        """Re-signal public entities once the library's reconnect resync applied.
+        """Re-signal public entities once the library's reconnect resync has finished.
 
         Added and removed devices arrive as frames, field changes apply silently.
         Re-offer cameras and relays because their entity sets derive from fields.
         """
         self._async_process_public_updates()
-        if not self.api.has_public_bootstrap:
-            return
         public_bootstrap = self.api.public_bootstrap
         for public in list(public_bootstrap.cameras.values()):
             async_dispatcher_send(self._hass, self.channels_signal, public)

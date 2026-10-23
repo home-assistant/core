@@ -993,6 +993,7 @@ async def test_failed_public_resync_still_resignals(
 
     await init_entry(hass, ufp, [])
     entity_id = _channel_entity_id(camera, 0)
+    ufp.api.update_public.reset_mock()
 
     ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
@@ -1005,6 +1006,7 @@ async def test_failed_public_resync_still_resignals(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    ufp.api.update_public.assert_not_awaited()
 
 
 async def test_hybrid_camera_lost_public_mirror_logs(
