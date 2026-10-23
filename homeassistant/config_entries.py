@@ -354,6 +354,36 @@ def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> N
         )
 
 
+def _async_process_entry_method_result(
+    domain: str, method: str, result: bool | None
+) -> None:
+    """Raise if the return value of a config entry method means it failed.
+
+    Only custom integrations may still return a boolean. False and any other
+    value than a boolean or None are converted to a `ConfigEntryError`.
+    See https://github.com/home-assistant/architecture/discussions/1463
+    """
+    if result is None:
+        return
+    if isinstance(result, bool):
+        report_usage(
+            f"returns a boolean from {method}, which should return None",
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.IGNORE,
+            integration_domain=domain,
+        )
+        if result:
+            return
+    else:
+        _LOGGER.error(  # type: ignore[unreachable]
+            "%s.%s returned %r, which is not supported", domain, method, result
+        )
+    raise ConfigEntryError(
+        translation_domain=HOMEASSISTANT_DOMAIN,
+        translation_key=f"{method}_failed",
+    )
+
+
 class ConfigSubentryData(TypedDict):
     """Container for configuration subentry data.
 
@@ -995,18 +1025,10 @@ class ConfigEntry[_DataT = Any]:
                     hass, self
                 )  # type: ignore[func-returns-value]
 
-            # Custom components can continue to return a boolean
-            # See https://github.com/home-assistant/architecture/discussions/1463
-            if setup_result is None:
-                result = True
-            elif not isinstance(setup_result, bool):
-                logger.error(  # type: ignore[unreachable]
-                    "%s.async_setup_entry did not return None or a boolean",
-                    integration.domain,
-                )
-                result = False
-            else:
-                result = setup_result
+            _async_process_entry_method_result(
+                integration.domain, "async_setup_entry", setup_result
+            )
+            result = True
 
         except (
             asyncio.CancelledError,
@@ -1146,30 +1168,20 @@ class ConfigEntry[_DataT = Any]:
         if domain_is_integration:
             self._async_set_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS, None)
 
-        result = False
         try:
             unload_result: bool | None = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
 
-            # Custom components can continue to return a boolean
-            # See https://github.com/home-assistant/architecture/discussions/1463
-            if unload_result is None:
-                result = True
-            else:
-                result = unload_result
-            assert isinstance(result, bool)
+            _async_process_entry_method_result(
+                integration.domain, "async_unload_entry", unload_result
+            )
 
             # Only do side effects if we unloaded the integration
             if domain_is_integration:
-                if result:  # type: ignore[unused-ignore]
-                    await self._async_process_on_unload(hass)
-                    if hasattr(self, "runtime_data"):
-                        object.__delattr__(self, "runtime_data")
+                await self._async_process_on_unload(hass)
+                if hasattr(self, "runtime_data"):
+                    object.__delattr__(self, "runtime_data")
 
-                    self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
-                else:
-                    self._async_set_state(
-                        hass, ConfigEntryState.FAILED_UNLOAD, "Unload failed"
-                    )
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
         except Exception as exc:
             self.logger.exception(
@@ -1193,7 +1205,7 @@ class ConfigEntry[_DataT = Any]:
                 )
             return False
 
-        return result
+        return True
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
@@ -1322,19 +1334,11 @@ class ConfigEntry[_DataT = Any]:
             return False
 
         migration_result: bool | None = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
-        # Custom components can continue to return a boolean
-        # See https://github.com/home-assistant/architecture/discussions/1463
-        if migration_result is None:
-            migration_result = True
-        elif not isinstance(migration_result, bool):
-            self.logger.error(  # type: ignore[unreachable]
-                "%s.async_migrate_entry did not return None or a boolean", self.domain
-            )
-            return False
-        if migration_result:
-            hass.config_entries._async_schedule_save()  # noqa: SLF001
-
-        return migration_result
+        _async_process_entry_method_result(
+            integration.domain, "async_migrate_entry", migration_result
+        )
+        hass.config_entries._async_schedule_save()  # noqa: SLF001
+        return True
 
     def add_update_listener(self, listener: UpdateListenerType) -> CALLBACK_TYPE:
         """Listen for when entry is updated.
@@ -3143,77 +3147,66 @@ class ConfigEntries:
     @callback
     def async_update_issues(self) -> None:
         """Update unique id collision issues."""
-        issue_registry = ir.async_get(self.hass)
-        issues: set[str] = set()
+        with ir.async_begin_issues_refresh(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            issue_id_pattern=f"{ISSUE_UNIQUE_ID_COLLISION}_",
+        ):
+            for (
+                domain,
+                unique_ids,
+            ) in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+                for unique_id, entries in unique_ids.items():
+                    # We might mutate the list of entries, so we need a copy to not mess up
+                    # the index
+                    entries = list(entries)
 
-        for issue in issue_registry.issues.values():
-            if (
-                issue.domain != HOMEASSISTANT_DOMAIN
-                or not (issue_data := issue.data)
-                or issue_data.get("issue_type") != ISSUE_UNIQUE_ID_COLLISION
-            ):
-                continue
-            issues.add(issue.issue_id)
+                    # There's no need to raise an issue for ignored entries, we can
+                    # safely remove them once we no longer allow unique id collisions.
+                    # Iterate over a copy of the copy to allow mutating while iterating
+                    for entry in list(entries):
+                        if entry.source == SOURCE_IGNORE:
+                            entries.remove(entry)
 
-        for (
-            domain,
-            unique_ids,
-        ) in self._entries._domain_unique_id_index.items():  # noqa: SLF001
-            for unique_id, entries in unique_ids.items():
-                # We might mutate the list of entries, so we need a copy to not mess up
-                # the index
-                entries = list(entries)
+                    if len(entries) < 2:
+                        continue
+                    issue_id = f"{ISSUE_UNIQUE_ID_COLLISION}_{domain}_{unique_id}"
+                    titles = [f"'{entry.title}'" for entry in entries]
+                    translation_placeholders = {
+                        "domain": domain,
+                        "configure_url": f"/config/integrations/integration/{domain}",
+                        "unique_id": str(unique_id),
+                    }
+                    if len(titles) <= UNIQUE_ID_COLLISION_TITLE_LIMIT:
+                        translation_key = "config_entry_unique_id_collision"
+                        translation_placeholders["titles"] = ", ".join(titles)
+                    else:
+                        translation_key = "config_entry_unique_id_collision_many"
+                        translation_placeholders["number_of_entries"] = str(len(titles))
+                        translation_placeholders["titles"] = ", ".join(
+                            titles[:UNIQUE_ID_COLLISION_TITLE_LIMIT]
+                        )
+                        translation_placeholders["title_limit"] = str(
+                            UNIQUE_ID_COLLISION_TITLE_LIMIT
+                        )
 
-                # There's no need to raise an issue for ignored entries, we can
-                # safely remove them once we no longer allow unique id collisions.
-                # Iterate over a copy of the copy to allow mutating while iterating
-                for entry in list(entries):
-                    if entry.source == SOURCE_IGNORE:
-                        entries.remove(entry)
-
-                if len(entries) < 2:
-                    continue
-                issue_id = f"{ISSUE_UNIQUE_ID_COLLISION}_{domain}_{unique_id}"
-                issues.discard(issue_id)
-                titles = [f"'{entry.title}'" for entry in entries]
-                translation_placeholders = {
-                    "domain": domain,
-                    "configure_url": f"/config/integrations/integration/{domain}",
-                    "unique_id": str(unique_id),
-                }
-                if len(titles) <= UNIQUE_ID_COLLISION_TITLE_LIMIT:
-                    translation_key = "config_entry_unique_id_collision"
-                    translation_placeholders["titles"] = ", ".join(titles)
-                else:
-                    translation_key = "config_entry_unique_id_collision_many"
-                    translation_placeholders["number_of_entries"] = str(len(titles))
-                    translation_placeholders["titles"] = ", ".join(
-                        titles[:UNIQUE_ID_COLLISION_TITLE_LIMIT]
+                    ir.async_create_issue(
+                        self.hass,
+                        HOMEASSISTANT_DOMAIN,
+                        issue_id,
+                        breaks_in_ha_version="2025.11.0",
+                        data={
+                            "issue_type": ISSUE_UNIQUE_ID_COLLISION,
+                            "unique_id": unique_id,
+                        },
+                        is_fixable=False,
+                        issue_domain=domain,
+                        severity=ir.IssueSeverity.ERROR,
+                        translation_key=translation_key,
+                        translation_placeholders=translation_placeholders,
                     )
-                    translation_placeholders["title_limit"] = str(
-                        UNIQUE_ID_COLLISION_TITLE_LIMIT
-                    )
 
-                ir.async_create_issue(
-                    self.hass,
-                    HOMEASSISTANT_DOMAIN,
-                    issue_id,
-                    breaks_in_ha_version="2025.11.0",
-                    data={
-                        "issue_type": ISSUE_UNIQUE_ID_COLLISION,
-                        "unique_id": unique_id,
-                    },
-                    is_fixable=False,
-                    issue_domain=domain,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key=translation_key,
-                    translation_placeholders=translation_placeholders,
-                )
-
-                break  # Only create one issue per domain
-
-        for issue_id in issues:
-            ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
+                    break  # Only create one issue per domain
 
 
 @callback
