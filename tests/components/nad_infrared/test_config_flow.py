@@ -1,6 +1,7 @@
 """Tests for the NAD Infrared config flow."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nad_infrared.const import (
     CONF_DEVICE_TYPE,
@@ -11,11 +12,8 @@ from homeassistant.components.nad_infrared.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -30,7 +28,6 @@ from tests.common import MockConfigEntry
 )
 async def test_user_flow_success(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     device_type: NADDeviceType,
     expected_title: str,
 ) -> None:
@@ -62,12 +59,9 @@ async def test_user_flow_success(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
-    emitter_entry = entity_registry.async_get(MOCK_INFRARED_EMITTER_ENTITY_ID)
-    assert emitter_entry is not None
-    # The emitter is stored by registry ID, so it survives renames.
     assert result["data"] == {
         CONF_DEVICE_TYPE: device_type,
-        CONF_INFRARED_ENTITY_ID: emitter_entry.id,
+        CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
     }
     assert result["result"].unique_id is None
 

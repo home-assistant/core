@@ -4,6 +4,11 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
 from homeassistant.components.nad_infrared import PLATFORMS
 from homeassistant.components.nad_infrared.codes import (
@@ -20,13 +25,6 @@ from homeassistant.components.nad_infrared.const import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import (
-    EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
-)
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 
 @pytest.fixture
@@ -39,21 +37,15 @@ def device_type(request: pytest.FixtureRequest) -> NADDeviceType:
 
 
 @pytest.fixture
-def mock_config_entry(
-    device_type: NADDeviceType,
-    entity_registry: er.EntityRegistry,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-) -> MockConfigEntry:
-    """Return a mock config entry that refers to the emitter by registry ID."""
-    emitter_entry = entity_registry.async_get(MOCK_INFRARED_EMITTER_ENTITY_ID)
-    assert emitter_entry is not None
+def mock_config_entry(device_type: NADDeviceType) -> MockConfigEntry:
+    """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTEST0000000000000000000",
         title=DEVICE_NAMES[device_type],
         data={
             CONF_DEVICE_TYPE: device_type,
-            CONF_INFRARED_ENTITY_ID: emitter_entry.id,
+            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
         },
     )
 

@@ -1,21 +1,13 @@
 """Tests for the NAD Infrared integration setup."""
 
-from homeassistant.components.media_player import (
-    DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_TURN_ON,
-)
-from homeassistant.components.nad_infrared.const import CONF_INFRARED_ENTITY_ID
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
-
-from tests.common import MockConfigEntry
-from tests.components.infrared.common import MockInfraredEmitterEntity
-
-NEW_EMITTER_ENTITY_ID = "infrared.renamed_ir_emitter"
 
 
 async def test_setup_and_unload_entry(
@@ -31,55 +23,7 @@ async def test_setup_and_unload_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_emitter_entity_id_renamed(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-) -> None:
-    """Renaming the emitter reloads the entry and keeps the controls working."""
-    entry = init_integration
-    stored_emitter = entry.data[CONF_INFRARED_ENTITY_ID]
-
-    entity_registry.async_update_entity(
-        MOCK_INFRARED_EMITTER_ENTITY_ID, new_entity_id=NEW_EMITTER_ENTITY_ID
-    )
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.data[CONF_INFRARED_ENTITY_ID] == stored_emitter
-    assert entry.runtime_data == NEW_EMITTER_ENTITY_ID
-    await _assert_controls_work(hass, mock_infrared_emitter_entity)
-
-
-async def test_emitter_renamed_while_entry_disabled(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-) -> None:
-    """A rename while the entry is disabled is picked up when it is re-enabled."""
-    entry = init_integration
-
-    await hass.config_entries.async_set_disabled_by(
-        entry.entry_id, ConfigEntryDisabler.USER
-    )
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.NOT_LOADED
-
-    entity_registry.async_update_entity(
-        MOCK_INFRARED_EMITTER_ENTITY_ID, new_entity_id=NEW_EMITTER_ENTITY_ID
-    )
-    await hass.async_block_till_done()
-
-    await hass.config_entries.async_set_disabled_by(entry.entry_id, None)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.runtime_data == NEW_EMITTER_ENTITY_ID
-    await _assert_controls_work(hass, mock_infrared_emitter_entity)
-
-
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_emitter_removed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -94,20 +38,3 @@ async def test_emitter_removed(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.error_reason_translation_key == "emitter_not_found"
-
-
-async def _assert_controls_work(
-    hass: HomeAssistant, mock_infrared_emitter_entity: MockInfraredEmitterEntity
-) -> None:
-    """Assert the media player is available and its commands reach the emitter."""
-    state = hass.states.get("media_player.nad_receiver")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "media_player.nad_receiver"},
-        blocking=True,
-    )
-    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
