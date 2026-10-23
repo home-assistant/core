@@ -21,6 +21,7 @@ from pyportainer import (
     PortainerEventListenerResult,
     PortainerTimeoutError,
 )
+from pyportainer.exceptions import PortainerNotFoundError
 from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
@@ -382,6 +383,39 @@ class PortainerCoordinator(
                     )
                 )
 
+                # Fetch stats for active containers. A container can be removed
+                # after it was listed, so leave those out and keep the others.
+                active_containers = [
+                    container
+                    for container in containers
+                    if container.state
+                    in (DockerContainerState.RUNNING, DockerContainerState.PAUSED)
+                ]
+                container_stats = dict(
+                    zip(
+                        (
+                            sanitize_container_name(container.names[0])
+                            for container in active_containers
+                        ),
+                        await asyncio.gather(
+                            *(
+                                self._get_container_stats(endpoint.id, container.id)
+                                for container in active_containers
+                            )
+                        ),
+                        strict=False,
+                    )
+                )
+                removed_containers = {
+                    name for name, stats in container_stats.items() if stats is None
+                }
+                containers = [
+                    container
+                    for container in containers
+                    if sanitize_container_name(container.names[0])
+                    not in removed_containers
+                ]
+
                 # Map containers, started and stopped
                 for container in containers:
                     container_name = sanitize_container_name(container.names[0])
@@ -410,7 +444,7 @@ class PortainerCoordinator(
                         container=container,
                         container_inspect=container_inspect,
                         local_image=local_image,
-                        stats=None,
+                        stats=container_stats.get(container_name),
                         stats_pre=prev_container.stats if prev_container else None,
                         image_status=image_status,
                         stack=stack_map[stack_name].stack
@@ -430,37 +464,6 @@ class PortainerCoordinator(
                             ref_count=item["UsageData"]["RefCount"],
                         )
                     volume_map[volume.name] = PortainerVolumeData(volume=volume)
-
-                # Separately fetch stats for active containers
-                active_containers = [
-                    container
-                    for container in containers
-                    if container.state
-                    in (DockerContainerState.RUNNING, DockerContainerState.PAUSED)
-                ]
-                if active_containers:
-                    container_stats = dict(
-                        zip(
-                            (
-                                sanitize_container_name(container.names[0])
-                                for container in active_containers
-                            ),
-                            await asyncio.gather(
-                                *(
-                                    self.portainer.container_stats(
-                                        endpoint_id=endpoint.id,
-                                        container_id=container.id,
-                                    )
-                                    for container in active_containers
-                                )
-                            ),
-                            strict=False,
-                        )
-                    )
-
-                    # Now assign stats to the containers
-                    for container_name, stats in container_stats.items():
-                        container_map[container_name].stats = stats
 
                 self._container_ids_by_endpoint[endpoint.id] = {
                     data.container.id: name for name, data in container_map.items()
@@ -659,6 +662,23 @@ class PortainerCoordinator(
             ]
             for stack_callback in self.new_stacks_callbacks:
                 stack_callback(new_stack_data)
+
+    async def _get_container_stats(
+        self, endpoint_id: int, container_id: str
+    ) -> DockerContainerStats | None:
+        """Fetch container stats, or None if the container no longer exists."""
+        try:
+            stats: DockerContainerStats = await self.portainer.container_stats(
+                endpoint_id=endpoint_id, container_id=container_id
+            )
+        except PortainerNotFoundError:
+            _LOGGER.debug(
+                "Container %s on endpoint %d was removed while fetching its stats",
+                container_id,
+                endpoint_id,
+            )
+            return None
+        return stats
 
     async def _get_local_image(
         self, endpoint_id: int, image: str

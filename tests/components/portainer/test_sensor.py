@@ -4,7 +4,7 @@ from typing import Any, cast
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyportainer.exceptions import PortainerTimeoutError
+from pyportainer.exceptions import PortainerNotFoundError, PortainerTimeoutError
 from pyportainer.models.docker import DockerContainerStats, EndpointStatus
 from pyportainer.models.docker_inspect import DockerInspect
 from pyportainer.models.portainer import Endpoint
@@ -144,6 +144,36 @@ async def test_endpoint_timeout_keeps_known_entities(
     assert (state := hass.states.get(CPU_USAGE_ENTITY_ID))
     assert state.state == "50.0"
     assert "does not generate unique IDs" not in caplog.text
+
+
+async def test_container_removed_during_poll(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a container removed while fetching stats only affects itself."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get("sensor.funny_chatelet_cpu_usage_total"))
+    assert state.state != STATE_UNAVAILABLE
+
+    stats = DockerContainerStats.from_dict(
+        load_json_value_fixture("container_stats.json", DOMAIN)
+    )
+    # Stats are requested in container order, funny_chatelet is the first one
+    mock_portainer_client.container_stats.side_effect = [
+        PortainerNotFoundError("Resource not found"),
+        *[stats] * 5,
+    ]
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get("sensor.funny_chatelet_cpu_usage_total"))
+    assert state.state == STATE_UNAVAILABLE
+    assert (state := hass.states.get(CPU_USAGE_ENTITY_ID))
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_container_never_started(
