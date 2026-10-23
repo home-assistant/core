@@ -56,17 +56,17 @@ HASS_TO_HOMEKIT_TARGET = {
 }
 
 HASS_TO_HOMEKIT_SERVICES = {
-    AlarmControlPanelService.ALARM_ARM_HOME: HK_ALARM_STAY_ARMED,
-    AlarmControlPanelService.ALARM_ARM_AWAY: HK_ALARM_AWAY_ARMED,
-    AlarmControlPanelService.ALARM_ARM_NIGHT: HK_ALARM_NIGHT_ARMED,
-    AlarmControlPanelService.ALARM_DISARM: HK_ALARM_DISARMED,
+    AlarmControlPanelService.ARM_HOME: HK_ALARM_STAY_ARMED,
+    AlarmControlPanelService.ARM_AWAY: HK_ALARM_AWAY_ARMED,
+    AlarmControlPanelService.ARM_NIGHT: HK_ALARM_NIGHT_ARMED,
+    AlarmControlPanelService.DISARM: HK_ALARM_DISARMED,
 }
 
 HK_TO_SERVICE = {
-    HK_ALARM_AWAY_ARMED: AlarmControlPanelService.ALARM_ARM_AWAY,
-    HK_ALARM_STAY_ARMED: AlarmControlPanelService.ALARM_ARM_HOME,
-    HK_ALARM_NIGHT_ARMED: AlarmControlPanelService.ALARM_ARM_NIGHT,
-    HK_ALARM_DISARMED: AlarmControlPanelService.ALARM_DISARM,
+    HK_ALARM_AWAY_ARMED: AlarmControlPanelService.ARM_AWAY,
+    HK_ALARM_STAY_ARMED: AlarmControlPanelService.ARM_HOME,
+    HK_ALARM_NIGHT_ARMED: AlarmControlPanelService.ARM_NIGHT,
+    HK_ALARM_DISARMED: AlarmControlPanelService.DISARM,
 }
 
 
@@ -98,6 +98,13 @@ class SecuritySystem(HomeAccessory):
         default_current_states = current_char.properties.get("ValidValues")
         default_target_services = target_char.properties.get("ValidValues")
 
+        # Both characteristics start at 0 (stay armed). Panels without
+        # ARM_HOME drop 0 from the valid values below, and HAP-python logs an
+        # error when the current value is outside the new set. Disarmed is
+        # always valid, so start from it.
+        current_char.set_value(HK_ALARM_DISARMED, should_notify=False)
+        target_char.set_value(HK_ALARM_DISARMED, should_notify=False)
+
         current_supported_states = [HK_ALARM_DISARMED, HK_ALARM_TRIGGERED]
         target_supported_services = [HK_ALARM_DISARMED]
 
@@ -127,7 +134,7 @@ class SecuritySystem(HomeAccessory):
         )
         self.char_target_state = serv_alarm.configure_char(
             CHAR_TARGET_SECURITY_STATE,
-            value=HASS_TO_HOMEKIT_SERVICES[AlarmControlPanelService.ALARM_DISARM],
+            value=HASS_TO_HOMEKIT_SERVICES[AlarmControlPanelService.DISARM],
             valid_values={
                 key: val
                 for key, val in default_target_services.items()
