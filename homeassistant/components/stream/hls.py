@@ -133,7 +133,16 @@ class HlsMasterPlaylistView(StreamView):
         # hls spec already allows for 25% variation
         if not (segment := track.get_segment(track.sequences[-2])):
             return ""
-        bandwidth = round(segment.data_size_with_init * 8 / segment.duration * 1.2)
+        # Over all complete segments: one cut at a parameter set change can be
+        # little more than a keyframe
+        if not (complete := [s for s in track.get_segments() if s.complete]):
+            return ""
+        bandwidth = round(
+            sum(s.data_size_with_init for s in complete)
+            * 8
+            / sum(s.duration for s in complete)
+            * 1.2
+        )
         codecs = get_codec_string(segment.init)
         lines = [
             "#EXTM3U",

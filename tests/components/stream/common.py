@@ -123,16 +123,17 @@ def split_hevc_nal_units(data, nal_types):
     )
 
 
-def hevc_pps_with_id(pps, pps_id):
-    """Return a copy of a PPS NAL unit whose ID is 0 with the ID set to pps_id."""
-    rbsp = pps[2:].replace(b"\x00\x00\x03", b"\x00\x00")
-    # RBSP bits without the stop bit and alignment zeros
-    bits = "".join(f"{byte:08b}" for byte in rbsp).rstrip("0")[:-1]
-    assert bits[0] == "1"  # pps_pic_parameter_set_id 0, unsigned Exp-Golomb
-    code = f"{pps_id + 1:b}"
-    bits = "0" * (len(code) - 1) + code + bits[1:] + "1"
+def _rbsp_bits(nal_unit):
+    """Return the RBSP bits of a NAL unit without the stop bit and alignment."""
+    rbsp = nal_unit[2:].replace(b"\x00\x00\x03", b"\x00\x00")
+    return "".join(f"{byte:08b}" for byte in rbsp).rstrip("0")[:-1]
+
+
+def _nal_unit_from_bits(header, bits):
+    """Return a NAL unit from its header and RBSP bits, with emulation prevention."""
+    bits += "1"
     bits += "0" * (-len(bits) % 8)
-    nal_unit = bytearray(pps[:2])
+    nal_unit = bytearray(header)
     zeros = 0
     for byte in int(bits, 2).to_bytes(len(bits) // 8):
         if zeros >= 2 and byte <= 3:
@@ -141,6 +142,40 @@ def hevc_pps_with_id(pps, pps_id):
         nal_unit.append(byte)
         zeros = zeros + 1 if byte == 0 else 0
     return bytes(nal_unit)
+
+
+def _exp_golomb(value):
+    """Return the unsigned Exp-Golomb code of a value."""
+    code = f"{value + 1:b}"
+    return "0" * (len(code) - 1) + code
+
+
+def _exp_golomb_end(bits, pos):
+    """Return the position after the unsigned Exp-Golomb code at pos."""
+    leading_zeros = bits.index("1", pos) - pos
+    return pos + 2 * leading_zeros + 1
+
+
+def hevc_pps_with_id(pps, pps_id, sps_id=0):
+    """Return a copy of a PPS NAL unit with its ID and its SPS ID replaced."""
+    bits = _rbsp_bits(pps)
+    # pps_pic_parameter_set_id, pps_seq_parameter_set_id
+    rest = _exp_golomb_end(bits, _exp_golomb_end(bits, 0))
+    return _nal_unit_from_bits(
+        pps[:2], _exp_golomb(pps_id) + _exp_golomb(sps_id) + bits[rest:]
+    )
+
+
+def hevc_sps_with_id(sps, sps_id):
+    """Return a copy of an SPS NAL unit without sub-layers with its ID replaced."""
+    bits = _rbsp_bits(sps)
+    assert bits[4:7] == "000"  # sps_max_sub_layers_minus1
+    # VPS ID, sub-layers and nesting flag (8 bits), profile_tier_level (96 bits)
+    pos = 8 + 96
+    return _nal_unit_from_bits(
+        sps[:2],
+        bits[:pos] + _exp_golomb(sps_id) + bits[_exp_golomb_end(bits, pos) :],
+    )
 
 
 def generate_video_with_size_change(
@@ -152,6 +187,8 @@ def generate_video_with_size_change(
     extra_pps=False,
     change_at_dts_zero=False,
     stale_extradata=False,
+    sps_id_switch=False,
+    first_size_sar=None,
 ):
     """Generate an MPEG-TS video whose picture size changes at a keyframe.
 
@@ -166,12 +203,23 @@ def generate_video_with_size_change(
     `change_at_dts_zero`, timestamps start negative and the first keyframe of
     the second size has DTS 0. With `stale_extradata`, a non-key packet ahead
     of the first keyframe carries the parameter sets of the last size, which
-    become the stream's extradata.
+    become the stream's extradata. With `sps_id_switch`, the sizes after the
+    first use SPS ID 1. `first_size_sar` is the x265 `sar` of the first size.
     """
     options = {"x265-params": "repeat-headers=1"} if encoder == "libx265" else {}
     parts = [
-        av.open(generate_video(encoder, "mpegts", duration, size, options))
-        for size in sizes
+        av.open(
+            generate_video(
+                encoder,
+                "mpegts",
+                duration,
+                size,
+                {"x265-params": f"repeat-headers=1:sar={first_size_sar}"}
+                if first_size_sar and not index
+                else options,
+            )
+        )
+        for index, size in enumerate(sizes)
     ]
     part_packets = [
         [packet for packet in part.demux(video=0) if packet.dts is not None]
@@ -216,6 +264,13 @@ def generate_video_with_size_change(
                     out_of_band = removed
                 elif packet_index == 1:
                     data = out_of_band + data
+            if sps_id_switch and part_index and packet.is_keyframe:
+                sps, _ = split_hevc_nal_units(data, {33})
+                pps, _ = split_hevc_nal_units(data, {34})
+                sps, pps = sps[3:].rstrip(b"\x00"), pps[3:].rstrip(b"\x00")
+                data = data.replace(sps, hevc_sps_with_id(sps, 1), 1).replace(
+                    pps, hevc_pps_with_id(pps, 0, 1), 1
+                )
             if extra_pps and first:
                 pps, _ = split_hevc_nal_units(data, {34})
                 data = data.replace(

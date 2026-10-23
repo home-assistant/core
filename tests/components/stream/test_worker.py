@@ -43,6 +43,7 @@ from homeassistant.components.stream.const import (
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
 from homeassistant.components.stream.core import Orientation, StreamSettings
+from homeassistant.components.stream.diagnostics import Diagnostics
 from homeassistant.components.stream.exceptions import StreamClientError
 from homeassistant.components.stream.worker import (
     StreamEndedError,
@@ -1317,3 +1318,18 @@ def test_hevc_parameter_sets() -> None:
         b"\x00\x00\x01" + sps + b"\x00\x00\x01" + pps_0 + b"\x00\x00\x01" + sps[:12]
     ) == {(33, 0): sps, (34, 0): pps_0}
     assert hevc_parameter_sets(b"\x00\x00\x01" + idr) == {}
+
+
+async def test_stream_state_stream_id(hass: HomeAssistant) -> None:
+    """Test that a new stream_id is used only once a segment carries the current one."""
+    stream_state = StreamState(hass, dict, Diagnostics())
+    # A restart before the first segment
+    stream_state.discontinuity()
+    assert stream_state.use_stream_id() == 0
+    # A parameter set change, then a restart before a segment carries it
+    stream_state.next_stream_id()
+    stream_state.discontinuity()
+    assert stream_state.use_stream_id() == 1
+    # A restart after a segment carries it
+    stream_state.discontinuity()
+    assert stream_state.use_stream_id() == 2

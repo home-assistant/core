@@ -24,7 +24,11 @@ from homeassistant.components.stream.const import (
 )
 from homeassistant.components.stream.core import Orientation, Part
 from homeassistant.components.stream.fmp4utils import find_box
-from homeassistant.components.stream.worker import StreamState, hevc_picture_size
+from homeassistant.components.stream.worker import (
+    StreamState,
+    VideoFormat,
+    hevc_keyframe_format,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -269,6 +273,24 @@ BOTH_SIZES = [(480, 320), (640, 480)]
             BOTH_SIZES,
             id="h265-stale-extradata",
         ),
+        # A new size under a new SPS ID; the old SPS stays in the init
+        pytest.param(
+            "libx265",
+            {"sps_id_switch": True},
+            0,
+            BOTH_SIZES,
+            BOTH_SIZES,
+            id="h265-sps-id-switch",
+        ),
+        # A 4:3 sample aspect ratio that the second size drops
+        pytest.param(
+            "libx265",
+            {"first_size_sar": 14},
+            0,
+            BOTH_SIZES,
+            BOTH_SIZES,
+            id="h265-aspect-ratio-change",
+        ),
         # avc1 samples keep their in-band parameter sets
         pytest.param("libx264", {}, 0, [(480, 320)], BOTH_SIZES, id="h264"),
     ],
@@ -284,16 +306,17 @@ async def test_hls_stream_picture_size_change(
     decoded: list[tuple[int, int]],
 ) -> None:
     """Test that every playlist segment decodes with its init after a size change."""
+    # The change falls 1 s into a segment, so it cuts that segment short
     source = generate_video_with_size_change(
-        encoder, BOTH_SIZES, duration=4, **source_options
+        encoder, BOTH_SIZES, duration=5, **source_options
     )
     size_calls = itertools.count()
 
-    def picture_size(extradata: bytes) -> tuple[int, int]:
+    def keyframe_format(extradata: bytes, keyframe: bytes) -> VideoFormat:
         """Fail the first `size_errors` calls, or every call for None."""
         if size_errors is None or next(size_calls) < size_errors:
             raise av.FFmpegError(1094995529, "Invalid data")
-        return hevc_picture_size(extradata)
+        return hevc_keyframe_format(extradata, keyframe)
 
     # Hold the worker at the end of the stream so the segments stay available
     worker_ended = threading.Event()
@@ -310,8 +333,8 @@ async def test_hls_stream_picture_size_change(
             StreamState, "discontinuity", autospec=True, side_effect=hold_worker
         ),
         patch(
-            "homeassistant.components.stream.worker.hevc_picture_size",
-            side_effect=picture_size,
+            "homeassistant.components.stream.worker.hevc_keyframe_format",
+            side_effect=keyframe_format,
         ),
     ):
         stream = create_stream(hass, source, {}, dynamic_stream_settings())
@@ -344,9 +367,15 @@ async def test_hls_stream_picture_size_change(
                     assert segment_response.status == HTTPStatus.OK
                     data = inits[init_uri] + await segment_response.read()
                     with av.open(io.BytesIO(data)) as container:
+                        video = container.streams.video[0]
                         decoded_sizes.extend(
                             (frame.width, frame.height)
                             for frame in container.decode(video=0)
+                        )
+                        # The init's aspect ratio is the one of the SPS in use
+                        assert (
+                            video.sample_aspect_ratio
+                            == video.codec_context.sample_aspect_ratio
                         )
         finally:
             release_worker.set()
@@ -598,6 +627,43 @@ async def test_hls_playlist_target_duration_short_segment(
     assert f"#EXT-X-TARGETDURATION:{min_segment_duration:.0f}" in playlist
 
 
+async def test_hls_master_playlist_bandwidth_short_segment(
+    hass: HomeAssistant, setup_component: None, hls_stream, stream_worker_sync
+) -> None:
+    """Test the master playlist bandwidth when a short segment is second to last."""
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    stream_worker_sync.pause()
+    hls = stream.add_provider(HLS_PROVIDER)
+    try:
+        # A segment cut at a parameter set change holds little more than a keyframe
+        for sequence, stream_id, duration, size in (
+            (0, 0, 2.0, 2000),
+            (1, 0, 0.05, 500),
+            (2, 1, 0, 0),
+        ):
+            segment = Segment(sequence=sequence, stream_id=stream_id, init=INIT_BYTES)
+            segment.parts = [Part(duration, has_keyframe=True, data=bytes(size))]
+            segment.duration = duration
+            hls.put(segment)
+        await hass.async_block_till_done()
+
+        hls_client = await hls_stream(stream)
+        with patch(
+            "homeassistant.components.stream.hls.get_codec_string",
+            return_value="hvc1.1.6.L93.B0",
+        ):
+            resp = await hls_client.get()
+        assert resp.status == HTTPStatus.OK
+        master_playlist = await resp.text()
+    finally:
+        stream_worker_sync.resume()
+        await stream.stop()
+
+    # Bits of the complete segments over their duration, plus 20 %
+    bandwidth = round((2000 + 500 + 2 * len(INIT_BYTES)) * 8 / 2.05 * 1.2)
+    assert f"#EXT-X-STREAM-INF:BANDWIDTH={bandwidth}," in master_playlist
+
+
 async def test_hls_max_segments(
     hass: HomeAssistant, setup_component, hls_stream, stream_worker_sync
 ) -> None:
@@ -656,51 +722,51 @@ async def test_hls_playlist_view_discontinuity(
     stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
+    try:
+        segment = Segment(
+            sequence=0, stream_id=0, init=b"init-0", duration=SEGMENT_DURATION
+        )
+        hls.put(segment)
+        segment = Segment(
+            sequence=1, stream_id=0, init=b"init-0", duration=SEGMENT_DURATION
+        )
+        hls.put(segment)
+        segment = Segment(
+            sequence=2,
+            stream_id=1,
+            init=b"init-1",
+            duration=SEGMENT_DURATION,
+        )
+        hls.put(segment)
+        await hass.async_block_till_done()
 
-    segment = Segment(
-        sequence=0, stream_id=0, init=b"init-0", duration=SEGMENT_DURATION
-    )
-    hls.put(segment)
-    segment = Segment(
-        sequence=1, stream_id=0, init=b"init-0", duration=SEGMENT_DURATION
-    )
-    hls.put(segment)
-    segment = Segment(
-        sequence=2,
-        stream_id=1,
-        init=b"init-1",
-        duration=SEGMENT_DURATION,
-    )
-    hls.put(segment)
-    await hass.async_block_till_done()
+        hls_client = await hls_stream(stream)
 
-    hls_client = await hls_stream(stream)
-
-    resp = await hls_client.get("/playlist.m3u8")
-    assert resp.status == HTTPStatus.OK
-    assert await resp.text() == make_playlist(
-        sequence=0,
-        segments=[
-            make_segment(0),
-            make_segment(1),
-            make_segment(2, discontinuity_sequence=1),
-        ],
-    )
-
-    # Each discontinuity sequence number serves its own init
-    for path, init in (
-        ("/init/0.mp4", b"init-0"),
-        ("/init/1.mp4", b"init-1"),
-        ("/init.mp4", b"init-0"),
-    ):
-        resp = await hls_client.get(path)
+        resp = await hls_client.get("/playlist.m3u8")
         assert resp.status == HTTPStatus.OK
-        assert await resp.read() == init
-    resp = await hls_client.get("/init/2.mp4")
-    assert resp.status == HTTPStatus.NOT_FOUND
+        assert await resp.text() == make_playlist(
+            sequence=0,
+            segments=[
+                make_segment(0),
+                make_segment(1),
+                make_segment(2, discontinuity_sequence=1),
+            ],
+        )
 
-    stream_worker_sync.resume()
-    await stream.stop()
+        # Each discontinuity sequence number serves its own init
+        for path, init in (
+            ("/init/0.mp4", b"init-0"),
+            ("/init/1.mp4", b"init-1"),
+            ("/init.mp4", b"init-0"),
+        ):
+            resp = await hls_client.get(path)
+            assert resp.status == HTTPStatus.OK
+            assert await resp.read() == init
+        resp = await hls_client.get("/init/2.mp4")
+        assert resp.status == HTTPStatus.NOT_FOUND
+    finally:
+        stream_worker_sync.resume()
+        await stream.stop()
 
 
 async def test_hls_playlist_view_discontinuity_first_segment(

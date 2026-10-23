@@ -91,12 +91,17 @@ def http_range_from_part(part):
 
 
 def make_segment_with_parts(
-    segment, num_parts, independent_period, discontinuity=False
+    segment, num_parts, independent_period, discontinuity_sequence=None
 ):
     """Create a playlist response for a segment including part segments."""
-    response = []
-    if discontinuity:
-        response.append("#EXT-X-DISCONTINUITY")
+    response = (
+        []
+        if discontinuity_sequence is None
+        else [
+            "#EXT-X-DISCONTINUITY",
+            f'#EXT-X-MAP:URI="./init/{discontinuity_sequence}.mp4"',
+        ]
+    )
     response.extend(
         f"#EXT-X-PART:DURATION={TEST_PART_DURATION:.3f},"
         f'URI="./segment/{segment}.{i}.m4s"'
@@ -323,6 +328,60 @@ async def test_ll_hls_playlist_view(
 
     stream_worker_sync.resume()
     await stream.stop()
+
+
+async def test_ll_hls_playlist_view_discontinuity(
+    hass: HomeAssistant, hls_stream, stream_worker_sync
+) -> None:
+    """Test a discontinuity between segments rendered with parts."""
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "stream": {
+                CONF_LL_HLS: True,
+                CONF_SEGMENT_DURATION: SEGMENT_DURATION,
+                CONF_PART_DURATION: TEST_PART_DURATION,
+            }
+        },
+    )
+
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    stream_worker_sync.pause()
+    hls = stream.add_provider(HLS_PROVIDER)
+    try:
+        for sequence in range(2):
+            segment = create_segment(sequence=sequence)
+            segment.stream_id = sequence
+            hls.put(segment)
+            for part in create_parts(SEQUENCE_BYTES):
+                segment.async_add_part(part, 0)
+                hls.part_put()
+            complete_segment(segment)
+        await hass.async_block_till_done()
+
+        hls_client = await hls_stream(stream)
+
+        resp = await hls_client.get("/playlist.m3u8")
+        assert resp.status == HTTPStatus.OK
+        assert await resp.text() == make_playlist(
+            sequence=0,
+            segments=[
+                make_segment_with_parts(0, len(segment.parts), PART_INDEPENDENT_PERIOD),
+                make_segment_with_parts(
+                    1,
+                    len(segment.parts),
+                    PART_INDEPENDENT_PERIOD,
+                    discontinuity_sequence=1,
+                ),
+            ],
+            hint=make_hint(2, 0),
+            segment_duration=SEGMENT_DURATION,
+            part_target_duration=hls.stream_settings.part_target_duration,
+        )
+    finally:
+        stream_worker_sync.resume()
+        await stream.stop()
 
 
 async def test_ll_hls_msn(

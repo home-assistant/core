@@ -9,13 +9,14 @@ from io import SEEK_END, BytesIO
 import logging
 import math
 from threading import Event
-from typing import Any, Self, cast, override
+from typing import Any, NamedTuple, Self, cast, override
 
 import av
 import av.audio
 from av.codec.codec import UnknownCodecError  # pylint: disable=no-name-in-module
 import av.container
 from av.container import InputContainer
+from av.rational import AVRational  # pylint: disable=no-name-in-module
 import av.stream
 
 from homeassistant.core import HomeAssistant
@@ -126,12 +127,28 @@ def hevc_parameter_sets(data: bytes) -> dict[tuple[int, int], bytes]:
     return parameter_sets
 
 
-def hevc_picture_size(extradata: bytes) -> tuple[int, int]:
-    """Return the picture size the parameter sets in extradata declare."""
+class VideoFormat(NamedTuple):
+    """Picture size and sample aspect ratio of a video stream."""
+
+    width: int
+    height: int
+    # 0/1 if unknown
+    sample_aspect_ratio: AVRational
+
+
+def hevc_keyframe_format(extradata: bytes, keyframe: bytes) -> VideoFormat:
+    """Return the format of the picture a keyframe decodes to with extradata.
+
+    The format comes from the SPS the keyframe uses, which need not be the
+    first SPS in extradata. Raises av.FFmpegError or ValueError if no
+    picture decodes.
+    """
     decoder = av.CodecContext.create("hevc", "r")
     decoder.extradata = extradata
     decoder.open()
-    return decoder.width, decoder.height
+    if not [*decoder.decode(av.Packet(keyframe)), *decoder.decode(None)]:
+        raise ValueError("No picture decoded")
+    return VideoFormat(decoder.width, decoder.height, decoder.sample_aspect_ratio)
 
 
 class StreamState:
@@ -150,6 +167,8 @@ class StreamState:
     ) -> None:
         """Initialize StreamState."""
         self._stream_id: int = 0
+        # Whether a segment carries the current stream_id
+        self._stream_id_used = False
         self.hass = hass
         self._outputs_callback: Callable[[], Mapping[str, StreamOutput]] = (
             outputs_callback
@@ -170,12 +189,23 @@ class StreamState:
         return self._sequence
 
     def next_stream_id(self) -> None:
-        """Start a discontinuity for segments that need a new init."""
-        self._stream_id += 1
+        """Start a discontinuity for segments that need a new init.
+
+        A stream_id no segment carries is kept, so the discontinuity sequence
+        numbers in the playlist stay consecutive.
+        """
+        if self._stream_id_used:
+            self._stream_id += 1
+            self._stream_id_used = False
 
     @property
     def stream_id(self) -> int:
         """Return the readonly stream_id attribute."""
+        return self._stream_id
+
+    def use_stream_id(self) -> int:
+        """Return the stream_id for a new segment."""
+        self._stream_id_used = True
         return self._stream_id
 
     def discontinuity(self) -> None:
@@ -183,7 +213,7 @@ class StreamState:
         # Preserving sequence and stream_id here keep the HLS playlist logic
         # simple to check for discontinuity at output time, and to determine
         # the discontinuity sequence number.
-        self._stream_id += 1
+        self.next_stream_id()
         # Call discontinuity to fix incomplete segment in HLS output
         if hls_output := self._outputs_callback().get(HLS_PROVIDER):
             cast(HlsStreamOutput, hls_output).discontinuity()
@@ -243,7 +273,7 @@ class StreamMuxer:
         )
         self._first_keyframe = True
         self._video_extradata: bytes | None = None
-        self._video_size = (0, 0)
+        self._video_format = VideoFormat(0, 0, AVRational(0, 1))
         self._new_init = False
 
     @staticmethod
@@ -382,10 +412,12 @@ class StreamMuxer:
                 self._set_video_parameters()
 
     def _set_video_parameters(self) -> None:
-        """Give the output video stream the current parameter sets and size."""
+        """Give the output video stream the current parameter sets and format."""
         codec_context = self._output_video_stream.codec_context
         codec_context.extradata = self._video_extradata
-        codec_context.width, codec_context.height = self._video_size
+        codec_context.width = self._video_format.width
+        codec_context.height = self._video_format.height
+        codec_context.sample_aspect_ratio = self._video_format.sample_aspect_ratio
 
     def _parameter_sets_changed(self, packet: av.Packet) -> bool:
         """Return True if a keyframe carries parameter sets the init lacks."""
@@ -401,16 +433,15 @@ class StreamMuxer:
             b"\x00\x00\x00\x01" + parameter_sets[key] for key in sorted(parameter_sets)
         )
         try:
-            self._video_size = hevc_picture_size(extradata)
-        except av.FFmpegError as err:
-            _LOGGER.debug(
-                "Ignoring video parameter sets that do not parse: %s",
-                redact_av_error_string(err),
-            )
+            video_format = hevc_keyframe_format(extradata, bytes(packet))
+        except (av.FFmpegError, ValueError) as err:
+            # A codec context error carries no URL to redact
+            _LOGGER.debug("Ignoring video parameter sets that do not decode: %s", err)
             return False
         self._parameter_sets = parameter_sets
         self._video_extradata = extradata
-        _LOGGER.debug("Video parameter sets changed, size %sx%s", *self._video_size)
+        self._video_format = video_format
+        _LOGGER.debug("Video parameter sets changed: %s", video_format)
         return True
 
     def mux_packet(self, packet: av.Packet) -> None:
@@ -459,7 +490,7 @@ class StreamMuxer:
         """Create a segment when the moov is ready."""
         self._segment = Segment(
             sequence=self._stream_state.sequence,
-            stream_id=self._stream_state.stream_id,
+            stream_id=self._stream_state.use_stream_id(),
             init=read_init(self._memory_file),
             # Fetch the latest StreamOutputs, which may have changed since the
             # worker started.
