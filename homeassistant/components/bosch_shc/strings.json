@@ -84,6 +84,9 @@
       },
       "impulse_length": {
         "name": "Pulse length"
+      },
+      "offset": {
+        "name": "Temperature offset"
       }
     },
     "select": {
@@ -123,6 +126,14 @@
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
           "middle": "[%key:common::state::medium%]"
+        }
+      },
+      "state_after_power_outage": {
+        "name": "State after power outage",
+        "state": {
+          "last_state": "Last state",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       },
       "vibration_sensitivity": {

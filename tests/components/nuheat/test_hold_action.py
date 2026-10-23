@@ -1,5 +1,6 @@
 """Every write reconciles; explicit timed holds use the existing entity safely."""
 
+from asyncio import Event, create_task, sleep
 from datetime import UTC, datetime, timedelta
 import logging
 from math import inf, nan
@@ -34,6 +35,49 @@ from .test_permanent_hold import permanent
 from .test_setpoint_reconciliation import advance
 
 CONTROLS = ["run", "temporary", "permanent", "heat", "auto", "off", "on"]
+
+
+@pytest.mark.parametrize("control", CONTROLS)
+async def test_mode_commands_wait_for_inflight_setpoint(
+    hass: HomeAssistant, control: str
+) -> None:
+    """A slow earlier setpoint cannot finish after a newer mode command."""
+    coordinator, api, _ = await coordinator_with(hass, permanent())
+    entity = NuHeatClimateEntity(coordinator, "ABC123")
+    started = Event()
+    release = Event()
+
+    async def write(*_args: object, **_kwargs: object) -> None:
+        started.set()
+        await release.wait()
+
+    api.set_target_temperature.side_effect = write
+    setpoint = create_task(entity.async_set_temperature(temperature=24))
+    await started.wait()
+    mode = create_task(command(entity, control))
+    try:
+        await sleep(0)
+        api.set_schedule_mode.assert_not_awaited()
+        api.set_standby.assert_not_awaited()
+    finally:
+        release.set()
+        await setpoint
+        await mode
+        await coordinator.async_shutdown()
+    assert api.set_schedule_mode.await_count + api.set_standby.await_count == 1
+
+
+@pytest.mark.parametrize("control", ["temporary", "permanent", "heat"])
+async def test_mode_change_preserves_accepted_target_before_readback(
+    hass: HomeAssistant, control: str
+) -> None:
+    """Switching mode must not reuse a stale cloud target."""
+    coordinator, api, _ = await coordinator_with(hass, permanent())
+    entity = NuHeatClimateEntity(coordinator, "ABC123")
+    await entity.async_set_temperature(temperature=24)
+    await command(entity, control)
+    assert api.set_schedule_mode.await_args.kwargs["temperature"] == 24
+    await coordinator.async_shutdown()
 
 
 async def command(entity: NuHeatClimateEntity, control: str) -> None:

@@ -1291,8 +1291,8 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     entry.mock_state(hass, ConfigEntryState.LOADED)
     with patch.object(
         hass.config_entries,
-        "async_unload_platforms",
-        AsyncMock(return_value=True),
+        "async_unload_platforms_or_raise",
+        AsyncMock(),
     ) as unload:
         assert await hass.config_entries.async_unload(entry.entry_id) is True
     unload.assert_awaited_once()

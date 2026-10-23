@@ -184,8 +184,8 @@ async def run_migration_flow(
         patch.object(hass.config_entries, "async_forward_entry_setups", AsyncMock()),
         patch.object(
             hass.config_entries,
-            "async_unload_platforms",
-            AsyncMock(return_value=True),
+            "async_unload_platforms_or_raise",
+            AsyncMock(),
         ),
     ):
         result = await complete_oauth_flow(
@@ -394,7 +394,7 @@ async def test_version_one_oauth_entry_advances_without_legacy_data(
 
     with patch(
         "homeassistant.components.nuheat.async_setup_entry",
-        AsyncMock(return_value=True),
+        AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id) is True
     assert entry.version == OAUTH_CONFIG_ENTRY_VERSION
@@ -431,7 +431,7 @@ async def test_provisional_oauth_subject_migration_preserves_registry_identity(
 
     with patch(
         "homeassistant.components.nuheat.async_setup_entry",
-        AsyncMock(return_value=True),
+        AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id) is True
 

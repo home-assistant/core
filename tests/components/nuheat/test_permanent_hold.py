@@ -71,6 +71,47 @@ async def test_preset_menu_and_app_driven_permanent_hold(hass: HomeAssistant) ->
     await coordinator.async_shutdown()
 
 
+async def test_standby_confirmation_then_external_schedule(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Delayed Standby confirmation must not mask subsequent external changes."""
+    coordinator, api, _ = await coordinator_with(hass, permanent())
+    entity = NuHeatClimateEntity(coordinator, "ABC123")
+    await entity.async_turn_off()
+    assert entity.hvac_mode is HVACMode.OFF
+    assert entity.assumed_state
+    assert entity.native_target_temperature is None
+    api.list_thermostats.return_value = [permanent(target=500, operating=2)]
+    await advance(hass, freezer, 2)
+    assert entity.hvac_mode is HVACMode.OFF
+    assert not entity.assumed_state
+    api.list_thermostats.return_value = [
+        thermostat(mode=1, hold_until=None, hold_until_status=HoldUntilStatus.NULL)
+    ]
+    coordinator.async_schedule_reconciliation()
+    await advance(hass, freezer, 2)
+    assert entity.hvac_mode is HVACMode.AUTO
+    assert entity.preset_mode == PRESET_RUN
+    assert entity.native_target_temperature == 23
+    api.set_standby.assert_awaited_once_with("ABC123")
+    await coordinator.async_shutdown()
+
+
+async def test_unconfirmed_standby_expires(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """An unconfirmed OFF command expires without retrying the write."""
+    coordinator, api, _ = await coordinator_with(hass, permanent())
+    entity = NuHeatClimateEntity(coordinator, "ABC123")
+    await entity.async_turn_off()
+    assert entity.hvac_mode is HVACMode.OFF
+    await advance(hass, freezer, 30)
+    assert entity.hvac_mode is HVACMode.AUTO
+    assert not entity.assumed_state
+    api.set_standby.assert_awaited_once_with("ABC123")
+    await coordinator.async_shutdown()
+
+
 async def test_select_permanent_hold_preserves_target(hass: HomeAssistant) -> None:
     """Select permanent hold preserves target."""
     coordinator, api, _ = await coordinator_with(hass, thermostat())
@@ -195,7 +236,7 @@ async def test_permanent_from_standby_and_delayed_confirmation(
         hass, permanent(target=500, operating=2)
     )
     entity = NuHeatClimateEntity(coordinator, "ABC123")
-    entity._optimistic_standby = True
+    coordinator.async_set_pending_setpoint("ABC123", 5, standby=True)
     await entity.async_set_preset_mode(PRESET_PERMANENT_HOLD)
     api.set_schedule_mode.assert_awaited_once_with(
         "ABC123", ScheduleMode.PERMANENT_HOLD, temperature=5

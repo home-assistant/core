@@ -63,12 +63,12 @@ async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> None:
     """Set up NuHeat from an OAuth config entry."""
     if is_pending_cleanup_entry(entry):
         # A deferred cleanup marker has no credentials and must never call the
         # obsolete API or create duplicate entities.
-        return True
+        return
     if is_legacy_entry(entry):
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
@@ -115,28 +115,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     if not migration_reload_active():
         await async_resume_migration_cleanup(hass, entry)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> None:
     """Unload NuHeat."""
     if is_pending_cleanup_entry(entry):
-        return True
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        return
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry[Any]) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry[Any]) -> None:
     """Retain legacy entries until their user-assisted OAuth conversion."""
     if is_legacy_entry(entry):
         # Legacy entries intentionally remain version 1 so their stored schema
         # is distinguishable and reversible until OAuth validation succeeds.
-        return True
+        return
     if is_pending_cleanup_entry(entry):
         if entry.version < OAUTH_CONFIG_ENTRY_VERSION:
             hass.config_entries.async_update_entry(
                 entry, version=OAUTH_CONFIG_ENTRY_VERSION
             )
-        return True
+        return
     if entry.version < OAUTH_CONFIG_ENTRY_VERSION:
         try:
             account_subject = account_subject_from_entry_data(entry.data)
@@ -161,4 +160,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry[Any]) -> b
             unique_id=account_subject,
             version=OAUTH_CONFIG_ENTRY_VERSION,
         )
-    return True

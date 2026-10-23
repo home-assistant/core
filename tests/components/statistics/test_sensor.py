@@ -1957,6 +1957,71 @@ async def test_average_linear_unevenly_timed(
     assert [event.data["new_state"].state for event in events] == expected_states
 
 
+@pytest.mark.parametrize(
+    ("source_entity_id", "source_values", "state_characteristic", "expected_state"),
+    [
+        pytest.param(
+            "sensor.test_monitored",
+            ["10", "20"],
+            "average_linear",
+            "15.0",
+            id="average_linear",
+        ),
+        pytest.param(
+            "sensor.test_monitored",
+            ["10", "20"],
+            "average_step",
+            "15.0",
+            id="average_step",
+        ),
+        pytest.param(
+            "binary_sensor.test_monitored",
+            ["on", "off"],
+            "average_step",
+            "50.0",
+            id="binary_average_step",
+        ),
+    ],
+)
+async def test_time_weighted_average_samples_with_same_timestamp(
+    hass: HomeAssistant,
+    source_entity_id: str,
+    source_values: list[str],
+    state_characteristic: str,
+    expected_state: str,
+) -> None:
+    """Test time-weighted averages when all buffered samples share a timestamp."""
+    with freeze_time(dt_util.utcnow()):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": source_entity_id,
+                        "state_characteristic": state_characteristic,
+                        "sampling_size": 20,
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        for value in source_values:
+            hass.states.async_set(
+                source_entity_id,
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+            )
+            await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == expected_state
+
+
 async def test_sensor_unit_gets_removed(hass: HomeAssistant) -> None:
     """Test when input lose its unit of measurement."""
     assert await async_setup_component(
