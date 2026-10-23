@@ -878,6 +878,7 @@ async def test_cancelled_pipeline_keeps_next_call_pipeline(
                 await second_pipeline_running.wait()
 
             # More audio on the same call must not start another pipeline
+            second_pipeline_received_audio.clear()
             satellite.on_chunk(bytes(_ONE_SECOND))
 
             async with asyncio.timeout(1):
