@@ -8,6 +8,7 @@ from bsblan import (
     BSBLANAuthError,
     BSBLANConnectionError,
     BSBLANError,
+    BSBLANMalformedResponseError,
     BSBLANUnsupportedFeatureError,
     BSBLANVersionError,
     State,
@@ -262,6 +263,12 @@ async def test_config_entry_auth_failed_triggers_reauth(
             TimeoutError("Connection timeout"),
             ConfigEntryState.LOADED,
             True,
+        ),
+        (
+            "sensor",
+            BSBLANMalformedResponseError("Malformed response"),
+            ConfigEntryState.SETUP_RETRY,
+            False,
         ),
     ],
 )
@@ -660,7 +667,9 @@ async def test_coordinator_fast_sensor_fails_on_refresh_preserves_state(
     coordinator = mock_config_entry.runtime_data.fast_coordinator
     initial_sensor = coordinator.data.sensor
 
-    mock_bsblan.sensor.side_effect = BSBLANError("Malformed response")
+    mock_bsblan.sensor.side_effect = BSBLANError(
+        "None of the requested parameters are valid for this section"
+    )
 
     freezer.tick(timedelta(seconds=15))
     async_fire_time_changed(hass)

@@ -145,6 +145,12 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                 sensor = await self.client.sensor(include=SENSOR_INCLUDE)
             except BSBLANAuthError, BSBLANConnectionError:
                 raise
+            except BSBLANMalformedResponseError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="coordinator_sensor_error",
+                    translation_placeholders={"host": host},
+                ) from err
             except BSBLANError:
                 sensor = self.data.sensor if self.data else Sensor()
                 LOGGER.debug("Sensor data not available on device at %s", host)
