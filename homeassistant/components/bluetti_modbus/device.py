@@ -4,6 +4,7 @@ from bluetti_modbus_lib import (
     AGGREGATE_SUMMARY_FIELDS,
     Balco260,
     aggregate_pack_summary_component,
+    battery_pack_component,
 )
 from modbus_connection import ModbusUnit
 
@@ -34,3 +35,8 @@ def pack_summary(unit: ModbusUnit) -> Balco260:
     entity.
     """
     return aggregate_pack_summary_component(unit)
+
+
+def expansion_pack(unit: ModbusUnit) -> Balco260:
+    """Return a BC260 expansion pack, read at its own unit ID."""
+    return battery_pack_component(unit)

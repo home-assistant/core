@@ -30,10 +30,16 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         entry: BluettiModbusConfigEntry,
         device: Balco260,
         pack_summary: Balco260,
+        packs: dict[int, Balco260],
     ) -> None:
         """Initialize the coordinator."""
         self._device = device
         self._pack_summary = pack_summary
+        self._packs = packs
+        self._pack_count: int | None = None
+        # Each expansion pack's values, by unit ID, for the packs that answered
+        # the last poll.
+        self.pack_values: dict[int, dict[str, Any]] = {}
         super().__init__(
             hass,
             _LOGGER,
@@ -65,7 +71,34 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="wrong_device",
             )
-        return values | self._pack_summary.values
+        summary = self._pack_summary.values
+        await self._async_update_packs(summary["d_num_battery_packs"])
+        return values | summary
+
+    async def _async_update_packs(self, count: int) -> None:
+        """Read the expansion packs the pack summary counts.
+
+        The count includes the built-in pack. A pack that fails to answer
+        only leaves its own entities unavailable.
+        """
+        if self._pack_count is None:
+            self._pack_count = count
+        elif count != self._pack_count:
+            # Pack devices are created at setup.
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+
+        pack_values: dict[int, dict[str, Any]] = {}
+        # Unit IDs in order, so the first count - 1 are the packs counted.
+        for unit_id, pack in list(self._packs.items())[: max(count - 1, 0)]:
+            try:
+                await pack.async_update_with_retry()
+            except ModbusError as err:
+                _LOGGER.debug(
+                    "Battery pack at unit %s did not answer: %s", unit_id, err
+                )
+                continue
+            pack_values[unit_id] = pack.values
+        self.pack_values = pack_values
 
 
 @dataclass(kw_only=True)
@@ -74,4 +107,6 @@ class BluettiModbusRuntimeData:
 
     coordinator: BluettiModbusDataUpdateCoordinator
     device_info: DeviceInfo
+    # The power station's device, which expansion packs are attached to.
+    device_id: str
     serial: str

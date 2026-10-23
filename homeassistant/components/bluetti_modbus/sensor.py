@@ -4,7 +4,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast, override
 
-from bluetti_modbus_lib import InverterStatus, PackChargingStatus, PvType
+from bluetti_modbus_lib import (
+    EXPANSION_PACK_FIRST_SLAVE_ID,
+    InverterStatus,
+    PackChargingStatus,
+    PvType,
+    pack_is_reporting,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,9 +29,11 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DOMAIN
 from .coordinator import BluettiModbusConfigEntry
 from .entity import BluettiModbusEntity
 
@@ -384,6 +392,34 @@ async def async_setup_entry(
         BluettiModbusSensor(entry=entry, description=description)
         for description in SENSOR_DESCRIPTIONS
     )
+    async_add_entities(
+        BluettiModbusPackSensor(
+            entry=entry, description=description, unit_id=unit_id, values=values
+        )
+        for unit_id, values in entry.runtime_data.coordinator.pack_values.items()
+        # A pack is told apart by its serial number.
+        if values["b_serial"]
+        for description in PACK_SENSOR_DESCRIPTIONS
+    )
+
+
+# The built-in pack's sensors, which each expansion pack has too.
+PACK_SENSOR_DESCRIPTIONS = tuple(
+    description
+    for description in SENSOR_DESCRIPTIONS
+    if description.key
+    in {
+        "b_v",
+        "b_c",
+        "b_soc",
+        "b_soh",
+        "b_cycle_count",
+        "b_cell_count",
+        "b_ntc_count",
+        "b_i_e",
+        "b_o_e",
+    }
+)
 
 
 class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
@@ -409,3 +445,48 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
         if only_while is not None and data["b_status"] is not only_while:
             return None
         return self.entity_description.value_fn(data[self._field_name])
+
+
+class BluettiModbusPackSensor(BluettiModbusEntity, SensorEntity):
+    """Defines a sensor on a BC260 expansion pack."""
+
+    entity_description: BluettiModbusSensorEntityDescription
+
+    def __init__(
+        self,
+        *,
+        entry: BluettiModbusConfigEntry,
+        description: BluettiModbusSensorEntityDescription,
+        unit_id: int,
+        values: dict[str, Any],
+    ) -> None:
+        """Initialize an expansion pack sensor."""
+        super().__init__(entry=entry, field_name=description.key)
+        self.entity_description = description
+        self._unit_id = unit_id
+        pack_serial = str(values["b_serial"])
+        self._attr_unique_id = f"{pack_serial}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, pack_serial)},
+            manufacturer="BLUETTI",
+            model=values["b_type"] or None,
+            # The built-in pack is pack 1.
+            name=f"Pack {unit_id - EXPANSION_PACK_FIRST_SLAVE_ID + 2}",
+            serial_number=pack_serial,
+            sw_version=values["b_ver_1"] if values["b_ver_count"] else None,
+            via_device_id=entry.runtime_data.device_id,
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the pack reported data in the last poll."""
+        values = self.coordinator.pack_values.get(self._unit_id)
+        return super().available and values is not None and pack_is_reporting(values)
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the pack's most recently read value."""
+        values = self.coordinator.pack_values[self._unit_id]
+        return self.entity_description.value_fn(values[self._field_name])
