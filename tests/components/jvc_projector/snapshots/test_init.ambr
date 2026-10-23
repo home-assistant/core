@@ -29,7 +29,7 @@
     'name': 'JVC Projector',
     'name_by_user': None,
     'serial_number': None,
-    'sw_version': None,
+    'sw_version': '3.01',
     'via_device_id': None,
   })
 # ---

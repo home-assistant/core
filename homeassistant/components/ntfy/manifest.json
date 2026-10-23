@@ -1,6 +1,7 @@
 {
   "domain": "ntfy",
   "name": "ntfy",
+  "categories": ["messaging_notifications.push_notifications"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ntfy",

@@ -7,22 +7,21 @@ from freezegun.api import FrozenDateTimeFactory
 from pyicloud.exceptions import PyiCloudException
 from pyicloud.services.calendar import CalendarObject, EventObject
 import pytest
-from syrupy.assertion import SnapshotAssertion
-
-from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
-from homeassistant.components.icloud.coordinator import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
-
-from tests.common import (
+from pytest_homeassistant.common import (
     AsyncMock,
     MockConfigEntry,
     async_fire_time_changed,
     snapshot_platform,
 )
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
+from homeassistant.components.icloud.coordinator import CALENDAR_SCAN_INTERVAL
+from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 ENTITY_ID = "calendar.test_icloud_account_personal"
 
@@ -95,7 +94,8 @@ async def _setup(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     config_entry.add_to_hass(hass)
     with patch("homeassistant.components.icloud.PLATFORMS", [Platform.CALENDAR]):
         await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        # The first fetch runs as a background task of the config entry.
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_entities(
@@ -123,14 +123,14 @@ async def test_event_in_progress_wins(
         _event(
             "ev1",
             "Now",
-            now.replace(tzinfo=None) - SCAN_INTERVAL,
-            now.replace(tzinfo=None) + SCAN_INTERVAL,
+            now.replace(tzinfo=None) - CALENDAR_SCAN_INTERVAL,
+            now.replace(tzinfo=None) + CALENDAR_SCAN_INTERVAL,
         ),
         _event(
             "ev2",
             "Later",
-            now.replace(tzinfo=None) + SCAN_INTERVAL * 2,
-            now.replace(tzinfo=None) + SCAN_INTERVAL * 3,
+            now.replace(tzinfo=None) + CALENDAR_SCAN_INTERVAL * 2,
+            now.replace(tzinfo=None) + CALENDAR_SCAN_INTERVAL * 3,
         ),
     ]
 
@@ -246,7 +246,7 @@ async def test_new_calendar_added_on_later_poll(
         _calendar("cal1", "Personal"),
         _calendar("cal2", "Work"),
     ]
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(CALENDAR_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     # The scheduled refresh runs as a background task of the config entry.
     await hass.async_block_till_done(wait_background_tasks=True)

@@ -3,16 +3,20 @@
 import asyncio
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_flow
-
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 
 
 @contextmanager
@@ -102,7 +106,7 @@ async def test_user_has_confirmation(
     mock_platform(hass, "test.config_flow", None)
 
     result = await hass.config_entries.flow.async_init(
-        "test", context={"source": config_entries.SOURCE_USER}, data={}
+        "test", context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
@@ -129,7 +133,7 @@ async def test_user_has_confirmation_async_discovery_flow(
     mock_platform(hass, "test.config_flow", None)
 
     result = await hass.config_entries.flow.async_init(
-        "test", context={"source": config_entries.SOURCE_USER}, data={}
+        "test", context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
@@ -279,7 +283,7 @@ async def test_only_one_in_progress(
 
     # User starts flow
     result = await hass.config_entries.flow.async_init(
-        "test", context={"source": config_entries.SOURCE_USER}, data={}
+        "test", context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
@@ -431,8 +435,8 @@ async def test_webhook_create_cloudhook(
     """Test cloudhook will be created if subscribed."""
     assert await setup.async_setup_component(hass, "cloud", {})
 
-    async_setup_entry = Mock(return_value=True)
-    async_unload_entry = Mock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -492,8 +496,8 @@ async def test_webhook_create_cloudhook_aborts_not_connected(
     """Test cloudhook aborts if subscribed but not connected."""
     assert await setup.async_setup_component(hass, "cloud", {})
 
-    async_setup_entry = Mock(return_value=True)
-    async_unload_entry = Mock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,

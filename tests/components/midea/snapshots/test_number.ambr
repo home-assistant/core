@@ -194,7 +194,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'number',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'number.heat_pump_water_heater_vacation_days',
     'has_entity_name': True,
     'hidden_by': None,
@@ -255,7 +255,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'number',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'number.water_drinking_appliance_flushing_days',
     'has_entity_name': True,
     'hidden_by': None,
@@ -316,7 +316,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'number',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'number.water_drinking_appliance_leak_water_protection_value',
     'has_entity_name': True,
     'hidden_by': None,
@@ -359,6 +359,67 @@
     'state': '500.0',
   })
 # ---
+# name: test_number_state_snapshot[ed][number.water_drinking_appliance_salt_setting-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.water_drinking_appliance_salt_setting',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Salt setting',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Salt setting',
+    'platform': 'midea',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_setting',
+    'unique_id': '12345678_salt_setting',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_number_state_snapshot[ed][number.water_drinking_appliance_salt_setting-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'weight',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Drinking Appliance Salt setting',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.water_drinking_appliance_salt_setting',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25.0',
+  })
+# ---
 # name: test_number_state_snapshot[ed][number.water_drinking_appliance_water_hardness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -377,7 +438,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'number',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'number.water_drinking_appliance_water_hardness',
     'has_entity_name': True,
     'hidden_by': None,

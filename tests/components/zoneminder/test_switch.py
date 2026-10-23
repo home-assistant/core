@@ -4,8 +4,9 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import async_fire_time_changed
 from zoneminder.monitor import MonitorState
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import create_mock_monitor
-
-from tests.common import async_fire_time_changed
 
 
 async def _setup_zm_with_switches(
@@ -233,9 +232,9 @@ async def test_switch_platform_not_ready_empty_monitors(
 def test_platform_schema_requires_command_on_off() -> None:
     """Test platform schema requires command_on and command_off."""
     # Missing command_on
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         PLATFORM_SCHEMA({"platform": "zoneminder", "command_off": "Monitor"})
 
     # Missing command_off
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         PLATFORM_SCHEMA({"platform": "zoneminder", "command_on": "Modect"})

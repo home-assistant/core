@@ -1,6 +1,39 @@
 {
   "entity": {
     "binary_sensor": {
+      "cooling_start_condition_contact_not_blocked": {
+        "default": "mdi:snowflake-check"
+      },
+      "cooling_start_condition_control_method": {
+        "default": "mdi:snowflake-check"
+      },
+      "cooling_start_condition_demand": {
+        "default": "mdi:snowflake-check"
+      },
+      "cooling_start_condition_dtc": {
+        "default": "mdi:snowflake-check"
+      },
+      "cooling_start_condition_exponential_backoff": {
+        "default": "mdi:snowflake-check"
+      },
+      "cooling_start_condition_heat_cool_delay": {
+        "default": "mdi:snowflake-check"
+      },
+      "cooling_start_condition_indoor_unit_connected": {
+        "default": "mdi:snowflake-check"
+      },
+      "cooling_start_condition_inside_temperature": {
+        "default": "mdi:snowflake-check"
+      },
+      "cooling_start_condition_outside_air_temperature": {
+        "default": "mdi:snowflake-check"
+      },
+      "cooling_start_condition_water_temperature": {
+        "default": "mdi:snowflake-check"
+      },
+      "cooling_start_condition_water_to_air": {
+        "default": "mdi:snowflake-check"
+      },
       "indoor_unit_auxiliary_pump_state": {
         "default": "mdi:pump"
       },
@@ -29,6 +62,24 @@
       },
       "compressor_rpm": {
         "default": "mdi:fan"
+      },
+      "cooling_blocked_by": {
+        "default": "mdi:snowflake-alert"
+      },
+      "cooling_conditions_met": {
+        "default": "mdi:checkbox-multiple-marked-outline"
+      },
+      "cooling_pause_reason": {
+        "default": "mdi:snowflake-off"
+      },
+      "cooling_state": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "cooling_stop_reason": {
+        "default": "mdi:snowflake-off"
+      },
+      "cooling_wait_until": {
+        "default": "mdi:timer-sand"
       },
       "cop": {
         "default": "mdi:speedometer"
@@ -74,6 +125,9 @@
       },
       "heat_pump_state": {
         "default": "mdi:state-machine"
+      },
+      "last_cooling_time": {
+        "default": "mdi:snowflake-check"
       },
       "outside_temperature": {
         "default": "mdi:home-thermometer-outline"

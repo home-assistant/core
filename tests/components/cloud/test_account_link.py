@@ -8,6 +8,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError, ClientResponseError, RequestInfo
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_platform,
+)
 from yarl import URL
 
 from homeassistant import config_entries
@@ -23,8 +28,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
 
@@ -288,7 +291,7 @@ async def test_refresh_token_error(
     status: int,
     expected_exception: type[OAuth2TokenRequestError],
 ) -> None:
-    """Test that _async_refresh_token wraps ClientResponseError."""
+    """Test a failing token request reports the service, not the cloud domain."""
     hass.data[DATA_CLOUD] = None
     impl = account_link.CloudOAuth2Implementation(hass, "test")
 
@@ -299,7 +302,7 @@ async def test_refresh_token_error(
         ),
         pytest.raises(expected_exception) as exc_info,
     ):
-        await impl._async_refresh_token(
+        await impl.async_refresh_token(
             {"refresh_token": "mock-refresh", "access_token": "mock-access"}
         )
 

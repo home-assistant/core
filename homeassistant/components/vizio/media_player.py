@@ -208,12 +208,17 @@ class VizioDevice(VizioEntity, MediaPlayerEntity):
                     else ()
                 ),
             )
-            # find_app_name returns None on a catalog miss; the app_name state
-            # attribute contract expects the UNKNOWN_APP sentinel instead
+            # A catalog miss only warrants the UNKNOWN_APP sentinel on the app
+            # input; HDMI and the like report a config that is never an app.
             if app_name == NO_APP_RUNNING:
                 self._attr_app_name = None
             elif app_name is None:
-                self._attr_app_name = UNKNOWN_APP
+                self._attr_app_name = (
+                    UNKNOWN_APP
+                    if self._current_input is not None
+                    and is_app_input(self._current_input)
+                    else None
+                )
             else:
                 self._attr_app_name = app_name
 

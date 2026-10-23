@@ -5,14 +5,20 @@ from collections.abc import Callable, Coroutine
 import logging
 from typing import Any, cast
 
+import probatio
 from pydantic import ValidationError
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import Camera, Chime
+from uiprotect.data.public_devices import PublicCamera
 from uiprotect.exceptions import ClientError
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_NAME,
+    Platform,
+)
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -25,6 +31,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    service,
 )
 from homeassistant.helpers.target import (
     TargetSelection,
@@ -43,7 +50,7 @@ from .const import (
     KEYRINGS_USER_FULL_NAME,
     KEYRINGS_USER_STATUS,
 )
-from .data import async_ufp_instance_for_config_entry_ids
+from .data import UFPConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,8 +61,10 @@ SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
 SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
 SERVICE_PTZ_GOTO_PRESET = "ptz_goto_preset"
+SERVICE_TRIGGER_ALARM_WEBHOOK = "trigger_alarm_webhook"
 
 ATTR_PRESET = "preset"
+ATTR_TRIGGER_ID = "trigger_id"
 
 ALL_GLOBAL_SERVICES = [
     SERVICE_ADD_DOORBELL_TEXT,
@@ -64,39 +73,49 @@ ALL_GLOBAL_SERVICES = [
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_GET_USER_KEYRING_INFO,
     SERVICE_PTZ_GOTO_PRESET,
+    SERVICE_TRIGGER_ALARM_WEBHOOK,
 ]
 
-DOORBELL_TEXT_SCHEMA = vol.Schema(
+DOORBELL_TEXT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_MESSAGE): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_MESSAGE): cv.string,
     },
 )
 
-CHIME_PAIRED_SCHEMA = vol.Schema(
+CHIME_PAIRED_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_DEVICE_ID): str,
         "doorbells": cv.ENTITY_SERVICE_FIELDS,
     },
 )
 
-REMOVE_PRIVACY_ZONE_SCHEMA = vol.Schema(
+REMOVE_PRIVACY_ZONE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_NAME): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_NAME): cv.string,
     },
 )
 
-GET_USER_KEYRING_INFO_SCHEMA = vol.Schema(
+GET_USER_KEYRING_INFO_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_DEVICE_ID): str,
     },
 )
 
-PTZ_GOTO_PRESET_SCHEMA = vol.Schema(
+PTZ_GOTO_PRESET_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PRESET): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_PRESET): cv.string,
+    },
+)
+
+TRIGGER_ALARM_WEBHOOK_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_TRIGGER_ID): probatio.All(
+            cv.string, probatio.Length(min=1)
+        ),
     },
 )
 
@@ -104,35 +123,24 @@ PTZ_GOTO_PRESET_SCHEMA = vol.Schema(
 @callback
 def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiClient:
     device_registry = dr.async_get(hass)
-    if not (device_entry := device_registry.async_get(device_id)):
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_found",
-            translation_placeholders={"device_id": device_id},
-        )
+    device_entry = device_registry.async_get(device_id)
 
     if isinstance(device_entry, dr.ChildDeviceEntry):
         return _async_get_ufp_instance(hass, device_entry.parent_device_id)
 
-    if device_entry.via_device_id is not None:
+    if device_entry is not None and device_entry.via_device_id is not None:
         return _async_get_ufp_instance(hass, device_entry.via_device_id)
 
-    config_entry_ids = device_entry.config_entries
-    if ufp_instance := async_ufp_instance_for_config_entry_ids(hass, config_entry_ids):
-        if ufp_instance.is_public_only:
-            # Actions read/write through the private bootstrap, which an
-            # API-key-only entry never initializes.
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="public_only_no_actions",
-            )
-        return ufp_instance
-
-    raise HomeAssistantError(
-        translation_domain=DOMAIN,
-        translation_key="device_not_found",
-        translation_placeholders={"device_id": device_id},
-    )
+    _, config_entry = service.async_get_device_and_config_entry(hass, DOMAIN, device_id)
+    ufp_instance = cast(UFPConfigEntry, config_entry).runtime_data.api
+    if ufp_instance.is_public_only:
+        # Actions read/write through the private bootstrap, which an
+        # API-key-only entry never initializes.
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="public_only_no_actions",
+        )
+    return ufp_instance
 
 
 @callback
@@ -292,20 +300,33 @@ async def _async_ptz_command(
         ) from err
 
 
+@callback
+def _async_get_public_camera(camera: Camera) -> PublicCamera:
+    """Get the public camera matching a private camera."""
+    if (public := camera.api.public_bootstrap.cameras.get(camera.id)) is not None:
+        return public
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="device_not_available",
+        translation_placeholders={"device_name": camera.display_name},
+    )
+
+
 async def ptz_goto_preset(call: ServiceCall) -> None:
     """Move a PTZ camera to a preset position."""
     camera = _async_get_ptz_camera(call)
+    public = _async_get_public_camera(camera)
     preset_name: str = call.data[ATTR_PRESET]
 
     if preset_name.lower() == "home":
-        await _async_ptz_command(camera.ptz_goto_preset_public, slot=-1)
+        await _async_ptz_command(public.ptz_goto_preset, slot=-1)
         return
 
     presets = await _async_ptz_command(camera.get_ptz_presets)
 
     for preset in presets:
         if preset.name == preset_name:
-            await _async_ptz_command(camera.ptz_goto_preset_public, slot=preset.slot)
+            await _async_ptz_command(public.ptz_goto_preset, slot=preset.slot)
             return
 
     raise ServiceValidationError(
@@ -358,6 +379,23 @@ async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
     return response
 
 
+async def trigger_alarm_webhook(call: ServiceCall) -> None:
+    """Fire an Alarm Manager webhook trigger."""
+    entry: UFPConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+    try:
+        await entry.runtime_data.api.send_alarm_webhook_public(
+            call.data[ATTR_TRIGGER_ID]
+        )
+    except ClientError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
+
+
 SERVICES = [
     (
         SERVICE_ADD_DOORBELL_TEXT,
@@ -406,3 +444,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass.services.async_register(
             DOMAIN, name, method, schema=schema, supports_response=supports_response
         )
+    # Admin-only, there is no entity permission check.
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_TRIGGER_ALARM_WEBHOOK,
+        trigger_alarm_webhook,
+        schema=TRIGGER_ALARM_WEBHOOK_SCHEMA,
+    )

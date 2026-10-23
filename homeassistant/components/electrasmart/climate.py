@@ -107,7 +107,7 @@ class ElectraClimateEntity(ClimateEntity):
     _attr_target_temperature_step = 1
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = ELECTRA_MODES
     _attr_has_entity_name = True
     _attr_name = None
@@ -246,6 +246,16 @@ class ElectraClimateEntity(ClimateEntity):
         await self._async_operate_electra_ac()
 
     @override
+    async def async_turn_on(self) -> None:
+        """Turn on, keeping the mode the AC was last running in."""
+        if not self._electra_ac_device.turn_on():
+            # The unit reports no previous mode to restore, so fall back to
+            # cooling rather than leaving the AC off.
+            self._electra_ac_device.set_mode(HVAC_MODE_HASS_TO_ELECTRA[HVACMode.COOL])
+
+        await self._async_operate_electra_ac()
+
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 
@@ -271,10 +281,10 @@ class ElectraClimateEntity(ClimateEntity):
         self._attr_fan_mode = FAN_ELECTRA_TO_HASS[
             self._electra_ac_device.get_fan_speed()
         ]
-        self._attr_current_temperature = (
+        self._attr_native_current_temperature = (
             self._electra_ac_device.get_sensor_temperature()
         )
-        self._attr_target_temperature = self._electra_ac_device.get_temperature()
+        self._attr_native_target_temperature = self._electra_ac_device.get_temperature()
 
         self._attr_hvac_mode = (
             HVACMode.OFF

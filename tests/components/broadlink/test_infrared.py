@@ -2,8 +2,8 @@
 
 from unittest.mock import call
 
-from broadlink.exceptions import BroadlinkException
-from broadlink.remote import pulses_to_data
+from broadlink_async.exceptions import BroadlinkException
+from broadlink_async.remote import pulses_to_data
 from infrared_protocols.commands.nec import NECCommand
 import pytest
 
@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import get_device
 
-IR_DEVICES = ["Entrance", "Living Room", "Office", "Garage"]
+IR_DEVICES = ["Entrance", "Living Room", "Office", "Garage", "Study"]
 NON_IR_DEVICE = "Bedroom"
 
 

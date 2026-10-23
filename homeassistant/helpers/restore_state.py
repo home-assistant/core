@@ -6,13 +6,13 @@ import logging
 from typing import Any, Self, cast, override
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EntityStateAttribute
-from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
+from homeassistant.core import Event, HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
 
-from . import start
+from . import entity_registry as er, start
 from .entity import Entity
 from .event import async_track_time_interval
 from .json import JSONEncoder
@@ -65,8 +65,14 @@ class StoredState:
         state: State,
         extra_data: ExtraStoredData | None,
         last_seen: datetime,
+        entity_registry_id: str | None = None,
     ) -> None:
-        """Initialize a new stored state."""
+        """Initialize a new stored state.
+
+        entity_registry_id is the id of the entity registry entry of the entity
+        which stored the state, or None if the entity has no registry entry.
+        """
+        self.entity_registry_id = entity_registry_id
         self.extra_data = extra_data
         self.last_seen = last_seen
         self.state = state
@@ -77,6 +83,7 @@ class StoredState:
             "state": self.state.json_fragment,
             "extra_data": self.extra_data.as_dict() if self.extra_data else None,
             "last_seen": self.last_seen,
+            "entity_registry_id": self.entity_registry_id,
         }
 
     @classmethod
@@ -90,7 +97,10 @@ class StoredState:
             last_seen = dt_util.parse_datetime(last_seen)
 
         return cls(
-            cast(State, State.from_dict(json_dict["state"])), extra_data, last_seen
+            cast(State, State.from_dict(json_dict["state"])),
+            extra_data,
+            last_seen,
+            json_dict.get("entity_registry_id"),
         )
 
 
@@ -123,7 +133,12 @@ class RestoreStateData:
         self.store = Store[list[dict[str, Any]]](
             hass, STORAGE_VERSION, STORAGE_KEY, encoder=JSONEncoder
         )
-        self.last_states: dict[str, StoredState] = {}
+        # Stored states of entities without an entity registry entry, indexed
+        # by entity_id
+        self.last_states_by_entity_id: dict[str, StoredState] = {}
+        # Stored states of entities with an entity registry entry, indexed by
+        # entity registry id
+        self.last_states_by_entity_registry_id: dict[str, StoredState] = {}
         self.entities: dict[str, RestoreEntity] = {}
 
     def set_load_empty(self) -> None:
@@ -141,6 +156,29 @@ class RestoreStateData:
 
         start.async_at_start(self.hass, hass_start)
 
+        self.hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._async_entity_registry_entry_created,
+            event_filter=_entity_registry_entry_created_filter,
+        )
+
+    @callback
+    def _async_entity_registry_entry_created(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Index the state stored by entity_id by the new registry entry."""
+        entity_id = event.data["entity_id"]
+        if (stored_state := self.last_states_by_entity_id.get(entity_id)) is None:
+            return
+        registry_entry = er.async_get(self.hass).async_get(entity_id)
+        assert registry_entry is not None
+        # A recreated registry entry keeps its id and its own stored state
+        if registry_entry.id in self.last_states_by_entity_registry_id:
+            return
+        del self.last_states_by_entity_id[entity_id]
+        stored_state.entity_registry_id = registry_entry.id
+        self.last_states_by_entity_registry_id[registry_entry.id] = stored_state
+
     async def async_load(self) -> None:
         """Load the instance of this data helper."""
         try:
@@ -153,14 +191,60 @@ class RestoreStateData:
 
         if stored_states is None:
             _LOGGER.debug("Not creating cache - no saved states found")
-            self.last_states = {}
-        else:
-            self.last_states = {
-                item["state"]["entity_id"]: StoredState.from_dict(item)
-                for item in stored_states
-                if valid_entity_id(item["state"]["entity_id"])
-            }
-            _LOGGER.debug("Created cache with %s", list(self.last_states))
+            stored_states = []
+        await er.async_get(self.hass).async_wait_loaded()
+        self._async_load_stored_states(stored_states)
+
+    @callback
+    def _async_load_stored_states(self, stored_states: list[dict[str, Any]]) -> None:
+        """Replace the stored states with the serialized stored states."""
+        entity_registry = er.async_get(self.hass)
+        self.last_states_by_entity_id = {}
+        self.last_states_by_entity_registry_id = {}
+        for item in stored_states:
+            if not valid_entity_id(entity_id := item["state"]["entity_id"]):
+                continue
+            stored_state = StoredState.from_dict(item)
+            # Stored before states were indexed by entity registry id
+            if (
+                "entity_registry_id" not in item
+                and (registry_entry := entity_registry.async_get(entity_id)) is not None
+            ):
+                stored_state.entity_registry_id = registry_entry.id
+            if (entity_registry_id := stored_state.entity_registry_id) is not None:
+                self.last_states_by_entity_registry_id[entity_registry_id] = (
+                    stored_state
+                )
+            else:
+                self.last_states_by_entity_id[entity_id] = stored_state
+        _LOGGER.debug(
+            "Created cache with %s and %s",
+            list(self.last_states_by_entity_id),
+            list(self.last_states_by_entity_registry_id),
+        )
+
+    @callback
+    def async_get_stored_state(self, entity_id: str) -> StoredState | None:
+        """Get the stored state of an entity, if any."""
+        if (registry_entry := er.async_get(self.hass).async_get(entity_id)) is None:
+            return self.last_states_by_entity_id.get(entity_id)
+        stored_state = self.last_states_by_entity_registry_id.get(registry_entry.id)
+        if (
+            stored_state is not None
+            and (state := stored_state.state).entity_id != entity_id
+        ):
+            # The entity_id was changed after the state was stored
+            stored_state.state = State(
+                entity_id,
+                state.state,
+                state.attributes,
+                last_changed=state.last_changed,
+                last_reported=state.last_reported,
+                last_updated=state.last_updated,
+                context=state.context,
+                validate_entity_id=False,
+            )
+        return stored_state
 
     @callback
     def async_get_stored_states(self) -> list[StoredState]:
@@ -181,9 +265,17 @@ class RestoreStateData:
 
         # Start with the currently registered states
         stored_states: list[StoredState] = []
+        current_entity_registry_ids: set[str] = set()
         for entity_id, entity in self.entities.items():
             if entity_id not in current_states_by_entity_id:
                 continue
+            entity_registry_id = (
+                registry_entry.id
+                if (registry_entry := entity.registry_entry) is not None
+                else None
+            )
+            if entity_registry_id is not None:
+                current_entity_registry_ids.add(entity_registry_id)
             try:
                 extra_data = entity.extra_restore_state_data
             except Exception:
@@ -196,11 +288,26 @@ class RestoreStateData:
                     current_states_by_entity_id[entity_id],
                     extra_data,
                     now,
+                    entity_registry_id,
                 )
             )
         expiration_time = now - STATE_EXPIRATION
 
-        for entity_id, stored_state in self.last_states.items():
+        for (
+            entity_registry_id,
+            stored_state,
+        ) in self.last_states_by_entity_registry_id.items():
+            # Don't save old states that have entities in the current run
+            if entity_registry_id in current_entity_registry_ids:
+                continue
+
+            # Don't save old states that have expired
+            if stored_state.last_seen < expiration_time:
+                continue
+
+            stored_states.append(stored_state)
+
+        for entity_id, stored_state in self.last_states_by_entity_id.items():
             # Don't save old states that have entities in the current run
             # They are either registered and already part of stored_states,
             # or no longer care about restoring.
@@ -272,6 +379,7 @@ class RestoreStateData:
         entity_id: str,
         state: State | None,
         extra_data: ExtraStoredData | None,
+        entity_registry_id: str | None = None,
     ) -> None:
         """Unregister this entity from saving state."""
         # When an entity is being removed from hass, store its last state. This
@@ -282,20 +390,55 @@ class RestoreStateData:
         if state is not None:
             state = State.from_dict(json_loads(state.as_dict_json))  # type: ignore[arg-type]
         if state is not None:
-            self.last_states[entity_id] = StoredState(
-                state, extra_data, dt_util.utcnow()
+            stored_state = StoredState(
+                state, extra_data, dt_util.utcnow(), entity_registry_id
             )
+            if entity_registry_id is None:
+                self.last_states_by_entity_id[entity_id] = stored_state
+            else:
+                self.last_states_by_entity_registry_id[entity_registry_id] = (
+                    stored_state
+                )
 
         del self.entities[entity_id]
+
+    @callback
+    def async_restore_entity_moved(
+        self, entity: RestoreEntity, old_entity_id: str
+    ) -> None:
+        """Track an entity whose entity_id was changed in place."""
+        # When removed and re-added, it is already tracked under its new
+        # entity_id, this is backwards compatibility for custom integrations
+        # not yet migrated to async_entity_id_changed, can be removed in
+        # Home Assistant Core 2027.11.
+        if self.entities.get(old_entity_id) is entity:
+            del self.entities[old_entity_id]
+            self.entities[entity.entity_id] = entity
+
+
+@callback
+def _entity_registry_entry_created_filter(
+    event_data: er.EventEntityRegistryUpdatedData,
+) -> bool:
+    """Filter entity registry entry creations."""
+    return event_data["action"] == "create"
 
 
 class RestoreEntity(Entity):
     """Mixin class for restoring previous entity state."""
 
+    # registry_entry is cleared before the entity is removed from the registry
+    __added_entity_registry_id: str | None = None
+
     @override
     async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
         await super().async_internal_added_to_hass()
+        self.__added_entity_registry_id = (
+            registry_entry.id
+            if (registry_entry := self.registry_entry) is not None
+            else None
+        )
         async_get(self.hass).async_restore_entity_added(self)
 
     @override
@@ -312,9 +455,16 @@ class RestoreEntity(Entity):
         else:
             state = self.hass.states.get(self.entity_id)
         async_get(self.hass).async_restore_entity_removed(
-            self.entity_id, state, extra_data
+            self.entity_id, state, extra_data, self.__added_entity_registry_id
         )
         await super().async_internal_will_remove_from_hass()
+
+    @callback
+    @override
+    def async_internal_entity_id_changed(self, old_entity_id: str) -> None:
+        """Track restore state under the new entity_id."""
+        super().async_internal_entity_id_changed(old_entity_id)
+        async_get(self.hass).async_restore_entity_moved(self, old_entity_id)
 
     @callback
     def _async_get_restored_data(self) -> StoredState | None:
@@ -325,7 +475,7 @@ class RestoreEntity(Entity):
                 "Cannot get last state. Entity not added to hass"
             )
             return None
-        return async_get(self.hass).last_states.get(self.entity_id)
+        return async_get(self.hass).async_get_stored_state(self.entity_id)
 
     async def async_get_last_state(self) -> State | None:
         """Get the entity state from the previous run."""

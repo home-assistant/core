@@ -6,8 +6,16 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import ANY, patch
 
+import attr
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import (
+    async_block_recorder,
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+)
+from pytest_homeassistant.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 from homeassistant import core
 from homeassistant.components import logbook, recorder
@@ -50,21 +58,13 @@ from .common import (
     simulate_thermostat_context_chain,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import (
-    async_block_recorder,
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-)
-from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
-
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
-    """Return listeners without final write listeners."""
+    """Return listeners without core startup and final write listeners."""
     return {
         key: value
         for key, value in listeners.items()
-        if key != EVENT_HOMEASSISTANT_FINAL_WRITE
+        if key not in (EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_FINAL_WRITE)
     }
 
 
@@ -93,7 +93,9 @@ async def _async_mock_logbook_platform_with_broken_describe(
     logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
 
-async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
+async def _async_mock_logbook_platform(
+    hass: HomeAssistant, domain: str = "test", event_name: str = "mock_event"
+) -> None:
     class MockLogbookPlatform:
         """Mock a logbook platform."""
 
@@ -114,9 +116,9 @@ async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
                     "message": event.data.get("message", "is on fire"),
                 }
 
-            async_describe_event("test", "mock_event", async_describe_test_event)
+            async_describe_event(domain, event_name, async_describe_test_event)
 
-    logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    logbook._process_logbook_platform(hass, domain, MockLogbookPlatform)
 
 
 async def _async_mock_entity_with_broken_logbook_platform(
@@ -301,6 +303,69 @@ async def test_get_events(
     assert results[0]["entity_id"] == "light.kitchen"
     assert results[0]["state"] == "off"
     assert isinstance(results[0]["when"], float)
+
+
+async def test_get_events_automation_and_script_run_ids(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test entries of an automation and the scripts it calls identify their runs."""
+    now = dt_util.utcnow()
+    assert await async_setup_component(hass, "logbook", {})
+    assert await async_setup_component(
+        hass, "script", {"script": {"callee": {"sequence": {"event": "callee_event"}}}}
+    )
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "id": "caller",
+                "alias": "Caller",
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "actions": [{"action": "script.callee"}, {"action": "script.callee"}],
+            }
+        },
+    )
+    await async_recorder_block_till_done(hass)
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "trace/list", "domain": "automation"})
+    response = await client.receive_json()
+    assert response["success"]
+    automation_run_ids = [trace["run_id"] for trace in response["result"]]
+    await client.send_json_auto_id({"type": "trace/list", "domain": "script"})
+    response = await client.receive_json()
+    assert response["success"]
+    script_run_ids = [trace["run_id"] for trace in response["result"]]
+    assert len(automation_run_ids) == 1
+    assert len(script_run_ids) == 2
+
+    await client.send_json_auto_id(
+        {"type": "logbook/get_events", "start_time": now.isoformat()}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    entries = [entry for entry in response["result"] if "run_id" in entry]
+
+    # One shared context, but each entry points to the trace of its own run
+    assert len({entry["context_id"] for entry in entries}) == 1
+    assert [
+        (entry["domain"], entry["item_id"], entry["run_id"], entry["message"])
+        for entry in entries
+    ] == [
+        (
+            "automation",
+            "caller",
+            automation_run_ids[0],
+            "triggered by event 'test_event'",
+        ),
+        ("script", "callee", script_run_ids[0], "started"),
+        ("script", "callee", script_run_ids[1], "started"),
+    ]
 
 
 async def test_get_events_entities_filtered_away(
@@ -579,6 +644,75 @@ async def test_get_events_with_device_ids(
     assert results[4]["entity_id"] == "light.kitchen"
     assert results[4]["state"] == "off"
     assert isinstance(results[4]["when"], float)
+
+
+async def test_get_events_with_composite_device_id(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test logbook get_events for a pre-migration composite device id.
+
+    The composite device spans two config entries with different domains, so the
+    external logbook events of both domains must be returned. A composite reports
+    only one of the two as its config_entry_id, so the union of its config entries
+    is what makes both domains interesting.
+    """
+    composite_id = "composite00000000000000000000ab"
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+
+    entry_a = MockConfigEntry(domain="test_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="test_b")
+    entry_b.add_to_hass(hass)
+    await _async_mock_logbook_platform(hass, "test_a", "mock_event_a")
+    await _async_mock_logbook_platform(hass, "test_b", "mock_event_b")
+
+    device_a = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id, identifiers={("test_a", "0123")}
+    )
+    device_b = device_registry.async_get_or_create(
+        config_entry_id=entry_b.entry_id, identifiers={("test_b", "0123")}
+    )
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry._devices[device_a.id] = attr.evolve(
+        device_a, composite_device_id=composite_id
+    )
+    device_registry._devices[device_b.id] = attr.evolve(
+        device_b, composite_device_id=composite_id
+    )
+    assert device_registry.async_get(composite_id).is_composite_device is True
+
+    # No entity_ids are requested, so the composite device is the only route by which
+    # either domain can become interesting
+    hass.bus.async_fire("mock_event_a", {"device_id": composite_id})
+    hass.bus.async_fire("mock_event_b", {"device_id": composite_id})
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "device_ids": [composite_id],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+
+    results = response["result"]
+    assert len(results) == 2
+    assert {result["domain"] for result in results} == {"test_a", "test_b"}
+    assert {result["message"] for result in results} == {"is on fire"}
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -1194,10 +1328,6 @@ async def test_subscribe_unsubscribe_logbook_stream(
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
     init_listeners = hass.bus.async_listeners()
-    init_listeners = {
-        **init_listeners,
-        EVENT_HOMEASSISTANT_START: init_listeners[EVENT_HOMEASSISTANT_START] - 1,
-    }
     await websocket_client.send_json(
         {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
     )

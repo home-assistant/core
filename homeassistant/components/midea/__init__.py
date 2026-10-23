@@ -40,6 +40,7 @@ _PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,
+    Platform.WATER_HEATER,
 ]
 
 
@@ -87,7 +88,7 @@ def _discover_current_ip(device_id: int) -> str | None:
     return device[CONF_IP_ADDRESS] if device else None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> None:
     """Set up Midea from a config entry."""
 
     data: Mapping[str, Any] = entry.data
@@ -127,6 +128,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
                 translation_placeholders={"device_id": str(device_id)},
             )
 
+    unavailable_logged = False
+
+    def _log_availability(_status: Mapping[str, Any]) -> None:
+        """Log once when the device goes offline and once when it is back."""
+        nonlocal unavailable_logged
+        if not device.available and not unavailable_logged:
+            LOGGER.info("Device %s is unavailable", device_id)
+            unavailable_logged = True
+        elif device.available and unavailable_logged:
+            LOGGER.info("Device %s is back online", device_id)
+            unavailable_logged = False
+
+    device.register_update(_log_availability)
+    entry.async_on_unload(partial(device.unregister_update, _log_availability))
+
     # The library's reconnect loop keeps retrying with a growing backoff
     # (up to 600s) without checking for a stop request while sleeping, so
     # device.close() alone cannot guarantee the background thread exits
@@ -141,10 +157,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
 
     entry.async_on_unload(_close_device)
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-    return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> None:
     """Migrate an old config entry."""
     if entry.minor_version < 2:
         # minor_version 2 adds mac/serial number; discovery already parses both
@@ -178,9 +193,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> b
 
         hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

@@ -1,0 +1,6 @@
+# 'other_domain' keeps the root mapping's line different from the 'test_domain'
+# key's line: an error reported at 'test_domain' gets the key's line, while an
+# error reported at a path absent from the config falls back to the root
+# container's line.
+other_domain: {}
+test_domain: []

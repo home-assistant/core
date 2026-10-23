@@ -5,10 +5,11 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusError, ModbusTcpParams
+from modbus_connection import ModbusError, ModbusTcpParams, ModbusTlsParams
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import StiebelEltronModbusError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.stiebel_eltron.const import (
@@ -19,8 +20,6 @@ from homeassistant.components.stiebel_eltron.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 CLIMATE_ENTITY_ID = "climate.stiebel_eltron_lwz"
 
@@ -82,7 +81,7 @@ async def test_async_setup_entry_conflicting_link_settings(
     async_get_unit(
         hass,
         other_entry,
-        ModbusTcpParams(host="1.1.1.1", port=502, framer="rtu"),
+        ModbusTlsParams(host="1.1.1.1", port=502),
         UNIT_ID,
     )
     mock_config_entry.add_to_hass(hass)

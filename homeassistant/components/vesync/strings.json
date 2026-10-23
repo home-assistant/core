@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "VeSync account is already configured",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "The account you are trying to re-authenticate is different from the one configured"
     },
     "error": {
@@ -44,6 +43,11 @@
       },
       "water_tank_lifted": {
         "name": "Water tank lifted"
+      }
+    },
+    "button": {
+      "reset_filter": {
+        "name": "Reset filter"
       }
     },
     "fan": {

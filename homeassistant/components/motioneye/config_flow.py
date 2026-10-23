@@ -8,7 +8,7 @@ from motioneye_client.client import (
     MotionEyeClientInvalidAuthError,
     MotionEyeClientRequestError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -61,27 +61,27 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             if not self._hassio_discovery:
                 # Only ask for URL when not discovered
                 url_schema[
-                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, ""))
+                    probatio.Required(CONF_URL, default=user_input.get(CONF_URL, ""))
                 ] = str
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
                         **url_schema,
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_ADMIN_USERNAME,
                             default=user_input.get(CONF_ADMIN_USERNAME, ""),
                         ): str,
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_ADMIN_PASSWORD,
                             default=user_input.get(CONF_ADMIN_PASSWORD, ""),
                         ): str,
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_SURVEILLANCE_USERNAME,
                             default=user_input.get(CONF_SURVEILLANCE_USERNAME, ""),
                         ): str,
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_SURVEILLANCE_PASSWORD,
                             default=user_input.get(CONF_SURVEILLANCE_PASSWORD, ""),
                         ): str,
@@ -103,7 +103,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             # Cannot use cv.url validation in the schema itself, so
             # apply extra validation here.
             cv.url(user_input[CONF_URL])
-        except vol.Invalid:
+        except probatio.Invalid:
             return _get_form(user_input, {"base": "invalid_url"})
 
         client = create_motioneye_client(
@@ -211,26 +211,26 @@ class MotionEyeOptionsFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_WEBHOOK_SET,
                         default=self.config_entry.options.get(
                             CONF_WEBHOOK_SET,
                             DEFAULT_WEBHOOK_SET,
                         ),
                     ): bool,
-                    vol.Required(
+                    probatio.Required(
                         CONF_WEBHOOK_SET_OVERWRITE,
                         default=self.config_entry.options.get(
                             CONF_WEBHOOK_SET_OVERWRITE,
                             DEFAULT_WEBHOOK_SET_OVERWRITE,
                         ),
                     ): bool,
-                    vol.Required(CONF_MORE_OPTIONS): section(
-                        vol.Schema(
+                    probatio.Required(CONF_MORE_OPTIONS): section(
+                        probatio.Schema(
                             {
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_STREAM_URL_TEMPLATE,
                                     description=description,
                                 ): str,

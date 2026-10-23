@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_NAME
@@ -57,7 +57,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         self.powerview_config: dict = {}
         self.discovered_ip: str | None = None
         self.discovered_name: str | None = None
-        self.data_schema: dict = {vol.Required(CONF_HOST): str}
+        self.data_schema: dict = {probatio.Required(CONF_HOST): str}
 
     @override
     async def async_step_user(
@@ -89,7 +89,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = error
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(self.data_schema), errors=errors
+            step_id="user", data_schema=probatio.Schema(self.data_schema), errors=errors
         )
 
     async def _async_validate_or_error(

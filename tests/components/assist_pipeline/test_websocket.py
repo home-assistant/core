@@ -7,6 +7,8 @@ from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -34,9 +36,6 @@ from .conftest import (
     MockWakeWordEntity2,
     make_10ms_chunk,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

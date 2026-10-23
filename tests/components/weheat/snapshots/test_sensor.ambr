@@ -359,6 +359,415 @@
     'state': '100',
   })
 # ---
+# name: test_all_entities[sensor.test_model_cooling_blocked_by-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'control_method',
+        'dtc',
+        'outside_air_temperature',
+        'inside_temperature',
+        'indoor_unit_connected',
+        'water_to_air',
+        'demand',
+        'water_temperature',
+        'contact_not_blocked',
+        'exponential_backoff',
+        'heat_cool_delay',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_cooling_blocked_by',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cooling blocked by',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Cooling blocked by',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_blocked_by',
+    'unique_id': '0000-1111-2222-3333_cooling_blocked_by',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_blocked_by-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling blocked by',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'control_method',
+        'dtc',
+        'outside_air_temperature',
+        'inside_temperature',
+        'indoor_unit_connected',
+        'water_to_air',
+        'demand',
+        'water_temperature',
+        'contact_not_blocked',
+        'exponential_backoff',
+        'heat_cool_delay',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_cooling_blocked_by',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'demand',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_conditions_met-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_cooling_conditions_met',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cooling conditions met',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cooling conditions met',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_conditions_met',
+    'unique_id': '0000-1111-2222-3333_cooling_conditions_met',
+    'unit_of_measurement': 'of 9',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_conditions_met-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling conditions met',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'of 9',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_cooling_conditions_met',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_pause_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'room_temperature_too_low',
+        'outside_temperature_too_low',
+        'outside_colder_than_water_temperature',
+        'water_temperature_below_setpoint',
+        'heat_pump_control',
+        'water_temperature_below_dewpoint',
+        'contact_blocked',
+        'demand',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_model_cooling_pause_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cooling pause reason',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Cooling pause reason',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_pause_reason',
+    'unique_id': '0000-1111-2222-3333_cooling_pause_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_pause_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling pause reason',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'room_temperature_too_low',
+        'outside_temperature_too_low',
+        'outside_colder_than_water_temperature',
+        'water_temperature_below_setpoint',
+        'heat_pump_control',
+        'water_temperature_below_dewpoint',
+        'contact_blocked',
+        'demand',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_cooling_pause_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'water_temperature_below_setpoint',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'starting',
+        'active',
+        'stopping',
+        'standby',
+        'pausing',
+        'water_check',
+        'standby_run_cp',
+        'paused',
+        'stopped',
+        'waiting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_cooling_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cooling state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Cooling state',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_state',
+    'unique_id': '0000-1111-2222-3333_cooling_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'starting',
+        'active',
+        'stopping',
+        'standby',
+        'pausing',
+        'water_check',
+        'standby_run_cp',
+        'paused',
+        'stopped',
+        'waiting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_cooling_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'waiting',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_stop_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'dtc',
+        'control_method',
+        'no_indoor_unit_communication',
+        'heat_pump_control',
+        'cooling_control',
+        'contact_switch_over',
+        'thermostat_disabled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_model_cooling_stop_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cooling stop reason',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Cooling stop reason',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_stop_reason',
+    'unique_id': '0000-1111-2222-3333_cooling_stop_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_stop_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling stop reason',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'dtc',
+        'control_method',
+        'no_indoor_unit_communication',
+        'heat_pump_control',
+        'cooling_control',
+        'contact_switch_over',
+        'thermostat_disabled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_cooling_stop_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_wait_until-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_cooling_wait_until',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cooling wait until',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Cooling wait until',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_wait_until',
+    'unique_id': '0000-1111-2222-3333_cooling_wait_until',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_wait_until-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling wait until',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_cooling_wait_until',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.test_model_cop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1465,6 +1874,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '55',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_last_cooling-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_last_cooling',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last cooling',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last cooling',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_cooling_time',
+    'unique_id': '0000-1111-2222-3333_last_cooling_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_last_cooling-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Last cooling',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_last_cooling',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-06-21T14:30:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.test_model_output_power-entry]

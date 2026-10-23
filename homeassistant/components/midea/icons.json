@@ -3,6 +3,15 @@
     "binary_sensor": {
       "header_exist": {
         "default": "mdi:air-filter"
+      },
+      "protection": {
+        "default": "mdi:shield-lock-open-outline",
+        "state": {
+          "on": "mdi:shield-lock"
+        }
+      },
+      "water_pump_running": {
+        "default": "mdi:water-pump"
       }
     },
     "climate": {
@@ -41,6 +50,18 @@
       }
     },
     "sensor": {
+      "dehydration_level": {
+        "default": "mdi:tumble-dryer"
+      },
+      "dehydration_speed": {
+        "default": "mdi:speedometer"
+      },
+      "detergent": {
+        "default": "mdi:bottle-tonic"
+      },
+      "dry_program": {
+        "default": "mdi:tumble-dryer"
+      },
       "filter_life": {
         "default": "mdi:air-filter"
       },
@@ -70,6 +91,21 @@
       },
       "target_indoor_fan_speed": {
         "default": "mdi:fan-clock"
+      },
+      "time_remaining": {
+        "default": "mdi:progress-clock"
+      },
+      "wash_program": {
+        "default": "mdi:washing-machine"
+      },
+      "wash_progress": {
+        "default": "mdi:rotate-360"
+      },
+      "wash_strength": {
+        "default": "mdi:network-strength-4-cog"
+      },
+      "water_level": {
+        "default": "mdi:cup-water"
       }
     },
     "switch": {
@@ -94,6 +130,15 @@
       "prompt_tone": {
         "default": "mdi:bullhorn"
       },
+      "protection": {
+        "default": "mdi:shield-lock"
+      },
+      "pump": {
+        "default": "mdi:water-pump"
+      },
+      "running": {
+        "default": "mdi:play"
+      },
       "screen_display": {
         "default": "mdi:monitor"
       },
@@ -106,8 +151,17 @@
       "sound": {
         "default": "mdi:volume-high"
       },
+      "sterilization": {
+        "default": "mdi:bacteria"
+      },
       "tbh": {
         "default": "mdi:heating-coil"
+      },
+      "variable_heating": {
+        "default": "mdi:waves"
+      },
+      "whole_tank_heating": {
+        "default": "mdi:restore"
       },
       "zone1_curve": {
         "default": "mdi:chart-bell-curve"

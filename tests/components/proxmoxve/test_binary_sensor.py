@@ -6,6 +6,11 @@ from freezegun.api import FrozenDateTimeFactory
 from proxmoxer import AuthenticationError
 from proxmoxer.core import ResourceException
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 import requests
 from requests.exceptions import ConnectTimeout, SSLError
 from syrupy.assertion import SnapshotAssertion
@@ -17,8 +22,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
 from . import PVEVMUSER_PERMISSIONS, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

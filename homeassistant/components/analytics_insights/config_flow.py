@@ -2,12 +2,12 @@
 
 from typing import Any, override
 
+import probatio
 from python_homeassistant_analytics import (
     HomeassistantAnalyticsClient,
     HomeassistantAnalyticsConnectionError,
 )
 from python_homeassistant_analytics.models import Environment, IntegrationType
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -107,23 +107,23 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_TRACKED_APPS): SelectSelector(
+                    probatio.Optional(CONF_TRACKED_APPS): SelectSelector(
                         SelectSelectorConfig(
                             options=list(apps),
                             multiple=True,
                             sort=True,
                         )
                     ),
-                    vol.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
+                    probatio.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                         SelectSelectorConfig(
                             options=options,
                             multiple=True,
                             sort=True,
                         )
                     ),
-                    vol.Optional(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
+                    probatio.Optional(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
                         SelectSelectorConfig(
                             options=list(custom_integrations),
                             multiple=True,
@@ -189,23 +189,25 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithReload):
             step_id="init",
             errors=errors,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Optional(CONF_TRACKED_APPS): SelectSelector(
+                        probatio.Optional(CONF_TRACKED_APPS): SelectSelector(
                             SelectSelectorConfig(
                                 options=list(apps),
                                 multiple=True,
                                 sort=True,
                             )
                         ),
-                        vol.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
+                        probatio.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                             SelectSelectorConfig(
                                 options=options,
                                 multiple=True,
                                 sort=True,
                             )
                         ),
-                        vol.Optional(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
+                        probatio.Optional(
+                            CONF_TRACKED_CUSTOM_INTEGRATIONS
+                        ): SelectSelector(
                             SelectSelectorConfig(
                                 options=list(custom_integrations),
                                 multiple=True,

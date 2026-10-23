@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
@@ -21,8 +21,8 @@ def async_register_websocket_handlers(hass: HomeAssistant) -> None:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "vacuum/get_segments",
-        vol.Required("entity_id"): cv.strict_entity_id,
+        probatio.Required("type"): "vacuum/get_segments",
+        probatio.Required("entity_id"): cv.strict_entity_id,
     }
 )
 @websocket_api.async_response

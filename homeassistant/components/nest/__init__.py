@@ -6,7 +6,7 @@ from http import HTTPStatus
 import logging
 from typing import override
 
-from aiohttp import ClientError, web
+from aiohttp import web
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
@@ -21,12 +21,11 @@ from google_nest_sdm.exceptions import (
     SubscriberTimeoutException,
 )
 from google_nest_sdm.traits import TraitType
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.camera import Image, img_util
-from homeassistant.components.http import KEY_HASS_USER
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS_USER, HomeAssistantView
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_CLIENT_ID,
@@ -40,10 +39,9 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
     Unauthorized,
 )
 from homeassistant.helpers import (
@@ -78,27 +76,29 @@ from .types import DevicesAddedListener, NestConfigEntry, NestData
 _LOGGER = logging.getLogger(__name__)
 
 
-SENSOR_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)}
+SENSOR_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_MONITORED_CONDITIONS): probatio.All(probatio.EnsureList())}
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
+                probatio.Required(CONF_CLIENT_ID): cv.string,
+                probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): cv.string,
                 # Required to use the new API (optional for compatibility)
-                vol.Optional(CONF_PROJECT_ID): cv.string,
-                vol.Optional(CONF_SUBSCRIBER_ID): cv.string,
+                probatio.Optional(CONF_PROJECT_ID): cv.string,
+                probatio.Optional(CONF_SUBSCRIBER_ID): cv.string,
                 # Config that only currently works on the old API
-                vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-                vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA,
+                probatio.Optional(CONF_STRUCTURE): probatio.All(
+                    probatio.EnsureList(), [cv.string]
+                ),
+                probatio.Optional(CONF_SENSORS): SENSOR_SCHEMA,
+                probatio.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 # Platforms for SDM API
@@ -239,11 +239,14 @@ class SignalUpdateCallback:
             device_registry.async_remove_device(device_entry.id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None:
     """Set up Nest from a config entry with dispatch between old/new flows."""
     if DATA_SDM not in entry.data:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="legacy_entry",
+        )
 
     if entry.unique_id != entry.data[CONF_PROJECT_ID]:
         hass.config_entries.async_update_entry(
@@ -251,24 +254,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
         )
 
     auth = await api.new_auth(hass, entry)
-    try:
-        await auth.async_get_access_token()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="reauth_required"
-        ) from err
-    except OAuth2TokenRequestError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="auth_server_error"
-        ) from err
-    except ClientError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="auth_client_error"
-        ) from err
+    await auth.async_get_access_token()
 
     subscriber = await api.new_subscriber(hass, entry, auth)
     if not subscriber:
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_create_failed",
+        )
     # Keep media for last N events in memory
     subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
     subscriber.cache_policy.fetch = True
@@ -292,14 +285,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
             translation_key="reauth_required",
         ) from err
     except ConfigurationException as err:
-        _LOGGER.error("Configuration error: %s", err)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_configuration_error",
+        ) from err
     except SubscriberTimeoutException as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="subscriber_timeout",
         ) from err
     except SubscriberException as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Subscriber error: %s", err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -335,12 +331,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None:
@@ -360,18 +354,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: NestConfigEntry) -> Non
         access_token=entry.data["token"]["access_token"],
         cloud_project_id=entry.data[CONF_CLOUD_PROJECT_ID],
     )
-    _LOGGER.debug("Deleting subscription '%s'", subscription_name)
-    try:
-        await admin_client.delete_subscription(subscription_name)
-    except ApiException as err:
-        _LOGGER.warning(
-            (
-                "Unable to delete subscription '%s'; Will be automatically cleaned up"
-                " by cloud console: %s"
-            ),
-            subscription_name,
-            err,
-        )
+    await api.async_delete_subscription(admin_client, subscription_name)
 
 
 class NestEventViewBase(HomeAssistantView, ABC):

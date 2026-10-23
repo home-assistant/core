@@ -154,27 +154,30 @@
     dict({
       'agent_id': 'conversation.gpt_3_5_turbo',
       'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'data': dict({
+            'failed': list([
+            ]),
+            'success': list([
+            ]),
+          }),
+          'response_type': 'action_done',
+          'speech': dict({
+            'plain': dict({
+              'extra_data': None,
+              'speech': '12:00 PM',
+            }),
+          }),
+          'speech_slots': dict({
+            'time': datetime.time(12, 0),
+          }),
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'mock_tool_call_id',
       'tool_name': 'HassGetCurrentTime',
-      'tool_result': dict({
-        'data': dict({
-          'failed': list([
-          ]),
-          'success': list([
-          ]),
-        }),
-        'response_type': 'action_done',
-        'speech': dict({
-          'plain': dict({
-            'extra_data': None,
-            'speech': '12:00 PM',
-          }),
-        }),
-        'speech_slots': dict({
-          'time': datetime.time(12, 0),
-        }),
-      }),
     }),
     dict({
       'agent_id': 'conversation.gpt_3_5_turbo',
@@ -212,10 +215,13 @@
     dict({
       'agent_id': 'conversation.gpt_3_5_turbo',
       'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value1',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
-      'tool_result': 'value1',
     }),
     dict({
       'agent_id': 'conversation.gpt_3_5_turbo',
@@ -256,7 +262,7 @@
       ]),
     }),
     dict({
-      'content': '{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"success":[],"failed":[]}}',
+      'content': '{"data":{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"success":[],"failed":[]}},"error":false}',
       'role': 'tool',
       'tool_call_id': 'mock_tool_call_id',
     }),
@@ -283,7 +289,7 @@
       ]),
     }),
     dict({
-      'content': '"value1"',
+      'content': '{"data":"value1","error":false}',
       'role': 'tool',
       'tool_call_id': 'call_call_1',
     }),

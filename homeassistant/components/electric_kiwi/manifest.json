@@ -1,6 +1,7 @@
 {
   "domain": "electric_kiwi",
   "name": "Electric Kiwi",
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@mikey0000"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

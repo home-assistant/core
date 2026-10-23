@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unsupported_device": "Unsupported device"
     },
     "error": {
@@ -95,9 +94,6 @@
       },
       "base_station_identity_code": {
         "name": "Base station identity code"
-      },
-      "battery": {
-        "name": "Battery"
       },
       "cell_id": {
         "name": "Cell ID"
@@ -378,6 +374,17 @@
       "wifi_guest_network": {
         "name": "Wi-Fi guest network"
       }
+    }
+  },
+  "exceptions": {
+    "send_message_failed": {
+      "message": "Failed to send SMS to {targets}: {error}"
+    },
+    "serial_number_not_found": {
+      "message": "Could not resolve serial number to use as unique ID for router at {url}"
+    },
+    "serial_number_not_found_unauthenticated": {
+      "message": "Could not resolve serial number to use as unique ID for router at {url}. Try setting up credentials for the router for one startup, unauthenticated mode can be enabled after that in integration settings"
     }
   },
   "options": {

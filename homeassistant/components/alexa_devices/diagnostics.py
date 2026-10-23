@@ -55,9 +55,11 @@ async def async_get_device_diagnostics(
     coordinator = entry.runtime_data
 
     if TYPE_CHECKING:
-        # alexa_devices does not create child devices, and devices have a serial number
         assert isinstance(device_entry, DeviceEntry)
-        assert device_entry.serial_number
+
+    if device_entry.serial_number is None:
+        # Service device has no serial number and no matching coordinator data
+        return {"service device": True}
 
     return build_device_data(coordinator.data[device_entry.serial_number])
 

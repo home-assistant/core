@@ -1,7 +1,6 @@
 {
   "config": {
     "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "You must authenticate with the same Abode account that was originally configured."
     },
     "error": {

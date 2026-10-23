@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import aiohttp
 from env_canada import ECWeather, ec_exc
 from env_canada.ec_weather import get_ec_sites_list
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -122,7 +122,7 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(user_input)
-            except ET.ParseError, vol.MultipleInvalid, ec_exc.UnknownStationId:
+            except ET.ParseError, probatio.MultipleInvalid, ec_exc.UnknownStationId:
                 errors["base"] = "bad_station_id"
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
@@ -150,9 +150,9 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         station_codes = await self._get_station_codes()
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(CONF_STATION): SelectSelector(
+                probatio.Optional(CONF_STATION): SelectSelector(
                     SelectSelectorConfig(
                         options=[
                             SelectOptionDict(
@@ -163,13 +163,13 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
-                vol.Optional(
+                probatio.Optional(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
-                vol.Required(CONF_LANGUAGE, default="English"): vol.In(
+                probatio.Required(CONF_LANGUAGE, default="English"): probatio.In(
                     ["English", "French"]
                 ),
             }
@@ -197,12 +197,12 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             return self.async_create_entry(data=flat_options)
 
         options = self.config_entry.options
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(SECTION_MAP): section(
-                    vol.Schema(
+                probatio.Required(SECTION_MAP): section(
+                    probatio.Schema(
                         {
-                            vol.Required(
+                            probatio.Required(
                                 CONF_RADAR_RADIUS,
                                 default=options.get(
                                     CONF_RADAR_RADIUS, DEFAULT_RADAR_RADIUS
@@ -216,10 +216,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     ),
                     {"collapsed": False},
                 ),
-                vol.Required(SECTION_RADAR): section(
-                    vol.Schema(
+                probatio.Required(SECTION_RADAR): section(
+                    probatio.Schema(
                         {
-                            vol.Required(
+                            probatio.Required(
                                 CONF_RADAR_LAYER,
                                 default=options.get(
                                     CONF_RADAR_LAYER, DEFAULT_RADAR_LAYER
@@ -230,7 +230,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                                     translation_key="radar_layer",
                                 )
                             ),
-                            vol.Required(
+                            probatio.Required(
                                 CONF_RADAR_COLORS,
                                 default=options.get(
                                     CONF_RADAR_COLORS, DEFAULT_RADAR_COLORS
@@ -241,7 +241,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                                     translation_key="radar_colors",
                                 )
                             ),
-                            vol.Required(
+                            probatio.Required(
                                 CONF_RADAR_OPACITY,
                                 default=options.get(
                                     CONF_RADAR_OPACITY, DEFAULT_RADAR_OPACITY
@@ -254,7 +254,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                                     mode=NumberSelectorMode.SLIDER,
                                 )
                             ),
-                            vol.Required(
+                            probatio.Required(
                                 CONF_RADAR_LEGEND,
                                 default=options.get(
                                     CONF_RADAR_LEGEND, DEFAULT_RADAR_LEGEND
@@ -264,10 +264,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     ),
                     {"collapsed": False},
                 ),
-                vol.Required(SECTION_TIME): section(
-                    vol.Schema(
+                probatio.Required(SECTION_TIME): section(
+                    probatio.Schema(
                         {
-                            vol.Required(
+                            probatio.Required(
                                 CONF_RADAR_DURATION,
                                 default=options.get(
                                     CONF_RADAR_DURATION, DEFAULT_RADAR_DURATION
@@ -277,7 +277,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                                     min=0, max=180, step=5, unit_of_measurement="min"
                                 )
                             ),
-                            vol.Required(
+                            probatio.Required(
                                 CONF_RADAR_FUTURE_MINUTES,
                                 default=options.get(
                                     CONF_RADAR_FUTURE_MINUTES,
@@ -288,7 +288,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                                     min=0, max=72, step=1, unit_of_measurement="min"
                                 )
                             ),
-                            vol.Required(
+                            probatio.Required(
                                 CONF_RADAR_TIMESTAMP,
                                 default=options.get(
                                     CONF_RADAR_TIMESTAMP, DEFAULT_RADAR_TIMESTAMP
@@ -298,17 +298,17 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     ),
                     {"collapsed": False},
                 ),
-                vol.Required(SECTION_IMAGE): section(
-                    vol.Schema(
+                probatio.Required(SECTION_IMAGE): section(
+                    probatio.Schema(
                         {
-                            vol.Required(
+                            probatio.Required(
                                 CONF_RADAR_INTERPOLATION,
                                 default=options.get(
                                     CONF_RADAR_INTERPOLATION,
                                     DEFAULT_RADAR_INTERPOLATION,
                                 ),
                             ): BooleanSelector(),
-                            vol.Required(
+                            probatio.Required(
                                 CONF_RADAR_FPS,
                                 default=options.get(CONF_RADAR_FPS, DEFAULT_RADAR_FPS),
                             ): NumberSelector(

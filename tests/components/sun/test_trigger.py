@@ -7,8 +7,10 @@ from typing import Any
 import astral
 from astral.sun import elevation as astral_elevation
 from freezegun import freeze_time
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import async_fire_time_changed, mock_component
+from pytest_homeassistant.components.common import assert_trigger_options_supported
 
 from homeassistant.components import automation, sun
 from homeassistant.components.sun.trigger import _next_polar_transition
@@ -29,9 +31,6 @@ from homeassistant.helpers.sun import (
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed, mock_component
-from tests.components.common import assert_trigger_options_supported
 
 _TEST_DATETIME = datetime(2015, 9, 15, 1, tzinfo=dt_util.UTC)
 _SUN_ENTITY_ID = "sun.sun"
@@ -1052,7 +1051,7 @@ async def test_dawn_dusk_twilight_validation(
     if valid:
         await async_validate_trigger_config(hass, [config])
     else:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await async_validate_trigger_config(hass, [config])
 
 
@@ -1062,11 +1061,11 @@ async def test_dawn_dusk_twilight_validation(
         ("sun.golden_hour_started", "any", nullcontext()),
         ("sun.golden_hour_started", "morning", nullcontext()),
         ("sun.golden_hour_started", "evening", nullcontext()),
-        ("sun.golden_hour_started", "invalid", pytest.raises(vol.Invalid)),
+        ("sun.golden_hour_started", "invalid", pytest.raises(probatio.Invalid)),
         ("sun.blue_hour_ended", "any", nullcontext()),
         ("sun.blue_hour_ended", "morning", nullcontext()),
         ("sun.blue_hour_ended", "evening", nullcontext()),
-        ("sun.blue_hour_ended", "invalid", pytest.raises(vol.Invalid)),
+        ("sun.blue_hour_ended", "invalid", pytest.raises(probatio.Invalid)),
     ],
 )
 async def test_golden_blue_hour_period_validation(

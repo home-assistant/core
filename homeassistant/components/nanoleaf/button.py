@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import NanoleafConfigEntry, NanoleafCoordinator
-from .entity import NanoleafEntity
+from .entity import NanoleafEntity, async_handle_nanoleaf_errors
 
 
 async def async_setup_entry(
@@ -32,6 +32,7 @@ class NanoleafIdentifyButton(NanoleafEntity, ButtonEntity):
         self._attr_unique_id = f"{self._nanoleaf.serial_no}_identify"
 
     @override
+    @async_handle_nanoleaf_errors
     async def async_press(self) -> None:
         """Identify the Nanoleaf."""
         await self._nanoleaf.identify()

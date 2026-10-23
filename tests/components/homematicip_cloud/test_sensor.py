@@ -28,8 +28,13 @@ from homeassistant.components.homematicip_cloud.sensor import (
     ATTR_WIND_DIRECTION_VARIATION,
     SENSOR_DESCRIPTIONS_BY_DEVICE,
 )
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
     PERCENTAGE,
@@ -822,6 +827,47 @@ async def test_hmip_tilt_vibration_sensor_tilt_angle(
     assert ha_state.state == "89"
 
 
+async def test_hmip_temperature_tilt_vibration_sensor(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test the ELV-SH-TACO, whose tilt channel sits at index 2, not 1."""
+    device_model = "ELV-SH-TACO"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wassertemperatursensor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "sensor.wassertemperatursensor_tilt_state",
+        "Wassertemperatursensor Tilt State",
+        device_model,
+    )
+    assert ha_state.state == "non_neutral"
+
+    await async_manipulate_test_data(hass, hmip_device, "tiltState", "TILTED", 2)
+    ha_state = hass.states.get("sensor.wassertemperatursensor_tilt_state")
+    assert ha_state.state == "tilted"
+
+    ha_state, _ = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "sensor.wassertemperatursensor_tilt_angle",
+        "Wassertemperatursensor Tilt angle",
+        device_model,
+    )
+    assert ha_state.state == "92"
+
+    ha_state, _ = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "sensor.wassertemperatursensor_temperature",
+        "Wassertemperatursensor Temperature",
+        device_model,
+    )
+    assert ha_state.state == "22.9"
+
+
 async def test_hmip_absolute_humidity_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
@@ -1083,6 +1129,47 @@ async def test_hmip_soil_temperature_sensor(
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "18.3"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "entity_name", "attribute", "value", "new_value"),
+    [
+        ("sensor.zisterne_distance", "Zisterne Distance", "distance", "30.8", 39.4),
+        (
+            "sensor.zisterne_height",
+            "Zisterne Height",
+            "calculatedHeight",
+            "619.2",
+            610.6,
+        ),
+    ],
+)
+async def test_hmip_ultrasonic_distance_sensor(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_id: str,
+    entity_name: str,
+    attribute: str,
+    value: str,
+    new_value: float,
+) -> None:
+    """Test the ELV-SH-DUSI distance and height sensors."""
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Zisterne"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, "ELV-SH-DUSI"
+    )
+
+    assert ha_state.state == value
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.CENTIMETERS
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert ha_state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DISTANCE
+
+    await async_manipulate_test_data(hass, hmip_device, attribute, new_value)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == str(new_value)
 
 
 @pytest.mark.parametrize(

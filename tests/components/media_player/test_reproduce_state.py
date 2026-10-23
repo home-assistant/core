@@ -1,6 +1,7 @@
 """The tests for reproduction of state."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -33,8 +34,6 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import Context, HomeAssistant, State
-
-from tests.common import async_mock_service
 
 ENTITY_1 = "media_player.test1"
 ENTITY_2 = "media_player.test2"

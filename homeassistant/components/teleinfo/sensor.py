@@ -64,7 +64,6 @@ SENSOR_DESCRIPTIONS: tuple[TeleinfoSensorEntityDescription, ...] = (
     # ------------------------------------------------------------------
     TeleinfoSensorEntityDescription(
         key="PAPP",
-        translation_key="apparent_power",
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,

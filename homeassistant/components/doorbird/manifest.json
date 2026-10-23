@@ -1,6 +1,7 @@
 {
   "domain": "doorbird",
   "name": "DoorBird",
+  "categories": ["security_safety.doorbells_intercoms"],
   "codeowners": ["@oblogic7", "@bdraco", "@flacjacket"],
   "config_flow": true,
   "dependencies": ["http", "repairs"],
