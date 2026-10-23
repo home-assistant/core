@@ -7,10 +7,9 @@ from typing import TYPE_CHECKING
 import probatio
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, OUTPUT_FORMATS
 from homeassistant.const import ATTR_ENTITY_ID
@@ -113,11 +112,11 @@ async def _async_handle_play_stream_service(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: service_call.data[CameraServiceArgument.MEDIA_PLAYER],
-            ATTR_MEDIA_CONTENT_ID: url,
-            ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: url,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
         },
         blocking=True,
         context=service_call.context,
