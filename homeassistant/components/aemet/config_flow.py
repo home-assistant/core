@@ -45,7 +45,7 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            location = user_input.pop(CONF_LOCATION)
+            location = user_input[CONF_LOCATION]
             latitude = location[CONF_LATITUDE]
             longitude = location[CONF_LONGITUDE]
 
@@ -63,7 +63,7 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data={
-                        **user_input,
+                        CONF_API_KEY: user_input[CONF_API_KEY],
                         CONF_LATITUDE: latitude,
                         CONF_LONGITUDE: longitude,
                     },
@@ -82,9 +82,8 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 schema,
-                {**user_input, CONF_LOCATION: location}
-                if user_input is not None
-                else {
+                user_input
+                or {
                     CONF_LOCATION: {
                         CONF_LATITUDE: self.hass.config.latitude,
                         CONF_LONGITUDE: self.hass.config.longitude,
