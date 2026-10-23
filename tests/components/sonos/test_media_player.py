@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, _Call, call, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from soco.data_structures import (
     DidlAudioBroadcast,
     DidlAudioLineIn,
@@ -94,8 +95,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
