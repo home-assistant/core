@@ -48,8 +48,11 @@ async def async_remove_config_entry_device(
     )
     if address is None:
         return True
-    if entry.state is ConfigEntryState.LOADED and (
-        (state := entry.runtime_data.data.get(address)) and state.available
+    if (
+        entry.state is ConfigEntryState.LOADED
+        and entry.runtime_data.last_update_success
+        and (state := entry.runtime_data.data.get(address))
+        and state.available
     ):
         return False
 
@@ -66,8 +69,11 @@ async def async_remove_config_entry_device(
             },
         },
     )
-    # With no entities left the coordinator stops polling and keeps the port.
-    if not addresses:
+    # Without enabled entities the coordinator stops polling but keeps the port.
+    if (
+        entry.state is ConfigEntryState.LOADED
+        and not entry.runtime_data.enabled_addresses()
+    ):
         hass.config_entries.async_schedule_reload(entry.entry_id)
     return True
 

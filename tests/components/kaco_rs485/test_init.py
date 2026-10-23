@@ -249,6 +249,48 @@ async def test_an_answering_inverter_is_not_removed(
     assert init_integration.data[CONF_ADDRESSES] == [1, 2, 4]
 
 
+async def test_an_inverter_can_be_deleted_while_the_bus_is_down(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_bus: FakeBus,
+    ws_client: MockHAClientWebSocket,
+) -> None:
+    """Test a failed poll does not leave the last good reading blocking removal."""
+    mock_bus.request_error = BusError("connection closed")
+    await run_cycles(hass, freezer, 1)
+    device = _device(device_registry, init_integration, 2)
+
+    response = await ws_client.remove_device(device.id)
+
+    assert response["success"]
+    assert init_integration.data[CONF_ADDRESSES] == [1, 4]
+
+
+@pytest.mark.parametrize("silenced", [(2,)])
+async def test_deleting_the_last_enabled_inverter_releases_the_port(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_bus: FakeBus,
+    ws_client: MockHAClientWebSocket,
+) -> None:
+    """Test the port is let go when only disabled inverters remain."""
+    for address in (1, 4):
+        device_registry.async_update_device(
+            _device(device_registry, init_integration, address).id,
+            disabled_by=dr.DeviceEntryDisabler.USER,
+        )
+    device = _device(device_registry, init_integration, 2)
+
+    assert (await ws_client.remove_device(device.id))["success"]
+    await hass.async_block_till_done()
+
+    assert init_integration.data[CONF_ADDRESSES] == [1, 4]
+    assert not mock_bus.opened
+
+
 async def test_a_device_of_no_configured_inverter_can_be_deleted(
     init_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,

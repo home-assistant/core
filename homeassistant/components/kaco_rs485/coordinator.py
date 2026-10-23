@@ -47,7 +47,7 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
         self._opened = False
         self._reported_dark: dict[int, bool] = {}
 
-    def _enabled_addresses(self) -> list[int]:
+    def enabled_addresses(self) -> list[int]:
         """Return the addresses whose device has not been disabled.
 
         Disabled inverters are not polled, so they cost no bus time.
@@ -79,7 +79,7 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
 
     @override
     async def _async_update_data(self) -> dict[int, InverterState]:
-        if (addresses := self._enabled_addresses()) != self._addresses:
+        if (addresses := self.enabled_addresses()) != self._addresses:
             self._addresses = addresses
             self._client = KacoRs485Client(self._bus, addresses)
 
