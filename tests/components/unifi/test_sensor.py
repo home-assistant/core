@@ -1292,6 +1292,7 @@ async def test_ups_battery_pool_late_field(
     for value in initial_readings:
         pool[field] = value
     await config_entry_factory()
+    # Restore the shared parametrized payload
     device_payload[0] = original_device
 
     entity_id = f"sensor.{device_name}_{sensor}"

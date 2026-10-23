@@ -126,7 +126,7 @@ class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescrip
     has_entity_name = True  # Part of EntityDescription
     """Has entity name defaults to true."""
     data_can_return: bool = False
-    """Keep entity unavailable while unsupported, data can return later."""
+    """Data can return later, keep entity unavailable and create it once supported."""
     event_is_on: set[EventKey] | None = None
     """Which UniFi events should be used to consider state 'on'."""
     event_to_subscribe: tuple[EventKey, ...] | None = None
