@@ -88,8 +88,6 @@ class UnifiEntityLoader:
 
         self.known_objects: set[tuple[str, str]] = set()
         """Tuples of entity description key and object ID of loaded entities."""
-        self.unsupported_objects: set[tuple[str, str]] = set()
-        """Allowed objects whose entity waits for supported data."""
 
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
@@ -218,15 +216,11 @@ class UnifiEntityLoader:
         self, description: UnifiEntityDescription, obj_id: str
     ) -> bool:
         """Validate if entity is allowed and supported before creating it."""
-        key = (description.key, obj_id)
-        if key in self.known_objects or not description.allowed_fn(self.hub, obj_id):
-            return False
-        if not description.supported_fn(self.hub, obj_id):
-            if description.data_can_return:
-                self.unsupported_objects.add(key)
-            return False
-        self.unsupported_objects.discard(key)
-        return True
+        return bool(
+            (description.key, obj_id) not in self.known_objects
+            and description.allowed_fn(self.hub, obj_id)
+            and description.supported_fn(self.hub, obj_id)
+        )
 
     @callback
     def get_data_update_coordinator[HandlerT: APIHandler[ApiItem]](
@@ -273,12 +267,6 @@ class UnifiEntityLoader:
             description: UnifiEntityDescription, event: ItemEvent, obj_id: str
         ) -> None:
             """Create new UniFi entity on event."""
-            # Only objects that waited for supported data, a removed entity stays
-            if (
-                event is ItemEvent.CHANGED
-                and (description.key, obj_id) not in self.unsupported_objects
-            ):
-                return
             if self._should_add_entity(description, obj_id):
                 async_add_entities(
                     [unifi_platform_entity(obj_id, self.hub, description)]
