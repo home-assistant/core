@@ -2,7 +2,7 @@
   "domain": "google_travel_time",
   "name": "Google Maps Travel Time",
   "categories": ["vehicles_transport"],
-  "codeowners": ["@eifinger"],
+  "codeowners": ["@eifinger", "@tronikos"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/google_travel_time",
   "integration_type": "service",
