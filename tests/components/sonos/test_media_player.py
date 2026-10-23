@@ -1537,6 +1537,8 @@ async def test_release_skipped_when_paused_media_replayed(
         variables | {"transport_state": "PAUSED_PLAYBACK"},
         # Loading the same URL again reports it with STOPPED
         variables | {"transport_state": "STOPPED", "av_transport_uri": HASS_MEDIA_URI},
+        # Later loading updates only include what changed
+        variables | {"transport_state": "STOPPED", "number_of_tracks": "2"},
         variables | {"transport_state": "PLAYING"},
     ]
     for event_vars in events:
