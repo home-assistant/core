@@ -515,9 +515,8 @@ async def test_dual_circuit_climate_entities(
 @pytest.mark.parametrize(
     ("hvac_mode_int", "status", "expected_action"),
     [
-        # Unknown status codes default to idle
-        (1, 1, HVACAction.IDLE),
-        (0, 1, HVACAction.OFF),
+        (1, HeatingCircuitStatus.OFF, HVACAction.IDLE),
+        (0, HeatingCircuitStatus.OFF, HVACAction.OFF),
         (0, HeatingCircuitStatus.FROST_PROTECTION, HVACAction.HEATING),
     ],
 )
@@ -646,5 +645,5 @@ async def test_reread_waits_for_running_poll(
     release.set()
     await write
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).attributes["temperature"] == 19.5
+
     assert hass.states.get(ENTITY_ID).attributes["temperature"] == 19.5
