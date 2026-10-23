@@ -326,6 +326,7 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
         "speakers",
         "link_stations",
         "bridges",
+        "liveviews",
     ):
         setattr(pb, attr, {})
     pb.arm_mode = None
@@ -351,6 +352,7 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     pb.store_for = Mock(side_effect=_store_for)
     pb.get = Mock(side_effect=_get)
     pb.all_devices = _all_devices
+    pb.to_diagnostics = partial(PublicBootstrap.to_diagnostics, pb)
     # The real lookup, over the fake stores.
     pb.get_device_from_mac = partial(PublicBootstrap.get_device_from_mac, pb)
     return pb
