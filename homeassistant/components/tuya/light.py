@@ -68,6 +68,13 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.CZ: (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_BACKLIGHT,
+            translation_key="backlight",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.DC: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
@@ -237,6 +244,13 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.PC: (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_BACKLIGHT,
+            translation_key="backlight",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.QJDCZ: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
@@ -270,6 +284,27 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.LIGHT,
             brightness=DPCode.BRIGHT_VALUE,
             translation_key="light",
+        ),
+    ),
+    DeviceCategory.TDQ: (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            translation_key="light",
+            brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
+            brightness_max=DPCode.BRIGHTNESS_MAX_1,
+            brightness_min=DPCode.BRIGHTNESS_MIN_1,
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED_1,
+            translation_key="indexed_light",
+            translation_placeholders={"index": "1"},
+            brightness=DPCode.BRIGHT_VALUE_1,
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED_2,
+            translation_key="indexed_light",
+            translation_placeholders={"index": "2"},
+            brightness=DPCode.BRIGHT_VALUE_2,
         ),
     ),
     DeviceCategory.TGKG: (
@@ -364,18 +399,8 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
     ),
 }
 
-# Socket (duplicate of `kg`)
-# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-LIGHTS[DeviceCategory.CZ] = LIGHTS[DeviceCategory.KG]
-
-# Power Socket (duplicate of `kg`)
-LIGHTS[DeviceCategory.PC] = LIGHTS[DeviceCategory.KG]
-
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 LIGHTS[DeviceCategory.DGHSXJ] = LIGHTS[DeviceCategory.SP]
-
-# Dimmer (duplicate of `tgq`)
-LIGHTS[DeviceCategory.TDQ] = LIGHTS[DeviceCategory.TGQ]
 
 
 async def async_setup_entry(
