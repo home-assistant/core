@@ -3,6 +3,7 @@
 from datetime import datetime
 import logging
 from pathlib import Path
+import time
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -747,6 +748,16 @@ async def test_get_logs_pages_to_end_time(
             id="key_value",
         ),
         pytest.param(
+            'Payload {"password": "alpha beta", "user": "paulus"}',
+            'Payload {"password": "***", "user": "paulus"}',
+            id="quoted_with_space",
+        ),
+        pytest.param(
+            r'Payload {"password": "al\"pha", "user": "paulus"}',
+            'Payload {"password": "***", "user": "paulus"}',
+            id="quoted_with_escaped_quote",
+        ),
+        pytest.param(
             "Invalid token for device kitchen",
             "Invalid token for device kitchen",
             id="prose",
@@ -787,13 +798,39 @@ async def test_get_logs_contains_secret(
         {
             "core": [
                 "2026-10-20 13:50:00.000+02:00 DEBUG (MainThread) [core] "
-                "Login with password=hunter2"
+                'Login with {"password": "hunter2 beta"}'
             ]
         },
-        {"contains": "hunter2"},
+        {"contains": "beta"},
     )
 
     assert result.data["records"] == []
+
+
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_mask_long_payload(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test masking a long payload without secrets takes linear time."""
+    payload = "a" * 200_000
+
+    start = time.monotonic()
+    result = await _async_call_with_logs(
+        hass,
+        llm_context,
+        {
+            "core": [
+                f"2026-10-20 13:50:00.000+02:00 DEBUG (MainThread) [core] {payload}"
+            ]
+        },
+        {},
+    )
+
+    # Quadratic masking takes minutes for this payload
+    assert time.monotonic() - start < 2
+    assert result.data["records"][0]["message"].startswith(
+        "DEBUG (MainThread) [core] aaa"
+    )
 
 
 @pytest.mark.usefixtures("frozen_time")
