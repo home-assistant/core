@@ -36,6 +36,23 @@ STATES = {
     PlayState.LOADING: MediaPlayerState.BUFFERING,
 }
 
+# The hub reports its sources by name, and the names differ between models. The known ones
+# are shown under a translation key; any other passes through as the hub names it.
+SOURCE_KEYS = {
+    "AUX": "aux",
+    "Bluetooth": "bluetooth",
+    "COAX": "coaxial",
+    "eARC": "earc",
+    "HDMI": "hdmi",
+    "Line": "line",
+    "OPT1": "optical_1",
+    "OPT2": "optical_2",
+    "OPT3": "optical_3",
+    "PC/MAC": "pc_mac",
+    "Streaming": "streaming",
+    "USB": "usb",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -49,6 +66,11 @@ async def async_setup_entry(
     )
 
 
+def _source_key(name: str) -> str:
+    """Return the translation key of a source, or its name if it has none."""
+    return SOURCE_KEYS.get(name, name)
+
+
 class LibreSyncMediaPlayer(LibreSyncEntity, MediaPlayerEntity):
     """A LibreSync hub.
 
@@ -59,6 +81,7 @@ class LibreSyncMediaPlayer(LibreSyncEntity, MediaPlayerEntity):
     """
 
     _attr_name = None
+    _attr_translation_key = "hub"
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
@@ -158,13 +181,13 @@ class LibreSyncMediaPlayer(LibreSyncEntity, MediaPlayerEntity):
     def source(self) -> str | None:
         """Return the selected source."""
         source = self.snapshot.source
-        return source.name if source is not None else None
+        return _source_key(source.name) if source is not None else None
 
     @property
     @override
     def source_list(self) -> list[str]:
         """Return the sources the hub itself reports."""
-        return [source.name for source in self.snapshot.sources]
+        return [_source_key(source.name) for source in self.snapshot.sources]
 
     @property
     @override
@@ -221,7 +244,7 @@ class LibreSyncMediaPlayer(LibreSyncEntity, MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select a source by the index the hub gave it."""
         for candidate in self.snapshot.sources:
-            if candidate.name == source:
+            if _source_key(candidate.name) == source:
                 await self._client.async_select_source(candidate.index)
                 return
         raise ServiceValidationError(

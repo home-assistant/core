@@ -3,7 +3,13 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
-from aiolibresync import ConfirmationTimeout, NotConnectedError, NowPlaying, PlayState
+from aiolibresync import (
+    ConfirmationTimeout,
+    NotConnectedError,
+    NowPlaying,
+    PlayState,
+    Source,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -12,6 +18,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.media_player import (
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_DURATION,
@@ -98,7 +105,33 @@ async def test_select_source(hass: HomeAssistant, mock_client: MagicMock) -> Non
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "HDMI"},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "hdmi"},
+        blocking=True,
+    )
+    mock_client.async_select_source.assert_awaited_once_with(6)
+
+
+async def test_source_without_key(hass: HomeAssistant, mock_client: MagicMock) -> None:
+    """Test a source with no translation key is shown and selected by its name."""
+    push(
+        mock_client,
+        STATE.evolve(
+            source=Source(index=6, name="USBDISC"),
+            sources=(
+                Source(index=0, name="Streaming"),
+                Source(index=6, name="USBDISC"),
+            ),
+        ),
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_INPUT_SOURCE] == "USBDISC"
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["streaming", "USBDISC"]
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "USBDISC"},
         blocking=True,
     )
     mock_client.async_select_source.assert_awaited_once_with(6)

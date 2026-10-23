@@ -22,6 +22,30 @@
       }
     }
   },
+  "entity": {
+    "media_player": {
+      "hub": {
+        "state_attributes": {
+          "source": {
+            "state": {
+              "aux": "AUX",
+              "bluetooth": "Bluetooth",
+              "coaxial": "Coaxial",
+              "earc": "eARC",
+              "hdmi": "HDMI",
+              "line": "Line",
+              "optical_1": "Optical 1",
+              "optical_2": "Optical 2",
+              "optical_3": "Optical 3",
+              "pc_mac": "PC/Mac",
+              "streaming": "Streaming",
+              "usb": "USB"
+            }
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "The hub at {host} did not answer on ports 50006 and 7777."
