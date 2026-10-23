@@ -849,7 +849,7 @@ async def test_turn_off_and_turn_on_use_standby_and_auto(
     assert entity.hvac_mode is HVACMode.AUTO
     assert entity.hvac_action is HVACAction.HEATING
     assert entity.native_target_temperature == 23.0
-    assert entity.assumed_state is False
+    assert entity.assumed_state is True
     # The coordinator debounces the two immediate post-command refreshes.
     assert api.list_thermostats.await_count == 2
     await coordinator.async_shutdown()
@@ -883,7 +883,7 @@ async def test_successful_control_command_clears_optimistic_off(
     else:
         await entity.async_set_preset_mode(PRESET_TEMPORARY_HOLD)
 
-    assert entity.assumed_state is (exit_command == "target")
+    assert entity.assumed_state is True
     assert entity.hvac_mode is not HVACMode.OFF
     # The coordinator debounces the two immediate post-command refreshes.
     assert api.list_thermostats.await_count == 2

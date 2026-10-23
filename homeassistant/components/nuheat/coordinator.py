@@ -12,6 +12,7 @@ from chemelex_nuheat import (
     NuHeatAuthError,
     NuHeatClient,
     NuHeatDataError,
+    ScheduleMode,
     Thermostat,
     ThermostatState,
 )
@@ -42,7 +43,22 @@ class PendingSetpoint:
     temperature: float
     cancel_timeout: Callable[[], None]
     hold_until: datetime | None = None
-    standby: bool = False
+
+
+@dataclass
+class PendingMode:
+    """An accepted mode intent; object identity guards read generations."""
+
+    state: ThermostatState
+    cancel_timeout: Callable[[], None]
+
+
+MODE_TO_STATE = {
+    ScheduleMode.AUTO: ThermostatState.SCHEDULED,
+    ScheduleMode.MANUAL: ThermostatState.MANUAL,
+    ScheduleMode.PERMANENT_HOLD: ThermostatState.PERMANENT_HOLD,
+    ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE: ThermostatState.TIMED_HOLD,
+}
 
 
 class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
@@ -62,21 +78,64 @@ class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
         self.api = api
         self._present_serials: set[str] = set()
         self._pending_setpoints: dict[str, PendingSetpoint] = {}
+        self._pending_modes: dict[str, PendingMode] = {}
         self._cancel_reconcile: Callable[[], None] | None = None
+        self._reconcile_is_initial = False
+
+    def pending_mode(self, serial_number: str) -> ThermostatState | None:
+        """Return the accepted mode while its confirmation is bounded."""
+        if pending := self._pending_modes.get(serial_number):
+            return pending.state
+        return None
+
+    @callback
+    def async_set_pending_mode(
+        self, serial_number: str, mode: ScheduleMode | None
+    ) -> None:
+        """Track complete readback; None represents frost-protected Standby."""
+        self.async_clear_pending_mode(serial_number)
+
+        @callback
+        def expire(_now: datetime) -> None:
+            if self._pending_modes.get(serial_number) is not pending:
+                return
+            self.async_clear_pending_mode(serial_number)
+            _LOGGER.warning("NuHeat mode was not confirmed before the timeout")
+            self.async_update_listeners()
+
+        pending = PendingMode(
+            ThermostatState.STANDBY if mode is None else MODE_TO_STATE[mode],
+            async_call_later(self.hass, SETPOINT_RECONCILE_TIMEOUT, expire),
+        )
+        self._pending_modes[serial_number] = pending
+        self.async_schedule_reconciliation()
+        self.async_update_listeners()
+
+    @callback
+    def async_clear_pending_mode(
+        self, serial_number: str, *, confirmed: bool = False
+    ) -> None:
+        """Cancel a superseded, confirmed, or expired mode generation."""
+        if pending := self._pending_modes.pop(serial_number, None):
+            pending.cancel_timeout()
+        if not (confirmed and self._reconcile_is_initial):
+            self._cancel_idle_reconciliation()
+
+    @callback
+    def _cancel_idle_reconciliation(self) -> None:
+        if (
+            not self._pending_setpoints
+            and not self._pending_modes
+            and self._cancel_reconcile
+        ):
+            self._cancel_reconcile()
+            self._cancel_reconcile = None
 
     def pending_setpoint(self, serial_number: str) -> float | None:
         """Return a temporary requested target, without changing cloud data."""
-        if (
-            pending := self._pending_setpoints.get(serial_number)
-        ) and not pending.standby:
+        if pending := self._pending_setpoints.get(serial_number):
             return pending.temperature
         return None
-
-    def pending_standby(self, serial_number: str) -> bool:
-        """Return whether a successful Standby command awaits confirmation."""
-        return bool(
-            (pending := self._pending_setpoints.get(serial_number)) and pending.standby
-        )
 
     def pending_hold_until(self, serial_number: str) -> datetime | None:
         """Retain a newly accepted timed expiry until cloud confirmation/deadline."""
@@ -91,7 +150,6 @@ class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
         temperature: float,
         *,
         hold_until: datetime | None = None,
-        standby: bool = False,
     ) -> None:
         """Publish an accepted command until confirmed or its deadline expires."""
         self.async_clear_pending_setpoint(serial_number)
@@ -108,7 +166,6 @@ class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
             temperature,
             async_call_later(self.hass, SETPOINT_RECONCILE_TIMEOUT, expire),
             hold_until,
-            standby,
         )
         self._pending_setpoints[serial_number] = pending
         self.async_schedule_reconciliation()
@@ -119,26 +176,26 @@ class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
         """Discard a confirmed or superseded request."""
         if pending := self._pending_setpoints.pop(serial_number, None):
             pending.cancel_timeout()
-        if not self._pending_setpoints and self._cancel_reconcile:
-            self._cancel_reconcile()
-            self._cancel_reconcile = None
+        self._cancel_idle_reconciliation()
 
     @callback
     def async_schedule_reconciliation(self) -> None:
         """Coalesce writes into a delayed account refresh, including uncertain writes."""
         if self._cancel_reconcile:
             self._cancel_reconcile()
+        self._reconcile_is_initial = True
         self._cancel_reconcile = async_call_later(
             self.hass, SETPOINT_RECONCILE_DELAY, self._async_reconcile
         )
 
     async def _async_reconcile(self, _now: datetime) -> None:
         self._cancel_reconcile = None
+        self._reconcile_is_initial = False
         # async_refresh serializes reads but bypasses the request debouncer's
         # ten-second cooldown, which would otherwise defer the two-second read.
         await self.async_refresh()
         if (
-            self._pending_setpoints
+            (self._pending_setpoints or self._pending_modes)
             and not self._shutdown_requested
             and (
                 self.last_update_success
@@ -159,11 +216,15 @@ class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
         for pending in self._pending_setpoints.values():
             pending.cancel_timeout()
         self._pending_setpoints.clear()
+        for pending_mode in self._pending_modes.values():
+            pending_mode.cancel_timeout()
+        self._pending_modes.clear()
         await super().async_shutdown()
 
     @override
     async def _async_update_data(self) -> dict[str, Thermostat]:
         pending_at_start = self._pending_setpoints.copy()
+        modes_at_start = self._pending_modes.copy()
         try:
             thermostats = await self.api.list_thermostats()
         except NuHeatAuthError as err:
@@ -177,7 +238,6 @@ class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                 self._pending_setpoints.get(serial_number) is pending
                 and (thermostat := fresh.get(serial_number)) is not None
                 and thermostat.online
-                and (not pending.standby or thermostat.state is ThermostatState.STANDBY)
                 and (
                     pending.hold_until is None
                     or (
@@ -191,6 +251,14 @@ class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                 )
             ):
                 self.async_clear_pending_setpoint(serial_number)
+        for serial_number, pending_mode in modes_at_start.items():
+            if (
+                self._pending_modes.get(serial_number) is pending_mode
+                and (thermostat := fresh.get(serial_number)) is not None
+                and thermostat.online
+                and thermostat.state is pending_mode.state
+            ):
+                self.async_clear_pending_mode(serial_number, confirmed=True)
         self._present_serials = set(fresh)
         # Retain previously discovered devices when an otherwise successful
         # account response temporarily omits one of them.
