@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -12,6 +12,8 @@ from caldav.calendarobjectresource import Event
 from caldav.lib.url import URL
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.caldav.api import async_get_calendars
 from homeassistant.components.calendar import CalendarEntityFeature
@@ -19,9 +21,6 @@ from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 EVENTS = [
     """BEGIN:VCALENDAR
@@ -363,9 +362,9 @@ def get_api_events(
     return api_call
 
 
-def _local_datetime(hours: int, minutes: int) -> datetime.datetime:
+def _local_datetime(hours: int, minutes: int) -> dt.datetime:
     """Build a datetime object for testing in the correct timezone."""
-    return dt_util.as_local(datetime.datetime(2017, 11, 27, hours, minutes, 0))
+    return dt_util.as_local(dt.datetime(2017, 11, 27, hours, minutes, 0))
 
 
 def _mock_calendar(name: str, supported_components: list[str] | None = None) -> Mock:
@@ -758,23 +757,23 @@ async def test_no_result_with_filtering(
     ("tz", "target_datetime"),
     [
         # Early
-        (UTC, datetime.datetime(2017, 11, 27, 0, 30)),
-        (AMERICA_NEW_YORK, datetime.datetime(2017, 11, 27, 0, 30)),
-        (ASIA_BAGHDAD, datetime.datetime(2017, 11, 27, 0, 30)),
+        (UTC, dt.datetime(2017, 11, 27, 0, 30)),
+        (AMERICA_NEW_YORK, dt.datetime(2017, 11, 27, 0, 30)),
+        (ASIA_BAGHDAD, dt.datetime(2017, 11, 27, 0, 30)),
         # Mid
-        (UTC, datetime.datetime(2017, 11, 27, 12, 30)),
-        (AMERICA_NEW_YORK, datetime.datetime(2017, 11, 27, 12, 30)),
-        (ASIA_BAGHDAD, datetime.datetime(2017, 11, 27, 12, 30)),
+        (UTC, dt.datetime(2017, 11, 27, 12, 30)),
+        (AMERICA_NEW_YORK, dt.datetime(2017, 11, 27, 12, 30)),
+        (ASIA_BAGHDAD, dt.datetime(2017, 11, 27, 12, 30)),
         # Late
-        (UTC, datetime.datetime(2017, 11, 27, 23, 30)),
-        (AMERICA_NEW_YORK, datetime.datetime(2017, 11, 27, 23, 30)),
-        (ASIA_BAGHDAD, datetime.datetime(2017, 11, 27, 23, 30)),
+        (UTC, dt.datetime(2017, 11, 27, 23, 30)),
+        (AMERICA_NEW_YORK, dt.datetime(2017, 11, 27, 23, 30)),
+        (ASIA_BAGHDAD, dt.datetime(2017, 11, 27, 23, 30)),
     ],
 )
 async def test_all_day_event(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    target_datetime: datetime.datetime,
+    target_datetime: dt.datetime,
 ) -> None:
     """Test that the event lasting the whole day is returned.
 
@@ -941,23 +940,23 @@ async def test_event_rrule_endless(
     ("tz", "target_datetime"),
     [
         # Early
-        (UTC, datetime.datetime(2016, 12, 1, 0, 30)),
-        (AMERICA_NEW_YORK, datetime.datetime(2016, 12, 1, 0, 30)),
-        (ASIA_BAGHDAD, datetime.datetime(2016, 12, 1, 0, 30)),
+        (UTC, dt.datetime(2016, 12, 1, 0, 30)),
+        (AMERICA_NEW_YORK, dt.datetime(2016, 12, 1, 0, 30)),
+        (ASIA_BAGHDAD, dt.datetime(2016, 12, 1, 0, 30)),
         # Mid
-        (UTC, datetime.datetime(2016, 12, 1, 17, 30)),
-        (AMERICA_NEW_YORK, datetime.datetime(2016, 12, 1, 17, 30)),
-        (ASIA_BAGHDAD, datetime.datetime(2016, 12, 1, 17, 30)),
+        (UTC, dt.datetime(2016, 12, 1, 17, 30)),
+        (AMERICA_NEW_YORK, dt.datetime(2016, 12, 1, 17, 30)),
+        (ASIA_BAGHDAD, dt.datetime(2016, 12, 1, 17, 30)),
         # Late
-        (UTC, datetime.datetime(2016, 12, 1, 23, 30)),
-        (AMERICA_NEW_YORK, datetime.datetime(2016, 12, 1, 23, 30)),
-        (ASIA_BAGHDAD, datetime.datetime(2016, 12, 1, 23, 30)),
+        (UTC, dt.datetime(2016, 12, 1, 23, 30)),
+        (AMERICA_NEW_YORK, dt.datetime(2016, 12, 1, 23, 30)),
+        (ASIA_BAGHDAD, dt.datetime(2016, 12, 1, 23, 30)),
     ],
 )
 async def test_event_rrule_all_day_early(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    target_datetime: datetime.datetime,
+    target_datetime: dt.datetime,
 ) -> None:
     """Test recurring all day event is returned early in the day.
 
@@ -998,7 +997,7 @@ async def test_event_rrule_all_day_early(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@pytest.mark.freeze_time(dt_util.as_local(datetime.datetime(2015, 11, 27, 0, 15)))
+@pytest.mark.freeze_time(dt_util.as_local(dt.datetime(2015, 11, 27, 0, 15)))
 async def test_event_rrule_hourly_on_first(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -1023,7 +1022,7 @@ async def test_event_rrule_hourly_on_first(
 
 
 @pytest.mark.parametrize("tz", ["UTC"])
-@pytest.mark.freeze_time(dt_util.as_local(datetime.datetime(2015, 11, 27, 11, 15)))
+@pytest.mark.freeze_time(dt_util.as_local(dt.datetime(2015, 11, 27, 11, 15)))
 async def test_event_rrule_hourly_on_last(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -1050,16 +1049,16 @@ async def test_event_rrule_hourly_on_last(
 @pytest.mark.parametrize(
     ("target_datetime"),
     [
-        datetime.datetime(2015, 11, 27, 0, 45),
-        datetime.datetime(2015, 11, 27, 11, 45),
-        datetime.datetime(2015, 11, 27, 12, 15),
+        dt.datetime(2015, 11, 27, 0, 45),
+        dt.datetime(2015, 11, 27, 11, 45),
+        dt.datetime(2015, 11, 27, 12, 15),
     ],
 )
 async def test_event_rrule_hourly(
     hass: HomeAssistant,
     setup_platform_cb: Callable[[], Awaitable[None]],
     freezer: FrozenDateTimeFactory,
-    target_datetime: datetime.datetime,
+    target_datetime: dt.datetime,
 ) -> None:
     """Test that the endless recurring event is returned."""
     freezer.move_to(dt_util.as_local(target_datetime))
@@ -1174,7 +1173,6 @@ END:VCALENDAR"""
         pytest.param("TENTATIVE", "tentative", id="tentative"),
         pytest.param("CONFIRMED", "confirmed", id="confirmed"),
         pytest.param("Tentative", "tentative", id="mixed_case"),
-        pytest.param("CANCELLED", None, id="cancelled_is_not_reported"),
         pytest.param("X-VENDOR-SPECIFIC", None, id="unsupported_value"),
     ],
 )
@@ -1191,6 +1189,54 @@ async def test_get_events_with_status(
 
     assert len(events) == 1
     assert events[0]["status"] == expected_status
+
+
+def _mock_calendar_holding(name: str, vevents: list[str]) -> Mock:
+    """Return a mock calendar holding exactly the given VEVENTs."""
+    calendar = _mock_calendar(name)
+    calendar.search = MagicMock(
+        return_value=[
+            Event(None, f"{idx}.ics", vevent, calendar, str(idx))
+            for idx, vevent in enumerate(vevents)
+        ]
+    )
+    return calendar
+
+
+async def test_cancelled_event_is_not_returned(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that an event called off is not returned by the API."""
+    events = await _get_api_events_for_vevent(
+        hass,
+        hass_client,
+        ICS_WITH_STATUS.format(status="CANCELLED"),
+        "status-event-uid",
+    )
+
+    assert events == []
+
+
+@pytest.mark.parametrize("tz", [UTC])
+@pytest.mark.parametrize(
+    ("calendars"),
+    [[_mock_calendar_holding("Example", [ICS_WITH_STATUS.format(status="CANCELLED")])]],
+)
+@pytest.mark.freeze_time(_local_datetime(17, 30))
+async def test_cancelled_event_is_not_the_ongoing_event(
+    hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
+) -> None:
+    """Test that an event called off does not turn the entity on.
+
+    The event would be ongoing at this time were it not cancelled, so this
+    covers the state path rather than the API one.
+    """
+    await setup_platform_cb()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(
@@ -1307,6 +1353,100 @@ async def test_config_entry_supported_components(
     assert not state
 
 
+def _ics_event(uid: str, dates: str) -> str:
+    """Return a VCALENDAR holding a single VEVENT with the given dates."""
+    return (
+        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Test//CalDAV Client//EN\n"
+        f"BEGIN:VEVENT\nUID:{uid}\nDTSTAMP:20240801T000000Z\n{dates}\n"
+        f"SUMMARY:{uid}\nEND:VEVENT\nEND:VCALENDAR\n"
+    )
+
+
+@pytest.mark.parametrize("tz", [AMERICA_NEW_YORK])
+@pytest.mark.parametrize(
+    "calendars",
+    [
+        [
+            _mock_calendar_holding(
+                CALENDAR_NAME,
+                [
+                    _ics_event(
+                        "late", "DTSTART:20240829T150000Z\nDTEND:20240829T160000Z"
+                    ),
+                    _ics_event(
+                        "all-day",
+                        "DTSTART;VALUE=DATE:20240829\nDTEND;VALUE=DATE:20240830",
+                    ),
+                    _ics_event(
+                        "early", "DTSTART:20240829T120000Z\nDTEND:20240829T130000Z"
+                    ),
+                ],
+            )
+        ]
+    ],
+)
+async def test_get_events_sorted(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup_platform_cb: Callable[[], Awaitable[None]],
+) -> None:
+    """Test events are returned in order, including all-day events."""
+    await setup_platform_cb()
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/calendars/{TEST_ENTITY}"
+        "?start=2024-08-29T00:00:00-04:00&end=2024-08-30T00:00:00-04:00"
+    )
+    assert response.status == HTTPStatus.OK
+    assert [event["summary"] for event in await response.json()] == [
+        "all-day",
+        "early",
+        "late",
+    ]
+
+
+@pytest.mark.parametrize("tz", [AMERICA_NEW_YORK])
+@pytest.mark.parametrize(
+    "calendars",
+    [
+        [
+            _mock_calendar_holding(
+                CALENDAR_NAME,
+                [
+                    # 01:15 EST, after the clocks fell back
+                    _ics_event(
+                        "second", "DTSTART:20241103T061500Z\nDTEND:20241103T063000Z"
+                    ),
+                    # 01:30 EDT, before the clocks fell back
+                    _ics_event(
+                        "first", "DTSTART:20241103T053000Z\nDTEND:20241103T054500Z"
+                    ),
+                ],
+            )
+        ]
+    ],
+)
+async def test_get_events_sorted_dst_fallback(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup_platform_cb: Callable[[], Awaitable[None]],
+) -> None:
+    """Test events in the repeated hour are returned in chronological order."""
+    await setup_platform_cb()
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/calendars/{TEST_ENTITY}"
+        "?start=2024-11-03T00:00:00-04:00&end=2024-11-04T00:00:00-05:00"
+    )
+    assert response.status == HTTPStatus.OK
+    assert [event["summary"] for event in await response.json()] == [
+        "first",
+        "second",
+    ]
+
+
 @pytest.mark.parametrize("tz", [UTC])
 @pytest.mark.parametrize(
     ("service_data", "expected_ics_fields"),
@@ -1322,10 +1462,10 @@ async def test_config_entry_supported_components(
             },
             {
                 "description": "Test Description",
-                "dtend": datetime.datetime(
+                "dtend": dt.datetime(
                     2025, 8, 6, 11, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
                 ),
-                "dtstart": datetime.datetime(
+                "dtstart": dt.datetime(
                     2025, 8, 6, 10, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
                 ),
                 "location": "Test Location",
@@ -1341,10 +1481,10 @@ async def test_config_entry_supported_components(
             },
             {
                 "summary": "Required Only",
-                "dtstart": datetime.datetime(
+                "dtstart": dt.datetime(
                     2025, 8, 7, 9, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
                 ),
-                "dtend": datetime.datetime(
+                "dtend": dt.datetime(
                     2025, 8, 7, 10, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
                 ),
             },
@@ -1358,8 +1498,8 @@ async def test_config_entry_supported_components(
             },
             {
                 "summary": "All Day Event",
-                "dtstart": datetime.date(2025, 8, 8),
-                "dtend": datetime.date(2025, 8, 9),
+                "dtstart": dt.date(2025, 8, 8),
+                "dtend": dt.date(2025, 8, 9),
             },
         ),
         # Event with different timezone
@@ -1371,10 +1511,10 @@ async def test_config_entry_supported_components(
             },
             {
                 "summary": "Different TZ",
-                "dtstart": datetime.datetime(
+                "dtstart": dt.datetime(
                     2025, 8, 7, 7, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
                 ),
-                "dtend": datetime.datetime(
+                "dtend": dt.datetime(
                     2025, 8, 7, 8, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
                 ),
             },

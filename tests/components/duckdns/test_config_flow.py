@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.duckdns import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import NEW_TOKEN, TEST_SUBDOMAIN, TEST_TOKEN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_update_duckdns")

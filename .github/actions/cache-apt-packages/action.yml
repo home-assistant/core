@@ -29,7 +29,7 @@ runs:
       shell: bash
       run: sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
     - name: Install apt packages via cache
-      uses: awalsh128/cache-apt-pkgs-action@2c09a5e66da6c8016428a2172bd76e5e4f14bb17 # v1.5.3
+      uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
       with:
         packages: ${{ inputs.packages }}
         version: ${{ inputs.version }}

@@ -26,7 +26,7 @@ DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST, default=DEFAULT_HOST): str,
         probatio.Optional(CONF_USERNAME): str,
-        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
         probatio.Optional(CONF_SSL, default=False): bool,
         probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
@@ -72,7 +72,7 @@ class GlancesFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

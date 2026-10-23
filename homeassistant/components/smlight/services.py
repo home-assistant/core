@@ -116,7 +116,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     schema = probatio.Schema(
         {
             probatio.Required(ATTR_DEVICE_ID): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(ATTR_DURATION): probatio.All(
                 probatio.Coerce(int), probatio.In([1, 2, 4, 8, 16, 32])

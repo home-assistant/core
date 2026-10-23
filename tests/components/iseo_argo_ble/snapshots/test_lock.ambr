@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff',
+    'unique_id': '00:15:42:aa:bb:cc',
     'unit_of_measurement': None,
   })
 # ---

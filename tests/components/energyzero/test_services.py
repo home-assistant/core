@@ -2,7 +2,7 @@
 
 from datetime import UTC, date, datetime, timedelta
 import re
-from unittest.mock import AsyncMock, call
+from unittest.mock import AsyncMock, call, patch
 from zoneinfo import ZoneInfo
 
 from energyzero import (
@@ -12,8 +12,10 @@ from energyzero import (
     PriceType,
     TimeRange,
 )
+from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.energyzero.const import (
@@ -27,8 +29,7 @@ from homeassistant.components.energyzero.services import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-
-from tests.common import MockConfigEntry
+from homeassistant.util import dt as dt_util
 
 pytestmark = pytest.mark.freeze_time("2026-04-10 20:32:59")
 
@@ -843,3 +844,48 @@ async def test_energy_service_quarter_invalid_range(
             return_response=True,
         )
     mock_energyzero.get_electricity_prices.assert_not_awaited()
+
+
+async def test_gas_action_deduplicates_overlapping_days(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A multi-day action returns each complete gas interval exactly once."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to("2026-04-10T00:00:00+02:00")
+    electricity = await async_load_json_object_fixture(
+        hass, "today_energy.json", DOMAIN
+    )
+    gas = await async_load_json_object_fixture(hass, "today_gas.json", DOMAIN)
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "energyzero.api.rest.RESTClient._request",
+        side_effect=[electricity, gas, electricity, gas, gas],
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        response = await hass.services.async_call(
+            DOMAIN,
+            GAS_SERVICE_NAME,
+            {
+                ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+                "incl_vat": True,
+                "start": "2026-04-10",
+                "end": "2026-04-11",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert response == {
+        "prices": [
+            {
+                "price": float(block["price"]["value"]),
+                "timestamp": str(dt_util.parse_datetime(block["start"])),
+                "start": str(dt_util.parse_datetime(block["start"])),
+                "end": str(dt_util.parse_datetime(block["end"])),
+            }
+            for block in gas["base_with_vat"]
+        ]
+    }

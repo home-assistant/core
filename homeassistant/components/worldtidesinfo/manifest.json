@@ -1,6 +1,7 @@
 {
   "domain": "worldtidesinfo",
   "name": "World Tides",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/worldtidesinfo",
   "iot_class": "cloud_polling",

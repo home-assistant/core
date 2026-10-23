@@ -59,6 +59,7 @@ class AirZoneCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title=inst_desc, data=user_input)
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="user",
             data_schema=probatio.Schema(
@@ -109,7 +110,7 @@ class AirZoneCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

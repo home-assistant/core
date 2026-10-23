@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 
 from homeassistant.components.synology_dsm.const import (
     CONF_SERIAL,
@@ -23,8 +24,6 @@ from homeassistant.exceptions import Unauthorized, UnknownUser
 
 from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
-
-from tests.common import MockConfigEntry, MockUser
 
 
 @pytest.fixture

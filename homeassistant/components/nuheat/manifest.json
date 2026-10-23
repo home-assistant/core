@@ -1,6 +1,7 @@
 {
   "domain": "nuheat",
   "name": "NuHeat",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@tstabrawa"],
   "config_flow": true,
   "dhcp": [

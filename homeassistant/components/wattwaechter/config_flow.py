@@ -211,7 +211,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="auth",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_TOKEN)): str,
                 }
             ),
             errors=errors,
@@ -246,7 +246,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_TOKEN)): str,
                 }
             ),
             description_placeholders={"host": reauth_entry.data[CONF_HOST]},
@@ -279,7 +279,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = probatio.Schema(
             {
                 probatio.Required(CONF_HOST): str,
-                probatio.Optional(CONF_TOKEN): TextSelector(
+                probatio.Optional(probatio.Secret(CONF_TOKEN)): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.PASSWORD)
                 ),
             }

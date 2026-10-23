@@ -8,7 +8,7 @@ from enum import Enum, auto
 import logging
 from pathlib import Path
 import time
-from typing import IO, Any, cast, override
+from typing import IO, Any, NamedTuple, assert_never, cast, override
 
 from gazetteer_matcher import FrameCandidate, GazetteerMatcher
 from hassil.expression import Expression, Group, ListReference
@@ -34,6 +34,7 @@ from home_assistant_intents import (
     get_language_scores,
     get_languages,
 )
+import probatio
 import yaml
 
 from homeassistant.components.homeassistant.exposed_entities import (
@@ -50,7 +51,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import (
     area_registry as ar,
-    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -161,6 +161,9 @@ class IntentCacheKey:
     satellite_id: str | None
     """Satellite id from user input."""
 
+    device_id: str | None
+    """Device id from user input."""
+
 
 @dataclass(frozen=True)
 class IntentCacheValue:
@@ -228,6 +231,13 @@ async def async_setup_default_agent(
         async_track_state_added_domain(hass, MATCH_ALL, async_entity_state_listener)
 
     ha_start.async_at_started(hass, async_hass_started)
+
+
+# Errors that mean the sentence did not apply, as opposed to a failure to act on it
+_MATCH_ERROR_CODES = (
+    intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+    intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+)
 
 
 class DefaultAgent(ConversationEntity):
@@ -517,6 +527,8 @@ class DefaultAgent(ConversationEntity):
         result: RecognizeResult | None,
         user_input: ConversationInput,
         chat_log: ChatLog,
+        *,
+        discard_match_errors: bool = False,
     ) -> intent.IntentResponse:
         """Process user input with intents."""
         language = user_input.language or self.hass.config.language
@@ -578,6 +590,7 @@ class DefaultAgent(ConversationEntity):
             user_input,
             chat_log,
             lang_intents,
+            discard_match_errors=discard_match_errors,
         )
 
         if intent_response.response_type is not intent.IntentResponseType.ERROR:
@@ -597,6 +610,8 @@ class DefaultAgent(ConversationEntity):
         user_input: ConversationInput,
         chat_log: ChatLog,
         lang_intents: LanguageIntents,
+        *,
+        discard_match_errors: bool = False,
     ) -> intent.IntentResponse:
         """Handle one recognized intent and give it something to say."""
         language = user_input.language or self.hass.config.language
@@ -617,14 +632,6 @@ class DefaultAgent(ConversationEntity):
         if satellite_area is not None:
             slots = slots | {"preferred_area_id": {"value": satellite_area.id}}
 
-        chat_log.async_add_assistant_content_without_tools(
-            AssistantContent(
-                agent_id=user_input.agent_id,
-                content=None,
-                tool_calls=[tool_input],
-            )
-        )
-
         try:
             intent_response = await intent.async_handle(
                 self.hass,
@@ -642,7 +649,7 @@ class DefaultAgent(ConversationEntity):
         except intent.MatchFailedError as match_error:
             # Intent was valid, but no entities matched the constraints.
             error_response_type, error_response_args = _get_match_error_response(
-                self.hass, match_error
+                match_error
             )
             intent_response = _make_error_result(
                 language,
@@ -670,6 +677,11 @@ class DefaultAgent(ConversationEntity):
                 self._get_error_text(ErrorKey.HANDLE_ERROR, lang_intents),
             )
 
+        if discard_match_errors and intent_response.error_code in _MATCH_ERROR_CODES:
+            # The caller hands the turn to another agent, which must not see
+            # a tool call it did not make
+            return intent_response
+
         if (
             (not intent_response.speech)
             and (intent_response.intent is not None)
@@ -686,6 +698,13 @@ class DefaultAgent(ConversationEntity):
                 )
                 intent_response.async_set_speech(speech)
 
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id=user_input.agent_id,
+                content=None,
+                tool_calls=[tool_input],
+            )
+        )
         tool_result = llm.IntentResponseDict(intent_response)
         chat_log.async_add_assistant_content_without_tools(
             ToolResultContent(
@@ -827,6 +846,7 @@ class DefaultAgent(ConversationEntity):
             text=user_input.text,
             language=language,
             satellite_id=user_input.satellite_id,
+            device_id=user_input.device_id,
         )
         cache_value = self._intent_cache.get(cache_key)
         if cache_value is not None:
@@ -1163,10 +1183,18 @@ class DefaultAgent(ConversationEntity):
         self._intent_cache.clear()
 
     @override
-    async def async_prepare(self, language: str | None = None) -> None:
-        """Load intents for a language."""
+    async def async_prepare(
+        self, language: str | None = None, *, strict_intents_only: bool = False
+    ) -> None:
+        """Build what recognizing a sentence in a language needs."""
         if language is None:
             language = self.hass.config.language
+
+        # Sentence triggers do not depend on the language intents
+        if self._trigger_intents is None and self._trigger_intents_config.get(
+            "intents"
+        ):
+            self._rebuild_trigger_intents()
 
         lang_intents = await self.async_get_or_load_intents(language)
 
@@ -1175,6 +1203,16 @@ class DefaultAgent(ConversationEntity):
             return
 
         await self._make_slot_lists()
+
+        # Strict recognition uses neither the unexposed names nor the gazetteer
+        if strict_intents_only:
+            return
+
+        # Recognition builds this in the executor, but it reads loop-only state
+        self._get_unexposed_entity_names()
+
+        if self._gazetteer.supports(language):
+            await self._gazetteer.async_get_matcher()
 
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
@@ -1444,8 +1482,12 @@ class DefaultAgent(ConversationEntity):
         else:
             response_key = error_key
 
+        # A new error reaches here before every language has translated it, so
+        # prefer the language's own generic error over the English default
         response_str = (
-            lang_intents.error_responses.get(response_key) or _DEFAULT_ERROR_TEXT
+            lang_intents.error_responses.get(response_key)
+            or lang_intents.error_responses.get(ErrorKey.NO_INTENT.value)
+            or _DEFAULT_ERROR_TEXT
         )
         response_template = template.Template(response_str, self.hass)
 
@@ -1624,15 +1666,10 @@ class DefaultAgent(ConversationEntity):
             # No error message on failed match
             return None
 
-        response = await self._async_process_intent_result(result, user_input, chat_log)
-        if (
-            response.response_type is intent.IntentResponseType.ERROR
-            and response.error_code
-            not in (
-                intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-                intent.IntentResponseErrorCode.UNKNOWN,
-            )
-        ):
+        response = await self._async_process_intent_result(
+            result, user_input, chat_log, discard_match_errors=True
+        )
+        if response.error_code in _MATCH_ERROR_CODES:
             # We ignore no matching errors
             return None
         return response
@@ -1738,132 +1775,165 @@ def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str
     return ErrorKey.NO_INTENT, {}
 
 
-def _get_match_error_response(
-    hass: HomeAssistant,
-    match_error: intent.MatchFailedError,
-) -> tuple[ErrorKey, dict[str, Any]]:
-    """Return key and template arguments for error when target matching fails."""
+# Map to errors in home-assistant-intents
+_NO_TARGET_ERRORS: dict[tuple[str, str, bool], ErrorKey] = {
+    ("entity", "", False): ErrorKey.NO_ENTITY,
+    ("entity", "", True): ErrorKey.NO_ENTITY_EXPOSED,
+    ("entity", "area", False): ErrorKey.NO_ENTITY_IN_AREA,
+    ("entity", "area", True): ErrorKey.NO_ENTITY_IN_AREA_EXPOSED,
+    ("entity", "floor", False): ErrorKey.NO_ENTITY_IN_FLOOR,
+    ("entity", "floor", True): ErrorKey.NO_ENTITY_IN_FLOOR_EXPOSED,
+    ("device_class", "", False): ErrorKey.NO_DEVICE_CLASS,
+    ("device_class", "", True): ErrorKey.NO_DEVICE_CLASS_EXPOSED,
+    ("device_class", "area", False): ErrorKey.NO_DEVICE_CLASS_IN_AREA,
+    ("device_class", "area", True): ErrorKey.NO_DEVICE_CLASS_IN_AREA_EXPOSED,
+    ("device_class", "floor", False): ErrorKey.NO_DEVICE_CLASS_IN_FLOOR,
+    ("device_class", "floor", True): ErrorKey.NO_DEVICE_CLASS_IN_FLOOR_EXPOSED,
+    ("domain", "", False): ErrorKey.NO_DOMAIN,
+    ("domain", "", True): ErrorKey.NO_DOMAIN_EXPOSED,
+    ("domain", "area", False): ErrorKey.NO_DOMAIN_IN_AREA,
+    ("domain", "area", True): ErrorKey.NO_DOMAIN_IN_AREA_EXPOSED,
+    ("domain", "floor", False): ErrorKey.NO_DOMAIN_IN_FLOOR,
+    ("domain", "floor", True): ErrorKey.NO_DOMAIN_IN_FLOOR_EXPOSED,
+}
 
+
+class _NoTargetOrder(NamedTuple):
+    """Which constraints an error may name, most specific first."""
+
+    subjects: tuple[str, ...]
+    """What was asked for."""
+
+    scopes: tuple[str, ...]
+    """Where it was asked for."""
+
+
+# The failing constraint is what the message should be about
+_ANY_TARGET = ("entity", "device_class", "domain")
+_ANY_SCOPE = ("area", "floor")
+_NO_TARGET_ORDER: dict[intent.MatchFailedReason, _NoTargetOrder] = {
+    intent.MatchFailedReason.NAME: _NoTargetOrder(("entity",), _ANY_SCOPE),
+    intent.MatchFailedReason.AREA: _NoTargetOrder(_ANY_TARGET, ("area",)),
+    intent.MatchFailedReason.FLOOR: _NoTargetOrder(_ANY_TARGET, ("floor",)),
+    intent.MatchFailedReason.DOMAIN: _NoTargetOrder(
+        ("device_class", "domain"), _ANY_SCOPE
+    ),
+    intent.MatchFailedReason.DEVICE_CLASS: _NoTargetOrder(
+        ("device_class", "domain"), _ANY_SCOPE
+    ),
+    intent.MatchFailedReason.ASSISTANT: _NoTargetOrder(_ANY_TARGET, _ANY_SCOPE),
+}
+
+
+def _get_no_target_response(
+    constraints: intent.MatchTargetsConstraints,
+    order: _NoTargetOrder,
+    *,
+    exposed_only: bool,
+) -> tuple[ErrorKey, dict[str, Any]]:
+    """Return the error naming the failed constraint, scoped to an area or floor."""
+    subjects: dict[str, dict[str, Any]] = {}
+    if constraints.name:
+        subjects["entity"] = {"entity": constraints.name}
+    if constraints.device_classes:
+        subjects["device_class"] = {
+            "device_class": next(iter(constraints.device_classes))
+        }
+    if constraints.domains:
+        subjects["domain"] = {"domain": next(iter(constraints.domains))}
+
+    for kind in order.subjects:
+        if (args := subjects.get(kind)) is not None:
+            break
+    else:
+        # The constraint that failed was not set, so there is nothing to name
+        return ErrorKey.NO_INTENT, {}
+
+    scopes = {"area": constraints.area_name, "floor": constraints.floor_name}
+    scope = ""
+    for candidate in order.scopes:
+        if scopes[candidate]:
+            scope = candidate
+            args[candidate] = scopes[candidate]
+            break
+
+    return _NO_TARGET_ERRORS[kind, scope, exposed_only], args
+
+
+# Present in intents, but not the ErrorKey enum yet.
+_DUPLICATE_TARGETS = "duplicate_targets"
+
+
+def _get_duplicate_response(
+    name: str | None, constraints: intent.MatchTargetsConstraints
+) -> tuple[ErrorKey | str, dict[str, Any]]:
+    """Return the error for a match ambiguous between more entities than can be used."""
+    if not name:
+        # Nothing was named, so all the answer can say is that several matched
+        return _DUPLICATE_TARGETS, {}
+
+    if constraints.area_name:
+        return ErrorKey.DUPLICATE_ENTITIES_IN_AREA, {
+            "entity": name,
+            "area": constraints.area_name,
+        }
+
+    if constraints.floor_name:
+        return ErrorKey.DUPLICATE_ENTITIES_IN_FLOOR, {
+            "entity": name,
+            "floor": constraints.floor_name,
+        }
+
+    return ErrorKey.DUPLICATE_ENTITIES, {"entity": name}
+
+
+def _get_match_error_response(
+    match_error: intent.MatchFailedError,
+) -> tuple[ErrorKey | str, dict[str, Any]]:
+    """Return key and template arguments for error when target matching fails."""
     constraints, result = match_error.constraints, match_error.result
     reason = result.no_match_reason
+    if reason is None:
+        return ErrorKey.NO_INTENT, {}
 
-    if (
-        reason
-        in (intent.MatchFailedReason.DEVICE_CLASS, intent.MatchFailedReason.DOMAIN)
-    ) and constraints.device_classes:
-        device_class = next(iter(constraints.device_classes))  # first device class
-        if constraints.area_name:
-            # device_class in area
-            return ErrorKey.NO_DEVICE_CLASS_IN_AREA, {
-                "device_class": device_class,
-                "area": constraints.area_name,
+    match reason:
+        case (
+            intent.MatchFailedReason.NAME
+            | intent.MatchFailedReason.AREA
+            | intent.MatchFailedReason.FLOOR
+            | intent.MatchFailedReason.DOMAIN
+            | intent.MatchFailedReason.DEVICE_CLASS
+            | intent.MatchFailedReason.ASSISTANT
+        ):
+            return _get_no_target_response(
+                constraints,
+                _NO_TARGET_ORDER[reason],
+                exposed_only=reason is intent.MatchFailedReason.ASSISTANT,
+            )
+
+        case intent.MatchFailedReason.INVALID_AREA:
+            return ErrorKey.NO_AREA, {"area": result.no_match_name}
+
+        case intent.MatchFailedReason.INVALID_FLOOR:
+            return ErrorKey.NO_FLOOR, {"floor": result.no_match_name}
+
+        case intent.MatchFailedReason.FEATURE:
+            return ErrorKey.FEATURE_NOT_SUPPORTED, {}
+
+        case intent.MatchFailedReason.STATE:
+            if not constraints.states:
+                return ErrorKey.NO_INTENT, {}
+            return ErrorKey.ENTITY_WRONG_STATE, {
+                "state": next(iter(constraints.states))
             }
 
-        # device_class only
-        return ErrorKey.NO_DEVICE_CLASS, {"device_class": device_class}
+        case intent.MatchFailedReason.DUPLICATE_NAME:
+            return _get_duplicate_response(result.no_match_name, constraints)
 
-    if (reason is intent.MatchFailedReason.DOMAIN) and constraints.domains:
-        domain = next(iter(constraints.domains))  # first domain
-        if constraints.area_name:
-            # domain in area
-            return ErrorKey.NO_DOMAIN_IN_AREA, {
-                "domain": domain,
-                "area": constraints.area_name,
-            }
+        case intent.MatchFailedReason.MULTIPLE_TARGETS:
+            return _get_duplicate_response(constraints.name, constraints)
 
-        if constraints.floor_name:
-            # domain in floor
-            return ErrorKey.NO_DOMAIN_IN_FLOOR, {
-                "domain": domain,
-                "floor": constraints.floor_name,
-            }
-
-        # domain only
-        return ErrorKey.NO_DOMAIN, {"domain": domain}
-
-    if reason is intent.MatchFailedReason.DUPLICATE_NAME:
-        if constraints.floor_name:
-            # duplicate on floor
-            return ErrorKey.DUPLICATE_ENTITIES_IN_FLOOR, {
-                "entity": result.no_match_name,
-                "floor": constraints.floor_name,
-            }
-
-        if constraints.area_name:
-            # duplicate on area
-            return ErrorKey.DUPLICATE_ENTITIES_IN_AREA, {
-                "entity": result.no_match_name,
-                "area": constraints.area_name,
-            }
-
-        return ErrorKey.DUPLICATE_ENTITIES, {"entity": result.no_match_name}
-
-    if reason is intent.MatchFailedReason.INVALID_AREA:
-        # Invalid area name
-        return ErrorKey.NO_AREA, {"area": result.no_match_name}
-
-    if reason is intent.MatchFailedReason.INVALID_FLOOR:
-        # Invalid floor name
-        return ErrorKey.NO_FLOOR, {"floor": result.no_match_name}
-
-    if reason is intent.MatchFailedReason.FEATURE:
-        # Feature not supported by entity
-        return ErrorKey.FEATURE_NOT_SUPPORTED, {}
-
-    if reason is intent.MatchFailedReason.STATE:
-        # Entity is not in correct state
-        assert constraints.states
-        state = next(iter(constraints.states))
-
-        return ErrorKey.ENTITY_WRONG_STATE, {"state": state}
-
-    if reason is intent.MatchFailedReason.ASSISTANT:
-        # Not exposed
-        if constraints.name:
-            if constraints.area_name:
-                return ErrorKey.NO_ENTITY_IN_AREA_EXPOSED, {
-                    "entity": constraints.name,
-                    "area": constraints.area_name,
-                }
-            if constraints.floor_name:
-                return ErrorKey.NO_ENTITY_IN_FLOOR_EXPOSED, {
-                    "entity": constraints.name,
-                    "floor": constraints.floor_name,
-                }
-            return ErrorKey.NO_ENTITY_EXPOSED, {"entity": constraints.name}
-
-        if constraints.device_classes:
-            device_class = next(iter(constraints.device_classes))
-
-            if constraints.area_name:
-                return ErrorKey.NO_DEVICE_CLASS_IN_AREA_EXPOSED, {
-                    "device_class": device_class,
-                    "area": constraints.area_name,
-                }
-            if constraints.floor_name:
-                return ErrorKey.NO_DEVICE_CLASS_IN_FLOOR_EXPOSED, {
-                    "device_class": device_class,
-                    "floor": constraints.floor_name,
-                }
-            return ErrorKey.NO_DEVICE_CLASS_EXPOSED, {"device_class": device_class}
-
-        if constraints.domains:
-            domain = next(iter(constraints.domains))
-
-            if constraints.area_name:
-                return ErrorKey.NO_DOMAIN_IN_AREA_EXPOSED, {
-                    "domain": domain,
-                    "area": constraints.area_name,
-                }
-            if constraints.floor_name:
-                return ErrorKey.NO_DOMAIN_IN_FLOOR_EXPOSED, {
-                    "domain": domain,
-                    "floor": constraints.floor_name,
-                }
-            return ErrorKey.NO_DOMAIN_EXPOSED, {"domain": domain}
-
-    # Default error
-    return ErrorKey.NO_INTENT, {}
+    assert_never(reason)
 
 
 def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
@@ -1901,14 +1971,14 @@ def _get_debug_targets(
         floor_name = str(entities["floor"].value)
 
     if "domain" in entities:
-        domains = set(cv.ensure_list(entities["domain"].value))
+        domains = set(probatio.EnsureList()(entities["domain"].value))
 
     if "device_class" in entities:
-        device_classes = set(cv.ensure_list(entities["device_class"].value))
+        device_classes = set(probatio.EnsureList()(entities["device_class"].value))
 
     if "state" in entities:
         # HassGetState only
-        state_names = set(cv.ensure_list(entities["state"].value))
+        state_names = set(probatio.EnsureList()(entities["state"].value))
 
     constraints = intent.MatchTargetsConstraints(
         name=name,

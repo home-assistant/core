@@ -906,7 +906,6 @@
 # name: test_switches[switch.29_111111111111_programmed_input_output_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_file': '/29.111111111111/PIO.3',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '29.111111111111 Programmed input-output 3',
     }),
     'context': <ANY>,
@@ -914,7 +913,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_switches[switch.29_111111111111_programmed_input_output_4-entry]

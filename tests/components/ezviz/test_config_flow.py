@@ -9,6 +9,7 @@ from pyezvizapi.exceptions import (
     PyEzvizError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
@@ -35,8 +36,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_ezviz_client")
@@ -106,6 +105,7 @@ async def test_user_custom_url(
         CONF_URL: "apiieu.ezvizlife.com",
         CONF_TYPE: ATTR_TYPE_CLOUD,
     }
+    assert result["result"].unique_id == "test-username"
 
     assert len(mock_setup_entry.mock_calls) == 1
 

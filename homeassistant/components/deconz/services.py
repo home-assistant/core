@@ -34,7 +34,7 @@ SERVICE_CONFIGURE_DEVICE_SCHEMA = probatio.All(
             probatio.Optional(CONF_BRIDGE_ID): str,
         }
     ),
-    cv.has_at_least_one_key(SERVICE_ENTITY, SERVICE_FIELD),
+    probatio.AtLeastOne(SERVICE_ENTITY, SERVICE_FIELD),
 )
 
 SERVICE_DEVICE_REFRESH = "device_refresh"

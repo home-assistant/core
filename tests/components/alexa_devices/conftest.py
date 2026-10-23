@@ -1,11 +1,12 @@
 """Alexa Devices tests configuration."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.alexa_devices.const import (
     CONF_LOGIN_DATA,
@@ -23,15 +24,13 @@ from .const import (
     TEST_VOCAL_RECORD_INITIAL,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.alexa_devices.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -67,6 +66,17 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.on_volume_state_event = MagicMock()
         client.on_media_state_event = MagicMock()
         client.on_todo_event = MagicMock()
+        client.on_dnd_event = MagicMock()
+        dnd_event_handler: list[Callable[[dict[str, bool]], Awaitable[None]]] = []
+        client.on_dnd_event.append.side_effect = dnd_event_handler.append
+
+        async def _sync_dnd_state() -> None:
+            assert dnd_event_handler, "on_dnd_event handler was not registered"
+            await dnd_event_handler[0](
+                dict.fromkeys(client.get_devices_data.return_value, False)
+            )
+
+        client.sync_dnd_state = AsyncMock(side_effect=_sync_dnd_state)
 
         async def _start_http2_processing(*_args, **_kwargs) -> asyncio.Task[None]:
             async def _completed_task() -> None:

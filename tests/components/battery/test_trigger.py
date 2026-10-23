@@ -3,19 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.battery.trigger import TRIGGERS
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_OFF,
-    STATE_ON,
-    EntityCategory,
-)
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -29,6 +17,17 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.battery.trigger import TRIGGERS
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_OFF,
+    STATE_ON,
+    EntityCategory,
+)
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture

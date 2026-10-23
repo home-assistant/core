@@ -3,6 +3,8 @@
 import probatio
 
 from homeassistant.components.device_automation import (
+    CONF_IS_OFF,
+    CONF_IS_ON,
     async_get_entity_registry_entry_or_raise,
     toggle_entity,
 )
@@ -41,7 +43,14 @@ MODE_CONDITION = DEVICE_CONDITION_BASE_SCHEMA.extend(
     }
 )
 
-CONDITION_SCHEMA = probatio.Any(TOGGLE_CONDITION, MODE_CONDITION)
+CONDITION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        CONF_IS_OFF: TOGGLE_CONDITION,
+        CONF_IS_ON: TOGGLE_CONDITION,
+        "is_mode": MODE_CONDITION,
+    },
+)
 
 # Maps a state attribute to the condition config key used to compare against it.
 _STATE_ATTRIBUTE_TO_CONFIG_KEY = {
