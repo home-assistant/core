@@ -1,6 +1,6 @@
 """The tests for the MQTT time platform."""
 
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import patch
 
@@ -50,7 +50,7 @@ DEFAULT_CONFIG = {
 
 
 async def async_set_value(
-    hass: HomeAssistant, entity_id: str, value: datetime.time | None
+    hass: HomeAssistant, entity_id: str, value: dt.time | None
 ) -> None:
     """Set time value."""
     await hass.services.async_call(
@@ -176,7 +176,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await async_set_value(hass, "time.test", datetime.time(hour=10, minute=12))
+    await async_set_value(hass, "time.test", dt.time(hour=10, minute=12))
     await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_called_once_with(
@@ -187,7 +187,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.state == "10:12:00"
 
     await async_set_value(
-        hass, "time.test", datetime.time(hour=10, minute=12, second=1, microsecond=12)
+        hass, "time.test", dt.time(hour=10, minute=12, second=1, microsecond=12)
     )
 
     mqtt_mock.async_publish.assert_called_once_with(

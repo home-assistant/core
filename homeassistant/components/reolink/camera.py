@@ -1,6 +1,7 @@
 """Component providing support for Reolink IP cameras."""
 
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 from typing import override
 
@@ -9,8 +10,10 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
@@ -175,4 +178,19 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         """Return a still image response from the camera."""
         return await self._host.api.get_snapshot(
             self._channel, self.entity_description.stream
+        )
+
+    @raise_translated_error
+    async def async_camera_image_past(self, timestamp: datetime) -> bytes:
+        """Return a still image from a past recording."""
+        if timestamp.tzinfo is None:
+            timestamp = timestamp.replace(tzinfo=dt_util.get_default_time_zone())
+        if (camera_tz := self._host.api.timezone()) is not None:
+            timestamp = timestamp.astimezone(camera_tz)
+
+        return await self._host.api.baichuan.snapshot_past(
+            self._channel,
+            timestamp,
+            self.entity_description.stream,
+            get_ffmpeg_manager(self.hass).binary,
         )

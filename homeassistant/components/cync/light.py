@@ -121,8 +121,7 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
 
         if (
             self._device.supports_capability(CyncCapability.CCT_COLOR)
-            and self._device.color_mode > 0
-            and self._device.color_mode <= 100
+            and 0 < self._device.color_mode <= 100
         ):
             return ColorMode.COLOR_TEMP
         if (

@@ -291,6 +291,14 @@ class TokenView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         data = cast(MultiDictProxy[str], await request.post())
 
+        # RFC 6749 3.2: parameters must not be included more than once.
+        if len(data) != len(set(data)) or any(
+            not isinstance(value, str) for value in data.values()
+        ):
+            return self.json(
+                {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
+            )
+
         grant_type = data.get("grant_type")
 
         # IndieAuth 6.3.5
@@ -320,7 +328,9 @@ class TokenView(HomeAssistantView):
     ) -> web.Response:
         """Handle authorization code request."""
         client_id = data.get("client_id")
-        if client_id is None or not indieauth.verify_client_id(client_id):
+        if client_id is None or not indieauth.verify_client_id(
+            client_id, request_scheme=request.scheme, request_netloc=request.host
+        ):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid client id"},
                 status_code=HTTPStatus.BAD_REQUEST,
@@ -417,7 +427,9 @@ class TokenView(HomeAssistantView):
     ) -> web.Response:
         """Handle refresh token request."""
         client_id = data.get("client_id")
-        if client_id is not None and not indieauth.verify_client_id(client_id):
+        if client_id is not None and not indieauth.verify_client_id(
+            client_id, request_scheme=request.scheme, request_netloc=request.host
+        ):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid client id"},
                 status_code=HTTPStatus.BAD_REQUEST,

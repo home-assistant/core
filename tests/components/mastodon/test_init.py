@@ -121,6 +121,55 @@ async def test_migrate(
     assert config_entry.unique_id == "trwnh_mastodon_social"
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "state", "reason"),
+    [
+        pytest.param(
+            MastodonUnauthorizedError,
+            ConfigEntryState.MIGRATION_ERROR,
+            "Authentication failed, please reauthenticate with Mastodon",
+            id="unauthorized",
+        ),
+        pytest.param(
+            MastodonError,
+            ConfigEntryState.SETUP_RETRY,
+            "Failed to connect",
+            id="error",
+        ),
+    ],
+)
+async def test_migrate_error(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    side_effect: type[Exception],
+    state: ConfigEntryState,
+    reason: str,
+) -> None:
+    """Test migration errors."""
+    mock_mastodon_client.instance_v2.side_effect = side_effect
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_BASE_URL: "https://mastodon.social",
+            CONF_CLIENT_ID: "client_id",
+            CONF_CLIENT_SECRET: "client_secret",
+            CONF_ACCESS_TOKEN: "access_token",
+        },
+        title="@trwnh@mastodon.social",
+        unique_id="client_id",
+        version=1,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is state
+    assert config_entry.reason == reason
+    assert config_entry.minor_version == 1
+    assert config_entry.unique_id == "client_id"
+
+
 async def test_coordinator_general_error(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,

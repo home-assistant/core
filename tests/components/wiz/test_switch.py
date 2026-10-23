@@ -1,6 +1,9 @@
 """Tests for switch platform."""
 
-import datetime
+import datetime as dt
+
+import pytest
+from pywizlight.exceptions import WizLightConnectionError
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -12,6 +15,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -46,6 +50,20 @@ async def test_switch_operation(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
+async def test_switch_operation_fails(hass: HomeAssistant) -> None:
+    """Test a switch command raises HomeAssistantError when the socket does not answer."""
+    switch, _ = await async_setup_integration(hass, bulb_type=FAKE_SOCKET)
+    entity_id = "switch.mock_title"
+
+    switch.turn_on.side_effect = WizLightConnectionError("Network is unreachable")
+    with pytest.raises(
+        HomeAssistantError, match="Error while communicating with the WiZ device"
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+
 async def test_update_fails(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -62,7 +80,7 @@ async def test_update_fails(
 
     switch.updateState.side_effect = OSError
 
-    async_fire_time_changed(hass, utcnow() + datetime.timedelta(seconds=15))
+    async_fire_time_changed(hass, utcnow() + dt.timedelta(seconds=15))
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

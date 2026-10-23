@@ -1,6 +1,7 @@
 """Fixtures for the Besen integration tests."""
 
 from collections.abc import Generator
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 from besen.models import BesenData, ChargerConfig, ChargerInfo, ChargeStatus
@@ -91,6 +92,11 @@ def charger_state(
                 power=3500,
                 total_energy=12.3,
                 session_energy=1.2,
+                session_start=datetime(2026, 9, 30, 20, 0, tzinfo=UTC),
+                session_duration=1200,
+                session_current_limit=10,
+                scheduled_start=datetime(2026, 9, 30, 19, 30, tzinfo=UTC),
+                charging_time_limit=240,
                 inner_temp_c=24.5,
                 outer_temp=22.5,
                 l1_voltage=230.0,
@@ -168,7 +174,7 @@ def mock_besen_client() -> Generator[Mock]:
         client = mock_client.return_value
         _configure_client_mock(client)
 
-        async def async_start_charging() -> None:
+        async def async_start_charging(**kwargs: datetime | int | None) -> None:
             publish_besen_state(client, charger_state(charger_status=True))
 
         async def async_stop_charging() -> None:

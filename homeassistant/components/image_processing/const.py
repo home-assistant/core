@@ -7,11 +7,26 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from . import ImageProcessingEntity
+    from .entity import ImageProcessingEntity
 
 DOMAIN: Final = "image_processing"
 
 SERVICE_SCAN: Final = "scan"
+
+EVENT_DETECT_FACE = "image_processing.detect_face"
+
+ATTR_AGE = "age"
+ATTR_CONFIDENCE: Final = "confidence"
+ATTR_FACES = "faces"
+ATTR_GENDER = "gender"
+ATTR_GLASSES = "glasses"
+ATTR_MOTION: Final = "motion"
+ATTR_TOTAL_FACES = "total_faces"
+
+CONF_CONFIDENCE = "confidence"
+
+DEFAULT_TIMEOUT = 10
+DEFAULT_CONFIDENCE = 80
 
 DATA_COMPONENT: HassKey[EntityComponent[ImageProcessingEntity]] = HassKey(DOMAIN)
 

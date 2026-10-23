@@ -139,6 +139,17 @@ async def test_linear_state(hass: HomeAssistant, config: dict[str, Any]) -> None
     assert state.state == STATE_UNKNOWN
 
 
+async def test_initial_state_from_existing_source(hass: HomeAssistant) -> None:
+    """Test the sensor uses the source state that exists before setup."""
+    hass.states.async_set(TEST_SOURCE, 4, {})
+
+    await async_setup_compensation(hass, TEST_CONFIG)
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == "5.0"
+
+
 @pytest.mark.parametrize("config", [{"name": TEST_OBJECT_ID, **TEST_BASE_CONFIG}])
 @pytest.mark.usefixtures("setup_compensation")
 async def test_attributes_come_from_source(hass: HomeAssistant) -> None:

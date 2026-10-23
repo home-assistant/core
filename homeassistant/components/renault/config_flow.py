@@ -7,12 +7,23 @@ from typing import TYPE_CHECKING, Any, override
 import aiohttp
 import probatio
 from renault_api.const import AVAILABLE_LOCALES
-from renault_api.gigya.exceptions import GigyaException
+from renault_api.gigya.exceptions import (
+    GigyaException,
+    InvalidVerificationCodeException,
+    PendingTwoFactorAuthenticationException,
+)
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
+)
+from homeassistant.const import CONF_CODE, CONF_EMAIL
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
 )
 
 from .const import DOMAIN, RenaultConfigurationKeys
@@ -32,6 +43,7 @@ USER_SCHEMA = probatio.Schema(
 REAUTH_SCHEMA = probatio.Schema(
     {probatio.Required(RenaultConfigurationKeys.PASSWORD): str}
 )
+TWO_FACTOR_CODE_SCHEMA = probatio.Schema({probatio.Required(CONF_CODE): str})
 
 
 class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -42,6 +54,8 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the Renault config flow."""
         self.renault_config: dict[str, Any] = {}
+        self._two_factor_emails: dict[str, str] = {}
+        self._two_factor_email: str = ""
 
     @override
     async def async_step_user(
@@ -58,24 +72,27 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
             self.renault_config.update(user_input)
             self.renault_config.update(AVAILABLE_LOCALES[locale])
             self.renault_hub = RenaultHub(self.hass, locale)
+            if self.source == SOURCE_RECONFIGURE:
+                self.renault_hub.set_device_ids(
+                    self._get_reconfigure_entry().data.get(
+                        RenaultConfigurationKeys.DEVICE_IDS, {}
+                    )
+                )
             try:
                 login_success = await self.renault_hub.attempt_login(
                     user_input[RenaultConfigurationKeys.USERNAME],
                     user_input[RenaultConfigurationKeys.PASSWORD],
                 )
-            except aiohttp.ClientConnectionError, GigyaException:
+            except PendingTwoFactorAuthenticationException:
+                return await self.async_step_two_factor_email()
+            except aiohttp.ClientError, GigyaException:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 if login_success:
-                    if TYPE_CHECKING:
-                        assert self.renault_hub.login_token
-                    self.renault_config[RenaultConfigurationKeys.LOGIN_TOKEN] = (
-                        self.renault_hub.login_token
-                    )
-                    return await self.async_step_kamereon()
+                    return await self._async_login_complete()
                 errors["base"] = "invalid_credentials"
             suggested_values = user_input
         elif self.source == SOURCE_RECONFIGURE:
@@ -145,26 +162,29 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
         if user_input:
-            # Check credentials
+            self.renault_config.update(user_input)
             self.renault_hub = RenaultHub(
                 self.hass, reauth_entry.data[RenaultConfigurationKeys.LOCALE]
             )
-            if await self.renault_hub.attempt_login(
-                reauth_entry.data[RenaultConfigurationKeys.USERNAME],
-                user_input[RenaultConfigurationKeys.PASSWORD],
-            ):
-                if TYPE_CHECKING:
-                    assert self.renault_hub.login_token
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates={
-                        RenaultConfigurationKeys.PASSWORD: user_input[
-                            RenaultConfigurationKeys.PASSWORD
-                        ],
-                        RenaultConfigurationKeys.LOGIN_TOKEN: self.renault_hub.login_token,
-                    },
+            self.renault_hub.set_device_ids(
+                reauth_entry.data.get(RenaultConfigurationKeys.DEVICE_IDS, {})
+            )
+            try:
+                login_success = await self.renault_hub.attempt_login(
+                    reauth_entry.data[RenaultConfigurationKeys.USERNAME],
+                    user_input[RenaultConfigurationKeys.PASSWORD],
                 )
-            errors = {"base": "invalid_credentials"}
+            except PendingTwoFactorAuthenticationException:
+                return await self.async_step_two_factor_email()
+            except aiohttp.ClientError, GigyaException:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if login_success:
+                    return await self._async_login_complete()
+                errors["base"] = "invalid_credentials"
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -176,6 +196,104 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
                 ]
             },
         )
+
+    async def async_step_two_factor_email(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select the email address to send the two-factor authentication code to."""
+        if user_input:
+            return await self._async_request_two_factor_auth_code(
+                user_input[CONF_EMAIL]
+            )
+
+        try:
+            emails = await self.renault_hub.get_two_factor_auth_emails()
+        except aiohttp.ClientError, GigyaException:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+        self._two_factor_emails = {
+            email.id: email.obfuscated or email.id for email in emails if email.id
+        }
+        if not self._two_factor_emails:
+            return self.async_abort(reason="two_factor_no_email")
+        if len(self._two_factor_emails) == 1:
+            return await self._async_request_two_factor_auth_code(
+                next(iter(self._two_factor_emails))
+            )
+
+        return self.async_show_form(
+            step_id="two_factor_email",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_EMAIL): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=email_id, label=email)
+                                for email_id, email in self._two_factor_emails.items()
+                            ]
+                        )
+                    )
+                }
+            ),
+        )
+
+    async def _async_request_two_factor_auth_code(
+        self, email_id: str
+    ) -> ConfigFlowResult:
+        """Email the two-factor authentication code."""
+        try:
+            await self.renault_hub.request_two_factor_auth_code(email_id)
+        except aiohttp.ClientError, GigyaException:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+        self._two_factor_email = self._two_factor_emails[email_id]
+        return await self.async_step_two_factor_code()
+
+    async def async_step_two_factor_code(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Complete the login with the two-factor authentication code."""
+        errors: dict[str, str] = {}
+        if user_input:
+            try:
+                await self.renault_hub.complete_two_factor_auth(user_input[CONF_CODE])
+            except InvalidVerificationCodeException:
+                errors["base"] = "invalid_code"
+            # Other failures may discard the pending login, so the code can't be retried.
+            except aiohttp.ClientError, GigyaException:
+                return self.async_abort(reason="cannot_connect")
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
+            else:
+                return await self._async_login_complete()
+
+        return self.async_show_form(
+            step_id="two_factor_code",
+            data_schema=TWO_FACTOR_CODE_SCHEMA,
+            errors=errors,
+            description_placeholders={CONF_EMAIL: self._two_factor_email},
+        )
+
+    async def _async_login_complete(self) -> ConfigFlowResult:
+        """Store the login token and device ids once logged in."""
+        if TYPE_CHECKING:
+            assert self.renault_hub.login_token
+        self.renault_config[RenaultConfigurationKeys.LOGIN_TOKEN] = (
+            self.renault_hub.login_token
+        )
+        self.renault_config[RenaultConfigurationKeys.DEVICE_IDS] = (
+            self.renault_hub.device_ids
+        )
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data_updates=self.renault_config
+            )
+        return await self.async_step_kamereon()
 
     async def async_step_reconfigure(
         self, user_input: Mapping[str, Any]

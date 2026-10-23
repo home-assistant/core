@@ -7,11 +7,6 @@ from datetime import timedelta
 from typing import Any, override
 
 from pyportainer import DockerContainerState, Portainer
-from pyportainer.exceptions import (
-    PortainerAuthenticationError,
-    PortainerConnectionError,
-    PortainerTimeoutError,
-)
 from pyportainer.models.docker import DockerContainer
 from pyportainer.models.stacks import Stack, StackType
 
@@ -22,11 +17,9 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .const import DOMAIN
 from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
@@ -46,10 +39,7 @@ PARALLEL_UPDATES = 1
 class PortainerEndpointButtonDescription(ButtonEntityDescription):
     """Class to describe a Portainer endpoint button entity."""
 
-    press_action: Callable[
-        [Portainer, int],
-        Coroutine[Any, Any, DockerContainer | None],
-    ]
+    press_action: Callable[[Portainer, int], Coroutine[Any, Any, Any]]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -88,6 +78,24 @@ ENDPOINT_BUTTONS: tuple[PortainerEndpointButtonDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         press_action=(
             lambda portainer, endpoint_id: portainer.prune_volumes(endpoint_id)
+        ),
+    ),
+    PortainerEndpointButtonDescription(
+        key="build_cache_prune",
+        translation_key="build_cache_prune",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id: portainer.prune_build_cache(
+                endpoint_id, all_cache=True
+            )
+        ),
+    ),
+    PortainerEndpointButtonDescription(
+        key="networks_prune",
+        translation_key="networks_prune",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id: portainer.prune_networks(endpoint_id)
         ),
     ),
 )
@@ -275,24 +283,7 @@ class PortainerBaseButton(ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
-        try:
-            await self._async_press_call()
-        except PortainerConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
-        except PortainerAuthenticationError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from err
-        except PortainerTimeoutError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_connect",
-            ) from err
-
+        await self.coordinator.async_call_portainer(self._async_press_call())
         await self.coordinator.async_request_refresh()
 
 

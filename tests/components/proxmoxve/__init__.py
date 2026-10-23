@@ -36,15 +36,16 @@ POWER_PERMISSIONS = {
         "VM.PowerMgmt": 1,
     },
     "/vms": {"VM.PowerMgmt": 1},
-    "/vms/101": {"VM.PowerMgmt": 0},
+    "/vms/101": {"VM.Audit": 1},
 }
 
 SNAPSHOT_PERMISSIONS = {
     "/vms": {"VM.Snapshot": 1},
-    "/vms/101": {"VM.Snapshot": 0},
+    "/vms/101": {"VM.Audit": 1},
 }
 SYSMOD_PERMISSIONS = {
     "/": {"Sys.Modify": 1},
+    "/nodes": {"Sys.Modify": 1},
 }
 
 MERGED_PERMISSIONS = {

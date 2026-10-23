@@ -35,6 +35,17 @@
     "switch": {
       "bluetooth": {
         "default": "mdi:bluetooth"
+      },
+      "screensaver": {
+        "default": "mdi:sleep"
+      }
+    },
+    "time": {
+      "screensaver_end_time": {
+        "default": "mdi:clock-end"
+      },
+      "screensaver_start_time": {
+        "default": "mdi:clock-start"
       }
     }
   },

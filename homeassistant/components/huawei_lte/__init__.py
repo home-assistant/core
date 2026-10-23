@@ -17,15 +17,11 @@ from huawei_lte_api.exceptions import (
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
 )
-import probatio
 from requests.exceptions import Timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIG_ENTRY_ID,
-    ATTR_HW_VERSION,
-    ATTR_MODEL,
-    ATTR_SW_VERSION,
     CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
@@ -36,8 +32,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -47,11 +47,9 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ADMIN_SERVICES,
     ALL_KEYS,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
@@ -77,10 +75,9 @@ from .const import (
     KEY_WLAN_HOST_LIST,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
     KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
-    SERVICE_RESUME_INTEGRATION,
-    SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
 )
+from .services import async_setup_services
 from .utils import get_device_macs, non_verifying_requests_session
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,7 +86,6 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-SERVICE_SCHEMA = probatio.Schema({probatio.Optional(CONF_URL): cv.url})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -279,7 +275,7 @@ class Router:
 type HuaweiLteConfigEntry = ConfigEntry[Router]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) -> None:
     """Set up Huawei LTE component from config entry."""
     url = entry.data[CONF_URL]
 
@@ -332,18 +328,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
                 )
         else:
             await hass.async_add_executor_job(router.cleanup)
-            msg = (
-                "Could not resolve serial number to use as unique id for router at %s"
-                ", setup failed"
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key=(
+                    "serial_number_not_found"
+                    if entry.data.get(CONF_PASSWORD)
+                    else "serial_number_not_found_unauthenticated"
+                ),
+                translation_placeholders={"url": url},
             )
-            if not entry.data.get(CONF_PASSWORD):
-                msg += (
-                    ". Try setting up credentials for the router for one startup, "
-                    "unauthenticated mode can be enabled after that in integration "
-                    "settings"
-                )
-            _LOGGER.error(msg, url)
-            return False
 
     # Store reference to router
     entry.runtime_data = router
@@ -383,15 +376,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
             hw_version = router_info.get("HardwareVersion")
             sw_version = router_info.get("SoftwareVersion")
             if router_info.get("DeviceName"):
-                device_info[ATTR_MODEL] = router_info["DeviceName"]
+                device_info.model = router_info["DeviceName"]
         if not sw_version and router.data.get(KEY_DEVICE_BASIC_INFORMATION):
             sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get(
                 "SoftwareVersion"
             )
         if hw_version:
-            device_info[ATTR_HW_VERSION] = hw_version
+            device_info.hw_version = hw_version
         if sw_version:
-            device_info[ATTR_SW_VERSION] = sw_version
+            device_info.sw_version = sw_version
         device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
@@ -432,21 +425,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, router.cleanup)
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: HuaweiLteConfigEntry
-) -> bool:
+) -> None:
     """Unload config entry."""
 
-    # Forward config entry unload to platforms
-    await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-    # Invoke router cleanup
-    await hass.async_add_executor_job(config_entry.runtime_data.cleanup)
-
-    return True
+    try:
+        # Forward config entry unload to platforms
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, PLATFORMS
+        )
+    finally:
+        # Invoke router cleanup
+        await hass.async_add_executor_job(config_entry.runtime_data.cleanup)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -454,60 +446,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[HUAWEI_LTE_CONFIG] = config
 
-    def service_handler(service: ServiceCall) -> None:
-        """Apply a service.
-
-        We key this using the router URL instead of its unique id / serial number,
-        because the latter is not available anywhere in the UI.
-        """
-        routers = [
-            entry.runtime_data
-            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
-        ]
-        if url := service.data.get(CONF_URL):
-            router = next((router for router in routers if router.url == url), None)
-        elif not routers:
-            _LOGGER.error("%s: no routers configured", service.service)
-            return
-        elif len(routers) == 1:
-            router = routers[0]
-        else:
-            _LOGGER.error(
-                "%s: more than one router configured, must specify one of URLs %s",
-                service.service,
-                sorted(router.url for router in routers),
-            )
-            return
-        if not router:
-            _LOGGER.error("%s: router %s unavailable", service.service, url)
-            return
-
-        if service.service == SERVICE_RESUME_INTEGRATION:
-            # Login will be handled automatically on demand
-            router.suspended = False
-            _LOGGER.debug("%s: %s", service.service, "done")
-        elif service.service == SERVICE_SUSPEND_INTEGRATION:
-            router.logout()
-            router.suspended = True
-            _LOGGER.debug("%s: %s", service.service, "done")
-        else:
-            _LOGGER.error("%s: unsupported service", service.service)
-
-    for service in ADMIN_SERVICES:
-        async_register_admin_service(
-            hass,
-            DOMAIN,
-            service,
-            service_handler,
-            schema=SERVICE_SCHEMA,
-        )
+    async_setup_services(hass)
 
     return True
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: HuaweiLteConfigEntry
-) -> bool:
+) -> None:
     """Migrate config entry to new version."""
     if config_entry.version == 1:
         options = dict(config_entry.options)
@@ -524,4 +470,3 @@ async def async_migrate_entry(
     # There can be no longer needed *_from_yaml data and options things left behind
     # from pre-2022.4ish; they can be removed while at it when/if we eventually bump and
     # migrate to version > 3 for some other reason.
-    return True

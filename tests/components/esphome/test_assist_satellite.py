@@ -2369,6 +2369,51 @@ async def test_multichannel_audio(
             await pipeline_finished.wait()
 
 
+async def test_empty_audio_frame_does_not_end_stream(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test an empty audio frame from the device doesn't end the audio stream."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.API_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    received_chunks: list[bytes] = []
+    pipeline_finished = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        received_chunks.extend([chunk async for chunk in kwargs["stt_stream"]])
+        pipeline_finished.set()
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+        async with asyncio.timeout(1):
+            await satellite.handle_pipeline_start(
+                conversation_id="",
+                flags=VoiceAssistantCommandFlag(0),  # stt
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase=None,
+            )
+            await satellite.handle_audio(b"before")
+            await satellite.handle_audio(b"")
+            await satellite.handle_audio(b"after")
+            await satellite.handle_pipeline_stop(abort=False)
+            await pipeline_finished.wait()
+
+    assert received_chunks == [b"before", b"after"]
+
+
 async def test_multichannel_audio_fallback_channel_0(
     hass: HomeAssistant,
     mock_client: APIClient,

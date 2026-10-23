@@ -1,7 +1,7 @@
 """Sensor platform for Ista EcoTrend integration."""
 
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from enum import StrEnum
 import logging
 from typing import override
@@ -262,9 +262,9 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
 
         if last_stats:
             statistics_sum = last_stats[statistic_id][0].get("sum") or 0.0
-            statistics_since = datetime.datetime.fromtimestamp(
-                last_stats[statistic_id][0].get("end") or 0, tz=datetime.UTC
-            ) + datetime.timedelta(days=1)
+            statistics_since = dt.datetime.fromtimestamp(
+                last_stats[statistic_id][0].get("end") or 0, tz=dt.UTC
+            ) + dt.timedelta(days=1)
 
         if monthly_consumptions := get_statistics(
             self.coordinator.data[self.consumption_unit],

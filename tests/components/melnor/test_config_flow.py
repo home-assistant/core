@@ -63,6 +63,7 @@ async def test_user_step_discovered_devices(
 
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["data"] == {CONF_ADDRESS: FAKE_ADDRESS_1}
+        assert result2["result"].unique_id == FAKE_ADDRESS_1
 
     mock_setup_entry.assert_called_once()
 
@@ -149,6 +150,7 @@ async def test_bluetooth_confirm(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == FAKE_ADDRESS_1
     assert result2["data"] == {CONF_ADDRESS: FAKE_ADDRESS_1}
+    assert result2["result"].unique_id == FAKE_ADDRESS_1
 
     mock_setup_entry.assert_called_once()
 

@@ -152,11 +152,19 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
         translation_key="entering_region",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
+    SENSOR_MAP["thermometry"]: BinarySensorEntityDescription(
+        key="temperature_alarm",
+        translation_key="temperature_alarm",
+        device_class=BinarySensorDeviceClass.HEAT,
+    ),
 }
 
-# pyhik uses videoloss as a connection watchdog, not a user-facing event, so a
-# leaked entry gets no entity and no unknown-sensor warning.
-IGNORED_SENSOR_TYPES: frozenset[str] = frozenset({SENSOR_MAP["videoloss"]})
+# pyhik uses videoloss as a connection watchdog and does not parse duration
+# (ongoing events) packets, so neither is a user-facing event: a leaked entry
+# gets no entity and no unknown-sensor warning.
+IGNORED_SENSOR_TYPES: frozenset[str] = frozenset(
+    {SENSOR_MAP["videoloss"], SENSOR_MAP["duration"]}
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,7 +182,7 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_SSL, default=False): cv.boolean,
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_CUSTOMIZE, default={}): probatio.Schema(
             {cv.string: CUSTOMIZE_SCHEMA}
         ),

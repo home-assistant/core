@@ -352,6 +352,9 @@ async def test_reconfigure_flow_error(
         result["flow_id"], {CONF_FOLDER_NAME: "newFolder"}
     )
 
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
     assert mock_config_entry.data[CONF_FOLDER_NAME] == "newFolder"
     assert mock_config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"

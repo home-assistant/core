@@ -1,7 +1,7 @@
 """Tests for the Ollama integration."""
 
 from collections.abc import AsyncGenerator
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -501,7 +501,7 @@ async def test_history_conversion(
                 data={
                     "speech": {"plain": {"speech": "4:24 PM", "extra_data": None}},
                     "response_type": "action_done",
-                    "speech_slots": {"time": datetime.time(16, 24, 17, 813343)},
+                    "speech_slots": {"time": dt.time(16, 24, 17, 813343)},
                     "data": {"success": [], "failed": []},
                 }
             ),

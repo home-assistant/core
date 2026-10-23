@@ -38,6 +38,7 @@ class FakeStore(LocalCalendarStore):
         mock_path.read_text.return_value = ics_content
         mock_path.read_text.side_effect = read_side_effect
         mock_path.write_text = self._mock_write_text
+        mock_path.__str__ = Mock(return_value=str(path))
         super().__init__(hass, mock_path)
 
     def _mock_exists(self) -> bool:

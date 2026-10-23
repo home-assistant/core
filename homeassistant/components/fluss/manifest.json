@@ -1,6 +1,7 @@
 {
   "domain": "fluss",
   "name": "Fluss+",
+  "categories": ["blinds_curtains", "security_safety.locks_access"],
   "codeowners": ["@fluss", "@Marcello17"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fluss",

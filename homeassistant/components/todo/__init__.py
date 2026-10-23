@@ -1,7 +1,7 @@
 """The todo integration."""
 
 import dataclasses
-import datetime
+import datetime as dt
 import logging
 from typing import Any
 
@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_DESCRIPTION,
     ATTR_DUE,
     ATTR_DUE_DATE,
@@ -39,7 +39,26 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
-SCAN_INTERVAL = datetime.timedelta(seconds=60)
+SCAN_INTERVAL = dt.timedelta(seconds=60)
+
+__all__ = [
+    "ATTR_DESCRIPTION",
+    "ATTR_DUE",
+    "ATTR_DUE_DATE",
+    "ATTR_DUE_DATETIME",
+    "ATTR_ITEM",
+    "ATTR_RENAME",
+    "ATTR_STATUS",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "TodoItem",
+    "TodoItemStatus",
+    "TodoListEntity",
+    "TodoListEntityFeature",
+    "TodoServices",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

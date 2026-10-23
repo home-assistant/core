@@ -280,6 +280,18 @@ async def test_reauth_subscription_auth_failure(
     assert CONF_EMAIL in result["data_schema"].schema
     assert CONF_PASSWORD in result["data_schema"].schema
 
+    client.get_subscription_details.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
 
 async def test_form_mfa(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_api: AsyncMock

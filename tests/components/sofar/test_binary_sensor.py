@@ -14,7 +14,7 @@ from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MOCK_MODEL, MOCK_SERIAL, MOCK_USER_INPUT, seed_pv_inverter
+from . import MOCK_ENTRY_DATA, MOCK_MODEL, MOCK_SERIAL, seed_pv_inverter
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -29,7 +29,7 @@ async def test_all_entities(
     connection = MockModbusConnection()
     seed_pv_inverter(connection.for_unit(1))
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_USER_INPUT, title=MOCK_MODEL
+        domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_ENTRY_DATA, title=MOCK_MODEL
     )
     entry.add_to_hass(hass)
     with (

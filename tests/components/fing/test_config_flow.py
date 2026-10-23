@@ -1,6 +1,6 @@
 """Tests for Fing config flow."""
 
-import httpx
+import httpx2
 import pytest
 
 from homeassistant.components.fing.const import DOMAIN
@@ -70,24 +70,24 @@ async def test_verify_api_version_outdated(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (httpx.NetworkError("Network error"), "cannot_connect"),
-        (httpx.TimeoutException("Timeout error"), "timeout_connect"),
+        (httpx2.NetworkError("Network error"), "cannot_connect"),
+        (httpx2.TimeoutException("Timeout error"), "timeout_connect"),
         (
-            httpx.HTTPStatusError(
-                "HTTP status error - 500", request=None, response=httpx.Response(500)
+            httpx2.HTTPStatusError(
+                "HTTP status error - 500", request=None, response=httpx2.Response(500)
             ),
             "http_status_error",
         ),
         (
-            httpx.HTTPStatusError(
-                "HTTP status error - 401", request=None, response=httpx.Response(401)
+            httpx2.HTTPStatusError(
+                "HTTP status error - 401", request=None, response=httpx2.Response(401)
             ),
             "invalid_api_key",
         ),
-        (httpx.HTTPError("HTTP error"), "unknown"),
-        (httpx.InvalidURL("Invalid URL"), "url_error"),
-        (httpx.CookieConflict("Cookie conflict"), "unknown"),
-        (httpx.StreamError("Stream error"), "unknown"),
+        (httpx2.HTTPError("HTTP error"), "unknown"),
+        (httpx2.InvalidURL("Invalid URL"), "url_error"),
+        (httpx2.CookieConflict("Cookie conflict"), "unknown"),
+        (httpx2.StreamError("Stream error"), "unknown"),
     ],
 )
 async def test_http_error_handling(

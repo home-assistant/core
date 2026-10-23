@@ -172,7 +172,11 @@ async def test_form_no_location_data(
     ],
 )
 async def test_flow_fails(
-    hass: HomeAssistant, side_effect: Exception, error_key: str, base_error: str
+    hass: HomeAssistant,
+    get_camera: CameraInfoModel,
+    side_effect: Exception,
+    error_key: str,
+    base_error: str,
 ) -> None:
     """Test config flow errors."""
     result4 = await hass.config_entries.flow.async_init(
@@ -195,6 +199,27 @@ async def test_flow_fails(
         )
 
     assert result4["errors"] == {error_key: base_error}
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+            return_value=[get_camera],
+        ),
+        patch(
+            "homeassistant.components.trafikverket_camera.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result4["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567890",
+                CONF_LOCATION: "Test loc",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
@@ -372,6 +397,121 @@ async def test_reconfigure_flow(
         "api_key": "1234567890",
         "id": "5678",
     }
+
+
+async def test_reconfigure_flow_same_camera(
+    hass: HomeAssistant, get_camera: CameraInfoModel
+) -> None:
+    """Test reconfigure keeps the entry's own camera with a new API key."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_ID: "1234"},
+        unique_id="trafikverket_camera-1234",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+            return_value=[get_camera],
+        ),
+        patch(
+            "homeassistant.components.trafikverket_camera.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "new_api_key", CONF_LOCATION: "Test loc"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_API_KEY: "new_api_key", CONF_ID: "1234"}
+    assert entry.unique_id == "trafikverket_camera-1234"
+
+
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant, get_camera2: CameraInfoModel
+) -> None:
+    """Test reconfigure aborts when another entry has the camera."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_ID: "1234"},
+        unique_id="trafikverket_camera-1234",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_ID: "5678"},
+        unique_id="trafikverket_camera-5678",
+        version=3,
+    ).add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+        return_value=[get_camera2],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "1234567890", CONF_LOCATION: "Test loc"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {CONF_API_KEY: "1234567890", CONF_ID: "1234"}
+
+
+async def test_reconfigure_flow_multiple_cameras_already_configured(
+    hass: HomeAssistant,
+    get_cameras: list[CameraInfoModel],
+    get_camera2: CameraInfoModel,
+) -> None:
+    """Test reconfigure aborts when the selected camera has another entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_ID: "1234"},
+        unique_id="trafikverket_camera-1234",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_ID: "5678"},
+        unique_id="trafikverket_camera-5678",
+        version=3,
+    ).add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+        return_value=get_cameras,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "1234567890", CONF_LOCATION: "Test loc"},
+        )
+    assert result["step_id"] == "multiple_cameras"
+
+    with patch(
+        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+        return_value=[get_camera2],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ID: "5678"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {CONF_API_KEY: "1234567890", CONF_ID: "1234"}
 
 
 @pytest.mark.parametrize(

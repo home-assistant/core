@@ -1,6 +1,6 @@
 """The tests for the demo weather component."""
 
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import patch
 
@@ -58,7 +58,7 @@ async def test_attributes(hass: HomeAssistant, weather_only) -> None:
     assert data.get(ATTR_ATTRIBUTION) == "Powered by Home Assistant"
 
 
-TEST_TIME_ADVANCE_INTERVAL = datetime.timedelta(seconds=5 + 1)
+TEST_TIME_ADVANCE_INTERVAL = dt.timedelta(seconds=5 + 1)
 
 
 @pytest.mark.parametrize(
@@ -163,7 +163,7 @@ async def test_forecast(
     for key, val in expected_forecast[1].items():
         assert forecast1[6][key] == val
 
-    freezer.tick(WEATHER_UPDATE_INTERVAL + datetime.timedelta(seconds=1))
+    freezer.tick(WEATHER_UPDATE_INTERVAL + dt.timedelta(seconds=1))
     await hass.async_block_till_done()
 
     msg = await client.receive_json()

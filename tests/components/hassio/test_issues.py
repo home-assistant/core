@@ -33,7 +33,7 @@ from homeassistant.components.hassio.coordinator import (
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import issue_registry as ir, system_state
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -676,7 +676,7 @@ async def test_supervisor_issues(
         type_="detached_addon_missing",
         fixable=False,
         reference="test",
-        placeholders={"addon_url": "/hassio/addon/test", "addon": "test"},
+        placeholders={"addon_url": "/config/app/test", "addon": "test"},
     )
     assert_issue_repair_in_list(
         msg["result"]["issues"],
@@ -962,7 +962,7 @@ async def test_supervisor_issues_app_port_conflict_single(
         placeholders={
             "reference": "test",
             "addon": "test",
-            "addon_url": "/hassio/addon/test",
+            "addon_url": "/config/app/test",
             "port": "11443",
         },
     )
@@ -1034,7 +1034,7 @@ async def test_supervisor_issues_app_port_conflict_menu(
         placeholders={
             "reference": "test",
             "addon": "test",
-            "addon_url": "/hassio/addon/test",
+            "addon_url": "/config/app/test",
             "port": "11443",
         },
     )
@@ -1090,7 +1090,7 @@ async def test_supervisor_issues_detached_addon_missing(
         placeholders={
             "reference": "test",
             "addon": "test",
-            "addon_url": "/hassio/addon/test",
+            "addon_url": "/config/app/test",
         },
     )
 
@@ -1302,7 +1302,7 @@ async def test_supervisor_issues_addon_pwned(
         placeholders={
             "reference": "test",
             "addon": "test",
-            "addon_url": "/hassio/addon/test",
+            "addon_url": "/config/app/test",
             "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
         },
     )
@@ -1580,8 +1580,8 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
     await hass.async_block_till_done()
     assert events == ["changed"]
 
-    await issues_coordinator.async_refresh()
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert events == ["changed", "changed"]
 
     unsubscribe()
@@ -1631,8 +1631,8 @@ async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure
     assert issues_coordinator is not None
     assert len(issues_coordinator.issues) == 0
 
-    await issues_coordinator.async_refresh()
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert len(issues_coordinator.issues) == 1
 
 
@@ -1698,3 +1698,94 @@ async def test_supervisor_issues_unload_disconnects_listener(
     await hass.async_block_till_done()
     # unhealthy_reasons unchanged — listener did not fire.
     assert "docker" in issues.unhealthy_reasons
+
+
+def _reboot_required_event(event: str, issue_uuid: str) -> dict[str, Any]:
+    """Return a Supervisor event for a reboot required issue."""
+    return {
+        "type": "supervisor/event",
+        "data": {
+            "event": event,
+            "data": {
+                "uuid": issue_uuid,
+                "type": "reboot_required",
+                "context": "system",
+                "reference": None,
+                "reference_extra": None,
+                "suggestions": [
+                    {
+                        "uuid": uuid4().hex,
+                        "type": "execute_reboot",
+                        "context": "system",
+                        "reference": None,
+                        "reference_extra": None,
+                    }
+                ],
+            },
+        },
+    }
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_host_reboot_required(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the host reboot flag mirrors the Supervisor reboot issues."""
+    mock_resolution_info(supervisor_client)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_supervisor_ws_client()
+
+    assert not system_state.async_get(hass).host_reboot_required
+
+    # Supervisor raises one issue per cause, like an OS update and a swap change.
+    first_issue, second_issue = uuid4().hex, uuid4().hex
+    for event, issue_uuid, expected in (
+        ("issue_changed", first_issue, True),
+        ("issue_changed", second_issue, True),
+        ("issue_removed", first_issue, True),
+        ("issue_removed", second_issue, False),
+    ):
+        await client.send_json_auto_id(_reboot_required_event(event, issue_uuid))
+        assert (await client.receive_json())["success"]
+        await hass.async_block_till_done()
+
+        assert system_state.async_get(hass).host_reboot_required is expected
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_host_reboot_required_on_startup(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """Test a reboot issue already known to Supervisor sets the host reboot flag."""
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type=IssueType.REBOOT_REQUIRED,
+                context=ContextType.SYSTEM,
+                reference=None,
+                reference_extra=None,
+                uuid=(issue_uuid := uuid4()),
+            )
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    type=SuggestionType.EXECUTE_REBOOT,
+                    context=ContextType.SYSTEM,
+                    reference=None,
+                    reference_extra=None,
+                    uuid=uuid4(),
+                    auto=False,
+                )
+            ]
+        },
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert system_state.async_get(hass).host_reboot_required

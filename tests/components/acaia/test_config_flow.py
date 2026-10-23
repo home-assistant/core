@@ -61,6 +61,7 @@ async def test_form(
         **user_input,
         CONF_IS_NEW_STYLE_SCALE: True,
     }
+    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -85,6 +86,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant, mock_verify: AsyncMock) 
         CONF_ADDRESS: service_info.address,
         CONF_IS_NEW_STYLE_SCALE: True,
     }
+    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
 @pytest.mark.parametrize(

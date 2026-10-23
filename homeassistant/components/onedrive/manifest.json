@@ -2,6 +2,7 @@
   "domain": "onedrive",
   "name": "OneDrive",
   "after_dependencies": ["cloud"],
+  "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

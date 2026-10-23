@@ -26,7 +26,7 @@ async def fixture_single_platform():
 @pytest.mark.parametrize(
     ("model", "data"),
     [
-        (Model.F1155, {43005: 1234, 40004: 20.0, 40321: 50, 40317: 0}),
+        (Model.F1155, {43005: 1234, 40004: 20.0, 40321: 50, 40317: 0, 43431: "OFF"}),
         (Model.SMOS40, {40019: 1234, 30002: 20.0, 31855: 50}),
     ],
 )

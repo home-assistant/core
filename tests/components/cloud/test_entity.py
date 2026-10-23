@@ -2,7 +2,7 @@
 
 import base64
 from collections.abc import Callable
-import datetime
+import datetime as dt
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -367,7 +367,7 @@ async def test_prepare_chat_for_generation_passes_messages_through(
                 data={
                     "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
                     "response_type": "action_done",
-                    "speech_slots": {"time": datetime.time(12, 0)},
+                    "speech_slots": {"time": dt.time(12, 0)},
                     "data": {"success": [], "failed": []},
                 }
             ),

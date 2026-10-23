@@ -81,7 +81,7 @@ DOMAIN: Final = "number"
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import NumberEntity
+    from .entity import NumberEntity
 
 DATA_COMPONENT: HassKey[EntityComponent[NumberEntity]] = HassKey(DOMAIN)
 

@@ -49,7 +49,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_COVER_POSITION,
         {
             probatio.Required(ATTR_POSITION): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
             probatio.Optional(ATTR_SPEED): cv.string,
         },
@@ -93,7 +93,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_COVER_TILT_POSITION,
         {
             probatio.Required(ATTR_TILT_POSITION): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             )
         },
         "async_set_cover_tilt_position",

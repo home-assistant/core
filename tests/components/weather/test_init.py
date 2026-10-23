@@ -22,18 +22,18 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN,
-    ROUNDING_PRECISION,
     SERVICE_GET_FORECASTS,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
-    round_temperature,
 )
 from homeassistant.components.weather.const import (
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
     ATTR_WEATHER_HUMIDITY,
+    ROUNDING_PRECISION,
 )
+from homeassistant.components.weather.entity import round_temperature
 from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
@@ -44,7 +44,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
@@ -737,7 +737,13 @@ async def test_get_forecast_unsupported(
     weather_entity = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
 
     for forecast_type in forecast_types:
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(
+            ServiceValidationError,
+            match=(
+                f"Weather entity {weather_entity.entity_id} does not support"
+                f" the {forecast_type} forecast type"
+            ),
+        ):
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_GET_FORECASTS,

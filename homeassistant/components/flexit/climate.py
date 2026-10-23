@@ -114,7 +114,7 @@ class Flexit(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self, hub: ModbusHub, modbus_slave: int | None, name: str | None
@@ -135,11 +135,11 @@ class Flexit(ClimateEntity):
 
     async def async_update(self) -> None:
         """Update unit attributes."""
-        self._attr_target_temperature = await self._async_read_temp_from_register(
-            CALL_TYPE_REGISTER_HOLDING, 8
+        self._attr_native_target_temperature = (
+            await self._async_read_temp_from_register(CALL_TYPE_REGISTER_HOLDING, 8)
         )
-        self._attr_current_temperature = await self._async_read_temp_from_register(
-            CALL_TYPE_REGISTER_INPUT, 9
+        self._attr_native_current_temperature = (
+            await self._async_read_temp_from_register(CALL_TYPE_REGISTER_INPUT, 9)
         )
         res = await self._async_read_int16_from_register(CALL_TYPE_REGISTER_HOLDING, 17)
         if self.fan_modes and res < len(self.fan_modes):
@@ -208,7 +208,7 @@ class Flexit(ClimateEntity):
             return
 
         if await self._async_write_int16_to_register(8, int(target_temperature * 10)):
-            self._attr_target_temperature = target_temperature
+            self._attr_native_target_temperature = target_temperature
         else:
             _LOGGER.error("Modbus error setting target temperature to Flexit")
 
@@ -262,7 +262,7 @@ class FlexitClimate(FlexitEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = MIN_TEMPERATURE
     _attr_max_temp = MAX_TEMPERATURE
 
@@ -286,8 +286,8 @@ class FlexitClimate(FlexitEntity, ClimateEntity):
         fan_mode = device.fan_mode
         activity = device.activity
 
-        self._attr_target_temperature = device.target_temperature
-        self._attr_current_temperature = measurements.supply_air_temperature
+        self._attr_native_target_temperature = device.target_temperature
+        self._attr_native_current_temperature = measurements.supply_air_temperature
         self._attr_fan_mode = (
             FLEXIT_TO_HA_FAN_MODE.get(fan_mode) if fan_mode is not None else None
         )

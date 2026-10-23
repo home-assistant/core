@@ -42,17 +42,19 @@ async def test_updating_exception(
     mock_nyt_games_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling an exception during update."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_nyt_games_client.get_latest_stats.side_effect = NYTGamesError
+    mock_nyt_games_client.get_latest_stats.side_effect = NYTGamesError("Boom")
 
     freezer.tick(timedelta(minutes=15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.wordle_played").state == STATE_UNAVAILABLE
+    assert "An error occurred while fetching data from NYT Games: Boom" in caplog.text
 
     mock_nyt_games_client.get_latest_stats.side_effect = None
 

@@ -27,7 +27,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> None:
     """Set up a ProxmoxVE from a config entry."""
     coordinator = ProxmoxCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -45,10 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> None:
     """Migrate old config entries."""
 
     # Migration for only the old binary sensors to new unique_id format
@@ -91,9 +89,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) ->
 
         hass.config_entries.async_update_entry(entry, data=data, version=3)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

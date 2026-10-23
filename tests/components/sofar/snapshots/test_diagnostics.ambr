@@ -22,19 +22,17 @@
     'inverter_type': 1537,
     'link': dict({
       'stats': dict({
-        'answered': 43,
+        'answered': 46,
         'failures': dict({
         }),
         'median': float,
         'p95': float,
-        'requests': 43,
+        'requests': 46,
         'slowest': float,
       }),
       'tuning': dict({
         'connect_delay': 0.0,
         'spacing': 0.0,
-        'timeout': None,
-        'withdrawals': 0,
       }),
     }),
     'model': '4.4 KTLX-G3',
@@ -187,6 +185,7 @@
         '1682': 0,
         '1683': 0,
         '1773': 0,
+        '4106': 0,
         '4131': 0,
         '4132': 0,
         '4356': 0,
@@ -204,6 +203,7 @@
     ]),
     'serial_number': '**REDACTED**',
     'settings_components': list([
+      'rtc_sync',
       'feed_in',
       'remote',
       'active_power_control',

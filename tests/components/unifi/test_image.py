@@ -32,7 +32,7 @@ from tests.typing import ClientSessionGenerator
 def mock_getrandbits():
     """Mock image access token which normally is randomized."""
     with patch(
-        "homeassistant.components.image.SystemRandom.getrandbits",
+        "homeassistant.components.image.entity.SystemRandom.getrandbits",
         return_value=1,
     ):
         yield

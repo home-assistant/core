@@ -27,7 +27,7 @@ class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 def camera_in_use(data: SystemBridgeData) -> bool | None:
     """Return if any camera is in use."""
-    if data.system.camera_usage is not None:
+    if data.system is not None and data.system.camera_usage is not None:
         return len(data.system.camera_usage) > 0
     return None
 

@@ -353,6 +353,7 @@ async def test_import_migration(
         result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "123"
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1

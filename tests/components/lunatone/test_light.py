@@ -1,8 +1,9 @@
 """Tests for the Lunatone integration."""
 
-import copy
+from copy import deepcopy
 from unittest.mock import AsyncMock
 
+import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 from lunatone_rest_api_client.models import LineStatus
 import pytest
@@ -15,20 +16,23 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
+from homeassistant.components.lunatone.coordinator import DEFAULT_INFO_UPDATE_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(
@@ -94,6 +98,48 @@ async def test_turn_on_off(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
+
+
+async def test_turn_on_off_with_connection_error(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a connection error is raised while turning on and off the light."""
+    device_id = 1
+    entity_id = f"light.device_{device_id}"
+
+    await setup_integration(hass, mock_config_entry)
+
+    device = mock_config_entry.runtime_data.coordinator_devices.data[0][device_id]
+    device.switch_on.side_effect = aiohttp.ClientConnectionError()
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Unable to connect to the device and turn on {entity_id}",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+            blocking=True,
+        )
+
+    device.switch_off.side_effect = aiohttp.ClientConnectionError()
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Unable to connect to the device and turn off {entity_id}",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
 
 async def test_turn_on_off_with_brightness(
@@ -194,7 +240,7 @@ async def test_turn_on_off_broadcast(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -218,7 +264,53 @@ async def test_turn_on_off_broadcast(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_OFF
+
+
+async def test_turn_on_off_broadcast_with_connection_error(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_lunatone_dali_broadcast: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a connection error is raised while turning on and off the broadcast light."""
+    line_id = mock_lunatone_dali_broadcast.line
+    entity_id = f"light.dali_line_{line_id}"
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_lunatone_dali_broadcast.fade_to_brightness.side_effect = (
+        aiohttp.ClientConnectionError()
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Unable to connect to the device and turn on {entity_id}",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+            blocking=True,
+        )
+
+    mock_lunatone_dali_broadcast.fade_to_brightness.side_effect = (
+        aiohttp.ClientConnectionError()
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Unable to connect to the device and turn off {entity_id}",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
 
 async def test_line_broadcast_available_status(
@@ -234,26 +326,85 @@ async def test_line_broadcast_available_status(
     """Test if the broadcast light is available."""
     line_id = str(mock_lunatone_dali_broadcast.line)
     entity_id = f"light.dali_line_{line_id}"
+    line_status = iter((LineStatus.NOT_REACHABLE, LineStatus.OK))
 
     await setup_integration(hass, mock_config_entry)
 
     async def fake_update():
-        info_data = copy.deepcopy(mock_lunatone_info.data)
-        info_data.lines[line_id].line_status = LineStatus.NOT_REACHABLE
+        info_data = deepcopy(mock_lunatone_info.data)
+        info_data.lines[line_id].line_status = next(line_status)
         mock_lunatone_info.data = info_data
 
     mock_lunatone_info.async_update.side_effect = fake_update
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state != "unavailable"
+    assert state.state != STATE_UNAVAILABLE
 
-    await mock_config_entry.runtime_data.coordinator_info.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
+
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_line_broadcast_available_status_with_line_missing(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_lunatone_dali_broadcast: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test if the broadcast light is available."""
+    line_id = "0"
+    entity_id = f"light.dali_line_{line_id}"
+
+    await setup_integration(hass, mock_config_entry)
+
+    line_data = deepcopy(mock_lunatone_info.data.lines[line_id])
+
+    async def fake_update():
+        info_data = deepcopy(mock_lunatone_info.data)
+        if line_id in info_data.lines:
+            del info_data.lines[line_id]
+        else:
+            info_data.lines[line_id] = line_data
+        mock_lunatone_info.data = info_data
+
+    mock_lunatone_info.async_update.side_effect = fake_update
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

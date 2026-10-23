@@ -1,6 +1,7 @@
 {
   "domain": "satel_integra",
   "name": "Satel Integra",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@Tommatheussen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/satel_integra",

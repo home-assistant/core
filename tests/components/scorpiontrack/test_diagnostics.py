@@ -3,16 +3,20 @@
 from dataclasses import replace
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pyscorpiontrack import ScorpionTrackConnectionError, ScorpionTrackShare
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.scorpiontrack.const import CONF_SHARE_TOKEN
+from homeassistant.components.scorpiontrack.const import (
+    CONF_SHARE_TOKEN,
+    DEFAULT_SCAN_INTERVAL,
+)
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -36,6 +40,7 @@ async def test_diagnostics(
     mock_scorpiontrack_client: AsyncMock,
     mock_share: ScorpionTrackShare,
     snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
     update_error: ScorpionTrackConnectionError | None,
 ) -> None:
     """Test redaction for every vehicle without fetching or changing cached data."""
@@ -46,8 +51,12 @@ async def test_diagnostics(
     )
     mock_scorpiontrack_client.async_get_share.return_value = share
     await setup_integration(hass, mock_config_entry)
+    mock_scorpiontrack_client.async_get_share.reset_mock()
     mock_scorpiontrack_client.async_get_share.side_effect = update_error
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_scorpiontrack_client.async_get_share.assert_awaited_once_with()
     mock_scorpiontrack_client.async_get_share.reset_mock()
 
     result = await get_diagnostics_for_config_entry(

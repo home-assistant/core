@@ -112,6 +112,8 @@ DEVICE_CONFIG = GlobalConfig(
         custom_string_2="custom two",
         custom_string_3="custom three",
     ),
+    # Raw bytes of config packets the parser does not recognise; must be redacted.
+    unparsed_tail=b"\xde\xad\xbe\xef",
 )
 
 

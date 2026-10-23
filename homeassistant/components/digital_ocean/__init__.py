@@ -19,7 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 DIGITAL_OCEAN_PLATFORMS = [Platform.SWITCH, Platform.BINARY_SENSOR]
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.Schema({probatio.Required(CONF_ACCESS_TOKEN): cv.string})},
+    {
+        DOMAIN: probatio.Schema(
+            {probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): cv.string}
+        )
+    },
     extra=probatio.ALLOW_EXTRA,
 )
 

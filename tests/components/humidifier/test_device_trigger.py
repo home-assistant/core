@@ -1,8 +1,8 @@
 """The tests for Humidifier device triggers."""
 
-import datetime
+import datetime as dt
 
-from probatio import to_field_list
+from probatio import Invalid, to_field_list
 import pytest
 from pytest_unordered import unordered
 
@@ -378,7 +378,7 @@ async def test_if_fires_on_state_change(
     assert service_calls[3].data["some"] == "current_humidity_changed_above"
 
     # Wait 6 minutes
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=6))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=6))
     await hass.async_block_till_done()
     assert len(service_calls) == 6
     assert {service_calls[4].data["some"], service_calls[5].data["some"]} == {
@@ -614,3 +614,18 @@ async def test_get_trigger_capabilities_humidity(hass: HomeAssistant) -> None:
             "type": "positive_time_period_dict",
         },
     ]
+
+
+def test_target_humidity_changed_with_bad_above_is_invalid() -> None:
+    """Test the trigger type selects the schema that reports the error."""
+    with pytest.raises(Invalid, match="expected int at 'above'"):
+        device_trigger.TRIGGER_SCHEMA(
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": "abcdefgh",
+                "entity_id": "humidifier.test",
+                "type": "target_humidity_changed",
+                "above": "wet",
+            }
+        )

@@ -1,6 +1,6 @@
 """The tests for the Everything but the Kitchen Sink integration."""
 
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from unittest.mock import ANY
 
@@ -75,7 +75,7 @@ async def test_demo_statistics_growth(hass: HomeAssistant) -> None:
     hass.config.units = US_CUSTOMARY_SYSTEM
 
     now = dt_util.now()
-    last_week = now - datetime.timedelta(days=7)
+    last_week = now - dt.timedelta(days=7)
     last_week_midnight = last_week.replace(hour=0, minute=0, second=0, microsecond=0)
 
     statistic_id = f"{DOMAIN}:energy_consumption_kwh"

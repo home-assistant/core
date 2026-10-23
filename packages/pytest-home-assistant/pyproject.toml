@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=78.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytest-home-assistant"
+version = "0.0.0"
+license = "Apache-2.0"
+license-files = ["LICENSE.md"]
+description = "Pytest fixtures and test helpers for Home Assistant."
+readme = "README.md"
+requires-python = ">=3.14.0"
+authors = [
+  { name = "The Home Assistant Authors", email = "hello@home-assistant.io" },
+]
+
+[project.urls]
+Repository = "https://github.com/home-assistant/core"
+Documentation = "https://contributors.home-assistant.io"
+
+[tool.setuptools.packages.find]
+include = ["pytest_homeassistant*"]

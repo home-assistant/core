@@ -1,5 +1,6 @@
 """Test Matter entity behavior."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from matter_server.client.models.node import MatterNode
@@ -581,3 +582,64 @@ async def test_composed_entity_subscribes_to_parent_reachable_attribute(
         f"{_COMPOSED_PARENT_REACHABLE_ATTR_PATH!r}"
         " and event_filter=ATTRIBUTE_UPDATED, but none was found."
     )
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id", "expected_event_filters"),
+    [
+        pytest.param(
+            "mock_onoff_light",
+            "light.mock_onoff_light",
+            {EventType.ATTRIBUTE_UPDATED, EventType.NODE_UPDATED},
+            id="base_entity",
+        ),
+        pytest.param(
+            "mock_generic_switch",
+            "event.mock_generic_switch_button",
+            {EventType.ATTRIBUTE_UPDATED, EventType.NODE_UPDATED, EventType.NODE_EVENT},
+            id="event",
+        ),
+        pytest.param(
+            "mock_door_lock",
+            "lock.mock_door_lock",
+            {EventType.ATTRIBUTE_UPDATED, EventType.NODE_UPDATED, EventType.NODE_EVENT},
+            id="lock",
+        ),
+    ],
+)
+async def test_entity_removal_unsubscribes_events(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    node_fixture: str,
+    entity_id: str,
+    expected_event_filters: set[EventType],
+) -> None:
+    """Test removing an entity unsubscribes all its Matter client subscriptions."""
+    subscriptions: list[tuple[dict[str, Any], MagicMock]] = []
+
+    def _subscribe_events(**kwargs: Any) -> MagicMock:
+        unsubscribe = MagicMock()
+        subscriptions.append((kwargs, unsubscribe))
+        return unsubscribe
+
+    matter_client.subscribe_events.side_effect = _subscribe_events
+    await setup_integration_with_node_fixture(hass, node_fixture, matter_client)
+
+    entity_subscriptions = [
+        (kwargs["event_filter"], unsubscribe)
+        for kwargs, unsubscribe in subscriptions
+        # Only bound entity methods have an entity_id; other callbacks are skipped.
+        if getattr(getattr(kwargs["callback"], "__self__", None), "entity_id", None)
+        == entity_id
+    ]
+    assert {event_filter for event_filter, _ in entity_subscriptions} == (
+        expected_event_filters
+    )
+    assert not any(unsubscribe.called for _, unsubscribe in entity_subscriptions)
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
+    assert all(unsubscribe.called for _, unsubscribe in entity_subscriptions)

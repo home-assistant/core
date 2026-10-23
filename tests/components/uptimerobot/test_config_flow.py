@@ -1,5 +1,7 @@
 """Test the UptimeRobot config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 import pytest
@@ -26,6 +28,24 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch a successful account lookup without setting up the entry."""
+    with (
+        patch(
+            "homeassistant.components.uptimerobot.config_flow.UptimeRobot.async_get_account_details",
+            return_value=mock_uptimerobot_api_response(
+                api_path=API_PATH_USER_ME, data=MOCK_UPTIMEROBOT_ACCOUNT
+            ),
+        ),
+        patch(
+            "homeassistant.components.uptimerobot.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 async def test_user(hass: HomeAssistant) -> None:
@@ -88,6 +108,14 @@ async def test_user_key_read_only(hass: HomeAssistant) -> None:
     assert result2["errors"]
     assert result2["errors"]["base"] == "not_main_key"
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("exception", "error_key"),
@@ -97,7 +125,9 @@ async def test_user_key_read_only(hass: HomeAssistant) -> None:
         (UptimeRobotAuthenticationException, "invalid_api_key"),
     ],
 )
-async def test_exception_thrown(hass: HomeAssistant, exception, error_key) -> None:
+async def test_exception_thrown(
+    hass: HomeAssistant, exception: type[Exception], error_key: str
+) -> None:
     """Test user flow throwing exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -115,6 +145,14 @@ async def test_exception_thrown(hass: HomeAssistant, exception, error_key) -> No
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]
     assert result2["errors"]["base"] == error_key
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_api_error(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
@@ -134,6 +172,14 @@ async def test_api_error(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
 
     assert result2["errors"]
     assert result2["errors"]["base"] == "cannot_connect"
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_unique_id_already_exists(
@@ -243,6 +289,15 @@ async def test_reauthentication_failure(
     assert result2["errors"]
     assert result2["errors"]["base"] == "cannot_connect"
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+
 
 async def test_reauthentication_failure_no_existing_entry(
     hass: HomeAssistant,
@@ -321,6 +376,15 @@ async def test_reauthentication_failure_account_not_matching(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]
     assert result2["errors"]["base"] == "reauth_failed_matching_account"
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reconfigure_successful(

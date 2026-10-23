@@ -62,7 +62,7 @@ PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
             probatio.EnsureList(), [cv.string]
         ),
         probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-        probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "authentication"): cv.string,
         probatio.Optional(CONF_CUSTOM_CALENDARS, default=[]): probatio.All(
             probatio.EnsureList(),
             [

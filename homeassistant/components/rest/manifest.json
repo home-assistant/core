@@ -1,6 +1,7 @@
 {
   "domain": "rest",
   "name": "RESTful",
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["template"],

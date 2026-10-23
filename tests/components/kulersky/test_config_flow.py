@@ -62,6 +62,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_integration_discovery(hass: HomeAssistant) -> None:
@@ -81,6 +82,7 @@ async def test_integration_discovery(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_integration_discovery_no_last_service_info(hass: HomeAssistant) -> None:
@@ -96,6 +98,7 @@ async def test_integration_discovery_no_last_service_info(hass: HomeAssistant) -
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_user_setup(hass: HomeAssistant) -> None:
@@ -126,6 +129,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_user_setup_no_devices(hass: HomeAssistant) -> None:
@@ -162,6 +166,15 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
 
+    with patch("pykulersky.Light", Mock(return_value=AsyncMock())):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"},
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_unexpected_error(hass: HomeAssistant) -> None:
     """Test an unexpected error trying to set up."""
@@ -182,6 +195,15 @@ async def test_unexpected_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unknown"
+
+    with patch("pykulersky.Light", Mock(return_value=AsyncMock())):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"},
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:

@@ -695,6 +695,16 @@ def setup_connection_for_dialect(
             result = query_on_connection(dbapi_connection, "SHOW server_version")
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
+            if version is None:
+                # PostgreSQL prereleases such as 19beta3 are not SimpleVer.
+                result = query_on_connection(
+                    dbapi_connection, "SHOW server_version_num"
+                )
+                version_num = int(result[0][0])
+                # PostgreSQL < 12 is rejected regardless of the minor version.
+                version = _simple_version(
+                    f"{version_num // 10000}.{version_num % 10000}"
+                )
             if not version or version < MIN_VERSION_PGSQL:
                 _raise_if_version_unsupported(
                     version or version_string, "PostgreSQL", MIN_VERSION_PGSQL

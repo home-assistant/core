@@ -61,6 +61,21 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_config_entry_not_ready_no_locks(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+) -> None:
+    """Test a dedicated error is reported when the bridge has no locks."""
+    mock_tedee.locks_dict = {}
+    mock_tedee.get_locks.side_effect = TedeeClientException("No lock found")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "no_locks"
+
+
 async def test_cleanup_on_shutdown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

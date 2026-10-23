@@ -1,12 +1,14 @@
 """Tests for the Plugwise switch integration."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from plugwise.exceptions import PlugwiseException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.plugwise.const import DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -16,11 +18,15 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+DHW_CM_SWITCH_UNIQUE_ID = "36b937e44ad145bab165fa0fe99d742d-dhw_cm_switch"
+DHW_CM_SWITCH_ISSUE_ID = "deprecated_dhw_cm_switch_36b937e44ad145bab165fa0fe99d742d"
 
 
 @pytest.mark.usefixtures("mock_smile_adam")
@@ -121,6 +127,243 @@ async def test_stretch_switch_snapshot(
 ) -> None:
     """Test Stretch switch snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.parametrize("chosen_env", ["anna_p1"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+@pytest.mark.usefixtures("mock_smile_anna")
+async def test_deprecated_dhw_comfort_switch_warning(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_smile_anna: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test warning when using the deprecated DHW comfort switch."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        DHW_CM_SWITCH_UNIQUE_ID,
+        config_entry=mock_config_entry,
+        suggested_object_id="opentherm_dhw_cm_switch",
+    )
+    with patch("homeassistant.components.plugwise.PLATFORMS", [SWITCH_DOMAIN]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, DHW_CM_SWITCH_UNIQUE_ID
+    )
+    assert entity_id
+    issue = issue_registry.async_get_issue(DOMAIN, DHW_CM_SWITCH_ISSUE_ID)
+    assert issue is not None
+    assert issue.translation_key == "deprecated_dhw_cm_switch"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert not any(
+        "incorrectly returns a coroutine object" in record.message
+        for record in caplog.records
+    )
+    assert mock_smile_anna.set_switch_state.call_count == 2
+    mock_smile_anna.set_switch_state.assert_any_call(
+        "36b937e44ad145bab165fa0fe99d742d", None, "dhw_cm_switch", STATE_ON
+    )
+    mock_smile_anna.set_switch_state.assert_any_call(
+        "36b937e44ad145bab165fa0fe99d742d", None, "dhw_cm_switch", STATE_OFF
+    )
+
+
+@pytest.mark.parametrize("chosen_env", ["anna_p1"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+@pytest.mark.usefixtures("mock_smile_anna")
+async def test_deprecated_dhw_comfort_switch_not_created_for_new_install(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the deprecated DHW comfort switch is not added on a fresh install."""
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.plugwise.PLATFORMS", [SWITCH_DOMAIN]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            SWITCH_DOMAIN, DOMAIN, DHW_CM_SWITCH_UNIQUE_ID
+        )
+        is None
+    )
+    assert (DOMAIN, DHW_CM_SWITCH_ISSUE_ID) not in issue_registry.issues
+
+
+@pytest.mark.parametrize("chosen_env", ["anna_p1"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+@pytest.mark.usefixtures("mock_smile_anna")
+async def test_deprecated_dhw_comfort_switch_removed_when_disabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a disabled, unused DHW comfort switch is removed."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        DHW_CM_SWITCH_UNIQUE_ID,
+        config_entry=mock_config_entry,
+        suggested_object_id="opentherm_dhw_cm_switch",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    with patch("homeassistant.components.plugwise.PLATFORMS", [SWITCH_DOMAIN]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            SWITCH_DOMAIN, DOMAIN, DHW_CM_SWITCH_UNIQUE_ID
+        )
+        is None
+    )
+    assert (DOMAIN, DHW_CM_SWITCH_ISSUE_ID) not in issue_registry.issues
+
+
+@pytest.mark.parametrize("chosen_env", ["anna_p1"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+@pytest.mark.usefixtures("mock_smile_anna")
+async def test_deferred_dhw_switch_check_unsubscribed_when_entry_unloads(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test deferred entity checks are cancelled when the config entry unloads."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        DHW_CM_SWITCH_UNIQUE_ID,
+        config_entry=mock_config_entry,
+        suggested_object_id="opentherm_dhw_cm_switch",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    hass.set_state(CoreState.starting)
+
+    with patch("homeassistant.components.plugwise.PLATFORMS", [SWITCH_DOMAIN]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert await async_setup_component(
+        hass,
+        AUTOMATION_DOMAIN,
+        {
+            AUTOMATION_DOMAIN: {
+                "alias": "Unrelated automation",
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "sensor.unrelated",
+                },
+                "action": [],
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass, SCRIPT_DOMAIN, {SCRIPT_DOMAIN: {"unrelated_script": {"sequence": []}}}
+    )
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, DHW_CM_SWITCH_UNIQUE_ID
+    )
+
+
+@pytest.mark.parametrize("chosen_env", ["anna_p1"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+@pytest.mark.usefixtures("mock_smile_anna")
+async def test_deprecated_dhw_comfort_switch_kept_when_referenced(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a disabled DHW comfort switch referenced by an automation and script is kept."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        DHW_CM_SWITCH_UNIQUE_ID,
+        config_entry=mock_config_entry,
+        suggested_object_id="opentherm_dhw_cm_switch",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    hass.set_state(CoreState.starting)
+    with patch("homeassistant.components.plugwise.PLATFORMS", [SWITCH_DOMAIN]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, DHW_CM_SWITCH_UNIQUE_ID
+    )
+    assert (DOMAIN, DHW_CM_SWITCH_ISSUE_ID) not in issue_registry.issues
+
+    assert await async_setup_component(
+        hass,
+        AUTOMATION_DOMAIN,
+        {
+            AUTOMATION_DOMAIN: {
+                "alias": "Test automation",
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "switch.opentherm_dhw_cm_switch",
+                },
+                "action": [],
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        SCRIPT_DOMAIN,
+        {
+            SCRIPT_DOMAIN: {
+                "test_script": {
+                    "sequence": {
+                        "action": "switch.turn_on",
+                        "target": {"entity_id": "switch.opentherm_dhw_cm_switch"},
+                    }
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            SWITCH_DOMAIN, DOMAIN, DHW_CM_SWITCH_UNIQUE_ID
+        )
+        is not None
+    )
+    issue = issue_registry.async_get_issue(DOMAIN, DHW_CM_SWITCH_ISSUE_ID)
+    assert issue is not None
+    assert issue.translation_key == "deprecated_dhw_cm_switch_scripts"
+    assert issue.translation_placeholders is not None
+    assert "automation.test_automation" in issue.translation_placeholders["items"]
+    assert "/config/script/edit/test_script" in issue.translation_placeholders["items"]
 
 
 async def test_stretch_switch_changes(

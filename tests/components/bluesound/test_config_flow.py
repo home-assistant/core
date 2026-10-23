@@ -4,6 +4,7 @@ from ipaddress import IPv4Address, IPv6Address
 from unittest.mock import AsyncMock
 
 from pyblu.errors import PlayerUnreachableError
+import pytest
 
 from homeassistant.components.bluesound.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -114,8 +115,20 @@ async def test_user_flow_aleady_configured(
     player_mocks.player_data_for_already_configured.player.sync_status.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("port", "expected_port"),
+    [
+        pytest.param(None, 11000, id="missing-port"),
+        pytest.param(11000, 11000, id="default-port"),
+        pytest.param(11001, 11001, id="custom-port"),
+    ],
+)
 async def test_zeroconf_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, player_mocks: PlayerMocks
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    player_mocks: PlayerMocks,
+    port: int | None,
+    expected_port: int,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -124,7 +137,7 @@ async def test_zeroconf_flow_success(
         data=ZeroconfServiceInfo(
             ip_address=IPv4Address("1.1.1.1"),
             ip_addresses=[IPv4Address("1.1.1.1")],
-            port=11000,
+            port=port,
             hostname="player-name1111",
             type="_musc._tcp.local.",
             name="player-name._musc._tcp.local.",
@@ -144,8 +157,8 @@ async def test_zeroconf_flow_success(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "player-name1111"
-    assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_PORT: 11000}
-    assert result["result"].unique_id == "ff:ff:01:01:01:01-11000"
+    assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_PORT: expected_port}
+    assert result["result"].unique_id == f"ff:ff:01:01:01:01-{expected_port}"
 
     mock_setup_entry.assert_called_once()
 

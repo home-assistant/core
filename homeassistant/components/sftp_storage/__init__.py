@@ -36,7 +36,7 @@ class SFTPConfigEntryData:
     backup_location: str
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> None:
     """Set up SFTP Storage from a config entry."""
 
     cfg = SFTPConfigEntryData(
@@ -66,8 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
             listener()
 
     entry.async_on_unload(entry.async_on_state_change(_async_notify_backup_listeners))
-
-    return True
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> None:
@@ -145,7 +143,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
         await hass.async_add_executor_job(remove_files, entry)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> None:
     """Unload SFTP Storage config entry."""
     LOGGER.debug(
         "Unloading %s integration for host %s@%s",
@@ -153,4 +151,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> boo
         entry.data[CONF_USERNAME],
         entry.data[CONF_HOST],
     )
-    return True

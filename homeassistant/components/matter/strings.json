@@ -1,4 +1,8 @@
 {
+  "common": {
+    "release_notes_installation_notice": "The update process can take a while, especially for battery powered devices. Please be patient and wait until the update process is fully completed. Do not remove power from the device while it's updating. The device may restart during the update process and be unavailable for several minutes.",
+    "release_notes_not_official_source": "Update provided by {update_source}. Installing this update is at your own risk and you may run into unexpected problems such as the need to re-add and factory reset your device."
+  },
   "config": {
     "abort": {
       "addon_get_discovery_info_failed": "Failed to get Matter Server app discovery info.",
@@ -175,7 +179,6 @@
     },
     "event": {
       "button": {
-        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -668,14 +671,8 @@
           "medium": "[%key:common::state::medium%]"
         }
       },
-      "uptime": {
-        "name": "Uptime"
-      },
       "valve_position": {
         "name": "Valve position"
-      },
-      "voltage": {
-        "name": "Voltage"
       },
       "wifi_rssi": {
         "name": "Wi-Fi RSSI"
@@ -746,6 +743,9 @@
     },
     "addon_not_running": {
       "message": "The Matter Server app is not running yet."
+    },
+    "addon_stop_failed": {
+      "message": "Failed to stop the Matter Server app."
     },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."

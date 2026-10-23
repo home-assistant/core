@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import MagicMock, patch
 
+from music_assistant_client.dashboard import Dashboard
 from music_assistant_client.music import Music
 from music_assistant_client.player_queues import PlayerQueues
 from music_assistant_client.players import Players
@@ -68,6 +69,7 @@ async def music_assistant_client_fixture() -> AsyncGenerator[MagicMock]:
         client.players = Players(client)
         client.player_queues = PlayerQueues(client)
         client.music = Music(client)
+        client.dashboard = Dashboard(client)
         client.server_url = client.server_info.base_url
         client.get_media_item_image_url = MagicMock(return_value=None)
         client.config = MagicMock()

@@ -201,6 +201,7 @@ async def test_approval_error_retry(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "600"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

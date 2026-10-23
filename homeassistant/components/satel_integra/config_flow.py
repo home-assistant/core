@@ -51,7 +51,7 @@ CONNECTION_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
-        probatio.Optional(CONF_ENCRYPTION_KEY): selector.TextSelector(
+        probatio.Optional(probatio.Secret(CONF_ENCRYPTION_KEY)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }

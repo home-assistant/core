@@ -1,7 +1,7 @@
 """Fixtures for the todo component tests."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock
 import zoneinfo
 
@@ -83,7 +83,7 @@ def mock_test_entity_items() -> list[TodoItem]:
             summary="Item #2",
             uid="2",
             status=TodoItemStatus.COMPLETED,
-            completed=datetime.datetime(2026, 3, 27, 11, 0, 0, tzinfo=TEST_TIMEZONE),
+            completed=dt.datetime(2026, 3, 27, 11, 0, 0, tzinfo=TEST_TIMEZONE),
         ),
     ]
 

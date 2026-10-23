@@ -1,6 +1,6 @@
 """The bluetooth integration."""
 
-import datetime
+import datetime as dt
 import logging
 import platform
 from typing import TYPE_CHECKING, Any
@@ -181,7 +181,7 @@ async def _async_start_adapter_discovery(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer)
 
-    async def _async_call_debouncer(now: datetime.datetime) -> None:
+    async def _async_call_debouncer(now: dt.datetime) -> None:
         """Call the debouncer at a later time."""
         await discovery_debouncer.async_call()
 
@@ -346,6 +346,22 @@ async def async_update_device(
         sw_version=details.get(ADAPTER_SW_VERSION),
         hw_version=details.get(ADAPTER_HW_VERSION),
     )
+    if via_device_id and (
+        split_devices := device_registry.async_get_devices_for_composite_device_id(
+            via_device_id
+        )
+    ):
+        # The stored source device id can predate a device split, link to the
+        # device of the config entry that provides the scanner
+        source_entry_id = entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID)
+        via_device_id = next(
+            (
+                split_device.id
+                for split_device in split_devices
+                if split_device.config_entry_id == source_entry_id
+            ),
+            None,
+        )
     if via_device_id and (via_device_entry := device_registry.async_get(via_device_id)):
         # The bluetooth scanner may be child device; link to its parent.
         if isinstance(via_device_entry, dr.ChildDeviceEntry):
@@ -358,7 +374,7 @@ async def async_update_device(
         device_registry.async_update_device(device_entry.id, **kwargs)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry for a bluetooth scanner."""
     if source_entry_id := entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID):
         if not (source_entry := hass.config_entries.async_get_entry(source_entry_id)):
@@ -372,7 +388,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     )
                 )
             )
-            return True
+            return
         address = entry.unique_id
         assert address is not None
         source_domain = entry.data[CONF_SOURCE_DOMAIN]
@@ -392,7 +408,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             details,
             entry.data.get(CONF_SOURCE_DEVICE_ID),
         )
-        return True
+        return
     manager = _get_manager(hass)
     address = entry.unique_id
     assert address is not None
@@ -427,7 +443,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     entry.async_on_unload(scanner.async_stop)
-    return True
 
 
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -435,6 +450,5 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return True

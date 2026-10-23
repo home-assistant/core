@@ -61,7 +61,11 @@ async def _async_handle_process(service: ServiceCall) -> ServiceResponse:
             agent_id=service.data.get(ATTR_AGENT_ID),
         )
     except intent.IntentHandleError as err:
-        raise HomeAssistantError(f"Error processing {text}: {err}") from err
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="process_failed",
+            translation_placeholders={"text": text, "error": str(err)},
+        ) from err
 
     if service.return_response:
         return result.as_dict()

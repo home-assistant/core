@@ -121,11 +121,17 @@ async def test_setup_entry_no_address_loads_and_registers(
     assert device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MAC)), entry.entry_id
     )
-    issue = issue_registry.async_get_issue(DOMAIN, f"missing_address_{entry.entry_id}")
+    issue_id = f"missing_address_{entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue
+    assert issue.config_entry_id == entry.entry_id
     assert issue.is_fixable
     assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.data == {"entry_id": entry.entry_id}
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 @pytest.mark.parametrize(
@@ -441,7 +447,7 @@ async def test_failed_unload_keeps_missing_address_issue(
     """Test a failed platform unload keeps the actionable repair issue.
 
     A failed unload leaves the entry active with its addressless devices, so
-    deleting the issue first would strip the only UI path to fix them.
+    the issue is the only UI path to fix them.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -471,8 +477,8 @@ async def test_setup_retry_raises_issue_from_cached_credentials(
 ) -> None:
     """Test a cloud-down setup still offers the fix flow from stored data.
 
-    The issue is not persistent and unload deletes it, so a restart or reload
-    that cannot reach the cloud must reconcile it from the entry data alone.
+    The issue is not persistent, so a restart that cannot reach the cloud must
+    reconcile it from the entry data alone.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -557,8 +563,8 @@ async def test_remove_never_loaded_entry_clears_missing_address_issue(
 ) -> None:
     """Test removing an entry stuck in setup retry clears the repair issue.
 
-    Removal never calls async_unload_entry for an entry that failed setup, so
-    without the remove hook the issue would outlive the entry.
+    Removal never calls async_unload_entry for an entry that failed setup; core
+    deletes the issue because it is linked to the entry.
     """
     mock_account, mock_device = mock_setup_integration
     mock_account.discover_devices.return_value = {
@@ -587,16 +593,12 @@ async def test_remove_never_loaded_entry_clears_missing_address_issue(
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
-async def test_unload_entry_clears_missing_address_issue(
+async def test_reload_keeps_ignored_missing_address_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     mock_cloud_account: AsyncMock,
 ) -> None:
-    """Test unloading clears the missing-address repair issue.
-
-    Without the cleanup, removing the integration would leave a stale issue for
-    a device that never had a resolved LAN address.
-    """
+    """Test reloading keeps the missing-address repair issue and its ignore."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
@@ -607,9 +609,11 @@ async def test_unload_entry_clears_missing_address_issue(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     issue_id = f"missing_address_{entry.entry_id}"
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    issue_registry.async_ignore(DOMAIN, issue_id, True)
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.dismissed_version is not None

@@ -1801,17 +1801,21 @@ async def test_list_serial_ports(
     ]
 
 
-async def test_list_serial_ports_require_admin(
+@pytest.mark.parametrize(
+    "command", ["usb/list_serial_ports", "usb/list_serial_integrations"]
+)
+async def test_ws_commands_require_admin(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_admin_user: MockUser,
     setup_usb: MagicMock,
+    command: str,
 ) -> None:
-    """Test that listing serial ports requires admin."""
+    """Test that listing serial ports and integrations requires admin."""
     hass_admin_user.groups = []
 
     ws_client = await hass_ws_client(hass)
-    await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
+    await ws_client.send_json({"id": 1, "type": command})
     response = await ws_client.receive_json()
 
     assert not response["success"]
@@ -1833,6 +1837,44 @@ async def test_list_serial_ports_os_error(
     assert not response["success"]
     assert response["error"]["code"] == "unknown_error"
     assert "Permission denied" in response["error"]["message"]
+
+
+@pytest.mark.usefixtures("setup_usb")
+async def test_list_serial_integrations(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test listing the integrations whose config flow uses SerialPortSelector."""
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({"id": 1, "type": "usb/list_serial_integrations"})
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    result = response["result"]
+    assert result == sorted(result)
+    assert {"dsmr", "zha"} <= set(result)
+    assert not {"alarmdecoder", "bluetooth", "esphome", "rfxtrx", "zwave_js"} & set(
+        result
+    )
+
+
+@pytest.mark.usefixtures("setup_usb")
+async def test_list_serial_integrations_custom_override(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a core integration overridden by a custom integration is not listed."""
+    with patch(
+        "homeassistant.components.usb.async_get_custom_components",
+        return_value={"zha": Mock()},
+    ):
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/list_serial_integrations"})
+        response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert "zha" not in response["result"]
+    assert "dsmr" in response["result"]
 
 
 async def test_serial_proxy_stub_sync(hass: HomeAssistant) -> None:

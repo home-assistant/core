@@ -57,7 +57,7 @@ def outlet_numbers_from_status(status: dict[str, str]) -> set[int]:
     return outlet_numbers
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> None:
     """Set up Network UPS Tools (NUT) from a config entry."""
 
     # strip out the stale options CONF_RESOURCES,
@@ -157,12 +157,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NutConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
@@ -336,7 +334,11 @@ class PyNUTData:
             self._alias = await self._async_get_alias()
         if TYPE_CHECKING:
             assert self._alias is not None
-        return await self._client.list_vars(self._alias)
+        status = await self._client.list_vars(self._alias)
+        if not status:
+            return status
+        # a driver formatting a missing C string reports the literal (null)
+        return {key: value for key, value in status.items() if value != "(null)"}
 
     async def async_update(self) -> dict[str, str]:
         """Fetch the latest status from NUT."""

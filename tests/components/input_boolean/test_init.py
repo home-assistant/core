@@ -6,7 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.input_boolean import CONF_INITIAL, DOMAIN, is_on
+from homeassistant.components.input_boolean import DOMAIN, is_on
+from homeassistant.components.input_boolean.const import CONF_INITIAL
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_ENTITY_ID,

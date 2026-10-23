@@ -36,11 +36,13 @@ MAX_IDS_TO_REQUEST = 275
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
         probatio.Required(CONF_ACCOUNT): str,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
 
 
 def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
@@ -150,6 +152,7 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_update_and_abort(entry, data_updates=user_input)
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id=(
                 "reauth_confirm" if self.source == SOURCE_REAUTH else SOURCE_RECONFIGURE

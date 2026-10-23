@@ -26,7 +26,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                 ATTR_PERCENTAGE: intent.IntentSlotInfo(
                     description="The speed percentage of the fan",
                     value_schema=probatio.All(
-                        probatio.Coerce(int), probatio.Range(min=0, max=100)
+                        probatio.Coerce(int), probatio.Percentage()
                     ),
                 )
             },

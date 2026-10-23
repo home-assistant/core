@@ -24,7 +24,7 @@ EVENT_RECEIVED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         probatio.Required(CONF_OPTIONS): {
             probatio.Required(CONF_EVENT_TYPE): probatio.All(
-                probatio.EnsureList(), probatio.Length(min=1), [cv.string]
+                probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
             ),
         },
     }

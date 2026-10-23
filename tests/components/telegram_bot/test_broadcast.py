@@ -1,6 +1,6 @@
 """Test Telegram broadcast."""
 
-from httpx import Request as HTTPXRequest
+from httpx2 import Request as HTTPXRequest
 
 from homeassistant.components.telegram_bot.bot import TelegramBotConfigEntry
 from homeassistant.components.telegram_bot.const import DEFAULT_TIMEOUT_SECONDS

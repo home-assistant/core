@@ -28,7 +28,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context, HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -105,7 +105,10 @@ async def test_select_option(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == "another option"
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Option non existing option is not valid for input_select.test_1",
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -309,7 +312,10 @@ async def test_set_options_service(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == "test1"
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Option first option is not valid for input_select.test_1",
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -329,7 +335,16 @@ async def test_set_options_service(hass: HomeAssistant) -> None:
     assert state.state == "test2"
 
 
-async def test_set_options_service_duplicate(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("options", "duplicates"),
+    [
+        (["option1", "option1"], "option1"),
+        (["option1", "option2", "option1", "option3", "option2"], "option1, option2"),
+    ],
+)
+async def test_set_options_service_duplicate(
+    hass: HomeAssistant, options: list[str], duplicates: str
+) -> None:
     """Test set_options service with duplicates."""
     assert await async_setup_component(
         hass,
@@ -353,11 +368,14 @@ async def test_set_options_service_duplicate(hass: HomeAssistant) -> None:
         "last option",
     ]
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Options for input_select.test_1 contain duplicates: {duplicates}$",
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_OPTIONS,
-            {ATTR_OPTIONS: ["option1", "option1"], ATTR_ENTITY_ID: entity_id},
+            {ATTR_OPTIONS: options, ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
     state = hass.states.get(entity_id)

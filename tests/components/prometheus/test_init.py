@@ -1,7 +1,7 @@
 """The tests for the Prometheus exporter."""
 
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from typing import Any
 from unittest import mock
@@ -2040,7 +2040,7 @@ async def sensor_fixture(
         suggested_object_id="radio_energy",
         original_name="Radio Energy",
     )
-    with freeze_time(datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC)):
+    with freeze_time(dt.datetime(1970, 1, 2, tzinfo=dt_util.UTC)):
         set_state_with_entry(hass, sensor_3, 14)
     data["sensor_3"] = sensor_3
 

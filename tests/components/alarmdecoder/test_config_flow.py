@@ -146,6 +146,21 @@ async def test_setup_connection_error(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
 
+    with (
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"),
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"),
+        patch(
+            "homeassistant.components.alarmdecoder.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], connection_settings
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_options_arm_flow(hass: HomeAssistant) -> None:
     """Test arm options flow."""

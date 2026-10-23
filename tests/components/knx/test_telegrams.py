@@ -8,7 +8,12 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from knx_telegram_store import KnxTelegramStoreException, StoredTelegram, TelegramQuery
+from knx_telegram_store import (
+    BufferedSqliteStore,
+    KnxTelegramStoreException,
+    StoredTelegram,
+    TelegramQuery,
+)
 import pytest
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
@@ -205,33 +210,79 @@ async def test_sqlite_store_is_told_the_configured_timezone(
     assert store._legacy_timestamp_timezone is dt_util.get_default_time_zone()
 
 
-async def test_store_telegram_history_needs_migration_timeout(
+@pytest.mark.parametrize(
+    "hanging_method",
+    [
+        pytest.param("needs_migration", id="needs_migration"),
+        pytest.param("initialize", id="initialize"),
+    ],
+)
+async def test_postgres_store_init_timeout(
     hass: HomeAssistant,
     knx: KNXTestKit,
     issue_registry: ir.IssueRegistry,
+    hanging_method: str,
 ) -> None:
-    """Test store init aborts when needs_migration times out and retries are off."""
+    """A hanging PostgreSQL store init is cut off by the timeout and aborts when retries are off."""
 
-    async def hanging_probe() -> bool:
+    async def hang() -> None:
         await asyncio.Event().wait()
-        return False
 
+    knx.mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        knx.mock_config_entry,
+        options=knx.mock_config_entry.options
+        | {
+            CONF_KNX_TELEGRAM_DB_BACKEND: KNX_TELEGRAM_BACKEND_POSTGRES,
+            CONF_KNX_TELEGRAM_DB_POSTGRES_DSN: "postgresql://user:secret@db.local:5432/knx",
+        },
+    )
+    mock_store = AsyncMock()
+    mock_store.needs_migration.return_value = False
+    getattr(mock_store, hanging_method).side_effect = hang
     with (
         patch("homeassistant.components.knx.telegrams.STORE_INIT_TIMEOUT", 0.05),
         patch("homeassistant.components.knx.telegrams.STORE_INIT_MAX_RETRIES", 0),
         patch(
-            "knx_telegram_store.BufferedSqliteStore.needs_migration",
-            side_effect=hanging_probe,
+            "homeassistant.components.knx.telegrams.BufferedPostgresStore",
+            return_value=mock_store,
         ),
+    ):
+        await knx.setup_integration(add_entry_to_hass=False, real_telegram_store=True)
+
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+    assert telegrams_module.store is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+        is not None
+    )
+
+
+async def test_sqlite_store_init_is_not_cut_off_by_timeout(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A slow SQLite store init runs to completion instead of being cancelled and retried."""
+    original_initialize = BufferedSqliteStore.initialize
+
+    async def slow_initialize(self: BufferedSqliteStore) -> None:
+        await asyncio.sleep(0.2)
+        await original_initialize(self)
+
+    with (
+        patch("homeassistant.components.knx.telegrams.STORE_INIT_TIMEOUT", 0.05),
+        patch.object(BufferedSqliteStore, "initialize", slow_initialize),
     ):
         await knx.setup_integration(real_telegram_store=True)
 
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
-    assert telegrams_module.store is None
-
-    # Check that the repair issue was created
-    issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
-    assert issue is not None
+    assert telegrams_module.store is not None
+    assert telegrams_module._store_init_retry_unsub is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+        is None
+    )
 
 
 async def test_store_init_timeout_retries_and_succeeds(
@@ -529,17 +580,38 @@ async def test_telegram_to_dict_dpt_from_project(
     assert result["dpt_name"] is None
 
 
-async def test_load_history_needs_migration(
+@pytest.mark.parametrize(
+    "needs_migration",
+    [
+        pytest.param(True, id="needs_migration"),
+        pytest.param(False, id="no_migration"),
+    ],
+)
+async def test_load_history_holds_off_bootstrap_timeout(
     hass: HomeAssistant,
     knx: KNXTestKit,
+    needs_migration: bool,
 ) -> None:
-    """Test the schema-migration branch of store initialization."""
-    with patch(
-        "knx_telegram_store.BufferedSqliteStore.needs_migration",
-        return_value=True,
+    """Store initialization runs under a timeout freeze so bootstrap waits for it."""
+    original_initialize = BufferedSqliteStore.initialize
+    timeout_frozen: list[bool] = []
+
+    async def initialize(self: BufferedSqliteStore) -> None:
+        # The bootstrap stage timeout must wait for a migration to finish
+        timeout_frozen.append(DOMAIN in hass.timeout.zones)
+        await original_initialize(self)
+
+    with (
+        patch(
+            "knx_telegram_store.BufferedSqliteStore.needs_migration",
+            return_value=needs_migration,
+        ),
+        patch.object(BufferedSqliteStore, "initialize", initialize),
     ):
         await knx.setup_integration(real_telegram_store=True)
 
+    assert timeout_frozen == [True]
+    assert DOMAIN not in hass.timeout.zones
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is not None
 

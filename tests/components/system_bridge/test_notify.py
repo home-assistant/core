@@ -9,6 +9,7 @@ from systembridgeconnector.exceptions import ConnectionClosedException
 from systembridgeconnector.models.notification import Notification
 
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
@@ -19,6 +20,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.discovery import async_load_platform
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -85,6 +87,49 @@ async def test_send_message(
 
     mock_websocket_client.send_notification.assert_awaited_once_with(
         Notification(title="Hello", message="World")
+    )
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_legacy_notify_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: AsyncMock,
+) -> None:
+    """Test sending a message with the legacy notify service."""
+    with patch(
+        "homeassistant.helpers.discovery.async_load_platform",
+        wraps=async_load_platform,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        "system_bridge_hostname",
+        {
+            ATTR_MESSAGE: "World",
+            ATTR_DATA: {
+                "actions": [{"command": "test", "label": "Test"}],
+                "icon": "mdi:test",
+                "image": "https://example.com/image.png",
+                "timeout": 10,
+                ATTR_TITLE: "Hello",
+            },
+        },
+        blocking=True,
+    )
+
+    mock_websocket_client.send_notification.assert_awaited_once_with(
+        Notification(
+            actions=[{"command": "test", "label": "Test"}],
+            icon="mdi:test",
+            image="https://example.com/image.png",
+            message="World",
+            timeout=10,
+            title="Hello",
+        )
     )
 
 

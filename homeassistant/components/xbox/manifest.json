@@ -1,6 +1,7 @@
 {
   "domain": "xbox",
   "name": "Xbox",
+  "categories": ["media_entertainment.gaming"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

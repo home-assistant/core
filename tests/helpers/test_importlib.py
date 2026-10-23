@@ -1,5 +1,7 @@
 """Tests for the importlib helper."""
 
+import asyncio
+import threading
 import time
 from typing import Any
 from unittest.mock import patch
@@ -109,3 +111,32 @@ async def test_async_import_module_concurrency(
 
     assert module1 is mock_module
     assert module2 is mock_module
+
+
+async def test_async_import_module_concurrent_import_cancelled(
+    hass: HomeAssistant,
+) -> None:
+    """Verify cancelling a waiting caller does not break the in-progress import."""
+    mock_module = MockModule()
+    start_event = threading.Event()
+    import_event = asyncio.Event()
+
+    def _mock_import(name: str, *args: Any) -> MockModule:
+        hass.loop.call_soon_threadsafe(import_event.set)
+        start_event.wait()
+        return mock_module
+
+    with patch(
+        "homeassistant.helpers.importlib.importlib.import_module",
+        _mock_import,
+    ):
+        task1 = asyncio.create_task(importlib.async_import_module(hass, "test.module"))
+        task2 = asyncio.create_task(importlib.async_import_module(hass, "test.module"))
+        await import_event.wait()
+        task2.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task2
+        start_event.set()
+        assert await task1 is mock_module
+
+    assert await importlib.async_import_module(hass, "test.module") is mock_module

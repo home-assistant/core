@@ -5,13 +5,13 @@ from dataclasses import dataclass
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from openai.types import CompletionUsage
-from openai.types.chat import ChatCompletion, ChatCompletionMessage
-from openai.types.chat.chat_completion import Choice
+from openai.types.chat import ChatCompletionChunk
+from openai.types.chat.chat_completion_chunk import Choice as ChunkChoice, ChoiceDelta
 import pytest
 from python_open_router import KeyData, ModelsDataWrapper
 
 from homeassistant.components.open_router.const import (
+    CONF_OUTPUT_MODALITIES,
     CONF_PROMPT,
     CONF_WEB_SEARCH,
     DOMAIN,
@@ -61,10 +61,17 @@ def conversation_subentry_data(enable_assist: bool, web_search: str) -> dict[str
 
 
 @pytest.fixture
-def ai_task_data_subentry_data() -> dict[str, Any]:
+def output_modalities() -> list[str]:
+    """Mock AI task output modalities."""
+    return ["text", "image"]
+
+
+@pytest.fixture
+def ai_task_data_subentry_data(output_modalities: list[str]) -> dict[str, Any]:
     """Mock AI task subentry data."""
     return {
-        CONF_MODEL: "google/gemini-1.5-pro",
+        CONF_MODEL: "google/gemini-2.5-flash-image",
+        CONF_OUTPUT_MODALITIES: output_modalities,
     }
 
 
@@ -82,7 +89,7 @@ def mock_config_entry(
             CONF_API_KEY: "bla",
         },
         version=1,
-        minor_version=3,
+        minor_version=4,
         subentries_data=[
             ConfigSubentryData(
                 data=conversation_subentry_data,
@@ -95,7 +102,7 @@ def mock_config_entry(
                 data=ai_task_data_subentry_data,
                 subentry_id="ABCDEG",
                 subentry_type="ai_task_data",
-                title="Gemini 1.5 Pro",
+                title="Gemini 2.5 Flash Image",
                 unique_id=None,
             ),
         ],
@@ -116,27 +123,26 @@ async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
     with patch("homeassistant.components.open_router.AsyncOpenAI") as mock_client:
         client = mock_client.return_value
         client.chat.completions.create = AsyncMock(
-            return_value=ChatCompletion(
-                id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-                choices=[
-                    Choice(
-                        finish_reason="stop",
-                        index=0,
-                        message=ChatCompletionMessage(
-                            content="Hello, how can I help you?",
-                            role="assistant",
-                            function_call=None,
-                            tool_calls=None,
-                        ),
+            return_value=get_generator_from_data(
+                [
+                    ChatCompletionChunk.model_construct(
+                        id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                        choices=[
+                            ChunkChoice.model_construct(
+                                index=0,
+                                delta=ChoiceDelta(
+                                    role="assistant",
+                                    content="Hello, how can I help you?",
+                                ),
+                                finish_reason="stop",
+                            )
+                        ],
+                        created=1700000000,
+                        model="gpt-3.5-turbo-0613",
+                        object="chat.completion.chunk",
+                        system_fingerprint=None,
                     )
-                ],
-                created=1700000000,
-                model="gpt-3.5-turbo-0613",
-                object="chat.completion",
-                system_fingerprint=None,
-                usage=CompletionUsage(
-                    completion_tokens=9, prompt_tokens=8, total_tokens=17
-                ),
+                ]
             )
         )
         yield client
@@ -157,6 +163,21 @@ async def mock_open_router_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMo
             limit_remaining=None,
             is_free_tier=True,
         )
+        models = await async_load_fixture(hass, "models.json", DOMAIN)
+        client.get_models.return_value = ModelsDataWrapper.from_json(models).data
+        yield client
+
+
+@pytest.fixture
+async def mock_open_router_client_setup(
+    hass: HomeAssistant,
+) -> AsyncGenerator[AsyncMock]:
+    """Mock the OpenRouter client used during entry setup and migration."""
+    with patch(
+        "homeassistant.components.open_router.OpenRouterClient",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
         models = await async_load_fixture(hass, "models.json", DOMAIN)
         client.get_models.return_value = ModelsDataWrapper.from_json(models).data
         yield client

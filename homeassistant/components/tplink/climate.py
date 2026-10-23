@@ -134,7 +134,7 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
             )
 
         if temperature_feature := self._thermostat_module.get_feature("temperature"):
-            self._attr_temperature_unit = UNIT_MAPPING[
+            self._attr_native_temperature_unit = UNIT_MAPPING[
                 cast(str, temperature_feature.unit)
             ]
         else:
@@ -142,7 +142,7 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
                 "Unable to get correct temperature unit for %s, defaulting to celsius",
                 device.host,
             )
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     @async_refresh_after
     @override
@@ -177,8 +177,10 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
     @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
-        self._attr_current_temperature = self._thermostat_module.temperature
-        self._attr_target_temperature = self._thermostat_module.target_temperature
+        self._attr_native_current_temperature = self._thermostat_module.temperature
+        self._attr_native_target_temperature = (
+            self._thermostat_module.target_temperature
+        )
 
         self._attr_hvac_mode = (
             HVACMode.HEAT if self._thermostat_module.state else HVACMode.OFF

@@ -178,7 +178,7 @@ async def test_switch_command_failure(
         )
     await hass.async_block_till_done()
 
-    mock_command.assert_awaited_once_with()
+    mock_command.assert_awaited_once()
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "command_failed"
     assert err.value.__cause__ is failure

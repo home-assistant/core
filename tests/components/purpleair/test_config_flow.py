@@ -1,6 +1,7 @@
 """Define tests for the PurpleAir config flow."""
 
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock
 
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import pytest
@@ -20,29 +21,28 @@ TEST_LONGITUDE = -0.2416796
 
 
 @pytest.mark.parametrize(
-    ("check_api_key_mock", "check_api_key_errors"),
+    ("check_api_key_side_effect", "check_api_key_errors"),
     [
-        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
-        (AsyncMock(side_effect=InvalidApiKeyError), {"base": "invalid_api_key"}),
-        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
+        (Exception, "unknown"),
+        (InvalidApiKeyError, "invalid_api_key"),
+        (PurpleAirError, "unknown"),
     ],
 )
 @pytest.mark.parametrize(
-    ("get_nearby_sensors_mock", "get_nearby_sensors_errors"),
+    ("get_nearby_sensors_side_effect", "get_nearby_sensors_errors"),
     [
-        (AsyncMock(return_value=[]), {"base": "no_sensors_near_coordinates"}),
-        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
-        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
+        ([[]], "no_sensors_near_coordinates"),
+        (Exception, "unknown"),
+        (PurpleAirError, "unknown"),
     ],
 )
 async def test_create_entry_by_coordinates(
     hass: HomeAssistant,
-    api,
-    check_api_key_errors,
-    check_api_key_mock,
-    get_nearby_sensors_errors,
-    get_nearby_sensors_mock,
-    mock_aiopurpleair,
+    check_api_key_errors: str,
+    check_api_key_side_effect: type[Exception],
+    get_nearby_sensors_errors: str,
+    get_nearby_sensors_side_effect: list[Any] | type[Exception],
+    mock_aiopurpleair: AsyncMock,
 ) -> None:
     """Test creating an entry by entering a latitude/longitude (including errors)."""
     result = await hass.config_entries.flow.async_init(
@@ -50,14 +50,18 @@ async def test_create_entry_by_coordinates(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert not result["errors"]
 
     # Test errors that can arise when checking the API key:
-    with patch.object(api, "async_check_api_key", check_api_key_mock):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"api_key": TEST_API_KEY}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == check_api_key_errors
+    mock_aiopurpleair.async_check_api_key.side_effect = check_api_key_side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"api_key": TEST_API_KEY}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": check_api_key_errors}
+
+    mock_aiopurpleair.async_check_api_key.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"api_key": TEST_API_KEY}
@@ -66,17 +70,22 @@ async def test_create_entry_by_coordinates(
     assert result["step_id"] == "by_coordinates"
 
     # Test errors that can arise when searching for nearby sensors:
-    with patch.object(api.sensors, "async_get_nearby_sensors", get_nearby_sensors_mock):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                "latitude": TEST_LATITUDE,
-                "longitude": TEST_LONGITUDE,
-                "distance": 5,
-            },
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == get_nearby_sensors_errors
+    mock_aiopurpleair.sensors.async_get_nearby_sensors.side_effect = (
+        get_nearby_sensors_side_effect
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            "latitude": TEST_LATITUDE,
+            "longitude": TEST_LONGITUDE,
+            "distance": 5,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": get_nearby_sensors_errors}
+
+    mock_aiopurpleair.sensors.async_get_nearby_sensors.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -105,32 +114,38 @@ async def test_create_entry_by_coordinates(
     }
 
 
-async def test_duplicate_error(
-    hass: HomeAssistant, config_entry, setup_config_entry
-) -> None:
+@pytest.mark.usefixtures("config_entry", "setup_config_entry")
+async def test_duplicate_error(hass: HomeAssistant) -> None:
     """Test that the proper error is shown when adding a duplicate config entry."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={"api_key": TEST_API_KEY}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"api_key": TEST_API_KEY}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
-    ("check_api_key_mock", "check_api_key_errors"),
+    ("side_effect", "error_msg"),
     [
-        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
-        (AsyncMock(side_effect=InvalidApiKeyError), {"base": "invalid_api_key"}),
-        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
+        (Exception, "unknown"),
+        (InvalidApiKeyError, "invalid_api_key"),
+        (PurpleAirError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("setup_config_entry")
 async def test_reauth(
     hass: HomeAssistant,
-    mock_aiopurpleair,
-    check_api_key_errors,
-    check_api_key_mock,
+    mock_aiopurpleair: AsyncMock,
+    error_msg: str,
+    side_effect: type[Exception],
     config_entry: MockConfigEntry,
-    setup_config_entry,
 ) -> None:
     """Test re-auth (including errors)."""
     result = await config_entry.start_reauth_flow(hass)
@@ -138,12 +153,15 @@ async def test_reauth(
     assert result["step_id"] == "reauth_confirm"
 
     # Test errors that can arise when checking the API key:
-    with patch.object(mock_aiopurpleair, "async_check_api_key", check_api_key_mock):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"api_key": "new_api_key"}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == check_api_key_errors
+    mock_aiopurpleair.async_check_api_key.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"api_key": "new_api_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_msg}
+
+    mock_aiopurpleair.async_check_api_key.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -158,20 +176,20 @@ async def test_reauth(
 
 
 @pytest.mark.parametrize(
-    ("get_nearby_sensors_mock", "get_nearby_sensors_errors"),
+    ("side_effect", "error_msg"),
     [
-        (AsyncMock(return_value=[]), {"base": "no_sensors_near_coordinates"}),
-        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
-        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
+        ([[]], "no_sensors_near_coordinates"),
+        (Exception, "unknown"),
+        (PurpleAirError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("setup_config_entry")
 async def test_options_add_sensor(
     hass: HomeAssistant,
-    mock_aiopurpleair,
-    config_entry,
-    get_nearby_sensors_errors,
-    get_nearby_sensors_mock,
-    setup_config_entry,
+    mock_aiopurpleair: AsyncMock,
+    config_entry: MockConfigEntry,
+    error_msg: str,
+    side_effect: list[Any] | type[Exception],
 ) -> None:
     """Test adding a sensor via the options flow (including errors)."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -185,19 +203,23 @@ async def test_options_add_sensor(
     assert result["step_id"] == "add_sensor"
 
     # Test errors that can arise when searching for nearby sensors:
-    with patch.object(
-        mock_aiopurpleair.sensors, "async_get_nearby_sensors", get_nearby_sensors_mock
-    ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                "latitude": TEST_LATITUDE,
-                "longitude": TEST_LONGITUDE,
-                "distance": 5,
-            },
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "add_sensor"
+
+    mock_aiopurpleair.sensors.async_get_nearby_sensors.side_effect = side_effect
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "latitude": TEST_LATITUDE,
+            "longitude": TEST_LONGITUDE,
+            "distance": 5,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_sensor"
+    assert result["errors"] == {"base": error_msg}
+
+    mock_aiopurpleair.sensors.async_get_nearby_sensors.side_effect = None
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -230,8 +252,10 @@ async def test_options_add_sensor(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("setup_config_entry")
 async def test_options_add_sensor_duplicate(
-    hass: HomeAssistant, config_entry, setup_config_entry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test adding a duplicate sensor via the options flow."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -268,11 +292,11 @@ async def test_options_add_sensor_duplicate(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("setup_config_entry")
 async def test_options_remove_sensor(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry,
-    setup_config_entry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test removing a sensor via the options flow."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -304,8 +328,9 @@ async def test_options_remove_sensor(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("setup_config_entry")
 async def test_options_settings(
-    hass: HomeAssistant, config_entry, setup_config_entry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test setting settings via the options flow."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)

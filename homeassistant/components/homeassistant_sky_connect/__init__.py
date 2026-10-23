@@ -22,7 +22,11 @@ from homeassistant.components.usb import (
 )
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -88,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: HomeAssistantSkyConnectConfigEntry
-) -> bool:
+) -> None:
     """Set up a Home Assistant SkyConnect config entry."""
 
     # Postpone loading the config entry if the device is missing
@@ -121,19 +125,19 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, ["switch", "update"])
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: HomeAssistantSkyConnectConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, ["switch", "update"])
+    await hass.config_entries.async_unload_platforms_or_raise(
+        entry, ["switch", "update"]
+    )
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: HomeAssistantSkyConnectConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     _LOGGER.debug(
@@ -238,12 +242,17 @@ async def async_migrate_entry(
                 if canonical.minor_version < 5:
                     # The canonical entry has not been migrated yet and its
                     # migration will remove this duplicate.
-                    return False
+                    raise ConfigEntryError(
+                        translation_domain=DOMAIN,
+                        translation_key="duplicate_entry",
+                        translation_placeholders={"serial_number": serial_number},
+                    )
 
                 # The canonical entry is already fully migrated and will not run
                 # a migration that removes this duplicate, so remove it here. The
                 # entry can't remove itself while its setup lock is held, so
                 # schedule the removal instead.
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.warning(
                     "Removing duplicate config entry %s for serial %s in favor of %s",
                     config_entry.entry_id,
@@ -253,7 +262,11 @@ async def async_migrate_entry(
                 hass.async_create_task(
                     hass.config_entries.async_remove(config_entry.entry_id)
                 )
-                return False
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="duplicate_entry",
+                    translation_placeholders={"serial_number": serial_number},
+                )
 
             for duplicate in duplicates:
                 if duplicate.entry_id == config_entry.entry_id:
@@ -274,13 +287,8 @@ async def async_migrate_entry(
                 minor_version=5,
             )
 
-        _LOGGER.debug(
-            "Migration to version %s.%s successful",
-            config_entry.version,
-            config_entry.minor_version,
-        )
-
-        return True
-
-    # This means the user has downgraded from a future version
-    return False
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )

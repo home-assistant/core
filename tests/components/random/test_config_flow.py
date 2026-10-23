@@ -47,6 +47,23 @@ from tests.common import MockConfigEntry
             {},
             {"minimum": 0, "maximum": 20},
         ),
+        pytest.param(
+            "sensor",
+            {"unit_of_measurement": None},
+            {"unit_of_measurement": None, "minimum": 0, "maximum": 20},
+            id="sensor_no_unit",
+        ),
+        pytest.param(
+            "sensor",
+            {"device_class": SensorDeviceClass.AQI, "unit_of_measurement": None},
+            {
+                "device_class": SensorDeviceClass.AQI,
+                "unit_of_measurement": None,
+                "minimum": 0,
+                "maximum": 20,
+            },
+            id="sensor_aqi_no_unit",
+        ),
     ],
 )
 async def test_config_flow(
@@ -91,6 +108,7 @@ async def test_config_flow(
         **extra_options,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    assert hass.states.get(f"{entity_type}.my_random_entity") is not None
 
 
 @pytest.mark.parametrize(

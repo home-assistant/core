@@ -40,6 +40,10 @@ async def test_auth_error_handling(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert setup_result is False
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        entry.reason == "Authentication error initializing the WeatherKit integration"
+    )
 
 
 async def test_client_error_handling(hass: HomeAssistant) -> None:

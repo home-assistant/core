@@ -13,11 +13,11 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelState,
 )
-from homeassistant.components.totalconnect.alarm_control_panel import (
+from homeassistant.components.totalconnect.const import DOMAIN
+from homeassistant.components.totalconnect.services import (
     SERVICE_ALARM_ARM_AWAY_INSTANT,
     SERVICE_ALARM_ARM_HOME_INSTANT,
 )
-from homeassistant.components.totalconnect.const import DOMAIN
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,

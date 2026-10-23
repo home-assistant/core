@@ -8,12 +8,12 @@ from homeassistant.const import CONF_DEVICE, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import LOGGER, DenonRS232ConfigEntry
+from .const import DOMAIN, LOGGER, DenonRS232ConfigEntry
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DenonRS232ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DenonRS232ConfigEntry) -> None:
     """Set up Denon RS-232 from a config entry."""
     port = entry.data[CONF_DEVICE]
     model = MODELS[entry.data[CONF_MODEL]]
@@ -23,10 +23,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonRS232ConfigEntry) -
         await receiver.connect()
         await receiver.query_state()
     except (ConnectionError, OSError, TimeoutError) as err:
-        LOGGER.error("Error connecting to Denon receiver at %s: %s", port, err)
         if receiver.connected:
             await receiver.disconnect()
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            # An ESPHome proxy URL can carry the API key in its query string
+            translation_placeholders={"port": port.split("?", 1)[0]},
+        ) from err
 
     entry.runtime_data = receiver
 
@@ -42,14 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonRS232ConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DenonRS232ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DenonRS232ConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        await entry.runtime_data.disconnect()
-
-    return unload_ok
+    await entry.runtime_data.disconnect()

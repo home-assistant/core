@@ -115,7 +115,7 @@ async def test_reconnect(
     "Handles device/service unavailable. Log a warning once when
     unavailable, log once when reconnected."
 
-    https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
+    https://contributors.home-assistant.io/core/quality-scale/
     """
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)

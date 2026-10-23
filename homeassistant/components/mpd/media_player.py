@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        probatio.Optional(CONF_PASSWORD): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )

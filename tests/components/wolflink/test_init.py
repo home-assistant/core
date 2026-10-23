@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import attr
 from freezegun.api import FrozenDateTimeFactory
-from httpx import RequestError
+from httpx2 import RequestError
 import pytest
 from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth

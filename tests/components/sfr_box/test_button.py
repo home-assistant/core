@@ -4,11 +4,11 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-from sfrbox_api.exceptions import SFRBoxError
+from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -92,3 +92,32 @@ async def test_reboot(hass: HomeAssistant, config_entry_with_auth: ConfigEntry) 
 
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()
+
+
+async def test_reboot_invalid_auth(
+    hass: HomeAssistant, config_entry_with_auth: ConfigEntry
+) -> None:
+    """Test reauthentication is started when credentials fail on press."""
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.sfr_box.button.SFRBox.system_reboot",
+            side_effect=SFRBoxAuthenticationError,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            service_data={ATTR_ENTITY_ID: "button.sfr_box_restart"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert exc_info.value.translation_key == "invalid_credentials"
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == config_entry_with_auth.entry_id

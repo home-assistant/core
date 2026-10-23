@@ -1,6 +1,7 @@
 {
   "domain": "trafikverket_weatherstation",
   "name": "Trafikverket Weather Station",
+  "categories": ["weather_alerts"],
   "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_weatherstation",

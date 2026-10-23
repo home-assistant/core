@@ -3,14 +3,24 @@
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Container, Hashable, Iterable, Mapping
-from contextlib import suppress
+from collections.abc import (
+    Callable,
+    Container,
+    Coroutine,
+    Generator,
+    Hashable,
+    Iterable,
+    Mapping,
+)
+from contextlib import contextmanager, suppress
+from contextvars import ContextVar
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import wraps
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, TypeVar, cast
+from typing import Any, Concatenate, Generic, Required, TypedDict, TypeVar, cast
 
 import probatio
 
@@ -22,6 +32,10 @@ from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
 
 _LOGGER = logging.getLogger(__name__)
+
+_current_step: ContextVar[tuple[FlowHandler[Any, Any, Any], str] | None] = ContextVar(
+    "current_step", default=None
+)
 
 
 class FlowResultType(StrEnum):
@@ -617,6 +631,22 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         ]
 
 
+def flow_step[_FlowHandlerT: FlowHandler[Any, Any, Any], **_P, _R](
+    func: Callable[Concatenate[_FlowHandlerT, _P], Coroutine[Any, Any, _R]], /
+) -> Callable[Concatenate[_FlowHandlerT, _P], Coroutine[Any, Any, _R]]:
+    """Mark a step method so results built inside it default to its step id."""
+    if not func.__name__.startswith("async_step_"):
+        raise TypeError(f"{func.__qualname__} is not an async_step_ method")
+    step_id = func.__name__.removeprefix("async_step_")
+
+    @wraps(func)
+    async def wrapper(self: _FlowHandlerT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+        with self._as_step(step_id):
+            return await func(self, *args, **kwargs)
+
+    return wrapper
+
+
 class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     """Handle a data entry flow."""
 
@@ -702,6 +732,22 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             schema[new_key] = val
         return probatio.Schema(schema)
 
+    @contextmanager
+    def _as_step(self, step_id: str) -> Generator[None]:
+        """Default the step id of results built inside the block."""
+        token = _current_step.set((self, step_id))
+        try:
+            yield
+        finally:
+            _current_step.reset(token)
+
+    def _inferred_step_id(self) -> str | None:
+        """Return the id of the step running on this handler, if any."""
+        current = _current_step.get()
+        if current is None or current[0] is not self:
+            return None
+        return current[1]
+
     @callback
     def async_show_form(
         self,
@@ -724,6 +770,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             last_step=last_step,  # Display next or submit button in frontend
             preview=preview,  # Display preview component in frontend
         )
+        if step_id is None:
+            step_id = self._inferred_step_id()
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -791,6 +839,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             url=url,
             description_placeholders=description_placeholders,
         )
+        if step_id is None:
+            step_id = self._inferred_step_id()
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -841,6 +891,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             description_placeholders=description_placeholders,
             progress_task=progress_task,
         )
+        if step_id is None:
+            step_id = self._inferred_step_id()
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -897,6 +949,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
         if sort:
             flow_result["sort"] = sort
+        if step_id is None:
+            step_id = self._inferred_step_id()
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result

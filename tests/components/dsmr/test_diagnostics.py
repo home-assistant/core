@@ -1,6 +1,6 @@
 """Test DSMR diagnostics."""
 
-import datetime
+import datetime as dt
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -58,7 +58,7 @@ async def test_diagnostics(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m³"},
             ],
         ),

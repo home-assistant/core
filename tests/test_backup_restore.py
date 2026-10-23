@@ -432,34 +432,79 @@ def test_restore_backup_rejects_unsafe_files(tmp_path: Path) -> None:
     assert result["error_type"] in {"AbsolutePathError", "OutsideDestinationError"}
 
 
-def test_restore_backup_rejects_absolute_symlink(tmp_path: Path) -> None:
-    """Test rejection of a symlink whose linkname escapes the destination.
+def _tar_member(
+    name: str, *, data: bytes = b"", linkname: str | None = None
+) -> tuple[tarfile.TarInfo, bytes | None]:
+    """Return a tar member and its data."""
+    info = tarfile.TarInfo(name=name)
+    if linkname is not None:
+        info.type = tarfile.SYMTYPE
+        info.linkname = linkname
+        return info, None
+    info.size = len(data)
+    return info, data
 
-    A SYMTYPE entry followed by a regular file whose name traverses the
-    symlink would otherwise land attacker-controlled bytes outside the
-    extraction directory. The tar filter resolves the path after the
-    symlink and rejects the entry.
-    """
+
+BACKUP_JSON = json.dumps(
+    {"homeassistant": {"version": "0.0.0"}, "compressed": False}
+).encode()
+
+
+@pytest.mark.parametrize(
+    ("members", "missing_member"),
+    [
+        pytest.param([], "backup.json", id="no_backup_json"),
+        pytest.param(
+            [_tar_member("./backup.json", linkname="/etc/passwd")],
+            "backup.json",
+            id="backup_json_symlink",
+        ),
+        pytest.param(
+            [_tar_member("./backup.json", data=BACKUP_JSON)],
+            "homeassistant.tar",
+            id="no_homeassistant_tar",
+        ),
+        pytest.param(
+            [
+                _tar_member("./backup.json", data=BACKUP_JSON),
+                _tar_member("homeassistant.tar", linkname="/etc/passwd"),
+            ],
+            "homeassistant.tar",
+            id="homeassistant_tar_absolute_symlink",
+        ),
+        pytest.param(
+            [
+                _tar_member("./backup.json", data=BACKUP_JSON),
+                _tar_member("other.tar", data=b"not a tar"),
+                _tar_member("homeassistant.tar", linkname="other.tar"),
+            ],
+            "homeassistant.tar",
+            id="homeassistant_tar_relative_symlink",
+        ),
+        pytest.param(
+            [
+                _tar_member("./backup.json", data=BACKUP_JSON),
+                # Would escape the destination if the outer tar was extracted
+                _tar_member("pwn", linkname="/tmp"),  # noqa: S108
+                _tar_member("pwn/ha_escape_target", data=b"pwned"),
+            ],
+            "homeassistant.tar",
+            id="outer_symlink_escape",
+        ),
+    ],
+)
+def test_restore_backup_rejects_invalid_outer_members(
+    members: list[tuple[tarfile.TarInfo, bytes | None]],
+    missing_member: str,
+    tmp_path: Path,
+) -> None:
+    """Test only regular files are read from the outer backup tar."""
     backup_file_path = tmp_path / "backups" / "test.tar"
     backup_file_path.parent.mkdir()
 
     with tarfile.open(backup_file_path, "w") as tar:
-        backup_json = json.dumps(
-            {"homeassistant": {"version": "0.0.0"}, "compressed": False}
-        ).encode()
-        info = tarfile.TarInfo(name="./backup.json")
-        info.size = len(backup_json)
-        tar.addfile(info, BytesIO(backup_json))
-
-        symlink = tarfile.TarInfo(name="pwn")
-        symlink.type = tarfile.SYMTYPE
-        symlink.linkname = "/tmp"  # noqa: S108
-        tar.addfile(symlink)
-
-        payload = b"pwned"
-        evil = tarfile.TarInfo(name="pwn/ha_escape_target")
-        evil.size = len(payload)
-        tar.addfile(evil, BytesIO(payload))
+        for info, data in members:
+            tar.addfile(info, BytesIO(data) if data is not None else None)
 
     with (
         mock.patch(
@@ -472,10 +517,15 @@ def test_restore_backup_rejects_absolute_symlink(tmp_path: Path) -> None:
                 restore_homeassistant=True,
             ),
         ),
-        pytest.raises(tarfile.FilterError),
+        pytest.raises(ValueError, match=f"Backup does not contain {missing_member}"),
     ):
         backup_restore.restore_backup(tmp_path.as_posix())
 
+    assert restore_result_file_content(tmp_path) == {
+        "error": f"Backup does not contain {missing_member}",
+        "error_type": "ValueError",
+        "success": False,
+    }
     assert not Path("/tmp/ha_escape_target").exists()  # noqa: S108
 
 

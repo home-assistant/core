@@ -15,11 +15,12 @@ from aiocomelit.const import (
     AlarmAreaState,
     AlarmZoneState,
 )
+from aiocomelit.exceptions import CannotConnect
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.comelit.const import SCAN_INTERVAL
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -189,3 +190,34 @@ async def test_vedo_sensor_dynamic(
 
     assert hass.states.get(ENTITY_ID)
     assert hass.states.get(entity_id_2)
+
+
+async def test_vedo_sensor_unavailable_on_update_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vedo: AsyncMock,
+    mock_vedo_config_entry: MockConfigEntry,
+) -> None:
+    """Test VEDO sensor becomes unavailable when the update fails."""
+    await setup_integration(hass, mock_vedo_config_entry)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == AlarmZoneState.REST.value
+
+    mock_vedo.get_all_areas_and_zones.side_effect = CannotConnect
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_vedo.get_all_areas_and_zones.side_effect = None
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == AlarmZoneState.REST.value

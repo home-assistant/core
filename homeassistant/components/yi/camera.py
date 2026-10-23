@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
         probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
     }
 )

@@ -618,3 +618,29 @@ async def test_config_flow_custom_url_invalid_format(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "custom_url"
     assert result["errors"] == {CONF_ROBOROCK_SERVER_URL: "invalid_url_format"}
+
+    custom_url = "https://api-roborock.example.com:555"
+    with (
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient"
+        ) as mock_client_cls,
+    ):
+        mock_client = mock_client_cls.return_value
+        mock_client.request_code_v4 = AsyncMock(return_value=None)
+        mock_client.code_login_v4 = AsyncMock(return_value=USER_DATA)
+        future_base_url = hass.loop.create_future()
+        future_base_url.set_result(custom_url)
+        mock_client.base_url = future_base_url
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ROBOROCK_SERVER_URL: custom_url}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "code"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

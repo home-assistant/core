@@ -8,7 +8,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import LawnMowerEntity
+    from .entity import LawnMowerEntity
 
 DOMAIN: Final = "lawn_mower"
 DATA_COMPONENT: HassKey[EntityComponent[LawnMowerEntity]] = HassKey(DOMAIN)

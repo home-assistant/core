@@ -1,7 +1,7 @@
 """Common fixtures for the Model Context Protocol tests."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -103,15 +103,15 @@ async def mock_credential(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(name="config_entry_token_expiration")
-def mock_config_entry_token_expiration() -> datetime.datetime:
+def mock_config_entry_token_expiration() -> dt.datetime:
     """Fixture to mock the token expiration."""
-    return dt_util.utcnow() + datetime.timedelta(days=1)
+    return dt_util.utcnow() + dt.timedelta(days=1)
 
 
 @pytest.fixture(name="config_entry_with_auth")
 def mock_config_entry_with_auth(
     hass: HomeAssistant,
-    config_entry_token_expiration: datetime.datetime,
+    config_entry_token_expiration: dt.datetime,
 ) -> MockConfigEntry:
     """Fixture to load the integration with authentication."""
     config_entry = MockConfigEntry(

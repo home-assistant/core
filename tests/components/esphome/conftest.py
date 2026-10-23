@@ -241,9 +241,17 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
 
 
 @pytest.fixture
-async def mock_dashboard(hass: HomeAssistant) -> AsyncGenerator[dict[str, Any]]:
+def mock_dashboard_devices() -> list[dict[str, Any]]:
+    """Return the devices the mocked dashboard knows from the start."""
+    return []
+
+
+@pytest.fixture
+async def mock_dashboard(
+    hass: HomeAssistant, mock_dashboard_devices: list[dict[str, Any]]
+) -> AsyncGenerator[dict[str, Any]]:
     """Mock dashboard."""
-    data = {"configured": [], "importable": []}
+    data = {"configured": mock_dashboard_devices, "importable": []}
     with patch(
         "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
         return_value=data,

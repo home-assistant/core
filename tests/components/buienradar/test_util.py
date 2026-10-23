@@ -1,6 +1,6 @@
 """Tests for the Buienradar utilities."""
 
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -75,7 +75,7 @@ async def test_unparsable_data_is_quiet_during_the_midnight_hour(
     assert update is not None
     # A failed update reschedules itself two minutes later, which is the update
     # the assertion below is about.
-    freezer.move_to(update - datetime.timedelta(minutes=2))
+    freezer.move_to(update - dt.timedelta(minutes=2))
 
     entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST_ID", data=TEST_CFG_DATA)
     entry.add_to_hass(hass)

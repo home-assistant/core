@@ -8,10 +8,13 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import LockEntity
+    from .entity import LockEntity
 
 DOMAIN: Final = "lock"
 DATA_COMPONENT: HassKey[EntityComponent[LockEntity]] = HassKey(DOMAIN)
+
+ATTR_CHANGED_BY = "changed_by"
+CONF_DEFAULT_CODE = "default_code"
 
 
 class LockEntityStateAttribute(StrEnum):

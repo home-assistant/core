@@ -1,6 +1,6 @@
 """The tests for the MQTT datetime platform."""
 
-import datetime as datetime_lib
+import datetime as dt
 from typing import Any
 from unittest.mock import patch
 
@@ -52,7 +52,7 @@ DEFAULT_CONFIG = {
 
 
 async def async_set_value(
-    hass: HomeAssistant, entity_id: str, value: datetime_lib.datetime | None
+    hass: HomeAssistant, entity_id: str, value: dt.datetime | None
 ) -> None:
     """Set date and time value."""
     await hass.services.async_call(
@@ -282,9 +282,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await async_set_value(
         hass,
         "datetime.test",
-        datetime_lib.datetime(
-            year=2025, month=12, day=1, hour=10, minute=12, tzinfo=UTC
-        ),
+        dt.datetime(year=2025, month=12, day=1, hour=10, minute=12, tzinfo=UTC),
     )
     await hass.async_block_till_done()
 

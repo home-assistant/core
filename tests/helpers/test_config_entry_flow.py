@@ -102,7 +102,7 @@ async def test_user_has_confirmation(
     mock_platform(hass, "test.config_flow", None)
 
     result = await hass.config_entries.flow.async_init(
-        "test", context={"source": config_entries.SOURCE_USER}, data={}
+        "test", context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
@@ -129,7 +129,7 @@ async def test_user_has_confirmation_async_discovery_flow(
     mock_platform(hass, "test.config_flow", None)
 
     result = await hass.config_entries.flow.async_init(
-        "test", context={"source": config_entries.SOURCE_USER}, data={}
+        "test", context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
@@ -279,7 +279,7 @@ async def test_only_one_in_progress(
 
     # User starts flow
     result = await hass.config_entries.flow.async_init(
-        "test", context={"source": config_entries.SOURCE_USER}, data={}
+        "test", context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM

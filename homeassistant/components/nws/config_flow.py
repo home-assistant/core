@@ -82,7 +82,7 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = probatio.Schema(
             {
-                probatio.Required(CONF_API_KEY): str,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 probatio.Required(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
@@ -144,7 +144,7 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = probatio.Schema(
             {
-                probatio.Required(CONF_API_KEY): str,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 probatio.Required(CONF_LOCATION_ENTITY): EntitySelector(
                     EntitySelectorConfig(
                         domain=["person", "device_tracker", "zone"],

@@ -84,6 +84,9 @@
       "scene_change_detection": {
         "name": "Scene change detection"
       },
+      "temperature_alarm": {
+        "name": "Temperature alarm"
+      },
       "unattended_baggage": {
         "name": "Unattended baggage"
       },
@@ -119,7 +122,6 @@
         }
       },
       "motion": {
-        "name": "[%key:component::event::entity_component::motion::name%]",
         "state_attributes": {
           "event_type": {
             "state": {

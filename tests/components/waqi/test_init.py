@@ -3,13 +3,17 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiowaqi import WAQIError
+from aiowaqi import WAQIAuthenticationError, WAQIError
 import attr
 import pytest
 
 from homeassistant.components.waqi import DOMAIN
 from homeassistant.components.waqi.const import CONF_STATION_NUMBER
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -31,6 +35,31 @@ async def test_setup_failed(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_config_entry.reason
+        == "An error occurred while communicating with the World Air Quality Index API: API error"
+    )
+
+
+async def test_setup_auth_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_waqi: AsyncMock,
+) -> None:
+    """Test setup failure due to an invalid API key starts reauth."""
+    mock_waqi.get_by_station_number.side_effect = WAQIAuthenticationError
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        mock_config_entry.reason
+        == "The API key for the World Air Quality Index is invalid"
+    )
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

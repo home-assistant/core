@@ -2,6 +2,7 @@
   "domain": "onedrive_for_business",
   "name": "OneDrive for Business",
   "after_dependencies": ["cloud"],
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

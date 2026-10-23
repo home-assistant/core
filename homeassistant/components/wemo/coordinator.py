@@ -13,8 +13,6 @@ from pywemo.subscribe import EVENT_TYPE_LONG_PRESS, SubscriptionRegistry
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_CONFIGURATION_URL,
-    ATTR_IDENTIFIERS,
     CONF_DEVICE_ID,
     CONF_NAME,
     CONF_PARAMS,
@@ -271,8 +269,8 @@ def _create_device_info(wemo: WeMoDevice) -> DeviceInfo:
     """Create device information. Modify if special device."""
     _dev_info = _device_info(wemo)
     if wemo.model_name.lower() == "dli emulated belkin socket":
-        _dev_info[ATTR_CONFIGURATION_URL] = f"http://{wemo.host}"
-        _dev_info[ATTR_IDENTIFIERS] = {(DOMAIN, wemo.serial_number[:-1])}
+        _dev_info.configuration_url = f"http://{wemo.host}"
+        _dev_info.identifiers = {(DOMAIN, wemo.serial_number[:-1])}
     return _dev_info
 
 

@@ -112,7 +112,6 @@ class MatterEntity(Entity):
         self._endpoint = endpoint
         self._entity_info = entity_info
         self.entity_description = entity_info.entity_description
-        self._unsubscribes: list[Callable] = []
         # for fast lookups we create a mapping to the attribute paths
         self._attributes_map: dict[type, str] = {}
         # The server info is set when the client connects to the server.
@@ -213,7 +212,7 @@ class MatterEntity(Entity):
                 continue
             self._attributes_map[attr_cls] = attr_path
             sub_paths.append(attr_path)
-            self._unsubscribes.append(
+            self.async_on_remove(
                 self.matter_client.subscribe_events(
                     callback=self._on_matter_event,
                     event_filter=EventType.ATTRIBUTE_UPDATED,
@@ -222,7 +221,7 @@ class MatterEntity(Entity):
                 )
             )
         # subscribe to node (availability changes)
-        self._unsubscribes.append(
+        self.async_on_remove(
             self.matter_client.subscribe_events(
                 callback=self._on_matter_event,
                 event_filter=EventType.NODE_UPDATED,
@@ -240,7 +239,7 @@ class MatterEntity(Entity):
             )
             if reachable_attr_path not in sub_paths:
                 sub_paths.append(reachable_attr_path)
-                self._unsubscribes.append(
+                self.async_on_remove(
                     self.matter_client.subscribe_events(
                         callback=self._on_matter_event,
                         event_filter=EventType.ATTRIBUTE_UPDATED,
@@ -259,7 +258,7 @@ class MatterEntity(Entity):
             )
             if parent_reachable_attr_path not in sub_paths:
                 sub_paths.append(parent_reachable_attr_path)
-                self._unsubscribes.append(
+                self.async_on_remove(
                     self.matter_client.subscribe_events(
                         callback=self._on_matter_event,
                         event_filter=EventType.ATTRIBUTE_UPDATED,
@@ -268,7 +267,7 @@ class MatterEntity(Entity):
                     )
                 )
         # subscribe to FeatureMap attribute (as that can dynamically change)
-        self._unsubscribes.append(
+        self.async_on_remove(
             self.matter_client.subscribe_events(
                 callback=self._on_featuremap_update,
                 event_filter=EventType.ATTRIBUTE_UPDATED,

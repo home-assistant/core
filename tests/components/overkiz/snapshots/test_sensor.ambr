@@ -503,7 +503,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_living_room_heater_rssi_level-entry]
@@ -961,7 +961,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_heat_pump_power_consumption-entry]
@@ -1814,7 +1814,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_rssi_level-entry]
@@ -2323,7 +2323,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_water_heater_rssi_level-entry]
@@ -2495,7 +2495,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_domestic_hot_water_energy_electric_energy_consumption-entry]
@@ -3011,7 +3011,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_rssi_level-entry]
@@ -3715,7 +3715,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_rssi_level-entry]
@@ -3821,7 +3821,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_discrete_rssi_level-entry]
@@ -5355,7 +5355,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_rssi_level-entry]
@@ -5461,7 +5461,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_discrete_rssi_level-entry]
@@ -5629,7 +5629,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_rssi_level-entry]
@@ -5735,7 +5735,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_discrete_rssi_level-entry]
@@ -5903,7 +5903,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_rssi_level-entry]
@@ -6607,7 +6607,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_rssi_level-entry]

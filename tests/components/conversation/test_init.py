@@ -82,10 +82,10 @@ async def test_turn_on_intent(
 async def test_service_fails(hass: HomeAssistant, init_components) -> None:
     """Test calling the turn on intent."""
     with (
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
         patch(
             "homeassistant.components.conversation.services.async_converse",
-            side_effect=intent.IntentHandleError,
+            side_effect=intent.IntentHandleError("boom"),
         ),
     ):
         await hass.services.async_call(
@@ -94,6 +94,9 @@ async def test_service_fails(hass: HomeAssistant, init_components) -> None:
             {"text": "bla"},
             blocking=True,
         )
+    assert exc_info.value.translation_domain == "conversation"
+    assert exc_info.value.translation_key == "process_failed"
+    assert str(exc_info.value) == "Error processing bla: boom"
 
 
 @pytest.mark.parametrize("sentence", ["turn off kitchen", "turn kitchen off"])

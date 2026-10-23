@@ -743,7 +743,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 config=selector.FileSelectorConfig(accept=".knxkeys")
             ),
             probatio.Required(
-                CONF_KNX_KNXKEY_PASSWORD,
+                probatio.Secret(CONF_KNX_KNXKEY_PASSWORD),
                 default=self.initial_data.get(CONF_KNX_KNXKEY_PASSWORD),
             ): selector.TextSelector(),
         }

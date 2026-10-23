@@ -3,7 +3,7 @@
 from datetime import timedelta
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
 import jwt
@@ -1130,6 +1130,22 @@ async def test_async_remove_user(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(events) == 1
     assert events[0].data["user_id"] == user.id
+
+
+async def test_async_remove_user_revokes_refresh_tokens(hass: HomeAssistant) -> None:
+    """Test removing a user revokes its refresh tokens."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser(is_owner=False).add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+    access_token = manager.async_create_access_token(refresh_token)
+    revoked = Mock()
+    manager.async_register_revoke_token_callback(refresh_token.id, revoked)
+
+    await manager.async_remove_user(user)
+
+    revoked.assert_called_once_with()
+    assert manager.async_get_refresh_token(refresh_token.id) is None
+    assert manager.async_validate_access_token(access_token) is None
 
 
 async def test_async_remove_user_fail_if_remove_credential_fails(

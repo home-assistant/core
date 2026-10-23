@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.prowl.const import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -18,7 +18,7 @@ TEST_SERVICE = TEST_NAME.lower()
 ENTITY_ID = f"{NOTIFY_DOMAIN}.{TEST_SERVICE}"
 TEST_API_KEY = "f00f" * 10
 OTHER_API_KEY = "beef" * 10
-CONF_INPUT = {CONF_API_KEY: TEST_API_KEY, CONF_NAME: TEST_NAME}
+CONF_INPUT = {CONF_API_KEY: TEST_API_KEY}
 CONF_INPUT_NEW_KEY = {CONF_API_KEY: OTHER_API_KEY}
 INVALID_API_KEY_ERROR = {"base": "invalid_api_key"}
 TIMEOUT_ERROR = {"base": "api_timeout"}

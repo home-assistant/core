@@ -1,6 +1,6 @@
 """The tests for Climate device actions."""
 
-from probatio import to_field_list
+from probatio import Invalid, to_field_list
 import pytest
 from pytest_unordered import unordered
 
@@ -563,3 +563,19 @@ async def test_capabilities_missing_entity(
         )
         == expected_capabilities
     )
+
+
+async def test_set_preset_mode_without_preset_mode_is_invalid(
+    hass: HomeAssistant,
+) -> None:
+    """Test the action type selects the schema that reports the error."""
+    with pytest.raises(Invalid, match="required key not provided at 'preset_mode'"):
+        await device_action.async_validate_action_config(
+            hass,
+            {
+                "domain": DOMAIN,
+                "device_id": "abcdefgh",
+                "entity_id": "climate.test",
+                "type": "set_preset_mode",
+            },
+        )

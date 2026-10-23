@@ -1,6 +1,6 @@
 """The tests for the generic_hygrostat."""
 
-import datetime
+import datetime as dt
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
@@ -948,7 +948,7 @@ async def test_humidity_change_dry_trigger_on_not_long_enough(
 @pytest.mark.usefixtures("setup_comp_4")
 async def test_humidity_change_dry_trigger_on_long_enough(hass: HomeAssistant) -> None:
     """Test if humidity change turn dry on."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
+    fake_changed = dt.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 35)
@@ -982,7 +982,7 @@ async def test_humidity_change_dry_trigger_off_not_long_enough(
 @pytest.mark.usefixtures("setup_comp_4")
 async def test_humidity_change_dry_trigger_off_long_enough(hass: HomeAssistant) -> None:
     """Test if humidity change turn dry on."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
+    fake_changed = dt.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
@@ -1107,7 +1107,7 @@ async def test_humidity_change_humidifier_trigger_on_long_enough(
     hass: HomeAssistant,
 ) -> None:
     """Test if humidity change turn humidifier on after min cycle."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
+    fake_changed = dt.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
@@ -1128,7 +1128,7 @@ async def test_humidity_change_humidifier_trigger_off_long_enough(
     hass: HomeAssistant,
 ) -> None:
     """Test if humidity change turn humidifier off after min cycle."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
+    fake_changed = dt.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 35)
@@ -1239,10 +1239,10 @@ async def test_humidity_change_dry_trigger_on_long_enough_3(
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
@@ -1260,10 +1260,10 @@ async def test_humidity_change_dry_trigger_off_long_enough_3(
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
@@ -1288,7 +1288,7 @@ async def test_humidity_change_dry_trigger_off_not_long_enough_keep_alive(
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert len(calls) == 0
 
@@ -1309,7 +1309,7 @@ async def test_humidity_change_dry_trigger_on_not_long_enough_keep_alive(
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert len(calls) == 0
 
@@ -1347,10 +1347,10 @@ async def test_humidity_change_humidifier_trigger_on_long_enough_2(
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
@@ -1368,10 +1368,10 @@ async def test_humidity_change_humidifier_trigger_off_long_enough_2(
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
@@ -1820,7 +1820,7 @@ async def test_sensor_stale_duration(
     assert hass.states.get(humidifier_switch).state == STATE_ON
 
     # Wait 11 minutes
-    freezer.tick(datetime.timedelta(minutes=11))
+    freezer.tick(dt.timedelta(minutes=11))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -1836,7 +1836,7 @@ async def test_sensor_stale_duration(
     assert hass.states.get(humidifier_switch).state == STATE_ON
 
     # Wait 11 minutes
-    freezer.tick(datetime.timedelta(minutes=11))
+    freezer.tick(dt.timedelta(minutes=11))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -1862,7 +1862,7 @@ async def test_sensor_stale_duration(
     assert hass.states.get(humidifier_switch).state == STATE_OFF
 
     # Wait another 11 minutes
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=22))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=22))
     await hass.async_block_till_done()
 
     # Still off

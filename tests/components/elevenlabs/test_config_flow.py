@@ -62,13 +62,26 @@ async def test_user_step(
     mock_setup_entry.assert_called_once()
 
 
-async def test_invalid_api_key(
+@pytest.mark.parametrize(
+    ("client_fixture", "error"),
+    [
+        pytest.param(
+            "mock_async_client_api_error", "invalid_api_key", id="invalid_api_key"
+        ),
+        pytest.param(
+            "mock_async_client_connect_error", "cannot_connect", id="cannot_connect"
+        ),
+    ],
+)
+async def test_user_step_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_async_client_api_error: AsyncMock,
     request: pytest.FixtureRequest,
+    client_fixture: str,
+    error: str,
 ) -> None:
-    """Test user step with invalid api key."""
+    """Test user step errors and recovery."""
+    request.getfixturevalue(client_fixture)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -83,7 +96,7 @@ async def test_invalid_api_key(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_api_key"}
+    assert result["errors"] == {"base": error}
 
     mock_setup_entry.assert_not_called()
 
@@ -288,3 +301,69 @@ async def test_options_flow_voice_settings_default(
         CONF_STYLE: DEFAULT_STYLE,
         CONF_USE_SPEAKER_BOOST: DEFAULT_USE_SPEAKER_BOOST,
     }
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_async_client")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication flow."""
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new_api_key"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_entry.data == {CONF_API_KEY: "new_api_key"}
+
+
+@pytest.mark.parametrize(
+    ("client_fixture", "error"),
+    [
+        pytest.param(
+            "mock_async_client_api_error", "invalid_api_key", id="invalid_api_key"
+        ),
+        pytest.param("mock_async_client_voices_error", "unknown", id="unknown"),
+        pytest.param(
+            "mock_async_client_connect_error", "cannot_connect", id="cannot_connect"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    request: pytest.FixtureRequest,
+    client_fixture: str,
+    error: str,
+) -> None:
+    """Test reauthentication flow errors and recovery."""
+    mock_entry.add_to_hass(hass)
+    request.getfixturevalue(client_fixture)
+
+    result = await mock_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new_api_key"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    request.getfixturevalue("mock_async_client")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new_api_key"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_entry.data == {CONF_API_KEY: "new_api_key"}

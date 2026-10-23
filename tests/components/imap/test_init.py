@@ -3,16 +3,20 @@
 import asyncio
 from base64 import b64decode
 from datetime import datetime, timedelta, timezone
+import socket
+import ssl
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aioimaplib import AUTH, NONAUTH, SELECTED, AioImapException, Response
+import probatio
 import pytest
 
 from homeassistant.components.imap import DOMAIN
 from homeassistant.components.imap.const import CONF_CHARSET
 from homeassistant.components.imap.errors import InvalidAuth, InvalidFolder
 from homeassistant.components.sensor import SensorStateClass
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -106,6 +110,37 @@ async def test_entry_startup_fails(
         side_effect=effect,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        TimeoutError,
+        AioImapException("Something went wrong"),
+        ConnectionRefusedError,
+        socket.gaierror,
+        ssl.SSLError,
+    ],
+    ids=[
+        "TimeoutError",
+        "AioImapException",
+        "ConnectionRefusedError",
+        "gaierror",
+        "SSLError",
+    ],
+)
+async def test_entry_startup_connection_error(
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    exc: Exception,
+) -> None:
+    """Test setup is retried when the imap server can not be reached."""
+    mock_imap_protocol.wait_hello_from_server.side_effect = exc
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id) is False
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
@@ -555,6 +590,63 @@ async def test_lost_connection_with_imap_push(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     assert "Canceling IDLE wait for imap.server.com" in caplog.text
+
+
+@pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
+@pytest.mark.parametrize(
+    "exc",
+    [ConnectionRefusedError, socket.gaierror, ssl.SSLError],
+    ids=["ConnectionRefusedError", "gaierror", "SSLError"],
+)
+async def test_reconnect_after_connection_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_imap_protocol: MagicMock,
+    exc: Exception,
+) -> None:
+    """Test we keep reconnecting after a connection error."""
+    mock_imap_protocol.idle_start.return_value = asyncio.Future()
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    now = utcnow()
+
+    state = hass.states.get("sensor.imap_email_email_com_messages")
+    assert state is not None
+    assert state.state == "0"
+
+    # Lose the connection and fail to reconnect
+    mock_imap_protocol.noop.side_effect = AioImapException("Connection lost")
+    mock_imap_protocol.wait_server_push.side_effect = AioImapException(
+        "Connection lost"
+    )
+    mock_imap_protocol.wait_hello_from_server.side_effect = exc
+    for _ in range(4):
+        now += timedelta(seconds=15)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    assert mock_imap_protocol.wait_hello_from_server.call_count >= 2
+    state = hass.states.get("sensor.imap_email_email_com_messages")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # The server is reachable again
+    mock_imap_protocol.noop.side_effect = None
+    mock_imap_protocol.wait_server_push.side_effect = None
+    mock_imap_protocol.wait_hello_from_server.side_effect = None
+    mock_imap_protocol.protocol.state = NONAUTH
+    for _ in range(2):
+        now += timedelta(seconds=15)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.imap_email_email_com_messages")
+    assert state is not None
+    assert state.state == "0"
+    assert "Unexpected error" not in caplog.text
+    assert "Error doing job" not in caplog.text
 
 
 @pytest.mark.parametrize("imap_has_capability", [True], ids=["push"])
@@ -1024,15 +1116,25 @@ async def test_services(
     assert exc.value.translation_key == "invalid_entry"
 
     # Test processing imap client failures
-    exceptions = {
-        "invalid_auth": {"exc": InvalidAuth(), "translation_placeholders": None},
-        "invalid_folder": {"exc": InvalidFolder(), "translation_placeholders": None},
-        "imap_server_fail": {
-            "exc": AioImapException("Bla"),
-            "translation_placeholders": {"error": "Bla"},
-        },
-    }
-    for translation_key, attrs in exceptions.items():
+    exceptions = [
+        ("invalid_auth", {"exc": InvalidAuth(), "translation_placeholders": None}),
+        ("invalid_folder", {"exc": InvalidFolder(), "translation_placeholders": None}),
+        (
+            "imap_server_fail",
+            {
+                "exc": AioImapException("Bla"),
+                "translation_placeholders": {"error": "Bla"},
+            },
+        ),
+        (
+            "imap_server_fail",
+            {
+                "exc": ConnectionRefusedError("Bla"),
+                "translation_placeholders": {"error": "Bla"},
+            },
+        ),
+    ]
+    for translation_key, attrs in exceptions:
         with patch(
             "homeassistant.components.imap.services.connect_to_server",
             side_effect=attrs["exc"],
@@ -1099,6 +1201,38 @@ async def test_services(
         assert exc.value.translation_domain == DOMAIN
         assert exc.value.translation_key == patch_error_translation_key[service][1]
         assert exc.value.translation_placeholders == {"error": "Bla"}
+
+
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        pytest.param("seen", {"uid": "1\r\nA001 LOGOUT"}, id="seen_uid"),
+        pytest.param("delete", {"uid": "1\x00"}, id="delete_uid"),
+        pytest.param(
+            "move",
+            {"uid": "1", "target_folder": "Trash\nA001 LOGOUT"},
+            id="move_target_folder",
+        ),
+    ],
+)
+async def test_services_invalid_characters(
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    service: str,
+    data: dict[str, str],
+) -> None:
+    """Test service arguments that aioimaplib refuses to send are rejected."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN, service, {"entry": config_entry.entry_id, **data}, blocking=True
+        )
+    mock_imap_protocol.store.assert_not_called()
+    mock_imap_protocol.copy.assert_not_called()
 
 
 @pytest.mark.parametrize(

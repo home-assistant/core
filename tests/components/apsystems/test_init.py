@@ -1,6 +1,6 @@
 """Test the APSystem setup."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock
 
 from APsystemsEZ1 import InverterReturnedError
@@ -15,7 +15,7 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-SCAN_INTERVAL = datetime.timedelta(seconds=12)
+SCAN_INTERVAL = dt.timedelta(seconds=12)
 
 
 @pytest.mark.usefixtures("mock_apsystems")

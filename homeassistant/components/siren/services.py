@@ -6,6 +6,7 @@ import probatio
 
 from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
@@ -14,11 +15,12 @@ from .const import (
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
     DATA_COMPONENT,
+    DOMAIN,
     SirenEntityFeature,
 )
 
 if TYPE_CHECKING:
-    from . import SirenEntity
+    from .entity import SirenEntity
 
 TURN_ON_SCHEMA: VolDictType = {
     probatio.Optional(ATTR_TONE): probatio.Any(probatio.Coerce(int), cv.string),
@@ -54,9 +56,13 @@ def process_turn_on_params(
         if not siren.available_tones or (
             tone not in siren.available_tones and not is_tone_dict_value
         ):
-            raise ValueError(
-                f"Invalid tone specified for entity {siren.entity_id}: {tone}, "
-                "check the available_tones attribute for valid tones to pass in"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_tone",
+                translation_placeholders={
+                    "entity_id": siren.entity_id,
+                    "tone": str(tone),
+                },
             )
 
         # If available tones is a dict, and the tone provided is a dict value, we need

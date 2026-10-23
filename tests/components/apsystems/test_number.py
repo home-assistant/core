@@ -1,6 +1,6 @@
 """Test the APSystem number module."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -20,7 +20,7 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-SCAN_INTERVAL = datetime.timedelta(seconds=30)
+SCAN_INTERVAL = dt.timedelta(seconds=30)
 
 
 async def test_number(

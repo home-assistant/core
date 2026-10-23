@@ -1,5 +1,6 @@
 """Tradfri lights platform tests."""
 
+import json
 from typing import Any
 
 import pytest
@@ -14,6 +15,7 @@ from homeassistant.components.light import (
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
+    ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
@@ -45,9 +47,23 @@ def bulb_ws() -> str:
 
 
 @pytest.fixture(scope="module")
+def bulb_ws_philips(bulb_ws: str) -> str:
+    """Return a white spectrum response supporting combined commands."""
+    response = json.loads(bulb_ws)
+    response["3"]["0"] = "Philips"
+    return json.dumps(response)
+
+
+@pytest.fixture(scope="module")
 def bulb_cws() -> str:
     """Return a bulb CWS response."""
     return load_fixture("bulb_cws.json", DOMAIN)
+
+
+@pytest.fixture(scope="module")
+def bulb_cws_color_temp() -> str:
+    """Return a color bulb that also reports a color temperature."""
+    return load_fixture("bulb_cws_color_temp.json", DOMAIN)
 
 
 @pytest.mark.parametrize(
@@ -81,6 +97,16 @@ def bulb_cws() -> str:
                 ATTR_BRIGHTNESS: 250,
                 ATTR_HS_COLOR: (29.812, 65.252),
                 ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
+                ATTR_COLOR_MODE: ColorMode.HS,
+            },
+        ),
+        (
+            "bulb_cws_color_temp",
+            "light.test_cws_color_temp",
+            {
+                ATTR_BRIGHTNESS: 250,
+                ATTR_HS_COLOR: (29.812, 65.252),
+                ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP, ColorMode.HS],
                 ATTR_COLOR_MODE: ColorMode.HS,
             },
         ),
@@ -190,6 +216,13 @@ async def test_light_available(
             {"hs_color": [300, 100]},
             {"hs_color": [300, 100]},
         ),
+        # hs_color on a color bulb that also reports a color temperature
+        (
+            "bulb_cws_color_temp",
+            "light.test_cws_color_temp",
+            {"hs_color": [300, 100]},
+            {"hs_color": [300, 100]},
+        ),
         # ct + brightness
         (
             "bulb_ws",
@@ -229,6 +262,7 @@ async def test_light_available(
         "color_temp_kelvin > 4000",
         "color_temp_kelvin < 2202",
         "hs_color",
+        "hs_color (color bulb with color temp)",
         "ct + brightness",
         "ct + brightness (no temp support)",
         "ct + brightness (no temp or color support)",
@@ -314,3 +348,119 @@ async def test_turn_off(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("transition", "transition_payload"),
+    [
+        pytest.param({}, {}, id="no_transition"),
+        pytest.param({ATTR_TRANSITION: 0}, {"5712": 0}, id="transition_0"),
+        pytest.param({ATTR_TRANSITION: 0.5}, {"5712": 5}, id="transition_0.5"),
+        pytest.param({ATTR_TRANSITION: 1}, {"5712": 10}, id="transition_1"),
+        pytest.param({ATTR_TRANSITION: 1.5}, {"5712": 15}, id="transition_1.5"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("device", "entity_id", "service_data", "preceding_payloads", "light_payload"),
+    [
+        pytest.param(
+            "bulb_ws",
+            "light.test_ws",
+            {ATTR_COLOR_TEMP_KELVIN: 4000},
+            [{"3311": [{"5711": 250}]}],
+            {"5851": 200},
+            id="ikea_white_spectrum",
+        ),
+        pytest.param(
+            "bulb_ws_philips",
+            "light.test_ws",
+            {ATTR_COLOR_TEMP_KELVIN: 4000},
+            [],
+            {"5851": 200, "5711": 250},
+            id="philips_white_spectrum",
+        ),
+        pytest.param(
+            "bulb_cws",
+            "light.test_cws",
+            {ATTR_HS_COLOR: [0, 100]},
+            [],
+            {"5851": 200, "5707": 0, "5708": 65279},
+            id="ikea_color",
+        ),
+    ],
+    indirect=["device"],
+)
+async def test_turn_on_commands(
+    hass: HomeAssistant,
+    command_store: CommandStore,
+    device: Device,
+    entity_id: str,
+    service_data: dict[str, int | list[int]],
+    transition: dict[str, float],
+    transition_payload: dict[str, int],
+    preceding_payloads: list[dict[str, list[dict[str, int]]]],
+    light_payload: dict[str, int],
+) -> None:
+    """Test transition values, command combination and ordering sent to the gateway."""
+    await setup_integration(hass)
+    command_store.sent_commands.clear()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            "entity_id": entity_id,
+            ATTR_BRIGHTNESS: 200,
+            **service_data,
+            **transition,
+        },
+        blocking=True,
+    )
+
+    expected_payloads = [
+        *preceding_payloads,
+        {"3311": [{**light_payload, **transition_payload}]},
+    ]
+    assert [
+        (command.method, command.path, command.data)
+        for command in command_store.sent_commands
+    ] == [("put", device.path, payload) for payload in expected_payloads]
+
+
+@pytest.mark.parametrize("device", ["bulb_w"], indirect=True)
+@pytest.mark.parametrize(
+    ("transition", "light_payload"),
+    [
+        pytest.param({}, {"5850": 0}, id="no_transition"),
+        pytest.param({ATTR_TRANSITION: 0}, {"5851": 0, "5712": 0}, id="transition_0"),
+        pytest.param(
+            {ATTR_TRANSITION: 0.5}, {"5851": 0, "5712": 5}, id="transition_0.5"
+        ),
+        pytest.param({ATTR_TRANSITION: 1}, {"5851": 0, "5712": 10}, id="transition_1"),
+        pytest.param(
+            {ATTR_TRANSITION: 1.5}, {"5851": 0, "5712": 15}, id="transition_1.5"
+        ),
+    ],
+)
+async def test_turn_off_commands(
+    hass: HomeAssistant,
+    command_store: CommandStore,
+    device: Device,
+    transition: dict[str, float],
+    light_payload: dict[str, int],
+) -> None:
+    """Test transition values sent to the gateway when turning off."""
+    await setup_integration(hass)
+    command_store.sent_commands.clear()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {"entity_id": "light.test_w", **transition},
+        blocking=True,
+    )
+
+    assert [
+        (command.method, command.path, command.data)
+        for command in command_store.sent_commands
+    ] == [("put", device.path, {"3311": [light_payload]})]

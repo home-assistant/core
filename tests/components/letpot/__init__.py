@@ -1,6 +1,6 @@
 """Tests for the LetPot integration."""
 
-import datetime
+import datetime as dt
 
 from letpot.models import (
     AuthenticationInfo,
@@ -35,8 +35,8 @@ MAX_STATUS = LetPotGardenStatus(
     errors=LetPotDeviceErrors(low_water=True, low_nutrients=False, refill_error=False),
     light_brightness=750,
     light_mode=LightMode.VEGETABLE,
-    light_schedule_end=datetime.time(18, 0),
-    light_schedule_start=datetime.time(8, 0),
+    light_schedule_end=dt.time(18, 0),
+    light_schedule_start=dt.time(8, 0),
     online=True,
     plant_days=1,
     pump_mode=1,
@@ -55,8 +55,8 @@ SE_STATUS = LetPotGardenStatus(
     errors=LetPotDeviceErrors(low_water=True, pump_malfunction=True),
     light_brightness=500,
     light_mode=LightMode.VEGETABLE,
-    light_schedule_end=datetime.time(18, 0),
-    light_schedule_start=datetime.time(8, 0),
+    light_schedule_end=dt.time(18, 0),
+    light_schedule_start=dt.time(8, 0),
     online=True,
     plant_days=1,
     pump_mode=1,

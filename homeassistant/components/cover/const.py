@@ -10,7 +10,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import CoverEntity
+    from .entity import CoverEntity
 
 DOMAIN: Final = "cover"
 DATA_COMPONENT: HassKey[EntityComponent[CoverEntity]] = HassKey(DOMAIN)

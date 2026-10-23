@@ -572,7 +572,8 @@ class RuntimeEntryData:
                 for state_type, states in self.state.items()
                 if states and state_type in STATE_TYPE_TO_COMPONENT_TYPE
             }
-        if store_data == self._storage_contents:
+        # A pending save may still overwrite the store with stale data.
+        if self._pending_storage is None and store_data == self._storage_contents:
             return
 
         def _memorized_storage() -> StoreData:

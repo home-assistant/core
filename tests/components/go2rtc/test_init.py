@@ -688,12 +688,10 @@ ERR_AUTH_REQUIRED_WITH_DEBUG_UI = (
     _INVALID_CONFIG + "Username and password must be set when debug_ui is true"
 )
 ERR_USERNAME_EMPTY = (
-    _INVALID_CONFIG
-    + "length of value must be at least 1 for dictionary value 'go2rtc->username'"
+    _INVALID_CONFIG + "value must not be empty for dictionary value 'go2rtc->username'"
 )
 ERR_PASSWORD_EMPTY = (
-    _INVALID_CONFIG
-    + "length of value must be at least 1 for dictionary value 'go2rtc->password'"
+    _INVALID_CONFIG + "value must not be empty for dictionary value 'go2rtc->password'"
 )
 ERR_URL_REQUIRED = "Go2rtc URL required in non-docker installs"
 

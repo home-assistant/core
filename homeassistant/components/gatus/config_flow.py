@@ -37,7 +37,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
                 autocomplete="username",
             ),
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -203,7 +203,7 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
                         autocomplete="username",
                     ),
                 ),
-                probatio.Optional(CONF_PASSWORD): TextSelector(
+                probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.PASSWORD,
                         autocomplete="current-password",

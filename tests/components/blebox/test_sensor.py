@@ -1,9 +1,11 @@
 """Blebox sensors tests."""
 
+from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, PropertyMock
 
 import blebox_uniapi
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.blebox.const import CO2_LEVEL, OPEN_STATUS
@@ -29,7 +31,7 @@ from .conftest import (
     setup_multi_feature_product,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="airsensor")
@@ -149,7 +151,10 @@ async def test_update_with_error_state_is_unavailable(
 
 
 async def test_update_recovers_after_error_state_clears(
-    hass: HomeAssistant, tempsensor: tuple[Mock, str], config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    tempsensor: tuple[Mock, str],
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Entity becomes available again once the sensor reports a valid state."""
 
@@ -162,8 +167,9 @@ async def test_update_recovers_after_error_state_clears(
 
     feature_mock.is_error = False
     feature_mock.native_value = 21.5
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == "21.5"

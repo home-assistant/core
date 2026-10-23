@@ -77,8 +77,18 @@ def mock_async_create_device():
         yield mock_create
 
 
+@pytest.fixture
+def mock_notify_server() -> AiohttpNotifyServer:
+    """Mock async_upnp_client notify server."""
+    notify_server = create_autospec(AiohttpNotifyServer)
+    notify_server.event_handler = MagicMock()
+    return notify_server
+
+
 @pytest.fixture(autouse=True)
-def mock_igd_device(mock_async_create_device) -> IgdDevice:
+def mock_igd_device(
+    mock_async_create_device, mock_notify_server: AiohttpNotifyServer
+) -> IgdDevice:
     """Mock async_upnp_client device."""
     mock_upnp_device = create_autospec(UpnpDevice, instance=True)
     mock_upnp_device.device_url = TEST_DISCOVERY.ssdp_location
@@ -114,9 +124,6 @@ def mock_igd_device(mock_async_create_device) -> IgdDevice:
     )
 
     mock_igd_device.async_subscribe_services = AsyncMock()
-
-    mock_notify_server = create_autospec(AiohttpNotifyServer)
-    mock_notify_server.event_handler = MagicMock()
 
     with (
         patch(

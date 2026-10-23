@@ -111,6 +111,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_ACCESS_TOKEN: ANY,
     }
+    assert result3["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -194,6 +195,15 @@ async def test_no_link(hass: HomeAssistant) -> None:
     assert result3["errors"] == {"base": "linking"}
 
     assert len(mock_setup_entry.mock_calls) == 0
+
+    with patch_microbot_api(), patch_async_setup_entry():
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:

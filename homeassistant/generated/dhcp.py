@@ -1656,6 +1656,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "sugarwifi",
     },
     {
+        "domain": "whirlpool",
+        "macaddress": "88E712*",
+    },
+    {
         "domain": "withings",
         "macaddress": "0024E4*",
     },

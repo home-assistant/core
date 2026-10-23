@@ -8,13 +8,10 @@ from nrgkick_api import (
     NRGkickAPIDisabledError,
     NRGkickAuthenticationError,
     NRGkickConnectionError,
+    NRGkickInvalidResponseError,
 )
 import pytest
 
-from homeassistant.components.nrgkick.api import (
-    NRGkickApiClientError,
-    NRGkickApiClientInvalidResponseError,
-)
 from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -170,6 +167,7 @@ async def test_form_fallback_title_when_device_name_missing(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "NRGkick"
     assert result["data"] == {CONF_HOST: "192.168.1.100"}
+    assert result["result"].unique_id == "ABC"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -202,9 +200,9 @@ async def test_form_invalid_response_when_serial_missing(
     ("exception", "error"),
     [
         (NRGkickAPIDisabledError, "json_api_disabled"),
-        (NRGkickApiClientInvalidResponseError, "invalid_response"),
+        (NRGkickInvalidResponseError("Invalid response"), "invalid_response"),
         (NRGkickConnectionError, "cannot_connect"),
-        (NRGkickApiClientError, "unknown"),
+        (Exception, "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -240,9 +238,9 @@ async def test_user_flow_errors(
     [
         (NRGkickAPIDisabledError, "json_api_disabled"),
         (NRGkickAuthenticationError, "invalid_auth"),
-        (NRGkickApiClientInvalidResponseError, "invalid_response"),
+        (NRGkickInvalidResponseError("Invalid response"), "invalid_response"),
         (NRGkickConnectionError, "cannot_connect"),
-        (NRGkickApiClientError, "unknown"),
+        (Exception, "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -398,8 +396,8 @@ async def test_zeroconf_discovery_with_credentials(
     ("exception", "reason"),
     [
         (NRGkickConnectionError, "cannot_connect"),
-        (NRGkickApiClientInvalidResponseError, "cannot_connect"),
-        (NRGkickApiClientError, "unknown"),
+        (NRGkickInvalidResponseError("Invalid response"), "cannot_connect"),
+        (Exception, "unknown"),
     ],
 )
 async def test_zeroconf_errors(
@@ -495,9 +493,9 @@ async def test_zeroconf_json_api_disabled_stale_mdns(
     ("exception", "error"),
     [
         (NRGkickAPIDisabledError, "json_api_disabled"),
-        (NRGkickApiClientInvalidResponseError, "invalid_response"),
+        (NRGkickInvalidResponseError("Invalid response"), "invalid_response"),
         (NRGkickConnectionError, "cannot_connect"),
-        (NRGkickApiClientError, "unknown"),
+        (Exception, "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -577,7 +575,7 @@ async def test_zeroconf_json_api_disabled_with_credentials(
         (NRGkickAPIDisabledError, "json_api_disabled"),
         (NRGkickAuthenticationError, "invalid_auth"),
         (NRGkickConnectionError, "cannot_connect"),
-        (NRGkickApiClientError, "unknown"),
+        (Exception, "unknown"),
     ],
 )
 async def test_zeroconf_enable_json_api_auth_errors(
@@ -621,7 +619,7 @@ async def test_zeroconf_enable_json_api_auth_errors(
         (NRGkickAuthenticationError, "invalid_auth"),
         (NRGkickConnectionError, "cannot_connect"),
         (NRGkickAPIDisabledError, "json_api_disabled"),
-        (NRGkickApiClientError, "unknown"),
+        (Exception, "unknown"),
     ],
 )
 async def test_zeroconf_auth_errors(
@@ -703,9 +701,9 @@ async def test_reauth_flow(
     [
         (NRGkickAPIDisabledError, "json_api_disabled"),
         (NRGkickAuthenticationError, "invalid_auth"),
-        (NRGkickApiClientInvalidResponseError, "invalid_response"),
+        (NRGkickInvalidResponseError("Invalid response"), "invalid_response"),
         (NRGkickConnectionError, "cannot_connect"),
-        (NRGkickApiClientError, "unknown"),
+        (Exception, "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -847,9 +845,9 @@ async def test_reconfigure_flow_with_credentials(
     ("exception", "error"),
     [
         (NRGkickAPIDisabledError, "json_api_disabled"),
-        (NRGkickApiClientInvalidResponseError, "invalid_response"),
+        (NRGkickInvalidResponseError("Invalid response"), "invalid_response"),
         (NRGkickConnectionError, "cannot_connect"),
-        (NRGkickApiClientError, "unknown"),
+        (Exception, "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -892,9 +890,9 @@ async def test_reconfigure_flow_errors(
     [
         (NRGkickAPIDisabledError, "json_api_disabled"),
         (NRGkickAuthenticationError, "invalid_auth"),
-        (NRGkickApiClientInvalidResponseError, "invalid_response"),
+        (NRGkickInvalidResponseError("Invalid response"), "invalid_response"),
         (NRGkickConnectionError, "cannot_connect"),
-        (NRGkickApiClientError, "unknown"),
+        (Exception, "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")

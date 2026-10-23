@@ -155,6 +155,9 @@
   "exceptions": {
     "entry_not_loaded": {
       "message": "The Netatmo integration is not loaded. Please set it up before calling this action."
+    },
+    "missing_scopes": {
+      "message": "The Netatmo token is missing the required scopes: {scopes}."
     }
   },
   "issues": {

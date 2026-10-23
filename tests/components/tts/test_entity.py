@@ -1,5 +1,6 @@
 """Tests for the TTS entity."""
 
+from collections.abc import AsyncGenerator
 from typing import Any
 
 import pytest
@@ -7,6 +8,7 @@ import pytest
 from homeassistant.components import tts
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import (
     DEFAULT_LANG,
@@ -183,6 +185,32 @@ def test_streaming_supported() -> None:
 
     sync_non_streaming_entity = SyncNonStreamingEntity()
     assert sync_non_streaming_entity.async_supports_streaming_input() is False
+
+
+async def test_stream_tts_audio_no_audio() -> None:
+    """Test a translated error is raised when no audio is generated."""
+
+    class NoAudioEntity(DefaultEntity):
+        entity_id = "tts.no_audio"
+
+        async def async_get_tts_audio(
+            self, message: str, language: str, options: dict[str, Any]
+        ) -> tts.TtsAudioType:
+            return None, None
+
+    async def message_gen() -> AsyncGenerator[str]:
+        yield "hello"
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await NoAudioEntity().async_stream_tts_audio(
+            tts.TTSAudioRequest(DEFAULT_LANG, {}, message_gen())
+        )
+    assert exc_info.value.translation_domain == tts.DOMAIN
+    assert exc_info.value.translation_key == "no_tts_audio"
+    assert exc_info.value.translation_placeholders == {
+        "engine": "tts.no_audio",
+        "message": "hello",
+    }
 
 
 async def test_internal_get_tts_audio_writes_state(

@@ -5,7 +5,7 @@ pubsub subscriber.
 """
 
 from collections.abc import Mapping
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -372,7 +372,7 @@ async def test_doorbell_event_thread(
     await subscriber.async_receive_event(create_nest_event(message_data_1))
 
     # Publish message #2 that sends a no-op update to end the event thread
-    timestamp2 = timestamp1 + datetime.timedelta(seconds=1)
+    timestamp2 = timestamp1 + dt.timedelta(seconds=1)
     message_data_2 = event_message_data.copy()
     message_data_2.update(
         {

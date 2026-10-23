@@ -238,3 +238,52 @@ async def test_keep_socket_locked(
 async def test_keep_socket_locked_absent_without_socket(hass: HomeAssistant) -> None:
     """A charger with a fixed cable has no socket to keep locked."""
     assert hass.states.get("switch.peblar_ev_charger_keep_socket_locked") is None
+
+
+@pytest.mark.parametrize(
+    ("service", "always_charge"),
+    [(SERVICE_TURN_ON, True), (SERVICE_TURN_OFF, False)],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_custom_solar_always_charge(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    service: str,
+    always_charge: bool,
+) -> None:
+    """Test the switch that lets custom solar skip its own threshold."""
+    entity_id = "switch.peblar_ev_charger_custom_solar_always_charge"
+
+    # SolarChargingCustomAlwaysCharge is false in the fixture.
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_peblar.update_user_configuration.assert_called_once()
+    written = mock_peblar.update_user_configuration.call_args.args[0]
+    assert written.solar_charging_custom_always_charge is always_charge
+    assert written.solar_charging_custom_power_target is None
+
+
+@pytest.mark.parametrize(
+    "mock_peblar",
+    [
+        {"SolarChargingCustomPowerTarget": None},
+        {"SolarChargingAllowed": False},
+    ],
+    ids=["firmware without custom solar", "no power meter configured"],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_custom_solar_always_charge_absent(hass: HomeAssistant) -> None:
+    """Test a charger that cannot do custom solar is not offered the switch."""
+    assert (
+        hass.states.get("switch.peblar_ev_charger_custom_solar_always_charge") is None
+    )

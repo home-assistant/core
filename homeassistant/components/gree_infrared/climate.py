@@ -1,7 +1,7 @@
 """Climate platform for Gree IR integration — Gree AC."""
 
 from dataclasses import dataclass
-from typing import Any, override
+from typing import Any, Self, override
 
 from infrared_protocols.commands.gree_ac import (
     MAX_TEMP,
@@ -18,9 +18,10 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    ClimateEntity,
     ClimateEntityFeature,
+    ClimateExtraStoredData,
     HVACMode,
+    RestoreClimate,
 )
 from homeassistant.components.infrared import (
     InfraredEmitterConsumerEntity,
@@ -36,8 +37,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CONF_HVAC_MODES,
@@ -68,8 +67,8 @@ _HA_MODE_TO_LIB: dict[HVACMode, GreeAcMode] = {
 _LIB_MODE_TO_HA: dict[GreeAcMode, HVACMode] = {v: k for k, v in _HA_MODE_TO_LIB.items()}
 
 
-@dataclass
-class _GreeAcExtraStoredData(ExtraStoredData):
+@dataclass(kw_only=True)
+class _GreeAcExtraStoredData(ClimateExtraStoredData):
     """Extra data restored alongside the entity's visible state.
 
     Holds the mode the unit was last actively in. The visible state only records
@@ -79,18 +78,19 @@ class _GreeAcExtraStoredData(ExtraStoredData):
 
     last_active_hvac_mode: str
 
-    @override
-    def as_dict(self) -> dict[str, Any]:
-        """Return a dict representation for storage."""
-        return {"last_active_hvac_mode": self.last_active_hvac_mode}
-
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> _GreeAcExtraStoredData | None:
-        """Build from a stored dict, or None if it doesn't look valid."""
-        last_active_hvac_mode = restored.get("last_active_hvac_mode")
-        if not isinstance(last_active_hvac_mode, str):
+    @override
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize stored data from a dict."""
+        if (climate_data := ClimateExtraStoredData.from_dict(restored)) is None:
             return None
-        return cls(last_active_hvac_mode=last_active_hvac_mode)
+        if not isinstance(
+            last_active_hvac_mode := restored.get("last_active_hvac_mode"), str
+        ):
+            return None
+        return cls(
+            **climate_data.as_dict(), last_active_hvac_mode=last_active_hvac_mode
+        )
 
 
 async def async_setup_entry(
@@ -108,22 +108,23 @@ async def async_setup_entry(
         async_add_entities([GreeAcClimateEntity(entry, emitter_entity_id)])
 
 
-class GreeAcClimateEntity(
-    GreeIrEntity, InfraredEmitterConsumerEntity, ClimateEntity, RestoreEntity
-):
+class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreClimate):
     """Gree AC climate entity controlled via infrared emitter."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1.0
     _attr_min_temp = float(MIN_TEMP)
     _attr_max_temp = float(MAX_TEMP)
     _attr_should_poll = False
     _attr_assumed_state = True
-    # Every mode's frame carries a temperature and a fan field, so both features are
-    # always supported regardless of which modes are configured.
+    # Every mode's frame carries a temperature and a fan field, so target temperature
+    # and fan mode are always supported regardless of which modes are configured.
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
     )
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
@@ -137,7 +138,7 @@ class GreeAcClimateEntity(
         )
         self._attr_hvac_modes = [HVACMode.OFF] + [HVACMode(m) for m in configured_modes]
         self._attr_hvac_mode = HVACMode.OFF
-        self._attr_target_temperature = float(MIN_TEMP)
+        self._attr_native_target_temperature = float(MIN_TEMP)
         self._attr_fan_mode = FAN_AUTO
         # Power-off frames still need a mode field; this tracks the mode to send it
         # with, since the protocol has no dedicated OFF mode.
@@ -157,33 +158,38 @@ class GreeAcClimateEntity(
                 self._attr_hvac_mode = HVACMode(last_state.state)
             if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
                 self._attr_fan_mode = fan_mode
-            if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
-                self._attr_target_temperature = float(
-                    round(
-                        TemperatureConverter.convert(
-                            float(temperature),
-                            self.hass.config.units.temperature_unit,
-                            self.temperature_unit,
-                        )
-                    )
+            if (
+                climate_data := await self.async_get_last_climate_data(
+                    validate_range=True
                 )
+            ) is not None and (
+                temperature := climate_data.native_target_temperature
+            ) is not None:
+                self._attr_native_target_temperature = float(round(temperature))
 
         current_mode = self._attr_hvac_mode
         if current_mode is not None and current_mode is not HVACMode.OFF:
             self._last_active_hvac_mode = current_mode
         elif (last_extra_data := await self.async_get_last_extra_data()) is not None:
-            restored = _GreeAcExtraStoredData.from_dict(last_extra_data.as_dict())
-            if restored is not None and restored.last_active_hvac_mode in (
+            restored = last_extra_data.as_dict()
+            last_active_hvac_mode: str | None
+            if (data := _GreeAcExtraStoredData.from_dict(restored)) is not None:
+                last_active_hvac_mode = data.last_active_hvac_mode
+            else:
+                # Saved before 2026.11 without the temperatures, remove in 2027.5
+                last_active_hvac_mode = restored.get("last_active_hvac_mode")
+            if isinstance(last_active_hvac_mode, str) and last_active_hvac_mode in (
                 mode.value for mode in self._attr_hvac_modes if mode is not HVACMode.OFF
             ):
-                self._last_active_hvac_mode = HVACMode(restored.last_active_hvac_mode)
+                self._last_active_hvac_mode = HVACMode(last_active_hvac_mode)
 
     @property
     @override
-    def extra_restore_state_data(self) -> ExtraStoredData:
+    def extra_restore_state_data(self) -> _GreeAcExtraStoredData:
         """Return extra data to be restored alongside the entity's state."""
         return _GreeAcExtraStoredData(
-            last_active_hvac_mode=self._last_active_hvac_mode.value
+            **super().extra_restore_state_data.as_dict(),
+            last_active_hvac_mode=self._last_active_hvac_mode.value,
         )
 
     async def _async_send_state(
@@ -203,11 +209,16 @@ class GreeAcClimateEntity(
         """Set HVAC mode."""
         await self._async_send_state(
             hvac_mode,
-            int(self._attr_target_temperature or MIN_TEMP),
+            int(self._attr_native_target_temperature or MIN_TEMP),
             self._attr_fan_mode or FAN_AUTO,
         )
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn the entity on in the mode it was last active in."""
+        await self.async_set_hvac_mode(self._last_active_hvac_mode)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -227,7 +238,7 @@ class GreeAcClimateEntity(
         if hvac_mode is not None:
             self._attr_hvac_mode = hvac_mode
 
-        self._attr_target_temperature = float(temp)
+        self._attr_native_target_temperature = float(temp)
         self.async_write_ha_state()
 
     @override
@@ -236,7 +247,9 @@ class GreeAcClimateEntity(
         hvac_mode = self._attr_hvac_mode
         if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
             await self._async_send_state(
-                hvac_mode, int(self._attr_target_temperature or MIN_TEMP), fan_mode
+                hvac_mode,
+                int(self._attr_native_target_temperature or MIN_TEMP),
+                fan_mode,
             )
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
@@ -287,5 +300,5 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
 
         self._attr_hvac_mode = hvac_mode
         self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
-        self._attr_target_temperature = float(command.temperature)
+        self._attr_native_target_temperature = float(command.temperature)
         self.async_write_ha_state()

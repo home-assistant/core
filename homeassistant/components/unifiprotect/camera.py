@@ -7,7 +7,6 @@ from typing import override
 from uiprotect.data import (
     Camera as UFPCamera,
     ChannelQuality,
-    DeviceState,
     ModelType,
     ProtectAdoptableDeviceModel,
     PublicDeviceModel,
@@ -17,6 +16,7 @@ from uiprotect.data import (
 from uiprotect.data.public_devices import PublicCamera
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform, issue_registry as ir
@@ -176,7 +176,7 @@ def _async_camera_entities(
         # get the repair too; third-party is only knowable with a private fill.
         if (
             disable_stream
-            or public.state is not DeviceState.CONNECTED
+            or not public.is_reachable
             or (camera is not None and camera.is_third_party_camera)
         ):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
@@ -271,6 +271,8 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._attr_name = get_camera_base_name(quality)
         # only the default (first active) quality channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default
+        # RTSPS uses a self-signed certificate on the console IP
+        self.stream_options[CONF_VERIFY_SSL] = False
         # Set the stream source before finishing the init
         # because async_added_to_hass is too late and camera
         # integration uses async_internal_added_to_hass to access
@@ -365,7 +367,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._attr_available = (
             self.data.last_public_update_success
             and not self._public_missing
-            and public.state is DeviceState.CONNECTED
+            and public.is_reachable
         )
         self._async_set_stream_source()
         self._attr_extra_state_attributes = {

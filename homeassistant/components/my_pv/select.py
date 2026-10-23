@@ -28,7 +28,6 @@ async def async_setup_entry(
             key="bstmode",
             entity_category=EntityCategory.CONFIG,
             translation_key="bstmode",
-            entity_registry_enabled_default=False,
             options=list(config.get("options", {}).keys()),
         )
         entities.append(

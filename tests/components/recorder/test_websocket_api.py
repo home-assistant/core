@@ -1,7 +1,7 @@
 """The tests for sensor recorder platform."""
 
 from collections.abc import Iterable
-import datetime
+import datetime as dt
 from datetime import timedelta
 import math
 from statistics import fmean
@@ -53,7 +53,7 @@ from .common import (
 )
 from .conftest import InstrumentedMigration
 
-from tests.common import async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 from tests.typing import (
     RecorderInstanceContextManager,
     RecorderInstanceGenerator,
@@ -259,7 +259,7 @@ async def test_statistics_during_period(
     }
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2022, 10, 21, 7, 25, tzinfo=dt.UTC))
 @pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.parametrize("offset", [0, 1, 2])
 async def test_statistic_during_period(
@@ -707,7 +707,7 @@ def _circular_mean_approx(
     return pytest.approx(_circular_mean(values)["mean"], abs=tolerance)
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2022, 10, 21, 7, 25, tzinfo=dt.UTC))
 @pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.parametrize("offset", [0, 1, 2])
 @pytest.mark.parametrize(
@@ -1070,7 +1070,7 @@ async def test_statistic_during_period_circular_mean(
     }
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2022, 10, 21, 7, 25, tzinfo=dt.UTC))
 @pytest.mark.usefixtures("recorder_mock")
 async def test_statistic_during_period_hole(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -1223,7 +1223,7 @@ async def test_statistic_during_period_hole(
     }
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2022, 10, 21, 7, 25, tzinfo=dt.UTC))
 @pytest.mark.usefixtures("recorder_mock")
 async def test_statistic_during_period_hole_circular_mean(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -1378,10 +1378,10 @@ async def test_statistic_during_period_hole_circular_mean(
     "frozen_time",
     [
         # This is the normal case, all statistics runs are available
-        datetime.datetime(2022, 10, 21, 6, 31, tzinfo=datetime.UTC),
+        dt.datetime(2022, 10, 21, 6, 31, tzinfo=dt.UTC),
         # Statistic only available up until 6:25, this can happen if
         # core has been shut down for an hour
-        datetime.datetime(2022, 10, 21, 7, 31, tzinfo=datetime.UTC),
+        dt.datetime(2022, 10, 21, 7, 31, tzinfo=dt.UTC),
     ],
 )
 @pytest.mark.usefixtures("recorder_mock")
@@ -1389,7 +1389,7 @@ async def test_statistic_during_period_partial_overlap(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
-    frozen_time: datetime.datetime,
+    frozen_time: dt.datetime,
 ) -> None:
     """Test statistic_during_period."""
     client = await hass_ws_client()
@@ -1725,7 +1725,7 @@ async def test_statistic_during_period_partial_overlap(
     )
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2022, 10, 21, 7, 25, tzinfo=dt.UTC))
 @pytest.mark.parametrize(
     ("calendar_period", "start_time", "end_time"),
     [
@@ -2743,6 +2743,218 @@ async def test_clear_statistics_time_out(hass_ws_client: WebSocketGenerator) -> 
         "code": "timeout",
         "message": "clear_statistics timed out",
     }
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_clear_statistics_range(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test removing statistics which overlap a time range."""
+    start = dt_util.utcnow().replace(minute=0, second=0, microsecond=0) - timedelta(
+        days=1
+    )
+    stats_5min: list[StatisticData] = [
+        {"start": start + timedelta(minutes=5 * i), "mean": i, "min": i, "max": i}
+        for i in range(5 * 12)
+    ]
+    stats_hour: list[StatisticData] = [
+        {"start": start + timedelta(hours=i), "mean": i, "min": i, "max": i}
+        for i in range(5)
+    ]
+    instance = recorder.get_instance(hass)
+    for statistic_id in ("sensor.test1", "sensor.test2"):
+        metadata: StatisticMetaData = {
+            "has_sum": False,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "name": None,
+            "source": "recorder",
+            "statistic_id": statistic_id,
+            "unit_class": "temperature",
+            "unit_of_measurement": "°C",
+        }
+        instance.async_import_statistics(metadata, stats_hour, Statistics)
+        instance.async_import_statistics(metadata, stats_5min, StatisticsShortTerm)
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/clear_statistics",
+            "statistic_ids": ["sensor.test1"],
+            "start_time": (start + timedelta(hours=1, minutes=20)).isoformat(),
+            "end_time": (start + timedelta(hours=3)).isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await async_recorder_block_till_done(hass)
+
+    def starts(period: str) -> dict[str, list[dt.datetime]]:
+        stats = statistics_during_period(
+            hass,
+            start,
+            statistic_ids={"sensor.test1", "sensor.test2"},
+            period=period,
+            types={"mean"},
+        )
+        return {
+            statistic_id: [dt_util.utc_from_timestamp(row["start"]) for row in rows]
+            for statistic_id, rows in stats.items()
+        }
+
+    # The hour starting at 1:00 overlaps the range, so it is removed.
+    hourly = starts("hour")
+    assert hourly["sensor.test1"] == [
+        start,
+        start + timedelta(hours=3),
+        start + timedelta(hours=4),
+    ]
+    assert len(hourly["sensor.test2"]) == 5
+
+    # The row starting at 1:15 ends when the range starts, so it is kept.
+    short_term = starts("5minute")
+    assert short_term["sensor.test1"] == [
+        row["start"]
+        for row in stats_5min
+        if row["start"] <= start + timedelta(hours=1, minutes=15)
+        or row["start"] >= start + timedelta(hours=3)
+    ]
+    assert len(short_term["sensor.test2"]) == 5 * 12
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_clear_statistics_range_latest_short_term(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the latest short term statistic after removing the latest rows."""
+    start = dt_util.utcnow().replace(minute=0, second=0, microsecond=0) - timedelta(
+        hours=1
+    )
+    stats_5min: list[StatisticData] = [
+        {"start": start + timedelta(minutes=5 * i), "state": i, "sum": i}
+        for i in range(12)
+    ]
+    metadata: StatisticMetaData = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": None,
+        "source": "recorder",
+        "statistic_id": "sensor.test",
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+    recorder.get_instance(hass).async_import_statistics(
+        metadata, stats_5min, StatisticsShortTerm
+    )
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/clear_statistics",
+            "statistic_ids": ["sensor.test"],
+            "start_time": (start + timedelta(minutes=50)).isoformat(),
+            "end_time": (start + timedelta(hours=1)).isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await async_recorder_block_till_done(hass)
+
+    # The next statistics run continues the sum from the latest remaining row.
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass, session, {"sensor.test"}, {"sum"}
+        )
+    assert stats["sensor.test"][0]["sum"] == 9
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_clear_statistics_range_invalid_range(
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test removing statistics with an end time which is not after the start time."""
+    client = await hass_ws_client()
+    now = dt_util.utcnow()
+
+    with patch.object(recorder.tasks.ClearStatisticsTask, "run") as run_mock:
+        await client.send_json_auto_id(
+            {
+                "type": "recorder/clear_statistics",
+                "statistic_ids": ["sensor.test"],
+                "start_time": now.isoformat(),
+                "end_time": now.isoformat(),
+            }
+        )
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "invalid_time_range",
+        "message": "start_time must be before end_time",
+    }
+    run_mock.assert_not_called()
+
+
+@pytest.mark.parametrize("time_key", ["start_time", "end_time"])
+@pytest.mark.usefixtures("recorder_mock")
+async def test_clear_statistics_range_incomplete(
+    hass_ws_client: WebSocketGenerator, time_key: str
+) -> None:
+    """Test removing statistics with only one end of the time range."""
+    client = await hass_ws_client()
+
+    with patch.object(recorder.tasks.ClearStatisticsTask, "run") as run_mock:
+        await client.send_json_auto_id(
+            {
+                "type": "recorder/clear_statistics",
+                "statistic_ids": ["sensor.test"],
+                time_key: dt_util.utcnow().isoformat(),
+            }
+        )
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+    run_mock.assert_not_called()
+
+
+@pytest.mark.parametrize("time_key", ["start_time", "end_time"])
+async def test_async_clear_statistics_range_incomplete(
+    hass: HomeAssistant, recorder_mock: Recorder, time_key: str
+) -> None:
+    """Test the recorder refuses a range with only one end."""
+    with (
+        patch.object(recorder.tasks.ClearStatisticsTask, "run") as run_mock,
+        pytest.raises(ValueError, match="must be provided together"),
+    ):
+        recorder_mock.async_clear_statistics(
+            ["sensor.test"], **{time_key: dt_util.utcnow()}
+        )
+    await async_recorder_block_till_done(hass)
+    run_mock.assert_not_called()
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_clear_statistics_requires_admin(
+    hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test removing statistics requires an admin user."""
+    hass_admin_user.groups = []
+    client = await hass_ws_client()
+    now = dt_util.utcnow()
+
+    with patch.object(recorder.tasks.ClearStatisticsTask, "run") as run_mock:
+        await client.send_json_auto_id(
+            {
+                "type": "recorder/clear_statistics",
+                "statistic_ids": ["sensor.test"],
+                "start_time": now.isoformat(),
+                "end_time": (now + timedelta(hours=1)).isoformat(),
+            }
+        )
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
+    run_mock.assert_not_called()
 
 
 @pytest.mark.parametrize(

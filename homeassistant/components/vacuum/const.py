@@ -7,7 +7,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from . import StateVacuumEntity
+    from .entity import StateVacuumEntity
 
 DOMAIN: Final = "vacuum"
 
@@ -25,6 +25,8 @@ SERVICE_START: Final = "start"
 SERVICE_STOP: Final = "stop"
 
 DATA_COMPONENT: HassKey[EntityComponent[StateVacuumEntity]] = HassKey(DOMAIN)
+
+ISSUE_SEGMENTS_CHANGED = "segments_changed"
 
 
 class VacuumActivity(StrEnum):

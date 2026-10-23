@@ -1,6 +1,7 @@
 {
   "domain": "pterodactyl",
   "name": "Pterodactyl",
+  "categories": ["media_entertainment.gaming"],
   "codeowners": ["@elmurato"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pterodactyl",

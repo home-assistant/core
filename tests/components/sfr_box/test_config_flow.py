@@ -174,8 +174,18 @@ async def test_config_flow_with_auth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(SFRBoxAuthenticationError, "invalid_auth", id="invalid_auth"),
+        pytest.param(SFRBoxError, "cannot_connect", id="cannot_connect"),
+    ],
+)
 async def test_config_flow_with_auth_failure(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    side_effect: type[Exception],
+    error: str,
 ) -> None:
     """Test user flow (with authentication) with failure and recovery."""
     result = await hass.config_entries.flow.async_init(
@@ -211,7 +221,7 @@ async def test_config_flow_with_auth_failure(
 
     with patch(
         "homeassistant.components.sfr_box.config_flow.SFRBox.authenticate",
-        side_effect=SFRBoxAuthenticationError,
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -222,7 +232,7 @@ async def test_config_flow_with_auth_failure(
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": error}
 
     with patch("homeassistant.components.sfr_box.config_flow.SFRBox.authenticate"):
         result = await hass.config_entries.flow.async_configure(

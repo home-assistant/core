@@ -1,9 +1,7 @@
-"""Test deprecated constants custom integration."""
+"""Compatibility imports for the Home Assistant pytest helpers."""
 
-from types import ModuleType
-from typing import Any
-
-
-def import_deprecated_constant(module: ModuleType, constant_name: str) -> Any:
-    """Import and return deprecated constant."""
-    return getattr(module, constant_name)
+from pytest_homeassistant.testing_config.custom_components.test_constant_deprecation import (
+    Any as Any,
+    ModuleType as ModuleType,
+    import_deprecated_constant as import_deprecated_constant,
+)

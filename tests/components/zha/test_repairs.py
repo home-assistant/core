@@ -162,6 +162,7 @@ async def test_multipan_firmware_repair(
     # The issue is created when we fail to probe
     assert issue is not None
     assert issue.translation_placeholders["firmware_type"] == "CPC"
+    assert issue.config_entry_id == config_entry.entry_id
 
     # If ZHA manages to start up normally after this, the issue will be deleted
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -295,6 +296,7 @@ async def test_inconsistent_settings_keep_new(
 
     # The issue is created
     assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
 
     client = await hass_client()
     resp = await client.post(

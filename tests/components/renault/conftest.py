@@ -28,6 +28,18 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
+@pytest.fixture(autouse=True)
+def mock_get_vehicle_details() -> Generator[AsyncMock]:
+    """Fail the separate request for details missing from the vehicle list."""
+    with patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_details",
+        side_effect=exceptions.ResourceNotFoundException(
+            "err.func.wired.notFound", "Resource not found"
+        ),
+    ) as mock_get_details:
+        yield mock_get_details
+
+
 @pytest.fixture(name="vehicle_type", params=MOCK_VEHICLES.keys())
 def get_vehicle_type(request: pytest.FixtureRequest) -> str:
     """Parametrize vehicle type."""
@@ -61,6 +73,28 @@ async def patch_renault_account(hass: HomeAssistant) -> AsyncGenerator[RenaultAc
         return_value=renault_account,
     ):
         yield renault_account
+
+
+@pytest.fixture(name="account_ids")
+def get_account_ids() -> list[str]:
+    """Kamereon account ids returned by the Renault servers."""
+    return [MOCK_ACCOUNT_ID]
+
+
+@pytest.fixture(name="patch_get_api_accounts")
+def patch_get_api_accounts(
+    hass: HomeAssistant, account_ids: list[str]
+) -> Generator[None]:
+    """Mock the list of Kamereon accounts."""
+    websession = aiohttp_client.async_get_clientsession(hass)
+    with patch(
+        "renault_api.renault_client.RenaultClient.get_api_accounts",
+        return_value=[
+            RenaultAccount(account_id, websession=websession)
+            for account_id in account_ids
+        ],
+    ):
+        yield
 
 
 @pytest.fixture(name="patch_get_vehicles")

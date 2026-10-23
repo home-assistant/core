@@ -231,6 +231,7 @@ async def test_reconfigure_flow_errors(
         },
     )
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     assert mock_config_entry.data == {
         CONF_HOST: "127.0.0.2",
@@ -438,6 +439,7 @@ async def test_user_flow_with_zeroconf_in_progress(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "23-45-A4O-MOF"
 
     assert not hass.config_entries.flow.async_progress()
 

@@ -231,6 +231,16 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             if entry.data.get(CONF_HOST) in known_hosts:
                 return self.async_abort(reason="already_configured")
 
+        # Entries are keyed by site and a console may announce no address.
+        # Not the device registry: it also holds clients, which a console can be.
+        loaded_entries: list[UnifiConfigEntry] = (
+            self.hass.config_entries.async_loaded_entries(DOMAIN)
+        )
+        if any(
+            mac_address in entry.runtime_data.api.devices for entry in loaded_entries
+        ):
+            return self.async_abort(reason="already_configured")
+
         self.context["title_placeholders"] = {
             CONF_NAME: (
                 discovery_info.get("name")
@@ -255,7 +265,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             {
                 probatio.Required(CONF_HOST, default=host): str,
                 probatio.Required(CONF_USERNAME, default=username): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 probatio.Optional(CONF_PORT, default=port): int,
                 probatio.Optional(
                     CONF_VERIFY_SSL,

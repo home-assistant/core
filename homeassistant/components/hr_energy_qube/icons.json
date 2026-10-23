@@ -1,0 +1,146 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "anti_legionella": {
+        "default": "mdi:bacteria"
+      },
+      "booster_security": {
+        "default": "mdi:thermometer-alert"
+      },
+      "buffer_pump": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      },
+      "buffer_sensor_enabled": {
+        "default": "mdi:thermometer-probe"
+      },
+      "cooling_output": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "day_mode": {
+        "default": "mdi:weather-sunny",
+        "state": {
+          "off": "mdi:weather-night"
+        }
+      },
+      "dewpoint": {
+        "default": "mdi:water-percent-alert"
+      },
+      "dhw_controller_enabled": {
+        "default": "mdi:water-boiler",
+        "state": {
+          "off": "mdi:water-boiler-off"
+        }
+      },
+      "external_demand": {
+        "default": "mdi:import"
+      },
+      "four_way_valve": {
+        "default": "mdi:valve"
+      },
+      "heater_step_1": {
+        "default": "mdi:heating-coil"
+      },
+      "heater_step_2": {
+        "default": "mdi:heating-coil"
+      },
+      "heater_step_3": {
+        "default": "mdi:heating-coil"
+      },
+      "keypad": {
+        "default": "mdi:keyboard",
+        "state": {
+          "off": "mdi:keyboard-off"
+        }
+      },
+      "plant_demand": {
+        "default": "mdi:home-thermometer"
+      },
+      "plant_sensor_enabled": {
+        "default": "mdi:thermometer-probe"
+      },
+      "pv_surplus": {
+        "default": "mdi:solar-power"
+      },
+      "room_sensor_enabled": {
+        "default": "mdi:thermometer-probe"
+      },
+      "source_flow": {
+        "default": "mdi:waves-arrow-right"
+      },
+      "source_pump": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      },
+      "summer_mode": {
+        "default": "mdi:sun-snowflake-variant"
+      },
+      "thermostat_demand": {
+        "default": "mdi:thermostat"
+      },
+      "three_way_valve": {
+        "default": "mdi:valve"
+      },
+      "user_pump": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
+    },
+    "select": {
+      "sg_ready_mode": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "block": "mdi:cancel",
+          "max": "mdi:arrow-up-bold-circle",
+          "off": "mdi:transmission-tower-off",
+          "plus": "mdi:plus-circle"
+        }
+      }
+    },
+    "sensor": {
+      "compressor_speed": {
+        "default": "mdi:speedometer"
+      },
+      "cop_calc": {
+        "default": "mdi:gauge"
+      },
+      "status_heatpump": {
+        "default": "mdi:heat-pump",
+        "state": {
+          "alarm": "mdi:alert-circle",
+          "compressor_shutdown": "mdi:power-off",
+          "compressor_startup": "mdi:rocket-launch",
+          "cooling": "mdi:snowflake",
+          "heating": "mdi:fire",
+          "heating_dhw": "mdi:water-boiler",
+          "keyboard_off": "mdi:keyboard-off",
+          "standby": "mdi:power-standby",
+          "start_fail": "mdi:alert"
+        }
+      }
+    },
+    "switch": {
+      "anti_legionella_cycle": {
+        "default": "mdi:bacteria"
+      },
+      "heating_curve": {
+        "default": "mdi:chart-bell-curve-cumulative"
+      },
+      "heating_demand": {
+        "default": "mdi:thermostat"
+      },
+      "summer_mode": {
+        "default": "mdi:sun-snowflake-variant"
+      }
+    }
+  }
+}

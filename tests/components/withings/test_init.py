@@ -157,6 +157,7 @@ async def test_triggering_reauth(
     polling_config_entry: MockConfigEntry,
     error: Exception,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test triggering reauth."""
     await setup_integration(hass, polling_config_entry, False)
@@ -173,6 +174,7 @@ async def test_triggering_reauth(
     assert flow["step_id"] == "reauth_confirm"
     assert flow["handler"] == DOMAIN
     assert flow["context"]["source"] == config_entries.SOURCE_REAUTH
+    assert "Authentication with Withings failed. Please reauthenticate" in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -2,6 +2,7 @@
   "domain": "matter",
   "name": "Matter",
   "after_dependencies": ["bluetooth", "hassio"],
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@home-assistant/matter"],
   "config_flow": true,
   "dependencies": ["websocket_api"],

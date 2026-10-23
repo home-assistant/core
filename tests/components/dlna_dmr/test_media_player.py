@@ -35,6 +35,9 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
+
+# pylint: disable-next=home-assistant-component-root-import
+from homeassistant.components.media_player.entity import PROP_TO_ATTR
 from homeassistant.components.media_source import DOMAIN as MS_DOMAIN, PlayMedia
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -1322,7 +1325,7 @@ async def test_unavailable_device(
 
     # Check attributes are unavailable
     attrs = mock_state.attributes
-    for attr in mp.PROP_TO_ATTR.values():
+    for attr in PROP_TO_ATTR.values():
         assert attr not in attrs
 
     assert attrs[ha_const.ATTR_FRIENDLY_NAME] == MOCK_DEVICE_NAME
@@ -2135,7 +2138,7 @@ async def test_disappearing_device(
     entity: DlnaDmrEntity = hass.data[mp.DOMAIN].get_entity(mock_disconnected_entity_id)
 
     # Test attribute access
-    for prop in mp.PROP_TO_ATTR:
+    for prop in PROP_TO_ATTR:
         value = getattr(entity, prop)
         assert value is None
 

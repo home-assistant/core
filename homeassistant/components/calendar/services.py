@@ -1,7 +1,7 @@
 """Services for the calendar integration."""
 
 import dataclasses
-import datetime
+import datetime as dt
 from typing import TYPE_CHECKING, Any, Final
 
 import probatio
@@ -47,7 +47,7 @@ from .helper import (
 )
 
 if TYPE_CHECKING:
-    from . import CalendarEntity
+    from .entity import CalendarEntity
 
 CREATE_EVENT_SCHEMA = probatio.All(
     probatio.AtLeastOne(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
@@ -106,7 +106,7 @@ SERVICE_GET_EVENTS_SCHEMA: Final = probatio.All(
 
 def _validate_timespan(
     values: dict[str, Any],
-) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
+) -> tuple[dt.datetime | dt.date, dt.datetime | dt.date]:
     """Parse a create event service call.
 
     Convert the args for a create event entity call.
@@ -122,8 +122,8 @@ def _validate_timespan(
         days = event_in.get(EVENT_IN_DAYS, 7 * event_in.get(EVENT_IN_WEEKS, 0))
         today = dt_util.now().date()
         return (
-            today + datetime.timedelta(days=days),
-            today + datetime.timedelta(days=days + 1),
+            today + dt.timedelta(days=days),
+            today + dt.timedelta(days=days + 1),
         )
 
     if EVENT_START_DATE in values and EVENT_END_DATE in values:
@@ -135,7 +135,7 @@ def _validate_timespan(
     raise ValueError("Missing required fields to set start or end date/datetime")
 
 
-async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
+async def _async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
     """Add a new event to calendar."""
     # Convert parameters to format used by async_create_event
     (start, end) = _validate_timespan(call.data)
@@ -176,7 +176,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component.async_register_entity_service(
         CREATE_EVENT_SERVICE,
         CREATE_EVENT_SCHEMA,
-        async_create_event,
+        _async_create_event,
         required_features=[CalendarEntityFeature.CREATE_EVENT],
     )
     component.async_register_entity_service(

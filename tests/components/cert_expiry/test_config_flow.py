@@ -130,6 +130,14 @@ async def test_abort_on_socket_failed(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "connection_reset"}
 
+    with patch(
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: HOST}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reconfigure_successful(hass: HomeAssistant) -> None:
     """Test reconfiguration of an existing entry updates its data and unique_id."""

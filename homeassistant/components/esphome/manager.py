@@ -180,7 +180,10 @@ LOGGER_TO_LOG_LEVEL = {
 
 @callback
 def _async_check_firmware_version(
-    hass: HomeAssistant, device_info: EsphomeDeviceInfo, api_version: APIVersion
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    device_info: EsphomeDeviceInfo,
+    api_version: APIVersion,
 ) -> None:
     """Create or delete an the ble_firmware_outdated issue."""
     # ESPHome device_info.mac_address is the unique_id
@@ -206,12 +209,16 @@ def _async_check_firmware_version(
             "name": device_info.name,
             "version": STABLE_BLE_VERSION_STR,
         },
+        config_entry_id=entry.entry_id,
     )
 
 
 @callback
 def _async_check_using_api_password(
-    hass: HomeAssistant, device_info: EsphomeDeviceInfo, has_password: bool
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    device_info: EsphomeDeviceInfo,
+    has_password: bool,
 ) -> None:
     """Create or delete an the api_password_deprecated issue."""
     # ESPHome device_info.mac_address is the unique_id
@@ -230,6 +237,7 @@ def _async_check_using_api_password(
         translation_placeholders={
             "name": device_info.name,
         },
+        config_entry_id=entry.entry_id,
     )
 
 
@@ -376,6 +384,7 @@ class ESPHomeManager:
                 translation_placeholders={
                     "name": device_info.friendly_name or device_info.name,
                 },
+                config_entry_id=self.entry.entry_id,
             )
             _LOGGER.error(
                 "%s: Service call %s.%s: with data %s rejected; "
@@ -418,10 +427,13 @@ class ESPHomeManager:
                     response_dict = {"response": response}
 
                 except TemplateError as ex:
-                    # pylint: disable-next=home-assistant-exception-not-translated
-                    raise HomeAssistantError(
-                        f"Error rendering response template: {ex}"
-                    ) from ex
+                    self._send_service_call_response(
+                        call_id,
+                        success=False,
+                        error_message=f"Error rendering response template: {ex}",
+                        response_data=b"",
+                    )
+                    return
             else:
                 response_dict = {"response": action_response}
 
@@ -511,14 +523,18 @@ class ESPHomeManager:
         new_state = event_data["new_state"]
         old_state = event_data["old_state"]
 
-        if new_state is None or old_state is None:
+        if new_state is None:
             return
 
-        # Only communicate changes to the state or attribute tracked
-        if (not attribute and old_state.state == new_state.state) or (
-            attribute
-            and old_state.attributes.get(attribute)
-            == new_state.attributes.get(attribute)
+        # Only communicate changes to the state or attribute tracked, an entity
+        # created after the subscription has no old state and is always sent
+        if old_state is not None and (
+            (not attribute and old_state.state == new_state.state)
+            or (
+                attribute
+                and old_state.attributes.get(attribute)
+                == new_state.attributes.get(attribute)
+            )
         ):
             return
 
@@ -681,6 +697,7 @@ class ESPHomeManager:
                     hass,
                     DOMAIN,
                     issue,
+                    config_entry_id=entry.entry_id,
                     is_fixable=True,
                     severity=IssueSeverity.ERROR,
                     translation_key="device_conflict",
@@ -761,8 +778,6 @@ class ESPHomeManager:
                 hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
 
-        entry_data.first_connect_done.set()
-
         if device_info.voice_assistant_feature_flags_compat(api_version) and (
             Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
         ):
@@ -771,6 +786,9 @@ class ESPHomeManager:
                 self.entry, [Platform.ASSIST_SATELLITE]
             )
             entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
+
+        # Setup can wait for this, so only after the platforms are forwarded
+        entry_data.first_connect_done.set()
 
         if device_info.zwave_proxy_feature_flags:
             entry_data.disconnect_callbacks.add(
@@ -785,8 +803,8 @@ class ESPHomeManager:
         )
 
         entry_data.async_save_to_store()
-        _async_check_firmware_version(hass, device_info, api_version)
-        _async_check_using_api_password(hass, device_info, bool(self.password))
+        _async_check_firmware_version(hass, entry, device_info, api_version)
+        _async_check_using_api_password(hass, entry, device_info, bool(self.password))
 
     def _async_zwave_proxy_request(self, request: ZWaveProxyRequest) -> None:
         """Handle a request to create a zwave_js config flow."""
@@ -802,9 +820,15 @@ class ESPHomeManager:
         # if it's a broken connection or Z-Wave controller or a not
         # yet provisioned controller.
         zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
-        assert self.entry_data.device_info is not None
-        self.entry_data.async_create_zwave_js_flow(
-            self.hass, self.entry_data.device_info, zwave_home_id
+        entry_data = self.entry_data
+        assert entry_data.device_info is not None
+        # DeviceInfo is a snapshot from connect time; keep its home ID current.
+        entry_data.device_info = EsphomeDeviceInfo.from_dict(
+            {**entry_data.device_info.to_dict(), "zwave_home_id": zwave_home_id}
+        )
+        entry_data.async_save_to_store()
+        entry_data.async_create_zwave_js_flow(
+            self.hass, entry_data.device_info, zwave_home_id
         )
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
@@ -1564,6 +1588,8 @@ def _async_register_service(
     esphome_supports_response = service.supports_response or SupportsResponseType.NONE
     ha_supports_response = _RESPONSE_TYPE_MAPPER.from_esphome(esphome_supports_response)
 
+    # Cannot be moved: action names come from the device
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         service_name,

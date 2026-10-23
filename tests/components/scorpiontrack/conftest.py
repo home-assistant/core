@@ -2,7 +2,7 @@
 
 from collections.abc import Iterator
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyscorpiontrack import (
     ScorpionTrackClient,
@@ -64,11 +64,9 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture(autouse=True)
-def mock_scorpiontrack_client(
-    mock_share: ScorpionTrackShare,
-) -> Iterator[AsyncMock]:
-    """Mock the ScorpionTrack client."""
+@pytest.fixture
+def mock_scorpiontrack_client_class() -> Iterator[MagicMock]:
+    """Mock the ScorpionTrack client constructor."""
     with (
         patch(
             "homeassistant.components.scorpiontrack.ScorpionTrackClient",
@@ -79,8 +77,17 @@ def mock_scorpiontrack_client(
             new=mock_client,
         ),
     ):
-        client = mock_client.return_value
         mock_client.extract_token.side_effect = ScorpionTrackClient.extract_token
-        client.token = "canonical-token"
-        client.async_get_share.return_value = mock_share
-        yield client
+        yield mock_client
+
+
+@pytest.fixture(autouse=True)
+def mock_scorpiontrack_client(
+    mock_scorpiontrack_client_class: MagicMock,
+    mock_share: ScorpionTrackShare,
+) -> AsyncMock:
+    """Return the mocked ScorpionTrack client."""
+    client = mock_scorpiontrack_client_class.return_value
+    client.token = "canonical-token"
+    client.async_get_share.return_value = mock_share
+    return client

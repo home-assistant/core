@@ -1,7 +1,7 @@
 """Tests for the file config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -123,7 +123,7 @@ async def test_already_configured(
 )
 async def test_not_allowed(
     hass: HomeAssistant,
-    mock_is_allowed_path: bool,
+    mock_is_allowed_path: MagicMock,
     platform: str,
     data: dict[str, Any],
     options: dict[str, Any],
@@ -153,6 +153,15 @@ async def test_not_allowed(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"file_path": "not_allowed"}
+
+    mock_is_allowed_path.return_value = True
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

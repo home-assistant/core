@@ -32,7 +32,7 @@ from homeassistant.components.flux_led.const import (
     MIN_RGB_BRIGHTNESS,
     TRANSITION_JUMP,
 )
-from homeassistant.components.flux_led.light import (
+from homeassistant.components.flux_led.services import (
     ATTR_BACKGROUND_COLOR,
     ATTR_FOREGROUND_COLOR,
     ATTR_LIGHT_SCREEN,

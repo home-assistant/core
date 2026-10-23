@@ -167,6 +167,26 @@ async def mock_lyric_mixed_devices() -> AsyncGenerator[MagicMock]:
 
 
 @pytest.fixture
+def mock_lyric_thermostats() -> Generator[MagicMock]:
+    """Yield a mocked Lyric client with an LCC and a TCC thermostat."""
+    location = LyricLocation(
+        MagicMock(),
+        location_json(
+            1,
+            [
+                load_json_object_fixture("thermostat_lcc.json", DOMAIN),
+                load_json_object_fixture("thermostat_tcc.json", DOMAIN),
+            ],
+        ),
+    )
+    lyric = build_mock_lyric([location])
+    lyric.priorities_dict = {}
+
+    with patch("homeassistant.components.lyric.Lyric", return_value=lyric):
+        yield lyric
+
+
+@pytest.fixture
 def mock_lyric_api() -> Generator[MagicMock]:
     """Mock the aiolyric client, backed by a real Location and a real LyricPriority."""
     with patch("homeassistant.components.lyric.Lyric", autospec=True) as mock_lyric_cls:

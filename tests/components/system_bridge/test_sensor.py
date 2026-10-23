@@ -1,13 +1,15 @@
 """Tests for the System Bridge sensor platform."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from dataclasses import replace
+from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from systembridgeconnector.models.fixtures.modules.memory import FIXTURE_MEMORY
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -42,3 +44,56 @@ async def test_sensor_platform(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_sensor_memory_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test memory sensors are unknown when there is no memory data."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value, memory=None
+    )
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("sensor.hostname_memory_used")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_sensor_memory_free_uses_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test free memory counts reclaimable cache, not only unused memory."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value,
+        memory=replace(
+            FIXTURE_MEMORY,
+            virtual=replace(
+                FIXTURE_MEMORY.virtual,
+                free=1_500_000_000,
+                available=73_000_000_000,
+            ),
+        ),
+    )
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert (state := hass.states.get("sensor.hostname_memory_free"))
+    assert state.state == "73.0"

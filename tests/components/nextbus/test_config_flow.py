@@ -79,5 +79,6 @@ async def test_user_config(
         "route": "F",
         "stop": "5184",
     }
+    assert result["result"].unique_id == "sfmta-cis_F_5184"
 
     assert len(mock_setup_entry.mock_calls) == 1

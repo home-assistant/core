@@ -104,6 +104,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
         assert result["title"] == FAKE_TITLE
+        assert result["result"].unique_id == "123-english"
 
 
 async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
@@ -144,7 +145,9 @@ async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
         (ValueError, "unknown"),
     ],
 )
-async def test_exception_handling(hass: HomeAssistant, error) -> None:
+async def test_exception_handling(
+    hass: HomeAssistant, error: tuple[Exception | type[Exception], str]
+) -> None:
     """Test exception handling."""
     exc, base_error = error
     with (
@@ -164,6 +167,20 @@ async def test_exception_handling(hass: HomeAssistant, error) -> None:
         await hass.async_block_till_done()
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": base_error}
+
+    with (
+        mocked_ec(),
+        mocked_stations(),
+        patch(
+            "homeassistant.components.environment_canada.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], FAKE_CONFIG
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_lat_lon_not_specified(hass: HomeAssistant) -> None:
@@ -194,6 +211,7 @@ async def test_lat_lon_not_specified(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
         assert result["title"] == FAKE_TITLE
+        assert result["result"].unique_id == "123-english"
 
 
 async def test_coordinates_without_station(hass: HomeAssistant) -> None:
@@ -222,6 +240,7 @@ async def test_coordinates_without_station(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
         assert result["title"] == FAKE_TITLE
+        assert result["result"].unique_id == "123-english"
 
 
 async def _setup_with_options(

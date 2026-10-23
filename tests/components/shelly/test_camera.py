@@ -15,7 +15,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import (
-    DATA_COMPONENT,
     DOMAIN as CAMERA_DOMAIN,
     CameraState,
     get_camera_from_entity_id,
@@ -255,9 +254,8 @@ async def test_camera_off_when_streamer_stopped(
 
     await init_integration(hass, 3, model=MODEL_CAMERA)
 
-    camera = hass.data[DATA_COMPONENT].get_entity(CAMERA_ENTITY_ID)
-    assert camera is not None
-    assert camera.is_on is False
+    with pytest.raises(HomeAssistantError, match="Camera is off"):
+        get_camera_from_entity_id(hass, CAMERA_ENTITY_ID)
 
 
 async def test_camera_properties_when_device_not_initialized(

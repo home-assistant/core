@@ -23,6 +23,7 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DEVICE_TRIGGER_BASE_SCHEMA, entity
 from .const import (
+    CONF_CHANGED_STATES,
     CONF_IS_OFF,
     CONF_IS_ON,
     CONF_TOGGLE,
@@ -98,7 +99,14 @@ _TOGGLE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
-TRIGGER_SCHEMA = probatio.Any(entity.TRIGGER_SCHEMA, _TOGGLE_TRIGGER_SCHEMA)
+TRIGGER_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        CONF_CHANGED_STATES: entity.TRIGGER_SCHEMA,
+        CONF_TURNED_OFF: _TOGGLE_TRIGGER_SCHEMA,
+        CONF_TURNED_ON: _TOGGLE_TRIGGER_SCHEMA,
+    },
+)
 
 
 async def async_call_action_from_config(

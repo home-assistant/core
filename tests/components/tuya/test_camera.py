@@ -28,7 +28,7 @@ def platform_autouse():
         patch("homeassistant.components.tuya.PLATFORMS", [Platform.CAMERA]),
         # Mock camera access token which normally is randomized.
         patch(
-            "homeassistant.components.camera.SystemRandom.getrandbits",
+            "homeassistant.components.camera.entity.SystemRandom.getrandbits",
             return_value=1,
         ),
     ):

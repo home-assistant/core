@@ -172,7 +172,7 @@ async def test_no_standby_switch_without_support(
     """Test units without standby support get no standby switch."""
     context = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
     building = context["buildings"][0]
-    building["airToAirUnits"][0]["capabilities"]["hasStandbyMode"] = False
+    building["airToAirUnits"][0]["capabilities"]["hasStandby"] = False
     building["airToWaterUnits"][0]["capabilities"]["hasStandbyMode"] = False
     mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
 

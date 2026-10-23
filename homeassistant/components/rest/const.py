@@ -5,6 +5,13 @@ from homeassistant.util.ssl import SSLCipherList
 
 DOMAIN = "rest"
 
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.NOTIFY,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+
 DEFAULT_METHOD = "GET"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_SSL_CIPHER_LIST = SSLCipherList.PYTHON_DEFAULT

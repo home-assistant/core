@@ -15,6 +15,7 @@ from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
@@ -100,25 +101,25 @@ def mock_make_request(install: str) -> Callable:
         await self._headers()
 
         # assume a valid GET, and return the JSON for that web API
-        if url == "accountInfo":  # /v0/accountInfo
+        if url == "accountInfo":  # v1, accountInfo
             return {}  # will throw a KeyError -> BadApiResponseError
 
-        if url.startswith("locations/"):  # /v0/locations?userId={id}&allData=True
+        if url.startswith("locations"):  # v1, locations?userId={id}&allData=True
             return []  # user has no locations
 
-        if url == "userAccount":  # /v2/userAccount
+        if url == "userAccount":  # v2, userAccount
             return user_account_config_fixture(install)
 
         if url.startswith("location/"):
-            if "installationInfo" in url:  # /v2/location/installationInfo?userId={id}
+            if "installationInfo" in url:  # v2, location/installationInfo?userId={id}
                 return user_locations_config_fixture(install)
-            if "status" in url:  # /v2/location/{id}/status
-                return location_status_fixture(install)
+            if "status" in url:  # v2, location/{id}/status
+                return location_status_fixture(install, url.split("/")[1])
 
         elif "schedule" in url:
-            if url.startswith("domesticHotWater"):  # /v2/domesticHotWater/{id}/schedule
+            if url.startswith("domesticHotWater"):  # v2, domesticHotWater/{id}/schedule
                 return dhw_schedule_fixture(install, url[16:23])
-            if url.startswith("temperatureZone"):  # /v2/temperatureZone/{id}/schedule
+            if url.startswith("temperatureZone"):  # v2, temperatureZone/{id}/schedule
                 return zone_schedule_fixture(install, url[16:23])
 
         pytest.fail(f"Unexpected request: {HTTPMethod.GET} {url}")
@@ -127,7 +128,7 @@ def mock_make_request(install: str) -> Callable:
 
 
 @pytest.fixture
-def config() -> dict[str, str]:
+def config() -> ConfigType:
     "Return a default/minimal configuration."
     return {
         CONF_USERNAME: USERNAME,
@@ -137,7 +138,7 @@ def config() -> dict[str, str]:
 
 async def setup_evohome(
     hass: HomeAssistant,
-    config: dict[str, str],
+    config: ConfigType,
     install: str = "default",
 ) -> AsyncGenerator[MagicMock]:
     """Set up the evohome integration and return its client.
@@ -146,7 +147,7 @@ async def setup_evohome(
     """
 
     # set the time zone as for the active evohome location
-    loc_idx: int = config.get("location_idx", 0)  # type: ignore[assignment]
+    loc_idx: int = config.get("location_idx", 0)
 
     try:
         locn = user_locations_config_fixture(install)[loc_idx]
@@ -195,7 +196,7 @@ async def setup_evohome(
 @pytest.fixture
 async def evohome(
     hass: HomeAssistant,
-    config: dict[str, str],
+    config: ConfigType,
     freezer: FrozenDateTimeFactory,
     install: str,
 ) -> AsyncGenerator[MagicMock]:
@@ -207,34 +208,53 @@ async def evohome(
         yield mock_client
 
 
+def _tcs_for_config(evo: EvohomeClient, config: ConfigType) -> ControlSystem:
+    """Return the configured location's TCS; evo.tcs only supports one location."""
+
+    loc_idx: int = config.get("location_idx", 0)
+    return evo.locations[loc_idx].gateways[0].systems[0]
+
+
 @pytest.fixture
-def ctl_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str:
+def ctl_id(
+    evohome: MagicMock,
+    config: ConfigType,
+    entity_id: Callable[[Platform, str], str],
+) -> str:
     """Return the entity_id of evohome's controller (a Climate entity)."""
 
     evo: EvohomeClient = evohome.return_value
-    tcs: ControlSystem = evo.tcs
+    tcs = _tcs_for_config(evo, config)
 
     return entity_id(Platform.CLIMATE, tcs.id)
 
 
 @pytest.fixture
-def zone_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str:
+def zone_id(
+    evohome: MagicMock,
+    config: ConfigType,
+    entity_id: Callable[[Platform, str], str],
+) -> str:
     """Return the entity_id of evohome's first zone (a Climate entity)."""
 
     evo: EvohomeClient = evohome.return_value
-    tcs: ControlSystem = evo.tcs
+    tcs = _tcs_for_config(evo, config)
 
-    zone: Zone = evo.tcs.zones[0]
+    zone: Zone = tcs.zones[0]
 
     return entity_id(Platform.CLIMATE, f"{zone.id}z" if zone.id == tcs.id else zone.id)
 
 
 @pytest.fixture
-def dhw_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str:
+def dhw_id(
+    evohome: MagicMock,
+    config: ConfigType,
+    entity_id: Callable[[Platform, str], str],
+) -> str:
     """Return the entity_id of Evohome's DHW controller (a WaterHeater entity)."""
 
     evo: EvohomeClient = evohome.return_value
-    dhw: HotWater | None = evo.tcs.hotwater
+    dhw: HotWater | None = _tcs_for_config(evo, config).hotwater
 
     assert dhw is not None, "Fixture has no DHW zone"
 

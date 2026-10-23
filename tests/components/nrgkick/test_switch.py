@@ -2,7 +2,16 @@
 
 from unittest.mock import AsyncMock, call
 
-from nrgkick_api import NRGkickCommandRejectedError
+from nrgkick_api import (
+    NRGkickAPIDisabledError,
+    NRGkickAuthenticationError,
+    NRGkickCommandRejectedError,
+    NRGkickConnectionError,
+    NRGkickHTTPError,
+    NRGkickInvalidResponseError,
+    NRGkickTimeoutError,
+    NRGkickUnreachableError,
+)
 from nrgkick_api.const import CONTROL_KEY_CHARGE_PAUSE
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -116,3 +125,45 @@ async def test_charge_switch_rejected_by_device(
     # State should reflect actual device control data (still not paused).
     assert (state := hass.states.get(entity_id))
     assert state.state == "on"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key", "translation_placeholders"),
+    [
+        (NRGkickAuthenticationError("Unauthorized"), "authentication_error", None),
+        (NRGkickAPIDisabledError("API disabled"), "json_api_disabled", None),
+        (NRGkickInvalidResponseError("Bad payload"), "invalid_response", None),
+        (NRGkickTimeoutError("Timed out"), "timeout", None),
+        (NRGkickUnreachableError("Connection refused"), "unreachable", None),
+        (
+            NRGkickHTTPError("Internal Server Error", status=500),
+            "http_error",
+            {"status": "500"},
+        ),
+        (NRGkickConnectionError("Server disconnected"), "communication_error", None),
+    ],
+)
+async def test_charge_switch_api_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
+    side_effect: Exception,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
+) -> None:
+    """Test the switch raises translated errors when the API call fails."""
+    await setup_integration(hass, mock_config_entry, platforms=[Platform.SWITCH])
+
+    mock_nrgkick_api.set_charge_pause.side_effect = side_effect
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.nrgkick_test_charging_enabled"},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == "nrgkick"
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == translation_placeholders

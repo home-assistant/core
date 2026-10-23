@@ -41,6 +41,7 @@ async def test_form(hass: HomeAssistant, discovergy: AsyncMock) -> None:
         CONF_EMAIL: "test@example.com",
         CONF_PASSWORD: "test-password",
     }
+    assert result2["result"].unique_id == "test@example.com"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

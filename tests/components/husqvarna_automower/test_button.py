@@ -1,6 +1,6 @@
 """Tests for button platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiError
@@ -27,7 +27,7 @@ from .const import TEST_MOWER_ID
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2023, 6, 5, tzinfo=dt.UTC))
 async def test_button_error_confirm(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
@@ -79,7 +79,7 @@ async def test_button_error_confirm(
         ),
     ],
 )
-@pytest.mark.freeze_time(datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 2, 29, 11, tzinfo=dt.UTC))
 async def test_button_commands(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,

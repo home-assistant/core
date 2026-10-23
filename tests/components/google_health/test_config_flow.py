@@ -11,7 +11,6 @@ from google_health_api.exceptions import (
 from google_health_api.model import Identity
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.google_health.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -434,14 +433,7 @@ async def test_reauth_flow(
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -525,13 +517,7 @@ async def test_reconfigure_flow(
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -609,13 +595,7 @@ async def test_reconfigure_flow_wrong_account(
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 

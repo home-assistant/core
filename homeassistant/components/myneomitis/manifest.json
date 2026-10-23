@@ -1,6 +1,7 @@
 {
   "domain": "myneomitis",
   "name": "MyNeomitis",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@Epyes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/myneomitis",

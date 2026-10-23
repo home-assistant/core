@@ -1,6 +1,6 @@
 """Tests for the Concord232 binary sensor platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -151,11 +151,11 @@ async def test_zone_update_refresh(
     mock_concord232_client.list_zones.return_value = new_zones
     mock_concord232_client.zones = new_zones
 
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

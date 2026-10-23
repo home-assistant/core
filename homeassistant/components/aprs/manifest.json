@@ -1,6 +1,7 @@
 {
   "domain": "aprs",
   "name": "APRS",
+  "categories": ["presence_location.trackers"],
   "codeowners": ["@PhilRW"],
   "documentation": "https://www.home-assistant.io/integrations/aprs",
   "iot_class": "cloud_push",

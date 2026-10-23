@@ -1,6 +1,7 @@
 {
   "domain": "vlc_telnet",
   "name": "VLC media player via Telnet",
+  "categories": ["media_entertainment"],
   "codeowners": ["@rodripf", "@MartinHjelmare"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vlc_telnet",

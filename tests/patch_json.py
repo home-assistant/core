@@ -1,35 +1,14 @@
-"""Patch JSON related functions."""
+"""Compatibility imports for the Home Assistant pytest helpers."""
 
-import functools
-from typing import Any
-from unittest import mock
+# ruff: noqa: PLC0414
 
-import orjson
-
-from homeassistant.helpers import json as json_helper
-
-real_json_encoder_default = json_helper.json_encoder_default
-
-mock_objects = []
-
-
-def json_encoder_default(obj: Any) -> Any:
-    """Convert Home Assistant objects.
-
-    Hand other objects to the original method.
-    """
-    if isinstance(obj, mock.Base):
-        mock_objects.append(obj)
-        raise TypeError(f"Attempting to serialize mock object {obj}")
-    return real_json_encoder_default(obj)
-
-
-json_helper.json_encoder_default = json_encoder_default
-json_helper.json_bytes = functools.partial(
-    orjson.dumps, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
-)
-json_helper.json_bytes_sorted = functools.partial(
-    orjson.dumps,
-    option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS,
-    default=json_encoder_default,
+from pytest_homeassistant.patch_json import (
+    Any as Any,
+    functools as functools,
+    json_encoder_default as json_encoder_default,
+    json_helper as json_helper,
+    mock as mock,
+    mock_objects as mock_objects,
+    orjson as orjson,
+    real_json_encoder_default as real_json_encoder_default,
 )

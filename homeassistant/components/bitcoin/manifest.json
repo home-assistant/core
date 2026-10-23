@@ -1,6 +1,7 @@
 {
   "domain": "bitcoin",
   "name": "Bitcoin",
+  "categories": ["finance"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/bitcoin",
   "iot_class": "cloud_polling",

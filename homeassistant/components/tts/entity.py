@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
-from .const import TtsAudioType
+from .const import DOMAIN, TtsAudioType
 from .media_source import generate_media_source_id
 from .models import Voice
 
@@ -184,7 +184,14 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         )
 
         if extension is None or data is None:
-            raise HomeAssistantError(f"No TTS from {self.entity_id} for '{message}'")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_tts_audio",
+                translation_placeholders={
+                    "engine": self.entity_id,
+                    "message": message,
+                },
+            )
 
         async def data_gen() -> AsyncGenerator[bytes]:
             yield data

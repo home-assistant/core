@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -251,6 +251,41 @@ async def test_fix_unique_id_duplicate(
 
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.parametrize(
+    ("config_entry_unique_id"),
+    [(MAC_ADDRESS_UNIQUE_ID)],
+)
+async def test_fix_unique_id_duplicate_setup_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    responses: list[AiohttpClientMockResponse],
+) -> None:
+    """Test the setup error reason of a duplicate config entry."""
+    other_entry = MockConfigEntry(
+        unique_id=None,
+        domain=DOMAIN,
+        data=CONFIG_ENTRY_DATA_OLD_FORMAT,
+    )
+    other_entry.add_to_hass(hass)
+    responses.extend(
+        [
+            mock_response(MODEL_AND_VERSION_RESPONSE),
+            mock_json_response(WIFI_PARAMS_RESPONSE),
+        ]
+    )
+
+    with patch.object(hass.config_entries, "async_remove", AsyncMock()) as mock_remove:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert other_entry.state is ConfigEntryState.SETUP_ERROR
+    assert other_entry.reason == (
+        "Another entry already exists for this Rain Bird controller, this entry will"
+        " be removed"
+    )
+    mock_remove.assert_awaited_once_with(other_entry.entry_id)
 
 
 @pytest.mark.parametrize(

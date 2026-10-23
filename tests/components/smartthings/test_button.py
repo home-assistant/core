@@ -154,7 +154,7 @@ async def test_turn_on_with_wrong_dishwasher_machine_state(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when dishwasher machine state is stop",
+        match="Can only be changed when the dishwasher machine state is stop",
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,

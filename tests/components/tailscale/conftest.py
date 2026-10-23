@@ -6,7 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from tailscale.models import Devices
 
-from homeassistant.components.tailscale.const import CONF_TAILNET, DOMAIN
+from homeassistant.components.tailscale.const import (
+    CONF_OAUTH_CLIENT_ID,
+    CONF_OAUTH_CLIENT_SECRET,
+    CONF_TAILNET,
+    DOMAIN,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
@@ -15,7 +20,22 @@ from tests.common import MockConfigEntry, load_fixture
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return the default mocked config entry."""
+    """Return the default mocked config entry, using OAuth client credentials."""
+    return MockConfigEntry(
+        title="homeassistant.github",
+        domain=DOMAIN,
+        data={
+            CONF_TAILNET: "homeassistant.github",
+            CONF_OAUTH_CLIENT_ID: "tskey-client-MOCK",
+            CONF_OAUTH_CLIENT_SECRET: "mock-oauth-client-secret",
+        },
+        unique_id="homeassistant.github",
+    )
+
+
+@pytest.fixture
+def mock_config_entry_api_key() -> MockConfigEntry:
+    """Return a legacy mocked config entry still using an API access token."""
     return MockConfigEntry(
         title="homeassistant.github",
         domain=DOMAIN,

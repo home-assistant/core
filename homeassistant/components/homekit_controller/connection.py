@@ -28,13 +28,13 @@ from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.start import async_at_started
 
 from .config_flow import normalize_hkid
 from .const import (
@@ -258,7 +258,7 @@ class HKDevice:
         for callback_ in self._availability_callbacks:
             callback_()
 
-    async def _async_populate_ble_accessory_state(self, event: Event) -> None:
+    async def _async_populate_ble_accessory_state(self, hass: HomeAssistant) -> None:
         """Populate the BLE accessory state without blocking startup.
 
         If the accessory was asleep at startup we need to retry
@@ -309,10 +309,7 @@ class HKDevice:
             # previously we force an update after startup
             # is complete.
             entry.async_on_unload(
-                self.hass.bus.async_listen(
-                    EVENT_HOMEASSISTANT_STARTED,
-                    self._async_populate_ble_accessory_state,
-                )
+                async_at_started(self.hass, self._async_populate_ble_accessory_state)
             )
         else:
             await self.pairing.async_populate_accessories_state(
@@ -407,6 +404,10 @@ class HKDevice:
         await self.async_load_platforms()
         self.add_entities()
 
+    def accessory_identifier(self, accessory: Accessory) -> tuple[str, str]:
+        """Return the device registry identifier of an accessory."""
+        return (IDENTIFIER_ACCESSORY_ID, f"{self.unique_id}:aid:{accessory.aid}")
+
     def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
         """Build a DeviceInfo for a given accessory."""
         identifiers = {
@@ -430,12 +431,7 @@ class HKDevice:
             }
 
         return DeviceInfo(
-            identifiers={
-                (
-                    IDENTIFIER_ACCESSORY_ID,
-                    f"{self.unique_id}:aid:{accessory.aid}",
-                )
-            },
+            identifiers={self.accessory_identifier(accessory)},
             connections=connections,
             name=accessory.name,
             manufacturer=accessory.manufacturer,
@@ -677,7 +673,7 @@ class HKDevice:
             device_info = self.device_info_for_accessory(accessory)
 
             if accessory.aid != 1 and bridge_device_id is not None:
-                device_info["via_device_id"] = bridge_device_id
+                device_info.via_device_id = bridge_device_id
 
             device = device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,

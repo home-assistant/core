@@ -8,7 +8,7 @@ from functools import wraps
 import logging
 from typing import TYPE_CHECKING, Any, Concatenate, cast
 
-from renault_api.exceptions import RenaultException
+from renault_api.exceptions import NotAuthenticatedException, RenaultException
 from renault_api.kamereon import models
 from renault_api.renault_vehicle import RenaultVehicle
 
@@ -40,6 +40,12 @@ def with_error_wrapping[**_P, _R](
         """Catch RenaultException errors and raise HomeAssistantError."""
         try:
             return await func(self, *args, **kwargs)
+        except NotAuthenticatedException as err:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_expired",
+            ) from err
         except RenaultException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

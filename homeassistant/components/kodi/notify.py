@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
         probatio.Inclusive(CONF_USERNAME, "auth"): cv.string,
-        probatio.Inclusive(CONF_PASSWORD, "auth"): cv.string,
+        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "auth"): cv.string,
     }
 )
 

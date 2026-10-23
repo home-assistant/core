@@ -8,18 +8,29 @@ from aiohasupervisor.models import Job
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
+    ATTR_INSTALLED_VERSION,
+    ATTR_LATEST_VERSION,
+    ATTR_SKIPPED_VERSION,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
     ADDONS_COORDINATOR,
     ATTR_VERSION_LATEST,
+    DATA_AUTO_UPDATE,
     JOBS_COORDINATOR,
     MAIN_COORDINATOR,
 )
@@ -421,6 +432,7 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         | UpdateEntityFeature.PROGRESS
     )
     _attr_title = "Home Assistant Core"
+    _unsub_skipped_version: CALLBACK_TYPE | None = None
 
     @property
     @override
@@ -481,3 +493,54 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
                 )
             )
         )
+        self._async_track_skipped_version()
+        self.async_on_remove(self._async_untrack_skipped_version)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Follow the renamed entity with the skipped version listener."""
+        super().async_entity_id_changed(old_entity_id)
+        self._async_untrack_skipped_version()
+        self._async_track_skipped_version()
+
+    @callback
+    def _async_track_skipped_version(self) -> None:
+        """Listen to this entity's own state for skipped versions."""
+        self._unsub_skipped_version = async_track_state_change_event(
+            self.hass, self.entity_id, self._skipped_version_changed
+        )
+
+    @callback
+    def _async_untrack_skipped_version(self) -> None:
+        """Stop listening for skipped versions."""
+        if self._unsub_skipped_version is not None:
+            self._unsub_skipped_version()
+            self._unsub_skipped_version = None
+
+    @callback
+    def _skipped_version_changed(self, event: Event[EventStateChangedData]) -> None:
+        """Keep the skip list of automatic updates in line with this entity."""
+        if (new_state := event.data["new_state"]) is None:
+            return
+
+        auto_update = self.hass.data[DATA_AUTO_UPDATE]
+        if (
+            skipped_version := new_state.attributes.get(ATTR_SKIPPED_VERSION)
+        ) is not None:
+            auto_update.async_skip_version(skipped_version)
+            return
+
+        if (old_state := event.data["old_state"]) is None or (
+            previously_skipped := old_state.attributes.get(ATTR_SKIPPED_VERSION)
+        ) is None:
+            return
+
+        # This entity also forgets a skip once a newer version is offered or
+        # the skipped one got installed. Only a skip cleared while that
+        # version is still the pending update is the user changing their mind.
+        if (
+            new_state.attributes.get(ATTR_LATEST_VERSION) == previously_skipped
+            and new_state.attributes.get(ATTR_INSTALLED_VERSION) != previously_skipped
+        ):
+            auto_update.async_unskip_version(previously_skipped)

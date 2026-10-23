@@ -86,6 +86,11 @@ async def test_legacy_evcharger_sensor_creates_repair(
     assert issue is not None
     assert issue.translation_key == "deprecated_sensor"
     assert issue.translation_placeholders == {"entity_id": LEGACY_SENSOR_ENTITY_ID}
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, DEPRECATED_SENSOR_ISSUE_ID) is None
 
 
 @pytest.mark.usefixtures("mock_victron_hub_library")

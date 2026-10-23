@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from copy import deepcopy
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import logging
 from operator import attrgetter
@@ -2025,7 +2025,7 @@ async def test_websocket_cloud_onboarding_postpone(
     assert response["result"]["onboarding_postponed"] is True
     assert cloud.client.prefs.onboarding_postponed_until is not None
 
-    freezer.tick(datetime.timedelta(hours=25))
+    freezer.tick(dt.timedelta(hours=25))
 
     await client.send_json_auto_id({"type": "cloud/status"})
     response = await client.receive_json()
@@ -2873,7 +2873,7 @@ async def test_download_support_package(
     # The logging is done with local time according to the system timezone. Set the
     # fake time to 12:00 local time
     tz = now.astimezone().tzinfo
-    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    freezer.move_to(dt.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )
@@ -2989,7 +2989,7 @@ async def test_download_support_package_custom_components_error(
 
     now = dt_util.utcnow()
     tz = now.astimezone().tzinfo
-    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    freezer.move_to(dt.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )
@@ -3112,7 +3112,7 @@ async def test_download_support_package_integration_load_error(
 
     now = dt_util.utcnow()
     tz = now.astimezone().tzinfo
-    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    freezer.move_to(dt.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )

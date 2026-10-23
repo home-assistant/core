@@ -1,5 +1,7 @@
-"""Validate .core_files.yaml base_platforms alignment with entity platforms."""
+"""Validate .core_files.yaml and the core integrations it lists."""
 
+import ast
+from pathlib import Path
 import re
 
 from homeassistant.util.yaml import load_yaml_dict
@@ -9,7 +11,102 @@ from .model import Config, Integration, IntegrationType
 # Non-entity-platform components that belong in base_platforms
 EXTRA_BASE_PLATFORMS = {"diagnostics"}
 
+# Core integrations that do not define __all__ yet.
+# These need to be fixed; do not add new entries to this list.
+MISSING_ALL = {
+    "alexa",
+    "auth",
+    "automation",
+    "blueprint",
+    "cloud",
+    "config",
+    "configurator",
+    "demo",
+    "device_automation",
+    "energy",
+    "ffmpeg",
+    "frontend",
+    "google_assistant",
+    "group",
+    "homeassistant",
+    "homeassistant_hardware",
+    "http",
+    "input_boolean",
+    "input_button",
+    "input_datetime",
+    "input_number",
+    "input_select",
+    "input_text",
+    "llm",
+    "logbook",
+    "logger",
+    "lovelace",
+    "network",
+    "onboarding",
+    "otp",
+    "persistent_notification",
+    "person",
+    "recorder",
+    "recovery_mode",
+    "script",
+    "shopping_list",
+    "ssdp",
+    "sun",
+    "system_health",
+    "tag",
+    "template",
+    "timer",
+    "webhook",
+    "websocket_api",
+    "zeroconf",
+    "zone",
+}
+
 _COMPONENT_RE = re.compile(r"homeassistant/components/([^/]+)/\*\*")
+
+
+def _defines_all(init_file: Path) -> bool:
+    """Return True if the module assigns __all__ at module level."""
+    for node in ast.parse(init_file.read_text(), str(init_file)).body:
+        if isinstance(node, ast.Assign):
+            targets = node.targets
+        elif isinstance(node, ast.AnnAssign) and node.value is not None:
+            targets = [node.target]
+        else:
+            continue
+        if any(
+            isinstance(target, ast.Name) and target.id == "__all__"
+            for target in targets
+        ):
+            return True
+    return False
+
+
+def _validate_public_names(
+    integrations: dict[str, Integration], config: Config, core_domains: set[str]
+) -> None:
+    """Validate that core integrations define __all__ in their package root."""
+    for domain in sorted(core_domains):
+        if (integration := integrations.get(domain)) is None:
+            continue
+        init_file = integration.path / "__init__.py"
+        if not init_file.is_file():
+            continue
+        defines_all = _defines_all(init_file)
+        if domain in MISSING_ALL:
+            if defines_all:
+                config.add_error(
+                    "core_files",
+                    f"Core integration '{domain}' defines `__all__` "
+                    "but is still listed in MISSING_ALL",
+                )
+            continue
+        if not defines_all:
+            config.add_error(
+                "core_files",
+                f"Core integration '{domain}' must define `__all__` "
+                "in its `__init__.py`",
+            )
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
@@ -48,3 +145,12 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
             f"'{domain}' in base_platforms in .core_files.yaml "
             "is not an entity platform or in EXTRA_BASE_PLATFORMS",
         )
+
+    component_entries = {
+        match.group(1)
+        for entry in core_files.get("components", [])
+        if (match := _COMPONENT_RE.match(entry))
+    }
+    _validate_public_names(
+        integrations, config, base_platform_entries | component_entries
+    )

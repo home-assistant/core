@@ -63,7 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Set up roborock from a config entry."""
     await async_cleanup_map_storage(hass, entry.entry_id)
 
@@ -148,8 +148,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
 
     _remove_stale_devices(hass, entry, devices)
 
-    return True
-
 
 def _is_device_disabled(
     device_registry: dr.DeviceRegistry,
@@ -189,7 +187,7 @@ def _remove_stale_devices(
         device_registry.async_remove_device(device.id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Migrate old configuration entries to the new format."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -207,8 +205,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -
             version=1,
             minor_version=2,
         )
-
-    return True
 
 
 async def async_setup_device(
@@ -296,9 +292,9 @@ async def async_setup_device(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Handle removal of an entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
