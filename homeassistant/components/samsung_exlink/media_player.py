@@ -56,6 +56,8 @@ INPUT_SOURCE_SAMSUNG_TO_HA: dict[InputSource, str] = {
 INPUT_SOURCE_HA_TO_SAMSUNG: dict[str, InputSource] = {
     value: key for key, value in INPUT_SOURCE_SAMSUNG_TO_HA.items()
 }
+# Frame TVs expose Art Mode as a separate setting, not an input source.
+SOURCE_ART_MODE = "art_mode"
 
 _BASE_SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
@@ -103,11 +105,14 @@ class SamsungExLinkMediaPlayer(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "tv"
-    _attr_source_list = sorted(INPUT_SOURCE_SAMSUNG_TO_HA.values())
 
     def __init__(self, config_entry: SamsungExLinkConfigEntry) -> None:
         """Initialize the media player."""
         self._tv = config_entry.runtime_data
+        sources = list(INPUT_SOURCE_SAMSUNG_TO_HA.values())
+        if self._tv.model and self._tv.model.art_mode:
+            sources.append(SOURCE_ART_MODE)
+        self._attr_source_list = sorted(sources)
         self._attr_unique_id = config_entry.entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
@@ -153,9 +158,12 @@ class SamsungExLinkMediaPlayer(MediaPlayerEntity):
         if state.power:
             features |= MediaPlayerEntityFeature.SELECT_SOURCE
             source = state.input_source
-            self._attr_source = (
-                INPUT_SOURCE_SAMSUNG_TO_HA.get(source) if source else None
-            )
+            if state.art_mode:
+                self._attr_source = SOURCE_ART_MODE
+            else:
+                self._attr_source = (
+                    INPUT_SOURCE_SAMSUNG_TO_HA.get(source) if source else None
+                )
 
             if state.volume is None:
                 self._attr_volume_level = None
@@ -206,4 +214,7 @@ class SamsungExLinkMediaPlayer(MediaPlayerEntity):
     @override
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""
-        await self._tv.select_input_source(INPUT_SOURCE_HA_TO_SAMSUNG[source])
+        if source == SOURCE_ART_MODE:
+            await self._tv.set_art_mode(True)
+        else:
+            await self._tv.select_input_source(INPUT_SOURCE_HA_TO_SAMSUNG[source])

@@ -5,14 +5,13 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aws_s3.backup import suggested_filenames
 from homeassistant.components.aws_s3.const import DOMAIN
 from homeassistant.components.backup import AgentBackup
 
 from .const import CONFIG_ENTRY_DATA
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

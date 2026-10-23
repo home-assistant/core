@@ -48,6 +48,7 @@
       "error": {
         "api_error": "[%key:component::anthropic::config_subentries::conversation::error::api_error%]",
         "model_not_found": "[%key:component::anthropic::config_subentries::conversation::error::model_not_found%]",
+        "model_retired": "[%key:component::anthropic::config_subentries::conversation::error::model_retired%]",
         "thinking_budget_too_large": "[%key:component::anthropic::config_subentries::conversation::error::thinking_budget_too_large%]"
       },
       "initiate_flow": {
@@ -114,6 +115,7 @@
       "error": {
         "api_error": "Unable to get model info: {message}",
         "model_not_found": "Model not found",
+        "model_retired": "This model is retired. Select another model.",
         "thinking_budget_too_large": "Thinking budget must be less than the Maximum tokens."
       },
       "initiate_flow": {
@@ -237,7 +239,8 @@
     "model_deprecated": {
       "fix_flow": {
         "error": {
-          "api_error": "[%key:component::anthropic::config_subentries::conversation::error::api_error%]"
+          "api_error": "[%key:component::anthropic::config_subentries::conversation::error::api_error%]",
+          "model_not_active": "Select an active model."
         },
         "step": {
           "init": {
@@ -247,8 +250,18 @@
             "data_description": {
               "chat_model": "Select the new model to use."
             },
-            "description": "You are updating {subentry_name} ({subentry_type}) in {entry_name}. The current model {model} is deprecated and will reach end-of-life on {retirement_date}. Select a supported model to continue.",
+            "description": "You are updating {subentry_name} ({subentry_type}) in {entry_name}. The current model {model} is deprecated. Select an active model to continue.\n\nDeprecation date: {deprecation_date}\nRetirement date: {retirement_date}",
             "title": "Update model"
+          },
+          "retired": {
+            "data": {
+              "chat_model": "[%key:common::generic::model%]"
+            },
+            "data_description": {
+              "chat_model": "[%key:component::anthropic::issues::model_deprecated::fix_flow::step::init::data_description::chat_model%]"
+            },
+            "description": "You are updating {subentry_name} ({subentry_type}) in {entry_name}. The current model {model} is retired and can no longer be used. Select an active model to continue.\n\nDeprecation date: {deprecation_date}\nRetirement date: {retirement_date}",
+            "title": "[%key:component::anthropic::issues::model_deprecated::fix_flow::step::init::title%]"
           }
         }
       },

@@ -33,7 +33,13 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
@@ -243,8 +249,14 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Show the login form, retaining any previously entered values."""
         schema = probatio.Schema(
             {
-                probatio.Required(CONF_ACCOUNT): str,
-                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                probatio.Required(CONF_ACCOUNT): TextSelector(
+                    TextSelectorConfig(autocomplete="username")
+                ),
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
                 probatio.Required(
                     CONF_SERVER,
                     default=default_server,
@@ -382,7 +394,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="search",
             data_schema=probatio.Schema(
-                {probatio.Required(CONF_IP_ADDRESS, default="auto"): str},
+                {probatio.Required(CONF_IP_ADDRESS, default="auto"): TextSelector()},
             ),
             errors={"base": error} if error else None,
         )
@@ -809,7 +821,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_IP_ADDRESS,
                         default=(user_input or entry.data)[CONF_IP_ADDRESS],
-                    ): str
+                    ): TextSelector()
                 }
             ),
             errors={"base": error} if error else None,
@@ -835,7 +847,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Required(
                     CONF_IP_ADDRESS,
                     default=self.found_device.get(CONF_IP_ADDRESS),
-                ): str,
+                ): TextSelector(),
                 probatio.Required(
                     CONF_PORT,
                     default=(self.found_device.get(CONF_PORT) or 6444),
@@ -849,7 +861,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Required(
                     CONF_MODEL,
                     default=(self.found_device.get(CONF_MODEL) or "Unknown"),
-                ): str,
+                ): TextSelector(),
                 probatio.Required(
                     CONF_SUBTYPE,
                     default=(self.found_device.get(CONF_SUBTYPE) or 0),
@@ -857,11 +869,11 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Optional(
                     probatio.Secret(CONF_TOKEN),
                     default=(self.found_device.get(CONF_TOKEN) or ""),
-                ): str,
+                ): TextSelector(),
                 probatio.Optional(
                     probatio.Secret(CONF_KEY),
                     default=(self.found_device.get(CONF_KEY) or ""),
-                ): str,
+                ): TextSelector(),
             },
         )
         if user_input is not None:

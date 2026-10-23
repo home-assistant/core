@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
@@ -19,8 +20,6 @@ from .common import (
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("matter_devices")

@@ -4,6 +4,9 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from youtubeaio.types import ForbiddenError
 
 from homeassistant import config_entries
@@ -29,10 +32,6 @@ from .conftest import (
     TITLE,
     ComponentSetup,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -66,7 +65,7 @@ async def test_full_flow(
 
     with (
         patch(
-            "homeassistant.components.youtube.async_setup_entry", return_value=True
+            "homeassistant.components.youtube.async_setup_entry", return_value=None
         ) as mock_setup,
         patch(
             "homeassistant.components.youtube.config_flow.YouTube",
@@ -133,7 +132,7 @@ async def test_flow_abort_without_channel(
 
     service = MockYouTube(hass, channel_fixture="get_no_channel.json")
     with (
-        patch("homeassistant.components.youtube.async_setup_entry", return_value=True),
+        patch("homeassistant.components.youtube.async_setup_entry", return_value=None),
         patch(
             "homeassistant.components.youtube.config_flow.YouTube", return_value=service
         ),
@@ -178,7 +177,7 @@ async def test_flow_abort_without_subscriptions(
         subscriptions_fixture="get_no_subscriptions.json",
     )
     with (
-        patch("homeassistant.components.youtube.async_setup_entry", return_value=True),
+        patch("homeassistant.components.youtube.async_setup_entry", return_value=None),
         patch(
             "homeassistant.components.youtube.config_flow.YouTube", return_value=service
         ),
@@ -219,7 +218,7 @@ async def test_flow_without_subscriptions(
 
     service = MockYouTube(hass, subscriptions_fixture="get_no_subscriptions.json")
     with (
-        patch("homeassistant.components.youtube.async_setup_entry", return_value=True),
+        patch("homeassistant.components.youtube.async_setup_entry", return_value=None),
         patch(
             "homeassistant.components.youtube.config_flow.YouTube", return_value=service
         ),
@@ -389,7 +388,7 @@ async def test_reauth(
     youtube = MockYouTube(hass, channel_fixture=f"{fixture}.json")
     with (
         patch(
-            "homeassistant.components.youtube.async_setup_entry", return_value=True
+            "homeassistant.components.youtube.async_setup_entry", return_value=None
         ) as mock_setup,
         patch(
             "homeassistant.components.youtube.config_flow.YouTube",
@@ -502,7 +501,7 @@ async def test_flow_channel_listing_error(
     # The account check succeeds, listing the subscriptions afterwards fails
     mock = MockYouTube(hass)
     with (
-        patch("homeassistant.components.youtube.async_setup_entry", return_value=True),
+        patch("homeassistant.components.youtube.async_setup_entry", return_value=None),
         patch(
             "homeassistant.components.youtube.config_flow.YouTube",
             return_value=mock,
@@ -546,7 +545,7 @@ async def test_own_channel_included(
 
     with (
         patch(
-            "homeassistant.components.youtube.async_setup_entry", return_value=True
+            "homeassistant.components.youtube.async_setup_entry", return_value=None
         ) as mock_setup,
         patch(
             "homeassistant.components.youtube.config_flow.YouTube",

@@ -5,6 +5,12 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
@@ -26,10 +32,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_INTEGRATION_ID
-
-from tests.common import MockConfigEntry, async_mock_service
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 ISSUE_ID = f"restart_required_{REPOSITORY_INTEGRATION_ID}_1.0.0"
 
@@ -83,13 +85,14 @@ async def test_restart_required_fix_flow_for_an_unknown_repository(
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key="restart_required",
+        translation_placeholders={"name": "Unknown integration"},
     )
 
     client = await hass_client()
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     assert data["step_id"] == "confirm_restart"
-    assert data["description_placeholders"] == {"name": ""}
+    assert data["description_placeholders"] == {"name": "Unknown integration"}
 
 
 async def test_restart_required_fix_flow_while_unloaded(

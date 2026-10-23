@@ -2,13 +2,15 @@
 
 from collections.abc import Callable, Generator
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import logging
+import math
 from typing import Any
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET, DOMAIN
@@ -33,8 +35,6 @@ from . import (
     _get_write_api_mock_v1,
     _get_write_api_mock_v2,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def async_wait_for_queue_to_process(hass: HomeAssistant) -> None:
@@ -583,7 +583,7 @@ async def test_event_listener(
             "battery_level": f"99{PERCENTAGE}",
             "temperature": "20c",
             "last_seen": "Last seen 23 minutes ago",
-            "updated_at": datetime.datetime(2017, 1, 1, 0, 0),
+            "updated_at": dt.datetime(2017, 1, 1, 0, 0),
             "multi_periods": "0.120.240.2023873",
         }
         body = [
@@ -1923,20 +1923,56 @@ async def test_event_listener_backlog_full(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
+@pytest.mark.parametrize(
+    ("attributes", "fields"),
+    [
+        pytest.param(
+            {"value": "value_str"}, {"value__str": "value_str"}, id="state-value"
+        ),
+        pytest.param({"time": 42}, {"time_": 42.0}, id="numeric-time"),
+        pytest.param({"time": "42.5"}, {"time_": 42.5}, id="numeric-string-time"),
+        pytest.param(
+            {"time": "2026-09-28T08:10:53.050Z"},
+            {
+                "time_str": "2026-09-28T08:10:53.050Z",
+                "time_": 20260928081053.05,
+            },
+            id="timestamp-time",
+        ),
+        pytest.param({"time": "unknown"}, {"time_str": "unknown"}, id="string-time"),
+        pytest.param({"time": math.inf}, {}, id="nonfinite-time"),
+        pytest.param(
+            {"time_": 84, "time": 42},
+            {"time_": 84.0, "time__": 42.0},
+            id="reserved-name-conflict",
+        ),
+        pytest.param(
+            {"time": 42, "time_": 84},
+            {"time_": 84.0, "time__": 42.0},
+            id="renamed-field-conflict",
+        ),
+    ],
+)
 async def test_event_listener_attribute_name_conflict(
-    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    config_ext: dict[str, Any],
+    get_write_api: Callable[[MagicMock], MagicMock],
+    get_mock_call: Callable[..., Any],
+    attributes: dict[str, Any],
+    fields: dict[str, Any],
 ) -> None:
-    """Test the event listener when an attribute conflicts with another field."""
+    """Test attributes that conflict with an existing or reserved field name."""
     await _setup(hass, mock_client, config_ext, get_write_api)
     body = [
         {
             "measurement": "fake.something",
             "tags": {"domain": "fake", "entity_id": "something"},
             "time": ANY,
-            "fields": {"value": 1, "value__str": "value_str"},
+            "fields": {"value": 1, **fields},
         }
     ]
-    hass.states.async_set("fake.something", 1, {"value": "value_str"})
+    hass.states.async_set("fake.something", 1, attributes)
     await hass.async_block_till_done()
     await async_wait_for_queue_to_process(hass)
 

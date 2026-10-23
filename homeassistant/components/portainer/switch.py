@@ -18,14 +18,10 @@ from . import PortainerConfigEntry
 from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
+    PortainerCoordinatorData,
     PortainerStackData,
 )
-from .entity import (
-    PortainerContainerEntity,
-    PortainerCoordinatorData,
-    PortainerStackEntity,
-)
-from .util import async_call_portainer
+from .entity import PortainerContainerEntity, PortainerStackEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -54,7 +50,7 @@ async def _perform_action(
     coroutine: Coroutine[Any, Any, Any],
 ) -> None:
     """Perform a Portainer action with error handling and coordinator refresh."""
-    await async_call_portainer(coroutine)
+    await coordinator.async_call_portainer(coroutine)
     await coordinator.async_request_refresh()
 
 

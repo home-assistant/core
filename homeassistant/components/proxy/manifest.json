@@ -1,6 +1,7 @@
 {
   "domain": "proxy",
   "name": "Camera Proxy",
+  "categories": ["security_safety.cameras"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/proxy",
   "quality_scale": "legacy",

@@ -44,6 +44,13 @@ class Group:
         entity = self._entity
         del get_group_entities(entity.hass)[entity.entity_id]
 
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Called when the entity's entity_id has been changed."""
+        entity = self._entity
+        group_entities = get_group_entities(entity.hass)
+        group_entities[entity.entity_id] = group_entities.pop(old_entity_id)
+
 
 class GenericGroup(Group):
     """Generic entity group.

@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_media_player_platform[media_player.hostname_media-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.hostname_media',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Media',
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': 'Media',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 315441>,
+    'translation_key': 'media',
+    'unique_id': 'uuid_media',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player_platform[media_player.hostname_media-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Media',
+      <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_ARTIST: 'media_album_artist'>: 'Album Artist',
+      <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: 'Album Title',
+      <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Artist',
+      <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 100,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 100,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: datetime.datetime(1970, 1, 1, 0, 1, 40, tzinfo=datetime.timezone.utc),
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'title',
+      <MediaPlayerEntityStateAttribute.MEDIA_TRACK: 'media_track'>: 1,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 315441>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.hostname_media',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

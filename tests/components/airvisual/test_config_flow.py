@@ -10,6 +10,7 @@ from pyairvisual.cloud_api import (
 )
 from pyairvisual.errors import AirVisualError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airvisual import (
     CONF_CITY,
@@ -32,8 +33,6 @@ from .conftest import (
     TEST_LONGITUDE,
     TEST_STATE,
 )
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

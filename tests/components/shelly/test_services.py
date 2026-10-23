@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.shelly.const import ATTR_KEY, ATTR_VALUE, DOMAIN
 from homeassistant.components.shelly.services import (
@@ -17,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_service_get_kvs_value(

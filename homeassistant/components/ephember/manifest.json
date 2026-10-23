@@ -1,6 +1,7 @@
 {
   "domain": "ephember",
   "name": "EPH Controls",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@ttroy50", "@roberty99"],
   "documentation": "https://www.home-assistant.io/integrations/ephember",
   "iot_class": "local_polling",

@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
@@ -21,8 +22,6 @@ from homeassistant.util.unit_system import (
 )
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -50,7 +49,7 @@ async def test_platform_setup_and_discovery(
 @pytest.mark.parametrize(
     ("mock_device_code", "expected_children", "expected_parent_phase_entities"),
     [
-        pytest.param("zndb_qxlwffgv8avf5rrw", 0, 120, id="multi_channel"),
+        pytest.param("zndb_qxlwffgv8avf5rrw", 20, 0, id="multi_channel"),
         pytest.param("zndb_uqzhc4bx5zqwpg2m", 0, 6, id="single_channel"),
     ],
 )
@@ -64,7 +63,7 @@ async def test_indexed_phase_child_devices(
     expected_children: int,
     expected_parent_phase_entities: int,
 ) -> None:
-    """Test indexed phase sensors stay on the main device."""
+    """Test indexed phase sensors only move to child devices for multi-channel meters."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     parent = device_registry.async_get_device_by_identifier(
@@ -362,3 +361,39 @@ async def test_temp_unit_convert_sensor_invalid(
         "Device class temperature ignored for incompatible unit  in "
         "sensor entity tuya.zuqudhznfzttizpgbrnztemp_current"
     ) in caplog.text
+
+
+@pytest.mark.parametrize("mock_device_code", ["hwsb_ircs2n82vgrozoew"])
+async def test_hwsb_sensors_with_quirk(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+) -> None:
+    """Test HWSB outdoor equipment sensors with quirk applied."""
+    mock_device.status["speed_current"] = 80
+    mock_device.status["add_ele"] = 0
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state_speed = hass.states.get("sensor.inverflow_speed")
+    assert state_speed is not None
+    assert state_speed.state == "80.0"
+    assert state_speed.attributes["unit_of_measurement"] == "%"
+
+    state_energy = hass.states.get("sensor.inverflow_total_energy")
+    assert state_energy is not None
+    assert state_energy.state == "0"
+    assert state_energy.attributes["unit_of_measurement"] == "kWh"
+    assert state_energy.attributes["device_class"] == "energy"
+    assert state_energy.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
+
+    # Send energy delta update (1250 with scale 2 -> 12.5 kWh)
+    await notification_helper.async_send_device_update(
+        mock_device,
+        {"add_ele": 1250},
+        {"add_ele": 1000},
+    )
+    state_energy = hass.states.get("sensor.inverflow_total_energy")
+    assert state_energy is not None
+    assert float(state_energy.state) == pytest.approx(12.5)

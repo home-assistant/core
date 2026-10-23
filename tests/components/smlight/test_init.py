@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Info
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError, SmlightError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smlight.const import (
@@ -22,8 +23,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.issue_registry import IssueRegistry
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = [
     pytest.mark.usefixtures(

@@ -3,14 +3,17 @@
 from unittest.mock import ANY, call
 
 import pytest
+from pytest_homeassistant.common import (
+    MockEntity,
+    MockEntityPlatform,
+    mock_state_change_event,
+)
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components import mqtt_statestream as statestream
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntity, MockEntityPlatform, mock_state_change_event
-from tests.typing import MqttMockHAClient
 
 
 async def add_statestream(

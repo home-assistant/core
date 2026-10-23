@@ -118,7 +118,7 @@ def test_not_flagged_in_tests_common(
     """Test that the fixture helper definitions in tests.common are ignored."""
     root_node = astroid.parse(
         "value = json_loads_object(load_fixture('data.json'))",
-        "tests.common",
+        "pytest_homeassistant.common",
     )
 
     with assert_no_messages(linter):

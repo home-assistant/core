@@ -7,10 +7,16 @@ from typing import cast, override
 
 from uiprotect.data import (
     NVR,
-    DeviceState,
+    AlarmHubBatteryStatus,
+    AlarmHubCoverStatus,
+    AlarmHubInput,
+    AlarmHubInputStatus,
+    AlarmHubInputType,
     Fob,
+    LinkStation,
     ModelType,
     MountType,
+    OnOffState,
     ProtectAdoptableDeviceModel,
     PublicRelayInput,
     Relay,
@@ -32,15 +38,12 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 
-from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
@@ -49,15 +52,25 @@ from .entity import (
     ProtectDeviceEntity,
     ProtectEntityDescription,
     ProtectEventMixin,
-    ProtectFobEntity,
     ProtectIsOnEntity,
     ProtectNVREntity,
+    ProtectPublicChannelEntity,
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
 
 _KEY_DOOR = "door"
 PARALLEL_UPDATES = 0
+
+_ALARM_HUB_INPUT_DEVICE_CLASS: dict[AlarmHubInputType, BinarySensorDeviceClass] = {
+    AlarmHubInputType.MOTION: BinarySensorDeviceClass.MOTION,
+    AlarmHubInputType.ENTRY: BinarySensorDeviceClass.OPENING,
+    AlarmHubInputType.SMOKE: BinarySensorDeviceClass.SMOKE,
+    # No dedicated glass-break class; SOUND is the closest fit.
+    AlarmHubInputType.GLASS_BREAK: BinarySensorDeviceClass.SOUND,
+    AlarmHubInputType.EMERGENCY_BUTTON: BinarySensorDeviceClass.SAFETY,
+}
+
 
 _RELAY_INPUT_STATE_MAP: dict[RelayInputState, bool] = {
     RelayInputState.ON: True,
@@ -492,42 +505,6 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_value="led_settings.is_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
-    ProtectBinaryEntityDescription(
-        key="motion_enabled",
-        translation_key="motion_detection_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="motion_settings.is_enabled",
-        ufp_capability=SensorFeatureCapability.MOTION,
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="temperature",
-        translation_key="temperature_sensor_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="temperature_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="humidity",
-        translation_key="humidity_sensor_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="humidity_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="light",
-        translation_key="light_sensor_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="light_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="alarm",
-        translation_key="alarm_sound_detection",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="alarm_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
 )
 
 # Doorbell ring is momentary (no sustained public state), so it stays on the
@@ -684,13 +661,12 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
             self._async_event_with_immediate_end()
 
 
-class ProtectRelayInputBinarySensor(BinarySensorEntity):
+class ProtectRelayInputBinarySensor(
+    ProtectPublicChannelEntity[PublicRelayInput], BinarySensorEntity
+):
     """Binary sensor for a single relay input channel (Public API)."""
 
-    _attr_has_entity_name = True
-    _attr_attribution = DEFAULT_ATTRIBUTION
-    _attr_should_poll = False
-    _attr_translation_key = "relay_input"
+    _state_attrs = ("_attr_available", "_attr_is_on")
 
     def __init__(
         self,
@@ -699,76 +675,28 @@ class ProtectRelayInputBinarySensor(BinarySensorEntity):
         relay_input: PublicRelayInput,
     ) -> None:
         """Initialize the relay input binary sensor."""
-        self.data = data
-        self._relay_id = relay.id
-        self._relay_mac = relay.mac
-        self._input_id = relay_input.id
-        self._attr_unique_id = f"{relay.mac}_relay_input_{relay_input.id}"
+        # The description key keeps the legacy ``{mac}_relay_input_{id}`` unique ID.
+        description = BinarySensorEntityDescription(
+            key=f"relay_input_{relay_input.id}", translation_key="relay_input"
+        )
+        super().__init__(data, relay, description, relay_input.id)
         self._attr_translation_placeholders = {
             "input_name": relay_input.name or str(relay_input.id),
         }
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, relay.mac)},
-            identifiers={(DOMAIN, relay.mac)},
-            manufacturer=DEFAULT_BRAND,
-            name=relay.name,
-            model="Relay",
-            via_device_id=data.nvr_device_id,
-        )
-        self._update_from_relay(relay)
-
-    @property
-    def _relay(self) -> Relay | None:
-        api = self.data.api
-        if not api.has_public_bootstrap:
-            return None
-        return api.public_bootstrap.relays.get(self._relay_id)
 
     @callback
-    def _update_from_relay(self, relay: Relay) -> None:
-        relay_input = next(
-            (
-                relay_input
-                for relay_input in relay.inputs
-                if relay_input.id == self._input_id
-            ),
-            None,
-        )
-        if (
-            relay_input is None
-            or relay.state is not DeviceState.CONNECTED
-            or not self.data.last_public_update_success
-        ):
-            self._attr_available = False
-            self._attr_is_on = None
-            return
-        self._attr_available = True
+    @override
+    def _async_get_channel(self, device: PublicDeviceModel) -> PublicRelayInput | None:
+        return cast(Relay, device).get_input(self._channel_id)
+
+    @callback
+    @override
+    def _async_update_from_channel(self, channel: PublicRelayInput) -> None:
         self._attr_is_on = (
-            _RELAY_INPUT_STATE_MAP.get(relay_input.state)
-            if relay_input.state is not None
+            _RELAY_INPUT_STATE_MAP.get(channel.state)
+            if channel.state is not None
             else None
         )
-
-    @callback
-    def _async_updated(self, _obj: PublicDeviceModel | None) -> None:
-        """Refresh state from the public bootstrap cache."""
-        prev_state = (self._attr_available, self._attr_is_on)
-        if (relay := self._relay) is None:
-            self._attr_available = False
-            self._attr_is_on = None
-        else:
-            self._update_from_relay(relay)
-        if (self._attr_available, self._attr_is_on) != prev_state:
-            self.async_write_ha_state()
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to public relay updates."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.data.async_subscribe_public(self._relay_mac, self._async_updated)
-        )
-        self._async_updated(None)
 
 
 MODEL_DESCRIPTIONS_WITH_CLASS = (
@@ -826,6 +754,43 @@ def _async_nvr_entities(
     ]
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ProtectAlarmHubBinaryEntityDescription(BinarySensorEntityDescription):
+    """Describes a UniFi Protect alarm hub (public API) binary sensor."""
+
+    value_fn: Callable[[LinkStation], bool]
+
+
+def _alarm_hub_tamper(hub: LinkStation) -> bool:
+    """Return whether the alarm hub tamper cover is open."""
+    cover = hub.alarm_hub_cover
+    return cover is not None and cover.status is AlarmHubCoverStatus.OPEN
+
+
+def _alarm_hub_battery_problem(hub: LinkStation) -> bool:
+    """Return whether the backup battery is low or critical."""
+    battery = hub.alarm_hub_battery
+    return battery is not None and battery.battery_status in (
+        AlarmHubBatteryStatus.LOW,
+        AlarmHubBatteryStatus.CRITICAL,
+    )
+
+
+ALARM_HUB_BINARY_SENSORS: tuple[ProtectAlarmHubBinaryEntityDescription, ...] = (
+    ProtectAlarmHubBinaryEntityDescription(
+        key="tamper",
+        device_class=BinarySensorDeviceClass.TAMPER,
+        value_fn=_alarm_hub_tamper,
+    ),
+    ProtectAlarmHubBinaryEntityDescription(
+        key="battery",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_alarm_hub_battery_problem,
+    ),
+)
+
+
 def _fob_battery_low(fob: Fob) -> bool | None:
     """Return whether the key fob battery is low, if it has been reported."""
     if (battery := fob.wireless_connection_state.battery_status) is not None:
@@ -850,27 +815,95 @@ FOB_BINARY_SENSORS: tuple[ProtectFobBinaryEntityDescription, ...] = (
 )
 
 
-class ProtectFobBinarySensor(ProtectFobEntity, BinarySensorEntity):
-    """A binary sensor entity for a UniFi Protect key fob (Public API)."""
+class ProtectAlarmHubBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
+    """A hub-level binary sensor for a UniFi Protect alarm hub."""
 
-    entity_description: ProtectFobBinaryEntityDescription
-    _fob_state_attrs = ("_attr_available", "_attr_is_on")
-
-    def __init__(
-        self,
-        data: ProtectData,
-        fob: Fob,
-        description: ProtectFobBinaryEntityDescription,
-    ) -> None:
-        """Initialize the key fob binary sensor."""
-        self.entity_description = description
-        self._attr_unique_id = f"{fob.mac}_{description.key}"
-        super().__init__(data, fob)
+    entity_description: ProtectAlarmHubBinaryEntityDescription
+    _state_attrs = ("_attr_available", "_attr_is_on")
+    _ufp_uses_public = True
 
     @callback
     @override
-    def _async_update_from_fob(self, fob: Fob) -> None:
-        self._attr_is_on = self.entity_description.value_fn(fob)
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if (hub := self._ufp_public_obj) is not None:
+            self._attr_is_on = self.entity_description.value_fn(cast(LinkStation, hub))
+
+
+class ProtectAlarmHubZoneBinarySensor(
+    ProtectPublicChannelEntity[AlarmHubInput], BinarySensorEntity
+):
+    """A wired-input (zone) binary sensor for a UniFi Protect alarm hub."""
+
+    _state_attrs = ("_attr_available", "_attr_is_on")
+
+    def __init__(
+        self, data: ProtectData, hub: LinkStation, input_id: int, zone: AlarmHubInput
+    ) -> None:
+        """Initialize the zone binary sensor."""
+        device_class = (
+            _ALARM_HUB_INPUT_DEVICE_CLASS.get(zone.input_type)
+            if zone.input_type is not None
+            else None
+        )
+        description = BinarySensorEntityDescription(
+            key=f"input_{input_id}",
+            device_class=device_class,
+        )
+        super().__init__(data, hub, description, input_id)
+        if zone.name:
+            # Device-provided names take precedence over the translated default.
+            self._attr_name = zone.name
+        else:
+            self._attr_translation_key = "alarm_hub_zone"
+            self._attr_translation_placeholders = {"zone": str(input_id)}
+
+    @callback
+    @override
+    def _async_get_channel(self, device: PublicDeviceModel) -> AlarmHubInput | None:
+        zone = cast(LinkStation, device).get_alarm_hub_input(self._channel_id)
+        # An unreadable zone is unavailable rather than a definite "not
+        # triggered". FAULT/SHORT/CUT are known states and read off.
+        if zone is None or zone.status is AlarmHubInputStatus.UNKNOWN:
+            return None
+        return zone
+
+    @callback
+    @override
+    def _async_update_from_channel(self, channel: AlarmHubInput) -> None:
+        self._attr_is_on = channel.status is AlarmHubInputStatus.ALARM
+
+
+@callback
+def _async_alarm_hub_entities(
+    data: ProtectData, hub: LinkStation
+) -> list[ProtectDeviceEntity]:
+    """Build the binary sensors for one alarm hub."""
+    entities: list[ProtectDeviceEntity] = [
+        ProtectAlarmHubBinarySensor(data, hub, description)
+        for description in ALARM_HUB_BINARY_SENSORS
+    ]
+    entities += [
+        ProtectAlarmHubZoneBinarySensor(data, hub, input_id, zone)
+        for input_id, zone in hub.alarm_hub_inputs.items()
+        if zone.enable is OnOffState.ON and zone.input_type is not None
+    ]
+    return entities
+
+
+class ProtectFobBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
+    """A binary sensor entity for a UniFi Protect key fob (Public API)."""
+
+    entity_description: ProtectFobBinaryEntityDescription
+    _state_attrs = ("_attr_available", "_attr_is_on")
+    _ufp_uses_public = True
+
+    @callback
+    @override
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if (fob := self._ufp_public_obj) is not None:
+            self._attr_is_on = self.entity_description.value_fn(cast(Fob, fob))
 
 
 async def async_setup_entry(
@@ -889,6 +922,10 @@ async def async_setup_entry(
                 ProtectFobBinarySensor(data, device, description)
                 for description in FOB_BINARY_SENSORS
             )
+            return
+        if isinstance(device, LinkStation):
+            if device.is_alarm_hub:
+                async_add_entities(_async_alarm_hub_entities(data, device))
             return
         async_add_entities(_async_model_entities(data, public_device=device))
 
@@ -909,7 +946,7 @@ async def async_setup_entry(
     )
 
     # The public bootstrap is primed only with an API key and supported NVR
-    # firmware; without it there are no fobs to expose.
+    # firmware; without it there are no fobs or alarm hubs to expose.
     api = data.api
     if api.has_public_bootstrap:
         async_add_entities(
@@ -917,6 +954,8 @@ async def async_setup_entry(
             for fob in api.public_bootstrap.fobs.values()
             for description in FOB_BINARY_SENSORS
         )
+        for hub in api.public_bootstrap.alarm_hubs.values():
+            async_add_entities(_async_alarm_hub_entities(data, hub))
 
     @callback
     def _add_relay_inputs(relay: Relay) -> None:
