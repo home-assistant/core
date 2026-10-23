@@ -93,6 +93,17 @@
         "name": "Sync time"
       }
     },
+    "number": {
+      "comfort_temperature": {
+        "name": "Comfort temperature"
+      },
+      "nominal_temperature": {
+        "name": "Nominal temperature"
+      },
+      "reduced_temperature": {
+        "name": "Reduced temperature"
+      }
+    },
     "sensor": {
       "current_temperature": {
         "name": "Current temperature"
@@ -106,6 +117,9 @@
     }
   },
   "exceptions": {
+    "comfort_below_reduced": {
+      "message": "The comfort temperature ({temperature}) cannot be lower than the reduced temperature ({limit})"
+    },
     "coordinator_auth_error": {
       "message": "Authentication failed for BSB-LAN device"
     },
@@ -118,11 +132,20 @@
     "end_time_before_start_time": {
       "message": "End time ({end_time}) must be after start time ({start_time})"
     },
+    "nominal_below_reduced": {
+      "message": "The nominal hot water temperature ({temperature}) cannot be lower than the reduced hot water temperature ({limit})"
+    },
     "not_a_heating_circuit_device": {
       "message": "The selected device ({device_name}) is not a heating circuit. Please select a heating circuit sub-device."
     },
     "not_a_water_heater_device": {
       "message": "The selected device ({device_name}) is not a water heater. Please select the water heater sub-device."
+    },
+    "reduced_above_comfort": {
+      "message": "The reduced temperature ({temperature}) cannot be higher than the comfort temperature ({limit})"
+    },
+    "reduced_above_nominal": {
+      "message": "The reduced hot water temperature ({temperature}) cannot be higher than the nominal hot water temperature ({limit})"
     },
     "set_data_error": {
       "message": "An error occurred while sending the data to the BSB-LAN device"
