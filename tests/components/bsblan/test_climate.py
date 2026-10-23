@@ -692,18 +692,24 @@ async def test_set_temperature_writes_permanent_level(
 
 
 @pytest.mark.parametrize(
-    ("hvac_mode_int", "service_hvac_mode"),
-    [(1, None), (3, HVACMode.AUTO)],
-    ids=["in_auto", "switching_to_auto"],
+    ("hvac_mode_int", "service_hvac_mode", "translation_key"),
+    [
+        (1, None, "set_temperature_in_auto_mode"),
+        (3, HVACMode.AUTO, "set_temperature_in_auto_mode"),
+        (0, None, "set_temperature_when_off"),
+        (3, HVACMode.OFF, "set_temperature_when_off"),
+    ],
+    ids=["in_auto", "switching_to_auto", "off", "switching_to_off"],
 )
-async def test_set_temperature_rejected_in_auto(
+async def test_set_temperature_rejected_in_auto_or_off(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     hvac_mode_int: int,
     service_hvac_mode: HVACMode | None,
+    translation_key: str,
 ) -> None:
-    """Test the target temperature cannot be set while the time program runs."""
+    """Test the target temperature cannot be set in auto or off."""
     mock_bsblan.state.return_value = _circuit_state(hvac_mode_int, "20.0")
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
     service_data: dict[str, Any] = {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19.5}
@@ -715,7 +721,7 @@ async def test_set_temperature_rejected_in_auto(
             CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, service_data, blocking=True
         )
 
-    assert exc.value.translation_key == "set_temperature_in_auto_mode"
+    assert exc.value.translation_key == translation_key
     mock_bsblan.thermostat.assert_not_called()
 
 
@@ -757,6 +763,23 @@ async def test_restore_scene_in_auto(
         call(hvac_mode=1, circuit=1),
         call(temporary_mode=temporary_mode, circuit=1),
     ]
+
+
+@pytest.mark.usefixtures("mock_reduced_setpoint")
+async def test_restore_scene_in_off(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test restoring a scene in off keeps the comfort setpoint."""
+    mock_bsblan.state.return_value = _circuit_state(0, "8.0")
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    await async_reproduce_state(
+        hass, [HassState(ENTITY_ID, HVACMode.OFF, {ATTR_TEMPERATURE: 8.0})]
+    )
+
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=0, circuit=1)
 
 
 @pytest.mark.usefixtures("mock_reduced_setpoint")
