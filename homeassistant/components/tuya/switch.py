@@ -36,13 +36,18 @@ def _has_multiple_switch_channels(device: CustomerDevice, channels: int) -> bool
     )
 
 
-def _channel_switches(channels: int) -> tuple[TuyaSwitchEntityDescription, ...]:
+def _channel_switches(
+    channels: int,
+    *,
+    translation_key: str,
+    device_class: SwitchDeviceClass | None = None,
+) -> tuple[TuyaSwitchEntityDescription, ...]:
     """Build switch descriptions for indexed channels."""
     return tuple(
         TuyaSwitchEntityDescription(
             key=f"switch_{index}",
-            translation_key="switch",
-            device_class=SwitchDeviceClass.OUTLET,
+            translation_key=translation_key,
+            device_class=device_class,
             channel_index=index,
             channel_condition=lambda device: _has_multiple_switch_channels(
                 device, channels
@@ -401,7 +406,9 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        *_channel_switches(22),
+        *_channel_switches(
+            22, translation_key="switch", device_class=SwitchDeviceClass.OUTLET
+        ),
         TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
             translation_key="indexed_usb",
