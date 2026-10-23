@@ -4,12 +4,11 @@ from unittest.mock import MagicMock
 
 from elevenlabs.core import ApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.elevenlabs.const import CONF_VOICE
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup(

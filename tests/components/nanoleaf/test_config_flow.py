@@ -15,6 +15,7 @@ from aionanoleaf2 import (
     Unavailable,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nanoleaf.const import DOMAIN
@@ -27,8 +28,6 @@ from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_NAME = "Canvas ADF9"
 TEST_HOST = "192.168.0.100"
@@ -167,7 +166,7 @@ async def test_user_not_authorizing_new_tokens_user_step_link_step(
             return_value=_mock_nanoleaf(authorize_error=Unauthorized()),
         ) as mock_nanoleaf,
         patch(
-            "homeassistant.components.nanoleaf.async_setup_entry", return_value=True
+            "homeassistant.components.nanoleaf.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -328,7 +327,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nanoleaf.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await entry.start_reauth_flow(hass)
@@ -438,7 +437,7 @@ async def test_import_discovery_integration(
         ) as mock_remove,
         patch(
             "homeassistant.components.nanoleaf.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -487,7 +486,7 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nanoleaf.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -536,7 +535,7 @@ async def test_abort_discovery_flow_with_user_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nanoleaf.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -596,7 +595,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         ) as mock_nanoleaf,
         patch(
             "homeassistant.components.nanoleaf.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await entry.start_reconfigure_flow(hass)
@@ -639,7 +638,7 @@ async def test_reconfigure_errors(
         ) as mock_nanoleaf,
         patch(
             "homeassistant.components.nanoleaf.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await entry.start_reconfigure_flow(hass)

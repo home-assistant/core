@@ -8,6 +8,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from pytraccar import SubscriptionData, TraccarAuthenticationException, TraccarException
 
 from homeassistant.config_entries import ConfigEntryState
@@ -15,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .common import setup_integration
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 
 async def test_update_data_auth_failure_triggers_reauth(

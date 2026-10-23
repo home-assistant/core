@@ -8,9 +8,9 @@ These benchmarks live outside ``tests`` on purpose: ``testpaths`` only points at
 from collections.abc import AsyncGenerator, Callable
 
 import pytest
+from pytest_homeassistant.common import async_test_home_assistant
 
 from homeassistant.core import HomeAssistant
-from tests.common import async_test_home_assistant
 
 
 @pytest.fixture

@@ -1,6 +1,7 @@
 """Tests for the deprecation of the openSenseMap air quality entity."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -10,8 +11,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_STATION_ID
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "air_quality.test_station"
 

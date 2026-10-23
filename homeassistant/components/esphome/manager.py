@@ -14,15 +14,18 @@ from aioesphomeapi import (
     APIClient,
     APIConnectionError,
     APIVersion,
+    DeviceCapabilities,
     DeviceInfo as EsphomeDeviceInfo,
     EncryptionPlaintextAPIError,
     ExecuteServiceResponse,
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
+    InvalidWizardError,
     LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
+    SerialProxyIdentity,
     SupportsResponseType,
     UserService,
     UserServiceArgType,
@@ -83,6 +86,7 @@ from homeassistant.util.json import json_loads_object
 
 from .bluetooth import async_connect_scanner
 from .const import (
+    ASSIST_SATELLITE_KEY,
     CLIENT_INFO,
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
@@ -95,13 +99,18 @@ from .const import (
     PROJECT_URLS,
     STABLE_BLE_VERSION,
     STABLE_BLE_VERSION_STR,
+    VOICE_ASSISTANT_SELECT_KEYS,
 )
 from .dashboard import async_get_dashboard
 from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 
 # Import config flow so that it's added to the registry
-from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+from .entry_data import (
+    ESPHomeConfigEntry,
+    RuntimeEntryData,
+    async_notify_serial_ports_changed,
+)
 from .enum_mapper import EsphomeEnumMapper
 from .outgoing_connection import async_register_outgoing_target
 
@@ -151,6 +160,9 @@ if TYPE_CHECKING:
 
 
 _LOGGER = logging.getLogger(__name__)
+
+# Devices below this never answer the serial proxy identity subscription
+MIN_VERSION_SERIAL_PROXY_IDENTITY = APIVersion(1, 18)
 
 # Max time to wait at startup for a BLE proxy to register its scanner.
 STARTUP_SCANNER_WAIT: Final = 3.0
@@ -241,6 +253,22 @@ def _async_check_using_api_password(
     )
 
 
+@callback
+def _async_remove_voice_assistant_entities(
+    hass: HomeAssistant, mac_address: str
+) -> None:
+    """Remove the entities a device that no longer offers a voice assistant left."""
+    ent_reg = er.async_get(hass)
+    for platform, key in (
+        (Platform.ASSIST_SATELLITE, ASSIST_SATELLITE_KEY),
+        *((Platform.SELECT, key) for key in VOICE_ASSISTANT_SELECT_KEYS),
+    ):
+        if entity_id := ent_reg.async_get_entity_id(
+            platform, DOMAIN, f"{mac_address}-{key}"
+        ):
+            ent_reg.async_remove(entity_id)
+
+
 class ESPHomeManager:
     """Class to manage an ESPHome connection."""
 
@@ -287,7 +315,7 @@ class ESPHomeManager:
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
-        await cleanup_instance(self.entry)
+        await cleanup_instance(self.hass, self.entry)
 
     @property
     def services_issue(self) -> str:
@@ -738,6 +766,15 @@ class ESPHomeManager:
 
         api_version = cli.api_version
         assert api_version is not None, "API version must be set"
+        entry_data.device_capabilities = await cli.device_capabilities_compat(
+            device_info
+        )
+        device_wizard = None
+        if entry_data.device_capabilities.wizard.configured:
+            try:
+                device_wizard = await cli.device_wizard()
+            except InvalidWizardError as err:
+                _LOGGER.warning("%s: Ignoring the device wizard: %s", self.host, err)
         entry_data.async_on_connect(hass, device_info, api_version)
 
         await self._handle_dynamic_encryption_key(device_info)
@@ -765,6 +802,8 @@ class ESPHomeManager:
         await entry_data.async_update_static_infos(
             hass, entry, entity_infos, device_info.mac_address
         )
+        # The wizard names entities by key, so publish it with their new infos
+        entry_data.device_wizard = device_wizard
         _setup_services(hass, entry_data, services)
 
         if device_info.bluetooth_proxy_feature_flags_compat(api_version):
@@ -778,14 +817,16 @@ class ESPHomeManager:
                 hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
 
-        if device_info.voice_assistant_feature_flags_compat(api_version) and (
-            Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
-        ):
-            # Create assist satellite entity
-            await self.hass.config_entries.async_forward_entry_setups(
-                self.entry, [Platform.ASSIST_SATELLITE]
-            )
-            entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
+        if device_info.voice_assistant_feature_flags_compat(api_version):
+            if Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms:
+                # Create assist satellite entity
+                await self.hass.config_entries.async_forward_entry_setups(
+                    self.entry, [Platform.ASSIST_SATELLITE]
+                )
+                entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
+        else:
+            # Neither platform is reliably loaded here, so removal cannot live in them.
+            _async_remove_voice_assistant_entities(hass, device_info.mac_address)
 
         # Setup can wait for this, so only after the platforms are forwarded
         entry_data.first_connect_done.set()
@@ -793,6 +834,15 @@ class ESPHomeManager:
         if device_info.zwave_proxy_feature_flags:
             entry_data.disconnect_callbacks.add(
                 cli.subscribe_zwave_proxy_request(self._async_zwave_proxy_request)
+            )
+
+        if (
+            device_info.serial_proxies
+            and api_version >= MIN_VERSION_SERIAL_PROXY_IDENTITY
+        ):
+            # The device answers with one message per port, then one per change
+            entry_data.disconnect_callbacks.add(
+                cli.subscribe_serial_proxy_identity(self._async_serial_proxy_identity)
             )
 
         cli.subscribe_home_assistant_states_and_services(
@@ -822,14 +872,29 @@ class ESPHomeManager:
         zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
         entry_data = self.entry_data
         assert entry_data.device_info is not None
-        # DeviceInfo is a snapshot from connect time; keep its home ID current.
-        entry_data.device_info = EsphomeDeviceInfo.from_dict(
-            {**entry_data.device_info.to_dict(), "zwave_home_id": zwave_home_id}
+        assert entry_data.device_capabilities is not None
+        # Capabilities are a snapshot from connect time; keep the home ID current.
+        device_capabilities = entry_data.device_capabilities.to_dict()
+        device_capabilities["zwave_proxy"]["home_id"] = zwave_home_id
+        entry_data.device_capabilities = DeviceCapabilities.from_dict(
+            device_capabilities
         )
         entry_data.async_save_to_store()
         entry_data.async_create_zwave_js_flow(
             self.hass, entry_data.device_info, zwave_home_id
         )
+
+    @callback
+    def _async_serial_proxy_identity(self, identity: SerialProxyIdentity) -> None:
+        """Record what is behind a serial proxy port, from the snapshot or a hotplug."""
+        identities = self.entry_data.serial_proxy_identities
+        if (
+            identity.instance in identities
+            and identities[identity.instance] == identity
+        ):
+            return
+        identities[identity.instance] = identity
+        async_notify_serial_ports_changed(self.hass)
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
         """Run disconnect callbacks on API disconnect."""
@@ -843,7 +908,7 @@ class ESPHomeManager:
             host,
             expected_disconnect,
         )
-        entry_data.async_on_disconnect()
+        entry_data.async_on_disconnect(hass)
         entry_data.async_record_disconnect(expected_disconnect)
         if not hass.is_stopping:
             # Avoid marking every esphome entity as unavailable on shutdown
@@ -1649,11 +1714,13 @@ def _setup_services(
         _async_register_service(hass, entry_data, device_info, service)
 
 
-async def cleanup_instance(entry: ESPHomeConfigEntry) -> RuntimeEntryData:
+async def cleanup_instance(
+    hass: HomeAssistant, entry: ESPHomeConfigEntry
+) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data = entry.runtime_data
     was_connected = data.available
-    data.async_on_disconnect()
+    data.async_on_disconnect(hass)
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
     try:

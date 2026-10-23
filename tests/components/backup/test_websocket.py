@@ -2,11 +2,18 @@
 
 from collections.abc import Generator
 from dataclasses import replace
+import inspect
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_mock_service,
+    get_fixture_path,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import (
@@ -36,12 +43,10 @@ from .common import (
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
     mock_backup_agent,
+    mock_download_from_file,
     setup_backup_integration,
     setup_backup_platform,
 )
-
-from tests.common import async_fire_time_changed, async_mock_service
-from tests.typing import WebSocketGenerator
 
 BACKUP_CALL = call(
     agent_ids=["test.test-agent"],
@@ -4141,6 +4146,44 @@ async def test_can_decrypt_on_download(
         }
     )
     assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
+    ("password", "success"),
+    [
+        pytest.param("hunter2", True, id="correct_password"),
+        pytest.param("wrong_password", False, id="wrong_password"),
+    ],
+)
+async def test_can_decrypt_on_download_closes_stream(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    password: str,
+    success: bool,
+) -> None:
+    """Test the download stream is closed after checking the password."""
+    backup = replace(TEST_BACKUP_ABC123, protected=True)
+    mock_agents = await setup_backup_integration(
+        hass, remote_agents=["test.remote"], backups={"test.remote": [backup]}
+    )
+    streams = mock_download_from_file(
+        mock_agents["test.remote"],
+        get_fixture_path("test_backups/backup_compressed_protected_v3.tar", DOMAIN),
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "backup/can_decrypt_on_download",
+            "backup_id": backup.backup_id,
+            "agent_id": "test.remote",
+            "password": password,
+        }
+    )
+    assert (await client.receive_json())["success"] is success
+
+    assert len(streams) == 1
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
 
 
 @pytest.mark.parametrize(

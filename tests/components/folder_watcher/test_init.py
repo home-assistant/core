@@ -5,14 +5,13 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import folder_watcher
 from homeassistant.components.folder_watcher.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 
 async def test_invalid_path_setup(

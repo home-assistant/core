@@ -63,7 +63,6 @@ from anthropic.types import (
     ToolSearchToolResultBlock,
     ToolUseBlock,
     ToolUseBlockParam,
-    Usage,
     WebFetchTool20250910Param,
     WebFetchTool20260209Param,
     WebFetchToolResultBlock,
@@ -180,17 +179,19 @@ class ContentDetails:
     thinking_signature: str | None = None
     redacted_thinking: str | None = None
     container: Container | None = None
+    message_id: str | None = None
 
     def has_content(self) -> bool:
         """Check if there is any text content."""
         return any(detail.length > 0 for detail in self.citation_details)
 
     def __bool__(self) -> bool:
-        """Check if there is any thinking content or citations."""
+        """Check if there is any native metadata."""
         return (
             self.thinking_signature is not None
             or self.redacted_thinking is not None
             or self.container is not None
+            or self.message_id is not None
             or self.has_citations()
         )
 
@@ -522,18 +523,14 @@ class AnthropicDeltaStream:
     Each message could contain multiple blocks of the same type.
     """
 
-    def __init__(
-        self,
-        chat_log: conversation.ChatLog,
-        stream: AsyncStream[MessageStreamEvent],
-    ) -> None:
+    def __init__(self, stream: AsyncStream[MessageStreamEvent]) -> None:
         """Initialize the delta stream."""
         if not hasattr(stream, "__aiter__"):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unexpected_stream_object"
             )
-        self._chat_log: conversation.ChatLog = chat_log
         self._stream: AsyncStream[MessageStreamEvent] = stream
+        self.message_id: str | None = None
         self.stop_reason: StopReason | None = None
         self.tool_args_error: json.JSONDecodeError | None = None
 
@@ -549,7 +546,8 @@ class AnthropicDeltaStream:
         self._current_tool_args: str = ""
         self._content_details = ContentDetails()
         self._content_details.add_citation_detail()
-        self._input_usage: Usage | None = None
+        self._usage: dict[str, Any] = {}
+        self._diagnostics: dict[str, Any] | None = None
         self._first_block: bool = True
         self._has_content = False
 
@@ -602,7 +600,13 @@ class AnthropicDeltaStream:
 
     def on_message_start_event(self, message: Message) -> None:
         """Handle RawMessageStartEvent."""
-        self._input_usage = message.usage
+        self.message_id = message.id
+        self._diagnostics = (
+            message.diagnostics.to_dict(mode="json", exclude_unset=False)
+            if message.diagnostics is not None
+            else None
+        )
+        self._usage = message.usage.to_dict(mode="json")
         self._first_block = True
         self._has_content = False
 
@@ -863,7 +867,7 @@ class AnthropicDeltaStream:
 
     def on_message_delta_event(self, delta: Delta, usage: MessageDeltaUsage) -> None:
         """Handle RawMessageDeltaEvent."""
-        self._chat_log.async_trace(self._create_token_stats(self._input_usage, usage))
+        self._usage.update(usage.to_dict(mode="json", exclude_none=True))
         if delta.container is not None:
             self._content_details.container = delta.container
         if delta.stop_reason is not None:
@@ -873,28 +877,44 @@ class AnthropicDeltaStream:
         """Handle RawMessageStopEvent."""
         if self.stop_reason == "end_turn" and not self._has_content:
             self._buffer.append({"role": "assistant", "content": ""})
+        if self._has_content or self.stop_reason == "end_turn":
+            self._content_details.message_id = self.message_id
         if self._content_details:
             self._content_details.delete_empty()
             self._buffer.append({"native": self._content_details})
         self._content_details = ContentDetails()
         self._content_details.add_citation_detail()
 
-    def _create_token_stats(
-        self, input_usage: Usage | None, response_usage: MessageDeltaUsage
-    ) -> dict[str, Any]:
-        """Create token stats for conversation agent tracing."""
-        input_tokens = 0
-        cached_input_tokens = 0
-        if input_usage:
-            input_tokens = input_usage.input_tokens
-            cached_input_tokens = input_usage.cache_read_input_tokens or 0
-        output_tokens = response_usage.output_tokens
+    def trace_usage(self, chat_log: conversation.ChatLog) -> None:
+        """Trace accumulated response usage and cache diagnostics."""
+        if not self._usage:
+            return
+        token_stats = self._create_token_stats()
+        token_stats["message_id"] = self.message_id
+        if self._diagnostics is not None:
+            token_stats["diagnostics"] = self._diagnostics
+        LOGGER.debug("Response usage and cache diagnostics: %s", token_stats)
+        chat_log.async_trace(token_stats)
+
+    def _create_token_stats(self) -> dict[str, Any]:
+        """Create token stats and complete usage for conversation agent tracing."""
+        uncached_input_tokens = self._usage.get("input_tokens", 0)
+        cache_creation_input_tokens = (
+            self._usage.get("cache_creation_input_tokens") or 0
+        )
+        cached_input_tokens = self._usage.get("cache_read_input_tokens") or 0
         return {
             "stats": {
-                "input_tokens": input_tokens,
+                "input_tokens": uncached_input_tokens
+                + cache_creation_input_tokens
+                + cached_input_tokens,
+                "uncached_input_tokens": uncached_input_tokens,
+                "cache_creation_input_tokens": cache_creation_input_tokens,
                 "cached_input_tokens": cached_input_tokens,
-                "output_tokens": output_tokens,
-            }
+                "output_tokens": self._usage["output_tokens"],
+                "stop_reason": self.stop_reason or "interrupted",
+            },
+            "usage": self._usage.copy(),
         }
 
 
@@ -958,6 +978,21 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             stream=True,
             container=container_id,
         )
+
+        if options[CONF_PROMPT_CACHING] != PromptCaching.OFF:
+            model_args["diagnostics"] = {
+                "previous_message_id": next(
+                    (
+                        content.native.message_id
+                        for content in reversed(chat_log.content)
+                        if isinstance(content, conversation.AssistantContent)
+                        and content.agent_id == self.entity_id
+                        and isinstance(content.native, ContentDetails)
+                        and content.native.message_id is not None
+                    ),
+                    None,
+                )
+            }
 
         if options[CONF_PROMPT_CACHING] == PromptCaching.PROMPT:
             model_args["system"] = [
@@ -1151,18 +1186,25 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         for iteration in range(max_iterations):
             try:
                 stream = await client.messages.create(**model_args)
-                delta_stream = AnthropicDeltaStream(chat_log, stream)
+                delta_stream = AnthropicDeltaStream(stream)
 
-                async with stream:
-                    new_messages, model_args["container"] = _convert_content(
-                        [
-                            content
-                            async for content in chat_log.async_add_delta_content_stream(
-                                self.entity_id, delta_stream
-                            )
-                        ]
-                    )
+                try:
+                    async with stream:
+                        new_messages, model_args["container"] = _convert_content(
+                            [
+                                content
+                                async for content in chat_log.async_add_delta_content_stream(
+                                    self.entity_id, delta_stream
+                                )
+                            ]
+                        )
+                finally:
+                    delta_stream.trace_usage(chat_log)
                 cast(list[MessageParam], model_args["messages"]).extend(new_messages)
+                if "diagnostics" in model_args:
+                    model_args["diagnostics"] = {
+                        "previous_message_id": delta_stream.message_id
+                    }
             except anthropic.AuthenticationError as err:
                 # Trigger coordinator to confirm the auth failure
                 # and trigger the reauth flow.

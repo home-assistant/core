@@ -5,6 +5,9 @@ from unittest.mock import AsyncMock
 
 from homelink.settings import COGNITO_CLIENT_ID
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.plugins import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from yarl import URL
 
 from homeassistant.components.gentex_homelink.const import (
@@ -23,10 +26,6 @@ from . import (
     TEST_UNIQUE_ID,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
-from tests.conftest import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def complete_oauth_flow(

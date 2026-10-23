@@ -6,6 +6,11 @@ from unittest.mock import MagicMock, patch
 from aiosyncthing.exceptions import SyncthingError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.syncthing.const import (
     DOMAIN,
@@ -18,12 +23,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import dispatcher
 
 from . import SERVER_ID
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_object_fixture,
-)
 
 
 async def test_syncthing_client_reconnect_on_error(

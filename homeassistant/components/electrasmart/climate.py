@@ -31,7 +31,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import ElectraSmartConfigEntry
 from .const import (
     API_DELAY,
-    CONSECUTIVE_FAILURE_THRESHOLD,
     DOMAIN,
     PRESET_NONE,
     PRESET_SHABAT,
@@ -160,7 +159,7 @@ class ElectraClimateEntity(ClimateEntity):
         self._skip_update = True
         self._was_available = True
 
-        _LOGGER.debug("Added %s Electra AC device", self._attr_name)
+        _LOGGER.debug("Added %s Electra AC device", device.name)
 
     @property
     @override
@@ -199,7 +198,7 @@ class ElectraClimateEntity(ClimateEntity):
                     _LOGGER.warning(
                         "Electra AC %s (%s) is not available, check"
                         " its status in the Electra Smart mobile app",
-                        self.name,
+                        self.entity_id,
                         self._electra_ac_device.mac,
                     )
                     self._was_available = False
@@ -208,15 +207,15 @@ class ElectraClimateEntity(ClimateEntity):
             if not self._was_available:
                 _LOGGER.debug(
                     "%s (%s) is now available",
+                    self.entity_id,
                     self._electra_ac_device.mac,
-                    self.name,
                 )
                 self._was_available = True
 
             _LOGGER.debug(
                 "%s (%s) state updated: %s",
+                self.entity_id,
                 self._electra_ac_device.mac,
-                self.name,
                 self._electra_ac_device.__dict__,
             )
         except ElectraApiError as exp:
@@ -224,16 +223,10 @@ class ElectraClimateEntity(ClimateEntity):
             _LOGGER.warning(
                 "Failed to get %s state: %s"
                 " (try #%i since last success), keeping old state",
-                self.name,
+                self.entity_id,
                 exp,
                 self._consecutive_failures,
             )
-
-            if self._consecutive_failures >= CONSECUTIVE_FAILURE_THRESHOLD:
-                raise HomeAssistantError(
-                    f"Failed to get {self.name} state: {exp}"
-                    f" for the {self._consecutive_failures} time",
-                ) from ElectraApiError
 
         self._consecutive_failures = 0
         self._update_device_attrs()
@@ -269,12 +262,13 @@ class ElectraClimateEntity(ClimateEntity):
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
+        """Set new target temperature.
 
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise ValueError("No target temperature provided")
-
-        self._electra_ac_device.set_temperature(int(temperature))
+        The climate service schema requires one of the temperature attributes
+        and this entity only supports a target temperature, so the value is
+        always there.
+        """
+        self._electra_ac_device.set_temperature(int(kwargs[ATTR_TEMPERATURE]))
         await self._async_operate_electra_ac()
 
     def _update_device_attrs(self) -> None:
@@ -353,7 +347,9 @@ class ElectraClimateEntity(ClimateEntity):
             and resp[Attributes.DATA][Attributes.RES] == STATUS_SUCCESS
         ):
             self._async_write_ha_state()
-            raise HomeAssistantError(f"Failed to update {self.name}, error: {resp}")
+            raise HomeAssistantError(
+                f"Failed to update {self.entity_id}, error: {resp}"
+            )
 
         self._update_device_attrs()
         self._last_state_update = int(time.time())

@@ -3,12 +3,12 @@
 import dataclasses
 import uuid
 
+from pytest_homeassistant.common import MockConfigEntry, MockPlatform, mock_platform
+
 from homeassistant.components.todo import DOMAIN, TodoItem, TodoListEntity
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from tests.common import MockConfigEntry, MockPlatform, mock_platform
 
 TEST_DOMAIN = "test"
 

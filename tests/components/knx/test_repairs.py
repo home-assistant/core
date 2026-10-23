@@ -1,6 +1,12 @@
 """Test repair flows for KNX integration."""
 
 import pytest
+from pytest_homeassistant.components.repairs import (
+    get_repairs,
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from xknx.exceptions.exception import InvalidSecureConfiguration
 
 from homeassistant.components.knx import repairs
@@ -15,13 +21,6 @@ from homeassistant.helpers import issue_registry as ir
 
 from .conftest import KNXTestKit
 from .test_config_flow import FIXTURE_UPLOAD_UUID, patch_file_upload
-
-from tests.components.repairs import (
-    get_repairs,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_create_fix_flow_raises_on_unknown_issue_id(hass: HomeAssistant) -> None:

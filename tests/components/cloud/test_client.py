@@ -9,6 +9,7 @@ import aiohttp
 from aiohttp import web
 from hass_nabucasa.client import RemoteActivationNotAllowed
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import webhook
 from homeassistant.components.cloud import DOMAIN
@@ -35,7 +36,6 @@ from homeassistant.util import dt as dt_util
 
 from . import mock_cloud, mock_cloud_prefs
 
-from tests.common import async_fire_time_changed
 from tests.components.alexa import test_smart_home as test_alexa
 
 

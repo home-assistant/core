@@ -7,6 +7,7 @@ from ccm15 import CCM15DeviceState, CCM15SlaveDevice, TriState
 from freezegun.api import FrozenDateTimeFactory
 import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ccm15.const import DOMAIN
@@ -38,8 +39,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("ccm15_device")

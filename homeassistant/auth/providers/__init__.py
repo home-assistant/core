@@ -45,6 +45,10 @@ AUTH_PROVIDER_SCHEMA = probatio.Schema(
 )
 
 
+class InvalidStepUpError(HomeAssistantError):
+    """Raised when a signed in user could not be verified again."""
+
+
 class AuthProvider:
     """Provider of user authentication."""
 
@@ -107,7 +111,10 @@ class AuthProvider:
 
     @callback
     def async_can_start_login(self, context: AuthFlowContext) -> bool:
-        """Return if the login screen may offer this provider for the context."""
+        """Return if a login flow may be started with this provider for the context.
+
+        The login screen only offers the providers for which this returns True.
+        """
         return True
 
     async def async_get_or_create_credentials(
@@ -123,6 +130,12 @@ class AuthProvider:
 
         Will be used to populate info when creating a new user.
         """
+        raise NotImplementedError
+
+    async def async_verify_step_up(
+        self, user: User, data: Mapping[str, Any], context: AuthFlowContext | None
+    ) -> None:
+        """Verify a signed in user again, raising InvalidStepUpError if it fails."""
         raise NotImplementedError
 
     async def async_initialize(self) -> None:

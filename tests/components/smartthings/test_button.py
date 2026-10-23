@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -26,8 +27,6 @@ from . import (
     snapshot_smartthings_entities,
     trigger_health_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_all_entities(
