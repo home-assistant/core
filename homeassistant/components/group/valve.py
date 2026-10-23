@@ -154,7 +154,7 @@ class ValveGroup(GroupEntity, ValveEntity):
         data = {ATTR_ENTITY_ID: self._valves[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             VALVE_DOMAIN,
-            ValveService.OPEN_VALVE,
+            ValveService.OPEN,
             data,
             blocking=True,
             context=self._context,
@@ -176,7 +176,7 @@ class ValveGroup(GroupEntity, ValveEntity):
         data = {ATTR_ENTITY_ID: self._valves[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             VALVE_DOMAIN,
-            ValveService.CLOSE_VALVE,
+            ValveService.CLOSE,
             data,
             blocking=True,
             context=self._context,
@@ -201,7 +201,7 @@ class ValveGroup(GroupEntity, ValveEntity):
         }
         await self.hass.services.async_call(
             VALVE_DOMAIN,
-            ValveService.SET_VALVE_POSITION,
+            ValveService.SET_POSITION,
             data,
             blocking=True,
             context=self._context,
@@ -213,7 +213,7 @@ class ValveGroup(GroupEntity, ValveEntity):
         data = {ATTR_ENTITY_ID: self._valves[KEY_STOP]}
         await self.hass.services.async_call(
             VALVE_DOMAIN,
-            ValveService.STOP_VALVE,
+            ValveService.STOP,
             data,
             blocking=True,
             context=self._context,
