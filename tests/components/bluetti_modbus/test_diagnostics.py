@@ -1,5 +1,8 @@
 """Tests for the BLUETTI Modbus diagnostics."""
 
+from unittest.mock import AsyncMock, patch
+
+from bluetti_modbus_lib import Balco260
 from modbus_connection import ModbusTimeoutError
 from modbus_connection.mock import MockModbusUnit
 from pytest_homeassistant.common import MockConfigEntry
@@ -36,21 +39,28 @@ async def test_diagnostics_leave_out_serial_registers(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
-    mock_modbus_unit: MockModbusUnit,
 ) -> None:
     """Test no register holding a serial number is in the raw dump."""
-    # The device serial is already seeded; the others are not polled today.
-    for address in SERIAL_ADDRESSES[4:]:
-        mock_modbus_unit.holding[address] = 1
     await setup_integration(hass, mock_config_entry)
 
-    diag = await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+    # The read plan covers only the device serial, so the raw read is mocked
+    # to return all three ranges and their neighbours.
+    raw = {"holding": dict.fromkeys(SERIAL_ADDRESSES, 1)}
+    raw["holding"] |= {50205: 1, 50210: 1, 51205: 1, 51210: 1, 53006: 1, 53011: 1}
+    with patch.object(Balco260, "async_read_raw", AsyncMock(return_value=raw)):
+        diag = await get_diagnostics_for_config_entry(
+            hass, hass_client, mock_config_entry
+        )
 
     assert diag["values"]["d_serial"] == "**REDACTED**"
-    # The device serial is polled, so its block is in the dump around it.
-    assert "50205" in diag["raw"]["holding"]
-    assert "50210" in diag["raw"]["holding"]
-    assert not set(map(str, SERIAL_ADDRESSES)) & diag["raw"]["holding"].keys()
+    assert sorted(diag["raw"]["holding"]) == [
+        "50205",
+        "50210",
+        "51205",
+        "51210",
+        "53006",
+        "53011",
+    ]
 
 
 async def test_diagnostics_when_device_does_not_answer(
