@@ -794,13 +794,6 @@ class RuntimeEntryData:
         return partial(callbacks.remove, callback_)
 
     @callback
-    def async_forget_sub_device_entities(self, device_id: int) -> None:
-        """Forget the entities of a sub device so the next static info update re-adds them."""
-        for infos in self.info.values():
-            for slot in [slot for slot in infos if slot[0] == device_id]:
-                del infos[slot]
-
-    @callback
     def async_signal_entity_removal(
         self, info_type: type[EntityInfo], device_id: int, key: int
     ) -> None:

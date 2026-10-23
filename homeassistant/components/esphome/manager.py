@@ -1421,18 +1421,20 @@ def _async_setup_device_registry(
         identifier = (DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")
         valid_identifiers.add(identifier)
 
+        # A sub device whose relation changed is removed and restored from the
+        # deleted one as a device of the other kind, keeping its id. Its
+        # entities are detached meanwhile so they are not removed with it
+        entity_ids: list[str] = []
+        sub_device_entry: dr.AnyDeviceEntry
         if sub_device.relation is DeviceRelation.VIA:
             if (
                 child_device := device_registry.async_get_child_device_by_identifier(
                     identifier, entry.entry_id
                 )
             ) is not None:
-                # The sub device is no longer a child device. Removing it keeps
-                # its id, as the full device is restored from the deleted one;
-                # its entities go with it and are re-added to the restored device
-                entry_data.async_forget_sub_device_entities(sub_device.device_id)
+                entity_ids = _async_detach_entities(hass, child_device.id)
                 device_registry.async_remove_device(child_device.id)
-            device_registry.async_get_or_create(
+            sub_device_entry = device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 identifiers={identifier},
                 name=sub_device.name or device_entry.name,
@@ -1442,25 +1444,23 @@ def _async_setup_device_registry(
                 suggested_area=sub_device_suggested_area,
                 via_device_id=device_entry.id,
             )
-            continue
-
-        if (
-            via_device := device_registry.async_get_device_by_identifier(
-                identifier, entry.entry_id
+        else:
+            if (
+                via_device := device_registry.async_get_device_by_identifier(
+                    identifier, entry.entry_id
+                )
+            ) is not None:
+                entity_ids = _async_detach_entities(hass, via_device.id)
+                device_registry.async_remove_device(via_device.id)
+            sub_device_entry = device_registry.async_get_or_create_child(
+                config_entry_id=entry.entry_id,
+                identifiers={identifier},
+                name=sub_device.name or device_entry.name,
+                parent_device_id=device_entry.id,
+                suggested_area=sub_device_suggested_area,
             )
-        ) is not None:
-            # The sub device is no longer a full device. Removing it keeps its
-            # id, as the child device is restored from the deleted one; its
-            # entities go with it and are re-added to the restored device
-            entry_data.async_forget_sub_device_entities(sub_device.device_id)
-            device_registry.async_remove_device(via_device.id)
-        device_registry.async_get_or_create_child(
-            config_entry_id=entry.entry_id,
-            identifiers={identifier},
-            name=sub_device.name or device_entry.name,
-            parent_device_id=device_entry.id,
-            suggested_area=sub_device_suggested_area,
-        )
+
+        _async_attach_entities(hass, entity_ids, sub_device_entry.id)
 
     # Remove the sub devices that no longer exist
     for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
@@ -1471,6 +1471,31 @@ def _async_setup_device_registry(
     ):
         if not child_device_entry.identifiers & valid_identifiers:
             device_registry.async_remove_device(child_device_entry.id)
+
+
+@callback
+def _async_detach_entities(hass: HomeAssistant, device_id: str) -> list[str]:
+    """Detach the entities of a device so they survive its removal."""
+    ent_reg = er.async_get(hass)
+    entity_ids = [
+        entity_entry.entity_id
+        for entity_entry in er.async_entries_for_device(
+            ent_reg, device_id, include_disabled_entities=True
+        )
+    ]
+    for entity_id in entity_ids:
+        ent_reg.async_update_entity(entity_id, device_id=None)
+    return entity_ids
+
+
+@callback
+def _async_attach_entities(
+    hass: HomeAssistant, entity_ids: list[str], device_id: str
+) -> None:
+    """Attach entities to a device."""
+    ent_reg = er.async_get(hass)
+    for entity_id in entity_ids:
+        ent_reg.async_update_entity(entity_id, device_id=device_id)
 
 
 class ServiceMetadata(NamedTuple):

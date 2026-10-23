@@ -2945,14 +2945,23 @@ async def test_via_devices_converted_to_child_devices(
     ]
 
 
+@pytest.mark.parametrize(
+    "new_entity_name",
+    [pytest.param("Sensor", id="same_name"), pytest.param("Renamed", id="renamed")],
+)
 async def test_sub_device_relation_changed_while_connected(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
+    new_entity_name: str,
 ) -> None:
-    """Test a sub device changing its relation keeps its id and entities."""
+    """Test a sub device changing its relation keeps its id and entities.
+
+    The entity may be renamed with a stable key in the same update, which
+    migrates its unique id; its registry entry survives either way.
+    """
     entity_info = [
         BinarySensorInfo(object_id="sensor", key=1, name="Sensor", device_id=11111111)
     ]
@@ -2968,10 +2977,22 @@ async def test_sub_device_relation_changed_while_connected(
         states=states,
     )
     entry_id = device.entry.entry_id
-    identifier = (DOMAIN, f"{device.device_info.mac_address}_11111111")
+    mac = device.device_info.mac_address
+    identifier = (DOMAIN, f"{mac}_11111111")
     via_device = device_registry.async_get_device_by_identifier(identifier, entry_id)
     assert via_device is not None
     assert hass.states.get("binary_sensor.sub_sensor").state == STATE_ON
+    entity_entry = entity_registry.async_get("binary_sensor.sub_sensor")
+    assert entity_entry is not None
+    registry_id = entity_entry.id
+    entity_registry.async_update_entity("binary_sensor.sub_sensor", name="Custom")
+
+    new_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor", key=1, name=new_entity_name, device_id=11111111
+        )
+    ]
+    new_unique_id = build_device_unique_id(mac, new_entity_info[0])
 
     async def reconnect_with_relation(relation: DeviceRelation) -> None:
         device_info_dict = asdict(device.device_info)
@@ -2981,10 +3002,20 @@ async def test_sub_device_relation_changed_while_connected(
         new_device_info = DeviceInfo(**device_info_dict)
         mock_client.device_info = AsyncMock(return_value=new_device_info)
         mock_client.device_info_and_list_entities = AsyncMock(
-            return_value=(new_device_info, entity_info, [])
+            return_value=(new_device_info, new_entity_info, [])
         )
         await device.mock_disconnect(expected_disconnect=False)
         await device.mock_connect()
+
+    def assert_entity_kept(device_id: str) -> None:
+        """Assert the entity kept its registry entry and is on the device."""
+        entity_entry = entity_registry.async_get("binary_sensor.sub_sensor")
+        assert entity_entry is not None
+        assert entity_entry.id == registry_id
+        assert entity_entry.unique_id == new_unique_id
+        assert entity_entry.name == "Custom"
+        assert entity_entry.device_id == device_id
+        assert hass.states.get("binary_sensor.sub_sensor").state == STATE_ON
 
     # A device registered in this session can't be converted in place, so it is
     # removed and restored as a child device with the same id
@@ -2995,10 +3026,7 @@ async def test_sub_device_relation_changed_while_connected(
     assert child_device is not None
     assert child_device.id == via_device.id
     assert device_registry.async_get_device_by_identifier(identifier, entry_id) is None
-    entity_entry = entity_registry.async_get("binary_sensor.sub_sensor")
-    assert entity_entry is not None
-    assert entity_entry.device_id == child_device.id
-    assert hass.states.get("binary_sensor.sub_sensor").state == STATE_ON
+    assert_entity_kept(child_device.id)
 
     await reconnect_with_relation(DeviceRelation.VIA)
     via_device = device_registry.async_get_device_by_identifier(identifier, entry_id)
@@ -3007,17 +3035,14 @@ async def test_sub_device_relation_changed_while_connected(
     assert (
         via_device.via_device_id
         == device_registry.async_get_device_by_connection(
-            (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address), entry_id
+            (dr.CONNECTION_NETWORK_MAC, mac), entry_id
         ).id
     )
     assert (
         device_registry.async_get_child_device_by_identifier(identifier, entry_id)
         is None
     )
-    entity_entry = entity_registry.async_get("binary_sensor.sub_sensor")
-    assert entity_entry is not None
-    assert entity_entry.device_id == via_device.id
-    assert hass.states.get("binary_sensor.sub_sensor").state == STATE_ON
+    assert_entity_kept(via_device.id)
 
 
 async def test_sub_device_with_unsupported_relation(
