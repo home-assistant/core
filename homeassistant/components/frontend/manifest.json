@@ -16,6 +16,7 @@
     "repairs",
     "search",
     "system_log",
+    "weather_data",
     "websocket_api"
   ],
   "documentation": "https://www.home-assistant.io/integrations/frontend",

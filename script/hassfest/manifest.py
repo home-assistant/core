@@ -130,6 +130,7 @@ NO_IOT_CLASS = [
     "timer",
     "trace",
     "vibration",
+    "weather_data",
     "web_rtc",
     "webhook",
     "websocket_api",

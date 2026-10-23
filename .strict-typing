@@ -673,6 +673,7 @@ homeassistant.components.watts.*
 homeassistant.components.watttime.*
 homeassistant.components.wattwaechter.*
 homeassistant.components.weather.*
+homeassistant.components.weather_data.*
 homeassistant.components.web_rtc.*
 homeassistant.components.webhook.*
 homeassistant.components.webostv.*
