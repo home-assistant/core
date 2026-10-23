@@ -1,11 +1,61 @@
 """Helper functions for BSB-Lan integration."""
 
-from bsblan import BSBLAN, BSBLANError
+from bsblan import BSBLAN, BSBLANError, EntityInfo, StaticState
 
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+
+
+def first_temperature(*sources: EntityInfo[float] | None) -> float | None:
+    """Return the first usable temperature from the given sources."""
+    for source in sources:
+        if source is not None and source.value is not None:
+            return source.value
+    return None
+
+
+def circuit_temperature_bounds(
+    static: StaticState | None,
+) -> tuple[float | None, float | None]:
+    """Return the minimum and maximum setpoint of a heating circuit.
+
+    Standard BSB/LPB circuits expose the bounds via heating_protective_setpoint
+    (714) and comfort_setpoint_max (716); min_temp/max_temp (15006/15007) exist
+    only on PPS devices. Inactive parameters ("---") have value None.
+    """
+    if static is None:
+        return None, None
+    return (
+        first_temperature(static.heating_protective_setpoint, static.min_temp),
+        first_temperature(static.comfort_setpoint_max, static.max_temp),
+    )
+
+
+def validate_setpoint_order(
+    temperature: float,
+    translation_key: str,
+    *,
+    minimum: float | None = None,
+    maximum: float | None = None,
+) -> None:
+    """Raise if a setpoint would cross the setpoint it is paired with.
+
+    The controller accepts a reduced setpoint above the comfort or nominal
+    one, so the order is enforced here.
+    """
+    if minimum is not None and temperature < minimum:
+        limit = minimum
+    elif maximum is not None and temperature > maximum:
+        limit = maximum
+    else:
+        return
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key=translation_key,
+        translation_placeholders={"temperature": str(temperature), "limit": str(limit)},
+    )
 
 
 async def async_sync_device_time(client: BSBLAN, device_name: str) -> None:

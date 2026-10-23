@@ -50,7 +50,13 @@ from .const import (
 from .coordinator import BSBLanFastCoordinator, BSBLanSlowCoordinator
 from .services import async_setup_services
 
-PLATFORMS = [Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.WATER_HEATER,
+]
 ISSUE_OUTDATED_FIRMWARE = "outdated_firmware"
 
 # JSON-API version (reported by /JV) at or above which the device exposes the
