@@ -1,11 +1,9 @@
 """Platform allowing several cover to be grouped into one cover."""
 
-import asyncio
 from typing import Any, override
 
 import probatio
 
-from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
@@ -27,8 +25,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityStateAttribute,
 )
-from homeassistant.core import Context, HomeAssistant, State, callback
-from homeassistant.exceptions import Unauthorized
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -172,121 +169,39 @@ class CoverGroup(GroupEntity, CoverEntity):
             self._tilts[KEY_POSITION].discard(entity_id)
 
     def _member_speeds(self, entity_id: str) -> list[str]:
-        """Return the speeds a member supports.
-
-        Core validates a requested speed against this list, whether or not the
-        member sets the speed feature.
-        """
+        """Return the speeds a member supports."""
         if not (state := self.hass.states.get(entity_id)):
             return []
         return (
             state.attributes.get(CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS) or []
         )
 
-    async def _async_call_members(
-        self,
-        service: str,
-        entity_ids: set[str],
-        data: dict[str, Any],
-        context: Context | None,
-    ) -> None:
-        """Call a cover service for the given members."""
-        await self.hass.services.async_call(
-            COVER_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: entity_ids, **data},
-            blocking=True,
-            context=context,
-        )
-
-    async def _async_check_control(
-        self, entity_ids: set[str], context: Context | None
-    ) -> None:
-        """Raise if the user may not control all given members.
-
-        Core checks this per call, so split calls check it before the first.
-        """
-        if context is None or context.user_id is None:
-            return
-        user = await self.hass.auth.async_get_user(context.user_id)
-        for entity_id in entity_ids:
-            if user is None or not user.permissions.check_entity(
-                entity_id, POLICY_CONTROL
-            ):
-                raise Unauthorized(
-                    context=context,
-                    entity_id=entity_id,
-                    permission=POLICY_CONTROL,
-                )
-
-    async def _async_call_with_speed(
-        self,
-        service: str,
-        feature: CoverEntityFeature,
-        entity_ids: set[str],
-        data: dict[str, Any],
-        speed: str | None,
-    ) -> None:
-        """Call a service, passing the speed to the members that list it.
-
-        Other members move at their default speed.
-        """
-        # A parallel action can replace self._context before the calls run
-        context = self._context
-        # One call lets core reject a member without the action before any
-        # member moves
-        if speed is None or any(
-            (state := self.hass.states.get(entity_id))
-            and state.state != STATE_UNAVAILABLE
-            and not state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
-            & feature
-            for entity_id in entity_ids
-        ):
-            await self._async_call_members(service, entity_ids, data, context)
-            return
-
-        await self._async_check_control(entity_ids, context)
-        with_speed = {
-            entity_id
-            for entity_id in entity_ids
-            if speed in self._member_speeds(entity_id)
-        }
-        # Call all members before raising the first error, as core does
-        results = await asyncio.gather(
-            *(
-                self._async_call_members(service, members, member_data, context)
-                for members, member_data in (
-                    (entity_ids - with_speed, data),
-                    (with_speed, {**data, CoverServiceArgument.SPEED: speed}),
-                )
-                if members
-            ),
-            return_exceptions=True,
-        )
-        for result in results:
-            if isinstance(result, BaseException):
-                raise result
-
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the covers up."""
-        await self._async_call_with_speed(
+        data: dict[str, Any] = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
+        if (speed := kwargs.get(CoverServiceArgument.SPEED)) is not None:
+            data[CoverServiceArgument.SPEED] = speed
+        await self.hass.services.async_call(
+            COVER_DOMAIN,
             CoverService.OPEN,
-            CoverEntityFeature.OPEN,
-            self._covers[KEY_OPEN_CLOSE],
-            {},
-            kwargs.get(CoverServiceArgument.SPEED),
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the covers down."""
-        await self._async_call_with_speed(
+        data: dict[str, Any] = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
+        if (speed := kwargs.get(CoverServiceArgument.SPEED)) is not None:
+            data[CoverServiceArgument.SPEED] = speed
+        await self.hass.services.async_call(
+            COVER_DOMAIN,
             CoverService.CLOSE,
-            CoverEntityFeature.CLOSE,
-            self._covers[KEY_OPEN_CLOSE],
-            {},
-            kwargs.get(CoverServiceArgument.SPEED),
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     @override
@@ -304,12 +219,18 @@ class CoverGroup(GroupEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set covers position."""
-        await self._async_call_with_speed(
+        data: dict[str, Any] = {
+            ATTR_ENTITY_ID: self._covers[KEY_POSITION],
+            CoverServiceArgument.POSITION: kwargs[CoverServiceArgument.POSITION],
+        }
+        if (speed := kwargs.get(CoverServiceArgument.SPEED)) is not None:
+            data[CoverServiceArgument.SPEED] = speed
+        await self.hass.services.async_call(
+            COVER_DOMAIN,
             CoverService.SET_POSITION,
-            CoverEntityFeature.SET_POSITION,
-            self._covers[KEY_POSITION],
-            {CoverServiceArgument.POSITION: kwargs[CoverServiceArgument.POSITION]},
-            kwargs.get(CoverServiceArgument.SPEED),
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     @override
