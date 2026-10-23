@@ -379,7 +379,7 @@ aionatureremo==0.4.0
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.8.5
+aiontfy==0.8.6
 
 # homeassistant.components.nut
 aionut==4.3.4
