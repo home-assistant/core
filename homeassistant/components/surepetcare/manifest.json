@@ -1,6 +1,7 @@
 {
   "domain": "surepetcare",
   "name": "Sure Petcare",
+  "categories": ["pets"],
   "codeowners": ["@benleb", "@danielhiversen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/surepetcare",

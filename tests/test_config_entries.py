@@ -14,6 +14,20 @@ from aiohttp import RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    async_capture_events,
+    async_fire_time_changed,
+    flush_store,
+    help_test_all,
+    import_and_test_deprecated_constant,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow, loader
@@ -62,21 +76,6 @@ from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_comp
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
-
-from .common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    MockPlatform,
-    async_capture_events,
-    async_fire_time_changed,
-    flush_store,
-    help_test_all,
-    import_and_test_deprecated_constant,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 
 def _get_flow_context(
@@ -4069,6 +4068,76 @@ async def test_entry_disable_succeed(
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
+async def test_entry_disable_hides_issues(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test disabling an entry hides its issues without removing them."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="comp")
+    other_entry.add_to_hass(hass)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    events_on_unload: list[int] = []
+
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        events_on_unload.append(len(events))
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    for issue_id, config_entry_id in (
+        ("entry_issue", entry.entry_id),
+        ("other_entry_issue", other_entry.entry_id),
+    ):
+        ir.async_create_issue(
+            hass,
+            "comp",
+            issue_id,
+            config_entry_id=config_entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="abc",
+        )
+    issue_registry.async_ignore("comp", "entry_issue", True)
+    issue = issue_registry.async_get_issue("comp", "entry_issue")
+    other_issue = issue_registry.async_get_issue("comp", "other_entry_issue")
+    assert not issue_registry.async_is_hidden(issue)
+    events.clear()
+
+    assert await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert [event.data for event in events] == [
+        {"action": "update", "domain": "comp", "issue_id": "entry_issue"}
+    ]
+    # The frontend is told to refresh before the entry is unloaded
+    assert events_on_unload == [1]
+    assert issue_registry.async_get_issue("comp", "entry_issue") == issue
+    assert issue_registry.async_is_hidden(issue)
+    assert not issue_registry.async_is_hidden(other_issue)
+
+    events.clear()
+    assert await manager.async_set_disabled_by(entry.entry_id, None)
+    await hass.async_block_till_done()
+    assert [event.data for event in events] == [
+        {"action": "update", "domain": "comp", "issue_id": "entry_issue"}
+    ]
+    assert issue_registry.async_get_issue("comp", "entry_issue") == issue
+    assert not issue_registry.async_is_hidden(issue)
+
+
 async def test_entry_disable_entity_state(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -4921,7 +4990,7 @@ async def test_finish_flow_aborts_progress(
             await self.async_set_unique_id("mock-unique-id", raise_on_progress=False)
 
             if user_input is None:
-                return self.async_show_form(step_id="discovery")
+                return self.async_show_form(step_id="user")
 
             return self.async_create_entry(title="yo", data={})
 
@@ -4932,10 +5001,13 @@ async def test_finish_flow_aborts_progress(
         )
         assert result["type"] is data_entry_flow.FlowResultType.FORM
 
-        # Will finish and cancel other one.
         result2 = await manager.flow.async_init(
-            "comp", context={"source": config_entries.SOURCE_USER}, data={}
+            "comp", context={"source": config_entries.SOURCE_USER}
         )
+        assert result2["type"] is data_entry_flow.FlowResultType.FORM
+
+        # Will finish and cancel other one.
+        result2 = await manager.flow.async_configure(result2["flow_id"], {})
 
     assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
@@ -10755,6 +10827,39 @@ async def test_unique_id_collision_issues(
 
     # Remove the last test2 group2 duplicate, the issue is cleared
     await manager.async_remove(test2_group_2[1].entry_id)
+    assert not issue_registry.issues
+
+
+async def test_unique_id_collision_issue_keeps_ignore(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored unique id collision issue is kept while the collision persists."""
+    issue_id = "config_entry_unique_id_collision_test1_not_unique"
+    mock_integration(
+        hass, MockModule("test1", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "test1.config_flow", None)
+    entries = [
+        MockConfigEntry(domain="test1", unique_id="not_unique") for _ in range(3)
+    ]
+    for entry in entries:
+        await manager.async_add(entry)
+    ir.async_ignore_issue(hass, HOMEASSISTANT_DOMAIN, issue_id, True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    await manager.async_remove(entries[0].entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    # The issue is updated with the new entry count, not removed and created again
+    assert [event.data["action"] for event in events] == ["update"]
+
+    await manager.async_remove(entries[1].entry_id)
+
     assert not issue_registry.issues
 
 

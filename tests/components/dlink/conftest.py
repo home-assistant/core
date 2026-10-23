@@ -5,6 +5,7 @@ from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dlink.const import CONF_USE_LEGACY_PROTOCOL, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 HOST = "1.2.3.4"
 PASSWORD = "123456"

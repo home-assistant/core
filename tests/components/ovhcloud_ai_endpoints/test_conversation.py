@@ -1,6 +1,6 @@
 """Tests for the OVHcloud AI Endpoints conversation entity."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock
 
 from freezegun import freeze_time
@@ -14,6 +14,7 @@ from openai.types.chat import (
 from openai.types.chat.chat_completion import Choice
 from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -29,7 +30,6 @@ from homeassistant.helpers.llm import ToolInput
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.conversation import MockChatLog, mock_chat_log  # noqa: F401
 
 
@@ -359,7 +359,7 @@ async def test_function_call(
                 data={
                     "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
                     "response_type": "action_done",
-                    "speech_slots": {"time": datetime.time(12, 0)},
+                    "speech_slots": {"time": dt.time(12, 0)},
                     "data": {"success": [], "failed": []},
                 }
             ),

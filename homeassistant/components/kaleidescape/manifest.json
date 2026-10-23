@@ -1,6 +1,7 @@
 {
   "domain": "kaleidescape",
   "name": "Kaleidescape",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@SteveEasley"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/kaleidescape",

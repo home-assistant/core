@@ -19,7 +19,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, HARDWARE_ID
+from .const import DOMAIN, LEGACY_HARDWARE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,17 +43,35 @@ async def _send_blink_2fa_pin(blink: Blink, pin: str | None) -> None:
 class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Blink config flow."""
 
-    VERSION = 4
+    VERSION = 5
 
     def __init__(self) -> None:
         """Initialize the blink flow."""
         self.auth: Auth | None = None
         self.blink: Blink | None = None
 
+    def _existing_hardware_id(self) -> str | None:
+        """Return the stored hardware_id for a reauth/reconfigure, or None if legacy or absent."""
+        if self.source == SOURCE_REAUTH:
+            entry = self._get_reauth_entry()
+        elif self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+        else:
+            return None
+        hardware_id = entry.data.get("hardware_id")
+        if hardware_id and hardware_id != LEGACY_HARDWARE_ID:
+            return hardware_id
+        return None
+
     async def _handle_user_input(self, user_input: dict[str, Any]):
         """Handle user input."""
+        # Omit hardware_id on new installs so blinkpy mints a per-install UUID;
+        # reuse a stored non-legacy id so device identity stays stable on reauth.
+        login_data: dict[str, Any] = {**user_input}
+        if hardware_id := self._existing_hardware_id():
+            login_data["hardware_id"] = hardware_id
         self.auth = Auth(
-            {**user_input, "hardware_id": HARDWARE_ID},
+            login_data,
             no_prompt=True,
             session=async_get_clientsession(self.hass),
         )

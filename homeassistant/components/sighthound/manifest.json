@@ -1,6 +1,7 @@
 {
   "domain": "sighthound",
   "name": "Sighthound",
+  "categories": ["ai_voice.image_recognition"],
   "codeowners": ["@robmarkcole"],
   "documentation": "https://www.home-assistant.io/integrations/sighthound",
   "iot_class": "cloud_polling",

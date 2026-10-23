@@ -1258,10 +1258,7 @@ async def handle_execute_script(
 ) -> None:
     """Handle execute script command."""
     # Circular dep
-    from homeassistant.helpers.script import (  # noqa: PLC0415
-        Script,
-        async_validate_actions_config,
-    )
+    from homeassistant.helpers.script import Script, async_validate_actions_config  # noqa: PLC0415
 
     script_config = await async_validate_actions_config(hass, msg["sequence"])
 

@@ -961,6 +961,30 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "MOTION_*",
     },
     {
+        "connectable": False,
+        "domain": "okok_scale",
+        "manufacturer_id": 4554,
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
+        "manufacturer_data_start": [
+            2,
+            4,
+        ],
+        "manufacturer_id": 61695,
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
+        "manufacturer_id": 8394,
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
+        "local_name": "80:F4:16:*",
+    },
+    {
         "connectable": True,
         "domain": "opendisplay",
         "manufacturer_id": 9286,
@@ -1139,6 +1163,17 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": True,
         "domain": "specialized_turbo",
         "local_name": "SPECIALIZED*",
+    },
+    {
+        "connectable": True,
+        "domain": "spin_ble",
+        "service_uuid": "49535343-fe7d-4ae5-8fa9-9fafd205e455",
+    },
+    {
+        "connectable": True,
+        "domain": "steamvr_base_station",
+        "local_name": "LHB-*",
+        "manufacturer_id": 1373,
     },
     {
         "connectable": False,

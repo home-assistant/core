@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "unique_id_mismatch": "The provided credentials belong to a different Zinvolt account. Please log in with the account that was originally configured."
+      "unique_id_mismatch": "The provided credentials belong to a different Zinvolt account than the configured one."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -23,6 +23,16 @@
           "password": "[%key:component::zinvolt::config::step::user::data_description::password%]"
         },
         "description": "The authentication for your Zinvolt account has expired. Please log in again."
+      },
+      "reconfigure": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::zinvolt::config::step::user::data_description::email%]",
+          "password": "[%key:component::zinvolt::config::step::user::data_description::password%]"
+        }
       },
       "user": {
         "data": {
@@ -63,6 +73,9 @@
     "number": {
       "lower_threshold": {
         "name": "Minimum charge level"
+      },
+      "max_charge_power": {
+        "name": "Maximum charge power"
       },
       "max_output": {
         "name": "Maximum output"

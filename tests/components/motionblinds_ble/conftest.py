@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from motionblindsble.const import MotionBlindType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.motionblinds_ble.const import (
@@ -14,9 +19,6 @@ from homeassistant.components.motionblinds_ble.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ADDRESS
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 
 @pytest.fixture(autouse=True)
@@ -130,7 +132,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.motionblinds_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

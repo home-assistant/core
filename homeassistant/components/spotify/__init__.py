@@ -47,7 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> N
     try:
         await session.async_ensure_token_valid()
     except aiohttp.ClientError as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="token_refresh_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     spotify = SpotifyClient(async_get_clientsession(hass))
 
@@ -72,7 +76,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> N
     entry.runtime_data = SpotifyData(coordinator, session, device_coordinator)
 
     if not set(session.token["scope"].split(" ")).issuperset(SPOTIFY_SCOPES):
-        raise ConfigEntryAuthFailed
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_scopes",
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

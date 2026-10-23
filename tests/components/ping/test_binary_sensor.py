@@ -6,6 +6,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from icmplib import Host
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -13,8 +14,6 @@ from homeassistant.components.ping.const import CONF_IMPORTED_BY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("setup_integration")

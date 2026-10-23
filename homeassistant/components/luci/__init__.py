@@ -2,7 +2,6 @@
 
 from collections.abc import Collection
 from datetime import timedelta
-from functools import partial
 
 from openwrt_luci_rpc import OpenWrtRpc
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -73,7 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> None
             return
         seen_macs.update(coordinator.data)
         # Background, so unload cancels an in-flight check instead of awaiting it
-        # and letting it recreate the issue we just deleted.
         entry.async_create_background_task(
             hass,
             _async_check_legacy_known_devices(hass, entry, set(seen_macs)),
@@ -82,9 +80,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> None
 
     await _async_check_legacy_known_devices(hass, entry, seen_macs)
     entry.async_on_unload(coordinator.async_add_listener(_async_check_new_devices))
-    entry.async_on_unload(
-        partial(ir.async_delete_issue, hass, DOMAIN, _legacy_issue_id(entry))
-    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -121,6 +116,7 @@ async def _async_check_legacy_known_devices(
         hass,
         DOMAIN,
         _legacy_issue_id(entry),
+        config_entry_id=entry.entry_id,
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key=ISSUE_LEGACY_KNOWN_DEVICES,

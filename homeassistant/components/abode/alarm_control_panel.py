@@ -55,16 +55,19 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanelEntity):
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._device.set_standby()
+        self.schedule_update_ha_state()
 
     @override
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._device.set_home()
+        self.schedule_update_ha_state()
 
     @override
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._device.set_away()
+        self.schedule_update_ha_state()
 
     @property
     @override

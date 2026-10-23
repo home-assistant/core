@@ -10,6 +10,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::airnow::config::step::user::data_description::api_key%]"
+        },
+        "description": "The API key for {name} is no longer valid. To generate a new API key, go to {api_key_url}.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -37,6 +47,11 @@
           "long": { "name": "[%key:common::config_flow::data::longitude%]" }
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "The AirNow API key is invalid."
     }
   }
 }

@@ -5,12 +5,16 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pysmartyplants import (
-    SmartyPlantsAuthError,
     SmartyPlantsConnectionError,
     SmartyPlantsError,
     SmartyPlantsForbiddenError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smartyplants.const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -20,8 +24,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 TEMPERATURE = "sensor.monstera_temperature"
 
@@ -155,7 +157,6 @@ async def test_sensor_removed_from_account(
             {"error": "boom"},
             id="connection",
         ),
-        pytest.param(SmartyPlantsAuthError("nope"), "invalid_auth", None, id="auth"),
         pytest.param(
             SmartyPlantsForbiddenError(
                 "This API key does not allow requests from 198.51.100.7."

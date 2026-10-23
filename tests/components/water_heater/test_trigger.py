@@ -3,20 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.water_heater import (
-    STATE_ECO,
-    STATE_ELECTRIC,
-    STATE_GAS,
-    STATE_HEAT_PUMP,
-    STATE_HIGH_DEMAND,
-    STATE_PERFORMANCE,
-)
-from homeassistant.components.water_heater.trigger import TRIGGERS
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -30,6 +17,18 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.water_heater import (
+    STATE_ECO,
+    STATE_ELECTRIC,
+    STATE_GAS,
+    STATE_HEAT_PUMP,
+    STATE_HIGH_DEMAND,
+    STATE_PERFORMANCE,
+)
+from homeassistant.components.water_heater.trigger import TRIGGERS
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 
 ALL_ON_STATES = [
     STATE_ECO,

@@ -7,6 +7,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser, flush_store
 
 from homeassistant.components import media_source
 from homeassistant.components.ai_task import (
@@ -19,12 +20,10 @@ from homeassistant.components.ai_task.const import (
     DOMAIN,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import selector
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
-
-from tests.common import MockUser, flush_store
 
 
 async def test_automatic_evaluation_without_setup(hass: HomeAssistant) -> None:
@@ -397,7 +396,7 @@ async def test_generate_image_service_no_entity(
 ) -> None:
     """Test the generate image service with no entity specified."""
     with pytest.raises(
-        HomeAssistantError,
+        ServiceValidationError,
         match="No entity_id provided and no preferred entity set",
     ):
         await hass.services.async_call(
