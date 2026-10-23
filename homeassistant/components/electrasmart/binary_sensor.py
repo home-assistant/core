@@ -40,27 +40,31 @@ class ElectraBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe an Electra binary sensor."""
 
     value_fn: Callable[[ElectraAirConditioner], bool]
-    measurement_field: str | None = None
+    is_supported: Callable[[ElectraAirConditioner], bool]
 
 
 BINARY_SENSORS: tuple[ElectraBinarySensorEntityDescription, ...] = (
     ElectraBinarySensorEntityDescription(
         key="filter_clean_required",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda device: device.get_filter_clean_required(),
+        # The reminder lives in the operation state, not in the diagnostics, so
+        # the entity is only created for a unit that reports the field: a unit
+        # that omits it would otherwise show a reminder it never sent.
+        is_supported=lambda device: device.get_filter_clean_required() is not None,
+        value_fn=lambda device: device.get_filter_clean_required() is True,
     ),
     ElectraBinarySensorEntityDescription(
         key="indoor_coil_sensor_fault",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        measurement_field="I_BAD_ICT",
+        is_supported=lambda device: "I_BAD_ICT" in device.measurements,
         value_fn=lambda device: _is_sensor_fault(device, "I_BAD_ICT"),
     ),
     ElectraBinarySensorEntityDescription(
         key="return_air_sensor_fault",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        measurement_field="I_BAD_RAT",
+        is_supported=lambda device: "I_BAD_RAT" in device.measurements,
         value_fn=lambda device: _is_sensor_fault(device, "I_BAD_RAT"),
     ),
 )
@@ -79,9 +83,8 @@ async def async_setup_entry(
         for device in coordinator.api.devices
         for description in BINARY_SENSORS
         # An AC reports a subset of the telemetry, so only expose the binary
-        # sensors for the measurements it actually sends.
-        if description.measurement_field is None
-        or description.measurement_field in device.measurements
+        # sensors for the flags it actually sends.
+        if description.is_supported(device)
     )
 
 

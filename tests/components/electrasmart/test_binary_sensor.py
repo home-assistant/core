@@ -7,6 +7,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -91,6 +92,34 @@ async def test_missing_sensor_fault_flag_is_not_a_fault(
     await async_advance_to_next_poll(hass, freezer)
 
     assert hass.states.get(INDOOR_COIL_FAULT_ENTITY_ID).state == "off"
+
+
+async def test_unit_without_the_reminder_flag_gets_no_filter_entity(
+    hass: HomeAssistant,
+    mock_api: Mock,
+    mock_device: Mock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """A unit that does not report CLEAR_FILT gets no filter reminder entity."""
+    mock_device.get_filter_clean_required = Mock(return_value=None)
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.electrasmart.ElectraAPI", return_value=mock_api
+        ),
+        patch(
+            "homeassistant.components.electrasmart.PLATFORMS",
+            [Platform.BINARY_SENSOR],
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_ids = hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)
+    assert FILTER_ENTITY_ID not in entity_ids
+    # The fault flags this unit does report are still there.
+    assert INDOOR_COIL_FAULT_ENTITY_ID in entity_ids
 
 
 @pytest.mark.usefixtures("setup_integration")
