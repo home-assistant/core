@@ -1,34 +1,45 @@
 """Tests for Google Maps Travel Time services."""
 
+from typing import Any
+from unittest.mock import AsyncMock, patch
+
+from google_maps_routing_api import (
+    ComputeRoutesResponse,
+    GoogleMapsRoutingApiAuthError,
+    GoogleMapsRoutingApiConnectionTimeoutError,
+    GoogleMapsRoutingApiError,
+    TrafficModel,
+    TransitRoutingPreference,
+    TransitTravelMode,
+    TravelMode,
+    Units,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.google_travel_time.const import CONF_REFERRER, DOMAIN
+from homeassistant.components.google_travel_time.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import mock_compute_routes
-from .const import DEFAULT_OPTIONS, MOCK_CONFIG
+from .const import DEFAULT_OPTIONS, MOCK_CONFIG, MOCK_CONFIG_REFERRER
 
-TRAVEL_TIMES_SERVICE_DATA = {
-    "origin": "location1",
-    "destination": "location2",
-    "mode": "driving",
-    "units": "metric",
-}
 
-EXPECTED_RESPONSE = {
-    "routes": [
-        {
-            "duration": 1620,
-            "duration_text": "27 mins",
-            "static_duration_text": "26 mins",
-            "distance_meters": 21300,
-            "distance_text": "21.3 km",
-        }
-    ]
-}
+def _mock_routes_response() -> dict[str, Any]:
+    """Return a mocked ComputeRoutes response."""
+    return {
+        "routes": [
+            {
+                "distanceMeters": 21300,
+                "duration": "1620s",
+                "staticDuration": "1560s",
+                "localizedValues": {
+                    "distance": {"text": "21.3 km"},
+                    "duration": {"text": "27 mins"},
+                    "staticDuration": {"text": "26 mins"},
+                },
+            }
+        ]
+    }
 
 
 @pytest.mark.parametrize(
@@ -37,7 +48,7 @@ EXPECTED_RESPONSE = {
 )
 async def test_service_get_travel_times(
     hass: HomeAssistant,
-    routes_mock: AiohttpClientMocker,
+    routes_mock: AsyncMock,
     mock_config: MockConfigEntry,
 ) -> None:
     """Test service get_travel_times."""
@@ -46,12 +57,26 @@ async def test_service_get_travel_times(
         "get_travel_times",
         {
             "config_entry_id": mock_config.entry_id,
-            **TRAVEL_TIMES_SERVICE_DATA,
+            "origin": "location1",
+            "destination": "location2",
+            "mode": "driving",
+            "units": "metric",
         },
         blocking=True,
         return_response=True,
     )
-    assert response_data == EXPECTED_RESPONSE
+    assert response_data == {
+        "routes": [
+            {
+                "duration": 1620,
+                "duration_text": "27 mins",
+                "static_duration": 1560,
+                "static_duration_text": "26 mins",
+                "distance_meters": 21300,
+                "distance_text": "21.3 km",
+            }
+        ]
+    }
 
 
 @pytest.mark.parametrize(
@@ -60,7 +85,7 @@ async def test_service_get_travel_times(
 )
 async def test_service_get_travel_times_with_all_options(
     hass: HomeAssistant,
-    routes_mock: AiohttpClientMocker,
+    routes_mock: AsyncMock,
     mock_config: MockConfigEntry,
 ) -> None:
     """Test service get_travel_times with all optional parameters."""
@@ -81,14 +106,15 @@ async def test_service_get_travel_times_with_all_options(
         blocking=True,
         return_response=True,
     )
-    assert response_data == EXPECTED_RESPONSE
+    assert len(response_data["routes"]) == 1
 
-    payload = routes_mock.mock_calls[-1][2]
-    assert payload["units"] == "IMPERIAL"
-    assert payload["languageCode"] == "en"
-    assert payload["routeModifiers"]["avoidTolls"] is True
-    assert payload["trafficModel"] == "BEST_GUESS"
-    assert "departureTime" in payload
+    kwargs = routes_mock.async_compute_routes.call_args.kwargs
+    assert kwargs["units"] == Units.IMPERIAL
+    assert kwargs["language_code"] == "en"
+    assert kwargs["avoid_tolls"] is True
+    assert kwargs["traffic_model"] == TrafficModel.BEST_GUESS
+    assert kwargs["departure_time"] is not None
+    assert kwargs["arrival_time"] is None
 
 
 @pytest.mark.parametrize(
@@ -97,18 +123,21 @@ async def test_service_get_travel_times_with_all_options(
 )
 async def test_service_get_travel_times_empty_response(
     hass: HomeAssistant,
-    routes_mock: AiohttpClientMocker,
+    routes_mock: AsyncMock,
     mock_config: MockConfigEntry,
 ) -> None:
     """Test service get_travel_times with empty response."""
-    mock_compute_routes(routes_mock, json={})
+    routes_mock.async_compute_routes.return_value = None
 
     response_data = await hass.services.async_call(
         DOMAIN,
         "get_travel_times",
         {
             "config_entry_id": mock_config.entry_id,
-            **TRAVEL_TIMES_SERVICE_DATA,
+            "origin": "location1",
+            "destination": "location2",
+            "mode": "driving",
+            "units": "metric",
         },
         blocking=True,
         return_response=True,
@@ -118,26 +147,36 @@ async def test_service_get_travel_times_empty_response(
 
 @pytest.mark.parametrize(
     ("data", "options"),
-    [({**MOCK_CONFIG, CONF_REFERRER: "https://example.com/"}, DEFAULT_OPTIONS)],
+    [(MOCK_CONFIG_REFERRER, DEFAULT_OPTIONS)],
 )
-async def test_service_get_travel_times_uses_referrer(
+async def test_service_get_travel_times_with_referrer(
     hass: HomeAssistant,
-    routes_mock: AiohttpClientMocker,
+    routes_mock: AsyncMock,
     mock_config: MockConfigEntry,
 ) -> None:
-    """Test service get_travel_times sends the configured referrer."""
-    await hass.services.async_call(
-        DOMAIN,
-        "get_travel_times",
-        {
-            "config_entry_id": mock_config.entry_id,
-            **TRAVEL_TIMES_SERVICE_DATA,
-        },
-        blocking=True,
-        return_response=True,
+    """Test the referrer from the config entry is passed to the client."""
+    client_mock = AsyncMock()
+    client_mock.async_compute_routes.return_value = ComputeRoutesResponse.from_dict(
+        _mock_routes_response()
     )
-
-    assert routes_mock.mock_calls[-1][3]["Referer"] == "https://example.com/"
+    with patch(
+        "homeassistant.components.google_travel_time.helpers.GoogleMapsRoutingApi",
+        return_value=client_mock,
+    ) as mock_client:
+        await hass.services.async_call(
+            DOMAIN,
+            "get_travel_times",
+            {
+                "config_entry_id": mock_config.entry_id,
+                "origin": "location1",
+                "destination": "location2",
+                "mode": "driving",
+                "units": "metric",
+            },
+            blocking=True,
+            return_response=True,
+        )
+        assert mock_client.call_args.kwargs["referrer"] == "https://example.com/"
 
 
 @pytest.mark.parametrize(
@@ -145,39 +184,34 @@ async def test_service_get_travel_times_uses_referrer(
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
 @pytest.mark.parametrize(
-    ("mock_kwargs", "error_message"),
+    ("exception", "error_message"),
     [
         (
-            {
-                "status": 403,
-                "json": {
-                    "error": {
-                        "message": "Routes API has not been used in project.",
-                        "details": [{"reason": "SERVICE_DISABLED"}],
-                    }
-                },
-            },
+            GoogleMapsRoutingApiAuthError(
+                "Routes API is disabled.",
+                status="PERMISSION_DENIED",
+                reason="SERVICE_DISABLED",
+            ),
             "The Routes API is not enabled for this API key",
         ),
+        (GoogleMapsRoutingApiError("test"), "Google API error"),
         (
-            {"status": 500, "json": {"error": {"message": "Internal error."}}},
-            "Google API error: Internal error.",
+            GoogleMapsRoutingApiConnectionTimeoutError("Timeout"),
+            "Timed out getting travel times",
         ),
-        (
-            {"exc": TimeoutError()},
-            "Google API error: Timeout connecting to the Google Routes API",
-        ),
+        (TimeoutError(), "Timed out getting travel times"),
+        (ValueError("boom"), "Google API error: boom"),
     ],
 )
 async def test_service_get_travel_times_errors(
     hass: HomeAssistant,
-    routes_mock: AiohttpClientMocker,
+    routes_mock: AsyncMock,
     mock_config: MockConfigEntry,
-    mock_kwargs: dict,
+    exception: Exception,
     error_message: str,
 ) -> None:
     """Test service get_travel_times error handling."""
-    mock_compute_routes(routes_mock, **mock_kwargs)
+    routes_mock.async_compute_routes.side_effect = exception
 
     with pytest.raises(
         HomeAssistantError,
@@ -188,7 +222,10 @@ async def test_service_get_travel_times_errors(
             "get_travel_times",
             {
                 "config_entry_id": mock_config.entry_id,
-                **TRAVEL_TIMES_SERVICE_DATA,
+                "origin": "location1",
+                "destination": "location2",
+                "mode": "driving",
+                "units": "metric",
             },
             blocking=True,
             return_response=True,
@@ -201,7 +238,7 @@ async def test_service_get_travel_times_errors(
 )
 async def test_service_get_transit_times(
     hass: HomeAssistant,
-    routes_mock: AiohttpClientMocker,
+    routes_mock: AsyncMock,
     mock_config: MockConfigEntry,
 ) -> None:
     """Test service get_transit_times."""
@@ -217,7 +254,18 @@ async def test_service_get_transit_times(
         blocking=True,
         return_response=True,
     )
-    assert response_data == EXPECTED_RESPONSE
+    assert response_data == {
+        "routes": [
+            {
+                "duration": 1620,
+                "duration_text": "27 mins",
+                "static_duration": 1560,
+                "static_duration_text": "26 mins",
+                "distance_meters": 21300,
+                "distance_text": "21.3 km",
+            }
+        ]
+    }
 
 
 @pytest.mark.parametrize(
@@ -226,7 +274,7 @@ async def test_service_get_transit_times(
 )
 async def test_service_get_transit_times_with_all_options(
     hass: HomeAssistant,
-    routes_mock: AiohttpClientMocker,
+    routes_mock: AsyncMock,
     mock_config: MockConfigEntry,
 ) -> None:
     """Test service get_transit_times with all optional parameters."""
@@ -246,17 +294,18 @@ async def test_service_get_transit_times_with_all_options(
         blocking=True,
         return_response=True,
     )
-    assert response_data == EXPECTED_RESPONSE
+    assert len(response_data["routes"]) == 1
 
-    payload = routes_mock.mock_calls[-1][2]
-    assert payload["travelMode"] == "TRANSIT"
-    assert payload["units"] == "IMPERIAL"
-    assert payload["languageCode"] == "en"
-    assert payload["transitPreferences"] == {
-        "routingPreference": "FEWER_TRANSFERS",
-        "allowedTravelModes": ["BUS"],
-    }
-    assert "departureTime" in payload
+    kwargs = routes_mock.async_compute_routes.call_args.kwargs
+    assert kwargs["travel_mode"] == TravelMode.TRANSIT
+    assert kwargs["units"] == Units.IMPERIAL
+    assert kwargs["language_code"] == "en"
+    assert kwargs["transit_routing_preference"] == (
+        TransitRoutingPreference.FEWER_TRANSFERS
+    )
+    assert kwargs["allowed_travel_modes"] == [TransitTravelMode.BUS]
+    assert kwargs["departure_time"] is not None
+    assert kwargs["arrival_time"] is None
 
 
 @pytest.mark.parametrize(
@@ -264,39 +313,34 @@ async def test_service_get_transit_times_with_all_options(
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
 @pytest.mark.parametrize(
-    ("mock_kwargs", "error_message"),
+    ("exception", "error_message"),
     [
         (
-            {
-                "status": 403,
-                "json": {
-                    "error": {
-                        "message": "Routes API has not been used in project.",
-                        "details": [{"reason": "SERVICE_DISABLED"}],
-                    }
-                },
-            },
+            GoogleMapsRoutingApiAuthError(
+                "Routes API is disabled.",
+                status="PERMISSION_DENIED",
+                reason="SERVICE_DISABLED",
+            ),
             "The Routes API is not enabled for this API key",
         ),
+        (GoogleMapsRoutingApiError("test"), "Google API error"),
         (
-            {"status": 500, "json": {"error": {"message": "Internal error."}}},
-            "Google API error: Internal error.",
+            GoogleMapsRoutingApiConnectionTimeoutError("Timeout"),
+            "Timed out getting travel times",
         ),
-        (
-            {"exc": TimeoutError()},
-            "Google API error: Timeout connecting to the Google Routes API",
-        ),
+        (TimeoutError(), "Timed out getting travel times"),
+        (ValueError("boom"), "Google API error: boom"),
     ],
 )
 async def test_service_get_transit_times_errors(
     hass: HomeAssistant,
-    routes_mock: AiohttpClientMocker,
+    routes_mock: AsyncMock,
     mock_config: MockConfigEntry,
-    mock_kwargs: dict,
+    exception: Exception,
     error_message: str,
 ) -> None:
     """Test service get_transit_times error handling."""
-    mock_compute_routes(routes_mock, **mock_kwargs)
+    routes_mock.async_compute_routes.side_effect = exception
 
     with pytest.raises(
         HomeAssistantError,

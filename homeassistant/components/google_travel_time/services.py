@@ -1,6 +1,13 @@
 """Services for the Google Travel Time integration."""
 
+import datetime as dt
 from typing import Any, cast
+
+from google_maps_routing_api import (
+    ComputeRoutesResponse,
+    GoogleMapsRoutingApiAuthError,
+    GoogleMapsRoutingApiError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,20 +38,25 @@ from .const import (
     CONF_TRANSIT_ROUTING_PREFERENCE,
     CONF_UNITS,
     DOMAIN,
-    TRAVEL_MODES_TO_API,
+    TRAVEL_MODES_TO_API_ENUM,
 )
 from .helpers import (
-    ComputeRoutesResponse,
-    PermissionDenied,
-    RoutesClient,
     async_compute_routes,
     create_routes_api_disabled_issue,
     delete_routes_api_disabled_issue,
+    get_client,
+    get_localized_text,
+    is_routes_api_disabled,
 )
 from .schemas import SERVICE_GET_TRANSIT_TIMES_SCHEMA, SERVICE_GET_TRAVEL_TIMES_SCHEMA
 
 SERVICE_GET_TRAVEL_TIMES = "get_travel_times"
 SERVICE_GET_TRANSIT_TIMES = "get_transit_times"
+
+
+def _seconds(value: dt.timedelta | None) -> int:
+    """Return a duration in whole seconds, or 0 when it is missing."""
+    return int(value.total_seconds()) if value is not None else 0
 
 
 def _build_routes_response(
@@ -55,11 +67,24 @@ def _build_routes_response(
         return []
     return [
         {
-            "duration": route.duration_seconds,
-            "duration_text": route.duration_text,
-            "static_duration_text": route.static_duration_text,
-            "distance_meters": route.distance_meters,
-            "distance_text": route.distance_text,
+            "duration": (duration := _seconds(route.duration)),
+            "duration_text": get_localized_text(
+                route.localized_values.duration if route.localized_values else None
+            ),
+            "static_duration": (
+                _seconds(route.static_duration)
+                if route.static_duration is not None
+                else duration
+            ),
+            "static_duration_text": get_localized_text(
+                route.localized_values.static_duration
+                if route.localized_values
+                else None
+            ),
+            "distance_meters": route.distance_meters or 0,
+            "distance_text": get_localized_text(
+                route.localized_values.distance if route.localized_values else None
+            ),
         }
         for route in response.routes
     ]
@@ -71,11 +96,22 @@ def _raise_service_error(
     """Raise a HomeAssistantError based on the exception."""
     if isinstance(exc, HomeAssistantError):
         raise exc
-    if isinstance(exc, PermissionDenied):
+    if isinstance(exc, GoogleMapsRoutingApiAuthError) and is_routes_api_disabled(exc):
         create_routes_api_disabled_issue(hass, entry)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="permission_denied",
+        ) from exc
+    if isinstance(exc, TimeoutError):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+        ) from exc
+    if isinstance(exc, GoogleMapsRoutingApiError):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="api_error",
+            translation_placeholders={"error": str(exc)},
         ) from exc
     raise HomeAssistantError(
         translation_domain=DOMAIN,
@@ -95,10 +131,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         api_key = entry.data[CONF_API_KEY]
 
-        travel_mode = TRAVEL_MODES_TO_API[service.data[CONF_MODE]]
+        travel_mode = TRAVEL_MODES_TO_API_ENUM[service.data[CONF_MODE]]
 
-        referrer = entry.data.get(CONF_REFERRER)
-        client = RoutesClient(hass, api_key, referrer)
+        client = get_client(hass, api_key, entry.data.get(CONF_REFERRER))
 
         try:
             response = await async_compute_routes(
@@ -126,8 +161,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         api_key = entry.data[CONF_API_KEY]
 
-        referrer = entry.data.get(CONF_REFERRER)
-        client = RoutesClient(hass, api_key, referrer)
+        client = get_client(hass, api_key, entry.data.get(CONF_REFERRER))
 
         try:
             response = await async_compute_routes(
@@ -135,7 +169,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 origin=service.data[CONF_ORIGIN],
                 destination=service.data[CONF_DESTINATION],
                 hass=hass,
-                travel_mode=TRAVEL_MODES_TO_API["transit"],
+                travel_mode=TRAVEL_MODES_TO_API_ENUM["transit"],
                 units=service.data[CONF_UNITS],
                 language=service.data.get(CONF_LANGUAGE),
                 transit_mode=service.data.get(CONF_TRANSIT_MODE),

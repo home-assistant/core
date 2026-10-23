@@ -45,10 +45,10 @@ from .const import (
     UNITS_METRIC,
 )
 from .helpers import (
-    GoogleAPIError,
     InvalidApiKeyException,
     InvalidReferrerException,
-    PermissionDenied,
+    PermissionDeniedException,
+    UnknownException,
     validate_config_entry,
 )
 from .schemas import (
@@ -62,7 +62,7 @@ from .schemas import (
 )
 
 DESCRIPTION_PLACEHOLDERS = {
-    "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys"
+    "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
 }
 
 CONFIG_SCHEMA = probatio.Schema(
@@ -142,15 +142,14 @@ class GoogleOptionsFlow(OptionsFlow):
         )
 
 
-def _get_flow_data(user_input: dict[str, Any]) -> dict[str, Any]:
-    """Return the config entry data for the flow input."""
+def _extract_entry_data(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Flatten the API key options section into the entry data."""
     data = {
-        CONF_API_KEY: user_input[CONF_API_KEY],
-        CONF_ORIGIN: user_input[CONF_ORIGIN],
-        CONF_DESTINATION: user_input[CONF_DESTINATION],
+        key: value
+        for key, value in user_input.items()
+        if key != SECTION_API_KEY_OPTIONS
     }
-    referrer = user_input.get(SECTION_API_KEY_OPTIONS, {}).get(CONF_REFERRER)
-    if referrer:
+    if referrer := user_input.get(SECTION_API_KEY_OPTIONS, {}).get(CONF_REFERRER):
         data[CONF_REFERRER] = referrer
     return data
 
@@ -167,7 +166,7 @@ async def validate_input(
             user_input[CONF_DESTINATION],
             user_input.get(SECTION_API_KEY_OPTIONS, {}).get(CONF_REFERRER),
         )
-    except PermissionDenied:
+    except PermissionDeniedException:
         return {"base": "permission_denied"}
     except InvalidApiKeyException:
         return {"base": "invalid_auth"}
@@ -175,7 +174,7 @@ async def validate_input(
         return {"base": "invalid_referrer"}
     except TimeoutError:
         return {"base": "timeout_connect"}
-    except GoogleAPIError:
+    except UnknownException:
         return {"base": "cannot_connect"}
 
     return None
@@ -205,7 +204,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
-                    data=_get_flow_data(user_input),
+                    data=_extract_entry_data(user_input),
                     options=default_options(self.hass),
                 )
 
@@ -221,23 +220,24 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
         errors: dict[str, str] | None = None
-        reconfigure_entry = self._get_reconfigure_entry()
         if user_input is not None:
             errors = await validate_input(self.hass, user_input)
             if not errors:
                 return self.async_update_reload_and_abort(
-                    reconfigure_entry, data=_get_flow_data(user_input)
+                    self._get_reconfigure_entry(), data=_extract_entry_data(user_input)
                 )
 
-        suggested = {
-            **reconfigure_entry.data,
-            SECTION_API_KEY_OPTIONS: {
-                CONF_REFERRER: reconfigure_entry.data.get(CONF_REFERRER)
-            },
+        entry_data = self._get_reconfigure_entry().data
+        suggested_values = {
+            key: value for key, value in entry_data.items() if key != CONF_REFERRER
         }
+        if referrer := entry_data.get(CONF_REFERRER):
+            suggested_values[SECTION_API_KEY_OPTIONS] = {CONF_REFERRER: referrer}
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, suggested),
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIG_SCHEMA, suggested_values
+            ),
             errors=errors,
             description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )

@@ -4,6 +4,13 @@ import datetime as dt
 import logging
 from typing import Any, override
 
+from google_maps_routing_api import (
+    GoogleMapsRoutingApi,
+    GoogleMapsRoutingApiAuthError,
+    GoogleMapsRoutingApiError,
+    Route,
+)
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -37,22 +44,20 @@ from .const import (
     CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
-    TRAVEL_MODES_TO_API,
+    TRAVEL_MODES_TO_API_ENUM,
 )
 from .helpers import (
-    GoogleAPIError,
-    PermissionDenied,
-    Route,
-    RoutesClient,
     async_compute_routes,
     create_routes_api_disabled_issue,
     delete_routes_api_disabled_issue,
+    get_client,
+    get_localized_text,
+    is_routes_api_disabled,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = dt.timedelta(minutes=10)
-FIELD_MASK = "routes.duration,routes.localizedValues"
 
 SENSOR_DESCRIPTIONS = [
     SensorEntityDescription(
@@ -76,8 +81,7 @@ async def async_setup_entry(
     destination = config_entry.data[CONF_DESTINATION]
     name = config_entry.title
 
-    referrer = config_entry.data.get(CONF_REFERRER)
-    client = RoutesClient(hass, api_key, referrer)
+    client = get_client(hass, api_key, config_entry.data.get(CONF_REFERRER))
 
     sensors = [
         GoogleTravelTimeSensor(
@@ -101,7 +105,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         api_key: str,
         origin: str,
         destination: str,
-        client: RoutesClient,
+        client: GoogleMapsRoutingApi,
         sensor_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -136,10 +140,10 @@ class GoogleTravelTimeSensor(SensorEntity):
     @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if self._route is None:
+        if self._route is None or self._route.duration is None:
             return None
 
-        return self._route.duration_seconds
+        return self._route.duration.total_seconds()
 
     @property
     @override
@@ -148,10 +152,17 @@ class GoogleTravelTimeSensor(SensorEntity):
         if self._route is None:
             return None
 
+        localized_values = self._route.localized_values
         result = self._config_entry.options.copy()
-        result["duration_in_traffic"] = self._route.duration_text
-        result["duration"] = self._route.static_duration_text
-        result["distance"] = self._route.distance_text
+        result["duration_in_traffic"] = get_localized_text(
+            localized_values.duration if localized_values is not None else None
+        )
+        result["duration"] = get_localized_text(
+            localized_values.static_duration if localized_values is not None else None
+        )
+        result["distance"] = get_localized_text(
+            localized_values.distance if localized_values is not None else None
+        )
 
         result["origin"] = self._resolved_origin
         result["destination"] = self._resolved_destination
@@ -164,7 +175,7 @@ class GoogleTravelTimeSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the latest data from Google."""
-        travel_mode = TRAVEL_MODES_TO_API[self._config_entry.options[CONF_MODE]]
+        travel_mode = TRAVEL_MODES_TO_API_ENUM[self._config_entry.options[CONF_MODE]]
 
         self._resolved_origin = find_coordinates(self.hass, self._origin)
         self._resolved_destination = find_coordinates(self.hass, self._destination)
@@ -191,16 +202,19 @@ class GoogleTravelTimeSensor(SensorEntity):
                     ),
                     departure_time=self._config_entry.options.get(CONF_DEPARTURE_TIME),
                     arrival_time=self._config_entry.options.get(CONF_ARRIVAL_TIME),
-                    field_mask=FIELD_MASK,
+                    field_mask="routes.duration,routes.localizedValues",
                 )
                 _LOGGER.debug("Received response: %s", response)
                 if response is not None and len(response.routes) > 0:
                     self._route = response.routes[0]
                 delete_routes_api_disabled_issue(self.hass, self._config_entry)
-            except PermissionDenied:
-                _LOGGER.error("Routes API is disabled for this API key")
-                create_routes_api_disabled_issue(self.hass, self._config_entry)
+            except GoogleMapsRoutingApiAuthError as ex:
+                if is_routes_api_disabled(ex):
+                    _LOGGER.error("Routes API is disabled for this API key")
+                    create_routes_api_disabled_issue(self.hass, self._config_entry)
+                else:
+                    _LOGGER.error("Error getting travel time: %s", ex)
                 self._route = None
-            except (GoogleAPIError, TimeoutError) as ex:
+            except GoogleMapsRoutingApiError as ex:
                 _LOGGER.error("Error getting travel time: %s", ex)
                 self._route = None
