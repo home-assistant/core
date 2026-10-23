@@ -19,11 +19,12 @@
           'description': "Filter by integration domain (e.g. 'hue', 'zwave_js'). Accepts a single domain or a list of domains.",
         }),
         'status': dict({
-          'description': "Filter by status: 'loaded' (working normally), 'error' (failed setup, retrying, migration error, or failed unload), or 'not_loaded'.",
+          'description': "Filter by status: 'loaded' (working normally), 'error' (failed setup, retrying, migration error, or failed unload), 'not_loaded', or 'disabled' (disabled or ignored).",
           'enum': list([
             'loaded',
             'error',
             'not_loaded',
+            'disabled',
           ]),
           'format': 'lower',
           'type': 'string',

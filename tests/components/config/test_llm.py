@@ -187,7 +187,7 @@ async def test_get_config_entries_filtering_and_error_reasons(
         "homeassistant.components.config.llm.translation.async_get_translations",
         side_effect=_mock_get_translations,
     ):
-        # Default: returns all non-ignored, non-disabled entries
+        # Default: returns all entries including disabled and ignored
         all_res = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
         assert all_res == llm.ToolResult(
             data={
@@ -218,38 +218,71 @@ async def test_get_config_entries_filtering_and_error_reasons(
                         "state": "setup_retry",
                         "reason": "Failed to connect to bridge at 192.168.1.50",
                     },
+                    {
+                        "entry_id": "entry_disabled",
+                        "domain": "spotify",
+                        "title": "Spotify",
+                        "state": "not_loaded",
+                        "disabled_by": "user",
+                    },
+                    {
+                        "entry_id": "entry_ignored",
+                        "domain": "hue",
+                        "title": "Ignored",
+                        "state": "not_loaded",
+                        "source": "ignore",
+                    },
                 ]
             }
         )
 
-        # Filter by status="error"
-        error_res = await tool.async_call(
+        # Filter by status="not_loaded" (excludes disabled and ignored entries)
+        not_loaded_res = await tool.async_call(
             hass,
-            llm.ToolInput(tool.name, {"status": "error"}),
+            llm.ToolInput(tool.name, {"status": "not_loaded"}),
             llm_context,
         )
-        assert error_res == llm.ToolResult(
+        assert not_loaded_res == llm.ToolResult(
             data={
                 "result": [
                     {
-                        "entry_id": "entry_error",
-                        "domain": "zwave_js",
-                        "title": "Z-Wave Stick",
-                        "state": "setup_error",
-                        "reason": "Failed to connect to Z-Wave stick",
-                    },
-                    {
-                        "entry_id": "entry_translated_error",
-                        "domain": "hue",
-                        "title": "Hue Bridge",
-                        "state": "setup_retry",
-                        "reason": "Failed to connect to bridge at 192.168.1.50",
+                        "entry_id": "entry_not_loaded",
+                        "domain": "sun",
+                        "title": "Sun",
+                        "state": "not_loaded",
                     },
                 ]
             }
         )
 
-        # Filter by domain list and status
+        # Filter by status="disabled" (returns disabled and ignored entries)
+        disabled_res = await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"status": "disabled"}),
+            llm_context,
+        )
+        assert disabled_res == llm.ToolResult(
+            data={
+                "result": [
+                    {
+                        "entry_id": "entry_disabled",
+                        "domain": "spotify",
+                        "title": "Spotify",
+                        "state": "not_loaded",
+                        "disabled_by": "user",
+                    },
+                    {
+                        "entry_id": "entry_ignored",
+                        "domain": "hue",
+                        "title": "Ignored",
+                        "state": "not_loaded",
+                        "source": "ignore",
+                    },
+                ]
+            }
+        )
+
+        # Filter by domain list and status="error"
         filtered_res = await tool.async_call(
             hass,
             llm.ToolInput(

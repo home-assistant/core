@@ -6,6 +6,7 @@ from typing import Any, override
 
 import probatio
 
+from homeassistant import config_entries
 from homeassistant.components.llm import LLMTools
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
@@ -22,7 +23,8 @@ from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import DOMAIN
 
-_STATUS_FILTERS: dict[str, set[ConfigEntryState]] = {
+_STATUS_VALUES = ["loaded", "error", "not_loaded", "disabled"]
+_STATUS_STATES: dict[str, set[ConfigEntryState]] = {
     "loaded": {ConfigEntryState.LOADED},
     "error": {
         ConfigEntryState.SETUP_ERROR,
@@ -103,6 +105,18 @@ async def _async_load_entry_error_translations(
     return exc_trans, config_trans
 
 
+def _matches_status(entry: ConfigEntry, status: str) -> bool:
+    """Return whether a config entry matches the requested status filter."""
+    is_disabled_or_ignored = (
+        entry.disabled_by is not None or entry.source == config_entries.SOURCE_IGNORE
+    )
+    if status == "disabled":
+        return is_disabled_or_ignored
+    if is_disabled_or_ignored:
+        return False
+    return entry.state in _STATUS_STATES[status]
+
+
 def _format_config_entry(
     entry: ConfigEntry,
     exc_trans: dict[str, str],
@@ -115,6 +129,10 @@ def _format_config_entry(
         "title": entry.title,
         "state": entry.state.value,
     }
+    if entry.disabled_by is not None:
+        result["disabled_by"] = entry.disabled_by.value
+    if entry.source == config_entries.SOURCE_IGNORE:
+        result["source"] = entry.source
     if (reason := _resolve_entry_reason(entry, exc_trans, config_trans)) is not None:
         result["reason"] = reason
     return result
@@ -126,10 +144,10 @@ class GetConfigEntriesTool(Tool):
     name = "config__get_config_entries"
     title = "Get config entries"
     description = (
-        "Retrieve installed Home Assistant config entries (active integrations and "
-        "helpers configured in this instance; excludes ignored and disabled entries). "
-        "Use this to inspect which integrations are set up, check their status "
-        "('loaded', 'error', 'not_loaded'), and see translated error reasons."
+        "Retrieve installed Home Assistant config entries (configured integrations "
+        "and helpers). Use this to inspect which integrations are set up, check their "
+        "status ('loaded', 'error', 'not_loaded', 'disabled'), and see translated "
+        "error reasons."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -149,9 +167,9 @@ class GetConfigEntriesTool(Tool):
                 description=(
                     "Filter by status: 'loaded' (working normally), 'error' "
                     "(failed setup, retrying, migration error, or failed unload), "
-                    "or 'not_loaded'."
+                    "'not_loaded', or 'disabled' (disabled or ignored)."
                 ),
-            ): probatio.All(str, probatio.Lower, probatio.In(list(_STATUS_FILTERS))),
+            ): probatio.All(str, probatio.Lower, probatio.In(_STATUS_VALUES)),
         }
     )
 
@@ -165,7 +183,7 @@ class GetConfigEntriesTool(Tool):
         status_filter: str | None = args.get("status")
 
         entries = hass.config_entries.async_entries(
-            include_ignore=False, include_disabled=False
+            include_ignore=True, include_disabled=True
         )
 
         if domain_filter is not None:
@@ -176,8 +194,9 @@ class GetConfigEntriesTool(Tool):
             entries = [entry for entry in entries if entry.domain.lower() in domains]
 
         if status_filter is not None:
-            allowed_states = _STATUS_FILTERS[status_filter]
-            entries = [entry for entry in entries if entry.state in allowed_states]
+            entries = [
+                entry for entry in entries if _matches_status(entry, status_filter)
+            ]
 
         exc_trans, config_trans = await _async_load_entry_error_translations(
             hass, entries, llm_context.language
