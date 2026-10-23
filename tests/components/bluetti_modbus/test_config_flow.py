@@ -452,6 +452,57 @@ async def test_zeroconf_updates_a_moved_device(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize(
+    "entry_data",
+    [
+        pytest.param({CONF_PORT: 1502}, id="other_port"),
+        pytest.param({CONF_UNIT_ID: 2}, id="other_device_id"),
+    ],
+)
+async def test_zeroconf_leaves_an_entry_on_other_settings(
+    hass: HomeAssistant,
+    mock_modbus_unit: MockModbusUnit,
+    entry_data: dict[str, Any],
+) -> None:
+    """An entry on another port or device ID keeps its host."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SERIAL,
+        data={**bluetti_data(), CONF_HOST: "proxy.local", **entry_data},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {**bluetti_data(), CONF_HOST: "proxy.local", **entry_data}
+
+
+async def test_zeroconf_without_mac_can_be_ignored(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A discovery without a MAC in the hostname is ignored under its serial."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_info(hostname="bluetti.local."),
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IGNORE},
+        data={"unique_id": SERIAL, "title": TITLE},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
+    assert not hass.config_entries.flow.async_progress()
+
+
 async def test_zeroconf_ignored_by_serial(
     hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
 ) -> None:

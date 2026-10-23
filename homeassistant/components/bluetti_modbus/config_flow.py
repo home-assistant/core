@@ -120,12 +120,20 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
         if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, serial
         ):
-            if entry.source == SOURCE_IGNORE:
+            # Only the host is updated, so only an entry on the port and device
+            # ID the probe just used can follow its power station.
+            if entry.source == SOURCE_IGNORE or any(
+                entry.data[key] != data[key] for key in (CONF_PORT, CONF_UNIT_ID)
+            ):
                 return self.async_abort(reason="already_configured")
             # Same power station at a new address.
             return self.async_update_reload_and_abort(
                 entry, data_updates={CONF_HOST: host}, reason="already_configured"
             )
+
+        if self.unique_id is None:
+            # Without a MAC, the serial number is what an ignore remembers.
+            await self.async_set_unique_id(serial)
 
         self._discovered = data
         self._discovered_serial = serial
