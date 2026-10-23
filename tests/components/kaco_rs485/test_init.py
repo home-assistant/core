@@ -3,13 +3,20 @@
 from freezegun.api import FrozenDateTimeFactory
 from kaco_rs485 import BusError
 from kaco_rs485.testing import FakeBus
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
-from homeassistant.components.kaco_rs485.const import DOMAIN
+from homeassistant.components.kaco_rs485.const import (
+    CONF_ADDRESSES,
+    CONF_INVERTERS,
+    DOMAIN,
+)
 from homeassistant.components.kaco_rs485.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 
 async def test_setup_and_unload_entry(
@@ -149,3 +156,96 @@ async def test_an_entry_with_every_inverter_disabled_does_not_open_the_port(
 
     assert await _polled(hass, freezer, mock_bus) == set()
     assert not mock_bus.opened
+
+
+@pytest.fixture
+async def ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> MockHAClientWebSocket:
+    """A websocket client that can remove devices."""
+    assert await async_setup_component(hass, "config", {})
+    return await hass_ws_client(hass)
+
+
+async def test_a_removed_inverter_is_no_longer_polled(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_bus: FakeBus,
+    ws_client: MockHAClientWebSocket,
+) -> None:
+    """Test deleting an inverter's device drops it from the entry and the bus."""
+    device = _device(device_registry, init_integration, 2)
+
+    response = await ws_client.remove_device(device.id)
+
+    assert response["success"]
+    assert device_registry.async_get(device.id) is None
+    assert init_integration.data[CONF_ADDRESSES] == [1, 4]
+    assert "2" not in init_integration.data[CONF_INVERTERS]
+    assert await _polled(hass, freezer, mock_bus) == {1, 4}
+
+
+async def test_removing_every_inverter_releases_the_port(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_bus: FakeBus,
+    ws_client: MockHAClientWebSocket,
+) -> None:
+    """Test an entry left with no inverters stops holding the bus."""
+    assert mock_bus.opened
+
+    for address in (1, 2, 4):
+        device = _device(device_registry, init_integration, address)
+        assert (await ws_client.remove_device(device.id))["success"]
+    await hass.async_block_till_done()
+
+    assert init_integration.data[CONF_ADDRESSES] == []
+    assert not mock_bus.opened
+    assert await _polled(hass, freezer, mock_bus) == set()
+    assert init_integration.state is ConfigEntryState.LOADED
+
+
+async def test_a_foreign_device_is_not_removed(
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    ws_client: MockHAClientWebSocket,
+) -> None:
+    """Test a device that is not one of this entry's inverters is refused."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=init_integration.entry_id,
+        identifiers={(DOMAIN, "something_else")},
+    )
+
+    response = await ws_client.remove_device(device.id)
+
+    assert not response["success"]
+    assert init_integration.data[CONF_ADDRESSES] == [1, 2, 4]
+
+
+async def test_setup_drops_devices_for_addresses_no_longer_configured(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test setup removes the device of an inverter the entry no longer lists."""
+    stale = _device(device_registry, init_integration, 2)
+    foreign = device_registry.async_get_or_create(
+        config_entry_id=init_integration.entry_id,
+        identifiers={(DOMAIN, "something_else")},
+    )
+
+    hass.config_entries.async_update_entry(
+        init_integration,
+        data={**init_integration.data, CONF_ADDRESSES: [1, 4]},
+    )
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(stale.id) is None
+    assert device_registry.async_get(foreign.id) is not None
+    assert _device(device_registry, init_integration, 1)
+    assert _device(device_registry, init_integration, 4)

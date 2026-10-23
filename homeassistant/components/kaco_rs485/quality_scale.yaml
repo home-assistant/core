@@ -80,7 +80,7 @@ rules:
     comment: Entities use device_class-derived icons; no custom icons are needed.
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done
