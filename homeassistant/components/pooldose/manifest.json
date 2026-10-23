@@ -1,6 +1,7 @@
 {
   "domain": "pooldose",
   "name": "SEKO PoolDose",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@lmaertin"],
   "config_flow": true,
   "dhcp": [

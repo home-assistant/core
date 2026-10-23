@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from modbus_connection import ModbusError
+from modbus_connection import ModbusError, ModbusTimeoutError
 import probatio
 from sofar_modbus.modern.device import SofarInverter
 
@@ -69,11 +69,20 @@ STEP_SERIAL_DATA_SCHEMA = probatio.Schema(
 )
 
 
+class _InverterSilentError(Exception):
+    """The adapter is reachable, but the inverter behind it is not answering."""
+
+
 async def _async_probe(hass: HomeAssistant, data: Mapping[str, Any]) -> SofarInverter:
     """Connect to the inverter and identify it, or raise."""
     params = create_modbus_params(data)
     async with async_get_temporary_unit(hass, params, data[CONF_UNIT_ID]) as unit:
-        return await SofarInverter.async_detect(unit)
+        try:
+            return await SofarInverter.async_detect(unit)
+        except ModbusTimeoutError as err:
+            if unit.connected:
+                raise _InverterSilentError from err
+            raise
 
 
 class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -209,6 +218,8 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         """Probe the inverter, returning it or the errors to show instead."""
         try:
             device = await _async_probe(self.hass, data)
+        except _InverterSilentError:
+            return None, {"base": "inverter_silent"}, {}
         except (ModbusError, HomeAssistantError) as err:
             return None, {"base": "cannot_connect"}, {"error": str(err)}
 

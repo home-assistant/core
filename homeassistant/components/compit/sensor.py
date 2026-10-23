@@ -6,13 +6,13 @@ from typing import override
 from compit_inext_api.consts import CompitParameter
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
+    EntityCategory,
     UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfEnergy,

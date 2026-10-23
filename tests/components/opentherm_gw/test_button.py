@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from pyotgw.vars import OTGW_MODE_RESET
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.opentherm_gw import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MINIMAL_STATUS
-
-from tests.common import MockConfigEntry
 
 
 async def test_cancel_room_setpoint_override_button(

@@ -2,6 +2,7 @@
   "domain": "lcn",
   "name": "LCN",
   "after_dependencies": ["panel_custom"],
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@alengwenus"],
   "config_flow": true,
   "dependencies": ["http", "websocket_api"],

@@ -1,5 +1,6 @@
 """Tests for the WiLight component."""
 
+from pytest_homeassistant.common import MockConfigEntry
 from pywilight.const import DOMAIN
 
 from homeassistant.components.wilight.config_flow import (
@@ -15,8 +16,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 HOST = "127.0.0.1"
 WILIGHT_ID = "000000000099"

@@ -4,6 +4,10 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 from switchbot_api import Device, Remote, SmartRadiatorThermostatCommands, SwitchBotAPI
 
 from homeassistant.components.climate import (
@@ -30,8 +34,6 @@ from homeassistant.util.unit_system import (
 )
 
 from . import configure_integration
-
-from tests.common import mock_restore_cache, mock_restore_cache_with_extra_data
 
 
 async def test_air_conditioner_set_hvac_mode(

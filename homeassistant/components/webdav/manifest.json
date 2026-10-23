@@ -1,6 +1,7 @@
 {
   "domain": "webdav",
   "name": "WebDAV",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@jpbede"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/webdav",

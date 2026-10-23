@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, _patch, patch
 from modbus_connection import ModbusSerialParams, ModbusTcpParams, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.sofar.config_flow import (
@@ -43,8 +44,6 @@ from . import (
     declare_pv_in_masks,
     seed_pv_inverter,
 )
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 # A recognized prefix with no model in sofar-modbus's own table.
 _UNMODELED_SERIAL = "SA1XXES100XX"
@@ -187,11 +186,17 @@ async def test_user_step_success_without_model(
     assert result["result"].unique_id == serial
 
 
-def _seed_unreachable(unit: MockModbusUnit) -> None:
-    unit.fail_requests(ModbusTimeoutError("stuck"))
+def _seed_unreachable(connection: MockModbusConnection) -> None:
+    """No adapter answers, so the link never opens."""
+    connection._connect_client = AsyncMock(side_effect=ModbusTimeoutError("stuck"))
 
 
-def _seed_unrecognized(unit: MockModbusUnit) -> None:
+def _seed_silent(connection: MockModbusConnection) -> None:
+    """The adapter answers, but the inverter behind it does not."""
+    connection.for_unit(1).fail_requests(ModbusTimeoutError("asleep"))
+
+
+def _seed_unrecognized(connection: MockModbusConnection) -> None:
     """No-op: unseeded registers give no known serial and no usable mask."""
 
 
@@ -204,6 +209,7 @@ def _seed_unrecognized(unit: MockModbusUnit) -> None:
             {"error": "stuck"},
             id="cannot_connect",
         ),
+        pytest.param(_seed_silent, "inverter_silent", {}, id="inverter_silent"),
         pytest.param(
             _seed_unrecognized,
             "unrecognized_inverter",
@@ -215,13 +221,13 @@ def _seed_unrecognized(unit: MockModbusUnit) -> None:
 async def test_user_step_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    seed: Callable[[MockModbusUnit], None],
+    seed: Callable[[MockModbusConnection], None],
     expected_error: str,
     expected_placeholders: dict[str, str],
 ) -> None:
     """Test the user step reports the right error and recovers, per failure."""
     mock_conn = MockModbusConnection()
-    seed(mock_conn.for_unit(1))
+    seed(mock_conn)
     flow_id = await _start_flow(hass, TYPE_TCP)
 
     with _patch_temporary_unit(mock_conn):
@@ -404,6 +410,7 @@ async def test_reconfigure_rejects_a_different_serial(hass: HomeAssistant) -> No
             {"error": "stuck"},
             id="cannot_connect",
         ),
+        pytest.param(_seed_silent, "inverter_silent", {}, id="inverter_silent"),
         pytest.param(
             _seed_unrecognized,
             "unrecognized_inverter",
@@ -415,7 +422,7 @@ async def test_reconfigure_rejects_a_different_serial(hass: HomeAssistant) -> No
 async def test_reconfigure_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    seed: Callable[[MockModbusUnit], None],
+    seed: Callable[[MockModbusConnection], None],
     expected_error: str,
     expected_placeholders: dict[str, str],
 ) -> None:
@@ -425,7 +432,7 @@ async def test_reconfigure_errors(
     result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_TCP)
 
     mock_conn = MockModbusConnection()
-    seed(mock_conn.for_unit(1))
+    seed(mock_conn)
 
     with _patch_temporary_unit(mock_conn):
         result = await hass.config_entries.flow.async_configure(
@@ -525,7 +532,7 @@ async def test_reconfigure_new_line_settings(
 
 
 @pytest.mark.usefixtures("mock_get_unit")
-async def test_reconfigure_new_line_settings_cannot_connect(
+async def test_reconfigure_new_line_settings_silent_inverter(
     hass: HomeAssistant, mock_connection: MockModbusConnection
 ) -> None:
     """Test a failed probe puts the entry back on the bus it was taken off."""
@@ -545,7 +552,7 @@ async def test_reconfigure_new_line_settings_cannot_connect(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "inverter_silent"}
     assert entry.data == MOCK_SERIAL_ENTRY_DATA
     assert entry.unique_id == MOCK_SERIAL
     assert entry.state is ConfigEntryState.LOADED

@@ -2,6 +2,7 @@
   "domain": "system_bridge",
   "name": "System Bridge",
   "after_dependencies": ["zeroconf"],
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@timmo001"],
   "config_flow": true,
   "dependencies": ["media_source"],

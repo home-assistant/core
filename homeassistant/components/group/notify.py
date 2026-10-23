@@ -8,15 +8,13 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
-    SERVICE_SEND_MESSAGE,
     BaseNotificationService,
     NotifyEntity,
     NotifyEntityFeature,
+    NotifyService,
+    NotifyServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -63,7 +61,7 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
                     _backward_compat_schema,
                     {
                         probatio.Required(CONF_ACTION): cv.slug,
-                        probatio.Optional(ATTR_DATA): dict,
+                        probatio.Optional(NotifyServiceArgument.DATA): dict,
                     },
                 )
             ],
@@ -104,13 +102,13 @@ class GroupNotifyPlatform(BaseNotificationService):
     @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send message to all entities in the group."""
-        payload: dict[str, Any] = {ATTR_MESSAGE: message}
+        payload: dict[str, Any] = {NotifyServiceArgument.MESSAGE: message}
         payload.update({key: val for key, val in kwargs.items() if val})
 
         tasks: list[asyncio.Task[Any]] = []
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
-            if (default_data := entity.get(ATTR_DATA)) is not None:
+            if (default_data := entity.get(NotifyServiceArgument.DATA)) is not None:
                 add_defaults(sending_payload, default_data)
             tasks.append(
                 asyncio.create_task(
@@ -177,7 +175,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
         """Send a message to all members of the group."""
 
         data = {
-            ATTR_MESSAGE: message,
+            NotifyServiceArgument.MESSAGE: message,
             ATTR_ENTITY_ID: self._entity_ids,
         }
 
@@ -186,11 +184,11 @@ class NotifyGroup(GroupEntity, NotifyEntity):
             title is not None
             and self._attr_supported_features & NotifyEntityFeature.TITLE
         ):
-            data[ATTR_TITLE] = title
+            data[NotifyServiceArgument.TITLE] = title
 
         await self.hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             data,
             blocking=True,
             context=self._context,

@@ -1,6 +1,7 @@
 {
   "domain": "saj",
   "name": "SAJ Solar Inverter",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@fredericvl", "@edurenye"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/saj",

@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from awesomeversion import AwesomeVersion
 import pytest
+from pytest_homeassistant.common import MockModule, mock_integration
 
 from homeassistant import loader
 from homeassistant.components import hue
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.generated.zeroconf import ZEROCONF
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
-
-from .common import MockModule, mock_integration
 
 
 async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
@@ -591,6 +590,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
             "mqtt": ["hue/discovery"],
             "version": "1.0.0",
             "quality_scale": "gold",
+            "categories": ["lighting.bulbs_lamps", "hubs_protocols"],
         },
     )
     assert integration.name == "Philips Hue"
@@ -630,6 +630,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.overwrites_built_in is False
     assert integration.version == "1.0.0"
     assert integration.quality_scale == "gold"
+    assert integration.categories == ["lighting.bulbs_lamps", "hubs_protocols"]
 
     integration = loader.Integration(
         hass,
@@ -654,6 +655,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.mqtt is None
     assert integration.version is None
     assert integration.quality_scale == "custom"
+    assert integration.categories == []
 
     integration = loader.Integration(
         hass,

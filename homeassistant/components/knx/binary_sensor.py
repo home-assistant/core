@@ -177,7 +177,7 @@ class KnxUiBinarySensor(_KnxBinarySensor, KnxUiEntity):
         knx_conf = config.knx
         self._device = XknxBinarySensor(
             xknx=knx_module.xknx,
-            name=config.entity.xknx_name,
+            name=config.entity.name,
             group_address_state=state_and_passive(knx_conf.ga_sensor),
             sync_state=knx_conf.sync_state,
             invert=knx_conf.invert,

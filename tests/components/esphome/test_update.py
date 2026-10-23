@@ -9,6 +9,8 @@ from aioesphomeapi import APIClient, UpdateCommand, UpdateInfo, UpdateState
 from awesomeversion import AwesomeVersion
 from awesomeversion.exceptions import AwesomeVersionCompareException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.coordinator import REFRESH_INTERVAL
@@ -37,9 +39,6 @@ from homeassistant.util import dt as dt_util
 
 from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def _async_dashboard_poll(hass: HomeAssistant) -> None:

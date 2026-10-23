@@ -3,6 +3,8 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, Platform
@@ -39,9 +41,6 @@ from .common import (
     config_entry_ro_filter,
     config_entry_softener,
 )
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 
 @pytest.mark.parametrize(

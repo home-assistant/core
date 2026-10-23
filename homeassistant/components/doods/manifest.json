@@ -1,6 +1,7 @@
 {
   "domain": "doods",
   "name": "DOODS - Dedicated Open Object Detection Service",
+  "categories": ["ai_voice.image_recognition"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/doods",
   "iot_class": "local_polling",
