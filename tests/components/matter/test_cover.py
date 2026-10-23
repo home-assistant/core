@@ -1531,6 +1531,50 @@ async def test_closure_cover_ignores_non_closure_dimension_compose_child(
     assert state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
+async def test_closure_cover_duplicate_panel_role_warns_and_keeps_first(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that two panels claiming the same role log a warning, first wins.
+
+    Silently letting whichever panel enumerates last win would make behavior
+    depend on PartsList order instead of being deterministic and visible.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+
+    # Retag the Tilt panel (endpoint 3) as Lift too, so both endpoint 2 and
+    # endpoint 3 now claim the POSITION role. TagList isn't watched, so
+    # `_closure_panels` only picks this up on its next (live) access below.
+    set_node_attribute(
+        matter_node,
+        3,
+        clusters.Descriptor.id,
+        clusters.Descriptor.Attributes.TagList.attribute_id,
+        [{"1": NAMESPACE_CLOSURE_PANEL, "2": 0}],
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_position",
+        {"entity_id": entity_id, "position": 30},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.ClosureDimension.Commands.SetTarget(
+            position=7000, latch=False
+        ),
+        timed_request_timeout_ms=1000,
+    )
+    assert "Multiple ClosurePanel children report the POSITION role" in caplog.text
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_closure_tilt_only"])
 async def test_closure_cover_tilt_only(
     hass: HomeAssistant,

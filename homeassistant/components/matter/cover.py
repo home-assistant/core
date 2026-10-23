@@ -463,6 +463,9 @@ class MatterClosure(MatterEntity, CoverEntity):
         entity_info: MatterEntityInfo,
     ) -> None:
         """Initialize the closure entity and its child subscription registry."""
+        # Base __init__ calls _update_from_device, which reads _closure_panels,
+        # so this must be set before it, not after.
+        self._warned_duplicate_panel_roles: set[ClosurePanelRole] = set()
         super().__init__(matter_client, endpoint, entity_info)
         self._closure_panel_subscriptions: dict[str, Callable[[], None]] = {}
 
@@ -504,8 +507,21 @@ class MatterClosure(MatterEntity, CoverEntity):
             tag_list = child.get_attribute_value(
                 None, clusters.Descriptor.Attributes.TagList
             )
-            if (role := _get_closure_panel_role(tag_list)) is not None:
-                panels[role] = child
+            if (role := _get_closure_panel_role(tag_list)) is None:
+                continue
+            if role in panels:
+                if role not in self._warned_duplicate_panel_roles:
+                    LOGGER.warning(
+                        "Multiple ClosurePanel children report the %s role for"
+                        " %s; keeping endpoint %s, ignoring endpoint %s",
+                        role.name,
+                        self.entity_id,
+                        panels[role].endpoint_id,
+                        child.endpoint_id,
+                    )
+                    self._warned_duplicate_panel_roles.add(role)
+                continue
+            panels[role] = child
         return panels
 
     @callback
