@@ -418,12 +418,11 @@ async def test_name(hass: HomeAssistant) -> None:
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.RADIO_FREQUENCY]
         )
-        return True
 
     class MockFlow(ConfigFlow):
         """Test flow."""
