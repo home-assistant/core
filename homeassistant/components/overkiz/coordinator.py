@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
 from time import monotonic
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, overload, override
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -119,8 +119,25 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             and device.ui_class not in IGNORED_OVERKIZ_DEVICES
         )
 
-    async def async_execute_throttled(self, actions: list[Action]) -> str:
-        """Execute actions, at least MIN_WRITE_INTERVAL after the previous write."""
+    @overload
+    async def async_execute_throttled(self, actions: list[Action]) -> str: ...
+
+    @overload
+    async def async_execute_throttled(
+        self, actions: list[Action], still_wanted: Callable[[], bool]
+    ) -> str | None: ...
+
+    async def async_execute_throttled(
+        self,
+        actions: list[Action],
+        still_wanted: Callable[[], bool] | None = None,
+    ) -> str | None:
+        """Execute actions, at least MIN_WRITE_INTERVAL after the previous write.
+
+        With still_wanted, it is checked once the turn has come and the pause is
+        over, right before the call, and nothing is sent if it is not true any
+        more.
+        """
         async with self._write_lock:
             if (
                 self._last_write_at is not None
@@ -131,6 +148,10 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 > 0
             ):
                 await asyncio.sleep(wait)
+
+            if still_wanted is not None and not still_wanted():
+                return None
+
             try:
                 return await self.client.execute_action_group(
                     label="Home Assistant", actions=actions
@@ -156,7 +177,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             for record in records
             if record.get("key") == key and monotonic() - record["started"] < 60
         ]
-        if not running or not (replay := running[-1].get("replay")):
+        if not running or not (sent := running[-1].get("commands")):
             return False
 
         def values(commands: list[Command]) -> list[tuple[str, tuple[Any, ...]]]:
@@ -166,7 +187,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 if not str(command.name).startswith("refresh")
             ]
 
-        return values(replay) == values(commands)
+        return values(sent) == values(commands)
 
     def is_derogation_written_on(self, device_url: str) -> bool:
         """Return whether a recent write turned the derogation of a device on."""
@@ -212,6 +233,10 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 raise ConfigEntryAuthFailed("Invalid authentication.") from exception
             except TooManyRequestsError as exception:
                 raise UpdateFailed("Too many requests, try again later.") from exception
+
+            # What waited for a running write, which is forgotten now, is sent.
+            for key in list(self.pending_commands):
+                self.hass.async_create_task(_send_pending_commands(self, key))
 
             return self.devices
 
@@ -342,9 +367,10 @@ async def on_execution_state_changed(
 
     _track_derogation_writes(coordinator, records, event.new_state)
 
+    # A setting that went through ends the failure reported for the device.
     if event.new_state == ExecutionState.COMPLETED:
         for record in records:
-            if record.get("replay"):
+            if _written_commands(record):
                 ir.async_delete_issue(
                     coordinator.hass,
                     DOMAIN,
@@ -361,6 +387,15 @@ async def on_execution_state_changed(
                 )
 
 
+def _written_commands(record: dict[str, Any]) -> list[Command]:
+    """Return the commands of an execution that write a setting."""
+    return [
+        command
+        for command in record.get("commands") or ()
+        if not str(command.name).startswith("refresh")
+    ]
+
+
 def _track_derogation_writes(
     coordinator: OverkizDataUpdateCoordinator,
     records: list[dict[str, Any]],
@@ -368,7 +403,7 @@ def _track_derogation_writes(
 ) -> None:
     """Remember the derogation a finished write left on its device."""
     for record in records:
-        for command in record.get("replay") or ():
+        for command in _written_commands(record):
             if command.name != OverkizCommand.SET_DEROGATION_ON_OFF_STATE:
                 continue
             if new_state == ExecutionState.COMPLETED and command.parameters:
@@ -378,6 +413,25 @@ def _track_derogation_writes(
                 )
             else:
                 coordinator.derogation_writes.pop(record["device_url"], None)
+
+
+def _create_failure_issue(
+    coordinator: OverkizDataUpdateCoordinator, device_url: str, error: str
+) -> None:
+    """Tell the user that a command was not applied to a device."""
+    device = coordinator.devices.get(device_url)
+    ir.async_create_issue(
+        coordinator.hass,
+        DOMAIN,
+        f"execution_failed_{device_url}",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="execution_failed",
+        translation_placeholders={
+            "device": device.label if device is not None else device_url,
+            "error": error,
+        },
+    )
 
 
 async def _send_pending_commands(
@@ -396,7 +450,10 @@ async def _send_pending_commands(
             commands, coalesce=True
         )
     except HomeAssistantError:
+        # The service call that gave these commands returned long ago and no
+        # execution will report their failure.
         LOGGER.warning("Sending the waiting Overkiz commands failed", exc_info=True)
+        _create_failure_issue(coordinator, key[0], "REQUEST_FAILED")
 
 
 def _report_failed_execution(
@@ -443,13 +500,13 @@ def _report_failed_execution(
         return False
 
     # The link between the box and the device drops a command now and then,
-    # and a second attempt goes through: replay it once before bothering the
-    # user. The replay carries no commands to replay, so it is not repeated.
+    # and a second attempt goes through: replay once, for the writes that
+    # asked for it, before bothering the user.
     if (
         not replayed
         and event.failure_type_code == FailureType.DATA_TRANSPORT_SERVICE_ERROR
         and len(commands) == 1
-        and commands[0].get("replay")
+        and commands[0].get("replay_allowed")
     ):
         LOGGER.debug("Replaying Overkiz execution %s", event.exec_id)
         coordinator.hass.async_create_task(
@@ -457,19 +514,8 @@ def _report_failed_execution(
         )
         return True
 
-    device_url = commands[0]["device_url"]
-    device = coordinator.devices.get(device_url)
-    ir.async_create_issue(
-        coordinator.hass,
-        DOMAIN,
-        f"execution_failed_{device_url}",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="execution_failed",
-        translation_placeholders={
-            "device": device.label if device is not None else device_url,
-            "error": event.failure_type_code.name,
-        },
+    _create_failure_issue(
+        coordinator, commands[0]["device_url"], event.failure_type_code.name
     )
     return False
 
@@ -481,21 +527,20 @@ async def _replay_failed_execution(
 ) -> None:
     """Run again a command the device did not receive, once."""
     device_url = record["device_url"]
-    replay: list[Command] = record["replay"]
+    sent: list[Command] = record["commands"]
     sequence: int = record["sequence"]
 
-    # A newer value of a setting must not be overwritten by an older one.
-    if any(
-        coordinator.command_sequences.get((device_url, command.name)) != sequence
-        for command in replay
-        if not str(command.name).startswith("refresh")
-    ):
-        LOGGER.debug("Not replaying Overkiz execution %s: superseded", event.exec_id)
-        return
+    # A newer value of a setting must not be overwritten by an older one: this
+    # is checked when the write is about to be sent, after the wait for its turn.
+    def still_wanted() -> bool:
+        return all(
+            coordinator.command_sequences.get((device_url, command.name)) == sequence
+            for command in _written_commands(record)
+        )
 
     try:
         exec_id = await coordinator.async_execute_throttled(
-            [Action(device_url=device_url, commands=replay)]
+            [Action(device_url=device_url, commands=sent)], still_wanted
         )
     except (
         BaseOverkizError,
@@ -509,11 +554,17 @@ async def _replay_failed_execution(
             await _send_pending_commands(coordinator, key)
         return
 
+    if exec_id is None:
+        LOGGER.debug("Not replaying Overkiz execution %s: superseded", event.exec_id)
+        return
+
+    # The replay is not replayed in turn.
     coordinator.executions.setdefault(exec_id, []).append(
         {
             "device_url": device_url,
             "command_name": record["command_name"],
             "command_names": record["command_names"],
+            "commands": sent,
             "key": record.get("key"),
             "started": monotonic(),
         }

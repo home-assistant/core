@@ -6,12 +6,13 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import ExecutionState, FailureType, OverkizState
 from pyoverkiz.exceptions import BaseOverkizError
-from pyoverkiz.models import Event
+from pyoverkiz.models import Command, Event
 import pytest
-from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -27,7 +28,8 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.overkiz.const import DOMAIN
+from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.overkiz.executor import OverkizExecutor
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -1782,9 +1784,10 @@ async def test_zone_control_zone_waiting_value_that_cannot_be_sent(
     freezer: FrozenDateTimeFactory,
     mock_client: MockOverkizClient,
     setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a value that waited and cannot be sent is logged."""
+    """Test a value that waited and cannot be sent is logged and reported."""
     await _async_set_manual_zone(
         hass, freezer, mock_client, setup_overkiz_integration, "on"
     )
@@ -1798,6 +1801,14 @@ async def test_zone_control_zone_waiting_value_that_cannot_be_sent(
     await _async_end_execution(hass, freezer, mock_client, "exec-1")
 
     assert "Sending the waiting Overkiz commands failed" in caplog.text
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"execution_failed_{ZONE_CONTROL_ZONE.device_url}"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "device": "Living Room",
+        "error": "REQUEST_FAILED",
+    }
 
 
 async def test_zone_control_zone_single_setpoint_needs_a_known_side(
@@ -1876,3 +1887,141 @@ async def test_zone_control_zone_saved_state_restores_range_and_setpoint(
             *((name, None) for name, _ in ZONE_CONTROL_ZONE_REFRESH_COMMANDS),
         ],
     ]
+
+
+async def test_zone_control_zone_schedule_ends_a_derogation_just_written(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test resuming the schedule ends a derogation the states do not show yet."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_end_execution(hass, freezer, mock_client, "exec-1")
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {ATTR_ENTITY_ID: ZONE_CONTROL_ZONE.entity_id, ATTR_PRESET_MODE: "schedule"},
+        blocking=True,
+    )
+
+    assert ("setDerogationOnOffState", ["off"]) in _sent_commands(mock_client)[-1]
+
+
+async def test_zone_control_zone_pending_value_is_sent_after_a_reconnection(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test what waited for a write is sent when the executions are forgotten."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_set_zone_setpoint(hass, 21.0)
+    assert _sent_commands(mock_client) == [[("setHeatingTargetTemperature", [19.0])]]
+
+    calls = 0
+
+    async def fetch_events() -> list[Event]:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise ServerDisconnectedError
+        return []
+
+    mock_client.fetch_events.side_effect = fetch_events
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert _sent_commands(mock_client) == [
+        [("setHeatingTargetTemperature", [19.0])],
+        [("setHeatingTargetTemperature", [21.0])],
+    ]
+
+
+async def test_zone_control_zone_pending_batches_of_a_setting_replace_each_other(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a write with the derogation and one without it are the same setting."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    # The first two start the derogation, the third comes once it is reported on.
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_set_zone_setpoint(hass, 20.0)
+    await _async_set_zone_program(hass, freezer, mock_client, "manu", "on")
+    await _async_set_zone_setpoint(hass, 21.0)
+
+    await _async_end_execution(hass, freezer, mock_client, "exec-1")
+
+    sent = _sent_commands(mock_client)
+    assert len(sent) == 2
+    assert ("setHeatingTargetTemperature", [21.0]) in sent[1]
+    assert not any(("setHeatingTargetTemperature", [20.0]) in batch for batch in sent)
+
+
+async def test_zone_control_zone_throttled_write_is_dropped_when_not_wanted(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a write that is not wanted any more once its turn has come is not sent."""
+    entry = await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    mock_client.execute_action_group.reset_mock()
+
+    assert (
+        await entry.runtime_data.coordinator.async_execute_throttled([], lambda: False)
+        is None
+    )
+    mock_client.execute_action_group.assert_not_called()
+
+
+async def test_failed_write_without_coalescing_is_reported_and_cleared(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test only the writes that asked for it are replayed, and any success clears."""
+    entry = await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    executor = OverkizExecutor(
+        ZONE_CONTROL_ZONE.device_url, entry.runtime_data.coordinator
+    )
+    issue_id = f"execution_failed_{ZONE_CONTROL_ZONE.device_url}"
+    mock_client.execute_action_group.reset_mock()
+
+    await executor.async_execute_commands(
+        [Command(name="setHeatingTargetTemperature", parameters=[19.0])]
+    )
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        [{"rank": 0}],
+    )
+
+    # No replay, the user is told.
+    assert mock_client.execute_action_group.await_count == 1
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    # A single command that goes through clears it.
+    await executor.async_execute_command("setHeatingTargetTemperature", 20.0)
+    await _async_end_execution(hass, freezer, mock_client, "exec-2")
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

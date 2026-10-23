@@ -79,6 +79,7 @@ class OverkizExecutor:
             {
                 "device_url": self.device.device_url,
                 "command_name": command_name,
+                "commands": [Command(name=command_name, parameters=parameters)],
             }
         )
         if refresh_afterwards:
@@ -108,12 +109,15 @@ class OverkizExecutor:
         if not commands:
             return
 
+        # The derogation is part of a write of a setpoint when it is not on yet,
+        # and left out of the next ones: they are still the same setting.
         key = None
         if coalesce and (
             names := tuple(
                 str(command.name)
                 for command in commands
                 if not str(command.name).startswith("refresh")
+                and command.name != OverkizCommand.SET_DEROGATION_ON_OFF_STATE
             )
         ):
             key = (self.device.device_url, names)
@@ -149,22 +153,26 @@ class OverkizExecutor:
         ) as exception:
             raise HomeAssistantError("Failed to connect") from exception
 
-        # Remember what was sent, to run it once more if the device never
-        # received it. Refreshes alone are not worth replaying.
         record: dict[str, Any] = {
             "device_url": self.device.device_url,
             "command_name": commands[-1].name,
             "command_names": [command.name for command in commands],
+            "commands": commands,
             "key": key,
             "started": monotonic(),
         }
-        if any(not str(command.name).startswith("refresh") for command in commands):
+
+        # Only the writes that asked for it are replayed if the device never
+        # received them, and only if nothing has replaced them since.
+        if coalesce and any(
+            not str(command.name).startswith("refresh") for command in commands
+        ):
             self.coordinator.command_sequence += 1
             for command in commands:
                 self.coordinator.command_sequences[
                     (self.device.device_url, command.name)
                 ] = self.coordinator.command_sequence
-            record["replay"] = commands
+            record["replay_allowed"] = True
             record["sequence"] = self.coordinator.command_sequence
         self.coordinator.executions.setdefault(exec_id, []).append(record)
         if refresh_afterwards:
