@@ -127,7 +127,7 @@ def _convert_content(
                     translation_domain=DOMAIN,
                     translation_key="unsupported_attachment_type",
                 )
-            images.append(ollama.Image(value=attachment.path))
+            images.append(ollama.Image(value=attachment.path.read_bytes()))
         return ollama.Message(
             role=MessageRole.USER.value,
             content=chat_content.content,
@@ -225,8 +225,11 @@ class OllamaBaseLLMEntity(Entity):
                 for tool in chat_log.llm_api.tools
             ]
 
+        # Attachments are read from disk, so convert outside the event loop.
         message_history: MessageHistory = MessageHistory(
-            [_convert_content(content) for content in chat_log.content]
+            await self.hass.async_add_executor_job(
+                lambda: [_convert_content(content) for content in chat_log.content]
+            )
         )
         max_messages = int(settings.get(CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY))
         self._trim_history(message_history, max_messages)
