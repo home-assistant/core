@@ -490,6 +490,8 @@ async def test_service_call_all(
         },
     )
     await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         LOCK_DOMAIN,
