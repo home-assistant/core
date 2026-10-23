@@ -266,6 +266,39 @@ async def test_chat_log_without_user_input_parallel_claim(
             )
 
 
+async def test_new_chat_log_parallel_turns_cleanup(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test the cleanup after parallel first turns of a new conversation."""
+
+    async def run_turn() -> None:
+        with (
+            chat_session.async_get_chat_session(hass, "koala") as session,
+            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        ):
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+
+    with (
+        chat_session.async_get_chat_session(hass, "koala") as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        # A new context runs the request like a separate task would.
+        await asyncio.create_task(run_turn(), context=contextvars.Context())
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id="mock-agent-id", content="Hello")
+        )
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT * 2,
+    )
+
+    assert "koala" not in hass.data[DATA_CHAT_LOGS]
+    assert "koala" not in hass.data[chat_session.DATA_CHAT_SESSION]
+
+
 async def test_new_chat_log_parallel_claim(
     hass: HomeAssistant,
     hass_admin_user: MockUser,

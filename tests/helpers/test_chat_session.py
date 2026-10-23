@@ -101,15 +101,21 @@ async def test_cleanup(
 async def test_cleanup_session_in_use(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test the cleanup keeps a session that a turn entered before it expired."""
+    """Test the cleanup keeps sessions that a turn uses."""
     with chat_session.async_get_chat_session(hass) as session:
         conversation_id = session.conversation_id
 
     freezer.tick(chat_session.CONVERSATION_TIMEOUT)
-    with chat_session.async_get_chat_session(hass, conversation_id) as session:
-        freezer.tick(timedelta(seconds=2))
+    with (
+        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(hass, "koala") as new_session,
+    ):
+        freezer.tick(chat_session.CONVERSATION_TIMEOUT * 2)
         async_fire_time_changed(hass)
-        assert hass.data[chat_session.DATA_CHAT_SESSION][conversation_id] is session
+        assert hass.data[chat_session.DATA_CHAT_SESSION] == {
+            conversation_id: session,
+            "koala": new_session,
+        }
 
 
 async def test_new_session_shared(hass: HomeAssistant) -> None:

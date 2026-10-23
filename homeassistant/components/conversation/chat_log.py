@@ -165,7 +165,8 @@ def async_get_chat_log(
             )
         return
 
-    if is_new_log:
+    # Parallel first turns share the session, so register the cleanup once.
+    if session.conversation_id not in all_chat_logs:
 
         @callback
         def do_cleanup() -> None:

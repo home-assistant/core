@@ -42,6 +42,8 @@ class ChatSession:
     last_updated: datetime = field(default_factory=dt_util.utcnow)
     # The user of the first user input owns the conversation.
     user_id: str | UndefinedType | None = UNDEFINED
+    # Requests that use the session. The cleanup skips a session in use.
+    in_use: int = 0
     _cleanup_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
 
     @callback
@@ -102,7 +104,7 @@ class SessionCleanup:
         # We mutate original object because current commands could be
         # yielding session based on it.
         for conversation_id, session in list(all_sessions.items()):
-            if session.last_updated + CONVERSATION_TIMEOUT < now:
+            if not session.in_use and session.last_updated + CONVERSATION_TIMEOUT < now:
                 LOGGER.debug("Cleaning up session %s", conversation_id)
                 del all_sessions[conversation_id]
                 session.async_cleanup()
@@ -141,8 +143,6 @@ def async_get_chat_session(
 
     elif conversation_id in all_sessions:
         session = all_sessions[conversation_id]
-        # Restart the timeout, so the cleanup does not remove it during a turn.
-        session.async_updated()
 
     else:
         # Conversation IDs are ULIDs. We generate a new one if not provided.
@@ -161,11 +161,13 @@ def async_get_chat_session(
         # Store the session right away, so parallel requests share it.
         all_sessions[conversation_id] = session
 
+    session.in_use += 1
     token = current_session.set(session)
     try:
         yield session
     finally:
         current_session.reset(token)
+        session.in_use -= 1
         session.last_updated = dt_util.utcnow()
         all_sessions[conversation_id] = session
         hass.data[DATA_CHAT_SESSION_CLEANUP].schedule()
