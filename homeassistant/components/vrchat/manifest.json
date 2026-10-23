@@ -1,6 +1,7 @@
 {
   "domain": "vrchat",
   "name": "VRChat",
+  "categories": ["media_entertainment.gaming"],
   "codeowners": ["@hi94740"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vrchat",

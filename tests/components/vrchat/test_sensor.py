@@ -6,6 +6,7 @@ from typing import cast
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from vrchatapi.highlevel import VRChatAccount, WorldCache
 from vrchatapi.highlevel.presence import VRChatSpecialLocationString
 from vrchatapi.highlevel.types import World
@@ -27,8 +28,6 @@ from homeassistant.components.vrchat.sensor import (
     VRChatUserStatusSensor,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 def test_location_sensor_without_world_metadata() -> None:

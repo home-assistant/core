@@ -16,7 +16,7 @@ _PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VRChatConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VRChatConfigEntry) -> None:
     """Set up VRChat from a config entry."""
     entry.runtime_data = VRChatAccountDataCoordinator(hass, entry)
     try:
@@ -36,14 +36,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: VRChatConfigEntry) -> bo
     except BaseException:
         await entry.runtime_data.close()
         raise
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: VRChatConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VRChatConfigEntry) -> None:
     """Unload a VRChat config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, _PLATFORMS):
-        await entry.runtime_data.close()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
+    await entry.runtime_data.close()
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: VRChatConfigEntry) -> None:

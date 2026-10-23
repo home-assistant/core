@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 
 from aiohttp import ClientConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import vrchatapi
 from vrchatapi.highlevel import TwoFactorAuthChallenge, TwoFactorAuthRequired
 
@@ -16,8 +17,6 @@ from homeassistant.components.vrchat.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_USER = {"id": "usr_123", "username": "vrchat_user"}
 USER_INPUT = {CONF_USERNAME: "user@example.com", CONF_PASSWORD: "password"}
@@ -136,7 +135,16 @@ async def test_user_flow_error(
     with (
         patch(
             "homeassistant.components.vrchat.config_flow.VRChatAPI.get_current_user",
-            new=AsyncMock(side_effect=exception),
+            new=AsyncMock(side_effect=[exception, MOCK_USER]),
+        ),
+        patch(
+            "homeassistant.components.vrchat.config_flow.VRChatAPI.cookie",
+            new_callable=PropertyMock,
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.vrchat.async_setup_entry",
+            new=AsyncMock(),
         ),
         patch(
             "homeassistant.components.vrchat.config_flow.VRChatAPI.close",
@@ -149,11 +157,19 @@ async def test_user_flow_error(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], USER_INPUT
         )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": error}
+        mock_close.assert_awaited_once()
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": error}
-    mock_close.assert_awaited_once()
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == USER_INPUT
+    assert mock_close.await_count == 2
 
 
 async def test_authenticator_two_factor_flow(hass: HomeAssistant) -> None:

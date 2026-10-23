@@ -12485,6 +12485,9 @@
     "vrchat": {
       "name": "VRChat",
       "integration_type": "hub",
+      "categories": [
+        "media_entertainment.gaming"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
