@@ -886,6 +886,17 @@ async def test_proxy_view_errors(
     )
     assert resp.status == 400
 
+    # Control characters (\n, \r, \t) inside traversal segments -> 400
+    for encoded_ctrl_path in (
+        "aW1hZ2VzLy4KLi8uCi4vYXBpL2FkbWlu",  # "images/.\n./.\n./api/admin"
+        "aW1hZ2VzLy4NLi9hcGkvYWRtaW4=",  # "images/.\r./api/admin"
+        "aW1hZ2VzLy4JLi9hcGkvYWRtaW4=",  # "images/.\t./api/admin"
+    ):
+        resp = await client.get(
+            f"/api/indi_allsky/media/{mock_config_entry.entry_id}/{encoded_ctrl_path}"
+        )
+        assert resp.status == 400
+
     # 4. Absolute path -> 400
     # b64 for "/etc/passwd" is "L2V0Yy9wYXNzd2Q="
     resp = await client.get(

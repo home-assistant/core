@@ -158,6 +158,7 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
         if (
             media_path_obj.is_absolute()
             or ".." in media_path_obj.parts
+            or any(char in canonical_media_path for char in "\t\r\n")
             or not _is_valid_media_path(media_path)
             or not _is_valid_media_path(canonical_media_path)
         ):
