@@ -12,7 +12,7 @@ from propcache.api import cached_property
 from zha.application.platforms import EntityStateChangedEvent
 from zha.mixins import LogMixin
 
-from homeassistant.const import ATTR_NAME, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -134,7 +134,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             identifiers={(DOMAIN, ieee)},
             manufacturer=zha_device_info["manufacturer"],
             model=zha_device_info["model"],
-            name=zha_device_info[ATTR_NAME],
+            name=zha_device_info["name"],
         )
 
     def _update_capability_attrs(self) -> None:
