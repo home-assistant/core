@@ -69,7 +69,7 @@ async def test_line_added_after_info_update(
 
     assert hass.states.get("light.dali_line_2")
     assert hass.states.get("sensor.dali_line_2_status")
-    assert hass.states.get("binary_sensor.dali_line_2_scan_status")
+    assert hass.states.get("binary_sensor.dali_line_2_dali_scan_status")
 
 
 async def test_load_unload_config_entry(
