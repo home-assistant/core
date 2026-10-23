@@ -624,6 +624,25 @@ async def test_dynamic_hardware_sensor_discovery(
     assert state.attributes.get("device_class") == "temperature"
     assert state.attributes.get("state_class") == "measurement"
 
+    # Verify explicit None value in dictionary update transitions state to unknown while retaining metadata
+    null_value_dict_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": {"value": None},
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(null_value_dict_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_sht4x_i2c_sht40_temperature")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("unit_of_measurement") == "°C"
+    assert state.attributes.get("device_class") == "temperature"
+    assert state.attributes.get("state_class") == "measurement"
+
 
 async def test_initial_sensor_fetch_preserved(
     hass: HomeAssistant,
