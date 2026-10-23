@@ -51,7 +51,7 @@ openai==3.26.0
 orjson==3.13.0
 packaging>=23.1
 paho-mqtt==2.1.0
-Pillow==12.3.0
+Pillow==13.0.0
 probatio==0.13.0
 propcache==0.5.4
 psutil-home-assistant==0.0.1
