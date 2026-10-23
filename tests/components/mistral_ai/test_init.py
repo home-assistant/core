@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from httpx2 import ConnectError, Request, Response
 from mistralai.client import errors
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mistral_ai import DOMAIN
 from homeassistant.components.mistral_ai.const import (
@@ -16,8 +17,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 def _response(status_code: int) -> Response:

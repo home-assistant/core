@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mistral_ai.const import (
     DEFAULT_CONVERSATION_NAME,
@@ -16,8 +17,6 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 class FakeModels:

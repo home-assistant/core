@@ -17,6 +17,7 @@ from mistralai.client.models import (
 from mistralai.client.types import UNSET
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components import conversation
@@ -24,8 +25,6 @@ from homeassistant.components.llm import LLMTools
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.helpers.llm import ToolResult
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "conversation.mistral_conversation"
 

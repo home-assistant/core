@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from httpx2 import ConnectError, Request, Response
 from mistralai.client import errors
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.mistral_ai import (
@@ -29,8 +30,6 @@ from homeassistant.components.mistral_ai.const import (
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 VALIDATE_INPUT = "homeassistant.components.mistral_ai.config_flow.validate_input"
 
@@ -83,6 +82,7 @@ async def test_form_invalid_auth(
     hass: HomeAssistant, error: Exception, message: str
 ) -> None:
     """Test validation errors are mapped to the right user-facing message."""
+    hass.config.components.add(DOMAIN)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -92,6 +92,14 @@ async def test_form_invalid_auth(
         )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": message}
+
+    with patch(VALIDATE_INPUT, new_callable=AsyncMock):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {CONF_API_KEY: "test-key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_duplicate_entry(hass: HomeAssistant) -> None:
@@ -201,6 +209,22 @@ async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "reauth_confirm"
     assert result2["errors"] == {"base": "invalid_auth"}
     assert entry.data[CONF_API_KEY] == "test-key"
+
+    with (
+        patch(VALIDATE_INPUT, new_callable=AsyncMock),
+        patch(
+            "homeassistant.components.mistral_ai.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {CONF_API_KEY: "new-key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+    assert entry.data[CONF_API_KEY] == "new-key"
 
 
 async def test_supported_subentry_types(hass: HomeAssistant) -> None:

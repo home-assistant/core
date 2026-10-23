@@ -18,7 +18,7 @@ PLATFORMS = (Platform.CONVERSATION,)
 type MistralAIConfigEntry = ConfigEntry[Mistral]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MistralAIConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MistralAIConfigEntry) -> None:
     """Set up Mistral AI from a config entry."""
     try:
         client = await async_create_client(hass, entry.data[CONF_API_KEY])
@@ -36,12 +36,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MistralAIConfigEntry) ->
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MistralAIConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_options(
