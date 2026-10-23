@@ -121,16 +121,11 @@ class WyomingConversationEntity(
             context["satellite_id"] = user_input.satellite_id
 
         try:
-            # Open the chat log first, so its owner check runs before the
-            # text leaves Home Assistant.
-            with (
-                chat_session.async_get_chat_session(
-                    self.hass, user_input.conversation_id
-                ) as session,
-                conversation.async_get_chat_log(
-                    self.hass, session, user_input
-                ) as chat_log,
-            ):
+            # Get the session first, so its owner check runs before the text
+            # leaves Home Assistant.
+            with chat_session.async_get_chat_session(
+                self.hass, user_input.conversation_id, context=user_input.context
+            ) as session:
                 async with AsyncTcpClient(
                     self.service.host, self.service.port
                 ) as client:
@@ -141,9 +136,12 @@ class WyomingConversationEntity(
                             language=user_input.language,
                         ).event()
                     )
-                    intent_response = await self._async_process(
-                        user_input, client, chat_log, intent_response
-                    )
+                    with conversation.async_get_chat_log(
+                        self.hass, session, user_input
+                    ) as chat_log:
+                        intent_response = await self._async_process(
+                            user_input, client, chat_log, intent_response
+                        )
         except (OSError, WyomingError) as err:
             _LOGGER.exception("Unexpected error while communicating with service")
             intent_response.async_set_error(

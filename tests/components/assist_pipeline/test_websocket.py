@@ -2735,7 +2735,7 @@ async def test_intent_progress_event(
         """Mock converse method."""
         with (
             chat_session.async_get_chat_session(
-                kwargs["hass"], kwargs["conversation_id"]
+                kwargs["hass"], kwargs["conversation_id"], context=None
             ) as session,
             conversation.async_get_chat_log(hass, session) as chat_log,
         ):

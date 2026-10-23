@@ -739,7 +739,9 @@ class _DefaultPipelineProcessor:
 
             with (
                 chat_session.async_get_chat_session(
-                    self.host.hass, user_input.conversation_id
+                    self.host.hass,
+                    user_input.conversation_id,
+                    context=user_input.context,
                 ) as session,
                 conversation.async_get_chat_log(
                     self.host.hass,
