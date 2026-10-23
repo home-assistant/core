@@ -35,7 +35,7 @@ from telegram import (
 from telegram.constants import InputMediaType, ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
-from telegram.request import HTTPXRequest
+from telegram.request import BaseRequest, HTTPXRequest
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -419,7 +419,7 @@ class TelegramNotificationService:
             ATTR_DISABLE_WEB_PREV: None,
             ATTR_REPLY_TO_MSGID: None,
             ATTR_REPLYMARKUP: None,
-            ATTR_TIMEOUT: None,
+            ATTR_TIMEOUT: BaseRequest.DEFAULT_NONE,
             ATTR_MESSAGE_TAG: None,
             ATTR_MESSAGE_THREAD_ID: None,
         }

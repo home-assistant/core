@@ -91,6 +91,9 @@
     "failed_to_get_folder": {
       "message": "[%key:component::onedrive::exceptions::failed_to_get_folder::message%]"
     },
+    "hash_mismatch": {
+      "message": "[%key:component::onedrive::exceptions::hash_mismatch::message%]"
+    },
     "update_failed": {
       "message": "[%key:component::onedrive::exceptions::update_failed::message%]"
     }

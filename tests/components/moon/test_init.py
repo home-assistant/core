@@ -1,10 +1,10 @@
 """Tests for the Moon integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.moon.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(

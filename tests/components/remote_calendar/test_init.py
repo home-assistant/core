@@ -2,6 +2,7 @@
 
 from httpx2 import HTTPError, InvalidURL, Response, TimeoutException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import respx
 
 from homeassistant.components.remote_calendar.const import CONF_CALENDAR_NAME, DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import CALENDAR_NAME, CALENDER_URL, TEST_ENTITY
-
-from tests.common import MockConfigEntry
 
 
 @respx.mock

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import web
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
 from synology_dsm.exceptions import SynologyDSMException
 
@@ -30,8 +31,6 @@ from homeassistant.util.aiohttp import MockRequest
 
 from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -9,11 +9,11 @@ from typing import override
 from aiomelcloudhome import ATAUnit, ATWOperationMode, ATWUnit
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -21,8 +21,10 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .common import async_setup_unit_entities
 from .coordinator import (
@@ -178,17 +180,6 @@ async def async_setup_entry(
                 for unit in units
                 if unit.capabilities and unit.capabilities.has_energy_consumed_meter
             ),
-            (
-                ATAOutdoorTemperatureSensor(
-                    coordinator,
-                    telemetry_coordinator,
-                    OUTDOOR_TEMPERATURE_DESCRIPTION,
-                    unit,
-                )
-                for unit in units
-                if unit.capabilities
-                and unit.capabilities.has_outdoor_temperature_sensor
-            ),
         ),
         lambda units: chain(
             (
@@ -208,6 +199,45 @@ async def async_setup_entry(
                 if unit.capabilities and unit.capabilities.has_energy_consumed_meter
             ),
         ),
+    )
+
+    outdoor_temperature_units: set[str] = set()
+    # Sensors added before stay, even when the first sample after a restart is empty
+    registered = {
+        registry_entry.unique_id
+        for registry_entry in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+        if registry_entry.domain == SENSOR_DOMAIN
+    }
+
+    @callback
+    def _async_add_outdoor_temperature_sensors() -> None:
+        """Add an outdoor temperature sensor once a unit reports a value."""
+        outdoor_temperature_units.intersection_update(coordinator.ata_units)
+        new_units = [
+            unit
+            for unit_id, unit in coordinator.ata_units.items()
+            if unit_id not in outdoor_temperature_units
+            and (
+                telemetry_coordinator.data.outdoor_temperature.get(unit_id) is not None
+                or f"{unit_id}_{OUTDOOR_TEMPERATURE_DESCRIPTION.key}" in registered
+            )
+        ]
+        outdoor_temperature_units.update(unit.id for unit in new_units)
+        async_add_entities(
+            ATAOutdoorTemperatureSensor(
+                coordinator,
+                telemetry_coordinator,
+                OUTDOOR_TEMPERATURE_DESCRIPTION,
+                unit,
+            )
+            for unit in new_units
+        )
+
+    _async_add_outdoor_temperature_sensors()
+    entry.async_on_unload(
+        telemetry_coordinator.async_add_listener(_async_add_outdoor_temperature_sensors)
     )
 
 

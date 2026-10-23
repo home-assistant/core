@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -29,8 +30,6 @@ from .util import (
     _test_sensor_and_attributes,
     async_init_integration,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

@@ -6,7 +6,7 @@ from datetime import datetime
 from functools import partial
 import logging
 import operator
-from typing import Any, override
+from typing import Any, cast, override
 
 from uiprotect.data import (
     NVR,
@@ -48,20 +48,18 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
-    BaseAlarmHubEntity,
     BaseProtectEntity,
     EventEntityMixin,
     PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
     ProtectEventMixin,
-    ProtectFobEntity,
     ProtectNVREntity,
     T,
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
-from .utils import async_get_light_motion_current_public
+from .migrate import async_is_new_private_only_entity
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -532,7 +530,7 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="light_motion",
         translation_key="light_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_public_value_fn=async_get_light_motion_current_public,
+        ufp_public_value="light_mode_preset",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -713,39 +711,36 @@ FOB_SENSORS: tuple[ProtectFobSensorEntityDescription, ...] = (
 )
 
 
-class ProtectAlarmHubSensor(BaseAlarmHubEntity, SensorEntity):
+class ProtectAlarmHubSensor(ProtectDeviceEntity, SensorEntity):
     """A sensor entity for a UniFi Protect alarm hub."""
 
     entity_description: ProtectAlarmHubSensorEntityDescription
+    _state_attrs = ("_attr_available", "_attr_native_value")
+    _ufp_uses_public = True
 
     @callback
     @override
-    def _async_update_attrs(self, hub: LinkStation) -> None:
-        super()._async_update_attrs(hub)
-        self._attr_native_value = self.entity_description.value_fn(hub)
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if (hub := self._ufp_public_obj) is not None:
+            self._attr_native_value = self.entity_description.value_fn(
+                cast(LinkStation, hub)
+            )
 
 
-class ProtectFobSensor(ProtectFobEntity, SensorEntity):
+class ProtectFobSensor(ProtectDeviceEntity, SensorEntity):
     """A sensor entity for a UniFi Protect key fob (Public API)."""
 
     entity_description: ProtectFobSensorEntityDescription
-    _fob_state_attrs = ("_attr_available", "_attr_native_value")
-
-    def __init__(
-        self,
-        data: ProtectData,
-        fob: Fob,
-        description: ProtectFobSensorEntityDescription,
-    ) -> None:
-        """Initialize the key fob sensor."""
-        self.entity_description = description
-        self._attr_unique_id = f"{fob.mac}_{description.key}"
-        super().__init__(data, fob)
+    _state_attrs = ("_attr_available", "_attr_native_value")
+    _ufp_uses_public = True
 
     @callback
     @override
-    def _async_update_from_fob(self, fob: Fob) -> None:
-        self._attr_native_value = self.entity_description.value_fn(fob)
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if (fob := self._ufp_public_obj) is not None:
+            self._attr_native_value = self.entity_description.value_fn(cast(Fob, fob))
 
 
 @callback
@@ -872,6 +867,10 @@ def _async_nvr_entities(
     entities: list[BaseProtectEntity] = []
     device = data.api.bootstrap.nvr
     for description in NVR_SENSORS + NVR_DISABLED_SENSORS:
+        if async_is_new_private_only_entity(
+            data.hass, ModelType.NVR, device.mac, description.key
+        ):
+            continue
         entities.append(ProtectNVRSensor(data, device, description))
         _LOGGER.debug("Adding NVR sensor entity %s", description.name)
 

@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 import aiohttp
 from aiohttp.hdrs import CONTENT_TYPE
 from async_upnp_client.client import UpnpService, UpnpStateVariable
+from async_upnp_client.exceptions import UpnpError
 from wiim.consts import PlayingStatus as SDKPlayingStatus
 from wiim.exceptions import WiimDeviceException, WiimException, WiimRequestException
 from wiim.models import (
@@ -955,7 +956,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
 
         if media_content_id == MEDIA_CONTENT_ID_FAVORITES:
-            sdk_favorites = await self._device.async_get_presets()
+            try:
+                sdk_favorites = await self._device.async_get_presets()
+            except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
+                LOGGER.info("Unable to browse presets for %s: %s", self.entity_id, err)
+                sdk_favorites = ()
             favorites_items = [
                 BrowseMedia(
                     media_class=MediaClass.PLAYLIST,
@@ -980,8 +985,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
 
         if media_content_id == MEDIA_CONTENT_ID_PLAYLISTS:
-            queue_snapshot = await self._device.async_get_queue_snapshot()
-            if not queue_snapshot.is_active:
+            try:
+                queue_snapshot = await self._device.async_get_queue_snapshot()
+            except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
+                LOGGER.info("Unable to browse queue for %s: %s", self.entity_id, err)
+                queue_snapshot = None
+            if queue_snapshot is None or not queue_snapshot.is_active:
                 return BrowseMedia(
                     media_class=MediaClass.PLAYLIST,
                     media_content_id=MEDIA_CONTENT_ID_PLAYLISTS,

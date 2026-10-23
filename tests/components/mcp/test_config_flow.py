@@ -6,6 +6,9 @@ from unittest.mock import AsyncMock, Mock
 
 import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 
 from homeassistant import config_entries
@@ -31,10 +34,6 @@ from .conftest import (
     OAUTH_TOKEN_URL,
     TEST_API_NAME,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 MCP_SERVER_BASE_URL = "http://1.1.1.1:8080"
 OAUTH_DISCOVERY_ENDPOINT = (
@@ -108,7 +107,7 @@ async def test_form(
     assert result["errors"] == {}
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -168,7 +167,7 @@ async def test_form_mcp_client_error(
     # Reset the error and make sure the config flow can resume successfully.
     mock_mcp_client.side_effect = None
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -212,7 +211,7 @@ async def test_input_form_validation_error(
 
     # Reset the error and make sure the config flow can resume successfully.
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -247,7 +246,7 @@ async def test_unique_url(hass: HomeAssistant, mock_mcp_client: Mock) -> None:
     assert result["errors"] == {}
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -270,7 +269,7 @@ async def test_server_missing_capbilities(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     response.capabilities.tools = None
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -453,7 +452,7 @@ async def test_authentication_flow(
     # Client now accepts credentials
     mock_mcp_client.side_effect = None
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -574,7 +573,7 @@ async def test_authentication_discovery_via_header(
     # Client now accepts credentials
     mock_mcp_client.side_effect = None
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -846,7 +845,7 @@ async def test_authentication_flow_server_missing_tool_capabilities(
     mock_mcp_client.side_effect = None
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     response.capabilities.tools = None
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -883,7 +882,7 @@ async def test_reauth_flow(
 
     # Verify we can connect to the server
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -974,7 +973,7 @@ async def test_reauth_flow_upgrade_to_oauth(
 
     # Verify we can connect to the server now with the token
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     # Return success for validation in async_oauth_create_entry
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -1097,7 +1096,7 @@ async def test_reauth_flow_missing_implementation(
     )
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -1126,7 +1125,7 @@ async def test_hassio_discovery_flow(
     assert flows[0]["context"]["title_placeholders"] == {"name": ADDON_NAME}
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -1266,7 +1265,7 @@ async def test_hassio_discovery_missing_capabilities(
         data=ADDON_DISCOVERY_INFO,
     )
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     response.capabilities.tools = None
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -1343,7 +1342,7 @@ async def test_hassio_discovery_authentication_flow(
 
     mock_mcp_client.side_effect = None
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])

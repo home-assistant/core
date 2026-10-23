@@ -4,6 +4,9 @@ from collections.abc import Generator
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.yale.application_credentials import (
     OAUTH2_AUTHORIZE,
@@ -17,10 +20,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .mocks import USER_ID
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
-
 CLIENT_ID = "1"
 
 
@@ -28,7 +27,7 @@ CLIENT_ID = "1"
 def mock_setup_entry() -> Generator[Mock]:
     """Patch setup entry."""
     with patch(
-        "homeassistant.components.yale.async_setup_entry", return_value=True
+        "homeassistant.components.yale.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

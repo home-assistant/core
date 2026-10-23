@@ -389,6 +389,9 @@
     "access_control_not_supported": {
       "message": "Access control is not supported on this device"
     },
+    "addon_stop_failed": {
+      "message": "Failed to stop the Z-Wave JS app"
+    },
     "clear_lock_usercode_failed": {
       "message": "Unable to clear lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
     },

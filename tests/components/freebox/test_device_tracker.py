@@ -4,14 +4,13 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
-
-from tests.common import async_fire_time_changed
 
 
 async def test_router_mode(

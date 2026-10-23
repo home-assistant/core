@@ -3,12 +3,21 @@
 from collections.abc import Callable
 from functools import partial
 from http import HTTPStatus
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
+from async_upnp_client.exceptions import UpnpError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from wiim.consts import PlayingStatus
-from wiim.exceptions import WiimRequestException
+from wiim.exceptions import (
+    WiimDeviceException,
+    WiimInvalidDataException,
+    WiimRequestException,
+)
 from wiim.models import (
     WiimGroupRole,
     WiimGroupSnapshot,
@@ -76,10 +85,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import fire_general_update, fire_transport_update, setup_integration
-
-from tests.common import MockConfigEntry, async_capture_events
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.test_wiim_device"
 
@@ -1158,39 +1163,63 @@ async def test_browse_media_error_uses_translation(
     ],
 )
 @pytest.mark.usefixtures("mock_wiim_controller")
-async def test_browse_media_sdk_error_uses_translation(
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(WiimDeviceException("UPnP failed"), id="sdk-upnp"),
+        pytest.param(WiimRequestException("HTTP 500"), id="sdk-http"),
+        pytest.param(
+            WiimInvalidDataException("Invalid response"), id="sdk-invalid-data"
+        ),
+        pytest.param(UpnpError("UPnP failed"), id="upnp"),
+        pytest.param(aiohttp.ClientError("Connection failed"), id="http"),
+        pytest.param(TimeoutError("Timed out"), id="timeout"),
+    ],
+)
+async def test_browse_media_failure_returns_empty_without_changing_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
     *,
     sdk_method: str,
     media_content_id: str,
+    error: Exception,
 ) -> None:
-    """Test browse media SDK errors raise a translated Home Assistant error."""
+    """Test browse failures return an empty folder without marking the device offline."""
     await setup_integration(hass, mock_config_entry)
-    getattr(mock_wiim_device, sdk_method).side_effect = WiimRequestException(
-        "request failed"
+    initial_state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert initial_state is not None
+    assert initial_state.state != STATE_UNAVAILABLE
+    getattr(mock_wiim_device, sdk_method).side_effect = error
+
+    caplog.clear()
+    result = await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_BROWSE_MEDIA,
+        {
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+            ATTR_MEDIA_CONTENT_ID: media_content_id,
+        },
+        blocking=True,
+        return_response=True,
     )
 
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await hass.services.async_call(
-            MEDIA_PLAYER_DOMAIN,
-            SERVICE_BROWSE_MEDIA,
-            {
-                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
-                ATTR_MEDIA_CONTENT_ID: media_content_id,
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "command_failed"
-    assert exc_info.value.translation_placeholders == {
-        "command": "async_browse_media",
-        "entity_id": MEDIA_PLAYER_ENTITY_ID,
-    }
+    browse = result[MEDIA_PLAYER_ENTITY_ID]
+    assert browse.media_content_id == media_content_id
+    assert browse.children == []
+    assert not browse.can_play
+    assert browse.can_expand
+    assert hass.states.get(MEDIA_PLAYER_ENTITY_ID) == initial_state
+    mock_wiim_device.set_available.assert_not_called()
+    getattr(mock_wiim_device, sdk_method).assert_awaited_once_with()
+    folder = "presets" if sdk_method == "async_get_presets" else "queue"
+    assert (
+        "homeassistant.components.wiim",
+        logging.INFO,
+        f"Unable to browse {folder} for {MEDIA_PLAYER_ENTITY_ID}: {error}",
+    ) in caplog.record_tuples
 
 
 async def test_join_and_unjoin_services_use_resolved_member_udns(

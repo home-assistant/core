@@ -5,27 +5,22 @@ from dataclasses import dataclass
 from functools import partial
 import logging
 
-import probatio
 from tellduslive import DIM, TURNON, UP, Session
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
     KEY_SCAN_INTERVAL,
     KEY_SESSION,
-    MIN_UPDATE_INTERVAL,
     NOT_SO_PRIVATE_KEY,
     PUBLIC_KEY,
-    SCAN_INTERVAL,
     SIGNAL_UPDATE_ENTITY,
     TELLDUS_DISCOVERY_NEW,
 )
@@ -33,22 +28,6 @@ from .const import (
 APPLICATION_NAME = "Home Assistant"
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = probatio.Schema(
-    {
-        DOMAIN: probatio.Schema(
-            {
-                probatio.Optional(CONF_HOST, default=DOMAIN): cv.string,
-                probatio.Optional(
-                    CONF_SCAN_INTERVAL, default=SCAN_INTERVAL
-                ): probatio.All(
-                    cv.time_period, probatio.Clamp(min=MIN_UPDATE_INTERVAL)
-                ),
-            }
-        )
-    },
-    extra=probatio.ALLOW_EXTRA,
-)
 
 
 @dataclass
@@ -62,7 +41,7 @@ class TelldusLiveData:
 type TelldusLiveConfigEntry = ConfigEntry[TelldusLiveData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) -> None:
     """Create a tellduslive session."""
     conf = entry.data[KEY_SESSION]
 
@@ -89,8 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) 
         setup_task=hass.loop.create_task(async_new_client(hass, client, entry)),
     )
 
-    return True
-
 
 async def async_new_client(
     hass: HomeAssistant, client: TelldusLiveClient, entry: TelldusLiveConfigEntry
@@ -110,33 +87,15 @@ async def async_new_client(
     await client.update()
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Telldus Live component."""
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: config[DOMAIN].get(CONF_HOST),
-                KEY_SCAN_INTERVAL: config[DOMAIN][CONF_SCAN_INTERVAL],
-            },
-        )
-    )
-    return True
-
-
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: TelldusLiveConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     data = config_entry.runtime_data
     if not data.setup_task.done():
         data.setup_task.cancel()
     data.client.async_cancel_update()
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         config_entry, data.client.platforms
     )
 

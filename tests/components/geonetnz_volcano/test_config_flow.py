@@ -59,7 +59,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.geonetnz_volcano.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.geonetnz_volcano.async_setup", return_value=True
@@ -88,7 +88,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.geonetnz_volcano.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.geonetnz_volcano.async_setup", return_value=True

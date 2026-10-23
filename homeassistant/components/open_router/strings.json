@@ -70,14 +70,47 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Error communicating with the OpenRouter API: {error}"
+    },
     "cannot_connect": {
       "message": "Unable to connect to OpenRouter"
+    },
+    "empty_response": {
+      "message": "OpenRouter returned an empty response"
     },
     "fetch_models_failed": {
       "message": "Failed to fetch the models from OpenRouter"
     },
+    "file_not_found": {
+      "message": "`{file_path}` does not exist"
+    },
     "invalid_api_key": {
       "message": "Invalid API key"
+    },
+    "invalid_image_returned": {
+      "message": "OpenRouter returned an invalid image"
+    },
+    "invalid_schema_reference": {
+      "message": "Invalid OpenRouter output schema reference: {reference}"
+    },
+    "json_parse_error": {
+      "message": "Error with OpenRouter structured response"
+    },
+    "no_image_returned": {
+      "message": "OpenRouter did not return an image"
+    },
+    "response_not_found": {
+      "message": "Last content in chat log is not an AssistantContent"
+    },
+    "tool_args_parse_error": {
+      "message": "OpenRouter returned invalid tool arguments: {error}"
+    },
+    "unsupported_file_type": {
+      "message": "Only images and PDF are supported by the OpenRouter API, `{file_path}` is not an image file or PDF"
+    },
+    "unsupported_schema_reference": {
+      "message": "Unsupported OpenRouter output schema reference: {reference}"
     }
   },
   "selector": {

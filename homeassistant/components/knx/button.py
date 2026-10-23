@@ -114,15 +114,16 @@ class KnxUiButton(_KnxButton, KnxUiEntity):
                 self._payload = payload
                 self._device = XknxRawValue(
                     xknx=knx_module.xknx,
-                    name=config.entity.xknx_name,
+                    name=config.entity.name,
                     payload_length=payload_length,
                     group_address=ga_send.write,
                 )
             case PayloadValue(value=value):
                 self._payload = value
+                assert ga_send.dpt is not None  # a value requires a DPT - validated
                 self._device = XknxExposeSensor(
                     xknx=knx_module.xknx,
-                    name=config.entity.xknx_name,
+                    name=config.entity.name,
                     value_type=ga_send.dpt,
                     group_address=ga_send.write,
                     respond_to_read=False,

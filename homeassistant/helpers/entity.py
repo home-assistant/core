@@ -1681,20 +1681,25 @@ class Entity(
         Called when self.entity_id is already the new entity_id, core bookkeeping
         (entity registry and device registry tracking, entity sources, restore
         state) has been moved to it and async_registry_entry_updated has run; the
-        old state has already been removed.
+        old state has already been removed but the new state has not been written.
 
         Re-key anything the state or attributes are derived from which depends on
         the entity_id, e.g. state change listeners or signals keyed on
-        self.entity_id. Writing the state is optional, core writes it after this
-        method returns if it has not been written under the new entity_id.
+        self.entity_id.
 
         Work which needs the state under the new entity_id, e.g. templates
-        rendering `this`, writes it with self.async_write_ha_state() first. This
-        method must not await; work which must await can be done in a task,
+        rendering `this`, may optionally write the state by calling
+        self.async_write_ha_state() first.
+
+        After the method returns, core will write the state under the new entity_id
+        if the method did not write it.
+
+        Call super() so base classes can do the same. If the method writes the state
+        the call to super() must happen before doing so.
+
+        This method must not await; work which must await can be done in a task,
         registry events are not serialized with it, so after an await re-check
         that the entity is still added and that self.entity_id is unchanged.
-
-        Call super() so base classes can do the same.
 
         To be extended by integrations.
 

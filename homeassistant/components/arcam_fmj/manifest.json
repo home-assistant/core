@@ -1,6 +1,7 @@
 {
   "domain": "arcam_fmj",
   "name": "Arcam FMJ Receivers",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@elupus"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/arcam_fmj",

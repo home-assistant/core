@@ -6,6 +6,12 @@ from unittest.mock import Mock, call
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from roborock import RoborockException
 from roborock.data import WorkStatusMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
@@ -55,9 +61,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice, seed_q7_map, set_trait_attributes
 from .mock_data import STATUS
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"

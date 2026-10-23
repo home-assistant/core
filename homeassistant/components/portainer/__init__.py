@@ -56,7 +56,7 @@ type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> None:
     """Set up Portainer from a config entry."""
 
     session = async_create_clientsession(
@@ -157,8 +157,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_event_listeners)
     )
 
-    return True
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Portainer integration."""
@@ -166,12 +164,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> None:
     """Migrate old entry."""
 
     if entry.version < 2:
@@ -274,8 +272,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
             unique_id=system_status.instance_id,
             version=5,
         )
-
-    return True
 
 
 async def async_remove_config_entry_device(

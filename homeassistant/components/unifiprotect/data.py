@@ -168,6 +168,11 @@ class ProtectData:
         self.ptz_patrols: dict[str, list[PTZPatrol]] = {}
 
     @property
+    def hass(self) -> HomeAssistant:
+        """Return the Home Assistant instance."""
+        return self._hass
+
+    @property
     def disable_stream(self) -> bool:
         """Check if RTSP is disabled."""
         return self._entry.options.get(CONF_DISABLE_RTSP, False)  # type: ignore[no-any-return]
@@ -858,10 +863,21 @@ class ProtectData:
             return None
         # Migrated entities target dedicated public device models, which all
         # inherit from PublicDeviceModel (carrying mac/state).
-        return cast(
-            "PublicDeviceModel | None",
-            api.public_bootstrap.get(device.model, device.id),
-        )
+        public_bootstrap = api.public_bootstrap
+        if (public := public_bootstrap.get(device.model, device.id)) is None and (
+            store := public_bootstrap.store_for(device.model)
+        ):
+            # A device re-adopted while the websocket was down is only known
+            # under its new id after the resync.
+            public = next(
+                (
+                    obj
+                    for obj in store.values()
+                    if getattr(obj, "mac", None) == device.mac
+                ),
+                None,
+            )
+        return cast("PublicDeviceModel | None", public)
 
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:

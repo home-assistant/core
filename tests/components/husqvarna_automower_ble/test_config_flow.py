@@ -5,6 +5,8 @@ from unittest.mock import Mock, patch
 from automower_ble.protocol import ResponseResult
 from bleak import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
@@ -22,9 +24,6 @@ from . import (
     MISSING_SERVICE_SERVICE_INFO,
     WATER_TIMER_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

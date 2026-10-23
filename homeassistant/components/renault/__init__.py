@@ -40,13 +40,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: RenaultConfigEntry
-) -> bool:
+) -> None:
     """Load a config entry."""
     renault_hub = RenaultHub(hass, config_entry.data[RenaultConfigurationKeys.LOCALE])
     try:
         await renault_hub.async_initialise(config_entry)
     except NotAuthenticatedException as exc:
-        raise ConfigEntryAuthFailed from exc
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from exc
     except ForbiddenException as exc:
         account_id = config_entry.data[RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID]
         if account_id not in await renault_hub.get_all_account_ids():
@@ -54,6 +57,7 @@ async def async_setup_entry(
                 hass,
                 DOMAIN,
                 _account_not_found_issue_id(config_entry.entry_id),
+                config_entry_id=config_entry.entry_id,
                 is_fixable=True,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="account_not_found",
@@ -66,7 +70,10 @@ async def async_setup_entry(
             translation_placeholders={"account_id": account_id},
         ) from exc
     except (aiohttp.ClientError, GigyaException) as exc:
-        raise ConfigEntryNotReady from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from exc
 
     ir.async_delete_issue(
         hass, DOMAIN, _account_not_found_issue_id(config_entry.entry_id)
@@ -75,23 +82,12 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: RenaultConfigEntry
-) -> bool:
-    """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-
-async def async_remove_entry(
-    hass: HomeAssistant, config_entry: RenaultConfigEntry
 ) -> None:
-    """Remove the repair issue of a removed config entry."""
-    ir.async_delete_issue(
-        hass, DOMAIN, _account_not_found_issue_id(config_entry.entry_id)
-    )
+    """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

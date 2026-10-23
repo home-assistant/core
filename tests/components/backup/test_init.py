@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntryState
@@ -11,9 +13,6 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import ServiceNotFound, Unauthorized
 
 from .common import setup_backup_integration
-
-from tests.common import MockConfigEntry, MockUser
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("supervisor_client")
