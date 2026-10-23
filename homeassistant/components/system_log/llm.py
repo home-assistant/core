@@ -54,6 +54,15 @@ _RECORD_START = re.compile(
     r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}(?:[+-]\d{2}:\d{2})?) "
 )
 _RECORD_LEVEL = re.compile(r"(DEBUG|INFO|WARNING|ERROR|CRITICAL) ")
+_LEVEL_NUMBERS = logging.getLevelNamesMapping()
+# Best effort, as logs can hold credentials that an LLM does not need: the
+# value after an authorization scheme, or after a key that names a secret
+_SECRET = re.compile(
+    r"(\b(?:bearer|basic)\s+)[\w.~+/-]+=*"
+    r"|([\w.-]*(?:token|password|passwd|secret|api[_-]?key)[\w.-]*[\"']?\s*[:=]\s*"
+    r"[\"']?)[^\s\"',;&}]+",
+    re.IGNORECASE,
+)
 
 
 def _filter_log_entries(
@@ -198,6 +207,7 @@ def _parse_log_records(lines: list[str]) -> list[_LogRecord]:
     records: list[_LogRecord] = []
     record: _LogRecord | None = None
     for line in lines:
+        line = _SECRET.sub(lambda secret: f"{secret[1] or secret[2]}***", line)
         if match := _RECORD_START.match(line):
             time = datetime.fromisoformat(match[1])
             if time.tzinfo is None:
@@ -205,7 +215,7 @@ def _parse_log_records(lines: list[str]) -> list[_LogRecord]:
                 continue
             message = line[match.end() :]
             level = (
-                logging.getLevelNamesMapping()[level_match[1]]
+                _LEVEL_NUMBERS[level_match[1]]
                 if (level_match := _RECORD_LEVEL.match(message))
                 else None
             )
@@ -272,7 +282,8 @@ class SystemLogGetLogsTool(Tool):
         "a summary of Home Assistant errors and warnings. Use this tool to see "
         "what happened around a specific time, or to find the cause of an error. "
         "Records are sorted oldest first, with times in local time, starting at "
-        "start_time. Long messages are shortened in the middle. If "
+        "start_time. Long messages are shortened in the middle, and values "
+        "that look like credentials are masked. If "
         "'next_start_time' is set, the records stop before it: call the tool "
         "again with it as start_time to read the records after."
     )
@@ -384,11 +395,7 @@ class SystemLogGetLogsTool(Tool):
                 data={"error": "start_time must not be after end_time"}, error=True
             )
 
-        min_level = (
-            logging.getLevelNamesMapping()[args["level"].upper()]
-            if "level" in args
-            else None
-        )
+        min_level = _LEVEL_NUMBERS[args["level"].upper()] if "level" in args else None
         contains = args.get("contains", "").lower()
 
         names: list[str] = args.get("source", self._default_sources)

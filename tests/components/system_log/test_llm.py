@@ -723,6 +723,79 @@ async def test_get_logs_pages_to_end_time(
     assert "next_start_time" not in second.data
 
 
+@pytest.mark.parametrize(
+    ("message", "expected"),
+    [
+        pytest.param(
+            "Headers {'Authorization': 'Bearer abc.def-123', 'Accept': '*/*'}",
+            "Headers {'Authorization': 'Bearer ***', 'Accept': '*/*'}",
+            id="authorization",
+        ),
+        pytest.param(
+            "GET https://example.com/v1?api_key=XYZ123&page=2",
+            "GET https://example.com/v1?api_key=***&page=2",
+            id="query",
+        ),
+        pytest.param(
+            'Payload {"access_token": "eyJhbGc", "expires_in": 3600}',
+            'Payload {"access_token": "***", "expires_in": 3600}',
+            id="json",
+        ),
+        pytest.param(
+            "Login with password=hunter2, retrying",
+            "Login with password=***, retrying",
+            id="key_value",
+        ),
+        pytest.param(
+            "Invalid token for device kitchen",
+            "Invalid token for device kitchen",
+            id="prose",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_mask_secrets(
+    hass: HomeAssistant, llm_context: llm.LLMContext, message: str, expected: str
+) -> None:
+    """Test values that look like credentials are masked."""
+    result = await _async_call_with_logs(
+        hass,
+        llm_context,
+        {
+            "core": [
+                f"2026-10-20 13:50:00.000+02:00 DEBUG (MainThread) [core] {message}",
+                # Lines of a traceback are masked too
+                f"  {message}",
+            ]
+        },
+        {},
+    )
+
+    assert result.data["records"][0]["message"] == (
+        f"DEBUG (MainThread) [core] {expected}\n  {expected}"
+    )
+
+
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_contains_secret(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test a masked value cannot be found with contains."""
+    result = await _async_call_with_logs(
+        hass,
+        llm_context,
+        {
+            "core": [
+                "2026-10-20 13:50:00.000+02:00 DEBUG (MainThread) [core] "
+                "Login with password=hunter2"
+            ]
+        },
+        {"contains": "hunter2"},
+    )
+
+    assert result.data["records"] == []
+
+
 @pytest.mark.usefixtures("frozen_time")
 async def test_get_logs_shorten_record(
     hass: HomeAssistant, llm_context: llm.LLMContext
