@@ -72,10 +72,15 @@ class VictronModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             and not await self._async_answers(entry.data[CONF_HOST], serial)
         ):
             updates = {CONF_HOST: self._host}
-            # Setup of an entry whose stored address now belongs to another device
-            # failed for good, which the abort below doesn't retry by itself.
-            if entry.state is ConfigEntryState.SETUP_ERROR:
-                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        # Setup of an entry fails for good when its address belonged to another
+        # device. The device is back at the address it announces from now, which
+        # the abort below doesn't retry by itself.
+        if (
+            entry is not None
+            and entry.state is ConfigEntryState.SETUP_ERROR
+            and (updates is not None or entry.data[CONF_HOST] == self._host)
+        ):
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
         self._abort_if_unique_id_configured(updates=updates)
         self.context["title_placeholders"] = {"name": self._title}
         return await self.async_step_confirm()

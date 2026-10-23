@@ -214,7 +214,7 @@ async def test_zeroconf_flow(
 async def test_zeroconf_flow_errors(
     hass: HomeAssistant, mock_unit, error: Exception, reason: str
 ) -> None:
-    """A discovered device that can't be identified aborts."""
+    """A discovered device that can't be identified aborts, and a new discovery works."""
     with _failing_identify(error):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery()
@@ -222,6 +222,8 @@ async def test_zeroconf_flow_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+    await _assert_discovery_creates_entry(hass)
 
 
 async def test_zeroconf_flow_no_serial(hass: HomeAssistant, mock_unit) -> None:
@@ -236,6 +238,22 @@ async def test_zeroconf_flow_no_serial(hass: HomeAssistant, mock_unit) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_serial"
+
+    set_identity(mock_unit, VM_3P75CT, serial=SERIAL)
+    await _assert_discovery_creates_entry(hass)
+
+
+async def _assert_discovery_creates_entry(hass: HomeAssistant) -> None:
+    """Discover the device again and confirm it."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery()
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["host"] == HOST
 
 
 async def test_zeroconf_flow_known_device_at_its_address(
@@ -317,21 +335,30 @@ async def test_zeroconf_flow_updates_host_that_stopped_answering(
     assert len(mock_setup_entry.mock_calls) == 2  # reloaded
 
 
+@pytest.mark.parametrize(
+    ("announced", "replaced"),
+    [("192.168.1.110", (HOST,)), (HOST, ())],
+    ids=["new_address", "same_address"],
+)
 async def test_zeroconf_flow_restarts_setup_of_refused_entry(
-    hass: HomeAssistant, mock_unit, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_unit,
+    mock_config_entry: MockConfigEntry,
+    announced: str,
+    replaced: tuple[str, ...],
 ) -> None:
     """An entry refused for finding another device at its address is set up again."""
     mock_config_entry.add_to_hass(hass)
     mock_config_entry.mock_state(hass, ConfigEntryState.SETUP_ERROR)
 
     with (
-        _devices_at(mock_unit, replaced=(HOST,)),
+        _devices_at(mock_unit, replaced=replaced),
         patch.object(hass.config_entries, "async_schedule_reload") as reload,
     ):
-        result = await _discover(hass, "192.168.1.110")
+        result = await _discover(hass, announced)
 
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data["host"] == "192.168.1.110"
+    assert mock_config_entry.data["host"] == announced
     reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
