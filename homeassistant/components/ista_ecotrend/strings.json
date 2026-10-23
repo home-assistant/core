@@ -68,9 +68,6 @@
       "hot_water_energy": {
         "name": "Hot water energy"
       },
-      "water": {
-        "name": "Water"
-      },
       "water_cost": {
         "name": "Water cost"
       }

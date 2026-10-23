@@ -7,7 +7,7 @@ from aemet_opendata.interface import AEMET, ConnectionOptions
 import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -53,16 +53,11 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_api_key"
 
             if not errors:
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
+                return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
         schema = probatio.Schema(
             {
-                probatio.Required(CONF_API_KEY): str,
-                # Name field is no longer allowed in config flow schemas
-                # pylint: disable-next=home-assistant-config-flow-name-field
-                probatio.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 probatio.Optional(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,

@@ -1,8 +1,16 @@
 """The rest component constants."""
 
+from homeassistant.const import Platform
 from homeassistant.util.ssl import SSLCipherList
 
 DOMAIN = "rest"
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.NOTIFY,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 DEFAULT_METHOD = "GET"
 DEFAULT_VERIFY_SSL = True

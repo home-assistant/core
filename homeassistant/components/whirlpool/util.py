@@ -66,6 +66,7 @@ def deprecate_entity(
         DOMAIN,
         issue_id,
         breaks_in_ha_version=DEPRECATED_REMOVAL_VERSION,
+        config_entry_id=entity_entry.config_entry_id,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,

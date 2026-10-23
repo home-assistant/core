@@ -37,7 +37,6 @@ from homeassistant.const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
-    CONF_TYPE,
     __version__ as HA_VERSION,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -277,6 +276,10 @@ def get_home_and_node_id_from_device_entry(
     return (id_[0], int(id_[1]))
 
 
+class DriverNotReadyError(ValueError):
+    """Raised when the Z-Wave JS driver is not ready."""
+
+
 @callback
 def async_get_node_from_device_id(hass: HomeAssistant, device_id: str) -> ZwaveNode:
     """Get node from a device ID.
@@ -303,7 +306,7 @@ def async_get_node_from_device_id(hass: HomeAssistant, device_id: str) -> ZwaveN
     driver = client.driver
 
     if driver is None:
-        raise ValueError("Driver is not ready.")
+        raise DriverNotReadyError("Driver is not ready.")
 
     # Get node ID from device identifier, perform some validation, and then get the
     # node
@@ -357,7 +360,7 @@ async def async_get_provisioning_entry_from_device_id(
     driver = client.driver
 
     if driver is None:
-        raise ValueError("Driver is not ready.")
+        raise DriverNotReadyError("Driver is not ready.")
 
     provisioning_entries = await driver.controller.async_get_provisioning_entries()
     for provisioning_entry in provisioning_entries:
@@ -437,16 +440,25 @@ def async_get_nodes_from_targets(
     ent_reg: er.EntityRegistry | None = None,
     dev_reg: dr.DeviceRegistry | None = None,
     logger: logging.Logger = LOGGER,
+    *,
+    raise_on_driver_not_ready: bool = False,
 ) -> set[ZwaveNode]:
     """Get nodes for all targets.
 
     Supports entity_id with group expansion, area_id, and device_id.
+
+    With raise_on_driver_not_ready, raises DriverNotReadyError when no node was
+    found because a driver was not ready.
     """
     nodes: set[ZwaveNode] = set()
+    driver_not_ready = False
     # Convert all entity IDs to nodes
     for entity_id in expand_entity_ids(hass, val.get(ATTR_ENTITY_ID, [])):
         try:
             nodes.add(async_get_node_from_entity_id(hass, entity_id, ent_reg))
+        except DriverNotReadyError as err:
+            driver_not_ready = True
+            logger.warning(err.args[0])
         except ValueError as err:
             logger.warning(err.args[0])
 
@@ -458,8 +470,14 @@ def async_get_nodes_from_targets(
     for device_id in val.get(ATTR_DEVICE_ID, []):
         try:
             nodes.add(async_get_node_from_device_id(hass, device_id))
+        except DriverNotReadyError as err:
+            driver_not_ready = True
+            logger.warning(err.args[0])
         except ValueError as err:
             logger.warning(err.args[0])
+
+    if raise_on_driver_not_ready and driver_not_ready and not nodes:
+        raise DriverNotReadyError("Driver is not ready.")
 
     return nodes
 
@@ -541,18 +559,6 @@ def async_get_node_status_sensor_entity_id(
 def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
     """Remove keys from config where the value is an empty string or None."""
     return {key: value for key, value in config.items() if value not in ("", None)}
-
-
-def check_type_schema_map(
-    schema_map: dict[str, probatio.Schema],
-) -> Callable[[ConfigType], ConfigType]:
-    """Check type specific schema against config."""
-
-    def _check_type_schema(config: ConfigType) -> ConfigType:
-        """Check type specific schema against config."""
-        return cast(ConfigType, schema_map[str(config[CONF_TYPE])](config))
-
-    return _check_type_schema
 
 
 def copy_available_params(

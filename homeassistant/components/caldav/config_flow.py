@@ -23,7 +23,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_URL): str,
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Optional(CONF_PASSWORD, default=""): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD), default=""): cv.string,
         probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
@@ -122,7 +122,7 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

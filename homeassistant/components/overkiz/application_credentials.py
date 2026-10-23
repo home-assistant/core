@@ -38,9 +38,7 @@ class OverkizOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
         """Extra data that needs to be appended to the authorize url.
 
         Azure AD B2C requires the policy (user flow) as the ``p`` query
-        parameter. It must be added here rather than baked into the authorize
-        URL, because the OAuth2 helper rebuilds the query string and would
-        otherwise drop it.
+        parameter.
         """
         return super().extra_authorize_data | {
             "scope": f"{REXEL_OAUTH_SCOPE} offline_access",

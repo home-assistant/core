@@ -10,11 +10,11 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from uiprotect import ProtectApiClient
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     NVR,
-    AiPort,
     Bootstrap,
     Camera,
     Chime,
@@ -32,7 +32,7 @@ from uiprotect.data import (
     Viewer,
     WSSubscriptionMessage,
 )
-from uiprotect.data.public_devices import PublicNVR
+from uiprotect.data.public_devices import PublicDoorbellSettings, PublicNVR
 from uiprotect.exceptions import BadRequest, PublicOnlyModeError
 from uiprotect.websocket import WebsocketState
 
@@ -61,8 +61,6 @@ from .utils import (
     public_rtsps_for,
 )
 
-from tests.common import MockConfigEntry, load_json_object_fixture
-
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
 UNIFI_MAC = _async_unifi_mac_from_hass(MAC_ADDR)
 
@@ -82,6 +80,29 @@ DEFAULT_API_KEY = "test-api-key"
 def mock_discovery():
     """Prevent real network scanning in all unifiprotect tests."""
     with _patch_discovery(no_device=True):
+        yield
+
+
+@pytest.fixture
+def mock_private_only_entities_registered():
+    """Create the deprecated private-only entities as if they were registered.
+
+    New installs skip them; the platform tests cover existing installs.
+    """
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.entity.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.switch.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.sensor.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+    ):
         yield
 
 
@@ -151,7 +172,6 @@ def bootstrap_fixture(nvr: NVR):
     data["liveviews"] = []
     data["events"] = []
     data["chimes"] = []
-    data["aiports"] = []
 
     return Bootstrap.from_unifi_dict(**data)
 
@@ -205,6 +225,10 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.nvr.display_name = nvr.name
     client.public_bootstrap.nvr.device_type = None
     client.public_bootstrap.nvr.type = None
+    client.public_bootstrap.nvr.unifi_dict.return_value = {"name": nvr.name}
+    client.public_bootstrap.nvr.doorbell_settings = PublicDoorbellSettings(
+        default_message_text="Welcome", custom_messages=["Test"]
+    )
 
     async def get_camera_rtsps_streams(
         camera_id: str, *args: Any, **kwargs: Any
@@ -414,9 +438,6 @@ def ptz_camera_fixture(camera: Camera):
     # Disable pydantic validation on this instance so we can mock methods
     object.__setattr__(ptz_cam, "get_ptz_presets", AsyncMock(return_value=[]))
     object.__setattr__(ptz_cam, "get_ptz_patrols", AsyncMock(return_value=[]))
-    object.__setattr__(ptz_cam, "ptz_goto_preset_public", AsyncMock())
-    object.__setattr__(ptz_cam, "ptz_patrol_start_public", AsyncMock())
-    object.__setattr__(ptz_cam, "ptz_patrol_stop_public", AsyncMock())
 
     return ptz_cam
 
@@ -477,11 +498,6 @@ def sensor_fixture(fixed_now: datetime):
 
     data = load_json_object_fixture("sample_sensor.json", DOMAIN)
     sensor: Sensor = Sensor.from_unifi_dict(**data)
-    # Distinct offsets: these map to different public fields, and equal values
-    # would hide a swapped path. tampering stays unset on purpose, a value there
-    # would flip the tampering binary sensor.
-    sensor.motion_detected_at = fixed_now - timedelta(hours=1)
-    sensor.open_status_changed_at = fixed_now - timedelta(hours=2)
     sensor.alarm_triggered_at = fixed_now - timedelta(hours=1)
     yield sensor
 
@@ -514,19 +530,6 @@ def chime():
     yield Chime.from_unifi_dict(**data)
 
     Chime.model_config["validate_assignment"] = True
-
-
-@pytest.fixture(name="aiport")
-def aiport_fixture():
-    """Mock UniFi Protect AI Port device."""
-
-    # disable pydantic validation so mocking can happen
-    AiPort.model_config["validate_assignment"] = False
-
-    data = load_json_object_fixture("sample_aiport.json", DOMAIN)
-    yield AiPort.from_unifi_dict(**data)
-
-    AiPort.model_config["validate_assignment"] = True
 
 
 @pytest.fixture(name="fixed_now")
@@ -705,7 +708,7 @@ def mock_setup_fixture() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock,
     ):
         yield mock

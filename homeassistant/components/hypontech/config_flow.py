@@ -29,7 +29,7 @@ OEM_OPTIONS = [
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -39,7 +39,7 @@ def _data_schema(default_oem: int = DEFAULT_OEM) -> probatio.Schema:
     return probatio.Schema(
         {
             probatio.Required(CONF_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             probatio.Required(CONF_OEM, default=str(default_oem)): SelectSelector(
                 SelectSelectorConfig(
                     options=OEM_OPTIONS,

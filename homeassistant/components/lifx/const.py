@@ -14,6 +14,7 @@ DATA_LIFX_MANAGER: HassKey[LIFXManager] = HassKey(DOMAIN)
 CONF_GROUP = "group"
 CONF_LABEL = "label"
 CONF_MAC_ADDRESS = "mac_address"
+CONF_NETWORK_NAME = "network_name"
 CONF_SERIAL = "serial"
 CONF_TITLE = "title"
 
@@ -42,6 +43,7 @@ ATTR_SKY_TYPE = "sky_type"
 ATTR_SPEED = "speed"
 ATTR_SPREAD = "spread"
 
+SERVICE_EFFECT_COLORSWEEP = "effect_colorsweep"
 SERVICE_EFFECT_COLORLOOP = "effect_colorloop"
 SERVICE_EFFECT_FLAME = "effect_flame"
 SERVICE_EFFECT_MORPH = "effect_morph"

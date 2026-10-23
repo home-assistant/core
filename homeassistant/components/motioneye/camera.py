@@ -2,26 +2,25 @@
 
 from collections.abc import Mapping
 from contextlib import suppress
-from typing import Any, override
+from typing import Any, cast, override
 
 import aiohttp
 from jinja2 import Template
-from motioneye_client.client import MotionEyeClient, MotionEyeClientURLParseError
+from motioneye_client.client import (
+    MotionEyeClient,
+    MotionEyeClientError,
+    MotionEyeClientURLParseError,
+)
 from motioneye_client.const import (
     DEFAULT_SURVEILLANCE_USERNAME,
     KEY_ACTION_SNAPSHOT,
     KEY_MOTION_DETECTION,
     KEY_STREAMING_AUTH_MODE,
-    KEY_TEXT_OVERLAY_CAMERA_NAME,
-    KEY_TEXT_OVERLAY_CUSTOM_TEXT,
     KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
     KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
-    KEY_TEXT_OVERLAY_DISABLED,
     KEY_TEXT_OVERLAY_LEFT,
     KEY_TEXT_OVERLAY_RIGHT,
-    KEY_TEXT_OVERLAY_TIMESTAMP,
 )
-import probatio
 
 from homeassistant.components.mjpeg import (
     CONF_MJPEG_URL,
@@ -29,7 +28,6 @@ from homeassistant.components.mjpeg import (
     MjpegCamera,
 )
 from homeassistant.const import (
-    CONF_ACTION,
     CONF_AUTHENTICATION,
     CONF_NAME,
     CONF_PASSWORD,
@@ -39,7 +37,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import get_camera_from_cameras, is_acceptable_camera, listen_for_new_cameras
@@ -48,42 +46,12 @@ from .const import (
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     MOTIONEYE_MANUFACTURER,
-    SERVICE_ACTION,
-    SERVICE_SET_TEXT_OVERLAY,
-    SERVICE_SNAPSHOT,
     TYPE_MOTIONEYE_MJPEG_CAMERA,
 )
 from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
 from .entity import MotionEyeEntity
 
 PLATFORMS = [Platform.CAMERA]
-
-SCHEMA_TEXT_OVERLAY = probatio.In(
-    [
-        KEY_TEXT_OVERLAY_DISABLED,
-        KEY_TEXT_OVERLAY_TIMESTAMP,
-        KEY_TEXT_OVERLAY_CUSTOM_TEXT,
-        KEY_TEXT_OVERLAY_CAMERA_NAME,
-    ]
-)
-SCHEMA_SERVICE_SET_TEXT = probatio.Schema(
-    probatio.All(
-        cv.make_entity_service_schema(
-            {
-                probatio.Optional(KEY_TEXT_OVERLAY_LEFT): SCHEMA_TEXT_OVERLAY,
-                probatio.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT): cv.string,
-                probatio.Optional(KEY_TEXT_OVERLAY_RIGHT): SCHEMA_TEXT_OVERLAY,
-                probatio.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
-            },
-        ),
-        cv.has_at_least_one_key(
-            KEY_TEXT_OVERLAY_LEFT,
-            KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
-            KEY_TEXT_OVERLAY_RIGHT,
-            KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
-        ),
-    ),
-)
 
 
 async def async_setup_entry(
@@ -114,23 +82,6 @@ async def async_setup_entry(
         )
 
     listen_for_new_cameras(hass, entry, camera_add)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_TEXT_OVERLAY,
-        SCHEMA_SERVICE_SET_TEXT,
-        "async_set_text_overlay",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ACTION,
-        {probatio.Required(CONF_ACTION): cv.string},
-        "async_request_action",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SNAPSHOT,
-        None,
-        "async_request_snapshot",
-    )
 
 
 class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
@@ -195,8 +146,16 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
 
         return {
             CONF_NAME: None,
-            CONF_USERNAME: self._surveillance_username if auth is not None else None,
-            CONF_PASSWORD: self._surveillance_password if auth is not None else "",
+            CONF_USERNAME: (
+                camera.get("streaming_username") or self._surveillance_username
+                if auth is not None
+                else None
+            ),
+            CONF_PASSWORD: (
+                camera.get("streaming_password") or self._surveillance_password
+                if auth is not None
+                else ""
+            ),
             CONF_MJPEG_URL: streaming_url or "",
             CONF_STILL_IMAGE_URL: self._client.get_camera_snapshot_url(camera),
             CONF_AUTHENTICATION: auth,
@@ -214,6 +173,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         self._mjpeg_url = properties[CONF_MJPEG_URL]
         self._still_image_url = properties[CONF_STILL_IMAGE_URL]
         self._authentication = properties[CONF_AUTHENTICATION]
+        self._auth_headers = {}
 
         if (
             self._authentication == HTTP_BASIC_AUTHENTICATION
@@ -254,6 +214,20 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
+
+    @override
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Return a still image using the authenticated motionEye client."""
+        if not self._camera:
+            return None
+        try:
+            return await cast(Any, self._client).async_get_camera_snapshot(
+                self._camera_id
+            )
+        except MotionEyeClientError as err:
+            raise HomeAssistantError("Unable to get camera snapshot") from err
 
     async def async_set_text_overlay(
         self,

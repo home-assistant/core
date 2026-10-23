@@ -1,6 +1,11 @@
 {
   "domain": "xiaomi_miio",
   "name": "Xiaomi Home",
+  "categories": [
+    "hubs_protocols.smart_home_hubs",
+    "climate.air_purifiers_humidifiers",
+    "appliances_cleaning.cleaning"
+  ],
   "codeowners": ["@rytilahti", "@syssi", "@starkillerOG"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_miio",

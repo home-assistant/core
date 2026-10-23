@@ -5,7 +5,7 @@ import logging
 from typing import Any, Final, override
 
 from my_pv import MyPVLocalDevice
-from my_pv.exceptions import MyPVAuthenticationError
+from my_pv.exceptions import MyPVAuthenticationError, MyPVDeviceNotSupportedError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -31,7 +31,7 @@ HOST_SCHEMA: Final = probatio.Schema(
 )
 AUTH_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -93,6 +93,8 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
         except MyPVAuthenticationError:
             password_needed = True
+        except MyPVDeviceNotSupportedError:
+            return self.async_abort(reason="unsupported_device")
         finally:
             await device.disconnect()
 
@@ -142,17 +144,19 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_BASE] = "cannot_connect"
             except MyPVAuthenticationError:
                 password_needed = True
+            except MyPVDeviceNotSupportedError:
+                return self.async_abort(reason="unsupported_device")
             finally:
                 await device.disconnect()
-
-            if not errors and password_needed:
-                self._host = host
-                self._device_model = device.model
-                return await self.async_step_auth()
 
             if not errors:
                 await self.async_set_unique_id(device.serial_number)
                 self._abort_if_unique_id_configured()
+
+                if password_needed:
+                    self._host = host
+                    self._device_model = device.model
+                    return await self.async_step_auth()
 
                 title = f"my-PV {device.model} {device.serial_number[6:]}"
                 data = {

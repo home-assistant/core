@@ -87,7 +87,7 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = probatio.Schema(
             {
-                probatio.Required(CONF_API_KEY): str,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 probatio.Required(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
@@ -136,7 +136,7 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
             description_placeholders={

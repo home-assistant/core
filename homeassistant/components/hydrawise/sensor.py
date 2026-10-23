@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
@@ -41,6 +42,7 @@ WATER_USE_CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
         key="daily_active_water_time",
         translation_key="daily_active_water_time",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda sensor: _get_water_use(
             sensor
@@ -54,6 +56,7 @@ WATER_USE_ZONE_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
         key="daily_active_water_time",
         translation_key="daily_active_water_time",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda sensor: (
             _get_water_use(sensor)
@@ -68,6 +71,7 @@ FLOW_CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
         key="daily_total_water_use",
         translation_key="daily_total_water_use",
         device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=1,
         value_fn=lambda sensor: _get_water_use(sensor).total_use,
     ),
@@ -75,6 +79,7 @@ FLOW_CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
         key="daily_active_water_use",
         translation_key="daily_active_water_use",
         device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=1,
         value_fn=lambda sensor: _get_water_use(sensor).total_active_use,
     ),
@@ -82,6 +87,8 @@ FLOW_CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
         key="daily_inactive_water_use",
         translation_key="daily_inactive_water_use",
         device_class=SensorDeviceClass.WATER,
+        # No state class: this is total flow minus active use, which can drop
+        # during the day when the two reports update at different moments.
         suggested_display_precision=1,
         value_fn=lambda sensor: _get_water_use(sensor).total_inactive_use,
     ),
@@ -92,6 +99,7 @@ FLOW_ZONE_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="daily_active_water_use",
         translation_key="daily_active_water_use",
         device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=1,
         value_fn=lambda sensor: float(
             _get_water_use(sensor).active_use_by_zone_id.get(sensor.zone.id, 0.0)
@@ -113,7 +121,9 @@ ZONE_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
     HydrawiseSensorEntityDescription(
         key="watering_time",
         translation_key="watering_time",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda sensor: (
             int(
                 sensor.zone.scheduled_runs.current_run.remaining_time.total_seconds()
@@ -124,8 +134,6 @@ ZONE_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
         ),
     ),
 )
-
-FLOW_MEASUREMENT_KEYS = [x.key for x in FLOW_CONTROLLER_SENSORS]
 
 
 async def async_setup_entry(
@@ -212,18 +220,6 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
             if self.coordinator.data.user.units.units_name == "imperial"
             else UnitOfVolume.LITERS
         )
-
-    @property
-    @override
-    def icon(self) -> str | None:
-        """Icon of the entity based on the value."""
-        if (
-            self.entity_description.key in FLOW_MEASUREMENT_KEYS
-            and self.entity_description.device_class == SensorDeviceClass.WATER
-            and round(self.state, 2) == 0.0
-        ):
-            return "mdi:water-outline"
-        return None
 
     @override
     def _update_attrs(self) -> None:
