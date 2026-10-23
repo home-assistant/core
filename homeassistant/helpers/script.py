@@ -1406,6 +1406,9 @@ class _ScriptRun:
             entity_id: str, from_s: State | None, to_s: State | None
         ) -> None:
             """Handle script after template condition is true."""
+            # The timeout already won, possibly before the waiter resumed.
+            if timeout_future and timeout_future.done():
+                return
             self._async_set_remaining_time_var(timeout_handle)
             self._variables["wait"]["completed"] = True
             _set_result_unless_done(done)
