@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -120,6 +120,60 @@ async def test_unit_without_the_reminder_flag_gets_no_filter_entity(
     assert FILTER_ENTITY_ID not in entity_ids
     # The fault flags this unit does report are still there.
     assert INDOOR_COIL_FAULT_ENTITY_ID in entity_ids
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_reminder_that_stops_being_reported_is_unknown(
+    hass: HomeAssistant,
+    mock_device: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A reminder the unit stops reporting is unknown, not a cleared reminder."""
+    mock_device.get_filter_clean_required = Mock(return_value=True)
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert hass.states.get(FILTER_ENTITY_ID).state == "on"
+
+    mock_device.get_filter_clean_required = Mock(return_value=None)
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert hass.states.get(FILTER_ENTITY_ID).state == STATE_UNKNOWN
+
+
+async def test_fault_flag_reported_after_setup_gets_its_entity(
+    hass: HomeAssistant,
+    mock_api: Mock,
+    mock_device: Mock,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+) -> None:
+    """A unit that only reports a flag later gets the binary sensor then."""
+    mock_device.measurements.pop("I_BAD_ICT")
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.electrasmart.ElectraAPI", return_value=mock_api
+        ),
+        patch(
+            "homeassistant.components.electrasmart.PLATFORMS",
+            [Platform.BINARY_SENSOR],
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert INDOOR_COIL_FAULT_ENTITY_ID not in hass.states.async_entity_ids(
+        BINARY_SENSOR_DOMAIN
+    )
+
+    mock_device.measurements["I_BAD_ICT"] = "NORM"
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert hass.states.get(INDOOR_COIL_FAULT_ENTITY_ID).state == "off"
 
 
 @pytest.mark.usefixtures("setup_integration")

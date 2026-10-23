@@ -17,7 +17,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ElectraSmartConfigEntry, ElectraSmartCoordinator
@@ -81,15 +81,32 @@ async def async_setup_entry(
 ) -> None:
     """Add the sensors of every AC on the account."""
     coordinator = entry.runtime_data
+    added: set[tuple[str, str]] = set()
 
-    async_add_entities(
-        ElectraSensorEntity(coordinator, device, description)
-        for device in coordinator.api.devices
-        for description in SENSORS
-        # An AC reports a subset of the telemetry, so only expose the sensors
-        # for the measurements it actually sends.
-        if description.measurement_field in device.measurements
-    )
+    @callback
+    def _add_missing_sensors() -> None:
+        """Add a sensor for every measurement an AC reports.
+
+        An AC reports a subset of the telemetry, and one that was offline when
+        the integration set up reports nothing at all, so the fields are
+        re-read on every update instead of only at setup.
+        """
+        entities: list[ElectraSensorEntity] = []
+        for device in coordinator.api.devices:
+            for description in SENSORS:
+                if (
+                    device.mac,
+                    description.key,
+                ) in added or description.measurement_field not in device.measurements:
+                    continue
+                added.add((device.mac, description.key))
+                entities.append(ElectraSensorEntity(coordinator, device, description))
+
+        if entities:
+            async_add_entities(entities)
+
+    _add_missing_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_add_missing_sensors))
 
 
 class ElectraSensorEntity(ElectraEntity, SensorEntity):

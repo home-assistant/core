@@ -70,6 +70,35 @@ async def test_measurements_are_not_exposed_when_the_ac_does_not_report_them(
     assert hass.states.async_entity_ids(SENSOR_DOMAIN) == []
 
 
+async def test_measurement_reported_after_setup_gets_its_sensor(
+    hass: HomeAssistant,
+    mock_api: Mock,
+    mock_device: Mock,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+) -> None:
+    """A unit that only starts reporting a measurement later gets the sensor."""
+    mock_device.measurements = {}
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.electrasmart.ElectraAPI", return_value=mock_api
+        ),
+        patch("homeassistant.components.electrasmart.PLATFORMS", [Platform.SENSOR]),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.async_entity_ids(SENSOR_DOMAIN) == []
+
+    mock_device.measurements["WI_FI_RSSI"] = "-53"
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert hass.states.get(WIFI_SIGNAL_ENTITY_ID).state == "-53"
+
+
 @pytest.mark.usefixtures("setup_integration")
 async def test_unreadable_measurement_is_unknown(
     hass: HomeAssistant,
