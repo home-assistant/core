@@ -968,6 +968,7 @@ ZONE_CONTROL_ZONE_REFRESH_COMMANDS: list[tuple[str, list[Any]]] = [
             [
                 ("setPassAPCHeatingMode", ["internalScheduling"]),
                 ("setPassAPCCoolingMode", ["internalScheduling"]),
+                ("setDerogationOnOffState", ["off"]),
             ],
             id="preset_mode",
         ),
@@ -1284,6 +1285,7 @@ async def test_zone_control_zone_set_temperature_without_running_side(
                 [
                     ("setPassAPCHeatingMode", ["internalScheduling"]),
                     ("setPassAPCCoolingMode", ["internalScheduling"]),
+                    ("setDerogationOnOffState", ["off"]),
                 ],
             ],
             id="scheduled_scene_while_manual",
@@ -2025,3 +2027,43 @@ async def test_failed_write_without_coalescing_is_reported_and_cleared(
     await executor.async_execute_command("setHeatingTargetTemperature", 20.0)
     await _async_end_execution(hass, freezer, mock_client, "exec-2")
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_zone_control_zone_schedule_ends_a_derogation_not_reported_yet(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test resuming the schedule right after a temperature change ends the override."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    await _async_set_zone_control_operating_mode(hass, freezer, mock_client, "heating")
+    await _async_set_zone_program(hass, freezer, mock_client, "manu", "off")
+    mock_client.execute_action_group.reset_mock()
+
+    # The derogation is started, and the state does not report it yet.
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {ATTR_ENTITY_ID: ZONE_CONTROL_ZONE.entity_id, ATTR_TEMPERATURE: 21.0},
+        blocking=True,
+    )
+    mock_client.execute_action_group.reset_mock()
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {ATTR_ENTITY_ID: ZONE_CONTROL_ZONE.entity_id, ATTR_PRESET_MODE: "schedule"},
+        blocking=True,
+    )
+
+    assert_commands_call(
+        mock_client,
+        device_url=ZONE_CONTROL_ZONE.device_url,
+        commands=[
+            ("setPassAPCHeatingMode", ["internalScheduling"]),
+            ("setPassAPCCoolingMode", ["internalScheduling"]),
+            ("setDerogationOnOffState", ["off"]),
+            *ZONE_CONTROL_ZONE_REFRESH_COMMANDS,
+        ],
+    )
