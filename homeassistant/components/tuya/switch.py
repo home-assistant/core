@@ -16,12 +16,27 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity, TuyaEntityDescription
+from .entity import TuyaEntity, TuyaEntityDescription, get_child_device_info
+
+_KG_SWITCH_CHANNELS = 22
+
+
+def _has_multiple_switch_channels(device: CustomerDevice) -> bool:
+    """Return if the device reports more than one indexed switch channel."""
+    return (
+        sum(
+            f"switch_{index}" in device.status_range
+            for index in range(1, _KG_SWITCH_CHANNELS + 1)
+        )
+        > 1
+    )
 
 
 # All descriptions can be found here. Mostly the Boolean data types in the
@@ -376,11 +391,12 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
         *(
             TuyaSwitchEntityDescription(
                 key=f"switch_{index}",
-                translation_key="indexed_switch",
-                translation_placeholders={"index": str(index)},
+                translation_key="switch",
                 device_class=SwitchDeviceClass.OUTLET,
+                channel_index=index,
+                channel_condition=_has_multiple_switch_channels,
             )
-            for index in range(1, 23)
+            for index in range(1, _KG_SWITCH_CHANNELS + 1)
         ),
         TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
@@ -942,8 +958,19 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if descriptions := SWITCHES.get(device.category):
+                parent_device_id = dr.async_get_device_id_by_identifier(
+                    hass, (DOMAIN, device.id), config_entry_id=entry.entry_id
+                )
                 entities.extend(
-                    TuyaSwitchEntity(device, manager, description, definition)
+                    TuyaSwitchEntity(
+                        device,
+                        manager,
+                        description,
+                        definition,
+                        device_info=get_child_device_info(
+                            device, parent_device_id, description
+                        ),
+                    )
                     for description in descriptions
                     if (definition := get_default_definition(device, description.key))
                 )
@@ -966,9 +993,11 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         device_manager: Manager,
         description: TuyaSwitchEntityDescription,
         definition: SwitchDefinition,
+        *,
+        device_info: ChildDeviceInfo | None = None,
     ) -> None:
         """Init TuyaHaSwitch."""
-        super().__init__(device, device_manager, description)
+        super().__init__(device, device_manager, description, device_info=device_info)
         self._dpcode_wrapper = definition.switch_wrapper
 
     @property

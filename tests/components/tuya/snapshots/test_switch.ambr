@@ -1064,7 +1064,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.bathroom_light_switch_1-entry]
+# name: test_platform_setup_and_discovery[switch.bathroom_light_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1078,7 +1078,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bathroom_light_switch_1',
+    'entity_id': 'switch.bathroom_light_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1086,29 +1086,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 1',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 1',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.gluaktf5gkswitch_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.bathroom_light_switch_1-state]
+# name: test_platform_setup_and_discovery[switch.bathroom_light_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'bathroom light Switch 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'bathroom light Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bathroom_light_switch_1',
+    'entity_id': 'switch.bathroom_light_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -8109,7 +8109,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.office_lights_switch_1-entry]
+# name: test_platform_setup_and_discovery[switch.office_lights_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -8123,7 +8123,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.office_lights_switch_1',
+    'entity_id': 'switch.office_lights_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8131,29 +8131,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 1',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 1',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.O8QpxJwdme33sqn4gkswitch_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.office_lights_switch_1-state]
+# name: test_platform_setup_and_discovery[switch.office_lights_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'office lights Switch 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'office lights Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.office_lights_switch_1',
+    'entity_id': 'switch.office_lights_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -8866,7 +8866,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.qt_switch_switch_1-entry]
+# name: test_platform_setup_and_discovery[switch.qt_switch_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -8880,7 +8880,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.qt_switch_switch_1',
+    'entity_id': 'switch.qt_switch_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8888,29 +8888,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 1',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 1',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.a4zeazrz1ata9mbggkswitch_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.qt_switch_switch_1-state]
+# name: test_platform_setup_and_discovery[switch.qt_switch_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'QT-Switch Switch 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'QT-Switch Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.qt_switch_switch_1',
+    'entity_id': 'switch.qt_switch_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -9018,7 +9018,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_1-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_10_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9032,7 +9032,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_1',
+    'entity_id': 'switch.rcu_controller_channel_10_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9040,87 +9040,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 1',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 1',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.qpic3qqzgkswitch_1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 1',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_10-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_10',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Switch 10',
-    'options': dict({
-    }),
-    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
-    'original_icon': None,
-    'original_name': 'Switch 10',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_10',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_10-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_10_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 10',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 10 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_10',
+    'entity_id': 'switch.rcu_controller_channel_10_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_11-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_11_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9134,7 +9083,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_11',
+    'entity_id': 'switch.rcu_controller_channel_11_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9142,36 +9091,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 11',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 11',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_11',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_11-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_11_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 11',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 11 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_11',
+    'entity_id': 'switch.rcu_controller_channel_11_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_12-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_12_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9185,7 +9134,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_12',
+    'entity_id': 'switch.rcu_controller_channel_12_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9193,36 +9142,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 12',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 12',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_12',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_12-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_12_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 12',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 12 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_12',
+    'entity_id': 'switch.rcu_controller_channel_12_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_13-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_13_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9236,7 +9185,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_13',
+    'entity_id': 'switch.rcu_controller_channel_13_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9244,36 +9193,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 13',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 13',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_13',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_13-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_13_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 13',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 13 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_13',
+    'entity_id': 'switch.rcu_controller_channel_13_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_14-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_14_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9287,7 +9236,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_14',
+    'entity_id': 'switch.rcu_controller_channel_14_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9295,36 +9244,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 14',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 14',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_14',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_14-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_14_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 14',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 14 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_14',
+    'entity_id': 'switch.rcu_controller_channel_14_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_15-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_15_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9338,7 +9287,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_15',
+    'entity_id': 'switch.rcu_controller_channel_15_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9346,36 +9295,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 15',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 15',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_15',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_15-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_15_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 15',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 15 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_15',
+    'entity_id': 'switch.rcu_controller_channel_15_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_16-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_16_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9389,7 +9338,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_16',
+    'entity_id': 'switch.rcu_controller_channel_16_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9397,36 +9346,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 16',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 16',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_16',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_16-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_16_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 16',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 16 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_16',
+    'entity_id': 'switch.rcu_controller_channel_16_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_17-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_17_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9440,7 +9389,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_17',
+    'entity_id': 'switch.rcu_controller_channel_17_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9448,36 +9397,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 17',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 17',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_17-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_17_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 17',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 17 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_17',
+    'entity_id': 'switch.rcu_controller_channel_17_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_18-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_18_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9491,7 +9440,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_18',
+    'entity_id': 'switch.rcu_controller_channel_18_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9499,36 +9448,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 18',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 18',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_18',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_18-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_18_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 18',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 18 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_18',
+    'entity_id': 'switch.rcu_controller_channel_18_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_19-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_19_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9542,7 +9491,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_19',
+    'entity_id': 'switch.rcu_controller_channel_19_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9550,36 +9499,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 19',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 19',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_19',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_19-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_19_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 19',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 19 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_19',
+    'entity_id': 'switch.rcu_controller_channel_19_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_20-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_1_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9593,7 +9542,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_20',
+    'entity_id': 'switch.rcu_controller_channel_1_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9601,36 +9550,87 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 20',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 20',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
+    'unique_id': 'tuya.qpic3qqzgkswitch_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_1_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.rcu_controller_channel_1_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_20_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.rcu_controller_channel_20_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Switch',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Switch',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_20',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_20-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_20_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 20',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 20 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_20',
+    'entity_id': 'switch.rcu_controller_channel_20_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_21-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_21_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9644,7 +9644,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_21',
+    'entity_id': 'switch.rcu_controller_channel_21_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9652,36 +9652,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 21',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 21',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_21',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_21-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_21_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 21',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 21 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_21',
+    'entity_id': 'switch.rcu_controller_channel_21_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_22-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_22_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9695,7 +9695,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_22',
+    'entity_id': 'switch.rcu_controller_channel_22_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9703,36 +9703,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 22',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 22',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_22',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_22-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_22_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 22',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 22 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_22',
+    'entity_id': 'switch.rcu_controller_channel_22_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_7-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_7_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9746,7 +9746,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_7',
+    'entity_id': 'switch.rcu_controller_channel_7_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9754,36 +9754,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 7',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 7',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_7',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_7-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_7_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 7',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 7 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_7',
+    'entity_id': 'switch.rcu_controller_channel_7_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_8-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_8_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9797,7 +9797,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_8',
+    'entity_id': 'switch.rcu_controller_channel_8_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9805,36 +9805,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 8',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 8',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_8',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_8-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_8_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 8',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 8 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_8',
+    'entity_id': 'switch.rcu_controller_channel_8_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_9-entry]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_9_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9848,7 +9848,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.rcu_controller_switch_9',
+    'entity_id': 'switch.rcu_controller_channel_9_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9856,29 +9856,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 9',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 9',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.qpic3qqzgkswitch_9',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.rcu_controller_switch_9-state]
+# name: test_platform_setup_and_discovery[switch.rcu_controller_channel_9_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RCU controller Switch 9',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 9 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.rcu_controller_switch_9',
+    'entity_id': 'switch.rcu_controller_channel_9_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
