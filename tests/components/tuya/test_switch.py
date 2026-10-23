@@ -390,11 +390,26 @@ async def test_ggq_deprecated_switch_not_created(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    issue_registry: ir.IssueRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test deprecated indexed switches are not created for new devices."""
+    """Test deprecated indexed switches are not created without a registry entry."""
+    unique_id = f"tuya.{mock_device.id}switch_1"
+    # A repair left over from a removed entity is cleared
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_entity_{unique_id}",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_entity_new_valve",
+        translation_placeholders={
+            "name": "GIEX Watering Timer Switch 1",
+            "entity": "switch.giex_watering_timer_switch_1",
+        },
+    )
+
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    assert not entity_registry.async_get_entity_id(
-        SWITCH_DOMAIN, DOMAIN, f"tuya.{mock_device.id}switch_1"
-    )
+    assert not entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, unique_id)
+    assert not issue_registry.async_get_issue(DOMAIN, f"deprecated_entity_{unique_id}")
