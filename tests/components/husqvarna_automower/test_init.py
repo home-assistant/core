@@ -30,8 +30,13 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -714,3 +719,65 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "mock_automower_client",
+)
+async def test_number_workarea_cutting_height_legacy_registry_entry_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    legacy_mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removal of a legacy global cutting height registry entry and migration to minor version 2."""
+    legacy_mock_config_entry.add_to_hass(hass)
+    assert legacy_mock_config_entry.minor_version == 1
+    unique_id = f"{TEST_MOWER_ID}_0_cutting_height_work_area"
+    registry_entry = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        unique_id,
+        config_entry=legacy_mock_config_entry,
+    )
+    local_height_entry = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        f"{TEST_MOWER_ID}_123456_cutting_height_work_area",
+        config_entry=legacy_mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(legacy_mock_config_entry.entry_id)
+    assert legacy_mock_config_entry.minor_version == 2
+    assert entity_registry.async_get(registry_entry.entity_id) is None
+    assert entity_registry.async_get(local_height_entry.entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state", "expected_minor_version", "issue_created"),
+    [
+        (AuthError(), ConfigEntryState.MIGRATION_ERROR, 1, True),
+        (ApiError(), ConfigEntryState.SETUP_RETRY, 1, False),
+    ],
+)
+async def test_migration_failure(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    legacy_mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    side_effect: Exception,
+    expected_state: ConfigEntryState,
+    expected_minor_version: int,
+    issue_created: bool,
+) -> None:
+    """Test migration failures have the expected entry state."""
+    mock_automower_client.get_status.side_effect = side_effect
+    legacy_mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(legacy_mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert legacy_mock_config_entry.minor_version == expected_minor_version
+    assert legacy_mock_config_entry.state is expected_state
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"migrate_could_not_auth_{legacy_mock_config_entry.entry_id}"
+    )
+    assert (issue is not None) is issue_created

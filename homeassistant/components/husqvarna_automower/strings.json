@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "migration_failed": "The updated Husqvarna authorization could not complete the migration. Check the API connections in the Husqvarna Developer Portal and try the repair again.",
       "missing_amc_scope": "The `Authentication API` and the `Automower Connect API` are not connected to your application in the Husqvarna Developer Portal.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_mower_connected": "No mowers connected to this account.",
@@ -556,11 +557,31 @@
     "command_send_failed": {
       "message": "Failed to send command: {exception}"
     },
+    "could_not_connect": {
+      "message": "Could not connect"
+    },
+    "migrate_could_not_auth": {
+      "message": "Could not authenticate with Husqvarna while migrating the config entry. Run the repair to reauthenticate."
+    },
     "work_area_not_existing": {
       "message": "The selected work area does not exist."
     },
     "work_areas_not_supported": {
       "message": "This mower does not support work areas."
+    }
+  },
+  "issues": {
+    "migrate_could_not_auth": {
+      "description": "The integration could not finish loading because its Husqvarna authorization failed during migration. Run this repair to authorize Husqvarna again; Home Assistant will then retry the migration.",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Home Assistant could not authenticate with Husqvarna while migrating {title}, so the integration could not finish loading. Submit to start Husqvarna authorization again. Home Assistant will retry the migration after authorization succeeds.",
+            "title": "Reauthenticate with Husqvarna"
+          }
+        }
+      },
+      "title": "Husqvarna authorization failed during migration for {title}"
     }
   },
   "selector": {

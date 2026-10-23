@@ -7,7 +7,11 @@ from typing import Any, override
 from aioautomower.session import AutomowerSession
 from aioautomower.utils import structure_token
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryState,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.util import dt as dt_util
@@ -28,6 +32,7 @@ class HusqvarnaConfigFlowHandler(
     """Handle a config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
     DOMAIN = DOMAIN
 
     @override
@@ -42,10 +47,25 @@ class HusqvarnaConfigFlowHandler(
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
             if "amc:api" not in token["scope"]:
+                if reauth_entry.state is ConfigEntryState.MIGRATION_ERROR:
+                    return self.async_abort(reason="missing_amc_scope")
                 return self.async_update_reload_and_abort(
                     reauth_entry, data=data, reason="missing_amc_scope"
                 )
             self._abort_if_unique_id_mismatch(reason="wrong_account")
+            if reauth_entry.state is ConfigEntryState.MIGRATION_ERROR:
+                self.hass.config_entries.async_update_entry(reauth_entry, data=data)
+                await self.hass.config_entries.async_retry_migration(
+                    reauth_entry.entry_id
+                )
+                if reauth_entry.minor_version < self.MINOR_VERSION:
+                    return self.async_abort(
+                        reason="migration_failed", translation_domain=DOMAIN
+                    )
+                return self.async_abort(
+                    reason="reauth_successful",
+                    translation_domain=DOMAIN,
+                )
             return self.async_update_reload_and_abort(reauth_entry, data=data)
 
         self._abort_if_unique_id_configured()
