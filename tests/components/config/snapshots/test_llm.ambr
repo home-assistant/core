@@ -7,12 +7,15 @@
         'domain': dict({
           'anyOf': list([
             dict({
+              'format': 'strip',
               'type': 'string',
             }),
             dict({
               'items': dict({
+                'format': 'strip',
                 'type': 'string',
               }),
+              'minItems': 1,
               'type': 'array',
             }),
           ]),

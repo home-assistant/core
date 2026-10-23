@@ -32,8 +32,13 @@ _STATUS_STATES: dict[str, set[ConfigEntryState]] = {
         ConfigEntryState.MIGRATION_ERROR,
         ConfigEntryState.FAILED_UNLOAD,
     },
-    "not_loaded": {ConfigEntryState.NOT_LOADED},
+    "not_loaded": {
+        ConfigEntryState.NOT_LOADED,
+        ConfigEntryState.SETUP_IN_PROGRESS,
+        ConfigEntryState.UNLOAD_IN_PROGRESS,
+    },
 }
+_DOMAIN_VALIDATOR = probatio.All(str, probatio.Strip, probatio.NonEmpty())
 _PLACEHOLDER_RE = re.compile(r"\{([^{}]+)\}")
 
 
@@ -161,7 +166,10 @@ class GetConfigEntriesTool(Tool):
                     "Filter by integration domain (e.g. 'hue', 'zwave_js'). "
                     "Accepts a single domain or a list of domains."
                 ),
-            ): probatio.Any(str, [str]),
+            ): probatio.Any(
+                _DOMAIN_VALIDATOR,
+                probatio.All([_DOMAIN_VALIDATOR], probatio.Length(min=1)),
+            ),
             probatio.Optional(
                 "status",
                 description=(
@@ -179,7 +187,7 @@ class GetConfigEntriesTool(Tool):
     ) -> ToolResult:
         """Return matching config entries."""
         args = self.parameters(tool_input.tool_args)
-        domain_filter = args.get("domain")
+        domain_filter: str | list[str] | None = args.get("domain")
         status_filter: str | None = args.get("status")
 
         entries = hass.config_entries.async_entries(
@@ -187,10 +195,14 @@ class GetConfigEntriesTool(Tool):
         )
 
         if domain_filter is not None:
-            if isinstance(domain_filter, str):
-                domains = {domain_filter.strip().lower()}
-            else:
-                domains = {d.strip().lower() for d in domain_filter if d.strip()}
+            domains = {
+                d.lower()
+                for d in (
+                    (domain_filter,)
+                    if isinstance(domain_filter, str)
+                    else domain_filter
+                )
+            }
             entries = [entry for entry in entries if entry.domain.lower() in domains]
 
         if status_filter is not None:

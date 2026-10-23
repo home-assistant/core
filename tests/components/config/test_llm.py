@@ -1,6 +1,7 @@
 """Tests for the config LLM tools."""
 
 from collections.abc import Iterable
+from typing import Any
 from unittest.mock import patch
 
 import probatio
@@ -99,8 +100,172 @@ async def test_call_through_api(
     )
 
 
+MOCK_TRANSLATIONS: dict[str, dict[str, str]] = {
+    "exceptions": {
+        "component.hue.exceptions.cannot_connect.message": (
+            "Failed to connect to bridge at {host} ({unknown})"
+        ),
+    },
+    "config": {
+        "component.zwave_js.config.error.cannot_connect": (
+            "Failed to connect to Z-Wave stick"
+        ),
+    },
+}
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "expected_result"),
+    [
+        pytest.param(
+            {},
+            [
+                {
+                    "entry_id": "entry_loaded",
+                    "domain": TEST_DOMAIN,
+                    "title": "Main Entry",
+                    "state": "loaded",
+                },
+                {
+                    "entry_id": "entry_not_loaded",
+                    "domain": "sun",
+                    "title": "Sun",
+                    "state": "not_loaded",
+                },
+                {
+                    "entry_id": "entry_setup_in_progress",
+                    "domain": "matter",
+                    "title": "Matter",
+                    "state": "setup_in_progress",
+                },
+                {
+                    "entry_id": "entry_error",
+                    "domain": "zwave_js",
+                    "title": "Z-Wave Stick",
+                    "state": "setup_error",
+                    "reason": "Failed to connect to Z-Wave stick",
+                },
+                {
+                    "entry_id": "entry_translated_error",
+                    "domain": "hue",
+                    "title": "Hue Bridge",
+                    "state": "setup_retry",
+                    "reason": "Failed to connect to bridge at 192.168.1.50 ({unknown})",
+                },
+                {
+                    "entry_id": "entry_untranslated_exc_error",
+                    "domain": "hue",
+                    "title": "Hue Bridge 2",
+                    "state": "setup_error",
+                    "reason": "auth_failed_key",
+                },
+                {
+                    "entry_id": "entry_disabled",
+                    "domain": "spotify",
+                    "title": "Spotify",
+                    "state": "not_loaded",
+                    "disabled_by": "user",
+                },
+                {
+                    "entry_id": "entry_ignored",
+                    "domain": "hue",
+                    "title": "Ignored",
+                    "state": "not_loaded",
+                    "source": "ignore",
+                },
+            ],
+            id="all_entries",
+        ),
+        pytest.param(
+            {"status": "loaded"},
+            [
+                {
+                    "entry_id": "entry_loaded",
+                    "domain": TEST_DOMAIN,
+                    "title": "Main Entry",
+                    "state": "loaded",
+                },
+            ],
+            id="status_loaded",
+        ),
+        pytest.param(
+            {"status": "not_loaded"},
+            [
+                {
+                    "entry_id": "entry_not_loaded",
+                    "domain": "sun",
+                    "title": "Sun",
+                    "state": "not_loaded",
+                },
+                {
+                    "entry_id": "entry_setup_in_progress",
+                    "domain": "matter",
+                    "title": "Matter",
+                    "state": "setup_in_progress",
+                },
+            ],
+            id="status_not_loaded",
+        ),
+        pytest.param(
+            {"status": "disabled"},
+            [
+                {
+                    "entry_id": "entry_disabled",
+                    "domain": "spotify",
+                    "title": "Spotify",
+                    "state": "not_loaded",
+                    "disabled_by": "user",
+                },
+                {
+                    "entry_id": "entry_ignored",
+                    "domain": "hue",
+                    "title": "Ignored",
+                    "state": "not_loaded",
+                    "source": "ignore",
+                },
+            ],
+            id="status_disabled",
+        ),
+        pytest.param(
+            {"domain": [TEST_DOMAIN, "  ZWAVE_JS  "], "status": "error"},
+            [
+                {
+                    "entry_id": "entry_error",
+                    "domain": "zwave_js",
+                    "title": "Z-Wave Stick",
+                    "state": "setup_error",
+                    "reason": "Failed to connect to Z-Wave stick",
+                },
+            ],
+            id="domain_list_and_status_error",
+        ),
+        pytest.param(
+            {"domain": "  HUE  ", "status": "error"},
+            [
+                {
+                    "entry_id": "entry_translated_error",
+                    "domain": "hue",
+                    "title": "Hue Bridge",
+                    "state": "setup_retry",
+                    "reason": "Failed to connect to bridge at 192.168.1.50 ({unknown})",
+                },
+                {
+                    "entry_id": "entry_untranslated_exc_error",
+                    "domain": "hue",
+                    "title": "Hue Bridge 2",
+                    "state": "setup_error",
+                    "reason": "auth_failed_key",
+                },
+            ],
+            id="single_domain_and_missing_translation_fallback",
+        ),
+    ],
+)
 async def test_get_config_entries_filtering_and_error_reasons(
-    hass: HomeAssistant, llm_context: llm.LLMContext
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    tool_args: dict[str, Any],
+    expected_result: list[dict[str, Any]],
 ) -> None:
     """Test listing and filtering config entries and resolving error reasons."""
     loaded_entry = MockConfigEntry(
@@ -118,6 +283,14 @@ async def test_get_config_entries_filtering_and_error_reasons(
         state=ConfigEntryState.NOT_LOADED,
     )
     not_loaded_entry.add_to_hass(hass)
+
+    setup_in_progress_entry = MockConfigEntry(
+        domain="matter",
+        title="Matter",
+        entry_id="entry_setup_in_progress",
+        state=ConfigEntryState.SETUP_IN_PROGRESS,
+    )
+    setup_in_progress_entry.add_to_hass(hass)
 
     error_entry = MockConfigEntry(
         domain="zwave_js",
@@ -141,6 +314,21 @@ async def test_get_config_entries_filtering_and_error_reasons(
         "cannot_connect",
         {"host": "192.168.1.50"},
         "hue",
+    )
+
+    untranslated_exc_entry = MockConfigEntry(
+        domain="hue",
+        title="Hue Bridge 2",
+        entry_id="entry_untranslated_exc_error",
+    )
+    untranslated_exc_entry.add_to_hass(hass)
+    untranslated_exc_entry._async_set_state(
+        hass,
+        ConfigEntryState.SETUP_ERROR,
+        None,
+        "auth_failed_key",
+        None,
+        None,
     )
 
     disabled_entry = MockConfigEntry(
@@ -169,138 +357,34 @@ async def test_get_config_entries_filtering_and_error_reasons(
         integrations: Iterable[str] | None = None,
         config_flow: bool | None = None,
     ) -> dict[str, str]:
-        if category == "exceptions":
-            return {
-                "component.hue.exceptions.cannot_connect.message": (
-                    "Failed to connect to bridge at {host}"
-                )
-            }
-        if category == "config":
-            return {
-                "component.zwave_js.config.error.cannot_connect": (
-                    "Failed to connect to Z-Wave stick"
-                )
-            }
-        return {}
+        return MOCK_TRANSLATIONS.get(category, {})
 
     with patch(
         "homeassistant.components.config.llm.translation.async_get_translations",
         side_effect=_mock_get_translations,
     ):
-        # Default: returns all entries including disabled and ignored
-        all_res = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
-        assert all_res == llm.ToolResult(
-            data={
-                "result": [
-                    {
-                        "entry_id": "entry_loaded",
-                        "domain": TEST_DOMAIN,
-                        "title": "Main Entry",
-                        "state": "loaded",
-                    },
-                    {
-                        "entry_id": "entry_not_loaded",
-                        "domain": "sun",
-                        "title": "Sun",
-                        "state": "not_loaded",
-                    },
-                    {
-                        "entry_id": "entry_error",
-                        "domain": "zwave_js",
-                        "title": "Z-Wave Stick",
-                        "state": "setup_error",
-                        "reason": "Failed to connect to Z-Wave stick",
-                    },
-                    {
-                        "entry_id": "entry_translated_error",
-                        "domain": "hue",
-                        "title": "Hue Bridge",
-                        "state": "setup_retry",
-                        "reason": "Failed to connect to bridge at 192.168.1.50",
-                    },
-                    {
-                        "entry_id": "entry_disabled",
-                        "domain": "spotify",
-                        "title": "Spotify",
-                        "state": "not_loaded",
-                        "disabled_by": "user",
-                    },
-                    {
-                        "entry_id": "entry_ignored",
-                        "domain": "hue",
-                        "title": "Ignored",
-                        "state": "not_loaded",
-                        "source": "ignore",
-                    },
-                ]
-            }
+        res = await tool.async_call(
+            hass, llm.ToolInput(tool.name, tool_args), llm_context
         )
+        assert res == llm.ToolResult(data={"result": expected_result})
 
-        # Filter by status="not_loaded" (excludes disabled and ignored entries)
-        not_loaded_res = await tool.async_call(
-            hass,
-            llm.ToolInput(tool.name, {"status": "not_loaded"}),
-            llm_context,
-        )
-        assert not_loaded_res == llm.ToolResult(
-            data={
-                "result": [
-                    {
-                        "entry_id": "entry_not_loaded",
-                        "domain": "sun",
-                        "title": "Sun",
-                        "state": "not_loaded",
-                    },
-                ]
-            }
-        )
 
-        # Filter by status="disabled" (returns disabled and ignored entries)
-        disabled_res = await tool.async_call(
-            hass,
-            llm.ToolInput(tool.name, {"status": "disabled"}),
-            llm_context,
-        )
-        assert disabled_res == llm.ToolResult(
-            data={
-                "result": [
-                    {
-                        "entry_id": "entry_disabled",
-                        "domain": "spotify",
-                        "title": "Spotify",
-                        "state": "not_loaded",
-                        "disabled_by": "user",
-                    },
-                    {
-                        "entry_id": "entry_ignored",
-                        "domain": "hue",
-                        "title": "Ignored",
-                        "state": "not_loaded",
-                        "source": "ignore",
-                    },
-                ]
-            }
-        )
-
-        # Filter by domain list and status="error"
-        filtered_res = await tool.async_call(
-            hass,
-            llm.ToolInput(
-                tool.name,
-                {"domain": [TEST_DOMAIN, "zwave_js"], "status": "error"},
-            ),
-            llm_context,
-        )
-        assert filtered_res == llm.ToolResult(
-            data={
-                "result": [
-                    {
-                        "entry_id": "entry_error",
-                        "domain": "zwave_js",
-                        "title": "Z-Wave Stick",
-                        "state": "setup_error",
-                        "reason": "Failed to connect to Z-Wave stick",
-                    }
-                ]
-            }
-        )
+@pytest.mark.parametrize(
+    "invalid_args",
+    [
+        pytest.param({"domain": ""}, id="empty_domain_str"),
+        pytest.param({"domain": "   "}, id="whitespace_domain_str"),
+        pytest.param({"domain": []}, id="empty_domain_list"),
+        pytest.param({"domain": ["   "]}, id="whitespace_domain_list"),
+        pytest.param({"status": "invalid"}, id="invalid_status"),
+    ],
+)
+async def test_get_config_entries_invalid_args(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    invalid_args: dict[str, Any],
+) -> None:
+    """Test that invalid domain or status arguments raise probatio.Invalid."""
+    tool = GetConfigEntriesTool()
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
