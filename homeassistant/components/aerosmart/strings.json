@@ -4,11 +4,26 @@
       "already_configured": "Device is already configured"
     },
     "error": {
-      "cannot_connect": "Failed to connect. Check the host, port, and both station addresses.",
+      "cannot_connect": "Failed to connect. Check the connection settings and both station addresses.",
       "same_unit": "The ventilation and heat pump unit IDs must be different."
     },
     "step": {
-      "user": {
+      "serial": {
+        "data": {
+          "baudrate": "Baud rate",
+          "device": "Serial port",
+          "unit_heat_pump": "Heat pump unit",
+          "unit_ventilation": "Ventilation unit"
+        },
+        "data_description": {
+          "baudrate": "Speed of the Modbus RTU connection.",
+          "device": "Serial port connected to the aerosmart Modbus bus.",
+          "unit_heat_pump": "The heat pump / hot water controller's Modbus station address (default 2).",
+          "unit_ventilation": "The ventilation controller's Modbus station address (default 1)."
+        },
+        "description": "Enter the serial port and both station addresses used by the aerosmart installation."
+      },
+      "tcp": {
         "data": {
           "host": "Host",
           "port": "Port",
@@ -22,6 +37,13 @@
           "unit_ventilation": "The ventilation controller's Modbus station address (default 1)."
         },
         "description": "Enter the Modbus TCP gateway and the two station addresses used by the aerosmart installation."
+      },
+      "user": {
+        "description": "Choose whether the aerosmart Modbus bus is reached through a TCP gateway or a serial port.",
+        "menu_options": {
+          "serial": "Serial port (Modbus RTU)",
+          "tcp": "Network (Modbus TCP)"
+        }
       }
     }
   },
@@ -180,7 +202,7 @@
       "outside_temperature_betriebsstunden_sole_kreis_aussenluft": {
         "name": "Outdoor air brine circuit operating hours"
       },
-      "outside_temperature_temp_aussenluft": {
+      "outside_temperature_outdoor_air_temperature": {
         "name": "Outdoor air temperature"
       },
       "room_temperature_raum_temp_beschattung": {

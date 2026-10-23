@@ -48,10 +48,10 @@ rules:
   diagnostics: todo
   discovery:
     status: exempt
-    comment: Modbus links are not discoverable.
+    comment: Aerosmart controllers do not advertise a Modbus endpoint; their TCP gateway or serial port must be configured manually.
   discovery-update-info:
     status: exempt
-    comment: Modbus links are not discoverable.
+    comment: Aerosmart controllers do not advertise a Modbus endpoint; their TCP gateway or serial port must be configured manually.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

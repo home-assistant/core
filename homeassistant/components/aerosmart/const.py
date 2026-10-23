@@ -5,10 +5,15 @@ from typing import Final
 
 DOMAIN: Final = "aerosmart"
 
+CONF_BAUDRATE: Final = "baudrate"
 CONF_UNIT_VENTILATION: Final = "unit_ventilation"
 CONF_UNIT_HEAT_PUMP: Final = "unit_heat_pump"
 
+DEFAULT_BAUDRATE: Final = 9600
 DEFAULT_PORT: Final = 502
+
+TYPE_SERIAL: Final = "serial"
+TYPE_TCP: Final = "tcp"
 
 # The installation this library was transcribed from uses unit 1 for the
 # ventilation controller and unit 2 for the heat pump; both are configurable

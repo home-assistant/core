@@ -39,7 +39,6 @@ class AerosmartEntity(CoordinatorEntity[AerosmartCoordinator]):
         super().__init__(coordinator)
         self.entity_description = entity_description
         entry = coordinator.config_entry
-        assert entry is not None
         self._attr_unique_id = f"{entry.entry_id}_{entity_description.key}"
         device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},

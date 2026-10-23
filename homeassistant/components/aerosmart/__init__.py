@@ -1,10 +1,9 @@
 """The aerosmart integration."""
 
 from aerosmart_modbus import AerosmartDevice
-from modbus_connection import ModbusTcpParams
 
 from homeassistant.components.modbus import async_get_unit
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 
@@ -20,6 +19,7 @@ from .coordinator import (
     AerosmartCoordinator,
     AerosmartRuntimeData,
 )
+from .helpers import create_modbus_params
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -28,7 +28,7 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: AerosmartConfigEntry) -> None:
     """Set up aerosmart from a config entry."""
-    params = ModbusTcpParams(host=entry.data[CONF_HOST], port=entry.data[CONF_PORT])
+    params = create_modbus_params(entry.data)
     try:
         unit_ventilation = async_get_unit(
             hass, entry, params, entry.data[CONF_UNIT_VENTILATION]

@@ -46,8 +46,8 @@ class AerosmartSensorEntityDescription(
 
 SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
     AerosmartSensorEntityDescription(
-        key="outside_temperature_temp_aussenluft",
-        translation_key="outside_temperature_temp_aussenluft",
+        key="outside_temperature_outdoor_air_temperature",
+        translation_key="outside_temperature_outdoor_air_temperature",
         component="outside_temperature",
         attribute="temp_aussenluft",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,

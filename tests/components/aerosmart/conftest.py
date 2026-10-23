@@ -12,9 +12,10 @@ from homeassistant.components.aerosmart.const import (
     CONF_UNIT_HEAT_PUMP,
     CONF_UNIT_VENTILATION,
     DOMAIN,
+    TYPE_TCP,
 )
 from homeassistant.components.modbus import async_get_temporary_unit, async_get_unit
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 
 UNIT_VENTILATION = 1
 UNIT_HEAT_PUMP = 2
@@ -105,6 +106,7 @@ def mock_config_entry(
         domain=DOMAIN,
         title="aerosmart",
         data={
+            CONF_TYPE: TYPE_TCP,
             CONF_HOST: "1.2.3.4",
             CONF_PORT: 502,
             CONF_UNIT_VENTILATION: UNIT_VENTILATION,

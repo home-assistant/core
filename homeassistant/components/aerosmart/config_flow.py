@@ -3,34 +3,44 @@
 from typing import Any, override
 
 from aerosmart_modbus import AerosmartDevice
-from modbus_connection import ModbusError, ModbusTcpParams
+from modbus_connection import ModbusError
 import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SerialPortSelector,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
 from .const import (
+    CONF_BAUDRATE,
     CONF_UNIT_HEAT_PUMP,
     CONF_UNIT_VENTILATION,
+    DEFAULT_BAUDRATE,
     DEFAULT_PORT,
     DEFAULT_UNIT_HEAT_PUMP,
     DEFAULT_UNIT_VENTILATION,
     DOMAIN,
+    TYPE_SERIAL,
+    TYPE_TCP,
 )
+from .helpers import create_modbus_params
 
 _CONNECT_ERRORS = (ModbusError, HomeAssistantError, OSError, ValueError)
 
-STEP_USER = probatio.Schema(
+UNIT_ID_SCHEMA = NumberSelector(
+    NumberSelectorConfig(min=1, max=247, step=1, mode=NumberSelectorMode.BOX)
+)
+
+STEP_TCP = probatio.Schema(
     {
         probatio.Required(CONF_HOST): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
@@ -40,14 +50,25 @@ STEP_USER = probatio.Schema(
         ),
         probatio.Required(
             CONF_UNIT_VENTILATION, default=DEFAULT_UNIT_VENTILATION
-        ): NumberSelector(
-            NumberSelectorConfig(min=1, max=247, step=1, mode=NumberSelectorMode.BOX)
-        ),
+        ): UNIT_ID_SCHEMA,
         probatio.Required(
             CONF_UNIT_HEAT_PUMP, default=DEFAULT_UNIT_HEAT_PUMP
-        ): NumberSelector(
-            NumberSelectorConfig(min=1, max=247, step=1, mode=NumberSelectorMode.BOX)
+        ): UNIT_ID_SCHEMA,
+    }
+)
+
+STEP_SERIAL = probatio.Schema(
+    {
+        probatio.Required(CONF_DEVICE): SerialPortSelector(),
+        probatio.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): NumberSelector(
+            NumberSelectorConfig(min=1, step=1, mode=NumberSelectorMode.BOX)
         ),
+        probatio.Required(
+            CONF_UNIT_VENTILATION, default=DEFAULT_UNIT_VENTILATION
+        ): UNIT_ID_SCHEMA,
+        probatio.Required(
+            CONF_UNIT_HEAT_PUMP, default=DEFAULT_UNIT_HEAT_PUMP
+        ): UNIT_ID_SCHEMA,
     }
 )
 
@@ -59,16 +80,30 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure the TCP endpoint and both unit IDs."""
-        return await self._async_step_connection(user_input)
+        """Let the user select a connection type."""
+        return self.async_show_menu(
+            step_id="user", menu_options=[TYPE_TCP, TYPE_SERIAL]
+        )
+
+    async def async_step_tcp(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure a Modbus TCP gateway."""
+        return await self._async_step_connection(TYPE_TCP, user_input)
+
+    async def async_step_serial(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure a serial Modbus RTU connection."""
+        return await self._async_step_connection(TYPE_SERIAL, user_input)
 
     async def _async_step_connection(
-        self, user_input: dict[str, Any] | None
+        self, connection_type: str, user_input: dict[str, Any] | None
     ) -> ConfigFlowResult:
         """Validate the controller connection and create an entry."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            user_input = self._normalize_input(user_input)
+            user_input = self._normalize_input(connection_type, user_input)
             if user_input[CONF_UNIT_VENTILATION] == user_input[CONF_UNIT_HEAT_PUMP]:
                 errors["base"] = "same_unit"
             else:
@@ -77,17 +112,18 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not await self._async_can_connect(user_input):
                     errors["base"] = "cannot_connect"
                 else:
-                    self._async_abort_entries_match(user_input)
                     return self.async_create_entry(title="aerosmart", data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER, errors=errors
+            step_id=connection_type,
+            data_schema=STEP_SERIAL if connection_type == TYPE_SERIAL else STEP_TCP,
+            errors=errors,
         )
 
     async def _async_can_connect(self, data: dict[str, Any]) -> bool:
         """Probe both units and always release the temporary connection."""
         try:
-            params = ModbusTcpParams(host=data[CONF_HOST], port=data[CONF_PORT])
+            params = create_modbus_params(data)
             async with (
                 async_get_temporary_unit(
                     self.hass, params, data[CONF_UNIT_VENTILATION]
@@ -104,11 +140,17 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
         return True
 
     @staticmethod
-    def _normalize_input(data: dict[str, Any]) -> dict[str, Any]:
+    def _normalize_input(connection_type: str, data: dict[str, Any]) -> dict[str, Any]:
         """Normalize selector values before storing them."""
-        return {
-            CONF_HOST: str(data[CONF_HOST]).strip().lower(),
-            CONF_PORT: int(data[CONF_PORT]),
+        normalized: dict[str, Any] = {
+            CONF_TYPE: connection_type,
             CONF_UNIT_VENTILATION: int(data[CONF_UNIT_VENTILATION]),
             CONF_UNIT_HEAT_PUMP: int(data[CONF_UNIT_HEAT_PUMP]),
         }
+        if connection_type == TYPE_SERIAL:
+            normalized[CONF_DEVICE] = str(data[CONF_DEVICE])
+            normalized[CONF_BAUDRATE] = int(data[CONF_BAUDRATE])
+        else:
+            normalized[CONF_HOST] = str(data[CONF_HOST]).strip().lower()
+            normalized[CONF_PORT] = int(data[CONF_PORT])
+        return normalized
