@@ -68,6 +68,18 @@ STATUS:COMPLETED
 END:VTODO
 END:VCALENDAR"""
 
+TODO_COMPLETED_AT = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VTODO
+UID:3
+DTSTAMP:20231125T000000Z
+SUMMARY:Wine
+STATUS:COMPLETED
+COMPLETED:20231125T120000Z
+END:VTODO
+END:VCALENDAR"""
+
 
 TODO_NO_SUMMARY = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -210,6 +222,48 @@ async def test_todo_list_state(
         "friendly_name": ENTITY_NAME,
         "supported_features": SUPPORTED_FEATURES,
     }
+
+
+@pytest.mark.parametrize(
+    ("todos", "expected_item"),
+    [
+        (
+            [TODO_COMPLETED_AT],
+            {
+                "uid": "0",
+                "summary": "Wine",
+                "status": "completed",
+                "completed": "2023-11-25T06:00:00-06:00",
+            },
+        ),
+        (
+            [TODO_COMPLETED],
+            {"uid": "0", "summary": "Wine", "status": "completed"},
+        ),
+        (
+            [TODO_COMPLETED_AT.replace("STATUS:COMPLETED", "STATUS:NEEDS-ACTION")],
+            {"uid": "0", "summary": "Wine", "status": "needs_action"},
+        ),
+    ],
+    ids=["completed_at", "no_completed", "reopened"],
+)
+async def test_completed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    expected_item: dict[str, Any],
+) -> None:
+    """Test the time a to-do item was completed is read from the server."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {TEST_ENTITY: {"items": [expected_item]}}
 
 
 @pytest.mark.parametrize(

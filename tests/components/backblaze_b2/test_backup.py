@@ -22,6 +22,7 @@ from pytest_homeassistant.typing import (
 
 from homeassistant.components.backblaze_b2.backup import (
     _parse_metadata,
+    _ProgressListener,
     async_get_backup_agents,
     async_register_backup_agents_listener,
 )
@@ -553,6 +554,21 @@ async def test_upload_progress_after_failed_upload(
 
     upload_failed.set()
     await hass.async_block_till_done()
+
+    on_progress.assert_not_called()
+
+
+async def test_upload_progress_after_loop_closed(hass: HomeAssistant) -> None:
+    """Test that a B2 worker reporting progress after shutdown does not raise."""
+    on_progress = Mock()
+    listener = _ProgressListener(hass, on_progress)
+
+    with patch.object(
+        hass.loop,
+        "call_soon_threadsafe",
+        side_effect=RuntimeError("Event loop is closed"),
+    ):
+        listener.bytes_completed(8192)
 
     on_progress.assert_not_called()
 
