@@ -3,7 +3,7 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import GreeIrConfigEntry
+from . import GreeInfraredConfigEntry
 from .const import DOMAIN
 
 
@@ -14,7 +14,7 @@ class GreeIrEntity(Entity):
 
     def __init__(
         self,
-        entry: GreeIrConfigEntry,
+        entry: GreeInfraredConfigEntry,
         unique_id_suffix: str | None = None,
         device_name: str = "Gree AC",
     ) -> None:

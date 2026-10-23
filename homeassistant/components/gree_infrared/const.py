@@ -5,6 +5,9 @@ from infrared_protocols.commands.gree_ac import GreeAcMode
 from homeassistant.components.climate import HVACMode
 
 DOMAIN = "gree_infrared"
+MODEL_GENERIC = "generic"
+MODEL_YAP1F = "yap1f"
+CONF_GENERIC_OPTIONS = "generic_options"
 CONF_INFRARED_EMITTER_ENTITY_ID = "infrared_emitter_entity_id"
 CONF_INFRARED_RECEIVER_ENTITY_ID = "infrared_receiver_entity_id"
 CONF_HVAC_MODES = "hvac_modes"

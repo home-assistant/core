@@ -11,9 +11,11 @@ from homeassistant.components.infrared import (
     async_get_receivers,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     EntitySelector,
     EntitySelectorConfig,
     SelectSelector,
@@ -22,11 +24,13 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_GENERIC_OPTIONS,
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
-    DEFAULT_HVAC_MODES,
     DOMAIN,
+    MODEL_GENERIC,
+    MODEL_YAP1F,
 )
 
 _HVAC_MODE_OPTIONS = [
@@ -36,6 +40,7 @@ _HVAC_MODE_OPTIONS = [
     HVACMode.FAN_ONLY,
     HVACMode.AUTO,
 ]
+_DEFAULT_HVAC_MODES = [HVACMode.COOL, HVACMode.DRY]
 
 
 @callback
@@ -55,8 +60,16 @@ def _user_schema(hass: HomeAssistant) -> probatio.Schema:
                     include_entities=async_get_receivers(hass),
                 )
             ),
+            probatio.Required(CONF_MODEL, default=MODEL_GENERIC): SelectSelector(
+                SelectSelectorConfig(
+                    options=[MODEL_GENERIC, MODEL_YAP1F],
+                    translation_key=CONF_MODEL,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            probatio.Optional(CONF_GENERIC_OPTIONS, default=False): BooleanSelector(),
             probatio.Required(
-                CONF_HVAC_MODES, default=DEFAULT_HVAC_MODES
+                CONF_HVAC_MODES, default=_DEFAULT_HVAC_MODES
             ): probatio.All(
                 SelectSelector(
                     SelectSelectorConfig(
@@ -100,9 +113,41 @@ class GreeIrConfigFlow(ConfigFlow, domain=DOMAIN):
                     {CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id}
                 )
 
+            if not user_input.get(CONF_GENERIC_OPTIONS):
+                user_input.pop(CONF_GENERIC_OPTIONS, None)
+
             return self.async_create_entry(
                 title=f"Gree AC via {self._entity_name(emitter_id)}",
                 data=user_input,
             )
 
         return self.async_show_form(step_id="user", data_schema=_user_schema(self.hass))
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the remote profile without replacing the entry or IR bindings."""
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            return self.async_update_reload_and_abort(entry, data_updates=user_input)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_MODEL, default=entry.data.get(CONF_MODEL, MODEL_GENERIC)
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[MODEL_GENERIC, MODEL_YAP1F],
+                            translation_key=CONF_MODEL,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                    probatio.Optional(
+                        CONF_GENERIC_OPTIONS,
+                        default=entry.data.get(CONF_GENERIC_OPTIONS, False),
+                    ): BooleanSelector(),
+                }
+            ),
+        )

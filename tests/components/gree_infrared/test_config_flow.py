@@ -1,5 +1,8 @@
 """Tests for the Gree Infrared config flow."""
 
+from http import HTTPStatus
+from unittest.mock import patch
+
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.infrared import (
@@ -7,19 +10,26 @@ from pytest_homeassistant.components.infrared import (
     RECEIVER_ENTITY_ID as mock_infrared_receiver_entity_id,
 )
 from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.config import config_entries as config_entries_api
 from homeassistant.components.gree_infrared.const import (
+    CONF_GENERIC_OPTIONS,
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
+    MODEL_GENERIC,
+    MODEL_YAP1F,
 )
 from homeassistant.components.infrared import DATA_COMPONENT
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -45,8 +55,27 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
         CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
+        CONF_MODEL: MODEL_GENERIC,
     }
     assert result["result"].unique_id is None
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_user_flow_selects_yap1f(hass: HomeAssistant) -> None:
+    """A selected YAP1F profile persists without changing the integration domain."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
+            CONF_MODEL: MODEL_YAP1F,
+            CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_MODEL] == MODEL_YAP1F
 
 
 @pytest.mark.usefixtures(
@@ -199,3 +228,81 @@ async def test_user_flow_title_from_entity_name(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_user_flow_form_serialized_by_rest_api(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the flow form serializes when served to the frontend over REST.
+
+    Regression test: POST /api/config/config_entries/flow returned 500
+    "unable to serialize schema" because the schema mixed raw probatio
+    validators with frontend selectors.
+    """
+    await async_setup_component(hass, "http", {})
+    config_entries_api.async_setup(hass)
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/config/config_entries/flow",
+        json={"handler": DOMAIN},
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data["type"] == FlowResultType.FORM
+    assert data["step_id"] == "user"
+
+    fields = {field["name"]: field for field in data["data_schema"]}
+    assert set(fields) == {
+        CONF_GENERIC_OPTIONS,
+        CONF_HVAC_MODES,
+        CONF_INFRARED_EMITTER_ENTITY_ID,
+        CONF_INFRARED_RECEIVER_ENTITY_ID,
+        CONF_MODEL,
+    }
+    assert fields[CONF_GENERIC_OPTIONS]["selector"] == {"boolean": {}}
+
+
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
+)
+@pytest.mark.parametrize("model", [MODEL_YAP1F, MODEL_GENERIC])
+@pytest.mark.parametrize("generic_options", [False, True])
+async def test_reconfigure_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    generic_options: bool,
+) -> None:
+    """Changing the remote profile preserves the entry and its IR bindings."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_GENERIC_OPTIONS: not generic_options},
+    )
+    original_data = dict(mock_config_entry.data)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert (
+        result["data_schema"]({CONF_MODEL: model})[CONF_GENERIC_OPTIONS]
+        is not generic_options
+    )
+
+    with patch.object(hass.config_entries, "async_reload", return_value=True) as reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_MODEL: model, CONF_GENERIC_OPTIONS: generic_options},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        **original_data,
+        CONF_MODEL: model,
+        CONF_GENERIC_OPTIONS: generic_options,
+    }
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+    reload.assert_awaited_once_with(mock_config_entry.entry_id)
