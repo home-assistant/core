@@ -19,9 +19,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import template
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_PAYLOAD_TEMPLATE, CONF_SSL_SECTION, DOMAIN
+from .const import (
+    CONF_PAYLOAD_TEMPLATE,
+    CONF_SSL_SECTION,
+    COORDINATOR,
+    DOMAIN,
+    PLATFORM_IDX,
+    REST_IDX,
+)
 from .coordinator import RestConfigEntry, RestCoordinator
 from .data import RestData
 from .schema import CONFIG_SCHEMA, RESOURCE_SCHEMA  # noqa: F401
@@ -122,3 +129,18 @@ def create_rest_data_from_config_entry(
             convert_config_to_legacy_format(config)
         ),  # To convert templates
     )
+
+
+async def async_get_config_and_coordinator(
+    hass: HomeAssistant, platform_domain: str, discovery_info: DiscoveryInfoType
+) -> tuple[ConfigType, RestCoordinator, RestData]:
+    """Get the config and coordinator for the platform from discovery."""
+    # pylint: disable=home-assistant-use-runtime-data
+    coordinator: RestCoordinator = hass.data[DOMAIN][COORDINATOR][
+        discovery_info[REST_IDX]
+    ]
+    # pylint: disable=home-assistant-use-runtime-data
+    conf: ConfigType = hass.data[DOMAIN][platform_domain][discovery_info[PLATFORM_IDX]]
+    if coordinator.rest.data is None:
+        await coordinator.async_request_refresh()
+    return conf, coordinator, coordinator.rest
