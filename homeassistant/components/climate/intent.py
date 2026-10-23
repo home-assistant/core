@@ -19,7 +19,10 @@ from .const import (
     ClimateServiceArgument,
 )
 
-FAN_MODE_TRANSLATION_PREFIX = f"component.{DOMAIN}.entity_component._.state_attributes.{ClimateEntityStateAttribute.FAN_MODE}.state."
+FAN_MODE_TRANSLATION_PREFIX = (
+    f"component.{DOMAIN}.entity_component._.state_attributes."
+    f"{ClimateEntityStateAttribute.FAN_MODE}.state."
+)
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
