@@ -11,7 +11,12 @@ from pytest_homeassistant.common import MockConfigEntry
 from victron_modbus import UnsupportedDeviceError
 
 from homeassistant.components.victron_modbus.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -310,6 +315,24 @@ async def test_zeroconf_flow_updates_host_that_stopped_answering(
     assert probed == ["192.168.1.110", HOST]
     assert mock_config_entry.data["host"] == "192.168.1.110"
     assert len(mock_setup_entry.mock_calls) == 2  # reloaded
+
+
+async def test_zeroconf_flow_restarts_setup_of_refused_entry(
+    hass: HomeAssistant, mock_unit, mock_config_entry: MockConfigEntry
+) -> None:
+    """An entry refused for finding another device at its address is set up again."""
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.mock_state(hass, ConfigEntryState.SETUP_ERROR)
+
+    with (
+        _devices_at(mock_unit, replaced=(HOST,)),
+        patch.object(hass.config_entries, "async_schedule_reload") as reload,
+    ):
+        result = await _discover(hass, "192.168.1.110")
+
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data["host"] == "192.168.1.110"
+    reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 async def test_zeroconf_flow_follows_devices_that_swapped_addresses(

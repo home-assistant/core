@@ -8,7 +8,12 @@ import probatio
 from victron_modbus import UnsupportedDeviceError, async_identify
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import TextSelector
@@ -57,18 +62,20 @@ class VictronModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         # A configured device announced at another address (a second interface,
         # or a new DHCP lease) moves the entry only if its address stopped working.
         updates = None
+        entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, serial
+        )
         if (
-            (
-                entry := self.hass.config_entries.async_entry_for_domain_unique_id(
-                    DOMAIN, serial
-                )
-            )
-            is not None
+            entry is not None
             and entry.source != SOURCE_IGNORE
             and entry.data[CONF_HOST] != self._host
             and not await self._async_answers(entry.data[CONF_HOST], serial)
         ):
             updates = {CONF_HOST: self._host}
+            # Setup of an entry whose stored address now belongs to another device
+            # failed for good, which the abort below doesn't retry by itself.
+            if entry.state is ConfigEntryState.SETUP_ERROR:
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
         self._abort_if_unique_id_configured(updates=updates)
         self.context["title_placeholders"] = {"name": self._title}
         return await self.async_step_confirm()
