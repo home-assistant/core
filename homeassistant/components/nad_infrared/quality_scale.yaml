@@ -29,7 +29,10 @@ rules:
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: done
+  runtime-data:
+    status: exempt
+    comment: |
+      This integration does not keep runtime data.
   test-before-configure:
     status: exempt
     comment: |

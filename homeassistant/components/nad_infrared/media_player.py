@@ -9,12 +9,12 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
-from . import NadIrConfigEntry
 from .codes import NADAmplifierCode, NADCassetteCode, NADCDCode
 from .const import CONF_DEVICE_TYPE, DOMAIN, NADDeviceType
 from .entity import NadIrEntity
@@ -76,7 +76,7 @@ class _NadAmplifierExtraData(ExtraStoredData):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: NadIrConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NAD Infrared media player from config entry."""
@@ -107,7 +107,7 @@ class NadIrAmplifierMediaPlayer(NadIrEntity, MediaPlayerEntity, RestoreEntity):
         | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
 
-    def __init__(self, entry: NadIrConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize NAD Infrared amplifier media player."""
         super().__init__(entry, unique_id_suffix="media_player")
 
@@ -220,7 +220,7 @@ class NadIrCDPlayerMediaPlayer(NadIrEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
     )
 
-    def __init__(self, entry: NadIrConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize NAD Infrared CD player media player."""
         super().__init__(entry, unique_id_suffix="media_player")
 
@@ -272,7 +272,7 @@ class NadIrCassetteDeckMediaPlayer(NadIrEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
     )
 
-    def __init__(self, entry: NadIrConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize NAD Infrared cassette deck media player."""
         super().__init__(entry, unique_id_suffix="media_player")
 
