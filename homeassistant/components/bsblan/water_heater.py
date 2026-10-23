@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import BSBLanConfigEntry, BSBLanData
 from .const import DEFAULT_HOT_WATER_MIN_TEMP
 from .entity import BSBLanWaterHeaterDeviceEntity
+from .helpers import first_temperature, setpoint_to_change
 
 PARALLEL_UPDATES = 1
 
@@ -62,6 +63,7 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
     """Defines a BSBLAN water heater entity."""
 
     _attr_name = None
+    _attr_min_temp = DEFAULT_HOT_WATER_MIN_TEMP
     _attr_operation_list = list(HA_TO_BSBLAN_OPERATION_MODE.keys())
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
@@ -82,17 +84,9 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
         self._attr_available = True
 
     @property
-    @override
-    def min_temp(self) -> float:
-        """Return the minimum temperature.
-
-        Derived from the slow-coordinator DHW config, which may still be
-        pending when the platform is set up. Falls back to the default until
-        the config becomes available.
-        """
-        if (reduced := self._reduced_setpoint) is not None:
-            return reduced
-        return DEFAULT_HOT_WATER_MIN_TEMP
+    def _current_setpoint(self) -> float | None:
+        """Return the hot water setpoint the controller applies right now."""
+        return first_temperature(self._dhw.dhw_current_setpoint)
 
     @property
     @override
@@ -121,18 +115,23 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
     @property
     @override
     def native_target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
-        if (target_temp := self._dhw.nominal_setpoint) is None:
-            return None
-        return target_temp.value
+        """Return the setpoint the controller currently applies."""
+        return first_temperature(
+            self._dhw.dhw_current_setpoint, self._dhw.nominal_setpoint
+        )
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        await self._async_set_hot_water(
-            SetHotWaterParam(nominal_setpoint=temperature), "set_temperature_error"
+        """Set the setpoint currently in effect."""
+        temperature = kwargs[ATTR_TEMPERATURE]
+        setpoint = setpoint_to_change(
+            temperature,
+            current=self._current_setpoint,
+            normal=self._nominal_setpoint,
+            reduced=self._reduced_setpoint,
         )
+        self._validate_setpoint(temperature, setpoint)
+        await self._async_set_setpoint(temperature, setpoint)
 
     @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:

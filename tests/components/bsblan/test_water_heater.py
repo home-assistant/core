@@ -33,7 +33,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
@@ -392,10 +392,7 @@ async def test_water_heater_custom_temperature_limits_from_config(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
 
-    # Should use custom temperature limits from config
-    assert (
-        state.attributes.get("min_temp") == 15.0
-    )  # Custom minimum from reduced_setpoint
+    assert state.attributes.get("min_temp") == 10.0
     assert (
         state.attributes.get("max_temp") == 75.0
     )  # Custom maximum from nominal_setpoint_max
@@ -432,7 +429,7 @@ async def test_water_heater_temperature_limits_update_after_slow_fetch(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes["min_temp"] == 15.0
+    assert state.attributes["min_temp"] == 10.0
     assert state.attributes["max_temp"] == 75.0
 
 
@@ -534,6 +531,148 @@ async def test_turn_off_error(
         )
     assert exc.value.translation_domain == DOMAIN
     assert exc.value.translation_key == "set_operation_mode_error"
+
+
+@pytest.mark.parametrize(
+    ("current_setpoint", "expected_param", "expected_config_calls"),
+    [
+        (50.0, SetHotWaterParam(nominal_setpoint=45), 1),
+        (35.0, SetHotWaterParam(reduced_setpoint=45), 2),
+        # Neither, e.g. a legionella run: write the nominal setpoint
+        (60.0, SetHotWaterParam(nominal_setpoint=45), 1),
+    ],
+)
+async def test_water_heater_follows_current_setpoint(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    current_setpoint: float,
+    expected_param: SetHotWaterParam,
+    expected_config_calls: int,
+) -> None:
+    """Test the target and writes follow the DHW setpoint in effect."""
+    mock_bsblan.hot_water_state.return_value.dhw_current_setpoint = MagicMock(
+        value=current_setpoint
+    )
+
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["temperature"] == current_setpoint
+    assert state.attributes["min_temp"] == 10.0
+    assert state.attributes["max_temp"] == 65.0
+
+    await hass.services.async_call(
+        domain=WATER_HEATER_DOMAIN,
+        service=SERVICE_SET_TEMPERATURE,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 45},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_bsblan.set_hot_water.assert_called_once_with(expected_param)
+    # Writing the reduced setpoint refreshes the slow-polled DHW config
+    assert mock_bsblan.hot_water_config.call_count == expected_config_calls
+
+
+@pytest.mark.parametrize(
+    ("temperature", "expected_param"),
+    [
+        (45, SetHotWaterParam(reduced_setpoint=45)),
+        (55, SetHotWaterParam(nominal_setpoint=55)),
+    ],
+)
+async def test_set_temperature_with_equal_setpoints(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    temperature: int,
+    expected_param: SetHotWaterParam,
+) -> None:
+    """Test equal setpoints can be lowered and raised again."""
+    mock_bsblan.hot_water_state.return_value.dhw_current_setpoint = MagicMock(
+        value=50.0
+    )
+    mock_bsblan.hot_water_config.return_value.reduced_setpoint = MagicMock(value=50.0)
+
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    await hass.services.async_call(
+        domain=WATER_HEATER_DOMAIN,
+        service=SERVICE_SET_TEMPERATURE,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
+        blocking=True,
+    )
+
+    mock_bsblan.set_hot_water.assert_called_once_with(expected_param)
+
+
+@pytest.mark.parametrize(
+    ("current_setpoint", "temperature", "translation_key"),
+    [
+        # Nominal in effect, below the reduced setpoint (35.0)
+        (50.0, 30, "nominal_below_reduced"),
+        # Reduced in effect, above the nominal setpoint (50.0)
+        (35.0, 55, "reduced_above_nominal"),
+    ],
+)
+async def test_set_temperature_rejects_setpoint_order(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    current_setpoint: float,
+    temperature: float,
+    translation_key: str,
+) -> None:
+    """Test the reduced setpoint cannot end up above the nominal one."""
+    mock_bsblan.hot_water_state.return_value.dhw_current_setpoint = MagicMock(
+        value=current_setpoint
+    )
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            domain=WATER_HEATER_DOMAIN,
+            service=SERVICE_SET_TEMPERATURE,
+            service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
+            blocking=True,
+        )
+
+    assert exc.value.translation_key == translation_key
+    mock_bsblan.set_hot_water.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_dhw_config_none")
+async def test_set_temperature_without_dhw_config(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the nominal setpoint is written until the DHW config is fetched."""
+    mock_bsblan.hot_water_state.return_value.dhw_current_setpoint = MagicMock(
+        value=35.0
+    )
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    await hass.services.async_call(
+        domain=WATER_HEATER_DOMAIN,
+        service=SERVICE_SET_TEMPERATURE,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 45},
+        blocking=True,
+    )
+
+    mock_bsblan.set_hot_water.assert_called_once_with(
+        SetHotWaterParam(nominal_setpoint=45)
+    )
 
 
 async def test_set_temperature_rereads_only_hot_water(
