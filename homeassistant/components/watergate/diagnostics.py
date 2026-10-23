@@ -36,8 +36,13 @@ def _water_meter(meter: WaterMeter | None) -> dict[str, Any] | None:
     return {"volume": meter.volume, "duration": meter.duration} if meter else None
 
 
-def _device_state(state: DeviceStateV2) -> dict[str, Any]:
-    """Return the device state as a dict."""
+def _device_state(state: DeviceStateV2 | None) -> dict[str, Any] | None:
+    """Return the device state as a dict.
+
+    A device without device state v2 may report no state at all.
+    """
+    if state is None:
+        return None
     return {
         "valve_state": state.valve_state,
         "water_flow_indicator": state.water_flow_indicator,
@@ -100,13 +105,18 @@ async def async_get_config_entry_diagnostics(
     return {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "last_update_success": coordinator.last_update_success,
-        "data": async_redact_data(
-            {
-                "state": _device_state(data.state),
-                "telemetry": _telemetry(data.telemetry),
-                "networking": _networking(data.networking),
-                "auto_shut_off": _auto_shut_off(data.auto_shut_off),
-            },
-            TO_REDACT,
+        # Without data the first refresh has not succeeded (the entry is retrying setup).
+        "data": (
+            async_redact_data(
+                {
+                    "state": _device_state(data.state),
+                    "telemetry": _telemetry(data.telemetry),
+                    "networking": _networking(data.networking),
+                    "auto_shut_off": _auto_shut_off(data.auto_shut_off),
+                },
+                TO_REDACT,
+            )
+            if data
+            else None
         ),
     }

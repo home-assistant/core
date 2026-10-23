@@ -2,12 +2,19 @@
 
 from collections.abc import Generator
 import copy
+from datetime import timedelta
 
-from pytest_homeassistant.common import AsyncMock, MockConfigEntry
+from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    AsyncMock,
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
+from watergate_local_api import WatergateApiException
 from watergate_local_api.models import TelemetryData
 from watergate_local_api.models.water_event import Event
 
@@ -71,3 +78,49 @@ async def test_diagnostics_without_negative_water_meter(
         "volume": 1.2,
         "duration": 100,
     }
+
+
+async def test_diagnostics_without_device_state(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test diagnostics are still provided when the device reports no state."""
+    mock_watergate_client.async_get_device_state_v2.side_effect = WatergateApiException(
+        "Unsupported media type"
+    )
+    await init_integration(hass, mock_entry)
+
+    mock_watergate_client.async_get_device_state.return_value = None
+    freezer.tick(timedelta(minutes=2, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, mock_entry)
+
+    assert result["data"]["state"] is None
+    assert result["data"]["telemetry"]["flow"] == 0.0
+
+
+async def test_diagnostics_without_coordinator_data(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """Test diagnostics are still provided when the first refresh failed."""
+    mock_watergate_client.async_get_device_state_v2.side_effect = WatergateApiException(
+        "boom"
+    )
+    mock_watergate_client.async_get_device_state.side_effect = WatergateApiException(
+        "boom"
+    )
+    await init_integration(hass, mock_entry)
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, mock_entry)
+
+    assert result["data"] is None
+    assert result["last_update_success"] is False
+    assert result["config_entry"]["data"]["ip_address"] == "**REDACTED**"
