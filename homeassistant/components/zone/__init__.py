@@ -10,11 +10,7 @@ from typing import Any, Self, cast, override
 import probatio
 
 from homeassistant import config_entries
-from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_PERSONS,
+from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
     CONF_LATITUDE,
@@ -31,7 +27,6 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
-    ServiceCall,
     State,
     callback,
 )
@@ -40,14 +35,13 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_component,
     event,
-    service,
     storage,
 )
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.location import distance
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_PASSIVE,
     ATTR_RADIUS,
     CONF_PASSIVE,
@@ -56,6 +50,7 @@ from .const import (  # noqa: F401
     HOME_ZONE,
     ZoneEntityStateAttribute,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +81,31 @@ UPDATE_FIELDS: VolDictType = {
     probatio.Optional(CONF_ICON): cv.icon,
 }
 
+__all__ = [
+    "ATTR_PASSIVE",
+    "ATTR_RADIUS",
+    "CONF_ICON",
+    "CONF_LATITUDE",
+    "CONF_LONGITUDE",
+    "CONF_NAME",
+    "CONF_PASSIVE",
+    "CONF_RADIUS",
+    "CREATE_FIELDS",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "ENTITY_ID_HOME",
+    "HOME_ZONE",
+    "ICON_IMPORT",
+    "SERVICE_RELOAD",
+    "UPDATE_FIELDS",
+    "Zone",
+    "ZoneEntityStateAttribute",
+    "ZoneStorageCollection",
+    "async_active_zone",
+    "async_get_enclosing_zones",
+    "async_in_zones",
+]
+
 
 def empty_value(value: Any) -> Any:
     """Test if the user has the default config value from adding "zone:"."""
@@ -105,7 +125,6 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -370,18 +389,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DATA_ZONE] = ZoneData(component, storage_collection, yaml_collection)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Remove all zones and load new ones from config."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(conf[DOMAIN])
-
-    service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
+    async_setup_services(hass)
 
     if component.get_entity("zone.home"):
         return True
@@ -414,7 +422,7 @@ def _home_conf(hass: HomeAssistant) -> dict:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+) -> None:
     """Set up zone as config entry."""
     data = dict(config_entry.data)
     data.setdefault(CONF_PASSIVE, DEFAULT_PASSIVE)
@@ -426,14 +434,11 @@ async def async_setup_entry(
         hass.config_entries.async_remove(config_entry.entry_id), eager_start=True
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+) -> None:
     """Will be called once we remove it."""
-    return True
 
 
 class Zone(collection.CollectionEntity):
@@ -572,9 +577,7 @@ class Zone(collection.CollectionEntity):
     def _state_is_in_zone(self, state: State | None) -> bool:
         """Return if given state is in zone."""
 
-        from homeassistant.components.device_tracker import (  # noqa: PLC0415
-            ATTR_IN_ZONES,
-        )
+        from homeassistant.components.device_tracker import ATTR_IN_ZONES  # noqa: PLC0415
 
         return (
             state is not None

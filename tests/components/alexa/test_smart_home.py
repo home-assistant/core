@@ -1,9 +1,11 @@
 """Test for smart home alexa support."""
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
@@ -20,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.helpers import entityfilter
+from homeassistant.helpers import entity_registry as er, entityfilter
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
@@ -35,9 +37,6 @@ from .test_common import (
     get_new_request,
     reported_properties,
 )
-
-from tests.common import async_capture_events, async_mock_service
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -2191,7 +2190,7 @@ async def test_valve_position(
             "friendly_name": "Test valve range",
             "device_class": "water",
             "supported_features": supported_features,
-            "position": position,
+            "current_position": position,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2415,7 +2414,7 @@ async def test_valve_position_range(
             "friendly_name": "Test valve range",
             "device_class": "water",
             "supported_features": 15,
-            "position": 30,
+            "current_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4631,7 +4630,7 @@ async def test_cover_tilt_position(
             "friendly_name": "Test cover tilt range",
             "device_class": "blind",
             "supported_features": supported_features,
-            "tilt_position": tilt_position,
+            "current_tilt_position": tilt_position,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4701,7 +4700,7 @@ async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
             "friendly_name": "Test cover tilt range",
             "device_class": "blind",
             "supported_features": 240,
-            "tilt_position": 30,
+            "current_tilt_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4782,14 +4781,14 @@ async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
         (
             "cover.test_closed",
             CoverEntityFeature.SET_TILT_POSITION,
-            "tilt_position",
+            "current_tilt_position",
             "cover.tilt",
             "cover.set_cover_tilt_position",
         ),
         (
             "valve.test_closed",
             ValveEntityFeature.SET_POSITION,
-            "position",
+            "current_position",
             "valve.position",
             "valve.set_valve_position",
         ),
@@ -4875,7 +4874,7 @@ async def test_cover_stop(
             "device_class": "blind",
             "supported_features": int(base_features | supported_stop_features),
             "current_position": 30,
-            "tilt_position": 30,
+            "current_tilt_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4910,7 +4909,7 @@ async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
             "device_class": "blind",
             "supported_features": 255,
             "current_position": 30,
-            "tilt_position": 30,
+            "current_tilt_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -5596,7 +5595,7 @@ async def test_vacuum_pause(hass: HomeAssistant) -> None:
     assert configuration["allowRemoteResume"] is True
 
     await assert_request_calls_service(
-        "Alexa.TimeHoldController", "Hold", "vacuum#test_3", "vacuum.start_pause", hass
+        "Alexa.TimeHoldController", "Hold", "vacuum#test_3", "vacuum.pause", hass
     )
 
 
@@ -5623,7 +5622,7 @@ async def test_vacuum_resume(hass: HomeAssistant) -> None:
         "Alexa.TimeHoldController",
         "Resume",
         "vacuum#test_4",
-        "vacuum.start_pause",
+        "vacuum.start",
         hass,
     )
 
@@ -5917,3 +5916,41 @@ async def test_alexa_config(
         assert len(test_config._auth.async_invalidate_access_token.mock_calls) == 1
         await test_config.async_accept_grant("grant_code")
         test_config._auth.async_do_auth.assert_called_once_with("grant_code")
+
+
+async def test_alexa_config_migrate_entity_names(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the entity settings migration preserves exposed entity names once."""
+    exposed = entity_registry.async_get_or_create("light", "test", "exposed")
+    yaml_name = entity_registry.async_get_or_create("light", "test", "yaml_name")
+    not_exposed = entity_registry.async_get_or_create("switch", "test", "not_exposed")
+    unsupported = entity_registry.async_get_or_create(
+        "device_tracker", "test", "unsupported"
+    )
+    for entity in (exposed, yaml_name, not_exposed, unsupported):
+        hass.states.async_set(entity.entity_id, "on")
+    config = {
+        "filter": entityfilter.FILTER_SCHEMA(
+            {"include_domains": ["light", "device_tracker"]}
+        ),
+        "entity_config": {yaml_name.entity_id: {"name": "Configured"}},
+    }
+
+    with patch(
+        "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
+    ) as mock_preserve:
+        await smart_home.AlexaConfig(hass, config).async_initialize()
+        await hass.async_block_till_done()
+    assert mock_preserve.mock_calls == [call(hass, exposed.entity_id)]
+    assert hass_storage["alexa"]["data"]["entity_settings_version"] == 2
+
+    # The migration is not repeated
+    with patch(
+        "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
+    ) as mock_preserve:
+        await smart_home.AlexaConfig(hass, config).async_initialize()
+        await hass.async_block_till_done()
+    assert mock_preserve.mock_calls == []

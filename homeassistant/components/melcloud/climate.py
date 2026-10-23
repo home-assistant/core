@@ -101,7 +101,7 @@ async def async_setup_entry(
 class MelCloudClimate(MelCloudEntity, ClimateEntity):
     """Base climate device."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
 
     def __init__(
@@ -218,13 +218,13 @@ class AtaDeviceClimate(MelCloudClimate):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.room_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._device.target_temperature
 
@@ -440,13 +440,13 @@ class AtwDeviceZoneClimate(MelCloudClimate):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zone.room_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._zone.target_temperature
 
@@ -454,6 +454,6 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self._zone.set_target_temperature(
-            kwargs.get(ATTR_TEMPERATURE, self.target_temperature)
+            kwargs.get(ATTR_TEMPERATURE, self.native_target_temperature)
         )
         await self.coordinator.async_request_refresh()

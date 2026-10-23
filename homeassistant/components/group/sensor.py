@@ -475,7 +475,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         )
         valid_state_numeric = self.mode(numeric_state for numeric_state in valid_states)
 
-        if not valid_state or not valid_state_numeric:
+        if not sensor_values or not valid_state or not valid_state_numeric:
             self._attr_native_value = None
             self._extra_state_attribute = {}
             return
@@ -501,6 +501,27 @@ class SensorGroup(GroupEntity, SensorEntity):
         if not self.device_class:
             return "mdi:calculator"
         return None
+
+    @callback
+    def _async_create_issue(self, domain: str, issue_id: str, **kwargs: Any) -> None:
+        """Create a repair issue, unless rendering a preview."""
+        # A preview is not a real sensor, so it must not raise repairs
+        if not self._is_preview:
+            async_create_issue(self.hass, domain, issue_id, **kwargs)
+
+    @callback
+    def _async_delete_issue(self, domain: str, issue_id: str) -> None:
+        """Delete a repair issue, unless rendering a preview."""
+        if not self._is_preview:
+            async_delete_issue(self.hass, domain, issue_id)
+
+    @property
+    def _issue_config_entry_id(self) -> str | None:
+        """Return the config entry to link repair issues to, if any."""
+        # YAML sensors without unique_id have no registry entry
+        if self.registry_entry is None:
+            return None
+        return self.registry_entry.config_entry_id
 
     def _calculate_state_class(
         self,
@@ -538,14 +559,14 @@ class SensorGroup(GroupEntity, SensorEntity):
             state_classes.append(_state_class)
 
         if all(x == state_classes[0] for x in state_classes):
-            async_delete_issue(
-                self.hass, SENSOR_DOMAIN, f"{self.entity_id}_state_classes_not_matching"
+            self._async_delete_issue(
+                DOMAIN, f"{self.entity_id}_state_classes_not_matching"
             )
             return state_classes[0]
-        async_create_issue(
-            self.hass,
+        self._async_create_issue(
             DOMAIN,
             f"{self.entity_id}_state_classes_not_matching",
+            config_entry_id=self._issue_config_entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=IssueSeverity.WARNING,
@@ -594,16 +615,15 @@ class SensorGroup(GroupEntity, SensorEntity):
             device_classes.append(SensorDeviceClass(_device_class))
 
         if all(x == device_classes[0] for x in device_classes):
-            async_delete_issue(
-                self.hass,
-                SENSOR_DOMAIN,
+            self._async_delete_issue(
+                DOMAIN,
                 f"{self.entity_id}_device_classes_not_matching",
             )
             return device_classes[0]
-        async_create_issue(
-            self.hass,
+        self._async_create_issue(
             DOMAIN,
             f"{self.entity_id}_device_classes_not_matching",
+            config_entry_id=self._issue_config_entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=IssueSeverity.WARNING,
@@ -677,23 +697,21 @@ class SensorGroup(GroupEntity, SensorEntity):
                 and all(x == unit_of_measurements[0] for x in unit_of_measurements)
             )
         ):
-            async_delete_issue(
-                self.hass,
-                SENSOR_DOMAIN,
+            self._async_delete_issue(
+                DOMAIN,
                 f"{self.entity_id}_uoms_not_matching_device_class",
             )
-            async_delete_issue(
-                self.hass,
-                SENSOR_DOMAIN,
+            self._async_delete_issue(
+                DOMAIN,
                 f"{self.entity_id}_uoms_not_matching_no_device_class",
             )
             return unit_of_measurements[0]
 
         if device_class:
-            async_create_issue(
-                self.hass,
+            self._async_create_issue(
                 DOMAIN,
                 f"{self.entity_id}_uoms_not_matching_device_class",
+                config_entry_id=self._issue_config_entry_id,
                 is_fixable=False,
                 is_persistent=False,
                 severity=IssueSeverity.WARNING,
@@ -706,10 +724,10 @@ class SensorGroup(GroupEntity, SensorEntity):
                 },
             )
         else:
-            async_create_issue(
-                self.hass,
+            self._async_create_issue(
                 DOMAIN,
                 f"{self.entity_id}_uoms_not_matching_no_device_class",
+                config_entry_id=self._issue_config_entry_id,
                 is_fixable=False,
                 is_persistent=False,
                 severity=IssueSeverity.WARNING,

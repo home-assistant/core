@@ -3,13 +3,15 @@
 from datetime import time
 from typing import cast, override
 
+from midealocal.device import MideaDevice
+
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
-from .entity import MideaConfigEntry, MideaDevice, MideaEntity, midea_api_call
+from .entity import MideaConfigEntry, MideaEntity, midea_api_call
 
 PARALLEL_UPDATES = 0
 

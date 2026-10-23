@@ -1,6 +1,6 @@
 """Support for viewing the camera feed from a DoorBird video doorbell."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -14,9 +14,9 @@ from homeassistant.util import dt as dt_util
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
 
-_LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=2)
-_LAST_MOTION_INTERVAL = datetime.timedelta(seconds=30)
-_LIVE_INTERVAL = datetime.timedelta(seconds=45)
+_LAST_VISITOR_INTERVAL = dt.timedelta(minutes=2)
+_LAST_MOTION_INTERVAL = dt.timedelta(seconds=30)
+_LIVE_INTERVAL = dt.timedelta(seconds=45)
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
 
@@ -63,7 +63,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         door_bird_data: DoorBirdData,
         url: str,
         camera_id: str,
-        interval: datetime.timedelta,
+        interval: dt.timedelta,
         stream_url: str | None = None,
     ) -> None:
         """Initialize the camera on a DoorBird device."""
@@ -75,7 +75,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         if self._stream_url:
             self._attr_supported_features = CameraEntityFeature.STREAM
         self._interval = interval
-        self._last_update = datetime.datetime.min
+        self._last_update = dt.datetime.min
         self._attr_unique_id = f"{self._mac_addr}_{camera_id}"
 
     @override
@@ -109,20 +109,3 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
 
         self._last_update = now
         return self._last_image
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to events."""
-        await super().async_added_to_hass()
-        event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event in self._door_station.door_station_events:
-            event_to_entity_id[event] = self.entity_id
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from events."""
-        event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event in self._door_station.door_station_events:
-            # If the clear api was called, the events may not be in the dict
-            event_to_entity_id.pop(event, None)
-        await super().async_will_remove_from_hass()

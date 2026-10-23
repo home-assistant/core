@@ -4,6 +4,7 @@ from unittest.mock import DEFAULT, AsyncMock, patch
 
 from evolutionhttp import BryantEvolutionLocalClient, ZoneInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.bryant_evolution.const import CONF_SYSTEM_ZONE, DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -124,6 +123,15 @@ async def test_form_cannot_connect_bad_file(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_evolution_client_factory.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_FILENAME: "some-serial",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

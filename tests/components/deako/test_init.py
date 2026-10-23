@@ -3,11 +3,10 @@
 from unittest.mock import MagicMock
 
 from pydeako import FindDevicesError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_deako_async_setup_entry(

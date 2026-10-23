@@ -7,6 +7,7 @@
     'area_id': None,
     'capabilities': dict({
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'art_mode',
         'av1',
         'av2',
         'av3',
@@ -68,6 +69,7 @@
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'hdmi1',
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'art_mode',
         'av1',
         'av2',
         'av3',

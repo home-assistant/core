@@ -1,5 +1,7 @@
 """Tests for the Switch as X Lock platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler
@@ -21,8 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_default_state(hass: HomeAssistant) -> None:

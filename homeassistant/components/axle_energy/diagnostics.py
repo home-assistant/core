@@ -15,5 +15,6 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
     return {
         "last_update_success": coordinator.last_update_success,
-        "data": asdict(coordinator.data) if coordinator.data is not None else None,
+        "data": asdict(event) if (event := coordinator.event) is not None else None,
+        "opted_out": coordinator.data.opted_out,
     }

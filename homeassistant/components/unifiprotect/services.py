@@ -13,7 +13,12 @@ from uiprotect.data.public_devices import PublicCamera
 from uiprotect.exceptions import ClientError
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_NAME,
+    Platform,
+)
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -56,8 +61,10 @@ SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
 SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
 SERVICE_PTZ_GOTO_PRESET = "ptz_goto_preset"
+SERVICE_TRIGGER_ALARM_WEBHOOK = "trigger_alarm_webhook"
 
 ATTR_PRESET = "preset"
+ATTR_TRIGGER_ID = "trigger_id"
 
 ALL_GLOBAL_SERVICES = [
     SERVICE_ADD_DOORBELL_TEXT,
@@ -66,6 +73,7 @@ ALL_GLOBAL_SERVICES = [
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_GET_USER_KEYRING_INFO,
     SERVICE_PTZ_GOTO_PRESET,
+    SERVICE_TRIGGER_ALARM_WEBHOOK,
 ]
 
 DOORBELL_TEXT_SCHEMA = probatio.Schema(
@@ -99,6 +107,15 @@ PTZ_GOTO_PRESET_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_DEVICE_ID): str,
         probatio.Required(ATTR_PRESET): cv.string,
+    },
+)
+
+TRIGGER_ALARM_WEBHOOK_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_TRIGGER_ID): probatio.All(
+            cv.string, probatio.Length(min=1)
+        ),
     },
 )
 
@@ -362,6 +379,23 @@ async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
     return response
 
 
+async def trigger_alarm_webhook(call: ServiceCall) -> None:
+    """Fire an Alarm Manager webhook trigger."""
+    entry: UFPConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+    try:
+        await entry.runtime_data.api.send_alarm_webhook_public(
+            call.data[ATTR_TRIGGER_ID]
+        )
+    except ClientError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
+
+
 SERVICES = [
     (
         SERVICE_ADD_DOORBELL_TEXT,
@@ -410,3 +444,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass.services.async_register(
             DOMAIN, name, method, schema=schema, supports_response=supports_response
         )
+    # Admin-only, there is no entity permission check.
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_TRIGGER_ALARM_WEBHOOK,
+        trigger_alarm_webhook,
+        schema=TRIGGER_ALARM_WEBHOOK_SCHEMA,
+    )

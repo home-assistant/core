@@ -16,8 +16,10 @@ from uiprotect.data import (
     IRLEDMode,
     Light,
     LightModeEnableType,
+    LightModePreset,
     LightModeType,
     Liveview,
+    ModelType,
     NvrArmMode,
     NvrArmModeStatus,
     ProtectAdoptableDeviceModel,
@@ -28,8 +30,11 @@ from uiprotect.data import (
     Viewer,
     WSAction,
 )
-from uiprotect.data.nvr import DoorbellMessage
-from uiprotect.data.public_devices import PublicLcdMessage, SensorFeatureCapability
+from uiprotect.data.public_devices import (
+    PublicDoorbellSettings,
+    PublicLcdMessage,
+    SensorFeatureCapability,
+)
 from uiprotect.exceptions import ClientError, GlobalAlarmManagerError
 from uiprotect.websocket import WebsocketState
 
@@ -72,6 +77,8 @@ from .utils import (
     setup_public_camera,
     setup_public_light,
 )
+
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
 
 
 async def test_select_camera_remove(
@@ -124,8 +131,7 @@ async def test_select_setup_light(
 ) -> None:
     """Test select entity setup for light devices."""
 
-    light.light_mode_settings.enable_at = LightModeEnableType.DARK
-    setup_public_light(ufp)
+    setup_public_light(ufp, light_mode_enable_at=LightModeEnableType.DARK)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SELECT, 2, 2)
 
@@ -346,49 +352,60 @@ async def test_select_update_liveview(
     assert state.attributes[ATTR_OPTIONS] == expected_options
 
 
-async def test_select_update_doorbell_settings(
+async def test_select_doorbell_options_follow_public_nvr(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ) -> None:
-    """Test select entity update (new Doorbell Message)."""
-
+    """The doorbell text options come from the public NVR and follow its frames."""
+    nvr = ufp.api.public_bootstrap.nvr
+    nvr.model = ModelType.NVR
+    nvr.doorbell_settings = PublicDoorbellSettings(
+        default_message_text="Public Default", custom_messages=["Public Only"]
+    )
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SELECT, 5, 5)
-
-    expected_length = len(ufp.api.bootstrap.nvr.doorbell_settings.all_messages) + 1
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert len(state.attributes[ATTR_OPTIONS]) == expected_length
-
-    expected_length += 1
-    new_nvr = copy(ufp.api.bootstrap.nvr)
-
-    new_nvr.doorbell_settings.all_messages = [
-        *new_nvr.doorbell_settings.all_messages,
-        DoorbellMessage(
-            type=DoorbellMessageType.CUSTOM_MESSAGE,
-            text="Test2",
-        ),
+    assert hass.states.get(entity_id).attributes[ATTR_OPTIONS] == [
+        "Default Message (Public Default)",
+        "LEAVE PACKAGE AT DOOR",
+        "DO NOT DISTURB",
+        "Public Only",
     ]
 
-    mock_msg = Mock()
-    mock_msg.changed_data = {"doorbell_settings": {}}
-    mock_msg.new_obj = new_nvr
+    nvr.doorbell_settings = PublicDoorbellSettings(
+        default_message_text="Public Default",
+        custom_messages=["Public Only", "Added"],
+    )
+    msg = Mock()
+    msg.new_obj = nvr
+    msg.old_obj = None
+    msg.changed_data = {
+        "doorbellSettings": {"customMessages": ["Public Only", "Added"]}
+    }
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
 
-    with patch_ufp_method(new_nvr, "update_all_messages") as mock_method:
-        ufp.api.bootstrap.nvr = new_nvr
-        ufp.ws_msg(mock_msg)
-        await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes[ATTR_OPTIONS][-1] == "Added"
 
-        mock_method.assert_called_once()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert len(state.attributes[ATTR_OPTIONS]) == expected_length
+async def test_select_doorbell_options_without_public_settings(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Without public doorbell settings only the built-in messages are offered."""
+    ufp.api.public_bootstrap.nvr.doorbell_settings = None
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
+    )
+    assert hass.states.get(entity_id).attributes[ATTR_OPTIONS] == [
+        "Default Message ()",
+        "LEAVE PACKAGE AT DOOR",
+        "DO NOT DISTURB",
+    ]
 
 
 async def test_select_update_doorbell_message(
@@ -458,7 +475,9 @@ async def test_select_set_option_light_motion(
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
-    with patch.object(public, "set_light_mode", new_callable=AsyncMock) as mock_method:
+    with patch.object(
+        public, "set_light_mode_preset", new_callable=AsyncMock
+    ) as mock_method:
         await hass.services.async_call(
             "select",
             "select_option",
@@ -466,7 +485,7 @@ async def test_select_set_option_light_motion(
             blocking=True,
         )
 
-        mock_method.assert_called_once_with(LightModeType.MANUAL, enable_at=None)
+        mock_method.assert_called_once_with(LightModePreset.OFF)
 
 
 async def test_select_light_motion_public_value(
@@ -661,11 +680,9 @@ async def test_select_set_option_camera_doorbell_custom(
     """Test Doorbell Text select (user defined message)."""
 
     setup_public_camera(ufp)
-    doorbell_settings = ufp.api.bootstrap.nvr.doorbell_settings
-    doorbell_settings.all_messages = [
-        *doorbell_settings.all_messages,
-        DoorbellMessage(type=DoorbellMessageType.CUSTOM_MESSAGE, text="Back at 5:30"),
-    ]
+    ufp.api.public_bootstrap.nvr.doorbell_settings = PublicDoorbellSettings(
+        default_message_text="Welcome", custom_messages=["Test", "Back at 5:30"]
+    )
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
@@ -1353,8 +1370,8 @@ def _make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
             "light_motion",
             "when_dark",
             "motion",
-            "set_light_mode",
-            ((LightModeType.MOTION,), {"enable_at": LightModeEnableType.ALWAYS}),
+            "set_light_mode_preset",
+            ((LightModePreset.MOTION,), {}),
             id="light",
         ),
     ],
@@ -1613,6 +1630,7 @@ async def test_public_only_select_nvr_arm_profile_ws_update(
     msg = Mock()
     msg.new_obj = pb.nvr
     msg.old_obj = None
+    msg.changed_data = {}
     ufp_public_only.devices_ws_subscription(msg)
     await hass.async_block_till_done()
 

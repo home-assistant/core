@@ -1,14 +1,15 @@
 """Translation utils."""
 
 import argparse
-import json
 import os
 import pathlib
 import re
 import subprocess
 from typing import Any
 
-from .error import ExitApp, JSONDecodeErrorWithPath, MissingReference
+from script.hassfest.translation_data import load_json_from_path as load_json_from_path  # noqa: PLC0414
+
+from .error import ExitApp, MissingReference
 
 
 def get_base_arg_parser() -> argparse.ArgumentParser:
@@ -59,14 +60,6 @@ def get_current_branch():
         .stdout.decode()
         .strip()
     )
-
-
-def load_json_from_path(path: pathlib.Path) -> Any:
-    """Load JSON from path."""
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as err:
-        raise JSONDecodeErrorWithPath(err.msg, err.doc, err.pos, path) from err
 
 
 def flatten_translations(translations):

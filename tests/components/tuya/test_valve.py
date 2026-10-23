@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -53,7 +52,7 @@ async def test_single_channel_device_has_no_child_devices(
     assert not dr.async_child_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    entity_entry = entity_registry.async_get("valve.jie_hashui_fa_valve_1")
+    entity_entry = entity_registry.async_get("valve.jie_hashui_fa_valve")
     assert entity_entry
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, mock_device.id), mock_config_entry.entry_id
@@ -116,7 +115,7 @@ async def test_selective_state_update(
         mock_device,
         notification_helper,
         freezer,
-        entity_id="valve.jie_hashui_fa_valve_1",
+        entity_id="valve.jie_hashui_fa_channel_1_valve",
         dpcode="switch_1",
         initial_state="open",
         updates=updates,
@@ -151,7 +150,7 @@ async def test_action(
     expected_commands: list[dict[str, Any]],
 ) -> None:
     """Test valve action."""
-    entity_id = "valve.jie_hashui_fa_valve_1"
+    entity_id = "valve.jie_hashui_fa_channel_1_valve"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)
@@ -191,7 +190,7 @@ async def test_state(
     expected_state: str,
 ) -> None:
     """Test valve state."""
-    entity_id = "valve.jie_hashui_fa_valve_1"
+    entity_id = "valve.jie_hashui_fa_channel_1_valve"
     mock_device.status["switch_1"] = initial_status
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 

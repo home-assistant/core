@@ -227,16 +227,7 @@ class AirthingsSensor(
 
     @property
     @override
-    def available(self) -> bool:
-        """Check if device and sensor is available in data."""
-        return (
-            super().available
-            and self.entity_description.key in self.coordinator.data.sensors
-        )
-
-    @property
-    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        value = self.coordinator.data.sensors[self.entity_description.key]
+        value = self.coordinator.data.sensors.get(self.entity_description.key)
         return self.entity_description.value_fn(value)

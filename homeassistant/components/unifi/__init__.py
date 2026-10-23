@@ -5,7 +5,11 @@ from aiounifi.models.client import Client
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.storage import Store
@@ -37,7 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: UnifiConfigEntry
-) -> bool:
+) -> None:
     """Set up the UniFi Network integration."""
     try:
         api = await get_unifi_api(hass, config_entry.data)
@@ -73,14 +77,17 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.shutdown)
     )
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: UnifiConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await config_entry.runtime_data.async_reset()
+    if not await config_entry.runtime_data.async_reset():
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unload_failed",
+        )
 
 
 async def async_remove_config_entry_device(

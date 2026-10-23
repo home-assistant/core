@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -15,8 +20,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 from .conftest import BROTHER_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -59,7 +62,7 @@ async def test_binary_sensors_ink(
         "binary_sensor.hl_l2340dw_low_paper",
         "binary_sensor.hl_l2340dw_output_tray_full",
         "binary_sensor.hl_l2340dw_output_tray_missing",
-        "binary_sensor.hl_l2340dw_output_tray_near_full",
+        "binary_sensor.hl_l2340dw_output_tray_almost_full",
         "binary_sensor.hl_l2340dw_preventive_maintenance_overdue",
         "binary_sensor.hl_l2340dw_service_requested",
     ],

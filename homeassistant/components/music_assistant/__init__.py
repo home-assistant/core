@@ -40,7 +40,7 @@ from homeassistant.helpers.issue_registry import (
 
 from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DASHBOARD_ID_PREFIX, DOMAIN, LOGGER
 from .helpers import get_music_assistant_client
-from .services import register_actions
+from .services import async_setup_services
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
@@ -77,14 +77,14 @@ class MusicAssistantEntryData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Music Assistant component."""
-    register_actions(hass)
+    async_setup_services(hass)
 
     return True
 
 
 async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: MusicAssistantConfigEntry
-) -> bool:
+) -> None:
     """Set up Music Assistant from a config entry."""
     http_session = async_get_clientsession(hass, verify_ssl=False)
     mass_url = entry.data[CONF_URL]
@@ -127,6 +127,7 @@ async def async_setup_entry(  # noqa: C901
             f"Failed to connect to music assistant server {mass_url}: {err}"
         ) from err
     except MusicAssistantError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.exception("Failed to connect to music assistant server", exc_info=err)
         raise ConfigEntryNotReady(
             f"Unknown error connecting to the Music Assistant server {mass_url}"
@@ -157,13 +158,29 @@ async def async_setup_entry(  # noqa: C901
     # store the listen task and mass client in the entry data
     entry.runtime_data = MusicAssistantEntryData(mass, listen_task)
 
-    # If the listen task is already failed, we need to raise ConfigEntryNotReady
-    if listen_task.done() and (listen_error := listen_task.exception()) is not None:
-        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-        try:
-            await mass.disconnect()
-        finally:
-            raise ConfigEntryNotReady(listen_error) from listen_error
+    # check if any playerconfigs have been removed while we were disconnected,
+    # before forwarding the platforms, as the server can still go away here.
+    # never clean up dashboard devices: their registration is connection-scoped,
+    # so the cache may still be empty right after a reconnect.
+    try:
+        all_player_configs = await mass.config.get_player_configs()
+    except (MusicAssistantClientException, MusicAssistantError) as err:
+        listen_task.cancel()
+        await mass.disconnect()
+        raise ConfigEntryNotReady(
+            f"Lost connection to music assistant server {mass_url}: {err}"
+        ) from err
+    player_ids = {player.player_id for player in all_player_configs}
+    dev_reg = dr.async_get(hass)
+    dev_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+    for device in dev_entries:
+        for identifier in device.identifiers:
+            if (
+                identifier[0] == DOMAIN
+                and not identifier[1].startswith(DASHBOARD_ID_PREFIX)
+                and identifier[1] not in player_ids
+            ):
+                dev_reg.async_remove_device(device.id)
 
     # initialize platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -240,23 +257,14 @@ async def async_setup_entry(  # noqa: C901
         mass.subscribe(handle_player_config_updated, EventType.PLAYER_CONFIG_UPDATED)
     )
 
-    # check if any playerconfigs have been removed while we were disconnected.
-    # never clean up dashboard devices: their registration is connection-scoped,
-    # so the cache may still be empty right after a reconnect.
-    all_player_configs = await mass.config.get_player_configs()
-    player_ids = {player.player_id for player in all_player_configs}
-    dev_reg = dr.async_get(hass)
-    dev_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
-    for device in dev_entries:
-        for identifier in device.identifiers:
-            if (
-                identifier[0] == DOMAIN
-                and not identifier[1].startswith(DASHBOARD_ID_PREFIX)
-                and identifier[1] not in player_ids
-            ):
-                dev_reg.async_remove_device(device.id)
-
-    return True
+    # The listen task skips its reload when it fails with an exception while
+    # the entry is still being set up, so that case has to be caught here
+    if listen_task.done() and (listen_error := listen_task.exception()) is not None:
+        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        try:
+            await mass.disconnect()
+        finally:
+            raise ConfigEntryNotReady(listen_error) from listen_error
 
 
 async def _client_listen(
@@ -285,16 +293,13 @@ async def _client_listen(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: MusicAssistantConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        mass_entry_data = entry.runtime_data
-        mass_entry_data.listen_task.cancel()
-        await mass_entry_data.mass.disconnect()
-
-    return unload_ok
+    mass_entry_data = entry.runtime_data
+    mass_entry_data.listen_task.cancel()
+    await mass_entry_data.mass.disconnect()
 
 
 async def async_remove_config_entry_device(

@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 from google.api_core.exceptions import GoogleAPIError, PermissionDenied
 from google.maps.routing_v2 import Units
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.google_travel_time.config_flow import default_options
 from homeassistant.components.google_travel_time.const import (
@@ -28,8 +29,6 @@ from homeassistant.util.unit_system import (
 )
 
 from .const import DEFAULT_OPTIONS, MOCK_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="mock_update_empty")
@@ -213,3 +212,11 @@ async def test_sensor_routes_api_disabled(
     assert "Routes API is disabled for this API key" in caplog.text
 
     assert len(issue_registry.issues) == 1
+    issue_id = f"routes_api_disabled_{mock_config.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config.entry_id
+
+    await hass.config_entries.async_remove(mock_config.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
