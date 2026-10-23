@@ -17,6 +17,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_with_selected_platforms
 
@@ -161,6 +162,25 @@ async def test_set_setpoint_rejects_order(
     assert exc.value.translation_key == translation_key
     mock_bsblan.thermostat.assert_not_called()
     mock_bsblan.set_hot_water.assert_not_called()
+
+
+async def test_set_setpoint_from_fahrenheit(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a Fahrenheit value equal to the paired setpoint is accepted."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_bsblan.static_values.return_value = StaticState.model_validate(
+        {"temp_reduced_setpoint": _temp_param("18.5")}
+    )
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
+
+    await _async_set_value(hass, COMFORT_ENTITY_ID, 65.3)
+
+    mock_bsblan.thermostat.assert_called_once_with(
+        target_temperature=pytest.approx(18.5), circuit=1
+    )
 
 
 @pytest.mark.parametrize(

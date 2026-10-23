@@ -45,6 +45,8 @@ def validate_setpoint_order(
     The controller accepts a reduced setpoint above the comfort or nominal
     one, so the order is enforced here.
     """
+    # Converting from Fahrenheit leaves float noise: 65.3 °F gives 18.499999 °C
+    temperature = round(temperature, 2)
     if minimum is not None and temperature < minimum:
         limit = minimum
     elif maximum is not None and temperature > maximum:
