@@ -9,6 +9,7 @@ from aioseafile import (
     SeafileTwoFactorRequiredError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.seafile.const import (
     CONF_LIBRARIES,
@@ -29,8 +30,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .conftest import ACCOUNT_EMAIL, ENCRYPTED_LIBRARY_ID, LIBRARY_ID, TOKEN, URL
-
-from tests.common import MockConfigEntry
 
 NEW_LIBRARY_ID = "0c8bd7d5-6ba2-4e7d-9a8b-1f2f4c6ad2b1"
 

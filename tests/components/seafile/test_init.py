@@ -8,6 +8,7 @@ from aioseafile import (
     SeafileTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -15,8 +16,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import SUBENTRY_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_seafile_client")

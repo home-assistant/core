@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from aioseafile import AccountInfo, Library, LibraryDetail
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_fixture,
+    load_json_array_fixture,
+)
 
 from homeassistant.components.seafile.const import (
     CONF_LIBRARY_ID,
@@ -13,8 +18,6 @@ from homeassistant.components.seafile.const import (
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
-
-from tests.common import MockConfigEntry, load_fixture, load_json_array_fixture
 
 URL = "https://seafile.example.com"
 TOKEN = "0123456789abcdef0123456789abcdef01234567"
