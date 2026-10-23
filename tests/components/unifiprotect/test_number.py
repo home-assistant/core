@@ -1305,9 +1305,8 @@ async def test_public_only_chime_ring_volume_for_added_chime(
 async def _reconnect_public_devices_ws(
     _hass: HomeAssistant, ufp: MockUFPFixture
 ) -> None:
-    """Drop and restore the public devices websocket."""
-    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
-    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    """Finish the library's resync after a public websocket reconnect."""
+    ufp.public_resync()
 
 
 async def _refresh_manually(hass: HomeAssistant, _ufp: MockUFPFixture) -> None:

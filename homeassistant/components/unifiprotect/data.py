@@ -318,6 +318,7 @@ class ProtectData:
             # The events websocket is public in both modes (see
             # ``async_subscribe_public_events``), so track its state in both.
             api.subscribe_events_websocket_state(self._async_events_ws_state_changed),
+            api.subscribe_public_resync(self._async_public_resync_done),
         ]
         if api.is_public_only:
             # No private session: the private websocket and the private poll
@@ -543,43 +544,22 @@ class ProtectData:
             return
         self.last_public_update_success = success
         self._async_process_public_updates()
-        if success:
-            # The library resyncs its public bootstrap on reconnect, but the
-            # resync applies silently and races this callback, so the re-read
-            # above may see the pre-disconnect cache. Refresh again behind a
-            # guaranteed-fresh snapshot (``update_public`` is serialized) so a
-            # change from the disconnect gap cannot stay stale.
-            self._entry.async_create_background_task(
-                self._hass,
-                self._async_resignal_after_public_resync(),
-                "unifiprotect public reconnect refresh",
-            )
 
-    async def _async_resignal_after_public_resync(self) -> None:
-        """Re-signal public entities once a fresh public snapshot is applied."""
-        try:
-            await self.async_update_public()
-        except NotAuthorized:
-            # A revoked API key cannot self-recover.
-            self._entry.async_start_reauth(self._hass)
-            return
-        except (TimeoutError, ClientError, ServerDisconnectedError) as err:
-            # Retried on the next reconnect, but this now gates discovery of
-            # devices that appeared during the gap, so make it visible.
-            _LOGGER.warning("Public refresh after reconnect failed: %s", err)
-            return
+    @callback
+    def _async_public_resync_done(self, success: bool) -> None:
+        """Re-signal public entities once the library's reconnect resync has finished.
+
+        Added and removed devices arrive as frames, field changes apply silently.
+        Re-offer cameras, relays and chimes because their entity sets derive from
+        fields.
+        """
         self._async_process_public_updates()
-        # A device that appeared during the gap gets no add frame, so re-offer
-        # everything. Platforms and dispatch helpers drop what they already know.
-        if self.api.has_public_bootstrap:
-            for public in list(self.api.public_bootstrap.cameras.values()):
-                async_dispatcher_send(self._hass, self.channels_signal, public)
-            for device in list(self.api.public_bootstrap.all_devices()):
-                if isinstance(device, PublicDeviceModel):
-                    self._async_dispatch_new_public_device(device)
-            for relay in list(self.api.public_bootstrap.relays.values()):
-                async_dispatcher_send(self._hass, self.relay_signal, relay)
-            self._async_offer_chimes()
+        public_bootstrap = self.api.public_bootstrap
+        for public in list(public_bootstrap.cameras.values()):
+            async_dispatcher_send(self._hass, self.channels_signal, public)
+        for relay in list(public_bootstrap.relays.values()):
+            async_dispatcher_send(self._hass, self.relay_signal, relay)
+        self._async_offer_chimes()
 
     @callback
     def _async_signal_public_doorbell_settings(self) -> None:

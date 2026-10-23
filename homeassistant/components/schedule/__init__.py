@@ -37,7 +37,6 @@ from .const import (  # noqa: F401
     DATA_SCHEDULE,
     DOMAIN,
     LOGGER,
-    SERVICE_GET,
     WEEKDAY_TO_CONF,
     ScheduleEntityCapabilityAttribute,
     ScheduleEntityStateAttribute,

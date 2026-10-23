@@ -24,6 +24,8 @@ SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
 if TYPE_CHECKING:
     from homeassistant.components.sensor import SensorStateClass
 
+    from .template import Template
+
 
 def _get_selector_type_and_class(config: Any) -> tuple[str, type[Selector]]:
     """Get selector type and class."""
@@ -2186,6 +2188,10 @@ class TargetSelectorConfig(BaseSelectorConfig, total=False):
     primary_entities_only: bool
 
 
+# The IDs of one key of a target selection, which may contain templates
+type _TargetSelectionIds = str | Template | list[str | Template]
+
+
 @SELECTORS.register("target")
 class TargetSelector(Selector[TargetSelectorConfig]):
     """Selector of a target value (area ID, device ID, entity ID etc).
@@ -2216,9 +2222,13 @@ class TargetSelector(Selector[TargetSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> dict[str, list[str]]:
+    def __call__(
+        self, data: Any
+    ) -> dict[str, _TargetSelectionIds | dict[str, _TargetSelectionIds]]:
         """Validate the passed selection."""
-        target: dict[str, list[str]] = self.TARGET_SELECTION_SCHEMA(data)
+        target: dict[str, _TargetSelectionIds | dict[str, _TargetSelectionIds]] = (
+            self.TARGET_SELECTION_SCHEMA(data)
+        )
         return target
 
 

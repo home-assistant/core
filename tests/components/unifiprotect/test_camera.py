@@ -2,10 +2,10 @@
 
 from collections.abc import Callable, Coroutine
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
-from aiohttp.client_exceptions import ServerDisconnectedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     Camera as ProtectCamera,
@@ -49,6 +49,7 @@ from .utils import (
     enable_entity,
     init_entry,
     make_public_camera,
+    make_streamless_public_camera,
     public_device_ws_message,
     public_rtsps_for,
     remove_entities,
@@ -935,9 +936,8 @@ async def test_public_only_camera_deleted_during_gap(
 ) -> None:
     """A camera deleted while the websocket was down reads as unavailable.
 
-    The library resyncs its public bootstrap on reconnect but applies the
-    snapshot silently; the integration must re-read behind a fresh snapshot
-    rather than resurrect the entity from the pre-disconnect cache.
+    The reconnect itself re-reads the pre-disconnect cache; the library's
+    resync then removes the camera and the entity must not be resurrected.
     """
     for channel in camera.channels:
         channel._api = ufp.api
@@ -955,64 +955,23 @@ async def test_public_only_camera_deleted_during_gap(
     await init_entry(hass, ufp, [])
     entity_id = _channel_entity_id(camera, 0)
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+    ufp.api.update_public.reset_mock()
 
-    # The websocket drops; the camera is deleted during the gap, so the
-    # reconnect resync returns a snapshot without it.
-    async def _prime_empty() -> Any:
-        pb = ufp.api.public_bootstrap
-        pb.cameras = {}
-        return pb
-
-    ufp.api.update_public = AsyncMock(side_effect=_prime_empty)
     ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
-    # Not resurrected from the stale cache: the fresh snapshot has no camera.
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize(
-    ("error", "expect_reauth"),
-    [
-        pytest.param(NotAuthorized("revoked"), True, id="revoked_key"),
-        pytest.param(ServerDisconnectedError(), False, id="transport_error"),
-    ],
-)
-async def test_reconnect_refresh_failures(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    camera: ProtectCamera,
-    error: Exception,
-    expect_reauth: bool,
-) -> None:
-    """A failed reconnect refresh starts reauth on 401 and retries on transport."""
-    for channel in camera.channels:
-        channel._api = ufp.api
-    public = make_public_camera(camera)
-    public.rtsps_streams = public_rtsps_for(camera)
-
-    async def _prime_public_only() -> Any:
-        pb = ufp.api.public_bootstrap
-        pb.cameras = {camera.id: public}
-        return pb
-
-    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
-    ufp.api.is_public_only = True
-
-    await init_entry(hass, ufp, [])
-
-    ufp.api.update_public = AsyncMock(side_effect=error)
-    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    # The camera was deleted during the gap; the library resync drops it.
+    ufp.api.public_bootstrap.cameras = {}
+    ufp.public_resync(removed=[public])
     await hass.async_block_till_done()
-    with patch.object(ufp.entry, "async_start_reauth") as mock_reauth:
-        ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
-        await hass.async_block_till_done()
 
-    assert mock_reauth.called is expect_reauth
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    ufp.api.update_public.assert_not_awaited()
 
 
 async def test_hybrid_camera_lost_public_mirror_logs(
@@ -1039,9 +998,7 @@ async def test_public_only_camera_added_during_gap(
 ) -> None:
     """A camera added while the websocket was down enumerates on reconnect.
 
-    The resync snapshot is applied silently and no add frame ever arrives for
-    a camera that appeared during the gap, so the reconnect refresh must
-    dispatch it for enumeration itself.
+    The library's reconnect resync announces it with a synthetic add frame.
     """
     for channel in camera_all.channels:
         channel._api = ufp.api
@@ -1059,7 +1016,7 @@ async def test_public_only_camera_added_during_gap(
     await init_entry(hass, ufp, [])
     assert_entity_counts(hass, Platform.CAMERA, 3, 1)
 
-    # A second camera appears during the gap; the reconnect resync includes it.
+    # A second camera appears during the gap; the library resync adds it.
     second = make_public_camera(camera_all)
     second.id = "gap-camera"
     second.mac = "FFEEDDCCBB01"
@@ -1067,20 +1024,52 @@ async def test_public_only_camera_added_during_gap(
     second.display_name = "Gap Camera"
     second.rtsps_streams = first.rtsps_streams
 
-    async def _prime_two() -> Any:
-        pb = ufp.api.public_bootstrap
-        pb.cameras = {camera_all.id: first, second.id: second}
-        return pb
-
-    ufp.api.update_public = AsyncMock(side_effect=_prime_two)
     ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
     ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    ufp.api.public_bootstrap.cameras[second.id] = second
+    ufp.public_resync(added=[second])
     await hass.async_block_till_done()
 
     # Three tiers each for both cameras; no duplicates for the first one.
     assert_entity_counts(hass, Platform.CAMERA, 6, 2)
     assert hass.states.get("camera.gap_camera_high_resolution_channel") is not None
+
+
+async def test_public_only_camera_streams_primed_by_resync(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera_all: ProtectCamera
+) -> None:
+    """Stream tiers the library primes during its resync get their entities.
+
+    The prime of a known camera is silent (no frame), so the resync completion
+    has to re-offer the cameras.
+    """
+    for channel in camera_all.channels:
+        channel._api = ufp.api
+    public = make_streamless_public_camera(camera_all)
+
+    async def _prime_streamless() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {camera_all.id: public}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_streamless)
+    ufp.api.is_public_only = True
+
+    await init_entry(hass, ufp, [])
+    # Streamless: only the snapshot entity of the first main tier.
+    assert_entity_counts(hass, Platform.CAMERA, 1, 1)
+
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+    assert_entity_counts(hass, Platform.CAMERA, 1, 1)
+
+    public.rtsps_streams = public_rtsps_for(camera_all)
+    ufp.public_resync()
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
 
 
 async def test_unadopted_camera_not_enumerated_from_public_frame(
@@ -1136,3 +1125,106 @@ async def test_public_only_camera_end_to_end(
         == camera.channels[0].rtsps_no_srtp_url
     )
     assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL.value)) == 1
+
+
+def _prime_streams_unreadable(ufp: MockUFPFixture, camera: ProtectCamera) -> None:
+    """Make the next prime fail to read the camera's RTSPS streams."""
+
+    async def _prime() -> Any:
+        pb = ufp.api.public_bootstrap
+        public = make_public_camera(camera)
+        public.rtsps_streams = None
+        pb.cameras = {camera.id: public}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime)
+
+
+def _prime_not_mirrored(ufp: MockUFPFixture, camera: ProtectCamera) -> None:
+    """Make the next prime leave the camera out of the public bootstrap."""
+
+    async def _prime() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime)
+
+
+@pytest.mark.parametrize(
+    "prepare_reload",
+    [
+        pytest.param(lambda ufp, camera: None, id="still_valid"),
+        pytest.param(_prime_streams_unreadable, id="streams_unreadable"),
+        pytest.param(_prime_not_mirrored, id="not_mirrored"),
+    ],
+)
+async def test_ignored_rtsp_repair_kept_on_reload(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    issue_registry: ir.IssueRegistry,
+    prepare_reload: Callable[[MockUFPFixture, ProtectCamera], None],
+) -> None:
+    """An ignored RTSP repair is kept when it's still valid or can't be checked."""
+    camera.channels = [c.model_copy() for c in camera.channels]
+    for channel in camera.channels:
+        channel.is_rtsp_enabled = False
+    await init_entry(hass, ufp, [camera])
+    issue_id = f"rtsp_disabled_{camera.id}"
+    ir.async_ignore_issue(hass, DOMAIN, issue_id, True)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    dismissed_version = issue.dismissed_version
+    assert dismissed_version is not None
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    prepare_reload(ufp, camera)
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.active
+    assert issue.dismissed_version == dismissed_version
+    assert not [event for event in events if event.data["action"] == "remove"]
+
+
+async def test_stale_rtsp_repairs_deleted(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera_all: ProtectCamera,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """RTSP repairs of the entry's cameras which are gone are deleted on setup.
+
+    Repairs owned by another NVR's entry, or created before issues were linked to
+    their config entry, are left alone.
+    """
+    other_entry = MockConfigEntry(domain=DOMAIN)
+    other_entry.add_to_hass(hass)
+    for issue_id, config_entry_id in (
+        ("rtsp_disabled_gone", ufp.entry.entry_id),
+        ("rtsp_disabled_other_nvr", other_entry.entry_id),
+        ("rtsp_disabled_unlinked", None),
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            config_entry_id=config_entry_id,
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="rtsp_disabled",
+            translation_placeholders={"camera": "Camera"},
+            data={
+                "entry_id": config_entry_id or ufp.entry.entry_id,
+                "camera_id": issue_id,
+            },
+        )
+
+    await init_entry(hass, ufp, [camera_all])
+
+    assert issue_registry.async_get_issue(DOMAIN, "rtsp_disabled_gone") is None
+    assert issue_registry.async_get_issue(DOMAIN, "rtsp_disabled_other_nvr")
+    assert issue_registry.async_get_issue(DOMAIN, "rtsp_disabled_unlinked")
