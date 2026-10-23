@@ -13,9 +13,14 @@ from homeassistant.components.ezviz.const import (
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
     CONF_ENCRYPTION_PASSWORD,
+    CONF_FFMPEG_ARGUMENTS,
+    DEFAULT_FFMPEG_ARGUMENTS,
+    DEFAULT_TIMEOUT,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_PASSWORD,
+    CONF_TIMEOUT,
     CONF_TYPE,
     CONF_USERNAME,
     STATE_UNAVAILABLE,
@@ -421,11 +426,16 @@ async def test_image_entity_decrypts_with_camera_password(
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "verification-code",
         },
-        options=options,
+        options={
+            CONF_FFMPEG_ARGUMENTS: DEFAULT_FFMPEG_ARGUMENTS,
+            CONF_TIMEOUT: DEFAULT_TIMEOUT,
+            **options,
+        },
     ).add_to_hass(hass)
 
     with patch("homeassistant.components.ezviz.camera.get_ffmpeg_manager"):
         await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     with (
         patch(
