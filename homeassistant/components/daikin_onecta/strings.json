@@ -4,6 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cannot_connect": "Unable to connect to the Daikin API.",
+      "invalid_auth": "The Daikin API rejected the authentication token.",
       "invalid_token": "Invalid or expired token; please reconfigure the integration.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
