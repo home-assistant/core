@@ -1,6 +1,7 @@
 """Test websocket API."""
 
 from dataclasses import replace
+import logging
 import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -253,6 +254,54 @@ async def test_websocket_supervisor_api_error(
     msg = await websocket_client.receive_json()
     assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "example error"
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "method", "level"),
+    [
+        pytest.param("/ping", "get", logging.ERROR, id="ping"),
+        pytest.param(
+            "/ingress/validate_session", "post", logging.DEBUG, id="validate_session"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hassio_env")
+async def test_websocket_supervisor_api_error_log_level(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    endpoint: str,
+    method: str,
+    level: int,
+) -> None:
+    """Test the log level of failed Supervisor websocket api calls."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.request(
+        method,
+        f"http://127.0.0.1{endpoint}",
+        json={"result": "error", "message": "example error"},
+        status=401,
+    )
+    caplog.set_level(logging.DEBUG)
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: endpoint,
+            ATTR_METHOD: method,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["error"]["message"] == "example error"
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.getMessage() == f"Failed to call {endpoint} - example error"
+    ] == [level]
 
 
 @pytest.mark.usefixtures("hassio_env")
