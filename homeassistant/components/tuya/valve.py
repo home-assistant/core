@@ -32,6 +32,13 @@ class TuyaValveEntityDescription(TuyaEntityDescription, ValveEntityDescription):
 
 
 VALVES: dict[DeviceCategory, tuple[TuyaValveEntityDescription, ...]] = {
+    DeviceCategory.GGQ: (
+        TuyaValveEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="valve",
+            device_class=ValveDeviceClass.WATER,
+        ),
+    ),
     DeviceCategory.SFKZQ: (
         TuyaValveEntityDescription(
             key=DPCode.SWITCH,
