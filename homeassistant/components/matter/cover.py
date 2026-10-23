@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema, MatterEntityInfo
@@ -731,7 +731,10 @@ class MatterClosure(MatterEntity, CoverEntity):
         """Set the cover's position, via its primary ClosurePanel child endpoint."""
         panel = self._closure_panels.get(ClosurePanelRole.POSITION)
         if not panel:
-            raise HomeAssistantError(f"No position panel found for {self.entity_id}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="closure_no_position_panel",
+            )
         await self._set_panel_target(panel, kwargs[ATTR_POSITION])
 
     @override
@@ -739,7 +742,10 @@ class MatterClosure(MatterEntity, CoverEntity):
         """Set the cover's Tilt position, via its ClosurePanel child endpoint."""
         panel = self._closure_panels.get(ClosurePanelRole.TILT)
         if not panel:
-            raise HomeAssistantError(f"No tilt panel found for {self.entity_id}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="closure_no_tilt_panel",
+            )
         await self._set_panel_target(panel, kwargs[ATTR_TILT_POSITION])
 
     async def _set_panel_target(self, panel: MatterEndpoint, position: int) -> None:
