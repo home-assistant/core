@@ -167,7 +167,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
         hass.config_entries.async_update_entry(config_entry, data=new_data)
         device_path = usb_device.device
 
-    # The radio may have moved to another port on the host, or behind a serial proxy
+    # The radio may have moved between the host and a serial proxy, or between proxies
     if (new_path := async_find_moved_serial_port(hass, device_path)) is not None:
         _LOGGER.info("Following ZHA device path from %s to %s", device_path, new_path)
         async_update_device_path(hass, config_entry, new_path)

@@ -843,8 +843,8 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                         translation_domain=HOMEASSISTANT_DOMAIN,
                     )
 
-                # A configured radio turning up at another path has moved, to another
-                # port on the host or behind a serial proxy. Its entry follows it.
+                # A configured radio turning up at another path has moved, between the
+                # host and a serial proxy or between proxies. Its entry follows it.
                 if (
                     usb.async_find_moved_serial_port(self.hass, path)
                     == self._radio_mgr.device_path
