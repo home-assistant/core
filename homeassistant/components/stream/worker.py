@@ -377,25 +377,24 @@ class StreamMuxer:
             input_astream=self._input_audio_stream,
         )
         if self._input_video_stream.name == "hevc":
-            codec_context = self._output_video_stream.codec_context
-            codec_context.codec_tag = "hvc1"
+            self._output_video_stream.codec_context.codec_tag = "hvc1"
             if self._video_extradata:
-                codec_context.extradata = self._video_extradata
-                codec_context.width, codec_context.height = self._video_size
+                self._set_video_parameters()
+
+    def _set_video_parameters(self) -> None:
+        """Give the output video stream the current parameter sets and size."""
+        codec_context = self._output_video_stream.codec_context
+        codec_context.extradata = self._video_extradata
+        codec_context.width, codec_context.height = self._video_size
 
     def _parameter_sets_changed(self, packet: av.Packet) -> bool:
         """Return True if a keyframe carries parameter sets the init lacks."""
-        first_keyframe, self._first_keyframe = self._first_keyframe, False
         if not self._follow_parameter_sets or not (
             found := hevc_parameter_sets(bytes(packet))
         ):
             return False
         parameter_sets = self._parameter_sets | found
         if parameter_sets == self._parameter_sets:
-            return False
-        if first_keyframe:
-            # Its output was already created from the stream's extradata
-            self._parameter_sets = parameter_sets
             return False
         # VPS, SPS, PPS, each in ID order
         extradata = b"".join(
@@ -420,6 +419,11 @@ class StreamMuxer:
         # Check for end of segment
         if packet.stream == self._input_video_stream:
             new_init = packet.is_keyframe and self._parameter_sets_changed(packet)
+            if new_init and self._first_keyframe:
+                # Nothing is muxed yet: the current output takes the new sets
+                self._set_video_parameters()
+                new_init = False
+            self._first_keyframe = False
             if (
                 packet.is_keyframe
                 and packet.dts is not None

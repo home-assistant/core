@@ -260,6 +260,15 @@ BOTH_SIZES = [(480, 320), (640, 480)]
             BOTH_SIZES,
             id="h265-change-at-dts-zero",
         ),
+        # Extradata that differs from the first keyframe's parameter sets
+        pytest.param(
+            "libx265",
+            {"stale_extradata": True},
+            0,
+            BOTH_SIZES,
+            BOTH_SIZES,
+            id="h265-stale-extradata",
+        ),
         # avc1 samples keep their in-band parameter sets
         pytest.param("libx264", {}, 0, [(480, 320)], BOTH_SIZES, id="h264"),
     ],

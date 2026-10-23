@@ -151,6 +151,7 @@ def generate_video_with_size_change(
     first_size_keyframe_sets=True,
     extra_pps=False,
     change_at_dts_zero=False,
+    stale_extradata=False,
 ):
     """Generate an MPEG-TS video whose picture size changes at a keyframe.
 
@@ -163,7 +164,9 @@ def generate_video_with_size_change(
     `extra_pps`, the first keyframe (the stream's extradata) also carries a
     copy of its PPS with ID 1, which no later keyframe repeats. With
     `change_at_dts_zero`, timestamps start negative and the first keyframe of
-    the second size has DTS 0.
+    the second size has DTS 0. With `stale_extradata`, a non-key packet ahead
+    of the first keyframe carries the parameter sets of the last size, which
+    become the stream's extradata.
     """
     options = {"x265-params": "repeat-headers=1"} if encoder == "libx265" else {}
     parts = [
@@ -184,6 +187,16 @@ def generate_video_with_size_change(
     )
     stream = container.add_stream_from_template(parts[0].streams.video[0])
     offset = -lengths[0] if change_at_dts_zero else 0
+    if stale_extradata:
+        parameter_sets, _ = split_hevc_nal_units(
+            bytes(part_packets[-1][0]), {32, 33, 34}
+        )
+        # A non-key access unit, so the stream starts at the next keyframe
+        stale = av.Packet(parameter_sets + bytes(part_packets[-1][1]))
+        stale.pts = stale.dts = offset - 1
+        stale.time_base = part_packets[0][0].time_base
+        stale.stream = stream
+        container.mux(stale)
     for part_index, (packets, length) in enumerate(
         zip(part_packets, lengths, strict=True)
     ):
