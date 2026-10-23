@@ -8,10 +8,12 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv, intent, translation
 
-from . import INTENT_SET_FAN_MODE, INTENT_SET_TEMPERATURE, ClimateEntityFeature
 from .const import (
     DOMAIN,
+    INTENT_SET_FAN_MODE,
+    INTENT_SET_TEMPERATURE,
     ClimateEntityCapabilityAttribute,
+    ClimateEntityFeature,
     ClimateEntityStateAttribute,
     ClimateService,
     ClimateServiceArgument,
