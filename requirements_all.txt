@@ -328,7 +328,7 @@ aioimaplib==2.0.3
 aioimmich==0.18.0
 
 # homeassistant.components.indi_allsky
-aioindiallsky==0.1.6
+aioindiallsky==0.1.7
 
 # homeassistant.components.ipp
 aioipp==0.20.0
@@ -736,6 +736,9 @@ bluetooth-auto-recovery==1.6.4
 # homeassistant.components.private_ble_device
 bluetooth-data-tools==1.29.24
 
+# homeassistant.components.bluetti_modbus
+bluetti-modbus==0.52.0
+
 # homeassistant.components.bond
 bond-async==0.2.1
 
@@ -1072,9 +1075,6 @@ flexit-modbus==0.1.0
 
 # homeassistant.components.flexit_bacnet
 flexit_bacnet==2.2.3
-
-# homeassistant.components.flipr
-flipr-api==1.6.1
 
 # homeassistant.components.flow_it
 flow-it-api==0.0.1.1
@@ -1674,7 +1674,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==13.0.0
+midea-local==14.0.0
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -2140,6 +2140,9 @@ pyaprilaire==0.9.1
 # homeassistant.components.aqvify
 pyaqvify==0.0.12
 
+# homeassistant.components.ialarm
+pyasyncialarm==3.1.1
+
 # homeassistant.components.atag
 pyatag==0.3.7.1
 
@@ -2286,7 +2289,7 @@ pyevilgenius==2.0.0
 pyezvizapi==1.0.5.0
 
 # homeassistant.components.fibaro
-pyfibaro==0.8.3
+pyfibaro==0.8.4
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -2356,9 +2359,6 @@ pyhomematic==0.1.78
 
 # homeassistant.components.homeworks
 pyhomeworks==1.1.2
-
-# homeassistant.components.ialarm
-pyialarm==2.2.0
 
 # homeassistant.components.icloud
 pyicloud==2026.10.1
@@ -3132,7 +3132,7 @@ sentry-sdk==2.48.0
 
 # homeassistant.components.serial
 # homeassistant.components.usb
-serialx==1.14.0
+serialx==1.15.0
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.2.1
@@ -3451,10 +3451,10 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.8.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.9.5
+victron-mqtt==2026.10.1
 
 # homeassistant.components.victron_remote_monitoring
-victron-vrm==0.1.13
+victron-vrm==0.1.14
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0

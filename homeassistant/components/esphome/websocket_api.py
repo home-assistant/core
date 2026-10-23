@@ -2,15 +2,16 @@
 
 from typing import Any, cast
 
+from aioesphomeapi import WizardEntityField, build_device_unique_id
 import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import CONF_NOISE_PSK, DOMAIN
-from .entry_data import ESPHomeConfigEntry
+from .entry_data import INFO_TYPE_TO_PLATFORM, ESPHomeConfigEntry, RuntimeEntryData
 from .serial_proxy import build_url
 
 TYPE = "type"
@@ -32,6 +33,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the websocket API."""
     websocket_api.async_register_command(hass, get_encryption_key)
     websocket_api.async_register_command(hass, get_device_capabilities)
+    websocket_api.async_register_command(hass, get_device_wizard)
 
 
 @callback
@@ -77,30 +79,7 @@ def get_device_capabilities(
     msg: dict[str, Any],
 ) -> None:
     """Return the cached ESPHome device capabilities for the device page."""
-    device, candidate = dr.async_get_device_and_config_entry_for_domain(
-        hass, msg[DEVICE_ID], domain=DOMAIN, include_child_devices=False
-    )
-    if device is None:
-        connection.send_error(
-            msg["id"], websocket_api.ERR_NOT_FOUND, "Device not found"
-        )
-        return
-
-    if candidate is None:
-        connection.send_error(
-            msg["id"],
-            websocket_api.ERR_NOT_FOUND,
-            "Device is not an ESPHome device",
-        )
-        return
-    entry = cast(ESPHomeConfigEntry, candidate)
-
-    if not _is_main_esphome_device(device):
-        connection.send_error(
-            msg["id"],
-            websocket_api.ERR_NOT_FOUND,
-            "Device is not the main ESPHome device",
-        )
+    if (entry := _async_get_main_device_entry(hass, connection, msg)) is None:
         return
 
     capabilities = None
@@ -136,6 +115,112 @@ def get_device_capabilities(
             ],
             "sendspin": {"supported": bool(capabilities.sendspin.feature_flags)},
         },
+    )
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required(TYPE): "esphome/get_device_wizard",
+        probatio.Required(DEVICE_ID): str,
+    }
+)
+def get_device_wizard(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return the cached ESPHome device wizard, with the entity ids it lists."""
+    if (entry := _async_get_main_device_entry(hass, connection, msg)) is None:
+        return
+
+    wizard = None
+    if entry.state is ConfigEntryState.LOADED:
+        wizard = entry.runtime_data.device_wizard
+
+    if wizard is None:
+        connection.send_result(msg["id"], {"pages": []})
+        return
+
+    entry_data = entry.runtime_data
+    ent_reg = er.async_get(hass)
+    connection.send_result(
+        msg["id"],
+        {
+            "pages": [
+                {
+                    "title": page.title,
+                    "description": page.description,
+                    "entities": [
+                        {
+                            "entity_id": _wizard_entity_id(ent_reg, entry_data, entity),
+                            "description": entity.description,
+                        }
+                        for entity in page.entities
+                    ],
+                }
+                for page in wizard.pages
+            ]
+        },
+    )
+
+
+@callback
+def _async_get_main_device_entry(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> ESPHomeConfigEntry | None:
+    """Return the config entry of the requested main ESPHome device, or send an error."""
+    device, candidate = dr.async_get_device_and_config_entry_for_domain(
+        hass, msg[DEVICE_ID], domain=DOMAIN, include_child_devices=False
+    )
+    if device is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Device not found"
+        )
+        return None
+
+    if candidate is None:
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_NOT_FOUND,
+            "Device is not an ESPHome device",
+        )
+        return None
+
+    if not _is_main_esphome_device(device):
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_NOT_FOUND,
+            "Device is not the main ESPHome device",
+        )
+        return None
+    return cast(ESPHomeConfigEntry, candidate)
+
+
+def _wizard_entity_id(
+    ent_reg: er.EntityRegistry,
+    entry_data: RuntimeEntryData,
+    entity: WizardEntityField,
+) -> str | None:
+    """Return the entity id of an entity the wizard lists, if it has one."""
+    assert entry_data.device_info is not None
+    key = (entity.device_id, entity.key)
+    # Keys are only unique per platform and the wizard does not name the platform
+    matches = [
+        (info_type, infos[key])
+        for info_type, infos in entry_data.info.items()
+        if key in infos
+    ]
+    if len(matches) != 1:
+        return None
+    info_type, info = matches[0]
+    return ent_reg.async_get_entity_id(
+        INFO_TYPE_TO_PLATFORM[info_type],
+        DOMAIN,
+        build_device_unique_id(entry_data.device_info.mac_address, info),
     )
 
 

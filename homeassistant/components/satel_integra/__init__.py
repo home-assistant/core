@@ -62,11 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> Non
     ):
         coordinator.setup()
 
-    await client.async_connect(
-        coordinator_zones.zones_update_callback,
-        coordinator_outputs.outputs_update_callback,
-        coordinator_partitions.partitions_update_callback,
-    )
+    await client.async_connect()
     await coordinator_temperatures.async_config_entry_first_refresh()
 
     try:

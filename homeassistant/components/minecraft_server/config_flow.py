@@ -1,5 +1,6 @@
 """Config flow for Minecraft Server integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -29,65 +30,101 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            server_type = MinecraftServerType(user_input[CONF_TYPE])
-            server_address = user_input[CONF_ADDRESS]
+            errors = await self._async_validate_input(user_input)
 
-            # Prepare config entry data.
-            config_data = {
-                CONF_ADDRESS: server_address,
-                CONF_TYPE: server_type,
-            }
-
-            # Abort config flow if service is already configured.
-            self._async_abort_entries_match({CONF_ADDRESS: server_address})
-
-            api = MinecraftServer(self.hass, server_type, server_address)
-
-            try:
-                await api.async_initialize()
-            except MinecraftServerAddressError as error:
-                _LOGGER.debug(
-                    "Initialization of %s server failed: %s",
-                    server_type,
-                    error,
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_ADDRESS],
+                    data={
+                        CONF_ADDRESS: user_input[CONF_ADDRESS],
+                        CONF_TYPE: user_input[CONF_TYPE],
+                    },
                 )
-                errors["base"] = "cannot_connect"
-            else:
-                if await api.async_is_online():
-                    return self.async_create_entry(
-                        title=server_address,
-                        data=config_data,
-                    )
 
-                # Wrong edition selected, host or port invalid or server not reachable.
-                errors["base"] = "cannot_connect"
-
-        # Show configuration form (default form in case of no user_input,
-        # form filled with user_input and eventually with errors otherwise).
         return self._show_config_form(user_input, errors)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow for Minecraft Server."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            errors = await self._async_validate_input(user_input)
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    title=user_input[CONF_ADDRESS],
+                    data_updates={
+                        CONF_ADDRESS: user_input[CONF_ADDRESS],
+                        CONF_TYPE: user_input[CONF_TYPE],
+                    },
+                )
+
+        return self._show_config_form(
+            user_input,
+            errors,
+            step_id="reconfigure",
+            defaults=entry.data,
+        )
+
+    async def _async_validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
+        """Validate user input."""
+        errors: dict[str, str] = {}
+        server_type = MinecraftServerType(user_input[CONF_TYPE])
+        server_address = user_input[CONF_ADDRESS]
+
+        self._async_abort_entries_match({CONF_ADDRESS: server_address})
+        api = MinecraftServer(self.hass, server_type, server_address)
+
+        try:
+            await api.async_initialize()
+        except MinecraftServerAddressError as error:
+            _LOGGER.debug(
+                "Initialization of %s server failed: %s",
+                server_type,
+                error,
+            )
+
+            errors["base"] = "cannot_connect"
+        else:
+            if not await api.async_is_online():
+                errors["base"] = "cannot_connect"
+
+        return errors
 
     def _show_config_form(
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
+        *,
+        step_id: str = "user",
+        defaults: Mapping[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Show the configuration form to the user."""
         if user_input is None:
             user_input = {}
+        if defaults is None:
+            defaults = {}
 
         return self.async_show_form(
-            step_id="user",
+            step_id=step_id,
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
                         CONF_TYPE,
                         default=user_input.get(
-                            CONF_TYPE, MinecraftServerType.JAVA_EDITION
+                            CONF_TYPE,
+                            defaults.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION),
                         ),
                     ): probatio.In(list(MinecraftServerType)),
                     probatio.Required(
                         CONF_ADDRESS,
-                        default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
+                        default=user_input.get(
+                            CONF_ADDRESS, defaults.get(CONF_ADDRESS, DEFAULT_ADDRESS)
+                        ),
                     ): probatio.All(str, probatio.Lower),
                 }
             ),
