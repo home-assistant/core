@@ -24,8 +24,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import convert
 
-from . import FibaroConfigEntry
-from .entity import FibaroController, FibaroEntity
+from . import FibaroConfigEntry, FibaroController
+from .entity import FibaroEntity
 
 # List of known sensors which represents a fibaro device
 MAIN_SENSOR_TYPES: dict[str, SensorEntityDescription] = {

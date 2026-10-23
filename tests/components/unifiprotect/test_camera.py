@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     Camera as ProtectCamera,
@@ -1157,3 +1158,106 @@ async def test_public_only_camera_end_to_end(
         == camera.channels[0].rtsps_no_srtp_url
     )
     assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL.value)) == 1
+
+
+def _prime_streams_unreadable(ufp: MockUFPFixture, camera: ProtectCamera) -> None:
+    """Make the next prime fail to read the camera's RTSPS streams."""
+
+    async def _prime() -> Any:
+        pb = ufp.api.public_bootstrap
+        public = make_public_camera(camera)
+        public.rtsps_streams = None
+        pb.cameras = {camera.id: public}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime)
+
+
+def _prime_not_mirrored(ufp: MockUFPFixture, camera: ProtectCamera) -> None:
+    """Make the next prime leave the camera out of the public bootstrap."""
+
+    async def _prime() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime)
+
+
+@pytest.mark.parametrize(
+    "prepare_reload",
+    [
+        pytest.param(lambda ufp, camera: None, id="still_valid"),
+        pytest.param(_prime_streams_unreadable, id="streams_unreadable"),
+        pytest.param(_prime_not_mirrored, id="not_mirrored"),
+    ],
+)
+async def test_ignored_rtsp_repair_kept_on_reload(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    issue_registry: ir.IssueRegistry,
+    prepare_reload: Callable[[MockUFPFixture, ProtectCamera], None],
+) -> None:
+    """An ignored RTSP repair is kept when it's still valid or can't be checked."""
+    camera.channels = [c.model_copy() for c in camera.channels]
+    for channel in camera.channels:
+        channel.is_rtsp_enabled = False
+    await init_entry(hass, ufp, [camera])
+    issue_id = f"rtsp_disabled_{camera.id}"
+    ir.async_ignore_issue(hass, DOMAIN, issue_id, True)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    dismissed_version = issue.dismissed_version
+    assert dismissed_version is not None
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    prepare_reload(ufp, camera)
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.active
+    assert issue.dismissed_version == dismissed_version
+    assert not [event for event in events if event.data["action"] == "remove"]
+
+
+async def test_stale_rtsp_repairs_deleted(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera_all: ProtectCamera,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """RTSP repairs of the entry's cameras which are gone are deleted on setup.
+
+    Repairs owned by another NVR's entry, or created before issues were linked to
+    their config entry, are left alone.
+    """
+    other_entry = MockConfigEntry(domain=DOMAIN)
+    other_entry.add_to_hass(hass)
+    for issue_id, config_entry_id in (
+        ("rtsp_disabled_gone", ufp.entry.entry_id),
+        ("rtsp_disabled_other_nvr", other_entry.entry_id),
+        ("rtsp_disabled_unlinked", None),
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            config_entry_id=config_entry_id,
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="rtsp_disabled",
+            translation_placeholders={"camera": "Camera"},
+            data={
+                "entry_id": config_entry_id or ufp.entry.entry_id,
+                "camera_id": issue_id,
+            },
+        )
+
+    await init_entry(hass, ufp, [camera_all])
+
+    assert issue_registry.async_get_issue(DOMAIN, "rtsp_disabled_gone") is None
+    assert issue_registry.async_get_issue(DOMAIN, "rtsp_disabled_other_nvr")
+    assert issue_registry.async_get_issue(DOMAIN, "rtsp_disabled_unlinked")

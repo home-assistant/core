@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
         if controller_id == 1:
             assert controller.mac_address
             device_info.connections = {(CONNECTION_NETWORK_MAC, controller.mac_address)}
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=entry.entry_id, device_info=device_info
         )
 

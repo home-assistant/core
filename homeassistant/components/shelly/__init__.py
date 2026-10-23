@@ -352,6 +352,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 )
             if get_rpc_key_instances(device.status, "ledstrip"):
                 runtime_data.rpc_ledstrip_effects = await device.ledstrip_list_effects()
+                runtime_data.rpc_ledstrip_palettes = (
+                    await device.ledstrip_list_palettes()
+                )
             remove_stale_blu_trv_devices(hass, device, entry)
         except (DeviceConnectionError, MacAddressMismatchError, RpcCallError) as err:
             await device.shutdown()

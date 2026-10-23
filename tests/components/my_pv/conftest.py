@@ -161,6 +161,7 @@ def mock_my_pv_client(
         client.is_on = True
         client.send_command = AsyncMock(return_value=True)
         client.get_data_configurations = Mock(return_value=DATA_CONFIGURATION)
+        client.get_data_configuration = Mock(side_effect=DATA_CONFIGURATION.get)
         client.get_data_value = Mock(side_effect=_data_value_lookup)
         client.supports_data = Mock(side_effect=DATA_CONFIGURATION.__contains__)
 
