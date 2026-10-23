@@ -14,7 +14,6 @@ from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import async_noop, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -223,7 +222,8 @@ class UnifiEntityLoader:
         if key in self.known_objects or not description.allowed_fn(self.hub, obj_id):
             return False
         if not description.supported_fn(self.hub, obj_id):
-            self.unsupported_objects.add(key)
+            if description.data_can_return:
+                self.unsupported_objects.add(key)
             return False
         self.unsupported_objects.discard(key)
         return True
@@ -273,11 +273,6 @@ class UnifiEntityLoader:
             description: UnifiEntityDescription, event: ItemEvent, obj_id: str
         ) -> None:
             """Create new UniFi entity on event."""
-            if self.hub.config.entry.state not in (
-                ConfigEntryState.LOADED,
-                ConfigEntryState.SETUP_IN_PROGRESS,
-            ):
-                return
             # Only objects that waited for supported data, a removed entity stays
             if (
                 event is ItemEvent.CHANGED
@@ -289,9 +284,13 @@ class UnifiEntityLoader:
                     [unifi_platform_entity(obj_id, self.hub, description)]
                 )
 
-        # A changed object can become supported, e.g. after a device restart
         for description in descriptions:
-            description.api_handler_fn(self.hub.api).subscribe(
-                partial(create_unifi_entity, description),
-                (ItemEvent.ADDED, ItemEvent.CHANGED),
+            events = (ItemEvent.ADDED,)
+            if description.data_can_return:
+                # A changed object can become supported, e.g. after a device restart
+                events = (ItemEvent.ADDED, ItemEvent.CHANGED)
+            self.hub.config.entry.async_on_unload(
+                description.api_handler_fn(self.hub.api).subscribe(
+                    partial(create_unifi_entity, description), events
+                )
             )

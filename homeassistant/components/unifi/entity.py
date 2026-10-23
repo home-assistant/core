@@ -125,6 +125,8 @@ class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescrip
     # Optional constants
     has_entity_name = True  # Part of EntityDescription
     """Has entity name defaults to true."""
+    data_can_return: bool = False
+    """Keep entity unavailable while unsupported, data can return later."""
     event_is_on: set[EventKey] | None = None
     """Which UniFi events should be used to consider state 'on'."""
     event_to_subscribe: tuple[EventKey, ...] | None = None
@@ -250,7 +252,9 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
         description = self.entity_description
         if not description.supported_fn(self.hub, self._obj_id):
-            # Keep the entity, data like device stats can return after a restart
+            if not description.data_can_return:
+                self.hass.async_create_task(self.remove_item({self._obj_id}))
+                return
             self._attr_available = False
             self.async_write_ha_state()
             return

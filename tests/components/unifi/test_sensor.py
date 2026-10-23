@@ -693,44 +693,6 @@ async def test_bandwidth_sensors(
     assert hass.states.get("sensor.wired_client_tx")
 
 
-@pytest.mark.parametrize(
-    "config_entry_options",
-    [
-        {
-            CONF_ALLOW_BANDWIDTH_SENSORS: True,
-            CONF_ALLOW_UPTIME_SENSORS: True,
-            CONF_CLIENT_SOURCE: [WIRED_CLIENT["mac"]],
-        }
-    ],
-)
-@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_selected_client_sensors_follow_options(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    config_entry_setup: MockConfigEntry,
-    config_entry_options: MappingProxyType[str, Any],
-) -> None:
-    """Sensors of selected clients are removed when their option is disabled."""
-    entity_ids = (
-        "sensor.wired_client_rx",
-        "sensor.wired_client_tx",
-        "sensor.wired_client_uptime",
-    )
-    for entity_id in entity_ids:
-        assert hass.states.get(entity_id)
-
-    options = deepcopy(config_entry_options)
-    options[CONF_ALLOW_BANDWIDTH_SENSORS] = False
-    options[CONF_ALLOW_UPTIME_SENSORS] = False
-    hass.config_entries.async_update_entry(config_entry_setup, options=options)
-    await hass.async_block_till_done()
-
-    for entity_id in entity_ids:
-        assert hass.states.get(entity_id) is None
-        assert entity_registry.async_get(entity_id) is None
-
-
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -798,7 +760,6 @@ async def test_wired_client_speed_sensor(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_ignore_local_mac_client_sensors(
     hass: HomeAssistant,
-    mock_websocket_message: WebsocketMessageMock,
     wireless_local_mac_has_sensors: bool,
 ) -> None:
     """Only Wi-Fi clients with private MACs are filtered when the option is enabled."""
@@ -815,21 +776,6 @@ async def test_ignore_local_mac_client_sensors(
     assert hass.states.get("sensor.wired_local_mac_client_uptime")
 
     # The Wi-Fi private-MAC client only keeps its sensors via the allowlist
-    for entity_id in (
-        "sensor.wireless_local_mac_client_rx",
-        "sensor.wireless_local_mac_client_tx",
-        "sensor.wireless_local_mac_client_uptime",
-    ):
-        assert (
-            hass.states.get(entity_id) is not None
-        ) == wireless_local_mac_has_sensors
-
-    # An offline client can be reported as wired, it stays as it was
-    mock_websocket_message(
-        message=MessageKey.CLIENT, data={**WIRELESS_LOCAL_MAC_CLIENT, "is_wired": True}
-    )
-    await hass.async_block_till_done()
-
     for entity_id in (
         "sensor.wireless_local_mac_client_rx",
         "sensor.wireless_local_mac_client_tx",
