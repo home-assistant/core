@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from bsblan import BSBLANError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -62,9 +63,10 @@ async def test_partial_sensors_created_when_some_data_available(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test only available sensors are created when some sensor data is available."""
-    # Only current temperature available, outside temperature and energy not
-    mock_bsblan.sensor.return_value.outside_temperature = None
-    mock_bsblan.sensor.return_value.total_energy = None
+    # Without outside temperature and energy, the sensor section has nothing to read
+    mock_bsblan.sensor.side_effect = BSBLANError(
+        "None of the requested parameters are valid for this section"
+    )
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 

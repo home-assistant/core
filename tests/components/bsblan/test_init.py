@@ -646,6 +646,30 @@ async def test_coordinator_fast_dhw_fails_on_refresh_preserves_state(
     assert coordinator.data.dhw is initial_dhw
 
 
+async def test_coordinator_fast_sensor_fails_on_refresh_preserves_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test fast coordinator preserves last sensor data when sensors fail on refresh."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.fast_coordinator
+    initial_sensor = coordinator.data.sensor
+
+    mock_bsblan.sensor.side_effect = BSBLANError("Malformed response")
+
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success
+    assert coordinator.data.sensor is initial_sensor
+
+
 async def test_coordinator_fast_state_error_marks_update_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

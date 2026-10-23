@@ -141,7 +141,13 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                             "circuit": str(circuit),
                         },
                     ) from err
-            sensor = await self.client.sensor(include=SENSOR_INCLUDE)
+            try:
+                sensor = await self.client.sensor(include=SENSOR_INCLUDE)
+            except BSBLANAuthError, BSBLANConnectionError:
+                raise
+            except BSBLANError:
+                sensor = self.data.sensor if self.data else Sensor()
+                LOGGER.debug("Sensor data not available on device at %s", host)
 
         except BSBLANAuthError as err:
             raise ConfigEntryAuthFailed(
