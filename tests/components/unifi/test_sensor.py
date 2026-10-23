@@ -1459,6 +1459,41 @@ async def test_device_system_stats(
 
 
 @pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "device_id": "mock-id",
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "state": 1,
+                "version": "4.0.42.10433",
+                "system-stats": {"cpu": "", "mem": "", "uptime": ""},
+            }
+        ]
+    ],
+)
+async def test_no_entity_created_after_unload(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify a late reported stat does not create an entity after unload."""
+    assert hass.states.get("sensor.device_cpu_utilization") is None
+
+    api = config_entry_setup.runtime_data.api
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
+
+    device = deepcopy(device_payload[0])
+    device["system-stats"] = {"cpu": 5.8, "mem": 31.1, "uptime": 7316}
+    api.devices.process_raw([device])
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.device_cpu_utilization") is None
+
+
+@pytest.mark.parametrize(
     "config_entry_options",
     [
         {
