@@ -1,6 +1,8 @@
 """Test the Seafile config flow."""
 
+import asyncio
 from dataclasses import replace
+from typing import Any
 from unittest.mock import AsyncMock
 
 from aioseafile import (
@@ -26,7 +28,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 
 from . import setup_integration
 from .conftest import ACCOUNT_EMAIL, ENCRYPTED_LIBRARY_ID, LIBRARY_ID, TOKEN, URL
@@ -228,6 +230,37 @@ async def test_token_revoked_when_flow_cancelled(
     hass.config_entries.flow.async_abort(flow_id)
     await hass.async_block_till_done()
     mock_seafile_client.logout_device.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_token_revoked_when_flow_cancelled_during_login(
+    hass: HomeAssistant, mock_seafile_client: AsyncMock
+) -> None:
+    """Test a token that arrives after the flow was cancelled is revoked."""
+    login_started = asyncio.Event()
+    release_login = asyncio.Event()
+
+    async def _get_auth_token(*args: Any, **kwargs: Any) -> str:
+        login_started.set()
+        await release_login.wait()
+        return TOKEN
+
+    mock_seafile_client.get_auth_token.side_effect = _get_auth_token
+    flow_id = await _start_flow(hass)
+    configure = hass.async_create_task(
+        hass.config_entries.flow.async_configure(flow_id, USER_INPUT)
+    )
+    await login_started.wait()
+
+    hass.config_entries.flow.async_abort(flow_id)
+    release_login.set()
+    # The flow manager rejects the late result of the removed flow.
+    with pytest.raises(UnknownFlow):
+        await configure
+    await hass.async_block_till_done()
+
+    mock_seafile_client.logout_device.assert_awaited_once()
+    mock_seafile_client.get_account_info.assert_not_awaited()
 
 
 @pytest.mark.parametrize(

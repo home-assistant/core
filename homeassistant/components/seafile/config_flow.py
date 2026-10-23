@@ -94,6 +94,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
         self._client: Seafile | None = None
         self._token: str | None = None
         self._libraries: list[Library] = []
+        self._removed = False
 
     async def _async_login(
         self, errors: dict[str, str], otp: str | None = None
@@ -114,6 +115,10 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
                 device_id=hashlib.sha1(uuid4().bytes).hexdigest(),
                 device_name=f"Home Assistant ({self.hass.config.location_name})",
             )
+            if self._removed:
+                # Cancelled while logging in, before there was a token to revoke.
+                await self._async_revoke_token(client)
+                return None
             account = await client.get_account_info()
             self._libraries = await client.get_libraries()
         except SeafileTwoFactorRequiredError:
@@ -145,6 +150,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_remove(self) -> None:
         """Revoke the token when the flow ends without creating the entry."""
+        self._removed = True
         if self._token is not None and self._client is not None:
             self.hass.async_create_task(self._async_revoke_token(self._client))
 
