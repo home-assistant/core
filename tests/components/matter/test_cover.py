@@ -31,7 +31,9 @@ from homeassistant.components.matter.cover import (
     _get_closure_device_class,
     _get_closure_panel_role,
     _ha_position_to_percent100ths,
+    _ha_position_to_slats_percent100ths,
     _percent100ths_to_ha_position,
+    _slats_percent100ths_to_ha_position,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -215,6 +217,37 @@ def test_percent100ths_to_ha_position(value: int | None, expected: int | None) -
 def test_ha_position_to_percent100ths(position: int, expected: int) -> None:
     """Test converting a HA 0-100 cover position to a Matter percent100ths value."""
     assert _ha_position_to_percent100ths(position) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(None, None, id="none_value"),
+        pytest.param(0, 0, id="closed_at_zero"),
+        pytest.param(10000, 0, id="closed_at_hundred"),
+        pytest.param(5000, 100, id="open_at_fifty"),
+        pytest.param(2500, 50, id="halfway_first_half"),
+        pytest.param(7500, 50, id="halfway_second_half_folds_the_same"),
+    ],
+)
+def test_slats_percent100ths_to_ha_position(
+    value: int | None, expected: int | None
+) -> None:
+    """Test converting a slat-rotating Tilt panel's percent100ths to a HA position."""
+    assert _slats_percent100ths_to_ha_position(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("position", "expected"),
+    [
+        pytest.param(0, 0, id="ha_closed"),
+        pytest.param(100, 5000, id="ha_open"),
+        pytest.param(50, 2500, id="halfway"),
+    ],
+)
+def test_ha_position_to_slats_percent100ths(position: int, expected: int) -> None:
+    """Test converting a HA position to a slat-rotating Tilt panel's percent100ths."""
+    assert _ha_position_to_slats_percent100ths(position) == expected
 
 
 @pytest.mark.parametrize(
@@ -1433,6 +1466,65 @@ async def test_closure_cover_venetian_blinds(
     assert state
     assert state.attributes["current_position"] == 30
     assert state.attributes["current_tilt_position"] == 80
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
+async def test_closure_cover_slats_orientation_tilt(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a Tilt panel whose Modulation is SlatsOrientation (spec 5.5.5.1 / 5.5.8.1.5.1).
+
+    Closed at both 0% and 100%, open at 50%: the general monotonic
+    0%=open/100%=closed conversion doesn't apply to it.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    dim = clusters.ClosureDimension
+
+    # Mark the Tilt panel (endpoint 3) as Modulation/SlatsOrientation.
+    set_node_attribute(
+        matter_node,
+        3,
+        dim.id,
+        dim.Attributes.FeatureMap.attribute_id,
+        95 | dim.Bitmaps.Feature.kModulation,
+    )
+    set_node_attribute(
+        matter_node,
+        3,
+        dim.id,
+        dim.Attributes.ModulationType.attribute_id,
+        dim.Enums.ModulationTypeEnum.kSlatsOrientation.value,
+    )
+    # Fully open (slats horizontal): percent100ths 5000, not the panel's
+    # usual 0%=open.
+    set_node_attribute(
+        matter_node,
+        3,
+        dim.id,
+        dim.Attributes.CurrentState.attribute_id,
+        {0: 5000, 1: False, 2: 0},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["current_tilt_position"] == 100
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_tilt_position",
+        {"entity_id": entity_id, "tilt_position": 100},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=3,
+        # HA tilt 100 (open) must become Matter 5000 (open), not 0 (closed).
+        command=clusters.ClosureDimension.Commands.SetTarget(position=5000),
+        timed_request_timeout_ms=1000,
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_closure_roof_window_matterbridge"])

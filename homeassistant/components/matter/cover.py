@@ -180,6 +180,50 @@ def _ha_position_to_percent100ths(position: int) -> int:
     return (100 - position) * 100
 
 
+def _is_slats_orientation_tilt(panel: MatterEndpoint) -> bool:
+    """Return True if `panel` is a slat-rotating Tilt panel.
+
+    Per spec 5.5.5.1 / 5.5.8.1.5.1, such a panel is closed at both 0% and
+    100% and open at 50%, unlike the general monotonic 0%=open/100%=closed
+    convention the other panels (and `_ha_position_to_percent100ths`/
+    `_percent100ths_to_ha_position`) assume.
+    """
+    if not _feature_supported(
+        panel,
+        clusters.ClosureDimension.Attributes.FeatureMap,
+        clusters.ClosureDimension.Bitmaps.Feature.kModulation,
+    ):
+        return False
+    return bool(
+        panel.get_attribute_value(
+            None, clusters.ClosureDimension.Attributes.ModulationType
+        )
+        == clusters.ClosureDimension.Enums.ModulationTypeEnum.kSlatsOrientation
+    )
+
+
+def _slats_percent100ths_to_ha_position(value: int | None) -> int | None:
+    """Convert a slat-rotating Tilt panel's percent100ths to a HA 0-100 position.
+
+    0% and 100% both fold onto HA position 0 (closed); 50% is HA position
+    100 (open, slats horizontal). Readings symmetric around 50% (e.g. 25%
+    and 75%) are indistinguishable in HA's single-ended 0-100 scale.
+    """
+    if value is None:
+        return None
+    return floor((5000 - abs(value - 5000)) / 50)
+
+
+def _ha_position_to_slats_percent100ths(position: int) -> int:
+    """Convert a HA 0-100 position to a slat-rotating Tilt panel's percent100ths.
+
+    The reverse mapping is ambiguous (two closed states fold into one), so
+    this always targets the first half (0%-50%) of the physical range -
+    the exact inverse of `_slats_percent100ths_to_ha_position` there.
+    """
+    return position * 50
+
+
 def _feature_supported(
     endpoint: MatterEndpoint,
     feature_map_attribute: type[clusters.ClusterAttributeDescriptor],
@@ -706,7 +750,11 @@ class MatterClosure(MatterEntity, CoverEntity):
         is currently latched and the move actually changes its position
         (mirrors the parent's MoveTo `latch=False` in `_move_closure`).
         """
-        target_position = _ha_position_to_percent100ths(position)
+        target_position = (
+            _ha_position_to_slats_percent100ths(position)
+            if _is_slats_orientation_tilt(panel)
+            else _ha_position_to_percent100ths(position)
+        )
         command_kwargs: dict[str, Any] = {"position": target_position}
         current_state = panel.get_attribute_value(
             None, clusters.ClosureDimension.Attributes.CurrentState
@@ -849,8 +897,11 @@ class MatterClosure(MatterEntity, CoverEntity):
             tilt_state = tilt.get_attribute_value(
                 None, clusters.ClosureDimension.Attributes.CurrentState
             )
-            self._attr_current_cover_tilt_position = _percent100ths_to_ha_position(
-                _extract_struct_field(tilt_state, "position")
+            raw_tilt_position = _extract_struct_field(tilt_state, "position")
+            self._attr_current_cover_tilt_position = (
+                _slats_percent100ths_to_ha_position(raw_tilt_position)
+                if _is_slats_orientation_tilt(tilt)
+                else _percent100ths_to_ha_position(raw_tilt_position)
             )
             supported_features |= CoverEntityFeature.SET_TILT_POSITION
         else:
