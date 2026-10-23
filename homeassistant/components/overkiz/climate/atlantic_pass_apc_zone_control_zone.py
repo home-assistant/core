@@ -595,12 +595,10 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         ]
 
         # The zone keeps applying a derogation until it is turned off, even
-        # once both modes follow the time program again.
-        if (
-            preset_mode == PRESET_SCHEDULE
-            and self.device.states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
-            == OverkizCommandParam.ON
-        ):
+        # once both modes follow the time program again. The state of the
+        # derogation may not show one that has just been started, so it is
+        # always turned off.
+        if preset_mode == PRESET_SCHEDULE:
             commands.append(
                 Command(
                     name=OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
