@@ -10,10 +10,11 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.aemet.const import (
     CONF_RADAR_UPDATES,
     CONF_STATION_UPDATES,
+    DEFAULT_NAME,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -22,7 +23,6 @@ from .util import mock_api_call
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 CONFIG = {
-    CONF_NAME: "aemet",
     CONF_API_KEY: "foo",
     CONF_LATITUDE: 40.30403754,
     CONF_LONGITUDE: -3.72935236,
@@ -55,7 +55,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         assert entry.state is ConfigEntryState.LOADED
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == CONFIG[CONF_NAME]
+        assert result["title"] == DEFAULT_NAME
         assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
         assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
         assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]

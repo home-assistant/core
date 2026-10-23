@@ -118,6 +118,10 @@ CENTICELSIUS = "C-100"
 # Internal definitions
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up ZHA from config."""
@@ -245,16 +249,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
         manufacturer = "Unknown"
         model = "Unknown"
 
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        device_info=dr.DeviceInfo(
-            connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.state.node_info.ieee))},
-            identifiers={(DOMAIN, str(zha_gateway.state.node_info.ieee))},
-            name="Zigbee Coordinator",
-            manufacturer=manufacturer,
-            model=model,
-            sw_version=zha_gateway.state.node_info.version,
-        ),
+        connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.state.node_info.ieee))},
+        identifiers={(DOMAIN, str(zha_gateway.state.node_info.ieee))},
+        name="Zigbee Coordinator",
+        manufacturer=manufacturer,
+        model=model,
+        sw_version=zha_gateway.state.node_info.version,
     )
 
     websocket_api.async_load_api(hass)

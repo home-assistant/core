@@ -6,13 +6,14 @@ All evohome systems have a controller and at least one zone.
 from collections.abc import Callable
 from unittest.mock import patch
 
-from evohomeasync2 import ControlSystem, HotWater, Zone
+from evohomeasync2 import ControlSystem, HotWater, Zone, exceptions as evo_exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import TEST_INSTALLS
 
@@ -121,3 +122,28 @@ async def test_dhw_reset_button_press(
         )
 
         mock_fcn.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_button_press_api_call_failed(
+    hass: HomeAssistant,
+    system_button_id: str,
+) -> None:
+    """Test SERVICE_PRESS raises HomeAssistantError if the vendor's API call fails."""
+
+    with (
+        patch(
+            "evohomeasync2.control_system.ControlSystem.reset",
+            side_effect=evo_exc.ApiCallFailedError("API call failed"),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: system_button_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "api_call_failed"
