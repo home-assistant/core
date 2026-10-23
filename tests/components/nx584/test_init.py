@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.alarm_control_panel import (
@@ -23,8 +24,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_HOST, TEST_PORT
-
-from tests.common import MockConfigEntry
 
 ALARM_YAML = {
     ALARM_CONTROL_PANEL_DOMAIN: {

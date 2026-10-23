@@ -8,6 +8,11 @@ from unittest.mock import call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from vizaio import AppConfig, RemoteKey, VizioConnectionError, VizioNotFoundError
 from vizaio.apps import BUNDLED_APPS, UNKNOWN_APP, is_app_input
@@ -84,8 +89,6 @@ from .const import (
     VOLUME_STEP,
     audio_setting,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

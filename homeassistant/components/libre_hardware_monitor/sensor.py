@@ -13,14 +13,17 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfDataRate, UnitOfInformation
+from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LibreHardwareMonitorConfigEntry, LibreHardwareMonitorCoordinator
 from .const import DOMAIN, LEGACY_DATA_SIZE_UNIT_EQUIVALENTS
+from .coordinator import (
+    LibreHardwareMonitorConfigEntry,
+    LibreHardwareMonitorCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,6 +101,7 @@ class LibreHardwareMonitorSensor(
         super().__init__(coordinator)
 
         self._attr_name: str = sensor_data.name
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
         if sensor_data.type is None:
             _LOGGER.debug("Missing type for sensor: %s", sensor_data.name)

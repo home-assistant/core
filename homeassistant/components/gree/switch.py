@@ -16,8 +16,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DISPATCH_DEVICE_DISCOVERED
-from .coordinator import GreeConfigEntry
-from .entity import DeviceDataUpdateCoordinator, GreeEntity
+from .coordinator import DeviceDataUpdateCoordinator, GreeConfigEntry
+from .entity import GreeEntity
 
 
 @dataclass(kw_only=True, frozen=True)

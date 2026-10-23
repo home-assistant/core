@@ -46,7 +46,10 @@ async def async_setup_entry(
     try:
         await renault_hub.async_initialise(config_entry)
     except NotAuthenticatedException as exc:
-        raise ConfigEntryAuthFailed from exc
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from exc
     except ForbiddenException as exc:
         account_id = config_entry.data[RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID]
         if account_id not in await renault_hub.get_all_account_ids():
@@ -67,7 +70,10 @@ async def async_setup_entry(
             translation_placeholders={"account_id": account_id},
         ) from exc
     except (aiohttp.ClientError, GigyaException) as exc:
-        raise ConfigEntryNotReady from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from exc
 
     ir.async_delete_issue(
         hass, DOMAIN, _account_not_found_issue_id(config_entry.entry_id)

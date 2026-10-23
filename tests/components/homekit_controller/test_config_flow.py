@@ -14,6 +14,7 @@ from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FakeController
 from bleak.exc import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.homekit_controller import config_flow
@@ -27,8 +28,6 @@ from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 PAIRING_START_FORM_ERRORS = [
     (KeyError, "pairing_failed"),

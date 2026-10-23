@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.nx584.const import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import TEST_HOST, TEST_PORT
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "alarm_control_panel.nx584"
 

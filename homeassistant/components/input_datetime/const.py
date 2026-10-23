@@ -1,6 +1,6 @@
 """Constants for the input_datetime component."""
 
-import datetime as py_datetime
+import datetime as dt
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
@@ -20,7 +20,7 @@ CONF_HAS_DATE = "has_date"
 CONF_HAS_TIME = "has_time"
 CONF_INITIAL = "initial"
 
-DEFAULT_TIME = py_datetime.time(0, 0, 0)
+DEFAULT_TIME = dt.time(0, 0, 0)
 
 
 FMT_DATE = "%Y-%m-%d"
@@ -45,4 +45,20 @@ class InputDatetimeEntityStateAttribute(StrEnum):
     HOUR = "hour"
     MINUTE = "minute"
     SECOND = "second"
+    TIMESTAMP = "timestamp"
+
+
+class InputDatetimeService(StrEnum):
+    """Store keys for input datetime services."""
+
+    RELOAD = "reload"
+    SET = "set_datetime"
+
+
+class InputDatetimeServiceArgument(StrEnum):
+    """Store keys for input datetime service arguments."""
+
+    DATE = "date"
+    DATETIME = "datetime"
+    TIME = "time"
     TIMESTAMP = "timestamp"

@@ -9,6 +9,12 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError, Webhook
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_cloud_connection_status,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import cloud
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
@@ -34,13 +40,6 @@ from homeassistant.helpers.network import NoURLAvailableError
 
 from . import setup_integration
 from .conftest import TEST_ACCOUNTS, WEBHOOK_ID, WEBHOOK_URL
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_mock_cloud_connection_status,
-)
-from tests.typing import ClientSessionGenerator
 
 CLOUDHOOK_URL = "https://hooks.nabu.casa/test-cloudhook"
 NEW_CLOUDHOOK_URL = "https://hooks.nabu.casa/new-cloudhook"

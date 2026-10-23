@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
@@ -35,9 +37,6 @@ from .test_common import (
     get_new_request,
     reported_properties,
 )
-
-from tests.common import async_capture_events, async_mock_service
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -2191,7 +2190,7 @@ async def test_valve_position(
             "friendly_name": "Test valve range",
             "device_class": "water",
             "supported_features": supported_features,
-            "position": position,
+            "current_position": position,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2415,7 +2414,7 @@ async def test_valve_position_range(
             "friendly_name": "Test valve range",
             "device_class": "water",
             "supported_features": 15,
-            "position": 30,
+            "current_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4631,7 +4630,7 @@ async def test_cover_tilt_position(
             "friendly_name": "Test cover tilt range",
             "device_class": "blind",
             "supported_features": supported_features,
-            "tilt_position": tilt_position,
+            "current_tilt_position": tilt_position,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4701,7 +4700,7 @@ async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
             "friendly_name": "Test cover tilt range",
             "device_class": "blind",
             "supported_features": 240,
-            "tilt_position": 30,
+            "current_tilt_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4782,14 +4781,14 @@ async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
         (
             "cover.test_closed",
             CoverEntityFeature.SET_TILT_POSITION,
-            "tilt_position",
+            "current_tilt_position",
             "cover.tilt",
             "cover.set_cover_tilt_position",
         ),
         (
             "valve.test_closed",
             ValveEntityFeature.SET_POSITION,
-            "position",
+            "current_position",
             "valve.position",
             "valve.set_valve_position",
         ),
@@ -4875,7 +4874,7 @@ async def test_cover_stop(
             "device_class": "blind",
             "supported_features": int(base_features | supported_stop_features),
             "current_position": 30,
-            "tilt_position": 30,
+            "current_tilt_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4910,7 +4909,7 @@ async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
             "device_class": "blind",
             "supported_features": 255,
             "current_position": 30,
-            "tilt_position": 30,
+            "current_tilt_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -5399,9 +5398,7 @@ async def test_vacuum_discovery(hass: HomeAssistant) -> None:
         "docked",
         {
             "friendly_name": "Test vacuum 1",
-            "supported_features": VacuumEntityFeature.TURN_ON
-            | VacuumEntityFeature.TURN_OFF
-            | VacuumEntityFeature.START
+            "supported_features": VacuumEntityFeature.START
             | VacuumEntityFeature.STOP
             | VacuumEntityFeature.RETURN_HOME
             | VacuumEntityFeature.PAUSE,
@@ -5425,11 +5422,15 @@ async def test_vacuum_discovery(hass: HomeAssistant) -> None:
     properties.assert_equal("Alexa.PowerController", "powerState", "OFF")
 
     await assert_request_calls_service(
-        "Alexa.PowerController", "TurnOn", "vacuum#test_1", "vacuum.turn_on", hass
+        "Alexa.PowerController", "TurnOn", "vacuum#test_1", "vacuum.start", hass
     )
 
     await assert_request_calls_service(
-        "Alexa.PowerController", "TurnOff", "vacuum#test_1", "vacuum.turn_off", hass
+        "Alexa.PowerController",
+        "TurnOff",
+        "vacuum#test_1",
+        "vacuum.return_to_base",
+        hass,
     )
 
 
@@ -5440,10 +5441,9 @@ async def test_vacuum_fan_speed(hass: HomeAssistant) -> None:
         "cleaning",
         {
             "friendly_name": "Test vacuum 2",
-            "supported_features": VacuumEntityFeature.TURN_ON
-            | VacuumEntityFeature.TURN_OFF
-            | VacuumEntityFeature.START
+            "supported_features": VacuumEntityFeature.START
             | VacuumEntityFeature.STOP
+            | VacuumEntityFeature.RETURN_HOME
             | VacuumEntityFeature.PAUSE
             | VacuumEntityFeature.FAN_SPEED,
             "fan_speed_list": ["off", "low", "medium", "high", "turbo", "super_sucker"],
@@ -5569,10 +5569,9 @@ async def test_vacuum_pause(hass: HomeAssistant) -> None:
         "cleaning",
         {
             "friendly_name": "Test vacuum 3",
-            "supported_features": VacuumEntityFeature.TURN_ON
-            | VacuumEntityFeature.TURN_OFF
-            | VacuumEntityFeature.START
+            "supported_features": VacuumEntityFeature.START
             | VacuumEntityFeature.STOP
+            | VacuumEntityFeature.RETURN_HOME
             | VacuumEntityFeature.PAUSE
             | VacuumEntityFeature.FAN_SPEED,
             "fan_speed_list": ["off", "low", "medium", "high", "turbo", "super_sucker"],
@@ -5596,7 +5595,7 @@ async def test_vacuum_pause(hass: HomeAssistant) -> None:
     assert configuration["allowRemoteResume"] is True
 
     await assert_request_calls_service(
-        "Alexa.TimeHoldController", "Hold", "vacuum#test_3", "vacuum.start_pause", hass
+        "Alexa.TimeHoldController", "Hold", "vacuum#test_3", "vacuum.pause", hass
     )
 
 
@@ -5607,10 +5606,9 @@ async def test_vacuum_resume(hass: HomeAssistant) -> None:
         "docked",
         {
             "friendly_name": "Test vacuum 4",
-            "supported_features": VacuumEntityFeature.TURN_ON
-            | VacuumEntityFeature.TURN_OFF
-            | VacuumEntityFeature.START
+            "supported_features": VacuumEntityFeature.START
             | VacuumEntityFeature.STOP
+            | VacuumEntityFeature.RETURN_HOME
             | VacuumEntityFeature.PAUSE
             | VacuumEntityFeature.FAN_SPEED,
             "fan_speed_list": ["off", "low", "medium", "high", "turbo", "super_sucker"],
@@ -5623,100 +5621,37 @@ async def test_vacuum_resume(hass: HomeAssistant) -> None:
         "Alexa.TimeHoldController",
         "Resume",
         "vacuum#test_4",
-        "vacuum.start_pause",
+        "vacuum.start",
         hass,
     )
 
 
-async def test_vacuum_discovery_no_turn_on(hass: HomeAssistant) -> None:
-    """Test vacuum discovery for vacuums without turn_on."""
+@pytest.mark.parametrize(
+    "supported_features",
+    [
+        pytest.param(
+            VacuumEntityFeature.TURN_ON | VacuumEntityFeature.TURN_OFF,
+            id="deprecated_turn_on_off",
+        ),
+        pytest.param(VacuumEntityFeature.START, id="start_only"),
+        pytest.param(VacuumEntityFeature.RETURN_HOME, id="return_home_only"),
+    ],
+)
+async def test_vacuum_discovery_without_power_controller(
+    hass: HomeAssistant, supported_features: VacuumEntityFeature
+) -> None:
+    """Test vacuums need start and return home support for PowerController."""
     device = (
         "vacuum.test_5",
         "cleaning",
         {
             "friendly_name": "Test vacuum 5",
-            "supported_features": VacuumEntityFeature.TURN_OFF
-            | VacuumEntityFeature.START
-            | VacuumEntityFeature.RETURN_HOME,
+            "supported_features": supported_features,
         },
     )
     appliance = await discovery_test(device, hass)
 
-    assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
-    )
-
-    properties = await reported_properties(hass, "vacuum#test_5")
-    properties.assert_equal("Alexa.PowerController", "powerState", "ON")
-
-    await assert_request_calls_service(
-        "Alexa.PowerController", "TurnOn", "vacuum#test_5", "vacuum.start", hass
-    )
-
-    await assert_request_calls_service(
-        "Alexa.PowerController", "TurnOff", "vacuum#test_5", "vacuum.turn_off", hass
-    )
-
-
-async def test_vacuum_discovery_no_turn_off(hass: HomeAssistant) -> None:
-    """Test vacuum discovery for vacuums without turn_off."""
-    device = (
-        "vacuum.test_6",
-        "cleaning",
-        {
-            "friendly_name": "Test vacuum 6",
-            "supported_features": VacuumEntityFeature.TURN_ON
-            | VacuumEntityFeature.START
-            | VacuumEntityFeature.RETURN_HOME,
-        },
-    )
-    appliance = await discovery_test(device, hass)
-
-    assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
-    )
-
-    await assert_request_calls_service(
-        "Alexa.PowerController", "TurnOn", "vacuum#test_6", "vacuum.turn_on", hass
-    )
-
-    await assert_request_calls_service(
-        "Alexa.PowerController",
-        "TurnOff",
-        "vacuum#test_6",
-        "vacuum.return_to_base",
-        hass,
-    )
-
-
-async def test_vacuum_discovery_no_turn_on_or_off(hass: HomeAssistant) -> None:
-    """Test vacuum discovery vacuums without on or off."""
-    device = (
-        "vacuum.test_7",
-        "cleaning",
-        {
-            "friendly_name": "Test vacuum 7",
-            "supported_features": VacuumEntityFeature.START
-            | VacuumEntityFeature.RETURN_HOME,
-        },
-    )
-    appliance = await discovery_test(device, hass)
-
-    assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
-    )
-
-    await assert_request_calls_service(
-        "Alexa.PowerController", "TurnOn", "vacuum#test_7", "vacuum.start", hass
-    )
-
-    await assert_request_calls_service(
-        "Alexa.PowerController",
-        "TurnOff",
-        "vacuum#test_7",
-        "vacuum.return_to_base",
-        hass,
-    )
+    assert_endpoint_capabilities(appliance, "Alexa.EndpointHealth", "Alexa")
 
 
 async def test_camera_discovery(hass: HomeAssistant, mock_stream: None) -> None:

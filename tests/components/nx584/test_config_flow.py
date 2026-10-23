@@ -5,6 +5,7 @@ import threading
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.nx584.const import (
@@ -19,8 +20,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_HOST, TEST_PORT
-
-from tests.common import MockConfigEntry
 
 IMPORT_DATA = {
     CONF_HOST: TEST_HOST,

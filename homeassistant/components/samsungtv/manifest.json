@@ -1,6 +1,7 @@
 {
   "domain": "samsungtv",
   "name": "Samsung Smart TV",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@chemelli74"],
   "config_flow": true,
   "dependencies": ["ssdp"],

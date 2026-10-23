@@ -4,6 +4,7 @@ from datetime import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.enums import SpotlightModeEnum
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import TEST_CAM_NAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

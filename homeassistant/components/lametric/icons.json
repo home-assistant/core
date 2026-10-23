@@ -25,6 +25,9 @@
     "select": {
       "brightness_mode": {
         "default": "mdi:brightness-auto"
+      },
+      "screensaver_mode": {
+        "default": "mdi:sleep"
       }
     },
     "sensor": {

@@ -10,6 +10,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, MANUFACTURER, UPDATE_INTERVAL
@@ -56,20 +57,16 @@ class AirQCoordinator(DataUpdateCoordinator):
     @override
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device."""
-        if "name" not in self.device_info:
+        if self.device_info.name is UNDEFINED:
             _LOGGER.debug(
                 "'name' not found in AirQCoordinator.device_info,"
                 " fetching from the device"
             )
             info = await self.airq.fetch_device_info()
-            self.device_info.update(
-                DeviceInfo(
-                    name=info["name"],
-                    model=info["model"],
-                    sw_version=info["sw_version"],
-                    hw_version=info["hw_version"],
-                )
-            )
+            self.device_info.name = info["name"]
+            self.device_info.model = info["model"]
+            self.device_info.sw_version = info["sw_version"]
+            self.device_info.hw_version = info["hw_version"]
             _LOGGER.debug(
                 "Updated AirQCoordinator.device_info for 'name' %s",
                 info["name"],

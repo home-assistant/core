@@ -55,7 +55,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> None:
     """Set up NX584 from a config entry."""
     client = create_client(entry.data[CONF_HOST], entry.data[CONF_PORT])
     try:
@@ -67,12 +67,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> boo
 
     entry.runtime_data = NX584Data(client, zones, version)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_import_yaml(hass: HomeAssistant, import_data: dict[str, Any]) -> None:

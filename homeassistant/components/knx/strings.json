@@ -1821,6 +1821,10 @@
       "description": "Reloads the KNX integration.",
       "name": "[%key:common::action::reload%]"
     },
+    "save_scene": {
+      "description": "Tells KNX actuators to store their current state in the scene of the selected scene entity. Requires actuators supporting scene learning (DPT 18.001).",
+      "name": "Save scene"
+    },
     "send": {
       "description": "Sends arbitrary data directly to the KNX bus.",
       "fields": {

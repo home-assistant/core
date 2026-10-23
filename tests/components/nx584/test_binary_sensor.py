@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 from nx584 import client as nx584_client
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_HOST, TEST_PORT
-
-from tests.common import MockConfigEntry
 
 ZONE_OPTIONS = {"exclude_zones": [2], "zone_types": {"3": "motion"}}
 

@@ -1,6 +1,7 @@
 {
   "domain": "wsdot",
   "name": "Washington State Department of Transportation (WSDOT)",
+  "categories": ["vehicles_transport", "local_services"],
   "codeowners": ["@ucodery"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wsdot",

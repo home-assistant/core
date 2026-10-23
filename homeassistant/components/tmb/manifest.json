@@ -1,6 +1,7 @@
 {
   "domain": "tmb",
   "name": "Transports Metropolitans de Barcelona",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@alemuro"],
   "documentation": "https://www.home-assistant.io/integrations/tmb",
   "iot_class": "local_polling",

@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from nx584 import client as nx584_client
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nx584.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "192.168.1.10"
 TEST_PORT = 5007
@@ -49,7 +48,7 @@ def mock_watcher() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.nx584.async_setup_entry", return_value=True
+        "homeassistant.components.nx584.async_setup_entry", return_value=None
     ) as setup_entry:
         yield setup_entry
 

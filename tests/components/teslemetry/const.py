@@ -1,12 +1,16 @@
 """Constants for the teslemetry tests."""
 
+from pytest_homeassistant.common import load_json_object_fixture
+
 from homeassistant.components.teslemetry.const import DOMAIN, TeslemetryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from tests.common import load_json_object_fixture
-
 UNIQUE_ID = "abc-123"
 CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}
+
+# The vehicle in products.json, and the Bluetooth address a subentry pairs it at.
+VIN = "LRW3F7EK4NC700000"
+ADDRESS = "AA:BB:CC:DD:EE:FF"
 
 WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
 
@@ -28,6 +32,7 @@ VEHICLE_DATA_NONE["response"]["vehicle_state"]["rt"] = None
 VEHICLE_DATA_NONE["response"]["charge_state"]["charge_port_door_open"] = None
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
+POWERWALL_STATUS = load_json_object_fixture("powerwall_status.json", DOMAIN)
 SITE_INFO_WEEK_CROSSING = load_json_object_fixture(
     "site_info_week_crossing.json", DOMAIN
 )

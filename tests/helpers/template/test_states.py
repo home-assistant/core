@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
@@ -13,8 +14,6 @@ from homeassistant.helpers.template import states as template_states
 from homeassistant.util import dt as dt_util
 
 from .helpers import render
-
-from tests.common import async_fire_time_changed
 
 
 async def test_template_states_blocks_setitem(hass: HomeAssistant) -> None:

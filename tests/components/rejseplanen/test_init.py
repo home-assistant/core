@@ -9,6 +9,7 @@ from py_rejseplan.exceptions.api_error import APIError
 from py_rejseplan.exceptions.connection_error import ConnectionError
 from py_rejseplan.exceptions.http_error import HTTPError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.rejseplanen.const import (
     CONF_DEPARTURE_TYPE,
@@ -19,8 +20,6 @@ from homeassistant.components.rejseplanen.const import (
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_ENTITY_ID = "sensor.work_line"
 
