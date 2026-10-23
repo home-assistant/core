@@ -24,6 +24,7 @@ from homeassistant.components.conversation import (
     async_get_chat_log,
 )
 from homeassistant.components.conversation.chat_log import (
+    DATA_CHAT_LOG_OWNERS,
     DATA_CHAT_LOGS,
     Attachment,
     ChatLog,
@@ -63,6 +64,7 @@ async def test_cleanup(
         )
 
     assert conversation_id in hass.data[DATA_CHAT_LOGS]
+    assert conversation_id in hass.data[DATA_CHAT_LOG_OWNERS]
 
     # Set the last updated to be older than the timeout
     hass.data[chat_session.DATA_CHAT_SESSION][conversation_id].last_updated = (
@@ -75,6 +77,7 @@ async def test_cleanup(
     )
 
     assert conversation_id not in hass.data[DATA_CHAT_LOGS]
+    assert conversation_id not in hass.data[DATA_CHAT_LOG_OWNERS]
 
 
 async def test_default_content(
@@ -264,6 +267,70 @@ async def test_chat_log_without_user_input_parallel_claim(
             await asyncio.create_task(
                 open_other_chat_log(), context=contextvars.Context()
             )
+
+
+async def test_new_chat_log_parallel_claim(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test a parallel request cannot claim a new conversation of another user."""
+    other_input = ConversationInput(
+        text="Hello",
+        context=Context(user_id="other-user-id"),
+        conversation_id=None,
+        device_id=None,
+        satellite_id=None,
+        language="en",
+        agent_id="mock-agent-id",
+    )
+
+    with chat_session.async_get_chat_session(hass) as session:
+
+        async def open_other_chat_log() -> None:
+            with async_get_chat_log(hass, session, other_input):
+                pass
+
+        mock_conversation_input.context = Context(user_id=hass_admin_user.id)
+        with (
+            async_get_chat_log(hass, session, mock_conversation_input),
+            pytest.raises(Unauthorized),
+        ):
+            # A new context runs the request like a separate task would.
+            await asyncio.create_task(
+                open_other_chat_log(), context=contextvars.Context()
+            )
+
+
+async def test_chat_log_without_user_input_keeps_owner(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test saving a chat log opened without user input keeps the owner."""
+    mock_conversation_input.context = Context(user_id=hass_admin_user.id)
+
+    with chat_session.async_get_chat_session(hass) as session:
+
+        async def claim_chat_log() -> None:
+            with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+                chat_log.async_add_assistant_content_without_tools(
+                    AssistantContent(agent_id="mock-agent-id", content="Hello")
+                )
+
+        with async_get_chat_log(hass, session) as chat_log:
+            # A new context runs the request like a separate task would.
+            await asyncio.create_task(claim_chat_log(), context=contextvars.Context())
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+
+        mock_conversation_input.context = Context(user_id="other-user-id")
+        with (
+            pytest.raises(Unauthorized),
+            async_get_chat_log(hass, session, mock_conversation_input),
+        ):
+            pass
 
 
 class AdminAPI(llm.API):

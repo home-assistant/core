@@ -15,7 +15,6 @@ import probatio
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import chat_session, frame, intent, llm, template
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
@@ -25,6 +24,9 @@ from .const import DOMAIN, ChatLogEventType
 from .models import ConversationInput, ConversationResult
 
 DATA_CHAT_LOGS: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_logs")
+DATA_CHAT_LOG_OWNERS: HassKey[dict[str, str | None]] = HassKey(
+    "conversation_chat_log_owners"
+)
 DATA_SUBSCRIPTIONS: HassKey[
     list[Callable[[str, ChatLogEventType, dict[str, Any]], None]]
 ] = HassKey("conversation_chat_log_subscriptions")
@@ -69,17 +71,36 @@ def _async_notify_subscribers(
             callback_func(conversation_id, event_type, data)
 
 
-def _check_owner(chat_log: ChatLog, user_input: ConversationInput | None) -> None:
-    """Raise if the user of the input may not continue the chat log.
+@callback
+def _async_check_owner(
+    hass: HomeAssistant,
+    session: chat_session.ChatSession,
+    user_input: ConversationInput | None,
+) -> None:
+    """Raise if the user of the input may not continue the conversation.
 
-    A chat log opened without user input, like a conversation started by a
-    satellite, gets the user of the first input as its owner.
+    The user of the first input becomes the owner of the conversation. This
+    includes a conversation started without user input, like by a satellite.
+    Owners are kept apart from the chat log, because parallel requests each
+    work on their own copy of it.
     """
     if user_input is None:
         return
-    if chat_log.user_id is UNDEFINED:
-        chat_log.user_id = user_input.context.user_id
-    elif chat_log.user_id != user_input.context.user_id:
+    owners = hass.data.get(DATA_CHAT_LOG_OWNERS)
+    if owners is None:
+        owners = {}
+        hass.data[DATA_CHAT_LOG_OWNERS] = owners
+    conversation_id = session.conversation_id
+    if conversation_id not in owners:
+        owners[conversation_id] = user_input.context.user_id
+
+        @callback
+        def remove_owner() -> None:
+            """Remove the owner when the session ends."""
+            owners.pop(conversation_id, None)
+
+        session.async_on_cleanup(remove_owner)
+    elif owners[conversation_id] != user_input.context.user_id:
         raise Unauthorized(context=user_input.context)
 
 
@@ -101,7 +122,7 @@ def async_get_chat_log(
             raise RuntimeError(
                 "Cannot attach chat log delta listener unless initial caller"
             )
-        _check_owner(chat_log, user_input)
+        _async_check_owner(hass, session, user_input)
         if user_input is not None and (
             (content := chat_log.content[-1]).role != "user"
             or content.content != user_input.text
@@ -116,15 +137,14 @@ def async_get_chat_log(
         all_chat_logs = {}
         hass.data[DATA_CHAT_LOGS] = all_chat_logs
 
+    _async_check_owner(hass, session, user_input)
+
     is_new_log = session.conversation_id not in all_chat_logs
 
     if chat_log := all_chat_logs.get(session.conversation_id):
-        # Check the stored log, so a claim holds for parallel requests.
-        _check_owner(chat_log, user_input)
         chat_log = replace(chat_log, content=chat_log.content.copy())
     else:
         chat_log = ChatLog(hass, session.conversation_id)
-        _check_owner(chat_log, user_input)
 
     if chat_log_delta_listener:
         chat_log.delta_listener = chat_log_delta_listener
@@ -378,7 +398,6 @@ class ChatLog:
     conversation_id: str
     content: list[Content] = field(default_factory=lambda: [SystemContent(content="")])
     extra_system_prompt: str | None = None
-    user_id: str | UndefinedType | None = UNDEFINED
     llm_api: llm.APIInstance | None = None
     delta_listener: Callable[[ChatLog, dict], None] | None = None
     llm_input_provided_index = 0
