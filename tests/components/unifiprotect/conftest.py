@@ -105,6 +105,14 @@ def mock_private_only_entities_registered():
             "homeassistant.components.unifiprotect.sensor.async_is_new_private_only_entity",
             return_value=False,
         ),
+        patch(
+            "homeassistant.components.unifiprotect.sensor.async_is_new_ring_or_motion_sensor",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.binary_sensor.async_is_new_ring_or_motion_sensor",
+            return_value=False,
+        ),
     ):
         yield
 

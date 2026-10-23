@@ -58,6 +58,7 @@ from .entity import (
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
+from .migrate import async_is_new_ring_or_motion_sensor
 
 _KEY_DOOR = "door"
 PARALLEL_UPDATES = 0
@@ -735,6 +736,9 @@ def _async_event_entities(
             ProtectEventBinarySensor(data, device, description)
             for description in EVENT_SENSORS
             if description.has_required(device)
+            and not async_is_new_ring_or_motion_sensor(
+                data.hass, Platform.BINARY_SENSOR, device.mac, description.key
+            )
         )
     return entities
 

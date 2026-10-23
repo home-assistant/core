@@ -63,6 +63,8 @@ from .utils import (
     setup_public_sensor,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
+
 LIGHT_SENSOR_WRITE = LIGHT_SENSORS[:2]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:3]
 BATTERY_LOW = next(d for d in SENSE_SENSORS if d.key == "battery_low")
