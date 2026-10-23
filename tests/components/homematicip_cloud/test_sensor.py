@@ -388,6 +388,33 @@ async def test_hmip_motion_detector_push_button_single_illuminance(
     assert "does not generate unique IDs" not in caplog.text
 
 
+async def test_hmip_motion_detector_switch_outdoor_illuminance(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the illuminance of a motion detector with switching actuator."""
+    entity_id = "sensor.bewegungsmelder_haustur_illuminance"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Bewegungsmelder Haustür"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass, hmip_device, "illumination", 231, channel=0, channel_real_index=1
+    )
+    assert hass.states.get(entity_id).state == "231"
+
+
 async def test_hmip_windspeed_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:

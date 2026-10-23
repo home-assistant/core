@@ -171,11 +171,11 @@ class HomematicipHAP:
             if home.label != self.config_entry.unique_id
             else f"Home-{home.label}"
         )
-        dr.async_get(self.hass).async_get_or_create_device(
+        dr.async_get(self.hass).async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, home.id)}, manufacturer="eQ-3", name=hapname
-            ),
+            identifiers={(DOMAIN, home.id)},
+            manufacturer="eQ-3",
+            name=hapname,
         )
 
     @callback
