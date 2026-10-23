@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BSBLanConfigEntry, BSBLanData
-from .const import DEFAULT_HOT_WATER_MIN_TEMP
+from .const import DEFAULT_HOT_WATER_MIN_TEMP, Setpoint
 from .entity import BSBLanCircuitEntity, BSBLanWaterHeaterDeviceEntity
 from .helpers import circuit_temperature_bounds, first_temperature
 
@@ -26,7 +26,7 @@ PARALLEL_UPDATES = 1
 class BSBLanSetpointNumberEntityDescription(NumberEntityDescription):
     """Describes a BSB-LAN setpoint number entity."""
 
-    reduced: bool
+    setpoint: Setpoint
 
 
 COMFORT_TEMPERATURE = BSBLanSetpointNumberEntityDescription(
@@ -35,7 +35,7 @@ COMFORT_TEMPERATURE = BSBLanSetpointNumberEntityDescription(
     device_class=NumberDeviceClass.TEMPERATURE,
     entity_category=EntityCategory.CONFIG,
     native_step=0.5,
-    reduced=False,
+    setpoint=Setpoint.NORMAL,
 )
 NOMINAL_TEMPERATURE = BSBLanSetpointNumberEntityDescription(
     key="nominal_temperature",
@@ -43,7 +43,7 @@ NOMINAL_TEMPERATURE = BSBLanSetpointNumberEntityDescription(
     device_class=NumberDeviceClass.TEMPERATURE,
     entity_category=EntityCategory.CONFIG,
     native_step=0.5,
-    reduced=False,
+    setpoint=Setpoint.NORMAL,
 )
 REDUCED_TEMPERATURE = BSBLanSetpointNumberEntityDescription(
     key="reduced_temperature",
@@ -51,7 +51,7 @@ REDUCED_TEMPERATURE = BSBLanSetpointNumberEntityDescription(
     device_class=NumberDeviceClass.TEMPERATURE,
     entity_category=EntityCategory.CONFIG,
     native_step=0.5,
-    reduced=True,
+    setpoint=Setpoint.REDUCED,
 )
 
 
@@ -117,16 +117,16 @@ class BSBLanCircuitSetpointNumber(BSBLanCircuitEntity, NumberEntity):
     @override
     def native_value(self) -> float | None:
         """Return the setpoint."""
-        if self.entity_description.reduced:
+        if self.entity_description.setpoint is Setpoint.REDUCED:
             return self._reduced_setpoint
         return self._comfort_setpoint
 
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the setpoint."""
-        reduced = self.entity_description.reduced
-        self._validate_setpoint(value, reduced=reduced)
-        await self._async_set_setpoint(value, reduced=reduced)
+        setpoint = self.entity_description.setpoint
+        self._validate_setpoint(value, setpoint)
+        await self._async_set_setpoint(value, setpoint)
 
 
 class BSBLanHotWaterSetpointNumber(BSBLanWaterHeaterDeviceEntity, NumberEntity):
@@ -160,13 +160,13 @@ class BSBLanHotWaterSetpointNumber(BSBLanWaterHeaterDeviceEntity, NumberEntity):
     @override
     def native_value(self) -> float | None:
         """Return the setpoint."""
-        if self.entity_description.reduced:
+        if self.entity_description.setpoint is Setpoint.REDUCED:
             return self._reduced_setpoint
         return self._nominal_setpoint
 
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the setpoint."""
-        reduced = self.entity_description.reduced
-        self._validate_setpoint(value, reduced=reduced)
-        await self._async_set_setpoint(value, reduced=reduced)
+        setpoint = self.entity_description.setpoint
+        self._validate_setpoint(value, setpoint)
+        await self._async_set_setpoint(value, setpoint)
