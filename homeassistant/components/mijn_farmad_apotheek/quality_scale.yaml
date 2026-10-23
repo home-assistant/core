@@ -49,7 +49,7 @@ rules:
   parallel-updates:
     status: exempt
     comment: The integration has no entity platforms.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   devices:
@@ -95,7 +95,7 @@ rules:
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
-    comment: The integration raises no repair issues.
+    comment: Expired credentials start a reauthentication flow, so no repair issue is needed.
   stale-devices:
     status: exempt
     comment: The integration has no devices.
