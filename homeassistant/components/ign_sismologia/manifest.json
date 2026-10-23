@@ -1,6 +1,7 @@
 {
   "domain": "ign_sismologia",
   "name": "IGN Sismolog\u00eda",
+  "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@exxamalte"],
   "documentation": "https://www.home-assistant.io/integrations/ign_sismologia",
   "integration_type": "service",

@@ -27,7 +27,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GooglePhotosConfigEntry
-) -> bool:
+) -> None:
     """Set up Google Photos from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -45,11 +45,8 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GooglePhotosConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return True

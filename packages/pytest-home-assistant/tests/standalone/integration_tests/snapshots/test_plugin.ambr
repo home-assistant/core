@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_registry_snapshot
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sample',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'pytest_sample',
+    'previous_unique_id': None,
+    'suggested_object_id': 'sample',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'sample',
+    'unit_of_measurement': None,
+  })
+# ---

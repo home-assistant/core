@@ -1,13 +1,13 @@
 """The tests for the nexbus component."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_STOP
 from homeassistant.core import HomeAssistant
 
 from .const import VALID_AGENCY_TITLE, VALID_ROUTE_TITLE, VALID_STOP_TITLE
-
-from tests.common import MockConfigEntry
 
 
 async def assert_setup_sensor(

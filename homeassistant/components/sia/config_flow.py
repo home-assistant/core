@@ -38,7 +38,7 @@ HUB_SCHEMA = probatio.Schema(
         probatio.Required(CONF_PORT): int,
         probatio.Optional(CONF_PROTOCOL, default="TCP"): probatio.In(["TCP", "UDP"]),
         probatio.Required(CONF_ACCOUNT): str,
-        probatio.Optional(CONF_ENCRYPTION_KEY): str,
+        probatio.Optional(probatio.Secret(CONF_ENCRYPTION_KEY)): str,
         probatio.Required(CONF_PING_INTERVAL, default=1): int,
         probatio.Required(CONF_ZONES, default=1): int,
         probatio.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
@@ -48,7 +48,7 @@ HUB_SCHEMA = probatio.Schema(
 ACCOUNT_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_ACCOUNT): str,
-        probatio.Optional(CONF_ENCRYPTION_KEY): str,
+        probatio.Optional(probatio.Secret(CONF_ENCRYPTION_KEY)): str,
         probatio.Required(CONF_PING_INTERVAL, default=1): int,
         probatio.Required(CONF_ZONES, default=1): int,
         probatio.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,

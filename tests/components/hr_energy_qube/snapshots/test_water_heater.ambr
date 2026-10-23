@@ -59,6 +59,7 @@
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 50.0,
+      <WaterHeaterStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.qube_heat_pump_domestic_hot_water',

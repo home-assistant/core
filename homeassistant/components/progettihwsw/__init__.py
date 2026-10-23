@@ -15,7 +15,7 @@ type ProgettiHWSWConfigEntry = ConfigEntry[ProgettiHWSWAPI]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ProgettiHWSWConfigEntry
-) -> bool:
+) -> None:
     """Set up ProgettiHWSW Automation from a config entry."""
     api = ProgettiHWSWAPI(f"{entry.data['host']}:{entry.data['port']}")
 
@@ -26,14 +26,12 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: ProgettiHWSWConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def setup_input(api: ProgettiHWSWAPI, input_number: int) -> Input:

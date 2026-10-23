@@ -1,6 +1,7 @@
 {
   "domain": "redgtech",
   "name": "Redgtech",
+  "categories": ["plugs_switches"],
   "codeowners": ["@jonhsady", "@luan-nvg"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/redgtech",

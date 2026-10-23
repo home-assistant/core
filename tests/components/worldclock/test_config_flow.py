@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.worldclock.const import (
     CONF_TIME_FORMAT,
@@ -11,8 +13,6 @@ from homeassistant.components.worldclock.const import (
 from homeassistant.const import CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:

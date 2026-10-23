@@ -1,5 +1,7 @@
 """Aquacell entity."""
 
+from typing import override
+
 from aioaquacell import Softener
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -34,6 +36,12 @@ class AquacellEntity(CoordinatorEntity[AquacellCoordinator]):
             model=self.softener.ssn,
             serial_number=softener_key,
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the softener is still returned by the API."""
+        return super().available and self.softener_key in self.coordinator.data
 
     @property
     def softener(self) -> Softener:

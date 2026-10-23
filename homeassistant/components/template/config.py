@@ -31,6 +31,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
@@ -75,9 +76,16 @@ from . import (
     switch as switch_platform,
     update as update_platform,
     vacuum as vacuum_platform,
+    water_heater as water_heater_platform,
     weather as weather_platform,
 )
-from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS, TemplateConfig
+from .const import (
+    CONF_DEFAULT_ENTITY_ID,
+    CONF_TRIGGER_VARIABLES,
+    DOMAIN,
+    PLATFORMS,
+    TemplateConfig,
+)
 from .helpers import async_get_blueprints
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,6 +112,7 @@ _DEFAULT_NAMES = {
     Platform.SWITCH: switch_platform.DEFAULT_NAME,
     Platform.UPDATE: update_platform.DEFAULT_NAME,
     Platform.VACUUM: vacuum_platform.DEFAULT_NAME,
+    Platform.WATER_HEATER: water_heater_platform.DEFAULT_NAME,
     Platform.WEATHER: weather_platform.DEFAULT_NAME,
 }
 
@@ -166,6 +175,18 @@ def validate_entity_config_with_conditions_has_trigger(obj: dict) -> dict:
     return obj
 
 
+def validate_trigger_variables_has_trigger(obj: dict) -> dict:
+    """Validate that trigger variables have triggers."""
+    if CONF_TRIGGER_VARIABLES in obj and CONF_TRIGGERS not in obj:
+        raise probatio.Invalid(
+            f"The {CONF_TRIGGER_VARIABLES} option requires a trigger, remove the"
+            f" {CONF_TRIGGER_VARIABLES} option or rewrite configuration to use a"
+            " trigger"
+        )
+
+    return obj
+
+
 def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict], dict]:
     """Validate that config does not contain trigger and action."""
     domains = set(keys)
@@ -173,7 +194,7 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
     def validate(obj: dict):
         options = set(obj.keys())
         if found_domains := domains.intersection(options):
-            invalid = {CONF_TRIGGERS, CONF_ACTIONS}
+            invalid = {CONF_TRIGGERS, CONF_TRIGGER_VARIABLES, CONF_ACTIONS}
             if found_invalid := invalid.intersection(set(obj.keys())):
                 raise probatio.Invalid(
                     f"Unsupported option(s) found for domain"
@@ -241,62 +262,68 @@ CONFIG_SECTION_SCHEMA = probatio.All(
             probatio.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
             probatio.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
             probatio.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
+            probatio.Optional(CONF_TRIGGER_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             probatio.Optional(CONF_UNIQUE_ID): cv.string,
             probatio.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             probatio.Optional(ALARM_CONTROL_PANEL_DOMAIN): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [alarm_control_panel_platform.ALARM_CONTROL_PANEL_YAML_SCHEMA],
             ),
             probatio.Optional(BINARY_SENSOR_DOMAIN): probatio.All(
-                cv.ensure_list, [binary_sensor_platform.BINARY_SENSOR_YAML_SCHEMA]
+                probatio.EnsureList(),
+                [binary_sensor_platform.BINARY_SENSOR_YAML_SCHEMA],
             ),
             probatio.Optional(BUTTON_DOMAIN): probatio.All(
-                cv.ensure_list, [button_platform.BUTTON_YAML_SCHEMA]
+                probatio.EnsureList(), [button_platform.BUTTON_YAML_SCHEMA]
             ),
             probatio.Optional(CLIMATE_DOMAIN): probatio.All(
-                cv.ensure_list, [climate_platform.CLIMATE_YAML_SCHEMA]
+                probatio.EnsureList(), [climate_platform.CLIMATE_YAML_SCHEMA]
             ),
             probatio.Optional(COVER_DOMAIN): probatio.All(
-                cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
+                probatio.EnsureList(), [cover_platform.COVER_YAML_SCHEMA]
             ),
             probatio.Optional(DEVICE_TRACKER_DOMAIN): probatio.All(
-                cv.ensure_list, [device_tracker_platform.TRACKER_YAML_SCHEMA]
+                probatio.EnsureList(), [device_tracker_platform.TRACKER_YAML_SCHEMA]
             ),
             probatio.Optional(EVENT_DOMAIN): probatio.All(
-                cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
+                probatio.EnsureList(), [event_platform.EVENT_YAML_SCHEMA]
             ),
             probatio.Optional(FAN_DOMAIN): probatio.All(
-                cv.ensure_list, [fan_platform.FAN_YAML_SCHEMA]
+                probatio.EnsureList(), [fan_platform.FAN_YAML_SCHEMA]
             ),
             probatio.Optional(IMAGE_DOMAIN): probatio.All(
-                cv.ensure_list, [image_platform.IMAGE_YAML_SCHEMA]
+                probatio.EnsureList(), [image_platform.IMAGE_YAML_SCHEMA]
             ),
             probatio.Optional(LIGHT_DOMAIN): probatio.All(
-                cv.ensure_list, [light_platform.LIGHT_YAML_SCHEMA]
+                probatio.EnsureList(), [light_platform.LIGHT_YAML_SCHEMA]
             ),
             probatio.Optional(LOCK_DOMAIN): probatio.All(
-                cv.ensure_list, [lock_platform.LOCK_YAML_SCHEMA]
+                probatio.EnsureList(), [lock_platform.LOCK_YAML_SCHEMA]
             ),
             probatio.Optional(NUMBER_DOMAIN): probatio.All(
-                cv.ensure_list, [number_platform.NUMBER_YAML_SCHEMA]
+                probatio.EnsureList(), [number_platform.NUMBER_YAML_SCHEMA]
             ),
             probatio.Optional(SELECT_DOMAIN): probatio.All(
-                cv.ensure_list, [select_platform.SELECT_YAML_SCHEMA]
+                probatio.EnsureList(), [select_platform.SELECT_YAML_SCHEMA]
             ),
             probatio.Optional(SENSOR_DOMAIN): probatio.All(
-                cv.ensure_list, [sensor_platform.SENSOR_YAML_SCHEMA]
+                probatio.EnsureList(), [sensor_platform.SENSOR_YAML_SCHEMA]
             ),
             probatio.Optional(SWITCH_DOMAIN): probatio.All(
-                cv.ensure_list, [switch_platform.SWITCH_YAML_SCHEMA]
+                probatio.EnsureList(), [switch_platform.SWITCH_YAML_SCHEMA]
             ),
             probatio.Optional(UPDATE_DOMAIN): probatio.All(
-                cv.ensure_list, [update_platform.UPDATE_YAML_SCHEMA]
+                probatio.EnsureList(), [update_platform.UPDATE_YAML_SCHEMA]
             ),
             probatio.Optional(VACUUM_DOMAIN): probatio.All(
-                cv.ensure_list, [vacuum_platform.VACUUM_YAML_SCHEMA]
+                probatio.EnsureList(), [vacuum_platform.VACUUM_YAML_SCHEMA]
+            ),
+            probatio.Optional(WATER_HEATER_DOMAIN): probatio.All(
+                probatio.EnsureList(),
+                [water_heater_platform.WATER_HEATER_YAML_SCHEMA],
             ),
             probatio.Optional(WEATHER_DOMAIN): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [
                     probatio.Any(
                         weather_platform.WEATHER_YAML_SCHEMA,
@@ -311,6 +338,7 @@ CONFIG_SECTION_SCHEMA = probatio.All(
     ),
     validate_binary_sensor_auto_off_has_trigger,
     validate_entity_config_with_conditions_has_trigger,
+    validate_trigger_variables_has_trigger,
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = probatio.All(
@@ -435,7 +463,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             continue
 
         if key == DOMAIN or (key.startswith(DOMAIN) and len(key.split()) > 1):
-            configs.append(cv.ensure_list(config[key]))
+            configs.append(probatio.EnsureList()(config[key]))
 
     if not configs:
         return config

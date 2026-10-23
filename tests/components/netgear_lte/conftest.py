@@ -2,14 +2,13 @@
 
 from aiohttp.client_exceptions import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.netgear_lte.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 HOST = "192.168.5.1"
 PASSWORD = "password"

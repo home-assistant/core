@@ -7,6 +7,7 @@ from pyintelliclima.intelliclima_types import (
     IntelliClimaDevices,
     IntelliClimaFilterStatus,
 )
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.intelliclima.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_succeeds_when_filter_status_unavailable(
@@ -30,8 +29,8 @@ async def test_setup_succeeds_when_filter_status_unavailable(
     failure of that ancillary endpoint must not block the fan, select, and
     sensor platforms from being set up.
     """
-    mock_cloud_interface.get_filter_status.side_effect = IntelliClimaAPIError(
-        "cannot compute filter status"
+    mock_cloud_interface.ecocomfort2.get_filter_status.side_effect = (
+        IntelliClimaAPIError("cannot compute filter status")
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -54,14 +53,14 @@ async def test_filter_status_failure_isolated_per_device(
     """Test a filter-status failure for one device does not affect the others."""
     mock_cloud_interface.get_all_device_status.return_value = two_eco_devices
     working_device, failing_device = two_eco_devices.ecocomfort2_devices.values()
-    filter_status = mock_cloud_interface.get_filter_status.return_value
+    filter_status = mock_cloud_interface.ecocomfort2.get_filter_status.return_value
 
     def _get_filter_status(serial: str) -> IntelliClimaFilterStatus:
         if serial == failing_device.crono_sn:
             raise IntelliClimaAPIError("cannot compute filter status")
         return filter_status
 
-    mock_cloud_interface.get_filter_status.side_effect = _get_filter_status
+    mock_cloud_interface.ecocomfort2.get_filter_status.side_effect = _get_filter_status
 
     await setup_integration(hass, mock_config_entry)
 
