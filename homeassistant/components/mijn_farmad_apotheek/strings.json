@@ -29,7 +29,7 @@
           "email": "[%key:component::mijn_farmad_apotheek::config::step::user::data_description::email%]",
           "password": "[%key:component::mijn_farmad_apotheek::config::step::user::data_description::password%]"
         },
-        "description": "The Farmad session expired. Sign in again as {email} to reconnect your Mijn Farmad Apotheek account.",
+        "description": "The Farmad session expired. Sign in again as {account} to reconnect your Mijn Farmad Apotheek account.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {

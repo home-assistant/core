@@ -787,22 +787,39 @@ async def test_search_medication_after_unload(
         )
 
 
-async def test_search_medication_starts_reauth(
-    hass: HomeAssistant, mock_farmad_client: MagicMock
+@pytest.mark.parametrize(
+    ("action", "data", "method"),
+    [
+        pytest.param(
+            SERVICE_SEARCH_MEDICATION,
+            SEARCH_DATA,
+            "async_search_products_in_apb",
+            id="search",
+        ),
+        pytest.param(
+            SERVICE_ORDER_MEDICATION,
+            ORDER_DATA,
+            "async_get_draft_basket",
+            id="order",
+        ),
+    ],
+)
+async def test_rejected_session_starts_reauth(
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    action: str,
+    data: dict[str, str],
+    method: str,
 ) -> None:
     """Test a rejected session starts the reauthentication flow."""
     entry = await init_integration(hass)
-    mock_farmad_client.return_value.async_search_products_in_apb.side_effect = (
-        FarmadAuthenticationError("mock")
-    )
+    getattr(
+        mock_farmad_client.return_value, method
+    ).side_effect = FarmadAuthenticationError("mock")
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEARCH_MEDICATION,
-            SEARCH_DATA,
-            blocking=True,
-            return_response=True,
+            DOMAIN, action, data, blocking=True, return_response=True
         )
     await hass.async_block_till_done()
 

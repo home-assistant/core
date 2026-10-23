@@ -117,21 +117,11 @@ class FarmadConfigFlow(ConfigFlow, domain=DOMAIN):
                 """Return the one-time code the user typed."""
                 return otp
 
-            try:
-                account, access_token, refresh_token = await _async_login(
-                    self._login_data, provide_otp
-                )
-            except FarmadAuthenticationError:
-                errors[CONF_CODE] = "wrong_code"
-            except FarmadError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return await self._async_finish_login(
-                    account, access_token, refresh_token
-                )
+            result, errors = await self._async_attempt_login(
+                self._login_data, provide_otp
+            )
+            if result is not None:
+                return result
 
         return self.async_show_form(
             step_id="mfa",
@@ -165,20 +155,31 @@ class FarmadConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA if email else STEP_USER_DATA_SCHEMA,
-            description_placeholders={CONF_EMAIL: email or reauth_entry.title},
+            description_placeholders={"account": email or reauth_entry.title},
             errors=errors,
         )
 
     async def _async_attempt_login(
-        self, data: dict[str, Any]
+        self,
+        data: dict[str, Any],
+        otp_provider: Callable[[], Awaitable[str]] | None = None,
     ) -> tuple[ConfigFlowResult | None, dict[str, str]]:
-        """Log in with the credentials and return the next result or form errors."""
+        """Log in with the credentials and return the next result or form errors.
+
+        Without an otp provider, an account that needs a one-time code moves
+        to the code step. With one, every authentication error means the code
+        was wrong.
+        """
         self._login_data = data
         try:
-            account, access_token, refresh_token = await _async_login(data)
-        except FarmadMfaRequiredError:
-            return await self.async_step_mfa(), {}
-        except FarmadAuthenticationError:
+            account, access_token, refresh_token = await _async_login(
+                data, otp_provider
+            )
+        except FarmadAuthenticationError as err:
+            if otp_provider is not None:
+                return None, {CONF_CODE: "wrong_code"}
+            if isinstance(err, FarmadMfaRequiredError):
+                return await self.async_step_mfa(), {}
             return None, {"base": "invalid_auth"}
         except FarmadError:
             return None, {"base": "cannot_connect"}

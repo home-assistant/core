@@ -229,7 +229,7 @@ async def test_reauth(hass: HomeAssistant, mock_farmad_client: MagicMock) -> Non
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
-    assert result["description_placeholders"][CONF_EMAIL] == API_ACCOUNT_EMAIL
+    assert result["description_placeholders"]["account"] == API_ACCOUNT_EMAIL
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], REAUTH_INPUT
@@ -265,7 +265,7 @@ async def test_reauth_entry_without_email(
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["description_placeholders"][CONF_EMAIL] == API_ACCOUNT_FULL_NAME
+    assert result["description_placeholders"]["account"] == API_ACCOUNT_FULL_NAME
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
@@ -299,6 +299,8 @@ async def test_reauth_mfa(hass: HomeAssistant, mock_farmad_client: MagicMock) ->
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_farmad_client.call_args.kwargs["email"] == API_ACCOUNT_EMAIL
+    assert entry.data == ENTRY_DATA
 
 
 @pytest.mark.parametrize(
