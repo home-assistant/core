@@ -483,6 +483,22 @@ async def test_cleanup_recreates_gateway_ports_after_successful_refresh(
     assert gateway_port_entities()
 
 
+async def test_get_gateway_normalizes_mac_format(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test gateway lookup accepts an equivalent MAC format."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    controller = hass.config_entries.async_get_entry(
+        mock_config_entry.entry_id
+    ).runtime_data
+    assert await controller.async_get_gateway("AA:BB:CC:DD:EE:FF") is not None
+
+
 async def test_cleanup_drops_switch_port_coordinator(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,

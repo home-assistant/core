@@ -169,7 +169,20 @@ class OmadaSiteController:
         coordinator = self._gateway_coordinator
         if coordinator is None:
             return None
-        gateway = (coordinator.data or {}).get(mac)
+        target = dr.format_mac(mac)
+
+        def _cached_gateway() -> OmadaGateway | None:
+            """Find the gateway even when the MAC formatting differs."""
+            return next(
+                (
+                    gateway
+                    for key, gateway in (coordinator.data or {}).items()
+                    if dr.format_mac(key) == target
+                ),
+                None,
+            )
+
+        gateway = _cached_gateway()
         if gateway is not None:
             return gateway
         await coordinator.async_refresh()
@@ -178,7 +191,7 @@ class OmadaSiteController:
                 translation_domain=DOMAIN,
                 translation_key="gateway_unavailable",
             )
-        return (coordinator.data or {}).get(mac)
+        return _cached_gateway()
 
     @property
     def controller_client(self) -> OmadaClient:
