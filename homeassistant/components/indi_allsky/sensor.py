@@ -408,6 +408,7 @@ class IndiAllSkyDynamicHardwareSensor(IndiAllSkyEntity, SensorEntity):
         """Handle updated data from the coordinator."""
         if isinstance(self._get_sensor_item(), dict):
             self._update_attributes()
+            self.async_registry_entry_updated()
         super()._handle_coordinator_update()
 
     def _get_sensor_item(self) -> Any:

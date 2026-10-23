@@ -492,6 +492,7 @@ async def test_dynamic_hardware_sensor_discovery(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test dynamic discovery and metadata inference of custom hardware sensors."""
     with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
@@ -642,7 +643,14 @@ async def test_dynamic_hardware_sensor_discovery(
     assert state.attributes.get("unit_of_measurement") == "°C"
     assert state.attributes.get("device_class") == "temperature"
 
-    # Verify incompatible unit update clears device_class so conversion does not fail
+    # Verify incompatible unit update clears device_class and refreshes cached user unit options
+    entity_registry.async_update_entity_options(
+        "sensor.indi_allsky_sht4x_i2c_sht40_temperature",
+        "sensor",
+        {"unit_of_measurement": "°C"},
+    )
+    await hass.async_block_till_done()
+
     incompatible_unit_update = SensorData.from_dict(
         {
             "sensors": {
