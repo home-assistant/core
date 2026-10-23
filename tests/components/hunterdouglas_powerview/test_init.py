@@ -2,13 +2,13 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_MAC
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_not_primary_hub(hass: HomeAssistant) -> None:

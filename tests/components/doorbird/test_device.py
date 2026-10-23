@@ -6,6 +6,7 @@ from typing import Any
 
 from doorbirdpy import DoorBirdScheduleEntry
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.doorbird.const import (
     CONF_EVENTS,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 
 from . import VALID_CONFIG
 from .conftest import DoorbirdMockerType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

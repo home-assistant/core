@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import Mock, patch
 
 from pyschlage.lock import AUTO_LOCK_TIMES
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.schlage.const import DOMAIN
@@ -18,8 +19,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import LOCALE_EN, async_get_translations
 
 from . import MockSchlageConfigEntry
-
-from tests.common import snapshot_platform
 
 
 async def test_select_attributes(

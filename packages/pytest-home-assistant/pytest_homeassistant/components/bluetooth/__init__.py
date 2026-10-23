@@ -1,4 +1,4 @@
-"""Tests for the Bluetooth integration."""
+"""Bluetooth helpers."""
 
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
@@ -83,22 +83,14 @@ def patch_bleak_backend_type() -> Generator[None]:
     platform = system()
 
     if platform == "Darwin":
-        from bleak.backends.corebluetooth.client import (  # noqa: PLC0415
-            BleakClientCoreBluetooth,
-        )
-        from bleak.backends.corebluetooth.scanner import (  # noqa: PLC0415
-            BleakScannerCoreBluetooth,
-        )
+        from bleak.backends.corebluetooth.client import BleakClientCoreBluetooth  # noqa: PLC0415
+        from bleak.backends.corebluetooth.scanner import BleakScannerCoreBluetooth  # noqa: PLC0415
 
         scanner_backend = (BleakScannerCoreBluetooth, "CoreBluetooth")
         client_backend = (BleakClientCoreBluetooth, "CoreBluetooth")
     elif platform == "Linux":
-        from bleak.backends.bluezdbus.client import (  # noqa: PLC0415
-            BleakClientBlueZDBus,
-        )
-        from bleak.backends.bluezdbus.scanner import (  # noqa: PLC0415
-            BleakScannerBlueZDBus,
-        )
+        from bleak.backends.bluezdbus.client import BleakClientBlueZDBus  # noqa: PLC0415
+        from bleak.backends.bluezdbus.scanner import BleakScannerBlueZDBus  # noqa: PLC0415
 
         scanner_backend = (BleakScannerBlueZDBus, "BlueZ")
         client_backend = (BleakClientBlueZDBus, "BlueZ")

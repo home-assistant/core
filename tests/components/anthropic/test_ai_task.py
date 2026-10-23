@@ -17,6 +17,7 @@ from anthropic.types.raw_message_delta_event import Delta
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ai_task, media_source
@@ -25,8 +26,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
 from . import create_content_block, create_server_tool_use_block
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_init_component")

@@ -13,6 +13,11 @@ from linkplay.bridge import (
 )
 from linkplay.consts import API_ENDPOINT, LoopMode, PlayingStatus
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_load_fixture,
+)
 
 from homeassistant.components.linkplay.const import DOMAIN, SHARED_DATA_KEY
 from homeassistant.components.media_player import (
@@ -53,8 +58,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from . import setup_integration
 from .conftest import HOST, HOST_REENTRY, mock_lp_aiohttp_client
-
-from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
 
 ENTITY_ID = "media_player.smart_zone_1_54b9"
 LEADER_ENTITY_ID = "media_player.leader"

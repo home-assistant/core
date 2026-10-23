@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 from pyfronius import FroniusError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.fronius.const import DOMAIN
@@ -14,16 +16,13 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import mock_responses
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-
 
 @pytest.fixture(autouse=True)
 def no_setup():
     """Disable setting up the whole integration in config_flow tests."""
     with patch(
         "homeassistant.components.fronius.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

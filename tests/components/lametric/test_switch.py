@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from demetriek import LaMetricConnectionError, LaMetricError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.lametric.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.switch import (
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 

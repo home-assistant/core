@@ -12,6 +12,7 @@ from aio_wattwaechter import (
     WattwaechterNoDataError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.wattwaechter.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import MOCK_DEVICE_ID, MOCK_HOST
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload_entry(

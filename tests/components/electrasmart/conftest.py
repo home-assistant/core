@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from electrasmart.device import OperationMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.electrasmart.const import (
     CONF_IMEI,
@@ -12,8 +13,6 @@ from homeassistant.components.electrasmart.const import (
 )
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_device")

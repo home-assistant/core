@@ -5,11 +5,10 @@ from uuid import uuid4
 
 import blinkpy
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.blink.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 CAMERA_ATTRIBUTES = {
     "name": "Camera 1",

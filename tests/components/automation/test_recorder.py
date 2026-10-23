@@ -1,6 +1,8 @@
 """The tests for automation recorder."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import automation
 from homeassistant.components.automation import ATTR_LAST_TRIGGERED
@@ -11,9 +13,6 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.script import ATTR_CUR, ATTR_MAX
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_mock_service
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture

@@ -1,9 +1,10 @@
 """Test entity functions for Home Assistant templates."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
 from tests.helpers.template.helpers import render
 
 

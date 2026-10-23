@@ -6,13 +6,7 @@ from typing import Any
 import probatio
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,  # noqa: F401
-    CONF_ENTITIES,
-    CONF_ICON,
-    CONF_NAME,
-    SERVICE_RELOAD,  # noqa: F401
-)
+from homeassistant.const import CONF_ENTITIES, CONF_ICON, CONF_NAME, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.group import (
@@ -31,29 +25,31 @@ from homeassistant.helpers.typing import ConfigType
 # executor.
 #
 from . import config_flow as config_flow_pre_import  # noqa: F401
-from .const import (  # noqa: F401
-    ATTR_ADD_ENTITIES,
-    ATTR_ALL,
-    ATTR_AUTO,
-    ATTR_ENTITIES,
-    ATTR_OBJECT_ID,
-    ATTR_ORDER,
-    ATTR_REMOVE_ENTITIES,
+from .const import (
     CONF_ALL,
     CONF_HIDE_MEMBERS,
     DATA_COMPONENT,
     DOMAIN,
-    GROUP_ORDER,
-    PLATFORMS,
     REG_KEY,
     SERVICE_REMOVE,
     SERVICE_SET,
 )
-from .entity import Group  # noqa: F401
+from .entity import Group
 from .registry import async_setup as async_setup_registry
 from .services import async_process_config, async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "DOMAIN",
+    "SERVICE_RELOAD",
+    "SERVICE_REMOVE",
+    "SERVICE_SET",
+    "Group",
+    "expand_entity_ids",
+    "get_entity_ids",
+    "groups_with_entity",
+]
 
 
 def _conf_preprocess(value: Any) -> dict[str, Any]:

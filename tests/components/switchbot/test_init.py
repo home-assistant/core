@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 import switchbot
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -41,9 +43,6 @@ from . import (
     patch_async_ble_device_from_address,
     patch_async_setup_entry,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.parametrize(
@@ -281,7 +280,7 @@ async def test_migrate_deprecated_model_sensor_type(
         ) as mock_parse,
         patch_async_setup_entry(),
         patch(
-            "homeassistant.components.switchbot.async_unload_entry", return_value=True
+            "homeassistant.components.switchbot.async_unload_entry", return_value=None
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)

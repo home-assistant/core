@@ -13,6 +13,12 @@ from aiopowerwall import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from tesla_fleet_api.exceptions import InvalidResponse, PrivateKeyError
 
 from homeassistant.components.repairs import ConfirmRepairFlow
@@ -33,10 +39,6 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_config_entry, setup_platform
 from .const import METADATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 VEHICLE_VIN = "LRW3F7EK4NC700000"
 SITE_ID = 123456

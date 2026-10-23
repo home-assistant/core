@@ -1,5 +1,10 @@
 """Test homekit_controller diagnostics."""
 
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -8,12 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .common import setup_accessories_from_file, setup_test_accessories
-
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 IP_CONNECTION_DATA = {
     "AccessoryIP": "192.168.1.10",
