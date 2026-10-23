@@ -45,6 +45,7 @@ from homeassistant.components.nuheat.const import (
     AUTHORIZE_URL,
     DOMAIN,
     OAUTH_SCOPES,
+    PRESET_PERMANENT_HOLD,
     PRESET_RUN,
     PRESET_TEMPORARY_HOLD,
     SCAN_INTERVAL,
@@ -1005,6 +1006,7 @@ async def test_legacy_hvac_command_support_remains_separate_from_read_state(
     assert entity.preset_modes == [
         PRESET_RUN,
         PRESET_TEMPORARY_HOLD,
+        PRESET_PERMANENT_HOLD,
     ]
 
     await entity.async_set_hvac_mode(hvac_mode)
@@ -1164,6 +1166,7 @@ def test_climate_preset_translations() -> None:
     ]["state"] == {
         PRESET_RUN: "Run schedule",
         PRESET_TEMPORARY_HOLD: "Temporary hold",
+        PRESET_PERMANENT_HOLD: "Permanent hold",
     }
 
 

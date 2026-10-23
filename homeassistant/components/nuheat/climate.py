@@ -1,7 +1,10 @@
 """Climate entities for NuHeat thermostats."""
 
 from asyncio import Lock
+from datetime import UTC, datetime
+from math import isfinite
 from typing import Any, override
+from zoneinfo import ZoneInfo
 
 from chemelex_nuheat import ScheduleMode, Thermostat, ThermostatState
 
@@ -20,6 +23,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import NuHeatConfigEntry
@@ -203,6 +207,64 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
             and self.thermostat.hold_until is not None
         ):
             hold_until = self.thermostat.hold_until
+        if (
+            requested_hvac_mode is None
+            and (
+                pending_until := self.coordinator.pending_hold_until(
+                    self._serial_number
+                )
+            )
+            is not None
+        ):
+            mode = ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE
+            hold_until = pending_until
+        await self._async_write_setpoint(temperature_celsius, mode, hold_until)
+
+    async def async_set_temporary_hold(
+        self, temperature: float, hold_until: datetime
+    ) -> None:
+        """Hold a target until an explicit future time in HA's timezone."""
+        async with self._setpoint_lock:
+            temperature_celsius = self._to_celsius(temperature)
+            if not isfinite(temperature_celsius) or not (
+                DEFAULT_MIN_TEMP <= temperature_celsius <= DEFAULT_MAX_TEMP
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_hold_temperature",
+                )
+            if hold_until.tzinfo is None:
+                zone = ZoneInfo(self.hass.config.time_zone)
+                candidates = [
+                    hold_until.replace(tzinfo=zone, fold=fold) for fold in (0, 1)
+                ]
+                valid = [
+                    item
+                    for item in candidates
+                    if item.astimezone(UTC).astimezone(zone).replace(tzinfo=None)
+                    == hold_until
+                ]
+                if not valid or len({item.utcoffset() for item in valid}) != 1:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN, translation_key="invalid_hold_time"
+                    )
+                hold_until = valid[0]
+            hold_until = hold_until.astimezone(UTC)
+            if hold_until <= dt_util.utcnow():
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="invalid_hold_time"
+                )
+            await self._async_write_setpoint(
+                temperature_celsius, ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE, hold_until
+            )
+
+    async def _async_write_setpoint(
+        self,
+        temperature_celsius: float,
+        mode: ScheduleMode,
+        hold_until: datetime | None = None,
+    ) -> None:
+        """Share the existing write, optimism and reconciliation contract."""
         command_kwargs: dict[str, Any] = {"mode": mode}
         if hold_until is not None:
             command_kwargs["hold_until"] = hold_until
@@ -219,7 +281,7 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
             raise
         self._optimistic_standby = False
         self.coordinator.async_set_pending_setpoint(
-            self._serial_number, temperature_celsius
+            self._serial_number, temperature_celsius, hold_until=hold_until
         )
         await self.coordinator.async_request_refresh()
 
@@ -229,23 +291,33 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
             await self.async_turn_off()
             return
         mode = api_mode_for_hvac_mode(hvac_mode)
-        if mode is ScheduleMode.AUTO:
-            await self.coordinator.api.set_schedule_mode(self._serial_number, mode)
-        else:
-            await self.coordinator.api.set_schedule_mode(
-                self._serial_number,
-                mode,
-                temperature=self.thermostat.target_temperature,
-            )
+        try:
+            if mode is ScheduleMode.AUTO:
+                await self.coordinator.api.set_schedule_mode(self._serial_number, mode)
+            else:
+                await self.coordinator.api.set_schedule_mode(
+                    self._serial_number,
+                    mode,
+                    temperature=self.thermostat.target_temperature,
+                )
+        except Exception:
+            self.coordinator.async_schedule_reconciliation()
+            raise
         self._optimistic_standby = False
         self.coordinator.async_clear_pending_setpoint(self._serial_number)
+        self.coordinator.async_schedule_reconciliation()
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_off(self) -> None:
         """Enter NuHeat's frost-protected Standby state."""
-        await self.coordinator.api.set_standby(self._serial_number)
+        try:
+            await self.coordinator.api.set_standby(self._serial_number)
+        except Exception:
+            self.coordinator.async_schedule_reconciliation()
+            raise
         self.coordinator.async_clear_pending_setpoint(self._serial_number)
+        self.coordinator.async_schedule_reconciliation()
         self._optimistic_standby = True
         await self.coordinator.async_request_refresh()
         if self.thermostat.state is ThermostatState.STANDBY:
@@ -266,18 +338,23 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
                 translation_key="unsupported_preset",
                 translation_placeholders={"preset": preset_mode},
             ) from err
-        if mode is ScheduleMode.AUTO:
-            await self.coordinator.api.set_schedule_mode(self._serial_number, mode)
-        else:
-            # A Hold command without an end is verified to last until the next
-            # scheduled event; it does not create an indefinite hold.
-            await self.coordinator.api.set_schedule_mode(
-                self._serial_number,
-                mode,
-                temperature=self.thermostat.target_temperature,
-            )
+        try:
+            if mode is ScheduleMode.AUTO:
+                await self.coordinator.api.set_schedule_mode(self._serial_number, mode)
+            else:
+                # Permanent Hold uses the verified v1 schedule-mode-3 request;
+                # Temporary Hold without an end lasts until the next schedule event.
+                await self.coordinator.api.set_schedule_mode(
+                    self._serial_number,
+                    mode,
+                    temperature=self.thermostat.target_temperature,
+                )
+        except Exception:
+            self.coordinator.async_schedule_reconciliation()
+            raise
         self._optimistic_standby = False
         self.coordinator.async_clear_pending_setpoint(self._serial_number)
+        self.coordinator.async_schedule_reconciliation()
         await self.coordinator.async_request_refresh()
 
     @property

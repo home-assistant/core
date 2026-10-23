@@ -16,12 +16,14 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .account_identity import (
     InvalidAccountSubjectError,
@@ -36,6 +38,9 @@ from .migration import (
     is_pending_cleanup_entry,
     migration_reload_active,
 )
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.CLIMATE]
 
@@ -50,6 +55,12 @@ class NuHeatRuntimeData:
 
 
 type NuHeatConfigEntry = ConfigEntry[NuHeatRuntimeData]
+
+
+async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
+    """Register actions independently of account availability."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> bool:
@@ -94,7 +105,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> bo
     except (OAuth2TokenRequestTransientError, OAuth2TokenRequestError) as err:
         raise ConfigEntryNotReady("Unable to refresh NuHeat authorization") from err
 
-    api = NuHeatClient(async_get_clientsession(hass), async_access_token)
+    api = NuHeatClient(
+        async_get_clientsession(hass), async_access_token, include_schedule_details=True
+    )
     coordinator = NuHeatCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
 

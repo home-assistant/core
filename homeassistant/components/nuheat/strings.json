@@ -41,6 +41,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
+              "permanent_hold": "Permanent hold",
               "run_schedule": "Run schedule",
               "temporary_hold": "Temporary hold"
             }
@@ -50,6 +51,12 @@
     }
   },
   "exceptions": {
+    "invalid_hold_temperature": {
+      "message": "Choose a finite temperature within the thermostat's supported range, using Home Assistant's temperature unit."
+    },
+    "invalid_hold_time": {
+      "message": "Choose a future hold expiry. Ambiguous or nonexistent local times require a valid explicit UTC offset."
+    },
     "legacy_migration_required": {
       "message": "This NuHeat entry must be reconnected through OAuth."
     },
@@ -74,6 +81,22 @@
     "migration_rollback_failed": {
       "description": "Home Assistant could not completely restore local NuHeat registry or config-entry state after a migration failure. Stop retrying migration and restore the Home Assistant backup made before migration testing.",
       "title": "NuHeat migration rollback needs manual recovery"
+    }
+  },
+  "services": {
+    "set_temporary_hold": {
+      "description": "Hold a target until a future date and time. Local times use Home Assistant's timezone.",
+      "fields": {
+        "hold_until": {
+          "description": "Future expiry in Home Assistant's timezone. Use an explicit UTC offset for ambiguous local times.",
+          "name": "Hold until"
+        },
+        "temperature": {
+          "description": "Target in Home Assistant's temperature unit (Celsius or Fahrenheit).",
+          "name": "Target temperature"
+        }
+      },
+      "name": "Set temporary hold"
     }
   }
 }

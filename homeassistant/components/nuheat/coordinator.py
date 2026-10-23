@@ -13,6 +13,7 @@ from chemelex_nuheat import (
     NuHeatClient,
     NuHeatDataError,
     Thermostat,
+    ThermostatState,
 )
 
 from homeassistant.core import HomeAssistant, callback
@@ -40,6 +41,7 @@ class PendingSetpoint:
 
     temperature: float
     cancel_timeout: Callable[[], None]
+    hold_until: datetime | None = None
 
 
 class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
@@ -67,9 +69,19 @@ class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
             return pending.temperature
         return None
 
+    def pending_hold_until(self, serial_number: str) -> datetime | None:
+        """Retain a newly accepted timed expiry until cloud confirmation/deadline."""
+        if pending := self._pending_setpoints.get(serial_number):
+            return pending.hold_until
+        return None
+
     @callback
     def async_set_pending_setpoint(
-        self, serial_number: str, temperature: float
+        self,
+        serial_number: str,
+        temperature: float,
+        *,
+        hold_until: datetime | None = None,
     ) -> None:
         """Publish an accepted command until confirmed or its deadline expires."""
         self.async_clear_pending_setpoint(serial_number)
@@ -85,6 +97,7 @@ class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
         pending = PendingSetpoint(
             temperature,
             async_call_later(self.hass, SETPOINT_RECONCILE_TIMEOUT, expire),
+            hold_until,
         )
         self._pending_setpoints[serial_number] = pending
         self.async_schedule_reconciliation()
@@ -153,6 +166,13 @@ class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                 self._pending_setpoints.get(serial_number) is pending
                 and (thermostat := fresh.get(serial_number)) is not None
                 and thermostat.online
+                and (
+                    pending.hold_until is None
+                    or (
+                        thermostat.state is ThermostatState.TIMED_HOLD
+                        and thermostat.hold_until == pending.hold_until
+                    )
+                )
                 and thermostat.target_temperature is not None
                 and isclose(
                     thermostat.target_temperature, pending.temperature, abs_tol=0.01

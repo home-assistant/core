@@ -1,8 +1,10 @@
 """Test defensive NuHeat integration paths."""
 
+from collections.abc import Awaitable, Callable
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientSession
 from chemelex_nuheat import HoldUntilStatus, NuHeatApiError, NuHeatAuthError, Thermostat
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -116,12 +118,18 @@ async def test_api_access_token_callback_translation(
     oauth_session.async_ensure_token_valid = AsyncMock(side_effect=[None, error])
     access_token_callback = None
 
-    def make_api(_session, callback):
+    def make_api(
+        _session: ClientSession,
+        callback: Callable[[bool], Awaitable[str]],
+        *,
+        include_schedule_details: bool,
+    ) -> MagicMock:
+        assert include_schedule_details
         nonlocal access_token_callback
         access_token_callback = callback
         return MagicMock()
 
-    async def first_refresh():
+    async def first_refresh() -> None:
         assert access_token_callback is not None
         if expected is None:
             assert await access_token_callback(True) == "synthetic-access"
