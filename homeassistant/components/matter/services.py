@@ -2,6 +2,7 @@
 
 import probatio
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
@@ -12,6 +13,9 @@ from .const import (
     ATTR_CREDENTIAL_INDEX,
     ATTR_CREDENTIAL_RULE,
     ATTR_CREDENTIAL_TYPE,
+    ATTR_EXPIRATION_IN_MINUTES,
+    ATTR_PRESET_HANDLE,
+    ATTR_UNIQUE_ID,
     ATTR_USER_INDEX,
     ATTR_USER_NAME,
     ATTR_USER_STATUS,
@@ -20,7 +24,9 @@ from .const import (
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
     DOMAIN,
+    SERVICE_ADD_THERMOSTAT_SUGGESTION,
     SERVICE_CREDENTIAL_TYPES,
+    SERVICE_REMOVE_THERMOSTAT_SUGGESTION,
     USER_TYPE_REVERSE_MAP,
 )
 
@@ -51,6 +57,35 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ),
         },
         func="async_set_boost",
+    )
+
+    # Thermostat suggestion services (feature TSUGGEST, Matter 1.6)
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_ADD_THERMOSTAT_SUGGESTION,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            probatio.Required(ATTR_PRESET_HANDLE): cv.string,
+            probatio.Required(ATTR_EXPIRATION_IN_MINUTES): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1)
+            ),
+        },
+        func="async_add_thermostat_suggestion",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_REMOVE_THERMOSTAT_SUGGESTION,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            probatio.Required(ATTR_UNIQUE_ID): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0)
+            ),
+        },
+        func="async_remove_thermostat_suggestion",
     )
 
     # Lock services - Full user CRUD
