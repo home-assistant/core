@@ -1,0 +1,1 @@
+"""The Telegram component."""

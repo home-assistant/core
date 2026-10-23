@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "integration_removed": {
+      "description": "The Telegram integration has been removed from Home Assistant.\n\nIt only provided legacy notify actions, which were replaced by the notify entities of the [Telegram bot integration]({url}).\n\nTo resolve this issue, remove the Telegram notify configuration (`platform: telegram`) from your `configuration.yaml` file, add your chats to the Telegram bot integration, and restart Home Assistant. Then update your automations and scripts to use the `notify.send_message` action with the Telegram bot notify entities.\n\nOnce the configuration has been removed and Home Assistant has restarted, this issue will no longer be shown.",
+      "title": "The Telegram integration has been removed"
+    }
+  }
+}
