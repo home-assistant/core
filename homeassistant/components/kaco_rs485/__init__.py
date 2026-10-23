@@ -5,8 +5,8 @@ from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_ADDRESSES, CONF_INVERTERS, DOMAIN
-from .coordinator import KacoRs485ConfigEntry, KacoRs485Coordinator
+from .const import CONF_ADDRESSES, CONF_INVERTERS
+from .coordinator import KacoRs485ConfigEntry, KacoRs485Coordinator, device_identifier
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -34,25 +34,37 @@ async def async_unload_entry(hass: HomeAssistant, entry: KacoRs485ConfigEntry) -
 async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: KacoRs485ConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
-    """Stop polling an inverter whose device the user deleted.
+    """Allow deleting an inverter once it stops answering, and stop polling it.
 
-    Refused while it still answers. Once dark it may be removed or just asleep.
+    At night a removed inverter looks the same as a sleeping one.
     """
-    if (address := _address(entry, device_entry)) is None:
-        return False
-    if (
-        entry.state is ConfigEntryState.LOADED
-        and (state := entry.runtime_data.data.get(address)) is not None
-        and state.available
+    address = next(
+        (
+            a
+            for a in entry.data[CONF_ADDRESSES]
+            if device_identifier(entry, a) in device_entry.identifiers
+        ),
+        None,
+    )
+    if address is None:
+        return True
+    if entry.state is ConfigEntryState.LOADED and (
+        (state := entry.runtime_data.data.get(address)) and state.available
     ):
         return False
 
     addresses = [a for a in entry.data[CONF_ADDRESSES] if a != address]
-    inverters = dict(entry.data[CONF_INVERTERS])
-    inverters.pop(str(address), None)
     hass.config_entries.async_update_entry(
         entry,
-        data={**entry.data, CONF_ADDRESSES: addresses, CONF_INVERTERS: inverters},
+        data={
+            **entry.data,
+            CONF_ADDRESSES: addresses,
+            CONF_INVERTERS: {
+                key: inverter
+                for key, inverter in entry.data[CONF_INVERTERS].items()
+                if key != str(address)
+            },
+        },
     )
     # With no entities left the coordinator stops polling and keeps the port.
     if not addresses:
@@ -60,26 +72,12 @@ async def async_remove_config_entry_device(
     return True
 
 
-def _address(entry: KacoRs485ConfigEntry, device: dr.AnyDeviceEntry) -> int | None:
-    """Return the inverter address of one of this entry's devices."""
-    prefix = f"{entry.entry_id}_"
-    for domain, identifier in device.identifiers:
-        if (
-            domain == DOMAIN
-            and identifier.startswith(prefix)
-            and (address := identifier.removeprefix(prefix)).isdecimal()
-        ):
-            return int(address)
-    return None
-
-
 def _async_remove_stale_devices(
     hass: HomeAssistant, entry: KacoRs485ConfigEntry
 ) -> None:
     """Remove the devices of inverters the entry no longer lists."""
+    configured = {device_identifier(entry, a) for a in entry.data[CONF_ADDRESSES]}
     registry = dr.async_get(hass)
     for device in dr.async_entries_for_config_entry(registry, entry.entry_id):
-        if (address := _address(entry, device)) is not None and (
-            address not in entry.data[CONF_ADDRESSES]
-        ):
+        if device.identifiers.isdisjoint(configured):
             registry.async_remove_device(device.id)

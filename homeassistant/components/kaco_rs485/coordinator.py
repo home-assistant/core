@@ -17,6 +17,11 @@ SCAN_INTERVAL = timedelta(seconds=30)
 type KacoRs485ConfigEntry = ConfigEntry[KacoRs485Coordinator]
 
 
+def device_identifier(entry: KacoRs485ConfigEntry, address: int) -> tuple[str, str]:
+    """Return the device registry identifier of one inverter."""
+    return (DOMAIN, f"{entry.entry_id}_{address}")
+
+
 class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
     """Runs one poll cycle per interval over a single long-lived connection."""
 
@@ -53,7 +58,7 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
             for address in self.config_entry.data[CONF_ADDRESSES]
             if (
                 device := registry.async_get_device_by_identifier(
-                    (DOMAIN, f"{self.config_entry.entry_id}_{address}"),
+                    device_identifier(self.config_entry, address),
                     self.config_entry.entry_id,
                 )
             )

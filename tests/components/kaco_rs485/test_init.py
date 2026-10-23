@@ -249,20 +249,20 @@ async def test_an_answering_inverter_is_not_removed(
     assert init_integration.data[CONF_ADDRESSES] == [1, 2, 4]
 
 
-async def test_a_foreign_device_is_not_removed(
+async def test_a_device_of_no_configured_inverter_can_be_deleted(
     init_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     ws_client: MockHAClientWebSocket,
 ) -> None:
-    """Test a device that is not one of this entry's inverters is refused."""
+    """Test a leftover device is deleted without touching the polled inverters."""
     device = device_registry.async_get_or_create(
         config_entry_id=init_integration.entry_id,
-        identifiers={(DOMAIN, "something_else")},
+        identifiers={(DOMAIN, f"{init_integration.entry_id}_7")},
     )
 
     response = await ws_client.remove_device(device.id)
 
-    assert not response["success"]
+    assert response["success"]
     assert init_integration.data[CONF_ADDRESSES] == [1, 2, 4]
 
 
@@ -273,10 +273,6 @@ async def test_setup_drops_devices_for_addresses_no_longer_configured(
 ) -> None:
     """Test setup removes the device of an inverter the entry no longer lists."""
     stale = _device(device_registry, init_integration, 2)
-    foreign = device_registry.async_get_or_create(
-        config_entry_id=init_integration.entry_id,
-        identifiers={(DOMAIN, "something_else")},
-    )
 
     hass.config_entries.async_update_entry(
         init_integration,
@@ -286,6 +282,5 @@ async def test_setup_drops_devices_for_addresses_no_longer_configured(
     await hass.async_block_till_done()
 
     assert device_registry.async_get(stale.id) is None
-    assert device_registry.async_get(foreign.id) is not None
     assert _device(device_registry, init_integration, 1)
     assert _device(device_registry, init_integration, 4)
