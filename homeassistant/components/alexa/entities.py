@@ -90,6 +90,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er, intent, network
 from homeassistant.helpers.entity import entity_sources
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.util.decorator import Registry
 
 from .capabilities import (
@@ -418,9 +419,10 @@ def async_get_camera_entity(
     hass: HomeAssistant, entity_id: str
 ) -> camera.Camera | None:
     """Return the camera entity, regardless of whether it is turned on."""
-    if (component := hass.data.get(camera.DATA_COMPONENT)) is None:
+    if (component := hass.data.get(DATA_INSTANCES, {}).get(CAMERA_DOMAIN)) is None:
         return None
-    return component.get_entity(entity_id)
+    entity = component.get_entity(entity_id)
+    return entity if isinstance(entity, camera.Camera) else None
 
 
 @callback
