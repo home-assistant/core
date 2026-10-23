@@ -3429,7 +3429,7 @@
       "categories": [
         "water.pools_spas"
       ],
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_polling"
     },
     "flo": {
@@ -8270,7 +8270,7 @@
         },
         "ubus": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "categories": [
             "presence_location.network_presence",
