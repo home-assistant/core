@@ -27,6 +27,14 @@
     }
   },
   "entity": {
+    "number": {
+      "battery_soc_high": {
+        "name": "Charge limit"
+      },
+      "battery_soc_low": {
+        "name": "Discharge limit"
+      }
+    },
     "sensor": {
       "ac_output_current": {
         "name": "AC output current"
@@ -145,6 +153,17 @@
       "total_pv_input_power": {
         "name": "Total PV input power"
       }
+    },
+    "switch": {
+      "ac_output": {
+        "name": "AC output"
+      },
+      "grid_charging": {
+        "name": "Grid charging"
+      },
+      "grid_feed_in": {
+        "name": "Grid feed-in"
+      }
     }
   },
   "exceptions": {
@@ -153,6 +172,9 @@
     },
     "link_settings_in_use": {
       "message": "The device cannot be set up with these link settings: {error}"
+    },
+    "write_failed": {
+      "message": "The setting could not be written to the BLUETTI power station: {error}"
     },
     "wrong_device": {
       "message": "The device at this address is a different device than the one this entry was set up for."

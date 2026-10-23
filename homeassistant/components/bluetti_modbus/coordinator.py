@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,10 +65,46 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return values
 
 
+class BluettiModbusSettingsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Polls a BLUETTI power station for the settings it can be given."""
+
+    config_entry: BluettiModbusConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: BluettiModbusConfigEntry,
+        device: Balco260,
+    ) -> None:
+        """Initialize the coordinator."""
+        self.device = device
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=f"{entry.title} settings",
+            update_interval=SETTINGS_SCAN_INTERVAL,
+        )
+
+    @override
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Poll the device's settings."""
+        try:
+            await self.device.async_update_with_retry()
+        except ModbusError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        return self.device.values
+
+
 @dataclass(kw_only=True)
 class BluettiModbusRuntimeData:
     """Runtime data for a BLUETTI Modbus config entry."""
 
     coordinator: BluettiModbusDataUpdateCoordinator
+    settings: BluettiModbusSettingsCoordinator
     device_info: DeviceInfo
     serial: str

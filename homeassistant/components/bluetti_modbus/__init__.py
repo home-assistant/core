@@ -13,11 +13,12 @@ from .coordinator import (
     BluettiModbusConfigEntry,
     BluettiModbusDataUpdateCoordinator,
     BluettiModbusRuntimeData,
+    BluettiModbusSettingsCoordinator,
 )
-from .device import restricted_device
+from .device import restricted_device, settings_device
 from .entity import bluetti_modbus_device_info
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(
@@ -39,6 +40,8 @@ async def async_setup_entry(
     device = restricted_device(unit)
     coordinator = BluettiModbusDataUpdateCoordinator(hass, entry, device)
     await coordinator.async_config_entry_first_refresh()
+    settings = BluettiModbusSettingsCoordinator(hass, entry, settings_device(unit))
+    await settings.async_config_entry_first_refresh()
 
     # Firmware versions come from the first refresh's own values - device
     # identity, so they go on DeviceInfo rather than becoming sensors.
@@ -52,6 +55,7 @@ async def async_setup_entry(
     serial = str(values["d_serial"])
     entry.runtime_data = BluettiModbusRuntimeData(
         coordinator=coordinator,
+        settings=settings,
         device_info=bluetti_modbus_device_info(
             serial, sw_version, host=entry.data[CONF_HOST]
         ),
