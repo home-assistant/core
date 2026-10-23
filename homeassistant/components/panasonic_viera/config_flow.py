@@ -27,6 +27,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _create_remote_and_get_device_info(
+    host: str, port: int
+) -> tuple[RemoteControl, dict[str, Any]]:
+    """Create the remote and fetch the device info."""
+    remote = RemoteControl(host, port)
+    return remote, remote.get_device_info()
+
+
 class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Panasonic Viera."""
 
@@ -36,7 +44,6 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the Panasonic Viera config flow."""
         self._data: dict[str, Any] = {
             CONF_HOST: None,
-            CONF_NAME: None,
             CONF_PORT: None,
             CONF_ON_ACTION: None,
             ATTR_DEVICE_INFO: None,
@@ -54,12 +61,10 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_load_data(user_input)
             try:
-                self._remote = await self.hass.async_add_executor_job(
-                    partial(RemoteControl, self._data[CONF_HOST], self._data[CONF_PORT])
-                )
-                assert self._remote is not None
-                self._data[ATTR_DEVICE_INFO] = await self.hass.async_add_executor_job(
-                    self._remote.get_device_info
+                remote, device_info = await self.hass.async_add_executor_job(
+                    _create_remote_and_get_device_info,
+                    self._data[CONF_HOST],
+                    self._data[CONF_PORT],
                 )
             except (URLError, SOAPError, OSError) as err:
                 _LOGGER.error("Could not establish remote connection: %s", err)
@@ -68,7 +73,9 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("An unknown error occurred")
                 return self.async_abort(reason="unknown")
             else:
-                await self.async_set_unique_id(self._data[ATTR_DEVICE_INFO][ATTR_UDN])
+                self._remote = remote
+                self._data[ATTR_DEVICE_INFO] = device_info
+                await self.async_set_unique_id(device_info[ATTR_UDN])
                 self._abort_if_unique_id_configured()
 
                 if self._data[CONF_NAME] == DEFAULT_NAME:
@@ -76,7 +83,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
                         ATTR_FRIENDLY_NAME
                     ].replace("_", " ")
 
-                if self._remote.type == TV_TYPE_ENCRYPTED:
+                if remote.type == TV_TYPE_ENCRYPTED:
                     return await self.async_step_pairing()
 
                 return self.async_create_entry(
@@ -93,14 +100,6 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
                         default=self._data[CONF_HOST]
                         if self._data[CONF_HOST] is not None
                         else "",
-                    ): str,
-                    # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=home-assistant-config-flow-name-field
-                    probatio.Optional(
-                        CONF_NAME,
-                        default=self._data[CONF_NAME]
-                        if self._data[CONF_NAME] is not None
-                        else DEFAULT_NAME,
                     ): str,
                 }
             ),
@@ -170,6 +169,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
         """Load the data."""
         self._data = config
 
+        self._data[CONF_NAME] = self._data.get(CONF_NAME, DEFAULT_NAME)
         self._data[CONF_PORT] = self._data.get(CONF_PORT, DEFAULT_PORT)
         self._data[CONF_ON_ACTION] = self._data.get(CONF_ON_ACTION)
 

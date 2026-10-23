@@ -247,29 +247,35 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
     async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle MQTT device trigger discovery updates."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
+        config = TRIGGER_DISCOVERY_SCHEMA(discovery_data)
+        new_trigger_id = f"{self.device_id}_{config[CONF_TYPE]}_{config[CONF_SUBTYPE]}"
+        mqtt_data = self.hass.data[DATA_MQTT]
+        if (
+            new_trigger_id != self.trigger_id
+            and new_trigger_id in mqtt_data.device_triggers
+        ):
+            _LOGGER.error(
+                "Cannot update device trigger %s due to an existing duplicate "
+                "device trigger with the same device_id, "
+                "type and subtype. Got: %s",
+                discovery_hash,
+                config,
+            )
+            return
+        # Update the device first, so a failing update does not change the trigger
+        update_device(self.hass, self._config_entry, config)
+        # The debug info shares the discovery data that holds the current payload,
+        # so it is only updated when the update is accepted
         debug_info.update_trigger_discovery_data(
             self.hass, discovery_hash, discovery_data
         )
-        config = TRIGGER_DISCOVERY_SCHEMA(discovery_data)
-        new_trigger_id = f"{self.device_id}_{config[CONF_TYPE]}_{config[CONF_SUBTYPE]}"
         if new_trigger_id != self.trigger_id:
-            mqtt_data = self.hass.data[DATA_MQTT]
-            if new_trigger_id in mqtt_data.device_triggers:
-                _LOGGER.error(
-                    "Cannot update device trigger %s due to an existing duplicate "
-                    "device trigger with the same device_id, "
-                    "type and subtype. Got: %s",
-                    discovery_hash,
-                    config,
-                )
-                return
             # Update trigger_id based index after update of type or subtype
             mqtt_data.device_triggers[new_trigger_id] = mqtt_data.device_triggers.pop(
                 self.trigger_id
             )
             self.trigger_id = new_trigger_id
 
-        update_device(self.hass, self._config_entry, config)
         device_trigger: Trigger = self._mqtt_data.device_triggers[self.trigger_id]
         await device_trigger.update_trigger(config)
 
