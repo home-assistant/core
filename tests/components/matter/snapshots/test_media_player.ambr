@@ -32,7 +32,7 @@
     'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': <MediaPlayerDeviceClass.TV: 'tv'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': None,
     'platform': 'matter',
@@ -47,7 +47,6 @@
 # name: test_media_players[mock_basic_video_player][media_player.mock_basic_video_player-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Basic Video Player',
       <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 7200.0,
       <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 0.0,

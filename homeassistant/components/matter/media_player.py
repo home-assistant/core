@@ -10,7 +10,6 @@ from chip.clusters.Types import NullValue
 from matter_server.client.models import device_types
 
 from homeassistant.components.media_player import (
-    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityDescription,
     MediaPlayerEntityFeature,
@@ -87,7 +86,6 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
     """Representation of a Matter video player."""
 
     entity_description: MatterMediaPlayerEntityDescription
-    _attr_device_class = MediaPlayerDeviceClass.TV
     _write_state_debounce_cooldown = STATE_WRITE_DEBOUNCE_COOLDOWN
     _last_on_off_feature_map: int | None = None
     _last_accepted_commands: list[int] | None = None
