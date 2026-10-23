@@ -33,6 +33,8 @@ from .const import (
     SERVICE_DECREMENT,
     SERVICE_INCREMENT,
     SERVICE_SET_VALUE,
+    InputNumberService,
+    InputNumberServiceArgument,
 )
 from .entity import InputNumber
 from .services import async_setup_services
@@ -67,6 +69,8 @@ __all__ = [
     "SERVICE_SET_VALUE",
     "STORAGE_FIELDS",
     "InputNumber",
+    "InputNumberService",
+    "InputNumberServiceArgument",
 ]
 
 
