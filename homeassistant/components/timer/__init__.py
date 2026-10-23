@@ -26,6 +26,8 @@ from .const import (
     SERVICE_PAUSE,
     SERVICE_START,
     TimerEntityStateAttribute,
+    TimerService,
+    TimerServiceArgument,
 )
 from .entity import Timer, _format_timedelta
 from .services import async_setup_services
@@ -60,6 +62,8 @@ __all__ = [
     "STORAGE_FIELDS",
     "Timer",
     "TimerEntityStateAttribute",
+    "TimerService",
+    "TimerServiceArgument",
     "TimerStorageCollection",
 ]
 

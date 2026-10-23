@@ -23,6 +23,10 @@ from homeassistant.const import ATTR_MANUFACTURER, CONF_HOST, CONF_NAME, CONF_PO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
+MOCK_USER_INPUT = {
+    CONF_HOST: "0.0.0.0",
+}
+
 MOCK_BASIC_DATA = {
     CONF_HOST: "0.0.0.0",
     CONF_NAME: DEFAULT_NAME,

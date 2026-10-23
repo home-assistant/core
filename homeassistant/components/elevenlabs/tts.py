@@ -65,7 +65,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up ElevenLabs tts platform via config entry."""
     client = config_entry.runtime_data.client
-    voices = (await client.voices.get_all()).voices
+    voices = config_entry.runtime_data.voices
     default_voice_id = config_entry.options[CONF_VOICE]
     voice_settings = to_voice_settings(config_entry.options)
     async_add_entities(

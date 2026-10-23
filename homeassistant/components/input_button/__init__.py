@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import DATA_INPUT_BUTTON, DOMAIN
+from .const import DATA_INPUT_BUTTON, DOMAIN, InputButtonService
 from .entity import InputButton
 from .services import async_setup_services
 
@@ -47,6 +47,7 @@ __all__ = [
     "DOMAIN",
     "SERVICE_PRESS",
     "STORAGE_FIELDS",
+    "InputButtonService",
 ]
 
 
