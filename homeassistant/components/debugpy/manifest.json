@@ -1,6 +1,7 @@
 {
   "domain": "debugpy",
   "name": "Remote Python Debugger",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@frenck"],
   "documentation": "https://www.home-assistant.io/integrations/debugpy",
   "integration_type": "service",

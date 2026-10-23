@@ -41,7 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> None:
     """Set up config entry."""
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed
@@ -66,9 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> None:
     """Unload config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

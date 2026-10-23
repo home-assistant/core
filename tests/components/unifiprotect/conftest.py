@@ -10,6 +10,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from uiprotect import ProtectApiClient
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
@@ -60,8 +61,6 @@ from .utils import (
     public_rtsps_for,
 )
 
-from tests.common import MockConfigEntry, load_json_object_fixture
-
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
 UNIFI_MAC = _async_unifi_mac_from_hass(MAC_ADDR)
 
@@ -81,6 +80,29 @@ DEFAULT_API_KEY = "test-api-key"
 def mock_discovery():
     """Prevent real network scanning in all unifiprotect tests."""
     with _patch_discovery(no_device=True):
+        yield
+
+
+@pytest.fixture
+def mock_private_only_entities_registered():
+    """Create the deprecated private-only entities as if they were registered.
+
+    New installs skip them; the platform tests cover existing installs.
+    """
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.entity.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.switch.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.sensor.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+    ):
         yield
 
 
@@ -203,6 +225,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.nvr.display_name = nvr.name
     client.public_bootstrap.nvr.device_type = None
     client.public_bootstrap.nvr.type = None
+    client.public_bootstrap.nvr.unifi_dict.return_value = {"name": nvr.name}
     client.public_bootstrap.nvr.doorbell_settings = PublicDoorbellSettings(
         default_message_text="Welcome", custom_messages=["Test"]
     )
@@ -217,6 +240,19 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.get_camera_rtsps_streams = AsyncMock(side_effect=get_camera_rtsps_streams)
     client.create_camera_rtsps_streams = AsyncMock(return_value=None)
     return client
+
+
+def _subscribe_public_resync(
+    ufp: MockUFPFixture,
+) -> Callable[[Callable[[bool], None]], Mock]:
+    """Capture the public resync callback on the fixture."""
+
+    def subscribe(resync_callback: Callable[[bool], None]) -> Mock:
+        ufp.public_resync_subscription = resync_callback
+        ufp.public_resync_unsub = Mock()
+        return ufp.public_resync_unsub
+
+    return subscribe
 
 
 @pytest.fixture(name="ufp")
@@ -281,6 +317,7 @@ def mock_entry(
         ufp_client.subscribe_events = subscribe_events
         ufp_client.subscribe_devices_websocket_state = subscribe_devices_websocket_state
         ufp_client.subscribe_events_websocket_state = subscribe_events_websocket_state
+        ufp_client.subscribe_public_resync = _subscribe_public_resync(ufp)
 
         async def update_public() -> Any:
             # Mirror the library prime: build each camera's public model from the
@@ -649,6 +686,7 @@ def mock_ufp_public_only(
     ufp_public_only_client.subscribe_events_websocket_state = (
         subscribe_events_websocket_state
     )
+    ufp_public_only_client.subscribe_public_resync = _subscribe_public_resync(ufp)
     return ufp
 
 
@@ -685,7 +723,7 @@ def mock_setup_fixture() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock,
     ):
         yield mock

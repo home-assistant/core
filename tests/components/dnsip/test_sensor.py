@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from aiodns.error import DNSError
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.dnsip.const import (
     CONF_HOSTNAME,
@@ -21,8 +22,6 @@ from homeassistant.const import CONF_NAME, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import RetrieveDNS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensor(hass: HomeAssistant) -> None:

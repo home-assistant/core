@@ -10,6 +10,12 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_load_fixture,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from telegram import (
     Chat,
     File,
@@ -26,6 +32,7 @@ from telegram.error import (
     TelegramError,
     TimedOut,
 )
+from telegram.request import BaseRequest
 
 from homeassistant.components.telegram_bot.bot import (
     ALLOWED_UPDATES,
@@ -116,9 +123,6 @@ from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import write_utf8_file
 
-from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
-from tests.typing import ClientSessionGenerator
-
 
 async def test_webhook_platform_init(hass: HomeAssistant, webhook_bot) -> None:
     """Test initialization of the webhooks platform."""
@@ -153,6 +157,24 @@ async def test_polling_platform_init_failed(
 
     mock_get_me.assert_called_once()
     assert mock_polling_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_external_calls")
+async def test_polling_platform_setup_failed(
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup fails when the bot platform cannot be set up."""
+    with patch(
+        "homeassistant.components.telegram_bot.polling.async_setup_bot_platform",
+        side_effect=RuntimeError("mock platform error"),
+    ):
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_polling_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_polling_config_entry.reason == "Failed to set up the Telegram bot"
 
 
 async def test_polling_platform_init_failed_does_not_log_token(
@@ -350,7 +372,7 @@ async def test_send_message_with_inline_keyboard(
             disable_notification=False,
             reply_to_message_id=None,
             reply_markup=expected,
-            read_timeout=None,
+            read_timeout=BaseRequest.DEFAULT_NONE,
             message_thread_id=None,
         )
 
@@ -1426,7 +1448,7 @@ async def test_edit_message(
         parse_mode=None,
         disable_web_page_preview=None,
         reply_markup=None,
-        read_timeout=None,
+        read_timeout=BaseRequest.DEFAULT_NONE,
     )
 
     with patch(
@@ -1452,7 +1474,7 @@ async def test_edit_message(
         inline_message_id=None,
         caption="mock caption",
         reply_markup=None,
-        read_timeout=None,
+        read_timeout=BaseRequest.DEFAULT_NONE,
         parse_mode=PARSER_MD2,
     )
 
@@ -1519,7 +1541,7 @@ async def test_answer_callback_query(
         123456,
         text="mock message",
         show_alert=True,
-        read_timeout=None,
+        read_timeout=BaseRequest.DEFAULT_NONE,
     )
 
 
@@ -1830,7 +1852,7 @@ async def test_set_message_reaction(
         54321,
         reaction="👍",
         is_big=True,
-        read_timeout=None,
+        read_timeout=BaseRequest.DEFAULT_NONE,
     )
 
 
@@ -1868,7 +1890,7 @@ async def test_send_message_draft(
         text="_Thinking..._",
         message_thread_id=123,
         parse_mode=PARSER_MD2,
-        read_timeout=None,
+        read_timeout=BaseRequest.DEFAULT_NONE,
     )
 
 
@@ -2234,13 +2256,25 @@ async def test_deprecated_timeout_parameter(
     # trigger service call
     context = Context()
     context.origin_event = event
-    await hass.services.async_call(
-        DOMAIN,
-        "send_message",
-        {"message": "test message", "timeout": 5},
-        blocking=True,
-        context=context,
-    )
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_message",
+        AsyncMock(
+            return_value=Message(
+                message_id=12345,
+                date=dt_util.utcnow(),
+                chat=Chat(id=123456, type=ChatType.PRIVATE),
+            )
+        ),
+    ) as mock_send_message:
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message",
+            {"message": "test message", "timeout": 5},
+            blocking=True,
+            context=context,
+        )
+
+    assert mock_send_message.call_args.kwargs["read_timeout"] == 5
 
     # check issue is created correctly
     issue = issue_registry.async_get_issue(

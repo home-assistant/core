@@ -16,6 +16,7 @@ from uiprotect.data import (
     IRLEDMode,
     Light,
     LightModeEnableType,
+    LightModePreset,
     LightModeType,
     Liveview,
     ModelType,
@@ -76,6 +77,8 @@ from .utils import (
     setup_public_camera,
     setup_public_light,
 )
+
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
 
 
 async def test_select_camera_remove(
@@ -472,7 +475,9 @@ async def test_select_set_option_light_motion(
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
-    with patch.object(public, "set_light_mode", new_callable=AsyncMock) as mock_method:
+    with patch.object(
+        public, "set_light_mode_preset", new_callable=AsyncMock
+    ) as mock_method:
         await hass.services.async_call(
             "select",
             "select_option",
@@ -480,7 +485,7 @@ async def test_select_set_option_light_motion(
             blocking=True,
         )
 
-        mock_method.assert_called_once_with(LightModeType.MANUAL, enable_at=None)
+        mock_method.assert_called_once_with(LightModePreset.OFF)
 
 
 async def test_select_light_motion_public_value(
@@ -1365,8 +1370,8 @@ def _make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
             "light_motion",
             "when_dark",
             "motion",
-            "set_light_mode",
-            ((LightModeType.MOTION,), {"enable_at": LightModeEnableType.ALWAYS}),
+            "set_light_mode_preset",
+            ((LightModePreset.MOTION,), {}),
             id="light",
         ),
     ],
@@ -1660,6 +1665,54 @@ async def test_public_only_select_nvr_arm_profile_follows_public_ws(
     ufp_public_only.devices_ws_state_subscription(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == "Home (p1)"
+
+
+@pytest.mark.parametrize(
+    "success",
+    [
+        pytest.param(True, id="resync_ok"),
+        # A failed endpoint, e.g. liveviews, keeps what the others applied.
+        pytest.param(False, id="resync_partial"),
+    ],
+)
+async def test_public_only_select_nvr_arm_profile_follows_public_resync(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    success: bool,
+) -> None:
+    """Arm profiles the library resync refetched show up without another refresh."""
+    pb = ufp_public_only.api.public_bootstrap
+    pb.arm_profiles = {"p1": _make_arm_profile("p1", "Home")}
+    pb.arm_mode = _make_nvr_arm_mode(profile_id="p1")
+
+    await setup_public_only()
+    ufp_public_only.api.update_public.reset_mock()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{UNIFI_MAC}_nvr_arm_profile"
+    )
+    assert entity_id
+
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "Home (p1)"
+
+    # Arm profiles have no websocket frames; the resync applies them silently.
+    pb.arm_profiles = {
+        "p1": _make_arm_profile("p1", "Home"),
+        "p2": _make_arm_profile("p2", "Away"),
+    }
+    pb.arm_mode = _make_nvr_arm_mode(profile_id="p2")
+    ufp_public_only.public_resync(success=success)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "Away (p2)"
+    assert set(state.attributes[ATTR_OPTIONS]) == {"Home (p1)", "Away (p2)"}
+    ufp_public_only.api.update_public.assert_not_awaited()
 
 
 async def test_select_nvr_arm_profile_decoupled_from_private_websocket(

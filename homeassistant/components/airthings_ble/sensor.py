@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
-from airthings_ble import AirthingsConnectivityMode, AirthingsDevice
+from airthings_ble import AirthingsDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -28,22 +28,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import CONNECTIVITY_MODE_MAP, get_connectivity_mode
 from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-CONNECTIVITY_MODE_MAP = {
-    AirthingsConnectivityMode.BLE.value: "bluetooth",
-    AirthingsConnectivityMode.SMARTLINK.value: "smartlink",
-    AirthingsConnectivityMode.NOT_CONFIGURED.value: "not_configured",
-}
-
-
-def get_connectivity_mode(value: str | float | None) -> str | None:
-    """Get connectivity mode."""
-    if not isinstance(value, str):
-        return None
-    return CONNECTIVITY_MODE_MAP.get(value)
 
 
 @dataclass(frozen=True, kw_only=True)

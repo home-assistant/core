@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Generator
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import logging
 import math
@@ -10,6 +10,7 @@ from typing import Any
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET, DOMAIN
@@ -34,8 +35,6 @@ from . import (
     _get_write_api_mock_v1,
     _get_write_api_mock_v2,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def async_wait_for_queue_to_process(hass: HomeAssistant) -> None:
@@ -584,7 +583,7 @@ async def test_event_listener(
             "battery_level": f"99{PERCENTAGE}",
             "temperature": "20c",
             "last_seen": "Last seen 23 minutes ago",
-            "updated_at": datetime.datetime(2017, 1, 1, 0, 0),
+            "updated_at": dt.datetime(2017, 1, 1, 0, 0),
             "multi_periods": "0.120.240.2023873",
         }
         body = [

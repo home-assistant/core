@@ -1,10 +1,12 @@
 """Test the UniFi Protect setup flow."""
 
 from collections.abc import Callable, Coroutine
+import logging
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
-from uiprotect.data import Camera, Light, Sensor
+from uiprotect.data import Camera, Light, ModelType, Sensor
 from uiprotect.data.public_devices import SensorFeatureCapability
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -12,12 +14,14 @@ from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.components.unifiprotect.migrate import (
     LIGHT_SETTING_MIRROR_BREAKS_IN,
     async_deprecate_light_setting_mirrors,
+    async_deprecate_private_only_entities,
+    async_is_new_private_only_entity,
     async_migrate_sensor_signal_strength,
     async_remove_hdr_switch,
     async_remove_sense_setting_mirrors,
 )
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -684,6 +688,204 @@ async def test_migrate_light_setting_mirror_repair_clears_when_unused(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
+async def test_migrate_light_setting_mirror_waits_for_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+) -> None:
+    """Automations loaded after the entry still get the repair."""
+    setup_public_light(ufp)
+    mirror = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR, DOMAIN, f"{light.mac}_light", config_entry=ufp.entry
+    )
+    hass.set_state(CoreState.starting)
+
+    await init_entry(hass, ufp, [light], regenerate_ids=False)
+    await _load_automation(hass, mirror.entity_id)
+    assert not issue_registry.issues
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"setting_mirror_deprecated_{light.mac}_light"
+    )
+
+
+@pytest.mark.parametrize(
+    ("platform", "key", "issue"),
+    [
+        *REMOVED_ENTITIES,
+        pytest.param(
+            Platform.CAMERA,
+            "0_insecure",
+            "insecure_camera_removed",
+            id="insecure_camera",
+        ),
+    ],
+)
+async def test_migrate_removed_entity_waits_for_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    platform: Platform,
+    key: str,
+    issue: str,
+) -> None:
+    """A used entity is only removed, with its repair, once startup is done."""
+    # The insecure camera is only removed next to its secure counterpart. The
+    # other entities ignore it.
+    entity_registry.async_get_or_create(
+        Platform.CAMERA, DOMAIN, f"{doorbell.mac}_0", config_entry=ufp.entry
+    )
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{doorbell.mac}_{key}", config_entry=ufp.entry
+    )
+    hass.set_state(CoreState.starting)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+    await _load_automation(hass, entity.entity_id)
+    assert entity_registry.async_get(entity.entity_id) is not None
+    assert not issue_registry.issues
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity.entity_id) is None
+    assert issue_registry.async_get_issue(DOMAIN, f"{issue}_{doorbell.mac}_{key}")
+
+
+@pytest.mark.parametrize(
+    ("platform", "device", "key"),
+    [
+        pytest.param(Platform.SWITCH, "doorbell", "hdr_mode", id="removal"),
+        pytest.param(Platform.BINARY_SENSOR, "light", "light", id="deprecation"),
+    ],
+)
+async def test_migrate_unload_before_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    light: Light,
+    request: pytest.FixtureRequest,
+    platform: Platform,
+    device: str,
+    key: str,
+) -> None:
+    """An entry unloaded before startup finishes leaves its entities alone."""
+    setup_public_light(ufp)
+    mac = request.getfixturevalue(device).mac
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{mac}_{key}", config_entry=ufp.entry
+    )
+    await _load_automation(hass, entity.entity_id)
+    hass.set_state(CoreState.starting)
+    await init_entry(hass, ufp, [doorbell, light], regenerate_ids=False)
+
+    await hass.config_entries.async_unload(ufp.entry.entry_id)
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity.entity_id) is not None
+    assert not issue_registry.issues
+
+
+async def test_migrate_removed_entity_deleted_before_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An entity the user deletes during startup is skipped."""
+    entity = entity_registry.async_get_or_create(
+        Platform.SWITCH, DOMAIN, f"{doorbell.mac}_hdr_mode", config_entry=ufp.entry
+    )
+    await _load_automation(hass, entity.entity_id)
+    hass.set_state(CoreState.starting)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    entity_registry.async_remove(entity.entity_id)
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.issues
+    # A failing STARTED listener is only logged, not raised.
+    assert not [r for r in caplog.records if r.levelno >= logging.ERROR]
+
+
+async def test_migrate_removed_entity_renamed_before_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """An entity renamed during startup is still removed with its repair."""
+    entity = entity_registry.async_get_or_create(
+        Platform.SWITCH, DOMAIN, f"{doorbell.mac}_hdr_mode", config_entry=ufp.entry
+    )
+    hass.set_state(CoreState.starting)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    renamed = entity_registry.async_update_entity(
+        entity.entity_id, new_entity_id="switch.renamed_hdr"
+    )
+    await _load_automation(hass, renamed.entity_id)
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(renamed.entity_id) is None
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"hdr_switch_removed_{doorbell.mac}_hdr_mode"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders["entity_id"] == renamed.entity_id
+
+
+async def test_migrate_sense_setting_mirror_waits_for_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A used sense mirror is only removed, with its repair, once startup is done."""
+    setup_public_sensor(ufp)
+    mirror = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{sensor_all.mac}_alarm",
+        config_entry=ufp.entry,
+    )
+    hass.set_state(CoreState.starting)
+
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+    await _load_automation(hass, mirror.entity_id)
+    assert entity_registry.async_get(mirror.entity_id) is not None
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(mirror.entity_id) is None
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"sense_setting_mirror_removed_{mirror.unique_id}"
+    )
+
+
 async def test_migrate_light_setting_mirror_without_replacement(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -743,3 +945,400 @@ async def test_migrate_light_setting_keys_scoped_to_lights(
         )
         is None
     )
+
+
+CAMERA_MAC = "AABBCCDDEE01"
+LIGHT_MAC = "AABBCCDDEE02"
+VIEWER_MAC = "AABBCCDDEE03"
+SENSOR_MAC = "AABBCCDDEE04"
+NVR_MAC = "AABBCCDDEE05"
+CHIME_MAC = "AABBCCDDEE06"
+
+
+def _private_only_bootstrap() -> Mock:
+    """Return a bootstrap with one device of each model."""
+    return Mock(
+        nvr=Mock(mac=NVR_MAC),
+        cameras={"camera": Mock(mac=CAMERA_MAC)},
+        lights={"light": Mock(mac=LIGHT_MAC)},
+        viewers={"viewer": Mock(mac=VIEWER_MAC)},
+        sensors={"sensor": Mock(mac=SENSOR_MAC)},
+        chimes={"chime": Mock(mac=CHIME_MAC)},
+    )
+
+
+@pytest.mark.parametrize(
+    ("mac", "platform", "key"),
+    [
+        pytest.param(CAMERA_MAC, Platform.SWITCH, "ssh", id="camera_ssh_switch"),
+        pytest.param(
+            CAMERA_MAC, Platform.BINARY_SENSOR, "ssh", id="camera_ssh_binary_sensor"
+        ),
+        pytest.param(CAMERA_MAC, Platform.SENSOR, "lens_type", id="camera_lens_type"),
+        pytest.param(CAMERA_MAC, Platform.SENSOR, "voltage", id="camera_voltage"),
+        pytest.param(LIGHT_MAC, Platform.SWITCH, "ssh", id="light_ssh_switch"),
+        pytest.param(
+            LIGHT_MAC, Platform.BINARY_SENSOR, "ssh", id="light_ssh_binary_sensor"
+        ),
+        pytest.param(
+            LIGHT_MAC, Platform.SELECT, "paired_camera", id="light_paired_camera_select"
+        ),
+        pytest.param(
+            LIGHT_MAC, Platform.SENSOR, "paired_camera", id="light_paired_camera_sensor"
+        ),
+        pytest.param(VIEWER_MAC, Platform.SWITCH, "ssh", id="viewer_ssh_switch"),
+        pytest.param(
+            VIEWER_MAC, Platform.BINARY_SENSOR, "ssh", id="viewer_ssh_binary_sensor"
+        ),
+        pytest.param(
+            SENSOR_MAC, Platform.SELECT, "mount_type", id="sensor_mount_type_select"
+        ),
+        pytest.param(
+            SENSOR_MAC, Platform.SENSOR, "mount_type", id="sensor_mount_type_sensor"
+        ),
+        pytest.param(
+            SENSOR_MAC,
+            Platform.SELECT,
+            "paired_camera",
+            id="sensor_paired_camera_select",
+        ),
+        pytest.param(
+            SENSOR_MAC,
+            Platform.SENSOR,
+            "paired_camera",
+            id="sensor_paired_camera_sensor",
+        ),
+        pytest.param(NVR_MAC, Platform.SWITCH, "analytics_enabled", id="nvr_analytics"),
+        pytest.param(NVR_MAC, Platform.SWITCH, "insights_enabled", id="nvr_insights"),
+        *(
+            pytest.param(CAMERA_MAC, Platform.SENSOR, key, id=f"camera_{key}")
+            for key in (
+                "uptime",
+                "phy_rate",
+                "oldest_recording",
+                "storage_used",
+                "write_rate",
+                "stats_rx",
+                "stats_tx",
+            )
+        ),
+        *(
+            pytest.param(mac, Platform.SENSOR, key, id=f"{name}_{key}")
+            for mac, name in (
+                (LIGHT_MAC, "light"),
+                (VIEWER_MAC, "viewer"),
+                (SENSOR_MAC, "sensor"),
+                (CHIME_MAC, "chime"),
+            )
+            for key in ("uptime", "phy_rate")
+        ),
+        *(
+            pytest.param(NVR_MAC, Platform.SENSOR, key, id=f"nvr_{key}")
+            for key in (
+                "uptime",
+                "cpu_utilization",
+                "cpu_temperature",
+                "memory_utilization",
+            )
+        ),
+    ],
+)
+async def test_deprecate_private_only_entity_in_use(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    mac: str,
+    platform: Platform,
+    key: str,
+) -> None:
+    """A used private-only entity gets a deprecation repair."""
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{mac}_{key}", config_entry=ufp.entry
+    )
+    await _load_automation(hass, entity.entity_id)
+
+    async_deprecate_private_only_entities(hass, ufp.entry, _private_only_bootstrap())
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"private_only_entity_deprecated_{platform}_{mac}_{key}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "private_only_entity_deprecated"
+    assert issue.breaks_in_ha_version == "2027.1.0"
+    assert issue.translation_placeholders["entity_id"] == entity.entity_id
+
+
+@pytest.mark.parametrize(
+    ("platform", "unique_id"),
+    [
+        pytest.param(Platform.SENSOR, f"{CAMERA_MAC}_ssh", id="key_on_other_platform"),
+        pytest.param(
+            Platform.SELECT, f"{CAMERA_MAC}_mount_type", id="key_of_other_model"
+        ),
+        pytest.param(
+            Platform.SENSOR, f"{CAMERA_MAC}_x_voltage", id="key_inside_unique_id"
+        ),
+        pytest.param(Platform.SENSOR, "AABBCCDDEE99_voltage", id="unknown_device"),
+    ],
+)
+async def test_deprecate_private_only_entity_not_matched(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    platform: Platform,
+    unique_id: str,
+) -> None:
+    """Only the deprecated key on its platform and device model counts."""
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, unique_id, config_entry=ufp.entry
+    )
+    await _load_automation(hass, entity.entity_id)
+
+    async_deprecate_private_only_entities(hass, ufp.entry, _private_only_bootstrap())
+
+    assert not issue_registry.issues
+
+
+async def test_deprecate_private_only_entity_shared_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """An unused entity does not clear the repair of its counterpart."""
+    # The used entity comes first, so the unused one is scanned after it.
+    used = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR, DOMAIN, f"{CAMERA_MAC}_ssh", config_entry=ufp.entry
+    )
+    entity_registry.async_get_or_create(
+        Platform.SWITCH, DOMAIN, f"{CAMERA_MAC}_ssh", config_entry=ufp.entry
+    )
+    await _load_automation(hass, used.entity_id)
+
+    async_deprecate_private_only_entities(hass, ufp.entry, _private_only_bootstrap())
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"private_only_entity_deprecated_binary_sensor_{CAMERA_MAC}_ssh"
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"private_only_entity_deprecated_switch_{CAMERA_MAC}_ssh"
+        )
+        is None
+    )
+
+
+async def test_deprecate_private_only_entity_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """A disabled entity is not active in any automation, so it gets no repair."""
+    entity = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        f"{CAMERA_MAC}_ssh",
+        config_entry=ufp.entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+    await _load_automation(hass, entity.entity_id)
+
+    async_deprecate_private_only_entities(hass, ufp.entry, _private_only_bootstrap())
+
+    assert not issue_registry.issues
+
+
+async def test_deprecate_private_only_entity_repair_clears_when_unused(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """The deprecation repair goes away once the last usage is gone."""
+    entity = entity_registry.async_get_or_create(
+        Platform.SWITCH, DOMAIN, f"{CAMERA_MAC}_ssh", config_entry=ufp.entry
+    )
+    issue_id = f"private_only_entity_deprecated_switch_{CAMERA_MAC}_ssh"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        breaks_in_ha_version="2027.1.0",
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="private_only_entity_deprecated",
+        translation_placeholders={
+            "entity_id": entity.entity_id,
+            "items": "* `automation.gone`\n",
+        },
+    )
+
+    async_deprecate_private_only_entities(hass, ufp.entry, _private_only_bootstrap())
+
+    assert entity_registry.async_get(entity.entity_id) is not None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_deprecate_private_only_entity_waits_for_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """The scan runs once startup is done, when the automations are loaded."""
+    entity = entity_registry.async_get_or_create(
+        Platform.SWITCH, DOMAIN, f"{CAMERA_MAC}_ssh", config_entry=ufp.entry
+    )
+    await _load_automation(hass, entity.entity_id)
+    hass.set_state(CoreState.starting)
+
+    async_deprecate_private_only_entities(hass, ufp.entry, _private_only_bootstrap())
+    assert not issue_registry.issues
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"private_only_entity_deprecated_switch_{CAMERA_MAC}_ssh"
+    )
+
+
+async def test_deprecate_private_only_entities_on_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """Setup raises the repair for a used private-only entity."""
+    nvr_mac = ufp.api.bootstrap.nvr.mac
+    entity = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        f"{nvr_mac}_analytics_enabled",
+        config_entry=ufp.entry,
+    )
+    await _load_automation(hass, entity.entity_id)
+
+    await init_entry(hass, ufp, [])
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"private_only_entity_deprecated_switch_{nvr_mac}_analytics_enabled"
+    )
+
+
+async def test_is_new_private_only_entity(hass: HomeAssistant) -> None:
+    """A deprecated entity that is not registered yet counts as new."""
+    assert async_is_new_private_only_entity(hass, ModelType.CAMERA, CAMERA_MAC, "ssh")
+
+
+@pytest.mark.parametrize(
+    "platform",
+    [
+        pytest.param(Platform.SWITCH, id="same_platform"),
+        pytest.param(Platform.BINARY_SENSOR, id="other_platform"),
+    ],
+)
+async def test_is_new_private_only_entity_registered(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    platform: Platform,
+) -> None:
+    """An entity the user already has under the key is kept."""
+    entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{CAMERA_MAC}_ssh", config_entry=ufp.entry
+    )
+
+    assert not async_is_new_private_only_entity(
+        hass, ModelType.CAMERA, CAMERA_MAC, "ssh"
+    )
+
+
+@pytest.mark.parametrize(
+    ("model", "key"),
+    [
+        pytest.param(ModelType.CAMERA, "status_light", id="key_not_deprecated"),
+        pytest.param(ModelType.LINK_STATION, "uptime", id="model_without_deprecations"),
+        pytest.param(None, "ssh", id="no_model"),
+    ],
+)
+async def test_is_new_private_only_entity_not_deprecated(
+    hass: HomeAssistant, model: ModelType | None, key: str
+) -> None:
+    """Entities that are not deprecated are never skipped."""
+    assert not async_is_new_private_only_entity(hass, model, CAMERA_MAC, key)
+
+
+async def test_private_only_entities_skipped_on_new_install(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A new install does not get the deprecated entities."""
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    nvr_mac = ufp.api.bootstrap.nvr.mac
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{doorbell.mac}_voltage"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SWITCH, DOMAIN, f"{nvr_mac}_insights_enabled"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{nvr_mac}_cpu_temperature"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{doorbell.mac}_uptime"
+        )
+        is None
+    )
+    assert entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"{doorbell.mac}_status_light"
+    )
+    assert entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{nvr_mac}_storage_utilization"
+    )
+    assert entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{doorbell.mac}_wifi_signal"
+    )
+
+
+async def test_private_only_entities_kept_on_existing_install(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """An install that already has the deprecated entities keeps them working."""
+    nvr_mac = ufp.api.bootstrap.nvr.mac
+    kept = [
+        entity_registry.async_get_or_create(
+            platform, DOMAIN, unique_id, config_entry=ufp.entry
+        )
+        for platform, unique_id in (
+            (Platform.SENSOR, f"{doorbell.mac}_voltage"),
+            (Platform.SWITCH, f"{doorbell.mac}_ssh"),
+            (Platform.SWITCH, f"{nvr_mac}_insights_enabled"),
+            (Platform.SENSOR, f"{nvr_mac}_cpu_temperature"),
+        )
+    ]
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    for entity in kept:
+        assert hass.states.get(entity.entity_id) is not None

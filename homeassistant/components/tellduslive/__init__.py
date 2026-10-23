@@ -41,7 +41,7 @@ class TelldusLiveData:
 type TelldusLiveConfigEntry = ConfigEntry[TelldusLiveData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) -> None:
     """Create a tellduslive session."""
     conf = entry.data[KEY_SESSION]
 
@@ -68,8 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) 
         setup_task=hass.loop.create_task(async_new_client(hass, client, entry)),
     )
 
-    return True
-
 
 async def async_new_client(
     hass: HomeAssistant, client: TelldusLiveClient, entry: TelldusLiveConfigEntry
@@ -91,13 +89,13 @@ async def async_new_client(
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: TelldusLiveConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     data = config_entry.runtime_data
     if not data.setup_task.done():
         data.setup_task.cancel()
     data.client.async_cancel_update()
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         config_entry, data.client.platforms
     )
 

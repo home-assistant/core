@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aioesphomeapi import APIConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.components.esphome.const import CONF_NOISE_PSK
@@ -12,8 +13,6 @@ from homeassistant.components.esphome.encryption_key_storage import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_client", "mock_zeroconf")

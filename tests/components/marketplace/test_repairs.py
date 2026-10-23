@@ -5,6 +5,12 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
@@ -26,10 +32,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_INTEGRATION_ID
-
-from tests.common import MockConfigEntry, async_mock_service
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 ISSUE_ID = f"restart_required_{REPOSITORY_INTEGRATION_ID}_1.0.0"
 

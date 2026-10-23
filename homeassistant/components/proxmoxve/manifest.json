@@ -1,6 +1,7 @@
 {
   "domain": "proxmoxve",
   "name": "Proxmox VE",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@Corbeno", "@erwindouna", "@CoMPaTech"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/proxmoxve",

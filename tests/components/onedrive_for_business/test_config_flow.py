@@ -6,6 +6,9 @@ from unittest.mock import AsyncMock, MagicMock
 from onedrive_personal_sdk.exceptions import OneDriveException
 from onedrive_personal_sdk.models.items import Drive, IdentitySet
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.onedrive_for_business.const import (
@@ -24,10 +27,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_integration
 from .const import CLIENT_ID, TENANT_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def _do_get_token(

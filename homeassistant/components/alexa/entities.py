@@ -33,16 +33,18 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     ClimateEntityCapabilityAttribute,
 )
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverServiceArgument
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     FanEntityCapabilityAttribute,
+    FanServiceArgument,
 )
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.humidifier import (
     DOMAIN as HUMIDIFIER_DOMAIN,
     HumidifierEntityCapabilityAttribute,
+    HumidifierServiceArgument,
 )
 from homeassistant.components.image_processing import DOMAIN as IMAGE_PROCESSING_DOMAIN
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
@@ -61,17 +63,22 @@ from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
     RemoteEntityStateAttribute,
+    RemoteServiceArgument,
 )
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.timer import DOMAIN as TIMER_DOMAIN
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    VacuumServiceArgument,
+)
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN, ValveServiceArgument
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     WaterHeaterCapabilityAttribute,
+    WaterHeaterServiceArgument,
 )
 from homeassistant.const import (
     CONF_DESCRIPTION,
@@ -577,7 +584,7 @@ class ClimateCapabilities(AlexaEntity):
         ):
             yield AlexaModeController(
                 self.entity,
-                instance=f"{WATER_HEATER_DOMAIN}.{water_heater.ATTR_OPERATION_MODE}",
+                instance=f"{WATER_HEATER_DOMAIN}.{WaterHeaterServiceArgument.OPERATION_MODE}",
             )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
@@ -625,13 +632,13 @@ class CoverCapabilities(AlexaEntity):
         )
         if supported & cover.CoverEntityFeature.SET_POSITION:
             yield AlexaRangeController(
-                self.entity, instance=f"{COVER_DOMAIN}.{cover.ATTR_POSITION}"
+                self.entity, instance=f"{COVER_DOMAIN}.{CoverServiceArgument.POSITION}"
             )
         elif supported & (
             cover.CoverEntityFeature.CLOSE | cover.CoverEntityFeature.OPEN
         ):
             yield AlexaModeController(
-                self.entity, instance=f"{COVER_DOMAIN}.{cover.ATTR_POSITION}"
+                self.entity, instance=f"{COVER_DOMAIN}.{CoverServiceArgument.POSITION}"
             )
         if supported & cover.CoverEntityFeature.SET_TILT_POSITION:
             yield AlexaRangeController(self.entity, instance=f"{COVER_DOMAIN}.tilt")
@@ -714,19 +721,19 @@ class FanCapabilities(AlexaEntity):
         )
         if supported & fan.FanEntityFeature.OSCILLATE:
             yield AlexaToggleController(
-                self.entity, instance=f"{FAN_DOMAIN}.{fan.ATTR_OSCILLATING}"
+                self.entity, instance=f"{FAN_DOMAIN}.{FanServiceArgument.OSCILLATING}"
             )
             force_range_controller = False
         if supported & fan.FanEntityFeature.PRESET_MODE and self.entity.attributes.get(
             FanEntityCapabilityAttribute.PRESET_MODES
         ):
             yield AlexaModeController(
-                self.entity, instance=f"{FAN_DOMAIN}.{fan.ATTR_PRESET_MODE}"
+                self.entity, instance=f"{FAN_DOMAIN}.{FanServiceArgument.PRESET_MODE}"
             )
             force_range_controller = False
         if supported & fan.FanEntityFeature.DIRECTION:
             yield AlexaModeController(
-                self.entity, instance=f"{FAN_DOMAIN}.{fan.ATTR_DIRECTION}"
+                self.entity, instance=f"{FAN_DOMAIN}.{FanServiceArgument.DIRECTION}"
             )
             force_range_controller = False
 
@@ -737,7 +744,7 @@ class FanCapabilities(AlexaEntity):
         # can only be set to 0% or 100%.
         if force_range_controller or supported & fan.FanEntityFeature.SET_SPEED:
             yield AlexaRangeController(
-                self.entity, instance=f"{FAN_DOMAIN}.{fan.ATTR_PERCENTAGE}"
+                self.entity, instance=f"{FAN_DOMAIN}.{FanServiceArgument.PERCENTAGE}"
             )
 
         yield AlexaEndpointHealth(self.hass, self.entity)
@@ -769,7 +776,8 @@ class RemoteCapabilities(AlexaEntity):
             and self.entity.attributes.get(RemoteEntityStateAttribute.ACTIVITY_LIST)
         ):
             yield AlexaModeController(
-                self.entity, instance=f"{REMOTE_DOMAIN}.{remote.ATTR_ACTIVITY}"
+                self.entity,
+                instance=f"{REMOTE_DOMAIN}.{RemoteServiceArgument.ACTIVITY}",
             )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
@@ -797,10 +805,12 @@ class HumidifierCapabilities(AlexaEntity):
             HumidifierEntityCapabilityAttribute.AVAILABLE_MODES
         ):
             yield AlexaModeController(
-                self.entity, instance=f"{HUMIDIFIER_DOMAIN}.{humidifier.ATTR_MODE}"
+                self.entity,
+                instance=f"{HUMIDIFIER_DOMAIN}.{HumidifierServiceArgument.MODE}",
             )
         yield AlexaRangeController(
-            self.entity, instance=f"{HUMIDIFIER_DOMAIN}.{humidifier.ATTR_HUMIDITY}"
+            self.entity,
+            instance=f"{HUMIDIFIER_DOMAIN}.{HumidifierServiceArgument.HUMIDITY}",
         )
 
         yield AlexaEndpointHealth(self.hass, self.entity)
@@ -1121,18 +1131,15 @@ class VacuumCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(
             EntityStateAttribute.SUPPORTED_FEATURES, 0
         )
-        if (
-            (supported & vacuum.VacuumEntityFeature.TURN_ON)
-            or (supported & vacuum.VacuumEntityFeature.START)
-        ) and (
-            (supported & vacuum.VacuumEntityFeature.TURN_OFF)
-            or (supported & vacuum.VacuumEntityFeature.RETURN_HOME)
+        if supported & vacuum.VacuumEntityFeature.START and (
+            supported & vacuum.VacuumEntityFeature.RETURN_HOME
         ):
             yield AlexaPowerController(self.entity)
 
         if supported & vacuum.VacuumEntityFeature.FAN_SPEED:
             yield AlexaRangeController(
-                self.entity, instance=f"{VACUUM_DOMAIN}.{vacuum.ATTR_FAN_SPEED}"
+                self.entity,
+                instance=f"{VACUUM_DOMAIN}.{VacuumServiceArgument.FAN_SPEED}",
             )
 
         if supported & vacuum.VacuumEntityFeature.PAUSE:
@@ -1162,7 +1169,7 @@ class ValveCapabilities(AlexaEntity):
         )
         if supported & valve.ValveEntityFeature.SET_POSITION:
             yield AlexaRangeController(
-                self.entity, instance=f"{VALVE_DOMAIN}.{valve.ATTR_POSITION}"
+                self.entity, instance=f"{VALVE_DOMAIN}.{ValveServiceArgument.POSITION}"
             )
         elif supported & (
             valve.ValveEntityFeature.CLOSE | valve.ValveEntityFeature.OPEN

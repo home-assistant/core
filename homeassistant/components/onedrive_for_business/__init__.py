@@ -39,7 +39,7 @@ PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
     """Set up OneDrive from a config entry."""
     client, get_access_token = await _get_onedrive_client(hass, entry)
 
@@ -77,12 +77,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
 
     entry.async_on_unload(entry.async_on_state_change(async_notify_backup_listeners))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
     """Unload a OneDrive config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _get_onedrive_client(

@@ -14,6 +14,7 @@ import wave
 from aiohttp import client_exceptions
 import mutagen
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import esphome
 from homeassistant.components.esphome import DOMAIN
@@ -23,8 +24,6 @@ from homeassistant.components.esphome.ffmpeg_proxy import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator
 
 FFMPEG_PROXY = "homeassistant.components.esphome.ffmpeg_proxy"
 

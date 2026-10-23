@@ -10,13 +10,14 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RitualsConfigEntry
-from .entity import DiffuserSensorsEntity
+from .entity import DiffuserSensorsEntity, async_add_diffusers
 
 PARALLEL_UPDATES = 0
 
@@ -42,15 +43,17 @@ ENTITY_DESCRIPTIONS = (
     RitualsSensorEntityDescription(
         key="fill",
         translation_key="fill",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         sensor=Sensor.FILL,
-        value_fn=lambda sensors: sensors.fill.title if sensors.fill else None,
+        value_fn=lambda sensors: sensors.fill_percentage,
         has_fn=lambda hub: Sensor.FILL in hub.supported_sensors,
     ),
     RitualsSensorEntityDescription(
         key="perfume",
         translation_key="perfume",
         sensor=Sensor.PERFUME,
-        value_fn=lambda sensors: sensors.perfume.title if sensors.perfume else None,
+        value_fn=lambda sensors: sensors.perfume_name,
     ),
     RitualsSensorEntityDescription(
         key="wifi_percentage",
@@ -71,12 +74,18 @@ async def async_setup_entry(
     """Set up the diffuser sensors."""
     runtime_data = config_entry.runtime_data
 
-    async_add_entities(
-        RitualsSensorEntity(coordinator, description, description.sensor)
-        for hublot, coordinator in runtime_data.sensors.items()
-        for description in ENTITY_DESCRIPTIONS
-        if description.has_fn(runtime_data.hubs.data[hublot])
-    )
+    @callback
+    def add_diffusers(hublots: list[str]) -> None:
+        async_add_entities(
+            RitualsSensorEntity(
+                runtime_data.sensors[hublot], description, description.sensor
+            )
+            for hublot in hublots
+            for description in ENTITY_DESCRIPTIONS
+            if description.has_fn(runtime_data.hubs.data[hublot])
+        )
+
+    async_add_diffusers(config_entry, add_diffusers)
 
 
 class RitualsSensorEntity(DiffuserSensorsEntity, SensorEntity):

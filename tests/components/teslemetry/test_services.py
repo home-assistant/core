@@ -4,6 +4,7 @@ from datetime import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.components.teslemetry.services import (
@@ -48,8 +49,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_platform
 from .const import COMMAND_ERROR, COMMAND_OK
-
-from tests.common import MockConfigEntry
 
 lat = -27.9699373
 lon = 153.3726526

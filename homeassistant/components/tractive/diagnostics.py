@@ -3,12 +3,29 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import HomeAssistant
 
 from .coordinator import TractiveConfigEntry
 
-TO_REDACT = {CONF_PASSWORD, CONF_EMAIL, "title", "_id"}
+TO_REDACT = {
+    ATTR_DEVICE_ID,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_UNIQUE_ID,
+    "_id",
+    "birthday",
+    "chip_id",
+    "home_location",
+    "instagram_username",
+    "name",
+    "title",
+}
 
 
 async def async_get_config_entry_diagnostics(

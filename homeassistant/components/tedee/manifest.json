@@ -1,6 +1,7 @@
 {
   "domain": "tedee",
   "name": "Tedee",
+  "categories": ["security_safety.locks_access"],
   "codeowners": ["@patrickhilker", "@zweckj"],
   "config_flow": true,
   "dependencies": ["http", "webhook"],

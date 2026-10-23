@@ -1,6 +1,10 @@
 {
   "domain": "reolink",
   "name": "Reolink",
+  "categories": [
+    "security_safety.cameras",
+    "security_safety.doorbells_intercoms"
+  ],
   "codeowners": ["@starkillerOG"],
   "config_flow": true,
   "dependencies": ["ffmpeg", "http", "webhook"],

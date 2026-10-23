@@ -42,7 +42,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> None:
     """Set up Workday from a config entry."""
 
     calc_add_holidays = cast(
@@ -75,16 +75,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> b
         LOGGER.debug("%s %s", _holiday_string, name)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> None:
     """Unload Workday config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> None:
     """Migrate old config entry."""
 
     if entry.version == 1 and entry.minor_version == 1:
@@ -93,5 +92,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) ->
             entry,
             minor_version=2,
         )
-
-    return True

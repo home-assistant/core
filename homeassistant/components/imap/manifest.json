@@ -1,6 +1,7 @@
 {
   "domain": "imap",
   "name": "IMAP",
+  "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": ["@jbouwh"],
   "config_flow": true,
   "dependencies": ["repairs"],

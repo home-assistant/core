@@ -1,13 +1,15 @@
 """Test helpers for UniFi Protect."""
 
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from uiprotect import EventChange, ProtectApiClient, ProtectEvent
+from uiprotect.anonymize import random_hex
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     Bootstrap,
@@ -29,6 +31,7 @@ from uiprotect.data import (
     SmartDetectAudioType,
     SmartDetectObjectType,
     VideoMode,
+    WSAction,
     WSSubscriptionMessage,
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
@@ -58,7 +61,6 @@ from uiprotect.data.public_devices import (
     PublicWirelessConnectionState,
     SensorFeatureCapability,
 )
-from uiprotect.test_util.anonymize import random_hex
 from uiprotect.utils import to_js_time
 from uiprotect.websocket import WebsocketState
 
@@ -67,8 +69,6 @@ from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @dataclass
@@ -83,6 +83,8 @@ class MockUFPFixture:
     events_subscription: Callable[[ProtectEvent, EventChange], None] | None = None
     devices_ws_state_subscription: Callable[[WebsocketState], None] | None = None
     events_ws_state_subscription: Callable[[WebsocketState], None] | None = None
+    public_resync_subscription: Callable[[bool], None] | None = None
+    public_resync_unsub: Mock | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
@@ -95,6 +97,41 @@ class MockUFPFixture:
 
         if self.events_subscription is not None:
             self.events_subscription(event, change)
+
+    def public_resync(
+        self,
+        added: Iterable[Any] = (),
+        removed: Iterable[Any] = (),
+        success: bool = True,
+    ) -> None:
+        """Emit the library's public reconnect resync for testing.
+
+        Mirrors uiprotect: one synthetic add/remove devices websocket frame per
+        device whose membership changed, then the resync completion callback.
+        """
+        assert self.devices_ws_subscription is not None
+        assert self.public_resync_subscription is not None
+        for obj in added:
+            self.devices_ws_subscription(
+                WSSubscriptionMessage(
+                    action=WSAction.ADD,
+                    new_update_id=obj.id,
+                    changed_data={"modelKey": obj.model.value, "id": obj.id},
+                    new_obj=obj,
+                    old_obj=None,
+                )
+            )
+        for obj in removed:
+            self.devices_ws_subscription(
+                WSSubscriptionMessage(
+                    action=WSAction.REMOVE,
+                    new_update_id=obj.id,
+                    changed_data={"modelKey": obj.model.value, "id": obj.id},
+                    new_obj=None,
+                    old_obj=obj,
+                )
+            )
+        self.public_resync_subscription(success)
 
 
 def reset_objects(bootstrap: Bootstrap):
@@ -321,7 +358,14 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     may replace a whole map after setup (``pb.lights = {...}``).
     """
     pb = Mock(spec=PublicBootstrap)
-    for attr in (*_PUBLIC_STORE_ATTRS.values(), "arm_profiles"):
+    for attr in (
+        *_PUBLIC_STORE_ATTRS.values(),
+        "arm_profiles",
+        "speakers",
+        "link_stations",
+        "bridges",
+        "liveviews",
+    ):
         setattr(pb, attr, {})
     pb.arm_mode = None
     pb.nvr = None
@@ -346,6 +390,9 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     pb.store_for = Mock(side_effect=_store_for)
     pb.get = Mock(side_effect=_get)
     pb.all_devices = _all_devices
+    pb.to_diagnostics = partial(PublicBootstrap.to_diagnostics, pb)
+    # The real lookup, over the fake stores.
+    pb.get_device_from_mac = partial(PublicBootstrap.get_device_from_mac, pb)
     return pb
 
 
@@ -600,6 +647,7 @@ def make_public_light(
         ),
     )
     public.last_motion_dt = PublicLight.last_motion_dt.fget(public)
+    type(public).light_mode_preset = PublicLight.light_mode_preset
     return public
 
 
@@ -642,6 +690,7 @@ def make_public_camera(
     object_types: list[SmartDetectObjectType] | None = None,
     audio_types: list[SmartDetectAudioType] | None = None,
     mic_volume: int | None = None,
+    is_mic_enabled: bool = True,
     hdr_type: PublicHdrMode | None = None,
     lcd_message: PublicLcdMessage | None = None,
     active_patrol_slot: int | None = None,
@@ -678,6 +727,7 @@ def make_public_camera(
     )
     public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.is_mic_enabled = is_mic_enabled
     public.lcd_message = lcd_message
     public.lcd_message_text = PublicCamera.lcd_message_text.fget(public)
     # The doorbell text falls back to the default message of the private NVR.

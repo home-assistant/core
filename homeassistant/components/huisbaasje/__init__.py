@@ -12,7 +12,7 @@ from .coordinator import EnergyFlipConfigEntry, EnergyFlipUpdateCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -> None:
     """Set up EnergyFlip from a config entry."""
     # Create the EnergyFlip client
     energyflip = EnergyFlip(
@@ -51,10 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -
     # Offload the loading of entities to the platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -> None:
     """Unload a config entry."""
     # Forward the unloading of the entry to the platform
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

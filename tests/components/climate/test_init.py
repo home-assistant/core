@@ -8,6 +8,14 @@ from unittest.mock import AsyncMock, MagicMock, Mock, call
 import probatio
 from propcache.api import cached_property
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    async_mock_restore_state_shutdown_restart,
+    async_mock_service,
+    mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.climate import (
     DOMAIN,
@@ -54,15 +62,6 @@ from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    async_mock_restore_state_shutdown_restart,
-    async_mock_service,
-    mock_restore_cache_with_extra_data,
-    setup_test_component_platform,
 )
 
 
@@ -2083,6 +2082,14 @@ def _restored(
         pytest.param(
             METRIC_SYSTEM,
             {},
+            {**STORED_CELSIUS, "last_active_hvac_mode": HVACMode.COOL},
+            False,
+            _restored(21.5, 20, 25, 15),
+            id="extra_data_with_subclass_fields",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {},
             STORED_FAHRENHEIT,
             False,
             _restored(10, 20, 25, 15),
@@ -2317,6 +2324,38 @@ async def test_restore_climate_overflow(
     assert entity.restored is not None
     assert entity.restored.native_current_temperature is None
     assert entity.restored.native_target_temperature is None
+
+
+async def test_restore_climate_round_trip(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test saved temperatures are restored unchanged on a Fahrenheit system.
+
+    The state attributes are rounded Fahrenheit values, restoring from them
+    would drift the Celsius temperatures across restarts.
+    """
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    entity = MockRestoreClimate(name="test", entity_id="climate.test")
+    entity._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    entity._attr_native_current_temperature = 21.4
+    entity._attr_native_target_temperature = 20.3
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(register_test_integration.entry_id)
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    restored_entity = MockRestoreClimate(name="test", entity_id="climate.test")
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[restored_entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert restored_entity.restored == _restored(21.4, 20.3, 25, 15)
 
 
 async def test_restore_climate_no_last_state(

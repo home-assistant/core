@@ -13,7 +13,7 @@ from .coordinator import HypontechConfigEntry, HypontechDataCoordinator
 _PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) -> None:
     """Set up Hypontech Cloud from a config entry."""
     session = async_get_clientsession(hass)
     hypontech_cloud = HyponCloud(
@@ -39,9 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HypontechConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HypontechConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

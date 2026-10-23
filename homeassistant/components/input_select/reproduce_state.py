@@ -5,11 +5,14 @@ from collections.abc import Iterable, Mapping
 import logging
 from typing import Any
 
-from homeassistant.components.select import SelectEntityCapabilityAttribute
+from homeassistant.components.select import (
+    ATTR_OPTIONS,
+    SelectEntityCapabilityAttribute,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import ATTR_OPTIONS, DOMAIN, SERVICE_SELECT_OPTION, SERVICE_SET_OPTIONS
+from .const import DOMAIN, InputSelectService, InputSelectServiceArgument
 
 ATTR_GROUP = [ATTR_OPTION, ATTR_OPTIONS]
 
@@ -39,10 +42,10 @@ async def _async_reproduce_state(
     # Set service data
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
-    # If options are specified, call SERVICE_SET_OPTIONS
+    # If options are specified, call set_options
     if SelectEntityCapabilityAttribute.OPTIONS in state.attributes:
-        service = SERVICE_SET_OPTIONS
-        service_data[ATTR_OPTIONS] = state.attributes[
+        service = InputSelectService.SET_OPTIONS
+        service_data[InputSelectServiceArgument.OPTIONS] = state.attributes[
             SelectEntityCapabilityAttribute.OPTIONS
         ]
 
@@ -50,13 +53,13 @@ async def _async_reproduce_state(
             DOMAIN, service, service_data, context=context, blocking=True
         )
 
-        # Remove ATTR_OPTIONS from service_data so we can
+        # Remove options from service_data so we can
         # reuse service_data in next call
-        del service_data[ATTR_OPTIONS]
+        del service_data[InputSelectServiceArgument.OPTIONS]
 
-    # Call SERVICE_SELECT_OPTION
-    service = SERVICE_SELECT_OPTION
-    service_data[ATTR_OPTION] = state.state
+    # Call select_option
+    service = InputSelectService.SELECT_OPTION
+    service_data[InputSelectServiceArgument.OPTION] = state.state
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True
