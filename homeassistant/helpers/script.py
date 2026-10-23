@@ -1252,11 +1252,11 @@ class _ScriptRun:
         """Handle timeout."""
         self._variables["wait"]["remaining"] = 0.0
 
-    def _async_abort_unless_continue_on_timeout(self) -> None:
+    def _async_abort_unless_continue_on_timeout(self, wait: dict[str, Any]) -> None:
         """Abort the script if it should not continue after a timeout."""
         if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
             self._log(_TIMEOUT_MSG)
-            trace_set_result(wait=self._variables["wait"], timeout=True)
+            trace_set_result(wait=wait, timeout=True)
             raise _AbortScript from TimeoutError()
 
     async def _async_wait_with_optional_timeout(
@@ -1305,13 +1305,15 @@ class _ScriptRun:
                 "trigger": None,
             },
         )
-        trace_set_result(wait=self._variables["wait"])
+        # Nested waits in the branches rebind the wait variable.
+        wait_var = self._variables["wait"]
+        trace_set_result(wait=wait_var)
 
         if timeout == 0:
             self._changed()
             self._async_handle_timeout()
             await self._async_run_wait_for_trigger_branch(CONF_ON_TIMEOUT)
-            self._async_abort_unless_continue_on_timeout()
+            self._async_abort_unless_continue_on_timeout(wait_var)
             return
 
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
@@ -1355,7 +1357,7 @@ class _ScriptRun:
             await self._async_run_wait_for_trigger_branch(CONF_ON_COMPLETE)
             return
         await self._async_run_wait_for_trigger_branch(CONF_ON_TIMEOUT)
-        self._async_abort_unless_continue_on_timeout()
+        self._async_abort_unless_continue_on_timeout(wait_var)
 
     async def _async_run_wait_for_trigger_branch(
         self, branch: Literal["on_complete", "on_timeout"]
@@ -1392,7 +1394,7 @@ class _ScriptRun:
         if timeout == 0:
             self._changed()
             self._async_handle_timeout()
-            self._async_abort_unless_continue_on_timeout()
+            self._async_abort_unless_continue_on_timeout(self._variables["wait"])
             return
 
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
@@ -1420,7 +1422,7 @@ class _ScriptRun:
         if await self._async_wait_with_optional_timeout(
             futures, done, timeout_handle, timeout_future, unsub
         ):
-            self._async_abort_unless_continue_on_timeout()
+            self._async_abort_unless_continue_on_timeout(self._variables["wait"])
 
     ## Conversation actions ##
 
