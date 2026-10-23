@@ -855,6 +855,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                     if entry.state in (
                         ConfigEntryState.LOADED,
                         ConfigEntryState.SETUP_RETRY,
+                        ConfigEntryState.SETUP_ERROR,
                     ):
                         self.hass.config_entries.async_schedule_reload(entry.entry_id)
 

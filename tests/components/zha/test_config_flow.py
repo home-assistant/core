@@ -1001,6 +1001,7 @@ async def _async_scan_usb(hass: HomeAssistant, ports: list[USBDevice]) -> None:
     [
         pytest.param(ConfigEntryState.LOADED, 1, id="loaded"),
         pytest.param(ConfigEntryState.SETUP_RETRY, 1, id="setup_retry"),
+        pytest.param(ConfigEntryState.SETUP_ERROR, 1, id="setup_error"),
         pytest.param(ConfigEntryState.NOT_LOADED, 0, id="not_loaded"),
     ],
 )
