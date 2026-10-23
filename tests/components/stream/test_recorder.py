@@ -35,6 +35,7 @@ from .common import (
     dynamic_stream_settings,
     generate_h264_video,
     generate_h265_video,
+    generate_video,
     generate_video_with_size_change,
     remux_with_audio,
 )
@@ -121,6 +122,65 @@ SIZE_CHANGE = partial(
 )
 
 
+# Keyframes every half second; the segments' first frames have different
+# composition offsets once read back
+H264_B_FRAMES = partial(
+    generate_video, "libx264", "mpegts", 6, options={"g": "12", "keyint_min": "12"}
+)
+
+
+def generate_h264_with_audio() -> BytesIO:
+    """Generate an MPEG-TS with B-frames and AAC audio."""
+    return remux_with_audio(H264_B_FRAMES(), "mpegts", "aac")
+
+
+def recording_offsets(
+    source: bytes, recording: str
+) -> tuple[set[tuple[float, float]], list[float]]:
+    """Return how far the recording moved the source's video, in seconds.
+
+    The set holds the (PTS, DTS) offsets of the video frames in decode order
+    from the source's first keyframe on, after that keyframe, whose PTS the
+    worker changes. The list holds the recorded audio times that are not a
+    source audio time moved by the first of those offsets.
+    """
+    timestamps = []
+    for data in (BytesIO(source), recording):
+        with av.open(data) as container:
+            packets = [
+                (
+                    packet.stream.type,
+                    packet.is_keyframe,
+                    packet.pts * packet.time_base,
+                    packet.dts * packet.time_base,
+                )
+                for packet in container.demux()
+                if packet.size
+            ]
+        video = [packet for packet in packets if packet[0] == "video"]
+        first_keyframe = next(index for index, packet in enumerate(video) if packet[1])
+        timestamps.append(
+            (
+                [(pts, dts) for _, _, pts, dts in video[first_keyframe:]],
+                [pts for kind, _, pts, _ in packets if kind == "audio"],
+            )
+        )
+    (source_video, source_audio), (recorded_video, recorded_audio) = timestamps
+    video = {
+        (round(float(pts - src_pts), 4), round(float(dts - src_dts), 4))
+        for (pts, dts), (src_pts, src_dts) in zip(
+            recorded_video[1:], source_video[1:], strict=False
+        )
+    }
+    offset = recorded_video[1][0] - source_video[1][0]
+    audio = [
+        float(pts)
+        for pts in recorded_audio
+        if not any(abs(pts - offset - src_pts) < 0.001 for src_pts in source_audio)
+    ]
+    return video, audio
+
+
 @pytest.mark.parametrize(
     ("generate_source", "min_segment_duration"),
     [
@@ -136,9 +196,8 @@ SIZE_CHANGE = partial(
             1.9,
             id="h265-segment-before-size-change-negative-start",
         ),
-        pytest.param(
-            partial(generate_h264_video, "mpegts", 6), 1.9, id="h264-b-frames"
-        ),
+        pytest.param(H264_B_FRAMES, 1.9, id="h264-b-frames"),
+        pytest.param(generate_h264_with_audio, 1.9, id="h264-b-frames-audio"),
     ],
 )
 async def test_record_stream_decode_times(
@@ -147,7 +206,7 @@ async def test_record_stream_decode_times(
     generate_source: Callable[[], BytesIO],
     min_segment_duration: float,
 ) -> None:
-    """Test recorded decode times stay continuous across segments.
+    """Test a recording keeps the source's timestamps across segments.
 
     The worker gives the first keyframe a PTS equal to its DTS, unlike the
     later keyframes, and a size change starts a new init.
@@ -163,6 +222,7 @@ async def test_record_stream_decode_times(
             worker_finished.set()
 
     source = await hass.async_add_executor_job(generate_source)
+    source_data = source.getvalue()
     with (
         patch("homeassistant.components.stream.Stream", wraps=MockStream),
         patch.object(
@@ -189,6 +249,14 @@ async def test_record_stream_decode_times(
         dts = [packet.dts for packet in recording.demux(video=0) if packet.size]
     # Decode times advance by one frame (24 fps, 90 kHz) across segments
     assert {later - earlier for earlier, later in itertools.pairwise(dts)} == {3750}
+    video, audio = await hass.async_add_executor_job(
+        recording_offsets, source_data, filename
+    )
+    # Video presentation and decode times and audio move by one offset
+    assert len(video) == 1
+    ((offset, dts_offset),) = video
+    assert dts_offset == offset
+    assert audio == []
 
 
 async def test_record_lookback(hass: HomeAssistant, filename, h264_video) -> None:
@@ -256,17 +324,14 @@ def add_parts_to_segment(segment, source):
 async def test_recorder_discontinuity(
     hass: HomeAssistant, filename: str, h264_video: BytesIO
 ) -> None:
-    """Test recorder save across a discontinuity.
-
-    The segment after the discontinuity starts where the first one ends,
-    whatever the first one's video_dts_shift.
-    """
+    """Test recorder save across a discontinuity."""
 
     # Run
+    # The worker records the PTS - DTS of the first frame, 2 frames in h264_video
     segment_1 = Segment(sequence=1, stream_id=0, video_dts_shift=1024)
     add_parts_to_segment(segment_1, h264_video)
     segment_1.duration = 4
-    segment_2 = Segment(sequence=2, stream_id=1)
+    segment_2 = Segment(sequence=2, stream_id=1, video_dts_shift=1024)
     add_parts_to_segment(segment_2, h264_video)
     segment_2.duration = 4
 
@@ -310,6 +375,7 @@ async def test_recorder_discontinuity(
     # Each segment has 5 seconds of frames
     first, second = packets[0], packets[len(packets) // 2]
     assert (second.pts - first.pts) * first.time_base == 5
+    assert (second.dts - first.dts) * first.time_base == 5
 
 
 async def test_recorder_no_segments(hass: HomeAssistant, filename) -> None:
