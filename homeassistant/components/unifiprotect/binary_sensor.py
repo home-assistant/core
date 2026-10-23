@@ -843,9 +843,10 @@ class ProtectAlarmHubZoneBinarySensor(
 
     _state_attrs = ("_attr_available", "_attr_is_on")
 
-    def __init__(self, data: ProtectData, hub: LinkStation, input_id: int) -> None:
+    def __init__(
+        self, data: ProtectData, hub: LinkStation, input_id: int, zone: AlarmHubInput
+    ) -> None:
         """Initialize the zone binary sensor."""
-        zone = hub.alarm_hub_inputs[input_id]
         device_class = (
             _ALARM_HUB_INPUT_DEVICE_CLASS.get(zone.input_type)
             if zone.input_type is not None
@@ -866,7 +867,7 @@ class ProtectAlarmHubZoneBinarySensor(
     @callback
     @override
     def _async_get_channel(self, device: PublicDeviceModel) -> AlarmHubInput | None:
-        zone = cast(LinkStation, device).alarm_hub_inputs.get(self._channel_id)
+        zone = cast(LinkStation, device).get_alarm_hub_input(self._channel_id)
         # An unreadable zone is unavailable rather than a definite "not
         # triggered". FAULT/SHORT/CUT are known states and read off.
         if zone is None or zone.status is AlarmHubInputStatus.UNKNOWN:
@@ -889,7 +890,7 @@ def _async_alarm_hub_entities(
         for description in ALARM_HUB_BINARY_SENSORS
     ]
     entities += [
-        ProtectAlarmHubZoneBinarySensor(data, hub, input_id)
+        ProtectAlarmHubZoneBinarySensor(data, hub, input_id, zone)
         for input_id, zone in hub.alarm_hub_inputs.items()
         if zone.enable is OnOffState.ON and zone.input_type is not None
     ]

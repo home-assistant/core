@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
+import re
 from typing import Any, Final, cast
 
 from aiohttp import ClientError
@@ -116,6 +117,9 @@ PLATFORMS: Final = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
+_VEHICLE_ISSUE_ID_PATTERN = re.compile(
+    f"({'|'.join(map(re.escape, VEHICLE_ISSUE_LEARN_MORE))})_"
+)
 
 type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
 
@@ -254,31 +258,35 @@ def _async_update_vehicle_repairs(
     vins: set[str],
     vehicle_metadata: dict[str, Any],
 ) -> None:
-    """Create or remove repair issues based on each vehicle's metadata issue."""
-    for vin in vins | set(vehicle_metadata):
-        info = vehicle_metadata.get(vin, {})
-        issue = info.get("issue")
-        for issue_type, learn_more_url in VEHICLE_ISSUE_LEARN_MORE.items():
-            issue_id = f"{issue_type}_{vin}"
-            if vin in vins and info.get("access") and issue == issue_type:
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    issue_id,
-                    is_fixable=True,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key=issue_type,
-                    translation_placeholders={"vehicle": info.get("name") or vin},
-                    learn_more_url=learn_more_url,
-                    data={
-                        "entry_id": entry.entry_id,
-                        "vin": vin,
-                        "issue_type": issue_type,
-                        "vehicle": info.get("name") or vin,
-                    },
-                )
-            else:
-                ir.async_delete_issue(hass, DOMAIN, issue_id)
+    """Create repair issues for vehicle metadata issues and delete all others."""
+    with ir.async_begin_issues_refresh(
+        hass,
+        DOMAIN,
+        issue_id_pattern=_VEHICLE_ISSUE_ID_PATTERN,
+        config_entry_id=entry.entry_id,
+    ):
+        for vin in vins:
+            info = vehicle_metadata.get(vin, {})
+            issue_type = info.get("issue")
+            if not info.get("access") or issue_type not in VEHICLE_ISSUE_LEARN_MORE:
+                continue
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"{issue_type}_{vin}",
+                config_entry_id=entry.entry_id,
+                is_fixable=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=issue_type,
+                translation_placeholders={"vehicle": info.get("name") or vin},
+                learn_more_url=VEHICLE_ISSUE_LEARN_MORE[issue_type],
+                data={
+                    "entry_id": entry.entry_id,
+                    "vin": vin,
+                    "issue_type": issue_type,
+                    "vehicle": info.get("name") or vin,
+                },
+            )
 
 
 def _setup_vehicle_repairs(
@@ -470,6 +478,8 @@ async def _async_resolve_local_control(
             site_id,
             exc_info=True,
         )
+        # Whether the gateway is found is unknown
+        ir.async_keep_issue(hass, DOMAIN, _gateway_issue_id(site_id))
         return True, subentry_id, cloud_energy_site
     return True, subentry_id, api
 
@@ -577,6 +587,7 @@ async def _async_rediscover_gateway(
         hass,
         DOMAIN,
         issue_id,
+        config_entry_id=entry.entry_id,
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key=ISSUE_GATEWAY_NOT_FOUND,
@@ -672,6 +683,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     # Track known devices for dynamic discovery (based on metadata access state)
     known_vins, known_site_ids = _get_subscribed_ids_from_metadata(metadata)
+
+    # Energy sites which are gone or no longer set up leave issues to be deleted
+    gateway_refresh = ir.async_begin_issues_refresh(
+        hass,
+        DOMAIN,
+        issue_id_pattern=f"{ISSUE_GATEWAY_NOT_FOUND}_",
+        config_entry_id=entry.entry_id,
+    )
+    entry.async_on_unload(gateway_refresh.async_cancel)
 
     for product in products:
         if (
@@ -841,6 +861,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     local_status_coordinator=local_status_coordinator,
                 )
             )
+
+    gateway_refresh.async_finish()
 
     # Run all first refreshes
     await asyncio.gather(
@@ -1165,7 +1187,7 @@ def async_setup_energy_device(
     if version := data.get("version"):
         energysite.device.sw_version = version
 
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create_from_info(
         config_entry_id=entry.entry_id, device_info=energysite.device
     )
 

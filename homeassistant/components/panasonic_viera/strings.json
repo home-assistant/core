@@ -19,8 +19,7 @@
       },
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "host": "[%key:common::config_flow::data::ip%]"
         },
         "description": "Enter your Panasonic Viera TV's IP address",
         "title": "Set up your TV"

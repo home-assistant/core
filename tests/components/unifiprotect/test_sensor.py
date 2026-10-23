@@ -14,6 +14,8 @@ from uiprotect.data import (
     Event,
     EventType,
     Light,
+    LightModeEnableType,
+    LightModeType,
     ModelType,
     Permission,
     PublicLcdMessage,
@@ -821,6 +823,36 @@ async def test_sensor_light_last_motion_unavailable_without_public(
     await enable_entity(hass, ufp.entry.entry_id, entity_id)
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("mode", "enable_at", "expected"),
+    [
+        (LightModeType.MOTION, LightModeEnableType.ALWAYS, "motion"),
+        (LightModeType.MOTION, LightModeEnableType.DARK, "motion_dark"),
+        (LightModeType.WHEN_DARK, LightModeEnableType.DARK, "always"),
+        (LightModeType.MANUAL, LightModeEnableType.DARK, "off"),
+    ],
+)
+async def test_sensor_light_mode_mirror_public(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    light: Light,
+    mode: LightModeType,
+    enable_at: LightModeEnableType,
+    expected: str,
+) -> None:
+    """The deprecated light mode mirror shows the public preset value."""
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "light:read:*"})
+    ]
+    setup_public_light(ufp, light_mode=mode, light_mode_enable_at=enable_at)
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, light, get_sensor_by_key(LIGHT_SENSORS, "light_motion")
+    )
+    assert hass.states.get(entity_id).state == expected
 
 
 async def test_public_only_sensor_sense_end_to_end(

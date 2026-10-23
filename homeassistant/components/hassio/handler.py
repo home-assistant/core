@@ -87,7 +87,13 @@ class HassIO:
             )
 
             if response.status != HTTPStatus.OK:
-                error = await response.json(encoding="utf-8")
+                try:
+                    error = await response.json(encoding="utf-8")
+                except aiohttp.ContentTypeError:
+                    # Errors raised outside Supervisor's API handlers are plain text
+                    raise HassioAPIError(
+                        await response.text(encoding="utf-8")
+                    ) from None
                 if error.get(ATTR_RESULT) == "error":
                     raise HassioAPIError(error.get(ATTR_MESSAGE))
 
@@ -121,6 +127,7 @@ def get_supervisor_client(hass: HomeAssistant) -> SupervisorClient:
         str(hassio.base_url),
         os.environ.get("SUPERVISOR_TOKEN", ""),
         session=hassio.websession,
+        source="core/aiohasupervisor",
     )
 
 
