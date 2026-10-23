@@ -331,7 +331,7 @@ async def test_binary_sensor_last_reported(
     first_reported = hass.states.get("binary_sensor.zone").last_reported
     assert first_reported is not None
     # Initial state change events for four system sensors, zone, and output
-    assert len(events) == 6
+    assert len(events) == 4
 
     freezer.tick(1)
     async_fire_time_changed(hass)
@@ -345,7 +345,7 @@ async def test_binary_sensor_last_reported(
     system_status_update_method()
 
     assert first_reported != hass.states.get("binary_sensor.zone").last_reported
-    assert len(events) == 6  # last_reported shall not fire state_changed
+    assert len(events) == 4  # last_reported shall not fire state_changed
 
 
 @pytest.mark.parametrize("unique_id_suffix", ["zones_1", "system_trouble"])

@@ -57,7 +57,6 @@ def _trouble_sensor_description(
     trouble_type: SatelTroubleType,
     *,
     source_id: int | None = None,
-    enabled_by_default: bool = False,
     translation_key: str | None = None,
     translation_placeholders: Mapping[str, str] | None = None,
 ) -> SatelIntegraSystemStatusBinarySensorEntityDescription:
@@ -69,7 +68,7 @@ def _trouble_sensor_description(
         translation_placeholders=translation_placeholders,
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=enabled_by_default,
+        entity_registry_enabled_default=False,
         is_on_fn=lambda data: _has_system_trouble(data.troubles, trouble),
     )
 
@@ -90,15 +89,9 @@ SYSTEM_STATUS_BINARY_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda data: data.status.troubles if data.status is not None else None,
     ),
+    _trouble_sensor_description("panel_ac_trouble", SatelTroubleType.PANEL_AC),
     _trouble_sensor_description(
-        "panel_ac_trouble",
-        SatelTroubleType.PANEL_AC,
-        enabled_by_default=True,
-    ),
-    _trouble_sensor_description(
-        "panel_battery_trouble",
-        SatelTroubleType.PANEL_BATTERY,
-        enabled_by_default=True,
+        "panel_battery_trouble", SatelTroubleType.PANEL_BATTERY
     ),
     _trouble_sensor_description(
         "output_1_trouble",
