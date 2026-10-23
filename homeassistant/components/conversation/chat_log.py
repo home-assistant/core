@@ -13,7 +13,7 @@ from typing import Any, Literal, TypedDict, cast
 import probatio
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, frame, intent, llm, template
 from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
@@ -101,14 +101,11 @@ def async_get_chat_log(
         hass.data[DATA_CHAT_LOGS] = all_chat_logs
 
     is_new_log = session.conversation_id not in all_chat_logs
-    user_id = user_input.context.user_id if user_input else None
 
     if chat_log := all_chat_logs.get(session.conversation_id):
-        if user_input is not None and chat_log.user_id != user_id:
-            raise Unauthorized(context=user_input.context)
         chat_log = replace(chat_log, content=chat_log.content.copy())
     else:
-        chat_log = ChatLog(hass, session.conversation_id, user_id=user_id)
+        chat_log = ChatLog(hass, session.conversation_id)
 
     if chat_log_delta_listener:
         chat_log.delta_listener = chat_log_delta_listener
@@ -362,7 +359,6 @@ class ChatLog:
     conversation_id: str
     content: list[Content] = field(default_factory=lambda: [SystemContent(content="")])
     extra_system_prompt: str | None = None
-    user_id: str | None = None
     llm_api: llm.APIInstance | None = None
     _llm_api_key: tuple[Any, ...] | None = None
     delta_listener: Callable[[ChatLog, dict], None] | None = None
