@@ -1478,6 +1478,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/persistent_notification/ @home-assistant/core
 /homeassistant/components/pglab/ @pglab-electronics
 /tests/components/pglab/ @pglab-electronics
+/homeassistant/components/philips_infrared/ @javitonino
+/tests/components/philips_infrared/ @javitonino
 /homeassistant/components/philips_js/ @elupus
 /tests/components/philips_js/ @elupus
 /homeassistant/components/pi_hole/ @shenxn

@@ -485,6 +485,7 @@ homeassistant.components.peco.*
 homeassistant.components.pegel_online.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.person.*
+homeassistant.components.philips_infrared.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
