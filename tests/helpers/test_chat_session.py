@@ -178,13 +178,24 @@ async def test_new_session_shared(hass: HomeAssistant) -> None:
     ],
 )
 async def test_check_owner(hass: HomeAssistant, owner_user_id: str | None) -> None:
-    """Test the first checked user owns the session."""
-    with chat_session.async_get_chat_session(hass, context=None) as session:
-        session.async_check_owner(Context(user_id=owner_user_id))
-        session.async_check_owner(Context(user_id=owner_user_id))
+    """Test the first user owns the session, also when there is no user."""
+    with chat_session.async_get_chat_session(
+        hass, context=Context(user_id=owner_user_id)
+    ) as session:
+        conversation_id = session.conversation_id
 
-        with pytest.raises(Unauthorized):
-            session.async_check_owner(Context(user_id="other-user-id"))
+    with chat_session.async_get_chat_session(
+        hass, conversation_id, context=Context(user_id=owner_user_id)
+    ):
+        pass
+
+    with (
+        pytest.raises(Unauthorized),
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=Context(user_id="other-user-id")
+        ),
+    ):
+        pass
 
 
 async def test_session_owner(hass: HomeAssistant) -> None:

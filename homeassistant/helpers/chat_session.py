@@ -54,17 +54,6 @@ class ChatSession:
         self.last_updated = dt_util.utcnow()
 
     @callback
-    def async_check_owner(self, context: Context) -> None:
-        """Raise if the user of the context may not continue the conversation.
-
-        The user of the first context that is checked becomes the owner.
-        """
-        if self.user_id is UNDEFINED:
-            self.user_id = context.user_id
-        elif self.user_id != context.user_id:
-            raise Unauthorized(context=context)
-
-    @callback
     def async_on_cleanup(self, cb: CALLBACK_TYPE) -> None:
         """Register a callback to clean up the session."""
         self._cleanup_callbacks.append(cb)
@@ -153,7 +142,10 @@ def async_get_chat_session(
         # return that. We won't update the last updated time in this case.
         if session.conversation_id == conversation_id:
             if context is not None:
-                session.async_check_owner(context)
+                if session.user_id is UNDEFINED:
+                    session.user_id = context.user_id
+                elif session.user_id != context.user_id:
+                    raise Unauthorized(context=context)
             # A task that inherits the session can outlive the caller.
             session.in_use += 1
             try:
@@ -197,7 +189,10 @@ def async_get_chat_session(
         all_sessions[conversation_id] = session
 
     if context is not None:
-        session.async_check_owner(context)
+        if session.user_id is UNDEFINED:
+            session.user_id = context.user_id
+        elif session.user_id != context.user_id:
+            raise Unauthorized(context=context)
 
     session.in_use += 1
     token = current_session.set(session)
