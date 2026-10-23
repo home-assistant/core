@@ -129,6 +129,30 @@ async def test_cleanup_session_in_use(
         }
 
 
+async def test_cleanup_inherited_session_in_use(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the cleanup keeps a session that an inheriting task still uses."""
+    release = asyncio.Event()
+
+    async def use_session(conversation_id: str) -> None:
+        with chat_session.async_get_chat_session(hass, conversation_id, context=None):
+            await release.wait()
+
+    with chat_session.async_get_chat_session(hass, context=None) as session:
+        conversation_id = session.conversation_id
+        # The task inherits the current session, like a pipeline run does.
+        task = hass.async_create_task(use_session(conversation_id))
+        await asyncio.sleep(0)
+
+    freezer.tick(chat_session.CONVERSATION_TIMEOUT * 2)
+    async_fire_time_changed(hass)
+    assert hass.data[chat_session.DATA_CHAT_SESSION][conversation_id] is session
+
+    release.set()
+    await task
+
+
 async def test_new_session_shared(hass: HomeAssistant) -> None:
     """Test parallel requests share a new session."""
 
