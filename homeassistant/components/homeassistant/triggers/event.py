@@ -121,7 +121,8 @@ def _log_composite_device_id_warning(
         "%s.\nThe affected trigger is configured as:\n%s",
         device_id,
         ", ".join(device_summaries),
-        yaml_util.dump(config),
+        # The YAML dumper cannot represent the EventTriggerArgument keys
+        yaml_util.dump({str(key): value for key, value in config.items()}),
     )
 
 

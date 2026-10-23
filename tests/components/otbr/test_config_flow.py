@@ -199,7 +199,7 @@ async def _finish_user_flow(
 
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -266,7 +266,7 @@ async def test_user_flow_additional_entry_same_address(
     get_border_agent_id.side_effect = [TEST_BORDER_AGENT_ID_2, TEST_BORDER_AGENT_ID]
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -307,7 +307,7 @@ async def test_user_flow_router_not_setup(
         ),
         patch(
             "homeassistant.components.otbr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -374,7 +374,7 @@ async def test_user_flow_get_dataset_404(
         ),
         patch(
             "homeassistant.components.otbr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -441,7 +441,7 @@ async def _test_user_flow_connect_error(
 
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -462,7 +462,7 @@ async def test_hassio_discovery_flow(
 
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
@@ -499,7 +499,7 @@ async def test_hassio_discovery_flow_yellow(
     with (
         patch(
             "homeassistant.components.otbr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch("homeassistant.components.otbr.config_flow.yellow_hardware.async_info"),
     ):
@@ -558,7 +558,7 @@ async def test_hassio_discovery_flow_sky_connect(
 
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
@@ -767,7 +767,7 @@ async def test_hassio_discovery_flow_router_not_setup(
         ),
         patch(
             "homeassistant.components.otbr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -825,7 +825,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
         ),
         patch(
             "homeassistant.components.otbr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -886,7 +886,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
         ),
         patch(
             "homeassistant.components.otbr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1179,7 +1179,7 @@ async def test_config_flow_additional_entry(
 
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": source}, data=data

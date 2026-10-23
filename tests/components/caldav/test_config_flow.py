@@ -22,7 +22,7 @@ from .conftest import TEST_PASSWORD, TEST_URL, TEST_USERNAME
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
+        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

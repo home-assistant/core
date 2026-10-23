@@ -9,6 +9,7 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
+    SwitchService,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,8 +17,6 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -135,7 +134,7 @@ class SwitchGroup(GroupEntity, SwitchEntity):
 
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             data,
             blocking=True,
             context=self._context,
@@ -147,7 +146,7 @@ class SwitchGroup(GroupEntity, SwitchEntity):
         data = {ATTR_ENTITY_ID: self._entity_ids}
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             data,
             blocking=True,
             context=self._context,
