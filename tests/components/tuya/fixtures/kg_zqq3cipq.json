@@ -1,0 +1,167 @@
+{
+  "name": "RCU controller",
+  "category": "kg",
+  "product_id": "zqq3cipq",
+  "product_name": "16-way controller",
+  "online": true,
+  "sub": true,
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_7": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_8": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_9": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_10": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_11": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_12": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_13": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_14": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_15": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_16": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_17": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_18": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_19": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_20": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_21": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_22": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_7": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_8": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_9": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_10": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_11": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_12": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_13": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_14": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_15": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_16": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_17": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_18": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_19": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_20": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_21": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_22": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_1": false,
+    "switch_7": false,
+    "switch_8": false,
+    "switch_9": false,
+    "switch_10": false,
+    "switch_11": false,
+    "switch_12": false,
+    "switch_13": false,
+    "switch_14": false,
+    "switch_15": false,
+    "switch_16": false,
+    "switch_17": false,
+    "switch_18": false,
+    "switch_19": false,
+    "switch_20": false,
+    "switch_21": false,
+    "switch_22": false
+  }
+}

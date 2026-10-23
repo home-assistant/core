@@ -5,13 +5,6 @@ from collections.abc import Iterable
 from typing import Any
 
 from homeassistant.const import (
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_STOP,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
     STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
@@ -23,28 +16,21 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
-    ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
-    ATTR_SOUND_MODE,
     DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOUND_MODE,
-    SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
     MediaPlayerEntityStateAttribute,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 
 # Maps a state attribute to the service call argument used to restore it.
 _STATE_ATTRIBUTE_TO_SERVICE_ARG: dict[MediaPlayerEntityStateAttribute, str] = {
-    MediaPlayerEntityStateAttribute.INPUT_SOURCE: ATTR_INPUT_SOURCE,
-    MediaPlayerEntityStateAttribute.SOUND_MODE: ATTR_SOUND_MODE,
-    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: ATTR_MEDIA_VOLUME_LEVEL,
-    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: ATTR_MEDIA_VOLUME_MUTED,
-    MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: ATTR_MEDIA_CONTENT_TYPE,
-    MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: ATTR_MEDIA_CONTENT_ID,
+    MediaPlayerEntityStateAttribute.INPUT_SOURCE: MediaPlayerServiceArgument.SOURCE,
+    MediaPlayerEntityStateAttribute.SOUND_MODE: MediaPlayerServiceArgument.SOUND_MODE,
+    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: MediaPlayerServiceArgument.VOLUME_LEVEL,
+    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: MediaPlayerServiceArgument.IS_VOLUME_MUTED,
+    MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE,
+    MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: MediaPlayerServiceArgument.MEDIA_CONTENT_ID,
 }
 
 
@@ -80,7 +66,7 @@ async def _async_reproduce_states(
 
     if state.state == STATE_OFF:
         if features & MediaPlayerEntityFeature.TURN_OFF:
-            await call_service(SERVICE_TURN_OFF, [])
+            await call_service(MediaPlayerService.TURN_OFF, [])
         # entities that are off have no other attributes to restore
         return
 
@@ -95,7 +81,7 @@ async def _async_reproduce_states(
         )
         and features & MediaPlayerEntityFeature.TURN_ON
     ):
-        await call_service(SERVICE_TURN_ON, [])
+        await call_service(MediaPlayerService.TURN_ON, [])
 
     cur_state = hass.states.get(state.entity_id)
     features = (
@@ -110,7 +96,8 @@ async def _async_reproduce_states(
         and features & MediaPlayerEntityFeature.SELECT_SOURCE
     ):
         await call_service(
-            SERVICE_SELECT_SOURCE, [MediaPlayerEntityStateAttribute.INPUT_SOURCE]
+            MediaPlayerService.SELECT_SOURCE,
+            [MediaPlayerEntityStateAttribute.INPUT_SOURCE],
         )
 
     if (
@@ -118,7 +105,8 @@ async def _async_reproduce_states(
         and features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
     ):
         await call_service(
-            SERVICE_SELECT_SOUND_MODE, [MediaPlayerEntityStateAttribute.SOUND_MODE]
+            MediaPlayerService.SELECT_SOUND_MODE,
+            [MediaPlayerEntityStateAttribute.SOUND_MODE],
         )
 
     if (
@@ -126,7 +114,8 @@ async def _async_reproduce_states(
         and features & MediaPlayerEntityFeature.VOLUME_SET
     ):
         await call_service(
-            SERVICE_VOLUME_SET, [MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL]
+            MediaPlayerService.VOLUME_SET,
+            [MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL],
         )
 
     if (
@@ -134,7 +123,8 @@ async def _async_reproduce_states(
         and features & MediaPlayerEntityFeature.VOLUME_MUTE
     ):
         await call_service(
-            SERVICE_VOLUME_MUTE, [MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED]
+            MediaPlayerService.VOLUME_MUTE,
+            [MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED],
         )
 
     already_playing = False
@@ -144,7 +134,7 @@ async def _async_reproduce_states(
     ):
         if features & MediaPlayerEntityFeature.PLAY_MEDIA:
             await call_service(
-                SERVICE_PLAY_MEDIA,
+                MediaPlayerService.PLAY_MEDIA,
                 [
                     MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE,
                     MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID,
@@ -157,13 +147,13 @@ async def _async_reproduce_states(
         and state.state in (STATE_BUFFERING, STATE_PLAYING)
         and features & MediaPlayerEntityFeature.PLAY
     ):
-        await call_service(SERVICE_MEDIA_PLAY, [])
+        await call_service(MediaPlayerService.MEDIA_PLAY, [])
     elif state.state == STATE_IDLE:
         if features & MediaPlayerEntityFeature.STOP:
-            await call_service(SERVICE_MEDIA_STOP, [])
+            await call_service(MediaPlayerService.MEDIA_STOP, [])
     elif state.state == STATE_PAUSED:
         if features & MediaPlayerEntityFeature.PAUSE:
-            await call_service(SERVICE_MEDIA_PAUSE, [])
+            await call_service(MediaPlayerService.MEDIA_PAUSE, [])
 
 
 async def async_reproduce_states(

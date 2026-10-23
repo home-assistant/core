@@ -6,8 +6,7 @@ from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IturanConfigEntry
-from .coordinator import IturanDataUpdateCoordinator
+from .coordinator import IturanConfigEntry, IturanDataUpdateCoordinator
 from .entity import IturanBaseEntity
 
 

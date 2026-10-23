@@ -710,3 +710,15 @@ AMBIGUOUS_UNITS: dict[str | None, str] = {
     "VArh": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
     "kVArh": UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
 }
+
+
+class NumberService(StrEnum):
+    """Store keys for number services."""
+
+    SET_VALUE = "set_value"
+
+
+class NumberServiceArgument(StrEnum):
+    """Store keys for number service arguments."""
+
+    VALUE = "value"
