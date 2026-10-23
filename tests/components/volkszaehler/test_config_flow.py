@@ -66,6 +66,7 @@ async def test_create_entry(
     assert subentry.data == {CONF_UUID: "test-uuid"}
 
     assert mock_api.get_data.call_count == 1
+    assert mock_api.call_args.kwargs["middleware"] is False
     assert len(mock_setup_entry.mock_calls) == 1
 
 
