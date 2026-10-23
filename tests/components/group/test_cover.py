@@ -1013,6 +1013,7 @@ async def test_speeds(hass: HomeAssistant) -> None:
     ]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
 
+    # The hall window drops its speeds, so "slow" is gone
     hass.states.async_set(
         DEMO_COVER_POS, CoverState.OPEN, {ATTR_SUPPORTED_FEATURES: 11}
     )
