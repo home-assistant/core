@@ -22,6 +22,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid_now, ulid_to_bytes
 
+from . import frame
 from .event import async_call_later
 from .typing import UNDEFINED, UndefinedType
 
@@ -130,12 +131,29 @@ class SessionCleanup:
 def async_get_chat_session(
     hass: HomeAssistant,
     conversation_id: str | None = None,
+    *,
+    context: Context | UndefinedType | None = UNDEFINED,
 ) -> Generator[ChatSession]:
-    """Return a chat session."""
+    """Return a chat session.
+
+    The user of the first context becomes the owner of the conversation, and
+    the context of another user raises Unauthorized. Pass None as context when
+    the caller does not act for a user, like a satellite that starts a
+    conversation.
+    """
+    if context is UNDEFINED:
+        frame.report_usage(
+            "calls async_get_chat_session without a context",
+            breaks_in_ha_version="2027.5",
+        )
+        context = None
+
     if session := current_session.get():
         # If a session is already active and it's the requested conversation ID,
         # return that. We won't update the last updated time in this case.
         if session.conversation_id == conversation_id:
+            if context is not None:
+                session.async_check_owner(context)
             yield session
             return
 
@@ -172,6 +190,9 @@ def async_get_chat_session(
         session = ChatSession(conversation_id)
         # Store the session right away, so parallel requests share it.
         all_sessions[conversation_id] = session
+
+    if context is not None:
+        session.async_check_owner(context)
 
     session.in_use += 1
     token = current_session.set(session)

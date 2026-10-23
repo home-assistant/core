@@ -86,8 +86,6 @@ def async_get_chat_log(
             raise RuntimeError(
                 "Cannot attach chat log delta listener unless initial caller"
             )
-        if user_input is not None:
-            session.async_check_owner(user_input.context)
         if user_input is not None and (
             (content := chat_log.content[-1]).role != "user"
             or content.content != user_input.text
@@ -101,11 +99,6 @@ def async_get_chat_log(
     if all_chat_logs is None:
         all_chat_logs = {}
         hass.data[DATA_CHAT_LOGS] = all_chat_logs
-
-    # A conversation started without user input, like by a satellite, gets
-    # the user of its first input as owner.
-    if user_input is not None:
-        session.async_check_owner(user_input.context)
 
     is_new_log = session.conversation_id not in all_chat_logs
 
