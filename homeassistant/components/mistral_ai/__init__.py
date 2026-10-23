@@ -1,6 +1,6 @@
 """The Mistral AI integration."""
 
-from httpx import HTTPError
+from httpx2 import HTTPError
 from mistralai.client import Mistral, errors
 
 from homeassistant.config_entries import ConfigEntry

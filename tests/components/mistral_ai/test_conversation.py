@@ -4,7 +4,7 @@ from types import TracebackType
 from typing import Self
 from unittest.mock import AsyncMock, patch
 
-from httpx import Request, Response
+from httpx2 import Request, Response
 from mistralai.client import errors
 from mistralai.client.models import (
     CompletionChunk,

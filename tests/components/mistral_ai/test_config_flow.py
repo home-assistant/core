@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from httpx import ConnectError, Request, Response
+from httpx2 import ConnectError, Request, Response
 from mistralai.client import errors
 import pytest
 

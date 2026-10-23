@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from httpx import HTTPError
+from httpx2 import HTTPError
 from mistralai.client import errors as mistral_errors
 import probatio
 
