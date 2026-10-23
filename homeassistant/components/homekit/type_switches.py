@@ -234,13 +234,11 @@ class Vacuum(Switch):
         features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if value:
-            sup_start = features & VacuumEntityFeature.START
-            service = VacuumService.START if sup_start else SERVICE_TURN_ON
+            service = VacuumService.START
+        elif features & VacuumEntityFeature.RETURN_HOME:
+            service = VacuumService.RETURN_TO_BASE
         else:
-            sup_return_home = features & VacuumEntityFeature.RETURN_HOME
-            service = (
-                VacuumService.RETURN_TO_BASE if sup_return_home else SERVICE_TURN_OFF
-            )
+            service = VacuumService.STOP
 
         self.async_call_service(
             VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}
@@ -250,7 +248,7 @@ class Vacuum(Switch):
     @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        current_state = new_state.state in (VacuumActivity.CLEANING, STATE_ON)
+        current_state = new_state.state == VacuumActivity.CLEANING
         _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
         self.char_on.set_value(current_state)
 

@@ -76,6 +76,14 @@ def test_not_supported(caplog: pytest.LogCaptureFixture) -> None:
 
     # invalid aid
     assert get_accessory(None, None, State("light.demo", "on"), None, None) is None
+
+    # Vacuums can only be switched on when they support starting
+    entity_state = State(
+        "vacuum.demo",
+        "docked",
+        {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.RETURN_HOME},
+    )
+    assert get_accessory(None, None, entity_state, 2, {}) is None
     assert caplog.records[0].levelname == "WARNING"
     assert "invalid aid" in caplog.records[0].msg
 
@@ -436,7 +444,12 @@ def test_type_valve(type_name, entity_id, state, attrs) -> None:
                 | VacuumEntityFeature.RETURN_HOME
             },
         ),
-        ("Vacuum", "vacuum.basic_vacuum", "off", {}),
+        (
+            "Vacuum",
+            "vacuum.basic_vacuum",
+            "docked",
+            {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.START},
+        ),
     ],
 )
 def test_type_vacuum(type_name, entity_id, state, attrs) -> None:
