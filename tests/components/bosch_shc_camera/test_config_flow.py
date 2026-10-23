@@ -1,10 +1,9 @@
 """Test the Bosch Smart Home Camera config flow."""
 
 import base64
-from collections.abc import Generator
 from http import HTTPStatus
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 from urllib.parse import parse_qs, urlparse
 
 from bosch_shc_camera_client.cameras import (
@@ -55,24 +54,6 @@ pytestmark = pytest.mark.usefixtures("current_request_with_host")
 async def setup_application_credentials(hass: HomeAssistant) -> None:
     """Set up the application credentials component."""
     assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
-
-
-@pytest.fixture(autouse=True)
-def mock_list_cameras() -> Generator[AsyncMock]:
-    """Mock the camera list of the library."""
-    with (
-        patch(
-            "homeassistant.components.bosch_shc_camera.config_flow.list_cameras",
-            autospec=True,
-            return_value=[],
-        ) as mock,
-        patch(
-            "homeassistant.components.bosch_shc_camera.coordinator.list_cameras",
-            autospec=True,
-            return_value=[],
-        ),
-    ):
-        yield mock
 
 
 async def test_full_flow(

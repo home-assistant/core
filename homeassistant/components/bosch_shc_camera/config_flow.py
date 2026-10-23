@@ -7,9 +7,9 @@ from bosch_shc_camera_client.cameras import (
     BoschCameraAuthError,
     BoschCameraConnectionError,
     BoschCameraInvalidResponseError,
+    account_id_from_token,
     list_cameras,
 )
-import jwt
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -21,8 +21,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHan
 
 from .application_credentials import OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
 from .const import DOMAIN
-
-MAX_ACCOUNT_ID_LENGTH = 128
 
 
 class BoschCameraFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -53,26 +51,15 @@ class BoschCameraFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create the entry after checking the camera API accepts the token."""
+        access_token = data["token"]["access_token"]
         try:
-            # The token comes straight from the token endpoint over TLS, so only
-            # the subject is read and the signature is not verified again.
-            account_id = jwt.decode(
-                data["token"]["access_token"], options={"verify_signature": False}
-            )["sub"]
-        except jwt.InvalidTokenError, KeyError:
-            return self.async_abort(reason="oauth_error")
-        if (
-            not isinstance(account_id, str)
-            or not account_id.strip()
-            or len(account_id) > MAX_ACCOUNT_ID_LENGTH
-        ):
+            account_id = account_id_from_token(access_token)
+        except BoschCameraAuthError:
             return self.async_abort(reason="oauth_error")
         await self.async_set_unique_id(account_id)
         self._abort_if_unique_id_configured()
         try:
-            await list_cameras(
-                async_get_clientsession(self.hass), data["token"]["access_token"]
-            )
+            await list_cameras(async_get_clientsession(self.hass), access_token)
         except BoschCameraAuthError:
             return self.async_abort(reason="invalid_auth")
         except BoschCameraConnectionError, BoschCameraInvalidResponseError:

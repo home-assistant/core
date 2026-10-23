@@ -20,14 +20,20 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.bosch_shc_camera.const import DOMAIN
 from homeassistant.components.bosch_shc_camera.coordinator import SNAPSHOT_TTL
 from homeassistant.components.camera import async_get_image
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
     OAuth2TokenRequestConnectionError,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .conftest import CAMERA_ID, CAMERAS
@@ -175,12 +181,10 @@ async def test_token_refresh_failure_surfaces_translated_error(
 ) -> None:
     """Test a failing token refresh makes the image request fail cleanly."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
 
     with (
-        patch.object(
-            coordinator._oauth_session,
-            "async_ensure_token_valid",
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             side_effect=OAuth2TokenRequestConnectionError(domain=DOMAIN),
         ),
         pytest.raises(HomeAssistantError),
@@ -213,6 +217,19 @@ async def test_camera_image_errors(
     assert mock_latest_image.await_count == 2
 
 
+async def _refresh(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Refresh the camera list well within the snapshot cache lifetime."""
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
 async def test_removed_camera_forgets_its_image(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -220,18 +237,21 @@ async def test_removed_camera_forgets_its_image(
     mock_latest_image: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the cached image of a camera that left the account is dropped."""
+    """Test a camera that left the account and returns is asked again."""
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     mock_list_cameras.return_value = [*CAMERAS, OTHER]
     await setup_integration(hass, mock_config_entry)
     await async_get_image(hass, "camera.hall")
-    coordinator = mock_config_entry.runtime_data
-    assert OTHER_ID in coordinator._snapshots
+    assert mock_latest_image.await_count == 1
 
     mock_list_cameras.return_value = list(CAMERAS)
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert OTHER_ID not in coordinator._snapshots
+    await _refresh(hass, freezer)
+    assert hass.states.get("camera.hall") is None
+
+    mock_list_cameras.return_value = [*CAMERAS, OTHER]
+    await _refresh(hass, freezer)
+    await async_get_image(hass, "camera.hall")
+    assert mock_latest_image.await_count == 2
 
 
 async def test_unload(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
