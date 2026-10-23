@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "wrong_account": "You can only reauthenticate with the Hydrawise account that was used to set up this integration."
+      "wrong_account": "You can only use the Hydrawise account that was used to set up this integration."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -14,14 +14,30 @@
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "api_key": "[%key:component::hydrawise::config::step::user::data_description::api_key%]",
-          "password": "[%key:component::hydrawise::config::step::user::data_description::password%]"
+          "password": "[%key:component::hydrawise::config::step::user::data_description::password%]",
+          "username": "[%key:component::hydrawise::config::step::user::data_description::username%]"
         },
         "description": "The Hydrawise integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::hydrawise::config::step::user::data_description::api_key%]",
+          "password": "[%key:component::hydrawise::config::step::user::data_description::password%]",
+          "username": "[%key:component::hydrawise::config::step::user::data_description::username%]"
+        },
+        "description": "Update the credentials of your Hydrawise account.",
+        "title": "Reconfigure Hydrawise"
       },
       "user": {
         "data": {

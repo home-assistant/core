@@ -4,14 +4,13 @@ from unittest import mock
 
 from pymochad.exceptions import MochadException
 import pytest
+from pytest_homeassistant.common import MockEntityPlatform
 
 from homeassistant.components import switch
 from homeassistant.components.mochad import DOMAIN, switch as mochad
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntityPlatform
 
 
 @pytest.fixture(autouse=True)

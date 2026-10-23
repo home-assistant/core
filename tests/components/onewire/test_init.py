@@ -9,6 +9,8 @@ from aio_ownet.exceptions import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.onewire.const import DOMAIN
@@ -21,9 +23,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_owproxy_mock_devices
 from .const import MOCK_OWPROXY_DEVICES
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("owproxy_with_connerror")

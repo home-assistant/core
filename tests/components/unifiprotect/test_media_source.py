@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from uiprotect.data import (
     Bootstrap,
     Camera,
@@ -32,8 +33,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import MockUFPFixture
 from .utils import init_entry
-
-from tests.common import MockConfigEntry
 
 
 async def test_get_media_source(hass: HomeAssistant) -> None:
@@ -225,7 +224,6 @@ async def test_browse_media_root_multiple_consoles(
     api2.base_url = "https://127.0.0.2"
     api2.connection_host = IPv4Address("127.0.0.2")
     api2.get_bootstrap = AsyncMock(return_value=bootstrap2)
-    api2.get_nvr = AsyncMock(return_value=bootstrap2.nvr)
     api2.update = AsyncMock(return_value=bootstrap2)
     api2.async_disconnect_ws = AsyncMock()
 
@@ -292,7 +290,6 @@ async def test_browse_media_root_multiple_consoles_only_one_media(
     api2.api_path = "/api"
     api2.base_url = "https://127.0.0.2"
     api2.connection_host = IPv4Address("127.0.0.2")
-    api2.get_nvr = AsyncMock(return_value=bootstrap2.nvr)
     api2.update = AsyncMock(return_value=bootstrap2)
     api2.async_disconnect_ws = AsyncMock()
 

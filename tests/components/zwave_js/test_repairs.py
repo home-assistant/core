@@ -4,6 +4,12 @@ from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from zwave_js_server.client import Client
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node, NodeDataType
@@ -16,10 +22,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     issue_registry as ir,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def _trigger_repair_issue(

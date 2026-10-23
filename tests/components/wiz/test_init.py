@@ -3,6 +3,8 @@
 import datetime as dt
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOST, EVENT_HOMEASSISTANT_STOP
@@ -19,8 +21,6 @@ from . import (
     _patch_wizlight,
     async_setup_integration,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_retry(hass: HomeAssistant) -> None:

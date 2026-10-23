@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 from uiprotect.data import (
     Camera,
     Event,
@@ -62,7 +63,7 @@ from .utils import (
     setup_public_sensor,
 )
 
-from tests.common import async_capture_events
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
 
 LIGHT_SENSOR_WRITE = LIGHT_SENSORS[:2]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:3]
@@ -290,7 +291,13 @@ async def test_binary_sensor_setup_sensor_leak(
     """Test binary_sensor entity setup for sensor with most leak mounting type."""
 
     sensor.mount_type = MountType.LEAK
-    setup_public_sensor(ufp)
+    setup_public_sensor(
+        ufp,
+        motion_enabled=False,
+        temperature_enabled=False,
+        humidity_enabled=False,
+        light_enabled=False,
+    )
     await init_entry(hass, ufp, [sensor])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 

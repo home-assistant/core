@@ -2,14 +2,13 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from serialx import SerialException
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockLGTV
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_connection_error(

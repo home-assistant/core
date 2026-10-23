@@ -3,13 +3,13 @@
 from collections import defaultdict
 from unittest.mock import AsyncMock, Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.xiaomi_aqara import const
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_PORT = 1234

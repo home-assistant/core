@@ -10,6 +10,12 @@ from hassil.intents import Intents
 from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 from home_assistant_intents import ErrorKey
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    async_mock_service,
+    setup_test_component_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 import yaml
 
@@ -72,12 +78,6 @@ from homeassistant.setup import async_setup_component
 
 from . import expose_entity, expose_new
 
-from tests.common import (
-    MockConfigEntry,
-    MockUser,
-    async_mock_service,
-    setup_test_component_platform,
-)
 from tests.components.light.common import MockLight
 
 

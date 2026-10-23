@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aionut import NUTError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
 
 from homeassistant.components import automation, device_automation
@@ -20,8 +21,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .util import async_init_integration
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_all_actions_for_specified_user(

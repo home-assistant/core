@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
 from teslemetry_stream import Signal
 from teslemetry_stream.const import EnergyHistoryTotals
@@ -37,12 +42,6 @@ from .const import (
     PRODUCTS,
     SITE_INFO,
     VEHICLE_DATA_ALT,
-)
-
-from tests.common import (
-    async_capture_events,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
 )
 
 # VIN used across the Teslemetry test fixtures.

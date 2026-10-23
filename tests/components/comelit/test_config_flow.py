@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from aiocomelit import CannotAuthenticate, CannotConnect
 from aiocomelit.const import BRIDGE, VEDO
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.comelit.config_flow import (
     InvalidPin,
@@ -28,8 +29,6 @@ from .const import (
     VEDO_PIN,
     VEDO_PORT,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_flow_serial_bridge(
