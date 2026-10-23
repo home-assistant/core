@@ -1168,14 +1168,12 @@ class ConfigEntry[_DataT = Any]:
         if domain_is_integration:
             self._async_set_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS, None)
 
-        result = False
         try:
             unload_result: bool | None = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
 
             _async_process_entry_method_result(
                 integration.domain, "async_unload_entry", unload_result
             )
-            result = True
 
             # Only do side effects if we unloaded the integration
             if domain_is_integration:
@@ -1207,7 +1205,7 @@ class ConfigEntry[_DataT = Any]:
                 )
             return False
 
-        return result
+        return True
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
