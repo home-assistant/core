@@ -42,6 +42,7 @@ SENSOR_INCLUDE = ["current_temperature", "outside_temperature", "total_energy"]
 DHW_STATE_INCLUDE = [
     "operating_mode",
     "nominal_setpoint",
+    "dhw_current_setpoint",
     "dhw_actual_value_top_temperature",
 ]
 DHW_CONFIG_INCLUDE = ["reduced_setpoint", "nominal_setpoint_max"]
