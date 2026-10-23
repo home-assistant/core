@@ -30,7 +30,7 @@ class DobissCoordinator(DataUpdateCoordinator[dict[str, int | None]]):
             config_entry=entry,
             name="Dobiss",
             update_interval=timedelta(seconds=10),
-            always_update=False,
+            always_update=True,
         )
         self.client = client
         self._request_lock = Lock()

@@ -93,7 +93,9 @@ class DobissLight(CoordinatorEntity[DobissCoordinator], LightEntity):
         """Turn on, optionally setting a dimmer percentage."""
         brightness = None
         if ATTR_BRIGHTNESS in kwargs and self._light.dimmable:
-            brightness = round(brightness_to_value((1, 100), kwargs[ATTR_BRIGHTNESS]))
+            brightness = max(
+                1, round(brightness_to_value((1, 100), kwargs[ATTR_BRIGHTNESS]))
+            )
         await self._async_set_light(True, brightness)
 
     @override

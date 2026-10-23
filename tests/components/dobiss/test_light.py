@@ -1,5 +1,6 @@
 """Verify user-facing light behavior."""
 
+from asyncio import Event
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
@@ -42,6 +43,7 @@ async def test_state(hass: HomeAssistant) -> None:
     ("service", "extra", "on", "brightness", "state", "expected_brightness"),
     [
         ("turn_on", {"brightness": 255}, True, 100, "on", 255),
+        ("turn_on", {"brightness": 1}, True, 1, "on", 3),
         ("turn_on", {}, True, None, "on", 128),
         ("turn_off", {}, False, None, "off", None),
     ],
@@ -176,3 +178,38 @@ async def test_commands_preserve_polling_deadline(
     assert mock_client.light_states.await_count == 1
     assert hass.states.get("light.hall").state == "off"
     assert hass.states.get("light.kitchen").state == STATE_UNAVAILABLE
+
+
+async def test_poll_queued_behind_command(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    mock_entry: MockConfigEntry,
+) -> None:
+    """A poll corrects command feedback even when its result equals the old state."""
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_client.light_states.reset_mock()
+    command_started = Event()
+    release_command = Event()
+
+    async def delayed_command(*args: object, **kwargs: object) -> None:
+        command_started.set()
+        await release_command.wait()
+
+    mock_client.set_light.side_effect = delayed_command
+    command = hass.async_create_background_task(
+        mock_entry.runtime_data.async_set_light(LIGHTS[1], on=True),
+        "Dobiss delayed test command",
+    )
+    await command_started.wait()
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=False)
+    assert mock_client.light_states.await_count == 0
+    release_command.set()
+    await command
+    await hass.async_block_till_done()
+    assert mock_client.light_states.await_count == 1
+    assert hass.states.get("light.hall").state == "off"
