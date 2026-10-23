@@ -1317,7 +1317,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.bubbelbad_socket_1-entry]
+# name: test_platform_setup_and_discovery[switch.bubbelbad_channel_1_socket-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1327,11 +1327,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', 'pfhwb1v3i7cifa2tcp')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', 'pfhwb1v3i7cifa2tcp_channel_1')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bubbelbad_socket_1',
+    'entity_id': 'switch.bubbelbad_channel_1_socket',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1339,36 +1339,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Socket 1',
+    'object_id_base': 'Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Socket 1',
+    'original_name': 'Socket',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_socket',
+    'translation_key': 'socket',
     'unique_id': 'tuya.pfhwb1v3i7cifa2tcpswitch_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.bubbelbad_socket_1-state]
+# name: test_platform_setup_and_discovery[switch.bubbelbad_channel_1_socket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bubbelbad Socket 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Socket',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bubbelbad_socket_1',
+    'entity_id': 'switch.bubbelbad_channel_1_socket',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.bubbelbad_socket_2-entry]
+# name: test_platform_setup_and_discovery[switch.bubbelbad_channel_2_socket-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1378,11 +1378,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', 'pfhwb1v3i7cifa2tcp')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', 'pfhwb1v3i7cifa2tcp_channel_2')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bubbelbad_socket_2',
+    'entity_id': 'switch.bubbelbad_channel_2_socket',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1390,29 +1390,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Socket 2',
+    'object_id_base': 'Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Socket 2',
+    'original_name': 'Socket',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_socket',
+    'translation_key': 'socket',
     'unique_id': 'tuya.pfhwb1v3i7cifa2tcpswitch_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.bubbelbad_socket_2-state]
+# name: test_platform_setup_and_discovery[switch.bubbelbad_channel_2_socket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bubbelbad Socket 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Socket',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bubbelbad_socket_2',
+    'entity_id': 'switch.bubbelbad_channel_2_socket',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4486,6 +4486,108 @@
     'state': 'unknown',
   })
 # ---
+# name: test_platform_setup_and_discovery[switch.framboisier_channel_1_socket-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', '51tdkcsamisw9ukycp_channel_1')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.framboisier_channel_1_socket',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Socket',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Socket',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'socket',
+    'unique_id': 'tuya.51tdkcsamisw9ukycpswitch_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.framboisier_channel_1_socket-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Socket',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.framboisier_channel_1_socket',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.framboisier_channel_2_socket-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', '51tdkcsamisw9ukycp_channel_2')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.framboisier_channel_2_socket',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Socket',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Socket',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'socket',
+    'unique_id': 'tuya.51tdkcsamisw9ukycpswitch_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.framboisier_channel_2_socket-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Socket',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.framboisier_channel_2_socket',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_platform_setup_and_discovery[switch.framboisier_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4534,108 +4636,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[switch.framboisier_socket_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', '51tdkcsamisw9ukycp')]>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.framboisier_socket_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Socket 1',
-    'options': dict({
-    }),
-    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
-    'original_icon': None,
-    'original_name': 'Socket 1',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.51tdkcsamisw9ukycpswitch_1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[switch.framboisier_socket_1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Framboisier Socket 1',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.framboisier_socket_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_platform_setup_and_discovery[switch.framboisier_socket_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', '51tdkcsamisw9ukycp')]>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.framboisier_socket_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Socket 2',
-    'options': dict({
-    }),
-    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
-    'original_icon': None,
-    'original_name': 'Socket 2',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.51tdkcsamisw9ukycpswitch_2',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[switch.framboisier_socket_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Framboisier Socket 2',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.framboisier_socket_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
   })
 # ---
 # name: test_platform_setup_and_discovery[switch.framboisiers_switch_1-entry]
@@ -6949,7 +6949,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.keller_socket_1-entry]
+# name: test_platform_setup_and_discovery[switch.keller_channel_1_socket-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6959,11 +6959,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', 'g7af6lrt4miugbstcp')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', 'g7af6lrt4miugbstcp_channel_1')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.keller_socket_1',
+    'entity_id': 'switch.keller_channel_1_socket',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6971,36 +6971,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Socket 1',
+    'object_id_base': 'Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Socket 1',
+    'original_name': 'Socket',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_socket',
+    'translation_key': 'socket',
     'unique_id': 'tuya.g7af6lrt4miugbstcpswitch_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.keller_socket_1-state]
+# name: test_platform_setup_and_discovery[switch.keller_channel_1_socket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keller Socket 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Socket',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.keller_socket_1',
+    'entity_id': 'switch.keller_channel_1_socket',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.keller_socket_2-entry]
+# name: test_platform_setup_and_discovery[switch.keller_channel_2_socket-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7010,11 +7010,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', 'g7af6lrt4miugbstcp')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', 'g7af6lrt4miugbstcp_channel_2')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.keller_socket_2',
+    'entity_id': 'switch.keller_channel_2_socket',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7022,36 +7022,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Socket 2',
+    'object_id_base': 'Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Socket 2',
+    'original_name': 'Socket',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_socket',
+    'translation_key': 'socket',
     'unique_id': 'tuya.g7af6lrt4miugbstcpswitch_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.keller_socket_2-state]
+# name: test_platform_setup_and_discovery[switch.keller_channel_2_socket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keller Socket 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Socket',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.keller_socket_2',
+    'entity_id': 'switch.keller_channel_2_socket',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.keller_socket_3-entry]
+# name: test_platform_setup_and_discovery[switch.keller_channel_3_socket-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7061,11 +7061,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', 'g7af6lrt4miugbstcp')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', 'g7af6lrt4miugbstcp_channel_3')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.keller_socket_3',
+    'entity_id': 'switch.keller_channel_3_socket',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7073,29 +7073,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Socket 3',
+    'object_id_base': 'Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Socket 3',
+    'original_name': 'Socket',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_socket',
+    'translation_key': 'socket',
     'unique_id': 'tuya.g7af6lrt4miugbstcpswitch_3',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.keller_socket_3-state]
+# name: test_platform_setup_and_discovery[switch.keller_channel_3_socket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keller Socket 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 3 Socket',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.keller_socket_3',
+    'entity_id': 'switch.keller_channel_3_socket',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -12668,7 +12668,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.terras_socket_1-entry]
+# name: test_platform_setup_and_discovery[switch.terras_channel_1_socket-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -12678,11 +12678,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', 'gt1q9tldv1opojrtcp')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', 'gt1q9tldv1opojrtcp_channel_1')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.terras_socket_1',
+    'entity_id': 'switch.terras_channel_1_socket',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -12690,36 +12690,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Socket 1',
+    'object_id_base': 'Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Socket 1',
+    'original_name': 'Socket',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_socket',
+    'translation_key': 'socket',
     'unique_id': 'tuya.gt1q9tldv1opojrtcpswitch_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.terras_socket_1-state]
+# name: test_platform_setup_and_discovery[switch.terras_channel_1_socket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terras Socket 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Socket',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.terras_socket_1',
+    'entity_id': 'switch.terras_channel_1_socket',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.terras_socket_2-entry]
+# name: test_platform_setup_and_discovery[switch.terras_channel_2_socket-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -12729,11 +12729,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', 'gt1q9tldv1opojrtcp')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', 'gt1q9tldv1opojrtcp_channel_2')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.terras_socket_2',
+    'entity_id': 'switch.terras_channel_2_socket',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -12741,29 +12741,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Socket 2',
+    'object_id_base': 'Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Socket 2',
+    'original_name': 'Socket',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_socket',
+    'translation_key': 'socket',
     'unique_id': 'tuya.gt1q9tldv1opojrtcpswitch_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.terras_socket_2-state]
+# name: test_platform_setup_and_discovery[switch.terras_channel_2_socket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terras Socket 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Socket',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.terras_socket_2',
+    'entity_id': 'switch.terras_channel_2_socket',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
