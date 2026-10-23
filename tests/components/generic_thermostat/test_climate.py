@@ -2379,4 +2379,3 @@ async def test_no_flip_flop_with_band_narrower_than_epsilon(
     _setup_sensor(hass, 25.0)
     await hass.async_block_till_done()
     assert calls == []
-    
