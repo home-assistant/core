@@ -1,8 +1,6 @@
 """LLM tools for the config integration."""
 
-from collections.abc import Iterable, Mapping
-import re
-from typing import Any, override
+from typing import override
 
 import probatio
 
@@ -39,75 +37,20 @@ _STATUS_STATES: dict[str, set[ConfigEntryState]] = {
     },
 }
 _DOMAIN_VALIDATOR = probatio.All(str, probatio.Strip, probatio.NonEmpty())
-_PLACEHOLDER_RE = re.compile(r"\{([^{}]+)\}")
 
 
-def _interpolate_placeholders(
-    text: str | None, placeholders: Mapping[str, Any] | None
-) -> str | None:
-    """Replace {placeholder} tokens in a translation string."""
-    if not text or not placeholders:
-        return text
-    return _PLACEHOLDER_RE.sub(
-        lambda m: (
-            str(placeholders[key])
-            if (key := m.group(1)) in placeholders
-            else m.group(0)
-        ),
-        text,
-    )
-
-
-def _resolve_entry_reason(
-    entry: ConfigEntry,
-    exc_trans: dict[str, str],
-    config_trans: dict[str, str],
-) -> str | None:
+def _resolve_entry_reason(entry: ConfigEntry) -> str | None:
     """Resolve a human-readable error reason for a ConfigEntry."""
     if key := entry.error_reason_translation_key:
-        trans_domain = entry.error_reason_translation_domain or entry.domain
-        msg = exc_trans.get(f"component.{trans_domain}.exceptions.{key}.message")
-        if resolved := _interpolate_placeholders(
-            msg, entry.error_reason_translation_placeholders
-        ):
-            return resolved
-        return entry.reason or key
-    if (reason := entry.reason) is not None:
-        return config_trans.get(
-            f"component.{entry.domain}.config.error.{reason}", reason
+        message = translation.async_get_exception_message(
+            entry.error_reason_translation_domain or entry.domain,
+            key,
+            entry.error_reason_translation_placeholders,
         )
-    return None
-
-
-async def _async_load_entry_error_translations(
-    hass: HomeAssistant,
-    entries: Iterable[ConfigEntry],
-    language: str | None,
-) -> tuple[dict[str, str], dict[str, str]]:
-    """Load exception and config error translations for entries with error reasons."""
-    exc_domains: set[str] = set()
-    config_domains: set[str] = set()
-    for entry in entries:
-        if entry.error_reason_translation_key:
-            exc_domains.add(entry.error_reason_translation_domain or entry.domain)
-        elif entry.reason is not None:
-            config_domains.add(entry.domain)
-
-    if not exc_domains and not config_domains:
-        return {}, {}
-
-    lang = language if language and language != "*" else (hass.config.language or "en")
-    exc_trans = (
-        await translation.async_get_translations(hass, lang, "exceptions", exc_domains)
-        if exc_domains
-        else {}
-    )
-    config_trans = (
-        await translation.async_get_translations(hass, lang, "config", config_domains)
-        if config_domains
-        else {}
-    )
-    return exc_trans, config_trans
+        if message != key:
+            return message
+        return entry.reason or key
+    return entry.reason
 
 
 def _matches_status(entry: ConfigEntry, status: str) -> bool:
@@ -122,11 +65,7 @@ def _matches_status(entry: ConfigEntry, status: str) -> bool:
     return entry.state in _STATUS_STATES[status]
 
 
-def _format_config_entry(
-    entry: ConfigEntry,
-    exc_trans: dict[str, str],
-    config_trans: dict[str, str],
-) -> JsonObjectType:
+def _format_config_entry(entry: ConfigEntry) -> JsonObjectType:
     """Format a ConfigEntry into a compact dictionary for LLM consumption."""
     result: JsonObjectType = {
         "entry_id": entry.entry_id,
@@ -138,7 +77,7 @@ def _format_config_entry(
         result["disabled_by"] = entry.disabled_by.value
     if entry.source == config_entries.SOURCE_IGNORE:
         result["source"] = entry.source
-    if (reason := _resolve_entry_reason(entry, exc_trans, config_trans)) is not None:
+    if (reason := _resolve_entry_reason(entry)) is not None:
         result["reason"] = reason
     return result
 
@@ -210,15 +149,10 @@ class GetConfigEntriesTool(Tool):
                 entry for entry in entries if _matches_status(entry, status_filter)
             ]
 
-        exc_trans, config_trans = await _async_load_entry_error_translations(
-            hass, entries, llm_context.language
-        )
-
         return ToolResult(
             data={
                 "result": list[JsonValueType](
-                    _format_config_entry(entry, exc_trans, config_trans)
-                    for entry in entries
+                    _format_config_entry(entry) for entry in entries
                 )
             }
         )

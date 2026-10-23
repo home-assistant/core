@@ -1,6 +1,5 @@
 """Tests for the config LLM tools."""
 
-from collections.abc import Iterable
 from typing import Any
 from unittest.mock import patch
 
@@ -100,17 +99,10 @@ async def test_call_through_api(
     )
 
 
-MOCK_TRANSLATIONS: dict[str, dict[str, str]] = {
-    "exceptions": {
-        "component.hue.exceptions.cannot_connect.message": (
-            "Failed to connect to bridge at {host} ({unknown})"
-        ),
-    },
-    "config": {
-        "component.zwave_js.config.error.cannot_connect": (
-            "Failed to connect to Z-Wave stick"
-        ),
-    },
+MOCK_EXCEPTION_TRANSLATIONS: dict[str, str] = {
+    "component.hue.exceptions.cannot_connect.message": (
+        "Failed to connect to bridge at {host}."
+    ),
 }
 
 
@@ -150,7 +142,7 @@ MOCK_TRANSLATIONS: dict[str, dict[str, str]] = {
                     "domain": "hue",
                     "title": "Hue Bridge",
                     "state": "setup_retry",
-                    "reason": "Failed to connect to bridge at 192.168.1.50 ({unknown})",
+                    "reason": "Failed to connect to bridge at 192.168.1.50",
                 },
                 {
                     "entry_id": "entry_untranslated_exc_error",
@@ -247,7 +239,7 @@ MOCK_TRANSLATIONS: dict[str, dict[str, str]] = {
                     "domain": "hue",
                     "title": "Hue Bridge",
                     "state": "setup_retry",
-                    "reason": "Failed to connect to bridge at 192.168.1.50 ({unknown})",
+                    "reason": "Failed to connect to bridge at 192.168.1.50",
                 },
                 {
                     "entry_id": "entry_untranslated_exc_error",
@@ -297,7 +289,7 @@ async def test_get_config_entries_filtering_and_error_reasons(
         title="Z-Wave Stick",
         entry_id="entry_error",
         state=ConfigEntryState.SETUP_ERROR,
-        reason="cannot_connect",
+        reason="Failed to connect to Z-Wave stick",
     )
     error_entry.add_to_hass(hass)
 
@@ -350,18 +342,9 @@ async def test_get_config_entries_filtering_and_error_reasons(
 
     tool = GetConfigEntriesTool()
 
-    async def _mock_get_translations(
-        hass_obj: HomeAssistant,
-        language: str,
-        category: str,
-        integrations: Iterable[str] | None = None,
-        config_flow: bool | None = None,
-    ) -> dict[str, str]:
-        return MOCK_TRANSLATIONS.get(category, {})
-
     with patch(
-        "homeassistant.components.config.llm.translation.async_get_translations",
-        side_effect=_mock_get_translations,
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value=MOCK_EXCEPTION_TRANSLATIONS,
     ):
         res = await tool.async_call(
             hass, llm.ToolInput(tool.name, tool_args), llm_context
