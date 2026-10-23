@@ -37,9 +37,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State as HassState
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.state import async_reproduce_state
 
 from . import setup_with_selected_platforms
 
@@ -716,6 +717,63 @@ async def test_set_temperature_rejected_in_auto(
 
     assert exc.value.translation_key == "set_temperature_in_auto_mode"
     mock_bsblan.thermostat.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_reduced_setpoint")
+@pytest.mark.parametrize(
+    ("temperature", "preset", "temporary_mode"),
+    [(20.0, PRESET_COMFORT, 2), (17.0, PRESET_ECO, 1)],
+)
+async def test_restore_scene_in_auto(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    temperature: float,
+    preset: str,
+    temporary_mode: int,
+) -> None:
+    """Test restoring a scene in auto only applies its mode and preset."""
+    mock_bsblan.state.return_value = _circuit_state(1, "20.0")
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    await async_reproduce_state(
+        hass,
+        [
+            HassState(
+                ENTITY_ID,
+                HVACMode.AUTO,
+                {ATTR_TEMPERATURE: temperature, ATTR_PRESET_MODE: preset},
+            )
+        ],
+    )
+
+    assert mock_bsblan.thermostat.call_args_list == [
+        call(hvac_mode=1, circuit=1),
+        call(temporary_mode=temporary_mode, circuit=1),
+    ]
+
+
+@pytest.mark.usefixtures("mock_reduced_setpoint")
+async def test_set_temperature_with_auto_matching_setpoint(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test switching to auto with a stored setpoint only switches the mode."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TEMPERATURE: 17.0,
+            ATTR_HVAC_MODE: HVACMode.AUTO,
+        },
+        blocking=True,
+    )
+
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=1, circuit=1)
 
 
 async def test_set_temperature_with_hvac_mode(
