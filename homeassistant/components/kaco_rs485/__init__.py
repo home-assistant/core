@@ -69,12 +69,6 @@ async def async_remove_config_entry_device(
             },
         },
     )
-    # Without enabled entities the coordinator stops polling but keeps the port.
-    if (
-        entry.state is ConfigEntryState.LOADED
-        and not entry.runtime_data.enabled_addresses()
-    ):
-        hass.config_entries.async_schedule_reload(entry.entry_id)
     return True
 
 

@@ -6,7 +6,7 @@ from typing import override
 from kaco_rs485 import AsyncBus, BusError, InverterState, KacoRs485Client, status_text
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -47,7 +47,7 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
         self._opened = False
         self._reported_dark: dict[int, bool] = {}
 
-    def enabled_addresses(self) -> list[int]:
+    def _enabled_addresses(self) -> list[int]:
         """Return the addresses whose device has not been disabled.
 
         Disabled inverters are not polled, so they cost no bus time.
@@ -74,12 +74,21 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
     async def async_close(self) -> None:
         """Close the bus if it is open."""
         if self._opened:
-            await self._bus.close()
             self._opened = False
+            await self._bus.close()
+
+    @callback
+    @override
+    def _unschedule_refresh(self) -> None:
+        """Release the port once no entity listens; polling stops with it."""
+        super()._unschedule_refresh()
+        self.config_entry.async_create_background_task(
+            self.hass, self.async_close(), "kaco_rs485 close bus"
+        )
 
     @override
     async def _async_update_data(self) -> dict[int, InverterState]:
-        if (addresses := self.enabled_addresses()) != self._addresses:
+        if (addresses := self._enabled_addresses()) != self._addresses:
             self._addresses = addresses
             self._client = KacoRs485Client(self._bus, addresses)
 

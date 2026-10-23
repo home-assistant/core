@@ -15,7 +15,7 @@ from homeassistant.components.kaco_rs485.const import (
 from homeassistant.components.kaco_rs485.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import CYCLES_UNTIL_DARK, run_cycles
@@ -288,6 +288,32 @@ async def test_deleting_the_last_enabled_inverter_releases_the_port(
     await hass.async_block_till_done()
 
     assert init_integration.data[CONF_ADDRESSES] == [1, 4]
+    assert not mock_bus.opened
+
+
+@pytest.mark.parametrize("silenced", [(2,)])
+async def test_deleting_the_last_listening_inverter_releases_the_port(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_bus: FakeBus,
+    ws_client: MockHAClientWebSocket,
+) -> None:
+    """Test the port is let go when the other inverters' entities are disabled."""
+    for address in (1, 4):
+        for entity in er.async_entries_for_device(
+            entity_registry, _device(device_registry, init_integration, address).id
+        ):
+            entity_registry.async_update_entity(
+                entity.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+    await hass.async_block_till_done()
+    device = _device(device_registry, init_integration, 2)
+
+    assert (await ws_client.remove_device(device.id))["success"]
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     assert not mock_bus.opened
 
 
