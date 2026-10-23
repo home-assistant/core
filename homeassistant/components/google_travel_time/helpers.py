@@ -42,13 +42,17 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 CLIENT_TIMEOUT = 30
+REFERRER_BLOCKED_REASON = "API_KEY_HTTP_REFERRER_BLOCKED"
 
 
-def get_client(hass: HomeAssistant, api_key: str) -> GoogleMapsRoutingApi:
+def get_client(
+    hass: HomeAssistant, api_key: str, referrer: str | None = None
+) -> GoogleMapsRoutingApi:
     """Return a Google Maps Routes API client."""
     return GoogleMapsRoutingApi(
         session=async_get_clientsession(hass),
         api_key=api_key,
+        referrer=referrer,
         timeout=CLIENT_TIMEOUT,
     )
 
@@ -56,10 +60,10 @@ def get_client(hass: HomeAssistant, api_key: str) -> GoogleMapsRoutingApi:
 def is_routes_api_disabled(err: GoogleMapsRoutingApiAuthError) -> bool:
     """Return whether the Routes API can't be used with this API key.
 
-    This is a permission denied error (HTTP 403), such as the API not being enabled
-    or being excluded by the API key restrictions.
+    Any permission denied error (HTTP 403) other than a blocked HTTP referrer, such as
+    the API not being enabled or being excluded by the API key restrictions.
     """
-    return err.status == "PERMISSION_DENIED"
+    return err.status == "PERMISSION_DENIED" and err.reason != REFERRER_BLOCKED_REASON
 
 
 def convert_time(time_str: str) -> dt.datetime:
@@ -116,6 +120,7 @@ async def validate_config_entry(
     api_key: str,
     origin: str,
     destination: str,
+    referrer: str | None = None,
 ) -> None:
     """Validate the config entry data."""
     origin_waypoint = convert_to_waypoint(hass, origin)
@@ -123,7 +128,7 @@ async def validate_config_entry(
     if origin_waypoint is None or destination_waypoint is None:
         raise UnknownException("Unable to resolve the origin or destination")
 
-    client = get_client(hass, api_key)
+    client = get_client(hass, api_key, referrer)
     try:
         await client.async_compute_routes(
             origin=origin_waypoint,
@@ -135,6 +140,9 @@ async def validate_config_entry(
         if is_routes_api_disabled(auth_error):
             _LOGGER.error("Routes API is disabled: %s", auth_error)
             raise PermissionDeniedException from auth_error
+        if auth_error.reason == REFERRER_BLOCKED_REASON:
+            _LOGGER.error("Referrer blocked: %s", auth_error)
+            raise InvalidReferrerException from auth_error
         _LOGGER.error("Request denied: %s", auth_error)
         raise InvalidApiKeyException from auth_error
     except GoogleMapsRoutingApiConnectionTimeoutError as timeout_error:
@@ -147,6 +155,10 @@ async def validate_config_entry(
 
 class InvalidApiKeyException(Exception):
     """Invalid API Key Error."""
+
+
+class InvalidReferrerException(Exception):
+    """HTTP referrer not allowed Error."""
 
 
 class UnknownException(Exception):

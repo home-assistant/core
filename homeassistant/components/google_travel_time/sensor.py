@@ -37,6 +37,7 @@ from .const import (
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_ORIGIN,
+    CONF_REFERRER,
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
@@ -80,7 +81,7 @@ async def async_setup_entry(
     destination = config_entry.data[CONF_DESTINATION]
     name = config_entry.title
 
-    client = get_client(hass, api_key)
+    client = get_client(hass, api_key, config_entry.data.get(CONF_REFERRER))
 
     sensors = [
         GoogleTravelTimeSensor(
