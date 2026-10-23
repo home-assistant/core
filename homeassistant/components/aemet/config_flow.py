@@ -82,8 +82,9 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 schema,
-                user_input
-                or {
+                {**user_input, CONF_LOCATION: location}
+                if user_input is not None
+                else {
                     CONF_LOCATION: {
                         CONF_LATITUDE: self.hass.config.latitude,
                         CONF_LONGITUDE: self.hass.config.longitude,
