@@ -183,6 +183,151 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.CZ: (
+        TuyaSwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "1"},
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "2"},
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_3,
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "3"},
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "4"},
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_5,
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "5"},
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_6,
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "6"},
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_USB1,
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "1"},
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_USB2,
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "2"},
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_USB3,
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "3"},
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_USB4,
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "4"},
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_USB5,
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "5"},
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_USB6,
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "6"},
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="socket",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+    ),
+    DeviceCategory.DGHSXJ: (
+        TuyaSwitchEntityDescription(
+            key=DPCode.WIRELESS_BATTERYLOCK,
+            translation_key="battery_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.CRY_DETECTION_SWITCH,
+            translation_key="cry_detection",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.DECIBEL_SWITCH,
+            translation_key="sound_detection",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.RECORD_SWITCH,
+            translation_key="video_recording",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MOTION_RECORD,
+            translation_key="motion_recording",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.BASIC_PRIVATE,
+            translation_key="privacy_mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.BASIC_FLIP,
+            translation_key="flip",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.BASIC_OSD,
+            translation_key="time_watermark",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.BASIC_WDR,
+            translation_key="wide_dynamic_range",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MOTION_TRACKING,
+            translation_key="motion_tracking",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MOTION_SWITCH,
+            translation_key="motion_alarm",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MOTION_AREA_SWITCH,
+            translation_key="motion_detection_zone",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.IPC_AUTO_SIREN,
+            translation_key="auto_siren",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.DJ: (
         # There are sockets available with an RGB light
         # that advertise as `dj`, but provide an additional
@@ -925,12 +1070,6 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
         ),
     ),
 }
-
-# Socket (duplicate of `pc`)
-SWITCHES[DeviceCategory.CZ] = SWITCHES[DeviceCategory.PC]
-
-# Smart Camera - Low power consumption camera (duplicate of `sp`)
-SWITCHES[DeviceCategory.DGHSXJ] = SWITCHES[DeviceCategory.SP]
 
 
 async def async_setup_entry(
