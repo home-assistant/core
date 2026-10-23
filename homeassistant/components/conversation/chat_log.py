@@ -119,11 +119,12 @@ def async_get_chat_log(
     is_new_log = session.conversation_id not in all_chat_logs
 
     if chat_log := all_chat_logs.get(session.conversation_id):
+        # Check the stored log, so a claim holds for parallel requests.
+        _check_owner(chat_log, user_input)
         chat_log = replace(chat_log, content=chat_log.content.copy())
     else:
         chat_log = ChatLog(hass, session.conversation_id)
-
-    _check_owner(chat_log, user_input)
+        _check_owner(chat_log, user_input)
 
     if chat_log_delta_listener:
         chat_log.delta_listener = chat_log_delta_listener

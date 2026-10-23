@@ -1,6 +1,8 @@
 """Test the conversation session."""
 
+import asyncio
 from collections.abc import AsyncGenerator
+import contextvars
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -225,6 +227,43 @@ async def test_chat_log_without_user_input_owner(
             async_get_chat_log(hass, session, mock_conversation_input),
         ):
             pass
+
+
+async def test_chat_log_without_user_input_parallel_claim(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test a parallel request cannot claim a chat log that is being claimed."""
+    other_input = ConversationInput(
+        text="Hello",
+        context=Context(user_id="other-user-id"),
+        conversation_id=None,
+        device_id=None,
+        satellite_id=None,
+        language="en",
+        agent_id="mock-agent-id",
+    )
+
+    with chat_session.async_get_chat_session(hass) as session:
+        with async_get_chat_log(hass, session) as chat_log:
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+
+        async def open_other_chat_log() -> None:
+            with async_get_chat_log(hass, session, other_input):
+                pass
+
+        mock_conversation_input.context = Context(user_id=hass_admin_user.id)
+        with (
+            async_get_chat_log(hass, session, mock_conversation_input),
+            pytest.raises(Unauthorized),
+        ):
+            # A new context runs the request like a separate task would.
+            await asyncio.create_task(
+                open_other_chat_log(), context=contextvars.Context()
+            )
 
 
 class AdminAPI(llm.API):
