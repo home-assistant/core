@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -73,6 +73,22 @@ async def test_number_entities(
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_reduced_setpoint_unknown_without_circuit_config(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reduced setpoint is unknown until the circuit config is fetched."""
+    static = mock_bsblan.static_values.return_value
+    mock_bsblan.static_values.side_effect = [static, BSBLANError("General error")]
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
+
+    state = hass.states.get(REDUCED_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_number_entities_not_available(
