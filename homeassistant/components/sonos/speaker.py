@@ -113,6 +113,7 @@ class SonosSpeaker:
         self.household_id: str = soco.household_id
         self.media = SonosMedia(hass, soco)
         self._av_transport_uri: str | None = None
+        self._av_transport_uri_set = False
         self._plex_plugin: PlexPlugin | None = None
         self._share_link_plugin: ShareLinkPlugin | None = None
         self.available: bool = True
@@ -553,6 +554,7 @@ class SonosSpeaker:
         # Only included when it changes, which can be in an event skipped below
         if "av_transport_uri" in event.variables:
             self._av_transport_uri = event.variables["av_transport_uri"]
+            self._av_transport_uri_set = True
 
         # The new coordinator can be provided in a media update event but
         # before the ZoneGroupState updates. If this happens the playback
@@ -598,8 +600,9 @@ class SonosSpeaker:
         self.hass.async_add_executor_job(
             self.media.update_media_from_event,
             event.variables | {"av_transport_uri": self._av_transport_uri},
-            "av_transport_uri" in event.variables,
+            self._av_transport_uri_set,
         )
+        self._av_transport_uri_set = False
 
     @callback
     def async_update_volume(self, event: SonosEvent) -> None:

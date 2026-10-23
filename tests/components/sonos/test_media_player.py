@@ -1523,10 +1523,18 @@ async def test_release_uses_uri_from_its_own_event(
 
 
 @pytest.mark.usefixtures("async_autosetup_sonos")
+@pytest.mark.parametrize(
+    "loading_state",
+    [
+        pytest.param("STOPPED", id="stopped"),
+        pytest.param("TRANSITIONING", id="transitioning"),
+    ],
+)
 async def test_release_skipped_when_paused_media_replayed(
     hass: HomeAssistant,
     soco: MockSoCo,
     no_media_event: SonosMockEvent,
+    loading_state: str,
 ) -> None:
     """Test playing the same paused media again does not release it."""
     hass.config.internal_url = "http://10.0.0.1:8123"
@@ -1535,8 +1543,9 @@ async def test_release_skipped_when_paused_media_replayed(
         variables | {"transport_state": "STOPPED", "av_transport_uri": HASS_MEDIA_URI},
         variables | {"transport_state": "PLAYING"},
         variables | {"transport_state": "PAUSED_PLAYBACK"},
-        # Loading the same URL again reports it with STOPPED
-        variables | {"transport_state": "STOPPED", "av_transport_uri": HASS_MEDIA_URI},
+        # Loading the same URL again reports it
+        variables
+        | {"transport_state": loading_state, "av_transport_uri": HASS_MEDIA_URI},
         # Later loading updates only include what changed
         variables | {"transport_state": "STOPPED", "number_of_tracks": "2"},
         variables | {"transport_state": "PLAYING"},
