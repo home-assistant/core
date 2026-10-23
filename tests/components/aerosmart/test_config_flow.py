@@ -182,6 +182,25 @@ async def test_fractional_connection_values_are_rejected(
     mock_modbus_api.temporary_unit.assert_not_called()
     mock_setup_entry.assert_not_called()
 
+    valid_data = dict(data)
+    valid_data[invalid_field] = {
+        CONF_PORT: 502,
+        CONF_UNIT_VENTILATION: 1,
+        CONF_UNIT_HEAT_PUMP: 2,
+        CONF_BAUDRATE: 19200,
+    }[invalid_field]
+    with patch(
+        "homeassistant.components.aerosmart.config_flow."
+        "AerosmartConfigFlow._async_can_connect",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], valid_data
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_setup_entry.assert_called_once()
+
 
 @pytest.mark.usefixtures("mock_modbus_unit_ventilation", "mock_modbus_unit_heat_pump")
 async def test_cannot_connect(

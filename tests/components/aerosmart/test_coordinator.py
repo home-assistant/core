@@ -43,6 +43,7 @@ async def test_all_failed_report_preserves_causes(
 
 async def test_device_info_includes_model_and_software_version(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit_ventilation: MockModbusUnit,
 ) -> None:
@@ -54,8 +55,8 @@ async def test_device_info_includes_model_and_software_version(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = dr.async_get(hass).async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.model == "3"
