@@ -95,7 +95,7 @@ def convert_content_to_messages(
                 )
             )
         elif isinstance(content, conversation.AssistantContent):
-            if content.content or content.tool_calls:
+            if content.content is not None or content.tool_calls:
                 messages.append(
                     AssistantMessage(
                         content=content.content,
@@ -147,13 +147,12 @@ async def transform_stream(
                 yield {"role": "assistant"}
                 message_started = True
 
-            if not is_unset(delta.content) and delta.content:
+            if not is_unset(delta.content) and delta.content is not None:
                 text = _extract_text(delta.content)
-                if text:
-                    if not message_started:
-                        yield {"role": "assistant"}
-                        message_started = True
-                    yield {"content": text}
+                if not message_started:
+                    yield {"role": "assistant"}
+                    message_started = True
+                yield {"content": text}
 
             if not is_unset(delta.tool_calls) and delta.tool_calls:
                 if not message_started:
@@ -173,8 +172,14 @@ async def transform_stream(
                         and not is_unset(tool_call.function.name)
                     ):
                         entry["name"] += tool_call.function.name
-                    if tool_call.function and tool_call.function.arguments:
-                        entry["arguments"] += tool_call.function.arguments
+                    if tool_call.function:
+                        arguments = tool_call.function.arguments
+                        if not is_unset(arguments) and arguments:
+                            entry["arguments"] += (
+                                arguments
+                                if isinstance(arguments, str)
+                                else json_dumps(arguments)
+                            )
 
             if choice.finish_reason == "tool_calls" and current_tool_calls:
                 tool_inputs: list[llm.ToolInput] = []
@@ -250,12 +255,10 @@ async def handle_chat_log(entity, chat_log: conversation.ChatLog) -> None:
             if err.status_code in (401, 403):
                 # Trigger the reauthentication flow for a revoked/expired key.
                 entity.entry.async_start_reauth(entity.hass)
-            LOGGER.error("Error talking to Mistral: %s", err)
             raise HomeAssistantError("Error talking to Mistral") from err
         except HomeAssistantError:
             raise
         except Exception as err:
-            LOGGER.error("Error talking to Mistral: %s", err)
             raise HomeAssistantError("Error talking to Mistral") from err
 
         if not chat_log.unresponded_tool_results:

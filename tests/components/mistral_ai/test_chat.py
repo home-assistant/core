@@ -96,6 +96,14 @@ def test_convert_assistant_without_content_is_skipped() -> None:
     assert convert_content_to_messages(content) == []
 
 
+def test_convert_assistant_with_empty_content_is_kept() -> None:
+    """An explicit empty assistant content is a valid silent turn."""
+    content = [conversation.AssistantContent(agent_id="a", content="")]
+    messages = convert_content_to_messages(content)
+    assert len(messages) == 1
+    assert messages[0].content == ""
+
+
 def test_convert_tool_result() -> None:
     """Tool result message."""
     content = [
@@ -242,6 +250,35 @@ async def test_transform_stream_text_without_role() -> None:
     events = [_event(content="Hello")]
     result = await _collect(_Stream(events))
     assert result == [{"role": "assistant"}, {"content": "Hello"}]
+
+
+async def test_transform_stream_empty_content() -> None:
+    """An explicit empty content string is emitted as a silent response."""
+    events = [_event(role="assistant", content="")]
+    result = await _collect(_Stream(events))
+    assert result == [{"role": "assistant"}, {"content": ""}]
+
+
+async def test_transform_stream_tool_arguments_dict() -> None:
+    """A complete dictionary of tool arguments is serialized."""
+    events = [
+        _event(
+            role="assistant",
+            tool_calls=[
+                ToolCall(
+                    id="tc1",
+                    index=0,
+                    function=FunctionCall(
+                        name="HassTurnOn", arguments={"name": "light"}
+                    ),
+                )
+            ],
+        ),
+        _event(finish="tool_calls"),
+    ]
+    result = await _collect(_Stream(events))
+    tool_calls_result = [d for d in result if "tool_calls" in d]
+    assert tool_calls_result[0]["tool_calls"][0].tool_args == {"name": "light"}
 
 
 async def test_handle_chat_log_requires_system_message() -> None:

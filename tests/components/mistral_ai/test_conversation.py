@@ -104,6 +104,29 @@ async def test_streamed_response(
     assert result.response.speech["plain"]["speech"] == "Hello world"
 
 
+@pytest.mark.usefixtures("mock_init_component")
+async def test_silent_response(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client,
+) -> None:
+    """An explicit empty response is returned as a silent response."""
+    mock_client.chat.stream_async.return_value = _Stream(
+        [
+            _event(role="assistant"),
+            _event(content="", finish="stop"),
+        ]
+    )
+
+    result = await conversation.async_converse(
+        hass, "hi", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == ""
+    assert not result.continue_conversation
+
+
 @pytest.mark.usefixtures(
     "mock_client", "mock_config_entry_with_assist", "mock_init_component"
 )
