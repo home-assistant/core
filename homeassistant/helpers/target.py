@@ -274,17 +274,13 @@ def _async_extract_excluded(
     """Resolve the exclude block of a target selection."""
     # All entities are resolved, so excluding an area also excludes its hidden,
     # config and diagnostic entities when those are part of the targeted entities.
-    excluded = _async_extract_referenced_entity_ids(
+    return _async_extract_referenced_entity_ids(
         hass,
         exclude,
         expand_group=expand_group,
         primary_entities_only=False,
         include_hidden=True,
     )
-    # Expansion drops group entity IDs, but group entities are still candidates
-    # when targeting all entities.
-    excluded.referenced.update(exclude.entity_ids)
-    return excluded
 
 
 def _async_extract_referenced_entity_ids(
