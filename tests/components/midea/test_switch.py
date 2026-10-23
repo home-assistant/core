@@ -196,6 +196,17 @@ def _set_attribute_calls(device: DummyDevice) -> list[tuple]:
             ),
             id="e2",
         ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.FC,
+                attributes={
+                    FCAttributes.power: True,
+                    FCAttributes.mode: "auto",
+                    FCAttributes.child_lock: False,
+                },
+            ),
+            id="fc",
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -214,44 +225,84 @@ async def test_switch_state_snapshot(
         await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-async def test_ac_switch_services(
+@pytest.mark.parametrize(
+    ("device", "attribute", "expected_state"),
+    [
+        pytest.param(
+            DummyDevice(
+                DeviceType.AC,
+                attributes={
+                    ACAttributes.power: True,
+                    ACAttributes.mode: 1,
+                    ACAttributes.target_temperature: 22.0,
+                    ACAttributes.indoor_temperature: 21.0,
+                    ACAttributes.aux_heating: False,
+                },
+            ),
+            ACAttributes.aux_heating,
+            STATE_OFF,
+            id="ac",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.FC,
+                attributes={FCAttributes.power: False, FCAttributes.mode: "auto"},
+            ),
+            FCAttributes.power,
+            STATE_OFF,
+            id="fc_off",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.FC,
+                attributes={FCAttributes.power: True, FCAttributes.mode: "auto"},
+            ),
+            FCAttributes.power,
+            STATE_ON,
+            id="fc_on",
+        ),
+    ],
+)
+async def test_switch_services(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    device: DummyDevice,
+    attribute: str,
+    expected_state: str,
 ) -> None:
-    """Test AC switch service calls reach the device."""
-    device = DummyDevice(
-        DeviceType.AC,
-        attributes={
-            ACAttributes.power: True,
-            ACAttributes.mode: 1,
-            ACAttributes.target_temperature: 22.0,
-            ACAttributes.indoor_temperature: 21.0,
-            ACAttributes.aux_heating: False,
-        },
-    )
+    """Test switch services update only the selected device attribute."""
+    original_attributes = device.attributes.copy()
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
         await setup_integration(hass, config_entry, device)
 
-    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_aux_heating"]
-
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_{attribute}"]
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == "off"
+    assert state.state == expected_state
 
     await _assert_service_call(
         hass,
         entity_entry.entity_id,
         SERVICE_TURN_ON,
-        [("set_attribute", ACAttributes.aux_heating, True)],
+        [("set_attribute", attribute, True)],
         device,
     )
+    await hass.async_block_till_done()
+    assert device.attributes == {**original_attributes, attribute: True}
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_ON
+
     await _assert_service_call(
         hass,
         entity_entry.entity_id,
         SERVICE_TURN_OFF,
-        [("set_attribute", ACAttributes.aux_heating, False)],
+        [("set_attribute", attribute, False)],
         device,
     )
+    await hass.async_block_till_done()
+    assert device.attributes == {**original_attributes, attribute: False}
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(
@@ -575,58 +626,6 @@ async def test_washing_machine_switch_services(
         device,
     )
     await hass.async_block_till_done()
-    assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == STATE_OFF
-
-
-@pytest.mark.parametrize(
-    ("power", "expected_state"),
-    [
-        pytest.param(False, STATE_OFF, id="off"),
-        pytest.param(True, STATE_ON, id="on"),
-    ],
-)
-async def test_air_purifier_power_switch(
-    hass: HomeAssistant,
-    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
-    power: bool,
-    expected_state: str,
-) -> None:
-    """Test reported power and power services independently of the mode."""
-    device = DummyDevice(
-        DeviceType.FC,
-        attributes={FCAttributes.power: power, FCAttributes.mode: "auto"},
-    )
-    config_entry = mock_config_entry(device)
-    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
-        await setup_integration(hass, config_entry, device)
-
-    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_power"]
-    assert entity_entry.entity_category is None
-    assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == expected_state
-
-    await _assert_service_call(
-        hass,
-        entity_entry.entity_id,
-        SERVICE_TURN_ON,
-        [("set_attribute", FCAttributes.power, True)],
-        device,
-    )
-    await hass.async_block_till_done()
-    assert device.attributes[FCAttributes.mode] == "auto"
-    assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == STATE_ON
-
-    await _assert_service_call(
-        hass,
-        entity_entry.entity_id,
-        SERVICE_TURN_OFF,
-        [("set_attribute", FCAttributes.power, False)],
-        device,
-    )
-    await hass.async_block_till_done()
-    assert device.attributes[FCAttributes.mode] == "auto"
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == STATE_OFF
 
