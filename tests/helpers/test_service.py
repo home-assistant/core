@@ -1811,6 +1811,45 @@ async def test_async_extract_entities_all_exclude(
     }
 
 
+@pytest.mark.parametrize(
+    ("expand_group", "expected_entity_ids"),
+    [
+        (True, {"light.living_room", "light.bathroom"}),
+        (False, {"light.living_room", "light.bedroom", "light.bathroom"}),
+    ],
+)
+async def test_async_extract_entities_all_exclude_group(
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    expand_group: bool,
+    expected_entity_ids: set[str],
+) -> None:
+    """Test excluded groups are expanded when targeting all."""
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
+    await Group.async_create_group(
+        hass,
+        "test",
+        created_by_service=False,
+        entity_ids=["light.kitchen", "light.bedroom"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+        context=None,
+    )
+    call = ServiceCall(
+        hass,
+        "light",
+        "turn_on",
+        {"entity_id": "all", "exclude": {"entity_id": ["group.test", "light.kitchen"]}},
+    )
+    extracted = await service.async_extract_entities(
+        mock_entities.values(), call, expand_group=expand_group
+    )
+    assert {entity.entity_id for entity in extracted} == expected_entity_ids
+
+
 async def test_service_call_exclude(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
