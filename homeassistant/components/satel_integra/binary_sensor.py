@@ -29,7 +29,7 @@ from .coordinator import (
     SatelIntegraSystemStatusCoordinator,
     SatelIntegraSystemStatusData,
 )
-from .entity import SatelIntegraEntity, SatelIntegraPanelEntity
+from .entity import SatelIntegraBaseEntity, SatelIntegraEntity
 
 PARALLEL_UPDATES = 0
 
@@ -282,7 +282,7 @@ class SatelIntegraBinarySensor[_CoordinatorT: SatelIntegraBaseCoordinator](
 
 
 class SatelIntegraSystemStatusBinarySensor(
-    SatelIntegraPanelEntity[SatelIntegraSystemStatusCoordinator], BinarySensorEntity
+    SatelIntegraBaseEntity[SatelIntegraSystemStatusCoordinator], BinarySensorEntity
 ):
     """Representation of a Satel Integra system status binary sensor."""
 
