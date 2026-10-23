@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from . import (
     MOCK_CODE,
     MOCK_ENTRY_ID,
-    get_monitor_callbacks,
+    get_output_changed_callback,
     setup_integration,
     trigger_connection_status_update,
 )
@@ -73,27 +73,26 @@ async def test_switches(
 
 
 @pytest.mark.parametrize(
-    ("violated_outputs", "expected_state"),
+    ("output_state", "expected_state"),
     [
-        ({2: 1}, STATE_UNKNOWN),
-        ({1: 0}, STATE_OFF),
-        ({1: 1}, STATE_ON),
+        (None, STATE_UNKNOWN),
+        (False, STATE_OFF),
+        (True, STATE_ON),
     ],
 )
 async def test_switch_initial_state(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
-    violated_outputs: dict[int, int],
+    output_state: bool | None,
     expected_state: str,
 ) -> None:
     """Test switch has a correct initial state after initialization."""
 
     # Instantly call callback to ensure we have initial data set
     async def mock_start(**_: object) -> None:
-        _, _, outputs_callback = get_monitor_callbacks(mock_satel)
-
-        outputs_callback(violated_outputs)
+        mock_satel.state.outputs[1].active = output_state
+        get_output_changed_callback(mock_satel)()
 
     mock_satel.start = AsyncMock(side_effect=mock_start)
 
@@ -112,18 +111,15 @@ async def test_switch_callback(
 
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
 
-    _, _, output_update_method = get_monitor_callbacks(mock_satel)
+    output_update_method = get_output_changed_callback(mock_satel)
 
-    output_update_method({1: 1})
+    mock_satel.state.outputs[1].active = True
+    output_update_method()
     assert hass.states.get("switch.switchable_output").state == STATE_ON
 
-    output_update_method({1: 0})
+    mock_satel.state.outputs[1].active = False
+    output_update_method()
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
-
-    # The client library should always report all entries, but test
-    # that we set the status correctly if it doesn't
-    output_update_method({2: 1})
-    assert hass.states.get("switch.switchable_output").state == STATE_UNKNOWN
 
 
 async def test_switch_change_state(
@@ -180,8 +176,8 @@ async def test_switch_last_reported(
     async_fire_time_changed(hass)
 
     # Run callbacks with same payload
-    _, _, output_update_method = get_monitor_callbacks(mock_satel)
-    output_update_method({1: 0})
+    output_update_method = get_output_changed_callback(mock_satel)
+    output_update_method()
 
     assert first_reported != hass.states.get("switch.switchable_output").last_reported
     assert len(events) == 1  # last_reported shall not fire state_changed

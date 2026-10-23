@@ -604,3 +604,64 @@ def _async_deprecate_setting_mirrors(
             )
 
     entry.async_on_unload(async_at_started(hass, _async_deprecate))
+
+
+# Camera entities on the private API that a public event entity replaces, keyed
+# by their own (platform, key), pointing at the event entity and the repair text.
+_RING_AND_MOTION_SENSOR_REPLACEMENTS: dict[
+    tuple[str, str], tuple[Platform, str | None, str]
+] = {
+    (Platform.BINARY_SENSOR, "doorbell"): (
+        Platform.EVENT,
+        "doorbell",
+        "doorbell_sensor_deprecated",
+    ),
+    (Platform.SENSOR, "doorbell_last_trip_time"): (
+        Platform.EVENT,
+        "doorbell",
+        "last_event_sensor_deprecated",
+    ),
+    (Platform.SENSOR, "motion_last_trip_time"): (
+        Platform.EVENT,
+        "motion_detection",
+        "last_event_sensor_deprecated",
+    ),
+}
+
+
+@callback
+def async_is_new_ring_or_motion_sensor(
+    hass: HomeAssistant, platform: Platform, mac: str, key: str
+) -> bool:
+    """Return whether a deprecated camera ring or motion sensor is not registered yet.
+
+    New installs do not get entities that are about to be removed. Matched per
+    platform: the doorbell text and event entities share the binary sensor's key.
+    """
+    if (platform, key) not in _RING_AND_MOTION_SENSOR_REPLACEMENTS:
+        return False
+    return (
+        er.async_get(hass).async_get_entity_id(platform, DOMAIN, f"{mac}_{key}") is None
+    )
+
+
+@callback
+def async_deprecate_ring_and_motion_sensors(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Deprecate the camera ring and motion sensors on the private API.
+
+    The doorbell and motion detection event entities cover them through the
+    public API.
+
+    Runs after platform setup so the repair can name the replacement.
+
+    Added in 2026.11.0
+    """
+    _async_deprecate_setting_mirrors(
+        hass,
+        entry,
+        {camera.mac for camera in bootstrap.cameras.values()},
+        _RING_AND_MOTION_SENSOR_REPLACEMENTS,
+        PRIVATE_ONLY_BREAKS_IN,
+    )

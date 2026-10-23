@@ -30,6 +30,15 @@
     "step": {}
   },
   "exceptions": {
+    "async_migrate_entry_failed": {
+      "message": "Failed to migrate the config entry."
+    },
+    "async_setup_entry_failed": {
+      "message": "Failed to set up the config entry."
+    },
+    "async_unload_entry_failed": {
+      "message": "Failed to unload the config entry."
+    },
     "component_import_err": {
       "message": "Unable to import {domain}: {error}"
     },

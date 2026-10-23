@@ -1,6 +1,11 @@
 """Utility helpers for the Teltonika integration."""
 
+from collections.abc import Mapping
+from typing import Any
+
 from yarl import URL
+
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 
 
 def normalize_url(host: str) -> str:
@@ -35,3 +40,24 @@ def get_url_variants(host: str) -> list[str]:
     https_url = str(url.with_scheme("https"))
     http_url = str(url.with_scheme("http"))
     return [https_url, http_url]
+
+
+def url_to_entry_data(url: str) -> dict[str, Any]:
+    """Split a base URL into the host, port and SSL config entry data."""
+    parsed = URL(normalize_url(url))
+    return {
+        CONF_HOST: parsed.host,
+        CONF_PORT: parsed.port,
+        CONF_SSL: parsed.scheme == "https",
+    }
+
+
+def entry_data_to_url(data: Mapping[str, Any]) -> str:
+    """Build the base URL from the host, port and SSL config entry data."""
+    return str(
+        URL.build(
+            scheme="https" if data[CONF_SSL] else "http",
+            host=data[CONF_HOST],
+            port=data[CONF_PORT],
+        )
+    )

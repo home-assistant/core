@@ -629,7 +629,6 @@ def _setup_chime_with_doorbell(
     chime: Chime, doorbell: Camera, volume: int = 50
 ) -> None:
     """Set up chime with paired doorbell for testing."""
-    chime.camera_ids = [doorbell.id]
     chime.ring_settings = [
         RingSetting(
             camera_id=doorbell.id,
@@ -782,7 +781,6 @@ async def test_chime_ring_volume_multiple_cameras(
     doorbell2.name = "Test Doorbell 2"
     doorbell2.mac = "aa:bb:cc:dd:ee:02"
 
-    chime.camera_ids = [doorbell.id, doorbell2.id]
     chime.ring_settings = [
         RingSetting(
             camera_id=doorbell.id,

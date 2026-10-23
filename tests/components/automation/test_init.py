@@ -4890,6 +4890,150 @@ async def test_unavailable_automation_changed_entity_id(
     )
 
 
+BROKEN_AUTOMATION_ISSUE_ID = "automation.bad_automation_validation_failed_schema"
+
+
+@pytest.mark.parametrize(
+    "reload_data",
+    [pytest.param({}, id="all"), pytest.param({CONF_ID: "bad"}, id="single")],
+)
+async def test_reload_keeps_ignored_validation_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    reload_data: dict[str, Any],
+) -> None:
+    """Test an ignored issue survives a reload replacing a still broken automation."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {automation.DOMAIN: {"id": "bad", "alias": "bad_automation"}},
+    )
+    ir.async_ignore_issue(hass, automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID, True)
+    issue = issue_registry.async_get_issue(
+        automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID
+    )
+    assert issue.dismissed_version is not None
+    old_state = hass.states.get("automation.bad_automation")
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    # The changed config makes the reload replace the still broken automation
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            automation.DOMAIN: {
+                "id": "bad",
+                "alias": "bad_automation",
+                "description": "Still broken",
+            }
+        },
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN, SERVICE_RELOAD, reload_data, blocking=True
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("automation.bad_automation") is not old_state
+    assert events == []
+    assert (
+        issue_registry.async_get_issue(automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID)
+        == issue
+    )
+
+
+@pytest.mark.parametrize(
+    "reload_data",
+    [pytest.param({}, id="all"), pytest.param({CONF_ID: "bad"}, id="single")],
+)
+@pytest.mark.parametrize(
+    "new_config",
+    [
+        pytest.param(
+            {
+                "id": "bad",
+                "alias": "bad_automation",
+                "triggers": {"platform": "event", "event_type": "test_event"},
+                "actions": [],
+            },
+            id="fixed",
+        ),
+        pytest.param([], id="removed"),
+    ],
+)
+async def test_reload_deletes_resolved_validation_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    reload_data: dict[str, Any],
+    new_config: dict[str, Any] | list[Any],
+) -> None:
+    """Test the issue is deleted when a broken automation is fixed or removed."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {automation.DOMAIN: {"id": "bad", "alias": "bad_automation"}},
+    )
+    ir.async_ignore_issue(hass, automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID, True)
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={automation.DOMAIN: new_config},
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN, SERVICE_RELOAD, reload_data, blocking=True
+        )
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID
+    )
+
+
+@pytest.mark.parametrize(
+    "reload_data",
+    [pytest.param({}, id="all"), pytest.param({CONF_ID: "bad"}, id="single")],
+)
+async def test_failed_reload_deletes_issue_of_removed_automation(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    reload_data: dict[str, Any],
+) -> None:
+    """Test the issue of a removed automation is deleted if adding new ones fails."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {automation.DOMAIN: {"id": "bad", "alias": "bad_automation"}},
+    )
+    ir.async_ignore_issue(hass, automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID, True)
+
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={
+                automation.DOMAIN: {
+                    "id": "bad",
+                    "alias": "bad_automation",
+                    "description": "Still broken",
+                }
+            },
+        ),
+        patch(
+            "homeassistant.components.automation.util._create_automation_entities",
+            side_effect=HomeAssistantError("Boom"),
+        ),
+        pytest.raises(HomeAssistantError, match="Boom"),
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN, SERVICE_RELOAD, reload_data, blocking=True
+        )
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID
+    )
+
+
 class _MockDiagnosticTrigger(Trigger):
     """A new-style trigger that fires on demand and otherwise reports why not."""
 
