@@ -631,29 +631,37 @@ async def test_preset_updates_after_slow_fetch(
 
 @pytest.mark.usefixtures("mock_reduced_setpoint")
 @pytest.mark.parametrize(
-    ("current_setpoint", "expected_call", "expected_static_calls"),
+    (
+        "hvac_mode_int",
+        "current_setpoint",
+        "temperature",
+        "expected_call",
+        "expected_static_calls",
+    ),
     [
-        ("20.0", {"target_temperature": 19.5}, 2),
-        ("17.0", {"temp_reduced_setpoint": 19.5}, 3),
-        ("21.0", {"target_temperature": 19.5}, 2),
+        (3, "20.0", 19.5, {"target_temperature": 19.5}, 2),
+        (2, "17.0", 16.5, {"temp_reduced_setpoint": 16.5}, 3),
     ],
+    ids=["comfort", "reduced"],
 )
-async def test_set_temperature_writes_setpoint_in_effect(
+async def test_set_temperature_writes_permanent_level(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    hvac_mode_int: int,
     current_setpoint: str,
+    temperature: float,
     expected_call: dict[str, float],
     expected_static_calls: int,
 ) -> None:
-    """Test setting the temperature writes the comfort or reduced setpoint."""
-    mock_bsblan.state.return_value = _circuit_state(1, current_setpoint)
+    """Test setting the temperature in a permanent mode writes its setpoint."""
+    mock_bsblan.state.return_value = _circuit_state(hvac_mode_int, current_setpoint)
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19.5},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -665,38 +673,31 @@ async def test_set_temperature_writes_setpoint_in_effect(
 
 
 @pytest.mark.parametrize(
-    ("temperature", "expected_call"),
-    [
-        (19.5, {"temp_reduced_setpoint": 19.5}),
-        (21.0, {"target_temperature": 21.0}),
-    ],
+    ("hvac_mode_int", "service_hvac_mode"),
+    [(1, None), (3, HVACMode.AUTO)],
+    ids=["in_auto", "switching_to_auto"],
 )
-async def test_set_temperature_with_equal_setpoints(
+async def test_set_temperature_rejected_in_auto(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    temperature: float,
-    expected_call: dict[str, float],
+    hvac_mode_int: int,
+    service_hvac_mode: HVACMode | None,
 ) -> None:
-    """Test equal setpoints can be lowered and raised again."""
-    mock_bsblan.state.return_value = _circuit_state(1, "20.0")
-    mock_bsblan.static_values.return_value = StaticState.model_validate(
-        {
-            "temp_reduced_setpoint": _temp_param("20.0"),
-            "heating_protective_setpoint": _temp_param("8.0"),
-            "comfort_setpoint_max": _temp_param("26.0"),
-        }
-    )
+    """Test the target temperature cannot be set while the time program runs."""
+    mock_bsblan.state.return_value = _circuit_state(hvac_mode_int, "20.0")
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+    service_data: dict[str, Any] = {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19.5}
+    if service_hvac_mode is not None:
+        service_data[ATTR_HVAC_MODE] = service_hvac_mode
 
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
-        blocking=True,
-    )
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, service_data, blocking=True
+        )
 
-    mock_bsblan.thermostat.assert_called_once_with(**expected_call, circuit=1)
+    assert exc.value.translation_key == "set_temperature_in_auto_mode"
+    mock_bsblan.thermostat.assert_not_called()
 
 
 async def test_set_temperature_with_hvac_mode(
@@ -726,35 +727,32 @@ async def test_set_temperature_with_hvac_mode(
 
 @pytest.mark.usefixtures("mock_reduced_setpoint")
 @pytest.mark.parametrize(
-    ("current_setpoint", "temperature", "translation_key"),
+    ("hvac_mode_int", "current_setpoint", "temperature", "translation_key"),
     [
-        # Comfort in effect, below the reduced setpoint (17.0)
-        ("20.0", 16.5, "comfort_below_reduced"),
-        # Reduced in effect, above the comfort setpoint (20.0)
-        ("17.0", 21.0, "reduced_above_comfort"),
+        # Permanent comfort, below the reduced setpoint (17.0)
+        (3, "20.0", 16.5, "comfort_below_reduced"),
+        # Permanent reduced, above the comfort setpoint (20.0)
+        (2, "17.0", 21.0, "reduced_above_comfort"),
     ],
 )
 async def test_set_temperature_rejects_setpoint_order(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    hvac_mode_int: int,
     current_setpoint: str,
     temperature: float,
     translation_key: str,
 ) -> None:
     """Test the reduced setpoint cannot end up above the comfort one."""
-    mock_bsblan.state.return_value = _circuit_state(1, current_setpoint)
+    mock_bsblan.state.return_value = _circuit_state(hvac_mode_int, current_setpoint)
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_TEMPERATURE: temperature,
-                ATTR_HVAC_MODE: HVACMode.AUTO,
-            },
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
             blocking=True,
         )
 
