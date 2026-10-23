@@ -489,6 +489,8 @@ async def test_async_browse_videos_hierarchy(
             day_date_long="October 11, 2026",
             night=False,
             success=False,
+            keogram_url="images/keogram_day_20261011.jpg",
+            startrail_url="images/startrail_day_20261011.jpg",
         ),
     ]
     mock_indi_allsky_client.get_media_url.side_effect = lambda p: (
@@ -511,11 +513,14 @@ async def test_async_browse_videos_hierarchy(
     res_videos = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos#2026#10"
     )
-    assert len(res_videos.children) == 3
+    assert len(res_videos.children) == 5
     titles = [c.title for c in res_videos.children]
     assert "Night Timelapse - October 11, 2026" in titles
     assert "Night Keogram - October 11, 2026" in titles
     assert "Night Star Trail - October 11, 2026" in titles
+    assert "Day Timelapse - October 11, 2026" not in titles
+    assert "Day Keogram - October 11, 2026" in titles
+    assert "Day Star Trail - October 11, 2026" in titles
     assert (
         res_videos.children[1].thumbnail
         == f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL2tlb2dyYW0yMDI2MTAxMS5qcGc="

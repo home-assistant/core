@@ -582,22 +582,21 @@ class IndiAllSkyMediaSource(MediaSource):
         seen_media_urls: set[str] = set()
 
         for vid in videos:
-            if not vid.success or not vid.url:
-                continue
-
             tod_str = "Night" if vid.night else "Day"
             date_str = vid.day_date_long or vid.day_date
-            children.append(
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"{entry.entry_id}#media#{vid.url}",
-                    media_class=MediaClass.VIDEO,
-                    media_content_type=MediaType.VIDEO,
-                    title=f"{tod_str} Timelapse - {date_str}",
-                    can_play=True,
-                    can_expand=False,
+
+            if vid.success and vid.url:
+                children.append(
+                    BrowseMediaSource(
+                        domain=DOMAIN,
+                        identifier=f"{entry.entry_id}#media#{vid.url}",
+                        media_class=MediaClass.VIDEO,
+                        media_content_type=MediaType.VIDEO,
+                        title=f"{tod_str} Timelapse - {date_str}",
+                        can_play=True,
+                        can_expand=False,
+                    )
                 )
-            )
 
             if vid.keogram_url and vid.keogram_url not in seen_media_urls:
                 seen_media_urls.add(vid.keogram_url)
