@@ -13,6 +13,7 @@ from midealocal.devices.da import DeviceAttributes as DAAttributes
 from midealocal.devices.db import DeviceAttributes as DBAttributes
 from midealocal.devices.dc import DeviceAttributes as DCAttributes
 from midealocal.devices.e2 import DeviceAttributes as E2Attributes
+from midealocal.devices.fc import DeviceAttributes as FCAttributes
 from midealocal.exceptions import SocketException
 import pytest
 from pytest_homeassistant.common import (
@@ -576,6 +577,71 @@ async def test_washing_machine_switch_services(
     await hass.async_block_till_done()
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("power", "expected_state"),
+    [
+        pytest.param(False, STATE_OFF, id="off"),
+        pytest.param(True, STATE_ON, id="on"),
+    ],
+)
+async def test_air_purifier_power_switch(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    power: bool,
+    expected_state: str,
+) -> None:
+    """Test reported power and power services independently of the mode."""
+    device = DummyDevice(
+        DeviceType.FC,
+        attributes={FCAttributes.power: power, FCAttributes.mode: "auto"},
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_power"]
+    assert entity_entry.entity_category is None
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == expected_state
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_ON,
+        [("set_attribute", FCAttributes.power, True)],
+        device,
+    )
+    await hass.async_block_till_done()
+    assert device.attributes[FCAttributes.mode] == "auto"
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_ON
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_OFF,
+        [("set_attribute", FCAttributes.power, False)],
+        device,
+    )
+    await hass.async_block_till_done()
+    assert device.attributes[FCAttributes.mode] == "auto"
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_OFF
+
+
+async def test_air_purifier_power_switch_requires_attribute(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test a purifier without a power attribute gets no power switch."""
+    device = DummyDevice(DeviceType.FC, attributes={FCAttributes.mode: "auto"})
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    assert f"{TEST_DEVICE_ID}_power" not in entity_entries(hass, config_entry)
 
 
 async def test_a1_pump_services(
