@@ -17,7 +17,7 @@ PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 type LibreSyncConfigEntry = ConfigEntry[LibreSyncClient]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LibreSyncConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LibreSyncConfigEntry) -> None:
     """Set up LibreSync from a config entry."""
     client = LibreSyncClient(entry.data[CONF_HOST])
     try:
@@ -49,7 +49,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LibreSyncConfigEntry) ->
     update_device(client.state)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 def _device_updater(
@@ -69,6 +68,6 @@ def _device_updater(
     return update
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LibreSyncConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LibreSyncConfigEntry) -> None:
     """Unload a config entry. The client disconnects after the platforms."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
