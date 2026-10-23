@@ -81,12 +81,18 @@ def get_models_pager():
     )
     model_31_flash_tts.name = "models/gemini-3.1-flash-tts-preview"
 
+    model_38_flash_tts = Mock(
+        supported_actions=["generateContent"],
+    )
+    model_38_flash_tts.name = "models/gemini-3.8-flash-tts"
+
     async def models_pager():
         yield model_25_flash
         yield model_20_flash
         yield model_15_flash
         yield model_15_pro
         yield model_31_flash_tts
+        yield model_38_flash_tts
 
     return models_pager()
 
@@ -1017,30 +1023,25 @@ async def test_tts_sampling_options_model_switch_and_reset(
 ) -> None:
     """TTS keeps dormant temperature through actual reconfigure/reload requests."""
 
-    async def sampling_models_pager() -> AsyncGenerator[Mock]:
-        async for model in get_models_pager():
-            yield model
-        model = Mock(supported_actions=["generateContent"])
-        model.name = "models/gemini-3.8-flash-tts"
-        yield model
+    sampling_model = "models/gemini-3.1-flash-tts-preview"
 
     subentry = mock_config_entry.subentries["ulid-tts"]
     advanced = {
         CONF_RECOMMENDED: False,
         CONF_TEMPERATURE: 0.2,
-        CONF_CHAT_MODEL: RECOMMENDED_TTS_MODEL,
+        CONF_CHAT_MODEL: sampling_model,
     }
     hass.config_entries.async_update_subentry(
         mock_config_entry, subentry, data=advanced
     )
     await hass.async_block_till_done()
     for model, expected in (
-        (RECOMMENDED_TTS_MODEL, {"temperature": 0.2}),
-        ("models/gemini-3.8-flash-tts", {}),
-        (RECOMMENDED_TTS_MODEL, {"temperature": 0.2}),
+        (sampling_model, {"temperature": 0.2}),
+        (RECOMMENDED_TTS_MODEL, {}),
+        (sampling_model, {"temperature": 0.2}),
     ):
         with patch(
-            "google.genai.models.AsyncModels.list", return_value=sampling_models_pager()
+            "google.genai.models.AsyncModels.list", return_value=get_models_pager()
         ):
             flow = await mock_config_entry.start_subentry_reconfigure_flow(
                 hass, subentry.subentry_id
@@ -1084,9 +1085,7 @@ async def test_tts_sampling_options_model_switch_and_reset(
             key: config[key] for key in ("temperature", "topP", "topK") if key in config
         } == expected
         assert "thinkingConfig" not in config
-    with patch(
-        "google.genai.models.AsyncModels.list", return_value=sampling_models_pager()
-    ):
+    with patch("google.genai.models.AsyncModels.list", return_value=get_models_pager()):
         flow = await mock_config_entry.start_subentry_reconfigure_flow(
             hass, subentry.subentry_id
         )
@@ -1125,5 +1124,5 @@ async def test_tts_sampling_options_model_switch_and_reset(
     config = mock_genai_transport.call_args.kwargs["http_request"].data[
         "generationConfig"
     ]
-    assert config["temperature"] == 1.0
+    assert "temperature" not in config
     assert "thinkingConfig" not in config
