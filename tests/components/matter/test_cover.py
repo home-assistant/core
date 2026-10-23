@@ -1384,7 +1384,7 @@ async def test_closure_cover_venetian_blinds(
     assert state.attributes["current_tilt_position"] == 80
 
 
-@pytest.mark.parametrize("node_fixture", ["mock_closure_roof_window"])
+@pytest.mark.parametrize("node_fixture", ["mock_closure_roof_window_matterbridge"])
 async def test_closure_cover_rotate_panel(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -1627,7 +1627,7 @@ async def test_closure_cover_gate(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["mock_closure_roof_window"])
+@pytest.mark.parametrize("node_fixture", ["mock_closure_roof_window_matterbridge"])
 @pytest.mark.usefixtures("matter_node")
 async def test_closure_cover_roof_window_real_device(
     hass: HomeAssistant,

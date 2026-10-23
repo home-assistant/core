@@ -68,7 +68,7 @@ FIXTURES = [
     "mock_closure_garage_door",
     "mock_closure_gate",
     "mock_closure_roof_window",
-    "mock_closure_roof_window_2",
+    "mock_closure_roof_window_matterbridge",
     "mock_closure_shutter",
     "mock_closure_tilt_only",
     "mock_closure_venetian_blinds",

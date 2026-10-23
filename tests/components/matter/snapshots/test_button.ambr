@@ -4941,7 +4941,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[mock_closure_roof_window_2][button.mock_closure_roof_window_identify-entry]
+# name: test_buttons[mock_closure_roof_window][button.mock_closure_roof_window_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4978,7 +4978,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[mock_closure_roof_window_2][button.mock_closure_roof_window_identify-state]
+# name: test_buttons[mock_closure_roof_window][button.mock_closure_roof_window_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',

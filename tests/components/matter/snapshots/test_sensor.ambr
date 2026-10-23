@@ -24016,7 +24016,7 @@
     'state': '2025-01-01T02:29:13+00:00',
   })
 # ---
-# name: test_sensors[mock_closure_roof_window_2][sensor.mock_closure_roof_window_boot_reason-entry]
+# name: test_sensors[mock_closure_roof_window][sensor.mock_closure_roof_window_boot_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -24063,7 +24063,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_closure_roof_window_2][sensor.mock_closure_roof_window_boot_reason-state]
+# name: test_sensors[mock_closure_roof_window][sensor.mock_closure_roof_window_boot_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -24086,7 +24086,7 @@
     'state': 'software_reset',
   })
 # ---
-# name: test_sensors[mock_closure_roof_window_2][sensor.mock_closure_roof_window_reboot_count-entry]
+# name: test_sensors[mock_closure_roof_window][sensor.mock_closure_roof_window_reboot_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -24125,7 +24125,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_closure_roof_window_2][sensor.mock_closure_roof_window_reboot_count-state]
+# name: test_sensors[mock_closure_roof_window][sensor.mock_closure_roof_window_reboot_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Closure Roof Window Reboot count',
@@ -24139,7 +24139,7 @@
     'state': '1',
   })
 # ---
-# name: test_sensors[mock_closure_roof_window_2][sensor.mock_closure_roof_window_thread_channel-entry]
+# name: test_sensors[mock_closure_roof_window][sensor.mock_closure_roof_window_thread_channel-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -24176,7 +24176,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_closure_roof_window_2][sensor.mock_closure_roof_window_thread_channel-state]
+# name: test_sensors[mock_closure_roof_window][sensor.mock_closure_roof_window_thread_channel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Closure Roof Window Thread channel',
@@ -24189,7 +24189,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[mock_closure_roof_window_2][sensor.mock_closure_roof_window_thread_network_name-entry]
+# name: test_sensors[mock_closure_roof_window][sensor.mock_closure_roof_window_thread_network_name-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -24226,7 +24226,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_closure_roof_window_2][sensor.mock_closure_roof_window_thread_network_name-state]
+# name: test_sensors[mock_closure_roof_window][sensor.mock_closure_roof_window_thread_network_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Closure Roof Window Thread network name',
@@ -24239,7 +24239,7 @@
     'state': 'ha-thread-1234',
   })
 # ---
-# name: test_sensors[mock_closure_roof_window_2][sensor.mock_closure_roof_window_thread_routing_role-entry]
+# name: test_sensors[mock_closure_roof_window][sensor.mock_closure_roof_window_thread_routing_role-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -24287,7 +24287,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_closure_roof_window_2][sensor.mock_closure_roof_window_thread_routing_role-state]
+# name: test_sensors[mock_closure_roof_window][sensor.mock_closure_roof_window_thread_routing_role-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -24311,7 +24311,7 @@
     'state': 'reed',
   })
 # ---
-# name: test_sensors[mock_closure_roof_window_2][sensor.mock_closure_roof_window_uptime-entry]
+# name: test_sensors[mock_closure_roof_window][sensor.mock_closure_roof_window_uptime-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -24348,7 +24348,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_closure_roof_window_2][sensor.mock_closure_roof_window_uptime-state]
+# name: test_sensors[mock_closure_roof_window][sensor.mock_closure_roof_window_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
