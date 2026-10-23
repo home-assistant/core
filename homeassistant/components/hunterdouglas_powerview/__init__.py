@@ -17,7 +17,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import DOMAIN, HUB_EXCEPTIONS, MANUFACTURER
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .model import PowerviewConfigEntry, PowerviewEntryData
-from .util import async_connect_hub, get_shade_ids
+from .util import async_connect_hub
 
 PARALLEL_UPDATES = 1
 
