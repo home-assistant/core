@@ -989,7 +989,9 @@ async def test_auth_status_on_first_device_refresh_asks_the_user(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.LOADED
+    # Only the user can clear a rejection, so setup fails as an authentication
+    # failure and Home Assistant starts the reauth flow and stops retrying.
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
@@ -1021,7 +1023,7 @@ async def test_rejected_session_on_first_device_refresh_asks_the_user(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
@@ -1059,6 +1061,74 @@ async def test_other_api_error_on_first_device_refresh_is_not_a_rejection(
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
+
+
+async def test_unreachable_icloud_on_first_device_refresh_retries_the_setup(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+) -> None:
+    """Test that an unreachable iCloud is reported as a connection problem."""
+    service, _ = polling_service
+    type(service).devices = PropertyMock(
+        side_effect=PyiCloudConnectionException(reason="Connection error")
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        config_entry.reason
+        == "An error occurred while connecting to iCloud: Connection error"
+    )
+    assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.parametrize(
+    ("error", "reauth"),
+    [
+        pytest.param(
+            PyiCloudAPIResponseException(
+                "Authentication required", AppleAuthError.LOGIN_TOKEN_EXPIRED
+            ),
+            True,
+            id="auth-status",
+        ),
+        pytest.param(PyiCloudFailedLoginException("rejected"), True, id="failed-login"),
+        pytest.param(
+            PyiCloudAPIResponseException("Service unavailable", 503),
+            False,
+            id="other-status",
+        ),
+    ],
+)
+async def test_devices_rejected_after_the_first_read_are_left_to_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    error: Exception,
+    reauth: bool,
+) -> None:
+    """Test that a rejection from the closing device update reaches the user.
+
+    The devices were read once to get this far, so this one rarely fails; when
+    it does, the entry still loads and the timer keeps polling.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch.object(IcloudAccount, "update_devices", side_effect=error):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert bool(hass.config_entries.flow.async_progress()) is reauth
+    assert (config_entry.state is ConfigEntryState.LOADED) is reauth
 
 
 async def test_auth_status_on_device_refresh_while_polling_asks_the_user(

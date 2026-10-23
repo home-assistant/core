@@ -86,12 +86,11 @@ def _mock_async_create_switch_entity(
 
 async def mock_async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
+) -> None:
     """Set up test config entry."""
     await hass.config_entries.async_forward_entry_setups(
         config_entry, [Platform.SWITCH]
     )
-    return True
 
 
 async def mock_async_setup_switch_entities(

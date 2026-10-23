@@ -18,7 +18,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FishAudioConfigEntry
 from .const import (
     CONF_BACKEND,
     CONF_LATENCY,
@@ -31,6 +30,7 @@ from .const import (
     TTS_SUPPORTED_LANGUAGES,
 )
 from .error import UnexpectedError
+from .types import FishAudioConfigEntry
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)

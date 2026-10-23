@@ -4,7 +4,6 @@ import abc
 import asyncio
 from collections.abc import Callable, Coroutine, Mapping
 from datetime import datetime, timedelta
-from enum import Enum, auto
 import functools as ft
 import logging
 from typing import TYPE_CHECKING, Any, ClassVar, Final, Unpack, cast, override
@@ -58,7 +57,6 @@ if TYPE_CHECKING:
     from homeassistant.components.recorder import Recorder
 
 from .models import Condition, ConditionCheckParams, ConditionConfig
-from .tracing import condition_trace_update_result
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,16 +69,6 @@ HISTORY_PRIMING_TIMEOUT = 10
 # very long `for:` durations; beyond this we rely on the live-state anchor, so
 # such conditions may only become true once enough time has elapsed since setup.
 MAX_HISTORY_PRIMING_LOOKBACK = timedelta(hours=6)
-
-
-class _HistoryPriming(Enum):
-    """Outcome of refining `for:` anchors from recorder history."""
-
-    COMPLETE = auto()
-    # History was read, or skipped, before the recorder processed its queue.
-    PENDING = auto()
-    FAILED = auto()
-
 
 ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_ANY: Final = "any"
@@ -97,6 +85,16 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = probatio.Schema(
         },
     }
 )
+
+
+def _references_registries(selection: TargetSelection) -> bool:
+    """Return if resolving the selection depends on the registries."""
+    return bool(
+        selection.area_ids
+        or selection.device_ids
+        or selection.floor_ids
+        or selection.label_ids
+    )
 
 
 class EntityConditionBase(Condition):
@@ -138,15 +136,10 @@ class EntityConditionBase(Condition):
         # Entities whose `for:` anchor is currently being resolved from recorder
         # history. While an entity is here the live listener leaves its anchor to
         # the priming, except that an invalidation removes it (the run broke, so
-        # the in-flight history is stale and live tracking takes over).
-        self._priming: set[str] = set()
-        # Entities whose `for:` anchor was resolved without complete recorder
-        # history. They are reported in the condition trace, and re-primed once
-        # the recorder processes its queue if that is what was missing. Mapped to
-        # the live anchor: the entity has been valid since, as live tracking saw.
-        self._incomplete_history: dict[str, datetime] = {}
-        self._unsub_recorder_ready: CALLBACK_TYPE | None = None
-        self._prime_tasks: set[asyncio.Task[None]] = set()
+        # the in-flight history is stale and live tracking takes over). Mapped to
+        # a token of the priming pass that owns the entity: when passes for an
+        # entity overlap, only the most recent one applies its result.
+        self._priming: dict[str, object] = {}
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
@@ -199,9 +192,7 @@ class EntityConditionBase(Condition):
         else:
             # An invalidation breaks the run, so any history being loaded for the
             # entity is now stale; stop priming it and let live tracking own it.
-            # Live tracking observed the break, so its next anchor is exact.
-            self._priming.discard(entity_id)
-            self._incomplete_history.pop(entity_id, None)
+            self._priming.pop(entity_id, None)
             self._valid_since.pop(entity_id, None)
 
     @property
@@ -223,18 +214,17 @@ class EntityConditionBase(Condition):
             action()
 
         selection = self._target_selection
+        exclude = selection.exclude
         # Explicit entity ids don't depend on the registries, skip the target tracker
-        if not (
-            selection.area_ids
-            or selection.device_ids
-            or selection.floor_ids
-            or selection.label_ids
+        if not _references_registries(selection) and (
+            exclude is None or not _references_registries(exclude)
         ):
+            excluded_entity_ids = exclude.entity_ids if exclude else set()
             return async_track_state_change_event(
                 self._hass,
                 {
                     entity_id
-                    for entity_id in selection.entity_ids
+                    for entity_id in selection.entity_ids - excluded_entity_ids
                     if split_entity_id(entity_id)[0] in self._domain_specs
                 },
                 state_changed,
@@ -304,8 +294,7 @@ class EntityConditionBase(Condition):
         changes.
         """
         for entity_id in removed:
-            self._priming.discard(entity_id)
-            self._incomplete_history.pop(entity_id, None)
+            self._priming.pop(entity_id, None)
             self._valid_since.pop(entity_id, None)
         await self._async_prime_valid_since(added)
 
@@ -314,85 +303,54 @@ class EntityConditionBase(Condition):
 
         For each currently-valid entity the anchor is the start of its current
         continuous run of validity, read from recorder history (bounded by
-        `MAX_HISTORY_PRIMING_LOOKBACK`). The earlier of that and the current
-        state's own anchor wins, so a run that began before the lookback window
-        is not cut short. When the recorder is unavailable or the read fails,
-        the current state's anchor is used alone. Before the recorder processes
-        its queue the history lacks queued changes, so the anchor may be too
-        generous; such entities are flagged in `_incomplete_history` and primed
-        again once the recorder is ready. An entity is added to
-        `_valid_since` only once this resolves, so a newly tracked entity does
-        not participate in the condition until its anchor is known — rather than
-        briefly using a conservative anchor that then changes.
+        `MAX_HISTORY_PRIMING_LOOKBACK`), including changes still queued in the
+        recorder. The earlier of that and the current state's own anchor wins,
+        so a run that began before the lookback window is not cut short. When
+        the recorder is unavailable or the read fails, the current state's
+        anchor is used alone. An entity is added to `_valid_since` only once
+        this resolves, so a newly tracked entity does not participate in the
+        condition until its anchor is known — rather than briefly using a
+        conservative anchor that then changes.
 
         While loading, an entity is held in `_priming`. A live change that keeps
         it valid is ignored (the run is unbroken, history is accurate), but an
         invalidation removes it from `_priming` so that we do not apply now-stale
-        history over the live tracking that observed the break.
+        history over the live tracking that observed the break. If a later pass
+        takes over the entity, e.g. because it left the target and came back
+        while this one loaded, this pass leaves the entity to the later one: its
+        history may predate a break that went unobserved while untracked.
         """
         # Conservative anchor from the live state for each currently-valid entity.
-        live_anchors: dict[str, datetime] = {}
-        for entity_id in entity_ids:
-            if (
-                (_state := self._hass.states.get(entity_id)) is None
-                or not self._should_include(_state)
-                or not self.is_valid_state(_state)
-            ):
-                continue
-            live_anchor = self._state_valid_since(_state)
-            # When priming again, live tracking has seen the entity stay valid
-            # since the earlier anchor; a later update must not cut that short.
-            if (earlier := self._incomplete_history.get(entity_id)) is not None:
-                live_anchor = min(live_anchor, earlier)
-            live_anchors[entity_id] = live_anchor
-        if not live_anchors:
+        anchors = {
+            entity_id: self._state_valid_since(_state)
+            for entity_id in entity_ids
+            if (_state := self._hass.states.get(entity_id)) is not None
+            and self._should_include(_state)
+            and self.is_valid_state(_state)
+        }
+        if not anchors:
             return
 
-        anchors = dict(live_anchors)
-        self._priming.update(anchors)
+        token = object()
+        self._priming.update(dict.fromkeys(anchors, token))
         try:
-            priming = _HistoryPriming.COMPLETE
             if "recorder" in self._hass.config.components:
-                priming = await self._async_refine_anchors_from_history(anchors)
+                await self._async_refine_anchors_from_history(anchors)
             for entity_id, anchor in anchors.items():
                 # Skip entities a live change invalidated mid-load: they were
                 # removed from `_priming`, the run broke, and live tracking (which
                 # saw the break) owns them — applying this history would be stale.
-                if entity_id not in self._priming:
-                    continue
-                self._valid_since[entity_id] = anchor
-                if priming is _HistoryPriming.COMPLETE:
-                    self._incomplete_history.pop(entity_id, None)
-                else:
-                    self._incomplete_history[entity_id] = live_anchors[entity_id]
+                # Also skip those a later pass took over.
+                if self._priming.get(entity_id) is token:
+                    self._valid_since[entity_id] = anchor
         finally:
-            self._priming.difference_update(anchors)
-
-        if (
-            priming is _HistoryPriming.PENDING
-            and self._incomplete_history
-            and self._unsub_recorder_ready is None
-        ):
-            manager = self._hass.data[DATA_HISTORY_PRIMING_MANAGER]
-            self._unsub_recorder_ready = manager.async_on_recorder_ready(
-                self._async_prime_incomplete_history
-            )
-
-    @callback
-    def _async_prime_incomplete_history(self) -> None:
-        """Prime entities again now that the recorder processes its queue."""
-        self._unsub_recorder_ready = None
-        # Tracked so it can be cancelled on unload.
-        task = self._hass.async_create_background_task(
-            self._async_prime_valid_since(set(self._incomplete_history)),
-            "condition history priming",
-        )
-        self._prime_tasks.add(task)
-        task.add_done_callback(self._prime_tasks.discard)
+            for entity_id in anchors:
+                if self._priming.get(entity_id) is token:
+                    del self._priming[entity_id]
 
     async def _async_refine_anchors_from_history(
         self, anchors: dict[str, datetime]
-    ) -> _HistoryPriming:
+    ) -> None:
         """Move each anchor in `anchors` back to the true start of its run.
 
         For each entity the anchor becomes the earlier of the recorded run start
@@ -401,7 +359,8 @@ class EntityConditionBase(Condition):
 
         The recorder only processes its queue once Home Assistant has started
         and any live schema migration is done, so the queue is not flushed
-        before that.
+        before that; the changes still queued are taken from the recorder's
+        index of them instead.
         """
         from sqlalchemy.exc import SQLAlchemyError  # noqa: PLC0415
 
@@ -433,30 +392,44 @@ class EntityConditionBase(Condition):
             )
 
         manager = self._hass.data[DATA_HISTORY_PRIMING_MANAGER]
-        recorder_ready = get_instance(self._hass).async_recorder_ready.is_set()
+        # None once the recorder is ready, then its queue is flushed instead.
+        queued = get_instance(self._hass).async_get_queued_states(anchors)
         try:
             # The timeout also covers waiting for our turn, so under a flood of
             # primings a condition falls back to its conservative anchor rather
             # than blocking on the queue indefinitely.
             async with asyncio.timeout(HISTORY_PRIMING_TIMEOUT):
                 historical_states = await manager.async_prime(
-                    _read_history, flush=recorder_ready
+                    _read_history, flush=queued is None
                 )
         except (SQLAlchemyError, TimeoutError) as err:
             # Best effort: keep the conservative anchors rather than failing.
-            _LOGGER.debug("Error priming condition durations from history: %s", err)
-            return _HistoryPriming.FAILED if recorder_ready else _HistoryPriming.PENDING
+            _LOGGER.debug("Error priming condition durations from history: %r", err)
+            return
 
-        for entity_id, rows in historical_states.items():
+        queued_states = queued or {}
+        for entity_id, anchor in anchors.items():
+            rows = cast(list[State], historical_states.get(entity_id, []))
+            entity_queued = queued_states.get(entity_id, [])
+            # If the recorder committed some of the snapshot before the read, the
+            # read returns those too, and a start state stamped at the window
+            # start: keep only older rows so that the rows stay in order.
+            if first_queued := next(
+                (_state for _state in entity_queued if _state is not None), None
+            ):
+                rows = [
+                    row
+                    for row in rows
+                    if row.last_updated_timestamp < first_queued.last_updated_timestamp
+                ]
             valid_since = self._valid_since_from_history(
-                entity_id, cast(list[State], rows)
+                entity_id, [*rows, *entity_queued]
             )
             if valid_since is not None:
-                anchors[entity_id] = min(valid_since, anchors[entity_id])
-        return _HistoryPriming.COMPLETE if recorder_ready else _HistoryPriming.PENDING
+                anchors[entity_id] = min(valid_since, anchor)
 
     def _valid_since_from_history(
-        self, entity_id: str, rows: list[State]
+        self, entity_id: str, rows: list[State | None]
     ) -> datetime | None:
         """Return when the current continuous run of valid states began.
 
@@ -466,12 +439,15 @@ class EntityConditionBase(Condition):
         in the window: an intervening invalid period breaks the run, so the
         anchor must come from after it.) Returns None when the latest recorded
         state is not valid, e.g. the recorder lags behind the live state machine.
+        A None row, an entity removed while queued, also breaks the run.
         """
         # Recorder rows are LazyState objects, which skip State.__init__ and so
         # never populate the domain/object_id that the validity checks rely on.
         domain, object_id = split_entity_id(entity_id)
         valid_since: datetime | None = None
         for _state in reversed(rows):
+            if _state is None:
+                break
             _state.domain = domain
             _state.object_id = object_id
             if not (self._should_include(_state) and self.is_valid_state(_state)):
@@ -485,11 +461,6 @@ class EntityConditionBase(Condition):
         for cb in self._on_unload:
             cb()
         self._on_unload.clear()
-        if self._unsub_recorder_ready is not None:
-            self._unsub_recorder_ready()
-            self._unsub_recorder_ready = None
-        for task in self._prime_tasks:
-            task.cancel()
 
     def _should_include(self, _state: State) -> bool:
         """Check if an entity should participate in any/all checks.
@@ -560,11 +531,6 @@ class EntityConditionBase(Condition):
             if (_state := self._hass.states.get(entity_id))
             and self._should_include(_state)
         ]
-        if self._incomplete_history and (
-            incomplete_history := self._incomplete_history.keys()
-            & {_state.entity_id for _state in entity_states}
-        ):
-            condition_trace_update_result(incomplete_history=sorted(incomplete_history))
         return self._matcher(entity_states)
 
 
@@ -920,8 +886,6 @@ class HistoryPrimingManager:
         self._flushing = False
         self._flush_ok = False
         self._query_lock = asyncio.Lock()
-        self._recorder_ready_jobs: set[Callable[[], None]] = set()
-        self._recorder_ready_task: asyncio.Task[None] | None = None
 
     async def async_prime[_T](
         self, job: Callable[[Recorder], Coroutine[Any, Any, _T]], *, flush: bool
@@ -931,34 +895,6 @@ class HistoryPrimingManager:
             await self._async_flush()
         async with self._query_lock:
             return await job(get_instance(self._hass))
-
-    @callback
-    def async_on_recorder_ready(self, job: Callable[[], None]) -> CALLBACK_TYPE:
-        """Call `job` once the recorder processes its queue."""
-        self._recorder_ready_jobs.add(job)
-        if self._recorder_ready_task is None:
-            # Not eager: if the recorder is already ready, an eager task would
-            # finish, and reset the attribute, before it is assigned here.
-            self._recorder_ready_task = self._hass.async_create_background_task(
-                self._async_run_recorder_ready_jobs(),
-                "condition history priming recorder ready",
-                eager_start=False,
-            )
-
-        @callback
-        def _unsub() -> None:
-            self._recorder_ready_jobs.discard(job)
-
-        return _unsub
-
-    async def _async_run_recorder_ready_jobs(self) -> None:
-        """Wait for the recorder to be ready, then call the registered jobs."""
-        await get_instance(self._hass).async_recorder_ready.wait()
-        jobs = self._recorder_ready_jobs
-        self._recorder_ready_jobs = set()
-        self._recorder_ready_task = None
-        for job in jobs:
-            job()
 
     async def _async_flush(self) -> None:
         """Return once a recorder flush that began no earlier than this call ends.

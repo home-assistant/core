@@ -135,7 +135,7 @@ async def test_discovery(
         _patch_single_discovery(device),
         _patch_connect(device),
         patch(f"{MODULE}.async_setup", return_value=True) as mock_setup,
-        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+        patch(f"{MODULE}.async_setup_entry", return_value=None) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -637,7 +637,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
         _patch_discovery(),
         _patch_single_discovery(),
         _patch_connect(),
-        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+        patch(f"{MODULE}.async_setup_entry", return_value=None) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: MAC_ADDRESS}
@@ -710,7 +710,7 @@ async def test_manual(hass: HomeAssistant) -> None:
         _patch_single_discovery(),
         _patch_connect(),
         patch(f"{MODULE}.async_setup", return_value=True),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -976,7 +976,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
         _patch_single_discovery(),
         _patch_connect(),
         patch(f"{MODULE}.async_setup", return_value=True),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -1372,7 +1372,7 @@ async def test_discovered_by_dhcp_or_discovery(
         _patch_connect(),
         patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
         patch(
-            f"{MODULE}.async_setup_entry", return_value=True
+            f"{MODULE}.async_setup_entry", return_value=None
         ) as mock_async_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
