@@ -20,7 +20,7 @@ async def async_get_config_entry_diagnostics(
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
     }
     if (data := getattr(entry, "runtime_data", None)) is not None:
-        diagnostics["products"] = {
-            apb: len(products) for apb, products in data.products.items()
-        }
+        diagnostics["products"] = sorted(
+            len(products) for products in data.products.values()
+        )
     return diagnostics

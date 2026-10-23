@@ -25,9 +25,9 @@
       'unique_id': '**REDACTED**',
       'version': 1,
     }),
-    'products': dict({
-      '343602': 1,
-    }),
+    'products': list([
+      1,
+    ]),
   })
 # ---
 # name: test_diagnostics_failed_entry
