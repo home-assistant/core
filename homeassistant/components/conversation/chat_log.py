@@ -13,9 +13,8 @@ from typing import Any, Literal, TypedDict, cast
 import probatio
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, frame, intent, llm, template
-from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
@@ -69,25 +68,6 @@ def _async_notify_subscribers(
             callback_func(conversation_id, event_type, data)
 
 
-@callback
-def _async_check_owner(
-    session: chat_session.ChatSession, user_input: ConversationInput | None
-) -> None:
-    """Raise if the user of the input may not continue the conversation.
-
-    The user of the first input becomes the owner of the conversation. This
-    includes a conversation started without user input, like by a satellite.
-    The owner is kept on the session, because parallel requests each work on
-    their own copy of the chat log.
-    """
-    if user_input is None:
-        return
-    if session.user_id is UNDEFINED:
-        session.user_id = user_input.context.user_id
-    elif session.user_id != user_input.context.user_id:
-        raise Unauthorized(context=user_input.context)
-
-
 @contextmanager
 def async_get_chat_log(
     hass: HomeAssistant,
@@ -106,7 +86,8 @@ def async_get_chat_log(
             raise RuntimeError(
                 "Cannot attach chat log delta listener unless initial caller"
             )
-        _async_check_owner(session, user_input)
+        if user_input is not None:
+            session.async_check_owner(user_input.context)
         if user_input is not None and (
             (content := chat_log.content[-1]).role != "user"
             or content.content != user_input.text
@@ -121,7 +102,10 @@ def async_get_chat_log(
         all_chat_logs = {}
         hass.data[DATA_CHAT_LOGS] = all_chat_logs
 
-    _async_check_owner(session, user_input)
+    # A conversation started without user input, like by a satellite, gets
+    # the user of its first input as owner.
+    if user_input is not None:
+        session.async_check_owner(user_input.context)
 
     is_new_log = session.conversation_id not in all_chat_logs
 

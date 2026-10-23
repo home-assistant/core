@@ -10,12 +10,14 @@ import logging
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Context,
     Event,
     HassJob,
     HassJobType,
     HomeAssistant,
     callback,
 )
+from homeassistant.exceptions import Unauthorized
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid_now, ulid_to_bytes
@@ -40,7 +42,6 @@ class ChatSession:
 
     conversation_id: str
     last_updated: datetime = field(default_factory=dt_util.utcnow)
-    # The user of the first user input owns the conversation.
     user_id: str | UndefinedType | None = UNDEFINED
     # Requests that use the session. The cleanup skips a session in use.
     in_use: int = 0
@@ -50,6 +51,17 @@ class ChatSession:
     def async_updated(self) -> None:
         """Update the last updated time."""
         self.last_updated = dt_util.utcnow()
+
+    @callback
+    def async_check_owner(self, context: Context) -> None:
+        """Raise if the user of the context may not continue the conversation.
+
+        The user of the first context that is checked becomes the owner.
+        """
+        if self.user_id is UNDEFINED:
+            self.user_id = context.user_id
+        elif self.user_id != context.user_id:
+            raise Unauthorized(context=context)
 
     @callback
     def async_on_cleanup(self, cb: CALLBACK_TYPE) -> None:

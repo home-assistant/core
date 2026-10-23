@@ -10,7 +10,8 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import chat_session
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 
@@ -131,6 +132,23 @@ async def test_new_session_shared(hass: HomeAssistant) -> None:
             await asyncio.create_task(get_session(), context=contextvars.Context())
             is session
         )
+
+
+@pytest.mark.parametrize(
+    "owner_user_id",
+    [
+        pytest.param("owner-user-id", id="user"),
+        pytest.param(None, id="no_user"),
+    ],
+)
+async def test_check_owner(hass: HomeAssistant, owner_user_id: str | None) -> None:
+    """Test the first checked user owns the session."""
+    with chat_session.async_get_chat_session(hass) as session:
+        session.async_check_owner(Context(user_id=owner_user_id))
+        session.async_check_owner(Context(user_id=owner_user_id))
+
+        with pytest.raises(Unauthorized):
+            session.async_check_owner(Context(user_id="other-user-id"))
 
 
 async def test_failed_nested_session(hass: HomeAssistant) -> None:
