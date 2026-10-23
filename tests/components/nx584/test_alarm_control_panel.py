@@ -29,7 +29,6 @@ async def test_entity_id_from_entry_name(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT, CONF_NAME: "House"},
-        unique_id=f"{TEST_HOST}:{TEST_PORT}",
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)

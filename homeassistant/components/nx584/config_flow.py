@@ -7,7 +7,7 @@ from typing import Any, override
 import probatio
 import requests
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE,
     CONF_HOST,
@@ -53,6 +53,17 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def _async_entry_for_server(self, host: str, port: int) -> ConfigEntry | None:
+        """Return the entry of the server, if it is set up."""
+        return next(
+            (
+                entry
+                for entry in self._async_current_entries(include_ignore=False)
+                if entry.data[CONF_HOST] == host and entry.data[CONF_PORT] == port
+            ),
+            None,
+        )
+
     async def _async_validate(self, host: str, port: int) -> None:
         """Connect to the server; raise if it cannot be reached."""
         client = create_client(host, port)
@@ -68,8 +79,7 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host: str = user_input[CONF_HOST]
             port: int = user_input[CONF_PORT]
-            await self.async_set_unique_id(f"{host}:{port}")
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
 
             try:
                 await self._async_validate(host, port)
@@ -79,6 +89,8 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                # Another flow may have set up the server during the validation.
+                self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
                 return self.async_create_entry(
                     title=DEFAULT_NAME, data={CONF_HOST: host, CONF_PORT: port}
                 )
@@ -110,11 +122,17 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
                 for zone, zone_type in import_data[CONF_ZONE_TYPES].items()
             }
 
-        unique_id = f"{host}:{port}"
-        await self.async_set_unique_id(unique_id)
-        if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
-            DOMAIN, unique_id
-        ):
+        if not self._async_entry_for_server(host, port):
+            try:
+                await self._async_validate(host, port)
+            except requests.exceptions.ConnectionError, requests.exceptions.Timeout:
+                return self.async_abort(reason="cannot_connect")
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
+
+        # Checked after the validation, as a user flow may set up the server meanwhile.
+        if entry := self._async_entry_for_server(host, port):
             # Each platform owns its keys; the other platform's keys are kept.
             return self.async_update_reload_and_abort(
                 entry,
@@ -125,14 +143,6 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
                 reason="already_configured",
                 reload_even_if_entry_is_unchanged=False,
             )
-
-        try:
-            await self._async_validate(host, port)
-        except requests.exceptions.ConnectionError, requests.exceptions.Timeout:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
 
         return self.async_create_entry(
             title=data.get(CONF_NAME, DEFAULT_NAME),

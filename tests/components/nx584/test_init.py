@@ -16,7 +16,7 @@ from homeassistant.components.nx584.const import (
     CONF_ZONE_TYPES,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -101,7 +101,6 @@ async def test_setup_entry_ipv6_host(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "fe80::1", CONF_PORT: TEST_PORT},
-        unique_id=f"fe80::1:{TEST_PORT}",
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -203,7 +202,7 @@ async def test_import_alarm_default_name(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].unique_id == "localhost:5007"
+    assert entries[0].data[CONF_HOST] == "localhost"
     assert hass.states.get("alarm_control_panel.nx584")
 
 
@@ -364,39 +363,6 @@ async def test_import_cannot_connect(
     assert hass.config_entries.async_entries(DOMAIN) == []
     assert issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
-    )
-    assert not issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-
-
-@pytest.mark.usefixtures("mock_watcher", "mock_hass_config")
-@pytest.mark.parametrize("hass_config", [ALARM_YAML])
-async def test_import_flow_in_progress(
-    hass: HomeAssistant,
-    hass_config: ConfigType,
-    mock_client: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test an import for a server with a user flow in progress raises no issue."""
-    mock_client.return_value.list_zones.side_effect = (
-        requests.exceptions.ConnectionError
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    # The failed attempt leaves the user flow open with the server unique ID.
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
-    )
-    assert result["errors"] == {"base": "cannot_connect"}
-    mock_client.return_value.list_zones.side_effect = None
-
-    await _async_setup_yaml(hass, hass_config, ALARM_CONTROL_PANEL_DOMAIN)
-
-    assert hass.config_entries.async_entries(DOMAIN) == []
-    assert not issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_already_in_progress"
     )
     assert not issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"

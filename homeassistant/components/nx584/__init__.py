@@ -2,7 +2,6 @@
 
 import asyncio
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from nx584 import client as nx584_client
@@ -21,16 +20,11 @@ from homeassistant.util.hass_dict import HassKey
 from .const import DEFAULT_NAME, DOMAIN
 from .services import async_setup_services
 
-_LOGGER = logging.getLogger(__name__)
-
 CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 
 DATA_IMPORT_LOCK: HassKey[asyncio.Lock] = HassKey(f"{DOMAIN}_import_lock")
-
-# Import abort reasons that have a repair issue in strings.json.
-IMPORT_ISSUE_REASONS = {"cannot_connect", "unknown"}
 
 
 @dataclass
@@ -98,14 +92,6 @@ async def async_import_yaml(
         result["type"] is FlowResultType.ABORT
         and result["reason"] != "already_configured"
     ):
-        if result["reason"] not in IMPORT_ISSUE_REASONS:
-            # The YAML stays in place, so the next start imports it again.
-            _LOGGER.debug(
-                "Import of the %s YAML configuration aborted: %s",
-                platform,
-                result["reason"],
-            )
-            return
         ir.async_create_issue(
             hass,
             DOMAIN,

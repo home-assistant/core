@@ -60,7 +60,6 @@ async def test_nx584_sensor_setup_zone_options(
         domain=DOMAIN,
         data={CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT},
         options=ZONE_OPTIONS,
-        unique_id=f"{TEST_HOST}:{TEST_PORT}",
     )
     await _async_setup_entry(hass, entry)
 

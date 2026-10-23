@@ -61,5 +61,4 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="NX584",
         data={CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT},
-        unique_id=f"{TEST_HOST}:{TEST_PORT}",
     )
