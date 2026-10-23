@@ -911,7 +911,7 @@
       "title": "Ubiquiti Cloud Users are not Supported"
     },
     "doorbell_sensor_deprecated": {
-      "description": "The binary sensor `{entity_id}` is deprecated and will be removed in a future release. Use the event entity `{replacement}` instead. The event entity records each ring instead of turning on and off, so trigger on its state changing rather than on `on`, ignoring changes to `unknown` and changes to or from `unavailable`.\n\nUpdate the following automations and scripts:\n{items}",
+      "description": "The binary sensor `{entity_id}` is deprecated and will be removed in a future release. Use the event entity `{replacement}` with the **Event received** trigger instead.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "[%key:component::unifiprotect::issues::private_only_entity_deprecated::title%]"
     },
     "hdr_switch_removed": {
@@ -923,7 +923,7 @@
       "title": "Insecure camera entity removed"
     },
     "last_event_sensor_deprecated": {
-      "description": "The entity `{entity_id}` is deprecated and will be removed in a future release. Use the event entity `{replacement}` instead. The event entity's state is the time of the last event Home Assistant received.\n\nUpdate the following automations and scripts:\n{items}",
+      "description": "The entity `{entity_id}` is deprecated and will be removed in a future release. Use the event entity `{replacement}` with the **Event received** trigger instead. The event entity's state is the time of the last event Home Assistant received.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "[%key:component::unifiprotect::issues::private_only_entity_deprecated::title%]"
     },
     "package_binary_sensor_removed": {
