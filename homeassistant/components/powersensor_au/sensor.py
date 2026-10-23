@@ -655,8 +655,14 @@ class PowersensorMeasurementEntity(PowersensorEntity, SensorEntity):
         self._attr_unique_id = f"{mac}_{description.key}"
 
     @override
-    def _update_from_message(self, message: dict[str, Any]) -> None:
-        """Set the native value from the description's key in the message."""
+    def _update_from_message(self, message: dict[str, Any]) -> bool:
+        """Set the native value from the description's key in the message.
+
+        Measurements are written on every update, even when the value repeats,
+        as HA's integral and derivative helpers count the repeated reports.
+        device_role arrives with every measurement only to keep it available
+        (see the dispatcher), so it is written only when the role changes.
+        """
         desc = self.entity_description
         if desc.message_key in message:
             raw = message[desc.message_key]
@@ -688,9 +694,12 @@ class PowersensorMeasurementEntity(PowersensorEntity, SensorEntity):
                         )
                         self._unrecognised_role = role
                     role = "unknown"
+                changed = role != self._attr_native_value
                 self._attr_native_value = role
+                return changed
             else:
                 self._attr_native_value = raw
+        return True
 
 
 class PowersensorSensorEntity(PowersensorMeasurementEntity):

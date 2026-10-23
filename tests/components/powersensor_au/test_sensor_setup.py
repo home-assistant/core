@@ -15,6 +15,7 @@ import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -22,12 +23,13 @@ from homeassistant.components.powersensor_au.config_flow import PowersensorConfi
 from homeassistant.components.powersensor_au.const import (
     CFG_ROLES,
     DOMAIN,
+    ROLE_APPLIANCE,
     ROLE_HOUSENET,
     ROLE_SOLAR,
     ROLE_WATER,
 )
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_STATE_REPORTED, Platform
+from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utc_from_timestamp, utcnow
@@ -667,6 +669,78 @@ async def test_vhh_mains_not_duplicated_on_repeated_signal(
     await hass.async_block_till_done()
 
     assert len(_registered(hass, config_entry)) == count_after_first
+
+
+async def test_unchanged_role_keeps_device_role_available_without_writes(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A repeated role keeps device_role available without writing its state.
+
+    The role comes with every measurement only to keep device_role available.
+    Measurements themselves are still written each time, even when unchanged.
+    """
+    reading = {
+        "event": "average_power",
+        "mac": PLUG_MAC,
+        "role": ROLE_APPLIANCE,
+        "watts": 50.0,
+        "starttime_utc": 1700000000,
+        "duration_s": 1,
+    }
+    await fire({"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"})
+    await fire(reading)
+    await hass.async_block_till_done()
+    role_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{PLUG_MAC}_device_role"
+    )
+    power_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{PLUG_MAC}_power"
+    )
+    assert role_id is not None
+    assert power_id is not None
+
+    reported: list[str] = []
+
+    @callback
+    def _ours(event_data: EventStateReportedData) -> bool:
+        return event_data["entity_id"] in (role_id, power_id)
+
+    @callback
+    def _record(event: Event[EventStateReportedData]) -> None:
+        reported.append(event.data["entity_id"])
+
+    hass.bus.async_listen(EVENT_STATE_REPORTED, _record, event_filter=_ours)
+
+    # Readings keep arriving well past the plug's 60 s timeout.
+    for _ in range(3):
+        freezer.tick(timedelta(seconds=50))
+        await fire(reading)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    role_state = hass.states.get(role_id)
+    assert role_state is not None
+    assert role_state.state == "appliance"
+    assert reported.count(role_id) == 0
+    assert reported.count(power_id) == 3
+
+    # Once unavailable, the same role is written again when readings resume.
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    role_state = hass.states.get(role_id)
+    assert role_state is not None
+    assert role_state.state == "unavailable"
+
+    await fire(reading)
+    await hass.async_block_till_done()
+    role_state = hass.states.get(role_id)
+    assert role_state is not None
+    assert role_state.state == "appliance"
 
 
 @pytest.mark.parametrize(

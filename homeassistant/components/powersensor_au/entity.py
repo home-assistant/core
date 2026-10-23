@@ -94,11 +94,17 @@ class PowersensorEntity(Entity):
     @callback
     def _handle_update(self, event: str | None, message: dict[str, Any]) -> None:
         """Handle a pushed data update from the dispatcher."""
+        was_available = self._has_recently_received_update_message
         self._has_recently_received_update_message = True
-        self._update_from_message(message)
+        needs_write = self._update_from_message(message)
         self._schedule_unavailable()
-        self.async_write_ha_state()
+        if needs_write or not was_available:
+            self.async_write_ha_state()
 
     @abstractmethod
-    def _update_from_message(self, message: dict[str, Any]) -> None:
-        """Apply a pushed message to the entity's state."""
+    def _update_from_message(self, message: dict[str, Any]) -> bool:
+        """Apply a pushed message to the entity's state.
+
+        Return whether the state must be written.  An entity that becomes
+        available again is written regardless.
+        """
