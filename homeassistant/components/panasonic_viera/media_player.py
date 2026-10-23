@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.const import ATTR_MANUFACTURER, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -79,7 +79,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, device_info[ATTR_UDN])},
                 connections={(CONNECTION_NETWORK_MAC, mac)} if mac else set(),
-                manufacturer=device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
+                manufacturer=device_info.get("manufacturer", DEFAULT_MANUFACTURER),
                 model=device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
                 name=name,
             )
