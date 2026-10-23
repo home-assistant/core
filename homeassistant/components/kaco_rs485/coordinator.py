@@ -82,7 +82,8 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
     def _unschedule_refresh(self) -> None:
         """Release the port once no entity listens; polling stops with it."""
         super()._unschedule_refresh()
-        self.config_entry.async_create_background_task(
+        # Not a background task: unload would cancel it mid-close.
+        self.config_entry.async_create_task(
             self.hass, self.async_close(), "kaco_rs485 close bus"
         )
 
