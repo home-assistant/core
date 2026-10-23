@@ -14,7 +14,8 @@ from aioesphomeapi.model import (
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from serialx.platforms.serial_esphome import InvalidSettingsError
+import serialx
+from serialx.platforms.serial_esphome import InvalidSettingsError, SerialProxyModeName
 from yarl import URL
 
 from homeassistant.components.esphome import _async_scan_serial_ports, serial_proxy
@@ -46,6 +47,19 @@ async def test_async_setup_stores_event_loop(
     """async_setup registers hass.loop on the serial_proxy module."""
     assert await async_setup_component(hass, DOMAIN, {})
     assert serial_proxy._HASS_LOOP is hass.loop
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_connect_kwargs_reach_serial(hass: HomeAssistant) -> None:
+    """Backend kwargs like `mode` are passed through to `HassESPHomeSerial`."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    port = serialx.serial_for_url(
+        "esphome-hass://esphome/abc123?port_name=uart0", mode="protocol"
+    )
+
+    assert isinstance(port, serial_proxy.HassESPHomeSerial)
+    assert port._mode is SerialProxyModeName.PROTOCOL
 
 
 async def test_resolve_client_unknown_entry(hass: HomeAssistant) -> None:
