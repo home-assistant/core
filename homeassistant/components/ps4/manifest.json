@@ -1,6 +1,7 @@
 {
   "domain": "ps4",
   "name": "Sony PlayStation 4",
+  "categories": ["media_entertainment.gaming"],
   "codeowners": ["@ktnrg45"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ps4",

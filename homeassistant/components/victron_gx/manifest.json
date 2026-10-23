@@ -1,6 +1,7 @@
 {
   "domain": "victron_gx",
   "name": "Victron GX",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@tomer-w"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/victron_gx",

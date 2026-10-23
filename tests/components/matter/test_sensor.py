@@ -56,6 +56,30 @@ async def test_sensor_null_value(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_flow_sensor"])
+@pytest.mark.parametrize("attributes", [{"1/1028/0": None}])
+async def test_flow_sensor_discovered_with_null_value_at_startup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test flow sensor is still discovered when its value is null at startup.
+
+    This test helps prevent regressions if allow_none_value=True is removed
+    from the FlowSensor discovery schema.
+    """
+    state = hass.states.get("sensor.mock_flow_sensor_flow")
+    assert state
+    assert state.state == "unknown"
+
+    set_node_attribute(matter_node, 1, 1028, 0, 20)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_flow_sensor_flow")
+    assert state
+    assert state.state == "2.0"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_flow_sensor"])
 async def test_flow_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,

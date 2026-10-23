@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roombapy import RoombaClient
 
 from homeassistant.components.roomba.const import CONF_BLID, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -1,6 +1,7 @@
 {
   "domain": "zonneplan",
   "name": "Zonneplan",
+  "categories": ["energy.energy_prices", "energy.solar_batteries"],
   "codeowners": ["@erwindouna"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zonneplan",

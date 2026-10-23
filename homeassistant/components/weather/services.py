@@ -16,7 +16,7 @@ from homeassistant.exceptions import ServiceValidationError
 from .const import DATA_COMPONENT, DOMAIN, SERVICE_GET_FORECASTS, WeatherEntityFeature
 
 if TYPE_CHECKING:
-    from . import WeatherEntity
+    from .entity import WeatherEntity
 
 
 def raise_unsupported_forecast(entity_id: str, forecast_type: str) -> None:

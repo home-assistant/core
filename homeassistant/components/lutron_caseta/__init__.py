@@ -242,9 +242,11 @@ def _async_register_bridge_device(
 
     area = area_name_from_id(bridge.areas, bridge_device["area"])
     if area != UNASSIGNED_AREA:
-        device_args["suggested_area"] = area
+        device_args.suggested_area = area
 
-    device_registry.async_get_or_create(**device_args, config_entry_id=config_entry_id)
+    device_registry.async_get_or_create_from_info(
+        device_info=device_args, config_entry_id=config_entry_id
+    )
 
 
 @callback
@@ -289,8 +291,8 @@ def _async_setup_keypads(
             )
 
             # Register the keypad device
-            dr_device = device_registry.async_get_or_create(
-                **keypad["device_info"], config_entry_id=config_entry_id
+            dr_device = device_registry.async_get_or_create_from_info(
+                device_info=keypad["device_info"], config_entry_id=config_entry_id
             )
             keypad[LUTRON_KEYPAD_DEVICE_REGISTRY_DEVICE_ID] = dr_device.id
             dr_device_id_to_keypad[dr_device.id] = keypad
@@ -379,7 +381,7 @@ def _async_build_lutron_keypad(
         ),
     )
     if area_name != UNASSIGNED_AREA:
-        device_info["suggested_area"] = area_name
+        device_info.suggested_area = area_name
 
     return LutronKeypad(
         lutron_device_id=keypad_device_id,

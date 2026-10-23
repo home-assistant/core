@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 from pyicloud.services.photos import AlbumContainer, PhotoAlbumFolder, PhotoAsset
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
+from pytest_homeassistant.typing import MagicMock
 
 from homeassistant.components.icloud.const import (
     CONF_GPS_ACCURACY_THRESHOLD,
@@ -16,9 +18,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import USER_INFO
-
-from tests.common import AsyncMock, MockConfigEntry
-from tests.typing import MagicMock
 
 
 @pytest.fixture(autouse=True)
@@ -184,11 +183,6 @@ class MockAppleDevice:
     def lost_mode_available(self) -> bool:
         """Return whether the device supports lost mode."""
         return bool(self._status.get("lostModeCapable", False))
-
-    @property
-    def sound_available(self) -> bool:
-        """Return whether the device can play a sound."""
-        return self._feature("SND")
 
 
 class MockDevicesContainer:

@@ -1,6 +1,7 @@
 {
   "domain": "profiler",
   "name": "Profiler",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/profiler",

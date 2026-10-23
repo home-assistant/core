@@ -14,6 +14,20 @@ from aiohttp import RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    async_capture_events,
+    async_fire_time_changed,
+    flush_store,
+    help_test_all,
+    import_and_test_deprecated_constant,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow, loader
@@ -62,21 +76,6 @@ from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_comp
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
-
-from .common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    MockPlatform,
-    async_capture_events,
-    async_fire_time_changed,
-    flush_store,
-    help_test_all,
-    import_and_test_deprecated_constant,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 
 def _get_flow_context(
@@ -4991,7 +4990,7 @@ async def test_finish_flow_aborts_progress(
             await self.async_set_unique_id("mock-unique-id", raise_on_progress=False)
 
             if user_input is None:
-                return self.async_show_form(step_id="discovery")
+                return self.async_show_form(step_id="user")
 
             return self.async_create_entry(title="yo", data={})
 
@@ -5002,10 +5001,13 @@ async def test_finish_flow_aborts_progress(
         )
         assert result["type"] is data_entry_flow.FlowResultType.FORM
 
-        # Will finish and cancel other one.
         result2 = await manager.flow.async_init(
-            "comp", context={"source": config_entries.SOURCE_USER}, data={}
+            "comp", context={"source": config_entries.SOURCE_USER}
         )
+        assert result2["type"] is data_entry_flow.FlowResultType.FORM
+
+        # Will finish and cancel other one.
+        result2 = await manager.flow.async_configure(result2["flow_id"], {})
 
     assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 

@@ -4,7 +4,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import itertools
 import logging
 import math
@@ -30,6 +30,7 @@ from homeassistant.const import (
     UnitOfIrradiance,
     UnitOfSoundPressure,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
@@ -50,7 +51,6 @@ from .const import (
     SensorEntityCapabilityAttribute,
     SensorEntityStateAttribute,
     SensorStateClass,
-    UnitOfVolumeFlowRate,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,6 +103,31 @@ UNITS_CHANGED_ISSUE = "units_changed"
 MEAN_TYPE_CHANGED_ISSUE = "mean_type_changed"
 
 
+def _is_hashable(value: Any) -> bool:
+    """Return True if the value can be used as a dict key or a set member.
+
+    State attributes are not validated, so an integration can set them to a value of
+    any type. The state class, unit of measurement and device class are all used as
+    dict keys or set members when compiling statistics, which raises TypeError for a
+    value which is not hashable.
+    """
+    try:
+        hash(value)
+    except TypeError:
+        return False
+    return True
+
+
+def _parse_state_class(state_class: Any) -> SensorStateClass | None:
+    """Parse the state class attribute of a sensor, None if it is not valid."""
+    if type(state_class) is SensorStateClass:
+        return state_class
+    if not _is_hashable(state_class):
+        # try_parse_enum is cached, so it raises TypeError for an unhashable value
+        return None
+    return try_parse_enum(SensorStateClass, state_class)
+
+
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     """Get the current state of all sensors for which to compile statistics."""
     instance = get_instance(hass)
@@ -118,16 +143,18 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
                 SensorEntityCapabilityAttribute.STATE_CLASS
             )
         )
-        and (
-            type(state_class) is SensorStateClass
-            or try_parse_enum(SensorStateClass, state_class)
-        )
+        and _parse_state_class(state_class)
+        # A sensor whose unit or device class is not hashable can't have statistics
+        # compiled for it, and must be excluded here so it does not break the whole
+        # compilation run
+        and _is_hashable(state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT))
+        and _is_hashable(state.attributes.get(EntityStateAttribute.DEVICE_CLASS))
         and (not entity_filter or entity_filter(state.entity_id))
     ]
 
 
 def _time_weighted_arithmetic_mean(
-    fstates: list[tuple[float, State]], start: datetime.datetime, end: datetime.datetime
+    fstates: list[tuple[float, State]], start: dt.datetime, end: dt.datetime
 ) -> float:
     """Calculate a time weighted average.
 
@@ -136,7 +163,7 @@ def _time_weighted_arithmetic_mean(
     Note: there's no interpolation of values between state changes.
     """
     old_fstate: float | None = None
-    old_start_time: datetime.datetime | None = None
+    old_start_time: dt.datetime | None = None
     accumulated = 0.0
 
     for fstate, state in fstates:
@@ -165,7 +192,7 @@ def _time_weighted_arithmetic_mean(
 
 
 def _time_weighted_circular_mean(
-    fstates: list[tuple[float, State]], start: datetime.datetime, end: datetime.datetime
+    fstates: list[tuple[float, State]], start: dt.datetime, end: dt.datetime
 ) -> tuple[float, float]:
     """Calculate a time weighted circular mean.
 
@@ -174,7 +201,7 @@ def _time_weighted_circular_mean(
     Note: there's no interpolation of values between state changes.
     """
     old_fstate: float | None = None
-    old_start_time: datetime.datetime | None = None
+    old_start_time: dt.datetime | None = None
     values: list[tuple[float, float]] = []
 
     for fstate, state in fstates:
@@ -226,14 +253,23 @@ def _equivalent_units(
 def _entity_history_to_float_and_state(
     entity_history: Iterable[State],
 ) -> list[tuple[float, State]]:
-    """Return a list of (float, state) tuples for the given entity."""
+    """Return a list of (float, state) tuples for the given entity.
+
+    States which can't be used to compile statistics are left out.
+    """
     float_states: list[tuple[float, State]] = []
     append = float_states.append
     isfinite = math.isfinite
     for state in entity_history:
         try:
-            if (float_state := float(state.state)) is not None and isfinite(
-                float_state
+            if (
+                (float_state := float(state.state)) is not None
+                and isfinite(float_state)
+                # Only the current state is checked when picking the sensors to
+                # compile, so an earlier state may still have a malformed unit
+                and _is_hashable(
+                    state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+                )
             ):
                 append((float_state, state))
         except ValueError, TypeError:
@@ -258,6 +294,9 @@ def _get_unit_class(
     The unit class is determined from the device class and unit if possible,
     otherwise from the unit.
     """
+    if not _is_hashable(device_class) or not _is_hashable(unit):
+        # This is reached from paths which pass unvalidated state attributes
+        return None
     if (
         device_class
         and (conv := UNIT_CONVERTERS.get(device_class))
@@ -535,8 +574,8 @@ def _timestamp_to_isoformat_or_none(timestamp: float | None) -> str | None:
 def compile_statistics(  # noqa: C901
     hass: HomeAssistant,
     session: Session,
-    start: datetime.datetime,
-    end: datetime.datetime,
+    start: dt.datetime,
+    end: dt.datetime,
     custom_units_for_entities: dict[str, dict[str | None, str]],
 ) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end."""
@@ -555,7 +594,7 @@ def compile_statistics(  # noqa: C901
         history_list = history.get_full_significant_states_with_session(
             hass,
             session,
-            start - datetime.timedelta.resolution,
+            start - dt.timedelta.resolution,
             end,
             entity_ids=entities_full_history,
             significant_changes_only=False,
@@ -569,7 +608,7 @@ def compile_statistics(  # noqa: C901
         _history_list = history.get_full_significant_states_with_session(
             hass,
             session,
-            start - datetime.timedelta.resolution,
+            start - dt.timedelta.resolution,
             end,
             entity_ids=entities_significant_history,
         )
@@ -896,9 +935,8 @@ def _update_issues(
     for state in sensor_states:
         entity_id = state.entity_id
         numeric = _is_numeric(state)
-        state_class = try_parse_enum(
-            SensorStateClass,
-            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS),
+        state_class = _parse_state_class(
+            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS)
         )
         state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         state_unit_class = _get_unit_class(
@@ -922,8 +960,12 @@ def _update_issues(
                     custom_units_for_entities.get(entity_id)
                 )
 
-                if numeric and not _equivalent_units(
-                    {state_unit, metadata_unit}, equivalent_units_for_entity
+                if numeric and (
+                    # An unhashable unit can't match the unit of the statistics
+                    not _is_hashable(state_unit)
+                    or not _equivalent_units(
+                        {state_unit, metadata_unit}, equivalent_units_for_entity
+                    )
                 ):
                     # The unit has changed, and it's not possible to convert
                     report_issue(
@@ -938,7 +980,9 @@ def _update_issues(
                             "supported_unit": metadata_unit,
                         },
                     )
-            elif numeric and state_unit not in converter.VALID_UNITS:
+            elif numeric and (
+                not _is_hashable(state_unit) or state_unit not in converter.VALID_UNITS
+            ):
                 # The state unit can't be converted to the unit in metadata
                 valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
                 valid_units_str = ", ".join(sorted(valid_units))
@@ -1067,9 +1111,8 @@ def validate_statistics(
 
     for state in sensor_states:
         entity_id = state.entity_id
-        state_class = try_parse_enum(
-            SensorStateClass,
-            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS),
+        state_class = _parse_state_class(
+            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS)
         )
 
         if entity_id in metadatas:

@@ -8,6 +8,13 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from mashumaro.exceptions import MissingField
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from spotifyaio import (
     PlaybackState,
     Playlist,
@@ -57,14 +64,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.mark.usefixtures("setup_credentials")

@@ -262,6 +262,7 @@ def websocket_update_config_update(
     hass.config_entries.async_update_entry(
         entry,
         options={
+            **entry.options,
             **async_get_update_options(hass, entry),
             **changes,
         },

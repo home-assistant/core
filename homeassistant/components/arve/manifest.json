@@ -1,6 +1,7 @@
 {
   "domain": "arve",
   "name": "Arve",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@ikalnyi"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/arve",

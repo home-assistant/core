@@ -5,6 +5,11 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_platform_setup_creates_issue,
+    mock_restore_cache,
+)
 
 from homeassistant.components import utility_meter
 from homeassistant.components.select import (
@@ -36,12 +41,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    assert_platform_setup_creates_issue,
-    mock_restore_cache,
-)
 
 
 @pytest.fixture

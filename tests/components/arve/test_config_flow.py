@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.arve.config_flow import ArveConnectionError
 from homeassistant.components.arve.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import USER_INPUT, async_init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_correct_flow(

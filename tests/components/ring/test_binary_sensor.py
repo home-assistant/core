@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from ring_doorbell import Ring
 from syrupy.assertion import SnapshotAssertion
 
@@ -30,8 +31,6 @@ from .device_mocks import (
     INGRESS_DEVICE_ID,
     INTERNAL_DEVICE_ID,
 )
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -248,3 +247,8 @@ async def test_binary_sensor_exists_with_deprecation(
     assert (
         issue_registry.async_get_issue(DOMAIN, issue_id) is not None
     ) == entity_has_automations
+    assert all(
+        issue.config_entry_id == mock_config_entry.entry_id
+        for (domain, _), issue in issue_registry.issues.items()
+        if domain == DOMAIN
+    )

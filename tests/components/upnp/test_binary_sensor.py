@@ -3,12 +3,11 @@
 from datetime import timedelta
 
 from async_upnp_client.profiles.igd import IgdDevice, IgdState
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.upnp.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_upnp_binary_sensors(

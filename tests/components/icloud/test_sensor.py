@@ -5,6 +5,8 @@ from datetime import UTC, datetime
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import MagicMock
 
 from homeassistant.components.icloud.const import (
     ATTR_ACCOUNT_FETCH_INTERVAL,
@@ -13,14 +15,17 @@ from homeassistant.components.icloud.const import (
     ATTR_DEVICE_STATUS,
     DOMAIN,
 )
-from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEVICE, FEATURES, LOCATION, LOCATION_TIMESTAMP_MS, MAX_INTERVAL
-
-from tests.common import MockConfigEntry
-from tests.typing import MagicMock
 
 BATTERY_UNIQUE_ID = "device1_battery"
 BATTERY_STATUS_UNIQUE_ID = "device1_battery_status"
@@ -506,3 +511,58 @@ async def test_last_location_sensor_with_unusable_timestamp(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+async def test_existing_battery_entity_updates_and_reloads(
+    hass: HomeAssistant,
+    devices_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    icloud_service: MagicMock,
+    setup_entry: Callable[[Platform], Awaitable[None]],
+) -> None:
+    """The shared base retains the registered battery and its update lifecycle."""
+    registered = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        BATTERY_UNIQUE_ID,
+        suggested_object_id="custom_battery",
+    )
+    apple_device = icloud_service.devices.add({**DEVICE})
+
+    await setup_entry(Platform.SENSOR)
+
+    state = hass.states.get(registered.entity_id)
+    assert state is not None
+    assert state.state == "80"
+    assert entity_registry.async_get(registered.entity_id).id == registered.id
+
+    apple_device.status()["batteryLevel"] = 0.5
+    await hass.async_add_executor_job(devices_config_entry.runtime_data.update_devices)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(registered.entity_id)
+    assert state is not None
+    assert state.state == "50"
+
+    with patch("homeassistant.components.icloud.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_reload(devices_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(registered.entity_id)
+    assert state is not None
+    assert state.state == "50"
+    assert entity_registry.async_get(registered.entity_id).id == registered.id
+
+    signal = devices_config_entry.runtime_data.signal_device_update
+    assert await hass.config_entries.async_unload(devices_config_entry.entry_id)
+    await hass.async_block_till_done()
+    state = hass.states.get(registered.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    with patch(
+        "homeassistant.components.icloud.entity.IcloudDeviceEntity.async_write_ha_state"
+    ) as write_state:
+        async_dispatcher_send(hass, signal)
+        await hass.async_block_till_done()
+    write_state.assert_not_called()

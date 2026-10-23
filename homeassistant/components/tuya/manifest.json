@@ -1,6 +1,7 @@
 {
   "domain": "tuya",
   "name": "Tuya",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@Tuya", "@zlinoliver"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],

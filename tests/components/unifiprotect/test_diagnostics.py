@@ -5,15 +5,14 @@ import re
 from typing import Any
 from unittest.mock import Mock
 
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from uiprotect.data import Light
 
 from homeassistant.core import HomeAssistant
 
 from .utils import MockUFPFixture, init_entry
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 # Pattern for hex IDs (24 char hex strings like device/user IDs)
 HEX_ID_PATTERN = re.compile(r"^[a-f0-9]{24}$")
@@ -34,7 +33,7 @@ PERMISSION_ID_PATTERN = re.compile(r"^(.+:\*:)[a-f0-9]{24}$")
 # Keys that should be redacted for security
 REDACT_KEYS = {"accessKey"}
 # Keys that contain anonymized names (need normalization) - pattern-matched
-NAME_KEYS = {"name", "firstName", "lastName"}
+NAME_KEYS = {"name", "firstName", "lastName", "customMessages"}
 # Keys that always need normalization (not pattern-matched)
 ALWAYS_REDACT_KEYS = {"localUsername"}
 
@@ -53,7 +52,7 @@ def _normalize_diagnostics(data: Any, parent_key: str | None = None) -> Any:
             if k != "repr"  # Remove repr fields with memory addresses
         }
     if isinstance(data, list):
-        return [_normalize_diagnostics(item) for item in data]
+        return [_normalize_diagnostics(item, parent_key) for item in data]
     if isinstance(data, str):
         # Redact sensitive keys
         if parent_key in REDACT_KEYS:

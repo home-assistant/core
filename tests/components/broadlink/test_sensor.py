@@ -2,6 +2,8 @@
 
 from datetime import timedelta
 
+from pytest_homeassistant.common import async_fire_time_changed
+
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.updater import BroadlinkSP4UpdateManager
 from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
@@ -11,8 +13,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
 from . import get_device
-
-from tests.common import async_fire_time_changed
 
 
 async def test_a1_sensor_setup(

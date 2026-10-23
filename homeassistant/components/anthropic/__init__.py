@@ -1,10 +1,10 @@
 """The Anthropic integration."""
 
-from anthropic.resources.messages.messages import DEPRECATED_MODELS
+from functools import partial
 
-from homeassistant.config_entries import ConfigSubentry
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -36,20 +36,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
+    entry.async_on_unload(
+        coordinator.async_add_listener(
+            partial(_async_check_model_lifecycle, hass, entry)
+        )
+    )
+    _async_check_model_lifecycle(hass, entry)
 
-    for subentry in entry.subentries.values():
-        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model in DEPRECATED_MODELS:
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "model_deprecated",
-                is_fixable=True,
-                is_persistent=False,
-                learn_more_url="https://platform.claude.com/docs/en/about-claude/model-deprecations",
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="model_deprecated",
-            )
-            break
+
+@callback
+def _async_check_model_lifecycle(
+    hass: HomeAssistant, entry: AnthropicConfigEntry
+) -> None:
+    """Update the shared repair issue for deprecated or retired models."""
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        if (
+            config_entry is not entry
+            and config_entry.state is not ConfigEntryState.LOADED
+        ):
+            continue
+        for subentry in config_entry.subentries.values():
+            if not (model := subentry.data.get(CONF_CHAT_MODEL)):
+                continue
+            model_info, found = config_entry.runtime_data.get_model_info(model)
+            if found and model_info.lifecycle in ("deprecated", "retired"):
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "model_deprecated",
+                    is_fixable=True,
+                    is_persistent=False,
+                    learn_more_url="https://platform.claude.com/docs/en/about-claude/model-deprecations",
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="model_deprecated",
+                )
+                return
+
+    ir.async_delete_issue(hass, DOMAIN, "model_deprecated")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> None:

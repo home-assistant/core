@@ -20,61 +20,42 @@ DEFAULT_INCLUDE_COMPLETED = False
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 2
 
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.CALENDAR,
-    Platform.DEVICE_TRACKER,
-    Platform.SENSOR,
-    Platform.TODO,
-]
+PLATFORMS = [Platform.CALENDAR, Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.TODO]
 
 # pyicloud.AppleDevice status
-DEVICE_ACTION_STATUS_CODE = "statusCode"
-DEVICE_ACTION_STATUS_PENDING = "2201"
-DEVICE_ACTIVATION_LOCKED = "activationLocked"
+DEVICE_FEATURES = "features"
+DEVICE_FEATURE_LOCK = "LCK"
+DEVICE_LOCATION_ALTITUDE = "altitude"
+DEVICE_LOCATION_FLOOR_LEVEL = "floorLevel"
+DEVICE_LOCATION_POSITION_TYPE = "positionType"
+DEVICE_LOCATION_TIMESTAMP = "timeStamp"
+DEVICE_LOCKED_TIMESTAMP = "lockedTimestamp"
+DEVICE_LOST_TIMESTAMP = "lostTimestamp"
+DEVICE_WIPED_TIMESTAMP = "wipedTimestamp"
 DEVICE_BATTERY_LEVEL = "batteryLevel"
 DEVICE_BATTERY_STATUS = "batteryStatus"
 DEVICE_CLASS = "deviceClass"
 DEVICE_DISPLAY_NAME = "deviceDisplayName"
-DEVICE_FEATURES = "features"
-DEVICE_FEATURE_LOCK = "LCK"
-DEVICE_FEATURE_SOUND = "SND"
 DEVICE_ID = "id"
-DEVICE_IS_LOCATING = "isLocating"
 DEVICE_LOCATION = "location"
-DEVICE_LOCATION_ALTITUDE = "altitude"
-DEVICE_LOCATION_ENABLED = "locationEnabled"
-DEVICE_LOCATION_FLOOR_LEVEL = "floorLevel"
 DEVICE_LOCATION_HORIZONTAL_ACCURACY = "horizontalAccuracy"
-DEVICE_LOCATION_IS_INACCURATE = "isInaccurate"
-DEVICE_LOCATION_IS_OLD = "isOld"
 DEVICE_LOCATION_LATITUDE = "latitude"
 DEVICE_LOCATION_LONGITUDE = "longitude"
-DEVICE_LOCATION_POSITION_TYPE = "positionType"
-DEVICE_LOCATION_TIMESTAMP = "timeStamp"
-DEVICE_LOCKED_TIMESTAMP = "lockedTimestamp"
 DEVICE_LOST_MODE_CAPABLE = "lostModeCapable"
-DEVICE_LOST_MODE_ENABLED = "lostModeEnabled"
-DEVICE_LOST_TIMESTAMP = "lostTimestamp"
 DEVICE_LOW_POWER_MODE = "lowPowerMode"
 DEVICE_NAME = "name"
 DEVICE_PERSON_ID = "prsId"
 DEVICE_RAW_DEVICE_MODEL = "rawDeviceModel"
-DEVICE_REMOTE_LOCK = "remoteLock"
-DEVICE_REMOTE_WIPE = "remoteWipe"
 DEVICE_STATUS = "deviceStatus"
-DEVICE_WIPE_IN_PROGRESS = "wipeInProgress"
-DEVICE_WIPED_TIMESTAMP = "wipedTimestamp"
 
 DEVICE_STATUS_SET = [
-    DEVICE_FEATURES,
+    "features",
     "maxMsgChar",
     "darkWake",
     "fmlyShare",
     DEVICE_STATUS,
-    DEVICE_REMOTE_LOCK,
-    DEVICE_ACTIVATION_LOCKED,
+    "remoteLock",
+    "activationLocked",
     DEVICE_CLASS,
     DEVICE_ID,
     "deviceModel",
@@ -85,27 +66,27 @@ DEVICE_STATUS_SET = [
     DEVICE_LOCATION,
     "msg",
     DEVICE_BATTERY_LEVEL,
-    DEVICE_REMOTE_WIPE,
+    "remoteWipe",
     "thisDevice",
     "snd",
     DEVICE_PERSON_ID,
-    DEVICE_WIPE_IN_PROGRESS,
+    "wipeInProgress",
     DEVICE_LOW_POWER_MODE,
-    DEVICE_LOST_MODE_ENABLED,
-    DEVICE_IS_LOCATING,
+    "lostModeEnabled",
+    "isLocating",
     DEVICE_LOST_MODE_CAPABLE,
     "mesg",
     DEVICE_NAME,
     DEVICE_BATTERY_STATUS,
-    DEVICE_LOCKED_TIMESTAMP,
-    DEVICE_LOST_TIMESTAMP,
+    "lockedTimestamp",
+    "lostTimestamp",
     "locationCapable",
     DEVICE_DISPLAY_NAME,
     "lostDevice",
     "deviceColor",
-    DEVICE_WIPED_TIMESTAMP,
+    "wipedTimestamp",
     "modelDisplayName",
-    DEVICE_LOCATION_ENABLED,
+    "locationEnabled",
     "isMac",
     "locFoundEnabled",
 ]

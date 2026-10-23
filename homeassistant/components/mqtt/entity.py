@@ -10,15 +10,6 @@ import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_CONFIGURATION_URL,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
-    ATTR_SERIAL_NUMBER,
-    ATTR_SUGGESTED_AREA,
-    ATTR_SW_VERSION,
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
@@ -875,6 +866,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         )
         # Tear down before the client disconnects, so subscriptions are not restored
         hass.data[DATA_MQTT].reload_dispatchers.append(self._entry_unload)
+        self._remove_device_updated: Callable[[], None] | None = None
         if device_id is not None:
             self._remove_device_updated = async_track_device_registry_updated_event(
                 hass, device_id, self._async_device_removed
@@ -891,7 +883,17 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         stop_discovery_updates(
             self.hass, self._discovery_data, self._remove_discovery_updated
         )
+        # A stale listener would clear the retained discovery payload
+        # if the device is removed before the item is discovered again
+        self._stop_device_updates()
         self._config_entry.async_create_task(self.hass, self.async_tear_down())
+
+    @callback
+    def _stop_device_updates(self) -> None:
+        """Stop listening for device registry updates."""
+        if self._remove_device_updated is not None:
+            self._remove_device_updated()
+            self._remove_device_updated = None
 
     async def async_discovery_update(
         self,
@@ -999,6 +1001,11 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             )
             try:
                 await self.async_update(discovery_payload)
+            except probatio.Invalid as err:
+                # Keep the current payload, so the update is validated again
+                # when it is received again
+                async_handle_schema_error(discovery_payload, err)
+                return
             finally:
                 send_discovery_done(self.hass, self._discovery_data)
             self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
@@ -1031,7 +1038,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         if self._skip_device_removal or not async_removed_from_device(event):
             return
         # Prevent a second cleanup round after the device is removed
-        self._remove_device_updated()
+        self._stop_device_updates()
         self._skip_device_removal = True
         # Unregister and clean up and publish an empty payload
         # so the service is not rediscovered after a restart
@@ -1376,31 +1383,31 @@ def device_info_from_specifications(
     )
 
     if CONF_MANUFACTURER in specifications:
-        info[ATTR_MANUFACTURER] = specifications[CONF_MANUFACTURER]
+        info.manufacturer = specifications[CONF_MANUFACTURER]
 
     if CONF_MODEL in specifications:
-        info[ATTR_MODEL] = specifications[CONF_MODEL]
+        info.model = specifications[CONF_MODEL]
 
     if CONF_MODEL_ID in specifications:
-        info[ATTR_MODEL_ID] = specifications[CONF_MODEL_ID]
+        info.model_id = specifications[CONF_MODEL_ID]
 
     if CONF_NAME in specifications:
-        info[ATTR_NAME] = specifications[CONF_NAME]
+        info.name = specifications[CONF_NAME]
 
     if CONF_HW_VERSION in specifications:
-        info[ATTR_HW_VERSION] = specifications[CONF_HW_VERSION]
+        info.hw_version = specifications[CONF_HW_VERSION]
 
     if CONF_SERIAL_NUMBER in specifications:
-        info[ATTR_SERIAL_NUMBER] = specifications[CONF_SERIAL_NUMBER]
+        info.serial_number = specifications[CONF_SERIAL_NUMBER]
 
     if CONF_SW_VERSION in specifications:
-        info[ATTR_SW_VERSION] = specifications[CONF_SW_VERSION]
+        info.sw_version = specifications[CONF_SW_VERSION]
 
     if CONF_SUGGESTED_AREA in specifications:
-        info[ATTR_SUGGESTED_AREA] = specifications[CONF_SUGGESTED_AREA]
+        info.suggested_area = specifications[CONF_SUGGESTED_AREA]
 
     if CONF_CONFIGURATION_URL in specifications:
-        info[ATTR_CONFIGURATION_URL] = specifications[CONF_CONFIGURATION_URL]
+        info.configuration_url = specifications[CONF_CONFIGURATION_URL]
 
     return info
 
@@ -1487,8 +1494,8 @@ class MqttEntityDeviceInfo(Entity):
         device_info = self.device_info
 
         if device_info is not None:
-            device_registry.async_get_or_create(
-                config_entry_id=config_entry_id, **device_info
+            device_registry.async_get_or_create_from_info(
+                config_entry_id=config_entry_id, device_info=device_info
             )
 
     @property
@@ -1501,7 +1508,7 @@ class MqttEntityDeviceInfo(Entity):
                 self.hass, self._device_specifications, self._config_entry
             )
         ):
-            info["via_device_id"] = via_device_id
+            info.via_device_id = via_device_id
         return info
 
 
@@ -1518,6 +1525,7 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
+    _previous_device_id: str | None = None
     _update_registry_entity_id: str | None = None
 
     def __init__(
@@ -1562,7 +1570,18 @@ class MqttEntity(
         object_id: str
         default_entity_id: str | None
         if default_entity_id := self._config.get(CONF_DEFAULT_ENTITY_ID):
-            _, _, object_id = default_entity_id.partition(".")
+            domain, _, object_id = default_entity_id.partition(".")
+            entity_domain = self._entity_id_format.split(".")[0]
+            if object_id and domain != entity_domain:
+                _LOGGER.warning(
+                    "The default_entity_id %s of a %s entity has the %s domain; "
+                    "using %s.%s as the default instead",
+                    default_entity_id,
+                    entity_domain,
+                    domain,
+                    entity_domain,
+                    object_id,
+                )
             self.entity_id = async_generate_entity_id(
                 self._entity_id_format, object_id, None, self.hass
             )
@@ -1572,6 +1591,12 @@ class MqttEntity(
         # Check for previous deleted entities
         entity_registry = er.async_get(self.hass)
         entity_platform = self._entity_id_format.split(".")[0]
+        if registry_entity_id := entity_registry.async_get_entity_id(
+            entity_platform, DOMAIN, self.unique_id
+        ):
+            self._previous_device_id = entity_registry.entities[
+                registry_entity_id
+            ].device_id
         if (
             deleted_entry := entity_registry.deleted_entities.get(
                 (entity_platform, DOMAIN, self.unique_id)
@@ -1654,6 +1679,7 @@ class MqttEntity(
                 self.entity_id, new_entity_id=self._update_registry_entity_id
             )
             self._update_registry_entity_id = None
+        await self._async_cleanup_previous_device()
 
         await super().async_added_to_hass()
         await self._async_finish_update_config()
@@ -1668,6 +1694,26 @@ class MqttEntity(
         await self._subscribe_topics()
         await self.mqtt_async_added_to_hass()
         self._added_to_hass = True
+
+    async def _async_cleanup_previous_device(self) -> None:
+        """Clean up the previous device when the entity was added to another device.
+
+        The entity platform links the registry entry to the new device when the
+        entity is added, leaving the previous device unused.
+        """
+        if (previous_device_id := self._previous_device_id) is None:
+            return
+        self._previous_device_id = None
+        if TYPE_CHECKING:
+            assert self.registry_entry is not None
+        if previous_device_id == self.registry_entry.device_id:
+            return
+        await async_cleanup_device_registry(
+            self.hass,
+            previous_device_id,
+            self._config_entry.entry_id,
+            include_disabled_entities=True,
+        )
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Call before the discovery message is acknowledged.
@@ -1894,9 +1940,9 @@ def update_device(
 
     if config_entry_id is not None and device_info is not None:
         if via_device_id := _resolve_via_device_id(hass, specifications, config_entry):
-            device_info["via_device_id"] = via_device_id
-        device = device_registry.async_get_or_create(
-            config_entry_id=config_entry_id, **device_info
+            device_info.via_device_id = via_device_id
+        device = device_registry.async_get_or_create_from_info(
+            config_entry_id=config_entry_id, device_info=device_info
         )
 
     return device.id if device else None

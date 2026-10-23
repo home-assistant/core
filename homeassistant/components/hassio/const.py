@@ -20,6 +20,7 @@ if TYPE_CHECKING:
         SupervisorInfo,
     )
 
+    from .auto_update import AutoUpdateManager
     from .coordinator import (
         HassioAddOnDataUpdateCoordinator,
         HassioMainDataUpdateCoordinator,
@@ -106,6 +107,7 @@ STATS_COORDINATOR: HassKey[HassioStatsDataUpdateCoordinator] = HassKey(
 JOBS_COORDINATOR: HassKey[SupervisorJobsCoordinator] = HassKey(
     "hassio_jobs_coordinator"
 )
+DATA_AUTO_UPDATE: HassKey[AutoUpdateManager] = HassKey("hassio_auto_update")
 
 
 DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
@@ -164,6 +166,19 @@ DEFAULT_UPDATE_OPTIONS = {
     OPTION_ADD_ON_BACKUP_RETAIN_COPIES: 1,
     OPTION_CORE_BACKUP_BEFORE_UPDATE: False,
 }
+
+# Automatic Home Assistant updates. A missing enabled option means the user
+# has not made a choice yet.
+OPTION_CORE_AUTO_UPDATE = "core_auto_update"
+OPTION_CORE_AUTO_UPDATE_DELAY = "core_auto_update_delay"
+OPTION_CORE_AUTO_UPDATE_WINDOW_START = "core_auto_update_window_start"
+OPTION_CORE_AUTO_UPDATE_WINDOW_END = "core_auto_update_window_end"
+OPTION_CORE_AUTO_UPDATE_WEEKDAYS = "core_auto_update_weekdays"
+
+CORE_AUTO_UPDATE_DELAYS = (0, 1, 3, 7, 14)
+DEFAULT_CORE_AUTO_UPDATE_DELAY = 3
+DEFAULT_CORE_AUTO_UPDATE_WINDOW_START = "03:00:00"
+DEFAULT_CORE_AUTO_UPDATE_WINDOW_END = "05:00:00"
 
 PLACEHOLDER_KEY_ADDON = "addon"
 PLACEHOLDER_KEY_ADDON_INFO = "addon_info"

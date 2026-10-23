@@ -12,6 +12,12 @@
       }
     },
     "number": {
+      "effect_intensity": {
+        "default": "mdi:brightness-percent"
+      },
+      "effect_speed": {
+        "default": "mdi:shimmer"
+      },
       "external_temperature": {
         "default": "mdi:thermometer-check"
       },
@@ -92,6 +98,9 @@
           "off": "mdi:home-import-outline",
           "on": "mdi:home-export-outline"
         }
+      },
+      "effect_reverse": {
+        "default": "mdi:swap-horizontal"
       },
       "left_slot": {
         "default": "mdi:scent",

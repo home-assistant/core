@@ -9,6 +9,8 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.local_todo.store import LocalTodoListStore
@@ -28,9 +30,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from .conftest import STORAGE_KEY, TEST_ENTITY, TODO_NAME
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 type WsGetItemsType = Callable[[], Coroutine[Any, Any, list[dict[str, str]]]]
 type WsMoveItemType = Callable[[str, str | None], Coroutine[Any, Any, dict[str, Any]]]

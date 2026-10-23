@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.panasonic_viera.const import (
     ATTR_DEVICE_INFO,
     ATTR_UDN,
@@ -19,8 +21,6 @@ from .conftest import (
     MOCK_ENCRYPTION_DATA,
     get_mock_remote,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_encrypted(hass: HomeAssistant, mock_remote) -> None:

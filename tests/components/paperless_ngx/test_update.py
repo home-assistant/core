@@ -6,6 +6,13 @@ from freezegun.api import FrozenDateTimeFactory
 from pypaperless.exceptions import PaperlessConnectionError
 from pypaperless.models import RemoteVersion
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    async_fire_time_changed,
+    patch,
+    snapshot_platform,
+)
 
 from homeassistant.components.paperless_ngx.update import SCAN_INTERVAL
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
@@ -13,14 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    SnapshotAssertion,
-    async_fire_time_changed,
-    patch,
-    snapshot_platform,
-)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

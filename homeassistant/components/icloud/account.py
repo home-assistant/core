@@ -1,12 +1,18 @@
 """iCloud account."""
 
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 import logging
 import operator
 from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
+from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
+    PyiCloud2FARequiredException,
+    PyiCloudAcceptTermsException,
+    PyiCloudAPIResponseException,
+    PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
@@ -16,7 +22,7 @@ from pyicloud.exceptions import (
 from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_USERNAME, EntityStateAttribute
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -36,9 +42,6 @@ from .const import (
     ATTR_DEVICE_STATUS,
     ATTR_LOW_POWER_MODE,
     ATTR_OWNER_NAME,
-    DEVICE_ACTION_STATUS_CODE,
-    DEVICE_ACTION_STATUS_PENDING,
-    DEVICE_ACTIVATION_LOCKED,
     DEVICE_BATTERY_LEVEL,
     DEVICE_BATTERY_STATUS,
     DEVICE_CLASS,
@@ -46,31 +49,24 @@ from .const import (
     DEVICE_FEATURE_LOCK,
     DEVICE_FEATURES,
     DEVICE_ID,
-    DEVICE_IS_LOCATING,
     DEVICE_LOCATION,
     DEVICE_LOCATION_ALTITUDE,
-    DEVICE_LOCATION_ENABLED,
     DEVICE_LOCATION_FLOOR_LEVEL,
     DEVICE_LOCATION_HORIZONTAL_ACCURACY,
-    DEVICE_LOCATION_IS_INACCURATE,
-    DEVICE_LOCATION_IS_OLD,
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
     DEVICE_LOCATION_POSITION_TYPE,
     DEVICE_LOCATION_TIMESTAMP,
     DEVICE_LOCKED_TIMESTAMP,
     DEVICE_LOST_MODE_CAPABLE,
-    DEVICE_LOST_MODE_ENABLED,
     DEVICE_LOST_TIMESTAMP,
     DEVICE_LOW_POWER_MODE,
     DEVICE_NAME,
     DEVICE_PERSON_ID,
     DEVICE_RAW_DEVICE_MODEL,
-    DEVICE_REMOTE_LOCK,
     DEVICE_STATUS,
     DEVICE_STATUS_CODES,
     DEVICE_STATUS_SET,
-    DEVICE_WIPE_IN_PROGRESS,
     DEVICE_WIPED_TIMESTAMP,
     DOMAIN,
 )
@@ -80,6 +76,42 @@ if TYPE_CHECKING:
     from .media_source import PhotoCache
 
 _LOGGER = logging.getLogger(__name__)
+
+# pyicloud only raises PyiCloud2FARequiredException for a 409 whose body is JSON
+# with authType == "hsa2". Every other authentication rejection falls through to
+# Session._raise_error(), which raises a plain PyiCloudAPIResponseException
+# carrying the HTTP status in .code, so the status is what has to be inspected.
+#
+# GENERAL_AUTH_ERROR (500) is excluded on purpose: pyicloud groups it with the
+# authentication statuses, but a 500 is just as likely to be a transient iCloud
+# failure, and those have to keep being retried rather than parked for the user.
+_AUTH_REQUIRED_STATUSES = frozenset(
+    {
+        AppleAuthError.TWO_FACTOR_REQUIRED,
+        AppleAuthError.LOGIN_TOKEN_EXPIRED,
+        AppleAuthError.FIND_MY_REAUTH_REQUIRED,
+    }
+)
+
+
+def is_auth_error(err: PyiCloudAPIResponseException) -> bool:
+    """Return True if the account has to authenticate again to recover."""
+    return isinstance(err.code, int) and err.code in _AUTH_REQUIRED_STATUSES
+
+
+def _is_auth_failure(err: BaseException) -> bool:
+    """Return True if iCloud rejected the session rather than the request."""
+    if isinstance(
+        err,
+        (
+            PyiCloud2FARequiredException,
+            PyiCloudFailedLoginException,
+            PyiCloudAuthRequiredException,
+        ),
+    ):
+        return True
+    return isinstance(err, PyiCloudAPIResponseException) and is_auth_error(err)
+
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
@@ -151,7 +183,34 @@ class IcloudAccount:
         self.photo_cache: PhotoCache | None = None
 
     def setup(self) -> None:
-        """Set up an iCloud account."""
+        """Set up an iCloud account, leaving it with a fetch scheduled.
+
+        Every path out of _setup() has to end with a timer, including the ones
+        that return before update_devices() arms it.
+        """
+        try:
+            self._setup()
+        except PyiCloudAPIResponseException as err:
+            if not is_auth_error(err):
+                raise
+            self._ask_to_authenticate(err)
+        except (
+            PyiCloud2FARequiredException,
+            PyiCloudFailedLoginException,
+            PyiCloudAuthRequiredException,
+            PyiCloudAcceptTermsException,
+        ) as err:
+            # Refreshing the devices can reject a session that logging in
+            # accepted. The entry still loads: the user is asked to act on it,
+            # and the timer below keeps polling so it recovers once they have.
+            self._ask_to_authenticate(err)
+
+        if self._unsub_fetch is None:
+            self._fetch_interval = self._max_interval
+            self._schedule_next_fetch()
+
+    def _setup(self) -> None:
+        """Log in and read the account's devices."""
         try:
             self.api = PyiCloudService(
                 self._username,
@@ -204,22 +263,27 @@ class IcloudAccount:
         if user_info is None:
             raise ConfigEntryNotReady("No user info found in iCloud devices response")
 
+        self._read_account_names(user_info)
+
+        self._devices = {}
+        # The FindMyiPhoneServiceManager constructor just located every device,
+        # so the first update should only read that fresh data, not request a
+        # second active locate from Apple.
+        self.update_devices(locate=False)
+
+    def _read_account_names(self, user_info: Mapping[str, Any]) -> None:
+        """Store the account owner and family member names."""
         self._owner_fullname = (
             f"{user_info.get('firstName')} {user_info.get('lastName')}"
         )
 
         self._family_members_fullname = {}
-        if user_info.get("membersInfo") is not None:
-            for prs_id, member in user_info.get("membersInfo").items():
+        members_info = user_info.get("membersInfo")
+        if members_info is not None:
+            for prs_id, member in members_info.items():
                 self._family_members_fullname[prs_id] = (
                     f"{member['firstName']} {member['lastName']}"
                 )
-
-        self._devices = {}
-        # pyicloud builds its service manager without an active locate, so
-        # this first update reads Apple's cached location and the first
-        # scheduled poll requests the fresh GPS fix.
-        self.update_devices(locate=False)
 
     def update_devices(self, locate: bool = True) -> None:
         """Update iCloud devices."""
@@ -229,28 +293,72 @@ class IcloudAccount:
 
         if self.api.requires_2fa:
             self._require_reauth()
+            # Keep the timer running so polling resumes by itself once the
+            # user has entered their verification code.
+            self._fetch_interval = self._max_interval
+            self._schedule_next_fetch()
             return
 
-        api_devices = {}
         try:
             api_devices = self.api.devices
-            if locate:
-                # Device reads are cache-only, so ask Apple for a fresh GPS
-                # fix on every poll instead of the location it last cached.
-                api_devices.refresh(locate=True)
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
+            if _is_auth_failure(err):
+                # Refreshing the devices is where a stored session is usually
+                # turned down. Retrying that here every couple of minutes gets
+                # nowhere, so hand it to the caller, which asks the user.
+                raise
             _LOGGER.error("Unknown iCloud error: %s", err)
             self._fetch_interval = 2
             dispatcher_send(self.hass, self.signal_device_update)
             self._schedule_next_fetch()
             return
 
+        if locate:
+            # Since pyicloud 2.3.0 device reads are cache-only and the library
+            # requests an active locate from Apple only at service creation, so
+            # explicitly refresh with locate=True to get a fresh GPS fix on
+            # every poll instead of Apple's cached location.
+            try:
+                api_devices.refresh(locate=True)
+            except Exception as err:
+                if _is_auth_failure(err):
+                    raise
+                # Best effort: the devices read below still carry whichever
+                # fixes iCloud already held, which beats skipping the poll
+                # altogether.
+                _LOGGER.debug("Could not request an iCloud location refresh: %s", err)
+
+        if self._owner_fullname is None and api_devices.user_info is not None:
+            # setup() returns before reading these when iCloud asks for a
+            # verification code, and keep_alive() only runs a full setup again
+            # when there is no session at all, so the first poll after the
+            # challenge is what fills them in. A family device cannot be built
+            # without them.
+            self._read_account_names(api_devices.user_info)
+
         # Gets devices infos
+        devices = list(api_devices)
         new_device = False
-        for device in api_devices:
+        first_status: dict[str, Any] | None = None
+        for device in devices:
             status = device.status(DEVICE_STATUS_SET)
             device_id = status[DEVICE_ID]
             device_name = status[DEVICE_NAME]
+
+            if device_id is None or device_name is None:
+                # status() reports every requested field, using None for the
+                # ones iCloud left out, so an unusable device arrives looking
+                # like any other rather than raising. It has to be rejected
+                # here to keep a None identity out of the entity and device
+                # registries; a later poll picks the device up if iCloud
+                # starts reporting it properly.
+                _LOGGER.warning("Skipping iCloud device with no id or name")
+                continue
+
+            # After the skip above, so the pending check below never reads the
+            # status of a device that was just rejected.
+            if first_status is None:
+                first_status = status
 
             if (
                 status[DEVICE_BATTERY_STATUS] == "Unknown"
@@ -274,7 +382,11 @@ class IcloudAccount:
                 new_device = True
 
         if (
-            DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending"
+            # status() reports every requested field, using None for the ones
+            # iCloud left out; indexing the payload directly would raise here
+            # instead, and during setup that is before any timer is armed.
+            first_status is not None
+            and DEVICE_STATUS_CODES.get(first_status[DEVICE_STATUS]) == "pending"
             and not self._retried_fetch
         ):
             _LOGGER.debug("Pending devices, trying again in 15s")
@@ -289,6 +401,49 @@ class IcloudAccount:
             dispatcher_send(self.hass, self.signal_device_new)
 
         self._schedule_next_fetch()
+
+    def _ask_to_authenticate(self, err: Exception) -> None:
+        """Ask the user to log in again after iCloud rejected the session.
+
+        The session is only kept when the reauth flow can actually use it.
+        That is what api.requires_2fa says: the flow reads exactly that
+        property to decide whether to open code entry. A challenge raised by a
+        request pyicloud does not route through authenticate() never sets it,
+        so keeping that session would send the flow past code entry with a
+        code still outstanding; dropping it asks for the password instead, and
+        the login that follows re-issues the challenge with requires_2fa set.
+
+        An authentication status on an API response is never that case either:
+        it says the session itself has to be established again, and one that
+        has just been rejected cannot carry a code.
+        """
+        if (
+            not isinstance(err, PyiCloudAPIResponseException)
+            and self.api is not None
+            and self.api.requires_2fa
+        ):
+            # Keep the session: the reauth flow reuses it to validate the code,
+            # and async_step_reauth sends a None api back to the password form
+            # instead of straight to code entry.
+            _LOGGER.warning(
+                (
+                    "2FA authentication required for '%s'; Go to the Integrations "
+                    "menu and click on Configure on the discovered Apple iCloud "
+                    "card to enter your verification code"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+        else:
+            self.api = None
+            _LOGGER.error(
+                (
+                    "Your iCloud account for '%s' is no longer working; Go to the "
+                    "Integrations menu and click on Configure on the discovered "
+                    "Apple iCloud card to login again"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+        self._require_reauth()
 
     def _require_reauth(self):
         """Require the user to log in again."""
@@ -382,16 +537,83 @@ class IcloudAccount:
                 utcnow() + timedelta(minutes=self._fetch_interval),
             )
 
+    def _reauth_pending(self) -> bool:
+        """Return whether the user is already being asked to log in again.
+
+        This runs in the executor, so the flow list has to be read on the
+        event loop like the rest of the shared state here.
+        """
+        return run_callback_threadsafe(
+            self.hass.loop,
+            lambda: bool(
+                any(
+                    self._config_entry.async_get_active_flows(
+                        self.hass, {SOURCE_REAUTH}
+                    )
+                )
+            ),
+        ).result()
+
     def keep_alive(self, now=None) -> None:
-        """Keep the API alive."""
-        if self.api is None:
-            self.setup()
+        """Keep the API alive.
+
+        This runs from a timer callback and is what schedules the next one, so
+        every path out of here has to schedule that fetch: anything raised
+        escapes into the event loop and stops the account polling entirely.
+        """
+        if self.api is None and not self._reauth_pending():
+            # Not while the user is already being asked: retrying underneath
+            # them adds failed attempts against the account, or succeeds and
+            # strands the repair they were shown. Completing that flow reloads
+            # the entry, which is what recovers the account.
+            try:
+                self.setup()
+            except Exception:
+                # setup() reports its own failures; it must not stop the loop.
+                # Drop whatever session it did establish: it may have failed
+                # after logging in but before reading the account's owner and
+                # family names, and those are only filled in by a full setup.
+                _LOGGER.exception("Error setting up iCloud account, will retry")
+                self.api = None
 
         if self.api is None:
+            # Still no session. Try again at the longest interval rather than
+            # giving up, so the account recovers on its own once iCloud is
+            # reachable again or the user has finished logging in.
+            self._fetch_interval = self._max_interval
+            self._schedule_next_fetch()
             return
 
-        self.api.authenticate()
-        self.update_devices()
+        try:
+            try:
+                self.api.authenticate()
+                self.update_devices()
+            except PyiCloudAPIResponseException as err:
+                if not is_auth_error(err):
+                    # Not an authentication failure. Hand it to the transient
+                    # handling below so it keeps being retried, rather than
+                    # parking the account for credentials that are not at fault.
+                    raise
+                self._ask_to_authenticate(err)
+                self._fetch_interval = self._max_interval
+                self._schedule_next_fetch()
+            except (
+                PyiCloud2FARequiredException,
+                PyiCloudFailedLoginException,
+                PyiCloudAuthRequiredException,
+                PyiCloudAcceptTermsException,
+            ) as err:
+                # None of these comes back on its own, so ask the user instead
+                # of retrying every couple of minutes forever.
+                self._ask_to_authenticate(err)
+                self._fetch_interval = self._max_interval
+                self._schedule_next_fetch()
+        except Exception:
+            # update_devices() reschedules itself on the errors it handles;
+            # this covers the rest, such as a device missing fields.
+            _LOGGER.exception("Error updating iCloud devices, will retry")
+            self._fetch_interval = 2
+            self._schedule_next_fetch()
 
     def get_devices_with_name(self, name: str) -> list[Any]:
         """Get devices by name."""
@@ -578,24 +800,6 @@ class IcloudDevice:
         return _parse_timestamp(self._location.get(DEVICE_LOCATION_TIMESTAMP))
 
     @property
-    def location_is_old(self) -> bool:
-        """Return whether Apple flagged the reported location fix as old."""
-        # The flag describes the payload Apple just sent, which can differ from
-        # the fix this integration stores.
-        location = self._status[DEVICE_LOCATION]
-        if location is None:
-            return False
-        return bool(location.get(DEVICE_LOCATION_IS_OLD, False))
-
-    @property
-    def location_is_inaccurate(self) -> bool:
-        """Return whether Apple flagged the reported location fix as inaccurate."""
-        location = self._status[DEVICE_LOCATION]
-        if location is None:
-            return False
-        return bool(location.get(DEVICE_LOCATION_IS_INACCURATE, False))
-
-    @property
     def location_type(self) -> str | None:
         """Return the type of the last location fix, for example GPS or Wifi."""
         if self._location is None:
@@ -627,46 +831,6 @@ class IcloudDevice:
     def device_status(self) -> str:
         """Return the device online status."""
         return DEVICE_STATUS_CODES.get(self._status[DEVICE_STATUS], "error")
-
-    @property
-    def is_online(self) -> bool:
-        """Return whether the device is online."""
-        return self.device_status == "online"
-
-    @property
-    def low_power_mode(self) -> bool:
-        """Return whether low power mode is enabled on the device."""
-        return bool(self._status.get(DEVICE_LOW_POWER_MODE, False))
-
-    @property
-    def activation_locked(self) -> bool:
-        """Return whether activation lock is enabled on the device."""
-        return bool(self._status.get(DEVICE_ACTIVATION_LOCKED, False))
-
-    @property
-    def is_locating(self) -> bool:
-        """Return whether the device is being located right now."""
-        return bool(self._status.get(DEVICE_IS_LOCATING, False))
-
-    @property
-    def location_services_enabled(self) -> bool:
-        """Return whether location services are enabled on the device."""
-        return bool(self._status.get(DEVICE_LOCATION_ENABLED, False))
-
-    @property
-    def wipe_in_progress(self) -> bool:
-        """Return whether a wipe is in progress on the device."""
-        return bool(self._status.get(DEVICE_WIPE_IN_PROGRESS, False))
-
-    @property
-    def remote_lock_pending(self) -> bool:
-        """Return whether a remote lock is pending on the device."""
-        remote_lock = self._status.get(DEVICE_REMOTE_LOCK)
-        if not isinstance(remote_lock, dict):
-            return False
-        return (
-            remote_lock.get(DEVICE_ACTION_STATUS_CODE) == DEVICE_ACTION_STATUS_PENDING
-        )
 
     @property
     def last_locked(self) -> datetime | None:
@@ -708,27 +872,6 @@ class IcloudDevice:
     def lost_mode_available(self) -> bool:
         """Return whether the device supports lost mode."""
         return self._device.lost_mode_available
-
-    @property
-    def sound_available(self) -> bool:
-        """Return whether the device can play a sound."""
-        return self._device.sound_available
-
-    @property
-    def lost_mode_enabled(self) -> bool:
-        """Return whether lost mode is currently enabled on the device."""
-        return bool(self._status.get(DEVICE_LOST_MODE_ENABLED, False))
-
-    @property
-    def raw_status(self) -> dict[str, Any]:
-        """Return the raw device data reported by Apple."""
-        # update() stores the fetch interval in the status dict, which is
-        # account state rather than device data.
-        return {
-            key: value
-            for key, value in self._status.items()
-            if key != ATTR_ACCOUNT_FETCH_INTERVAL
-        }
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

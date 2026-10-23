@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 import warnings
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zha.quirks import DEVICE_REGISTRY
 import zhaquirks
 import zigpy
@@ -32,7 +33,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import patch_cluster as common_patch_cluster
 
-from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 FIXTURE_GRP_ID = 0x1001

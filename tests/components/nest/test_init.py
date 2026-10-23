@@ -9,7 +9,7 @@ relevant modes.
 """
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import logging
 from unittest.mock import AsyncMock, patch
@@ -23,6 +23,8 @@ from google_nest_sdm.exceptions import (
     SubscriberTimeoutException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import OAUTH2_TOKEN
@@ -40,12 +42,9 @@ from .common import (
     create_nest_event,
 )
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-
 PLATFORM = "sensor"
 
-EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
+EXPIRED_TOKEN_TIMESTAMP = dt.datetime(2022, 4, 8).timestamp()
 
 
 @pytest.fixture

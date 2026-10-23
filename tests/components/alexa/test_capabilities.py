@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.alexa import smart_home
@@ -38,8 +39,6 @@ from .test_common import (
     get_new_request,
     reported_properties,
 )
-
-from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize(

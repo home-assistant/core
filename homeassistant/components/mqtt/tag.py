@@ -21,7 +21,6 @@ from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
 from .discovery import MQTTDiscoveryPayload
 from .entity import (
     MqttDiscoveryDeviceUpdateMixin,
-    async_handle_schema_error,
     async_setup_non_entity_entry_helper,
     send_discovery_done,
     update_device,
@@ -130,11 +129,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
     async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle MQTT tag discovery updates."""
         # Update tag scanner
-        try:
-            config: DiscoveryInfoType = DISCOVERY_SCHEMA(discovery_data)
-        except probatio.Invalid as err:
-            async_handle_schema_error(discovery_data, err)
-            return
+        config: DiscoveryInfoType = DISCOVERY_SCHEMA(discovery_data)
         self._config = config
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE)

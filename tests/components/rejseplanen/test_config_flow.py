@@ -10,14 +10,13 @@ from py_rejseplan.exceptions import (
     ConnectionError as RejseplanenConnectionError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.rejseplanen.const import CONF_STOP_ID, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 LOGGER = logging.getLogger(__name__)
 

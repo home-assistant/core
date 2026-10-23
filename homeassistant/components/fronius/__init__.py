@@ -17,7 +17,7 @@ from pyfronius import Fronius, FroniusError
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -247,17 +247,15 @@ class FroniusSolarNet:
         if self.logger_coordinator:
             _logger_info = self.logger_coordinator.data[SOLAR_NET_ID_SYSTEM]
             # API v0 doesn't provide product_type
-            solar_net_device[ATTR_MODEL] = _logger_info.get("product_type", {}).get(
+            solar_net_device.model = _logger_info.get("product_type", {}).get(
                 "value", "Datalogger Web"
             )
-            solar_net_device[ATTR_SW_VERSION] = _logger_info["software_version"][
-                "value"
-            ]
+            solar_net_device.sw_version = _logger_info["software_version"]["value"]
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=self.config_entry.entry_id,
-            **solar_net_device,
+            device_info=solar_net_device,
         )
         return solar_net_device
 

@@ -200,7 +200,10 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     @override
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
-        return self._rendered_entity_variables or {}
+        return {
+            **self.coordinator.trigger_variables,
+            **(self._rendered_entity_variables or {}),
+        }
 
     @override
     def _render_single_template(

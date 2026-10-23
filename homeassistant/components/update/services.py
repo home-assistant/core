@@ -19,7 +19,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import UpdateEntity
+    from .entity import UpdateEntity
 
 
 async def _async_install(entity: UpdateEntity, service_call: ServiceCall) -> None:

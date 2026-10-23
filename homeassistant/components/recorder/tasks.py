@@ -9,14 +9,14 @@ import logging
 import threading
 from typing import TYPE_CHECKING, Any, override
 
-from homeassistant.helpers.recorder import DATA_RECORDER
+from homeassistant.helpers.recorder import DATA_RECORDER, session_scope
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.util.event_type import EventType
 
 from . import entity_registry, purge, statistics
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
-from .util import periodic_db_cleanups, session_scope
+from .util import periodic_db_cleanups
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,11 +61,18 @@ class ClearStatisticsTask(RecorderTask):
 
     on_done: Callable[[], None] | None
     statistic_ids: list[str]
+    start_time: datetime | None = None
+    end_time: datetime | None = None
 
     @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        statistics.clear_statistics(instance, self.statistic_ids)
+        if self.start_time is not None and self.end_time is not None:
+            statistics.clear_statistics_range(
+                instance, self.statistic_ids, self.start_time, self.end_time
+            )
+        else:
+            statistics.clear_statistics(instance, self.statistic_ids)
         if self.on_done:
             self.on_done()
 

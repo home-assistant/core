@@ -2,6 +2,8 @@
 
 from unittest.mock import ANY, call
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.rfxtrx import DOMAIN, DeviceTuple
@@ -12,9 +14,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import setup_rfx_test_cfg
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 SOME_PROTOCOLS = ["ac", "arc"]
 

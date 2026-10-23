@@ -2,6 +2,8 @@
 
 from collections.abc import Awaitable, Callable
 
+from pytest_homeassistant.typing import MagicMock
+
 from homeassistant.components.icloud.const import (
     ATTR_ACCOUNT_FETCH_INTERVAL,
     ATTR_BATTERY,
@@ -14,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .const import DEVICE, LOCATION, MAX_INTERVAL
-
-from tests.typing import MagicMock
 
 TRACKER_UNIQUE_ID = "device1"
 

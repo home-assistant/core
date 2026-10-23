@@ -24,6 +24,7 @@
       "local_name": "GS3MP_*"
     }
   ],
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

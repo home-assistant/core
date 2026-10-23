@@ -107,6 +107,7 @@ async def async_setup_entry(
             hass=hass,
             domain=DOMAIN,
             issue_id=f"system_bridge_{entry.entry_id}_unsupported_version",
+            config_entry_id=entry.entry_id,
             translation_key="unsupported_version",
             translation_placeholders={"host": entry.data[CONF_HOST]},
             severity=IssueSeverity.ERROR,
@@ -189,22 +190,12 @@ async def async_setup_entry(
         )
     )
 
-    # Reload entry when its updated.
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SystemBridgeConfigEntry
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-
-
-async def async_reload_entry(
-    hass: HomeAssistant, entry: SystemBridgeConfigEntry
-) -> None:
-    """Reload the config entry when it changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_migrate_entry(
