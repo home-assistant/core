@@ -289,7 +289,13 @@ async def test_binary_sensor_setup_sensor_leak(
     """Test binary_sensor entity setup for sensor with most leak mounting type."""
 
     sensor.mount_type = MountType.LEAK
-    setup_public_sensor(ufp)
+    setup_public_sensor(
+        ufp,
+        motion_enabled=False,
+        temperature_enabled=False,
+        humidity_enabled=False,
+        light_enabled=False,
+    )
     await init_entry(hass, ufp, [sensor])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 

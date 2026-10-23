@@ -17,6 +17,7 @@ from uiprotect.data import (
     NVR,
     Bootstrap,
     Camera,
+    ChannelQuality,
     Chime,
     CloudAccount,
     Light,
@@ -56,9 +57,11 @@ from homeassistant.util import dt as dt_util
 from . import _patch_discovery
 from .utils import (
     MockUFPFixture,
+    active_rtsps_qualities,
     make_public_bootstrap,
     make_public_camera,
     public_rtsps_for,
+    set_active_rtsps_qualities,
 )
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
@@ -195,10 +198,6 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.base_url = "https://127.0.0.1"
     client.connection_host = IPv4Address("127.0.0.1")
 
-    async def get_nvr(*args: Any, **kwargs: Any) -> NVR:
-        return client.bootstrap.nvr
-
-    client.get_nvr = get_nvr
     client.get_bootstrap = AsyncMock(return_value=bootstrap)
     client.update = AsyncMock(return_value=bootstrap)
     client.update_public = AsyncMock()
@@ -235,7 +234,11 @@ def mock_ufp_client(bootstrap: Bootstrap):
     ) -> RTSPSStreams | None:
         """Fetch a camera's RTSPS streams (used by the repair flow)."""
         camera = client.bootstrap.cameras.get(camera_id)
-        return public_rtsps_for(camera) if camera is not None else None
+        return (
+            public_rtsps_for(*active_rtsps_qualities(camera))
+            if camera is not None
+            else None
+        )
 
     client.get_camera_rtsps_streams = AsyncMock(side_effect=get_camera_rtsps_streams)
     client.create_camera_rtsps_streams = AsyncMock(return_value=None)
@@ -314,7 +317,7 @@ def mock_entry(
             for camera in ufp_client.bootstrap.cameras.values():
                 public = make_public_camera(camera)
                 public.rtsps_streams = (
-                    public_rtsps_for(camera)
+                    public_rtsps_for(*active_rtsps_qualities(camera))
                     if camera.state is StateType.CONNECTED
                     else None
                 )
@@ -359,17 +362,16 @@ def camera_all_fixture(camera: Camera):
     all_camera.channels = [all_camera.channels[0].model_copy()]
 
     medium_channel = all_camera.channels[0].model_copy()
-    medium_channel.name = "Medium"
     medium_channel.id = 1
-    medium_channel.rtsp_alias = "test_medium_alias"
     all_camera.channels.append(medium_channel)
 
     low_channel = all_camera.channels[0].model_copy()
-    low_channel.name = "Low"
     low_channel.id = 2
-    low_channel.rtsp_alias = "test_medium_alias"
     all_camera.channels.append(low_channel)
 
+    set_active_rtsps_qualities(
+        all_camera, ChannelQuality.HIGH, ChannelQuality.MEDIUM, ChannelQuality.LOW
+    )
     return all_camera
 
 
@@ -397,12 +399,11 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
     doorbell.channels = [c.model_copy() for c in doorbell.channels]
 
     package_channel = doorbell.channels[0].model_copy()
-    package_channel.name = "Package Camera"
     package_channel.id = 3
     package_channel.fps = 2
-    package_channel.rtsp_alias = "test_package_alias"
 
     doorbell.channels.append(package_channel)
+    set_active_rtsps_qualities(doorbell, ChannelQuality.HIGH, ChannelQuality.PACKAGE)
     doorbell.feature_flags.video_modes = [VideoMode.DEFAULT, VideoMode.HIGH_FPS]
     doorbell.feature_flags.smart_detect_types = [
         SmartDetectObjectType.PERSON,
@@ -490,16 +491,14 @@ def viewer():
 
 
 @pytest.fixture(name="sensor")
-def sensor_fixture(fixed_now: datetime):
+def sensor_fixture():
     """Mock UniFi Protect Sensor device."""
 
     # disable pydantic validation so mocking can happen
     Sensor.model_config["validate_assignment"] = False
 
     data = load_json_object_fixture("sample_sensor.json", DOMAIN)
-    sensor: Sensor = Sensor.from_unifi_dict(**data)
-    sensor.alarm_triggered_at = fixed_now - timedelta(hours=1)
-    yield sensor
+    yield Sensor.from_unifi_dict(**data)
 
     Sensor.model_config["validate_assignment"] = True
 
@@ -509,12 +508,8 @@ def sensor_all_fixture(sensor: Sensor):
     """Mock UniFi Protect Sensor device."""
 
     all_sensor = sensor.model_copy()
-    all_sensor.light_settings.is_enabled = True
-    all_sensor.humidity_settings.is_enabled = True
-    all_sensor.temperature_settings.is_enabled = True
     all_sensor.alarm_settings.is_enabled = True
     all_sensor.led_settings.is_enabled = True
-    all_sensor.motion_settings.is_enabled = True
 
     return all_sensor
 
