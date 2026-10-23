@@ -70,5 +70,71 @@
     "switch_led": false
   },
   "set_up": false,
-  "support_local": true
+  "support_local": true,
+  "local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "switch",
+      "config_item": {
+        "statusFormat": {
+          "switch": "$"
+        },
+        "valueDesc": {},
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "z3srxdwcicg3bla4"
+      }
+    },
+    "2": {
+      "value_convert": "default",
+      "status_code": "temp_set",
+      "config_item": {
+        "statusFormat": {
+          "temp_set": "$"
+        },
+        "valueDesc": {
+          "unit": "\u2103",
+          "min": 5,
+          "max": 20,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "z3srxdwcicg3bla4"
+      }
+    },
+    "6": {
+      "value_convert": "default",
+      "status_code": "temp_current",
+      "config_item": {
+        "statusFormat": {
+          "temp_current": "$"
+        },
+        "valueDesc": {
+          "unit": "\u2103",
+          "min": -10,
+          "max": 50,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "z3srxdwcicg3bla4"
+      }
+    },
+    "11": {
+      "value_convert": "default",
+      "status_code": "switch_led",
+      "config_item": {
+        "statusFormat": {
+          "switch_led": "$"
+        },
+        "valueDesc": {},
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "z3srxdwcicg3bla4"
+      }
+    }
+  }
 }
