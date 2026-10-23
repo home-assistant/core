@@ -228,7 +228,7 @@ def _print_deprecation_warning(
 def _print_deprecation_warning_internal(
     obj_name: str,
     module_name: str,
-    replacement: str,
+    replacement: str | None,
     description: str,
     verb: str,
     breaks_in_ha_version: str | None,
@@ -252,7 +252,7 @@ def _print_deprecation_warning_internal(
 def _print_deprecation_warning_internal_impl(
     obj_name: str,
     module_name: str,
-    replacement: str,
+    replacement: str | None,
     description: str,
     verb: str,
     breaks_in_ha_version: str | None,
@@ -269,17 +269,23 @@ def _print_deprecation_warning_internal_impl(
         breaks_in = f" It will be removed in HA Core {breaks_in_ha_version}."
     else:
         breaks_in = ""
+    if replacement is None:
+        use_instead = ""
+        please = " Please"
+    else:
+        use_instead = f" Use {replacement} instead"
+        please = ", please"
     try:
         integration_frame = get_integration_frame()
     except MissingIntegrationFrame:
         if log_when_no_integration_is_found:
             logger.warning(
-                "The deprecated %s %s was %s.%s Use %s instead",
+                "The deprecated %s %s was %s.%s%s",
                 description,
                 obj_name,
                 verb,
                 breaks_in,
-                replacement,
+                use_instead,
             )
     else:
         if integration_frame.custom_integration:
@@ -289,24 +295,25 @@ def _print_deprecation_warning_internal_impl(
                 module=integration_frame.module,
             )
             logger.warning(
-                ("The deprecated %s %s was %s from %s.%s Use %s instead, please %s"),
+                "The deprecated %s %s was %s from %s.%s%s%s %s",
                 description,
                 obj_name,
                 verb,
                 integration_frame.integration,
                 breaks_in,
-                replacement,
+                use_instead,
+                please,
                 report_issue,
             )
         else:
             logger.warning(
-                "The deprecated %s %s was %s from %s.%s Use %s instead",
+                "The deprecated %s %s was %s from %s.%s%s",
                 description,
                 obj_name,
                 verb,
                 integration_frame.integration,
                 breaks_in,
-                replacement,
+                use_instead,
             )
 
 
@@ -314,7 +321,7 @@ class DeprecatedConstant[T](NamedTuple):
     """Deprecated constant."""
 
     value: T
-    replacement: str
+    replacement: str | None
     breaks_in_ha_version: str | None
 
 
@@ -383,7 +390,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         replacement = deprecated_const.replacement
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
 
-    if value is None or replacement is None:
+    if value is None:
         msg = (
             f"Value of {_PREFIX_DEPRECATED}{name} is an instance of "
             f"{type(deprecated_const)} but an instance of DeprecatedAlias, "

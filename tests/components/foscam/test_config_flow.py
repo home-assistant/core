@@ -4,6 +4,8 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.foscam import config_flow
 from homeassistant.components.foscam.const import DOMAIN
@@ -13,13 +15,11 @@ from homeassistant.data_entry_flow import FlowResultType
 from .conftest import setup_mock_foscam_camera
 from .const import CAMERA_NAME, INVALID_RESPONSE_CONFIG, VALID_CONFIG
 
-from tests.common import MockConfigEntry
-
 
 @contextmanager
 def _patch_setup_entry() -> Generator[None]:
     """Patch the entry setup."""
-    with patch("homeassistant.components.foscam.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.foscam.async_setup_entry", return_value=None):
         yield
 
 
@@ -38,7 +38,7 @@ async def test_user_valid(hass: HomeAssistant) -> None:
         ) as mock_foscam_camera,
         patch(
             "homeassistant.components.foscam.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         setup_mock_foscam_camera(mock_foscam_camera)

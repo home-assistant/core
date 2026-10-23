@@ -24,6 +24,7 @@ import probatio
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -82,6 +83,7 @@ from homeassistant.components.modbus.const import (
     UDP,
     DataType,
 )
+from homeassistant.components.modbus.schemas import CONFIG_SCHEMA
 from homeassistant.components.modbus.validators import (
     check_config,
     duplicate_fan_mode_validator,
@@ -132,8 +134,6 @@ from .conftest import (
     TEST_PORT_TCP,
     ReadResult,
 )
-
-from tests.common import async_fire_time_changed, get_fixture_path
 
 
 @pytest.fixture(name="mock_modbus_with_pymodbus")
@@ -200,6 +200,14 @@ async def test_nan_validator() -> None:
         nan_validator("x15")
     with pytest.raises(probatio.Invalid):
         nan_validator("not a hex string")
+
+
+async def test_tcp_hub_without_host_is_invalid() -> None:
+    """Test the hub type selects the schema that reports the error."""
+    with pytest.raises(
+        probatio.Invalid, match=r"required key not provided at 'modbus\[0\]\.host'"
+    ):
+        CONFIG_SCHEMA({DOMAIN: {CONF_TYPE: TCP, CONF_PORT: 502}})
 
 
 @pytest.mark.parametrize(

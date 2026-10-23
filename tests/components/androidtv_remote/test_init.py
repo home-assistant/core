@@ -4,12 +4,11 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock
 
 from androidtvremote2 import CannotConnect, InvalidAuth
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(

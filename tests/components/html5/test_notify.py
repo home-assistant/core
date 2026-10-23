@@ -11,6 +11,8 @@ from aiohttp import ClientError
 from aiohttp.hdrs import AUTHORIZATION
 import jwt.warnings
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from pywebpush import WebPushException
 from syrupy.assertion import SnapshotAssertion
 
@@ -52,9 +54,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 CONFIG_FILE = "file.conf"
 

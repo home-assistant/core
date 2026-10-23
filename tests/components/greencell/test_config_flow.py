@@ -6,6 +6,8 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant import config_entries
 from homeassistant.components.greencell.const import (
@@ -20,9 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_SERIAL_NUMBER, TEST_SERIAL_NUMBER_2
-
-from tests.common import MockConfigEntry
-from tests.typing import MqttMockHAClient
 
 OTHER_DEVICE_SERIAL = "OTHER12345678"
 

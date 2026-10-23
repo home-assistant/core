@@ -26,7 +26,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STOP,
-    FORMAT_DATETIME,
     Platform,
 )
 from homeassistant.core import Event, HassJob, HomeAssistant, callback
@@ -41,6 +40,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
+from homeassistant.util.logging import LOG_FORMAT, HomeAssistantLogFormatter
 from homeassistant.util.signal_type import SignalType
 
 # Pre-import backup to avoid it being imported
@@ -177,6 +177,22 @@ CONFIG_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "DOMAIN",
+    "CloudConnectionState",
+    "CloudNotAvailable",
+    "CloudNotConnected",
+    "async_active_subscription",
+    "async_create_cloudhook",
+    "async_delete_cloudhook",
+    "async_get_or_create_cloudhook",
+    "async_is_connected",
+    "async_is_logged_in",
+    "async_listen_cloudhook_change",
+    "async_listen_connection_change",
+    "async_remote_ui_url",
+]
 
 
 class CloudNotAvailable(HomeAssistantError):
@@ -520,7 +536,7 @@ def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> Non
     cloud.client.prefs.async_listen_updates(on_prefs_updated)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
     platforms = PLATFORMS.copy()
     if (cloud := hass.data[DATA_CLOUD]).is_logged_in:
@@ -533,22 +549,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     stt_tts_entities_added = hass.data[DATA_PLATFORMS_SETUP]["stt_tts_entities_added"]
     stt_tts_entities_added.set()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, entry.runtime_data["platforms"]
     )
 
 
 async def _setup_log_handler(hass: HomeAssistant) -> FixedSizeQueueLogHandler:
-    fmt = (
-        "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
-    )
     handler = FixedSizeQueueLogHandler()
-    handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
+    handler.setFormatter(HomeAssistantLogFormatter(LOG_FORMAT))
 
     integration = await async_get_integration(hass, DOMAIN)
     loggers: set[str] = {integration.pkg_path, *(integration.loggers or [])}

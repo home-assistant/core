@@ -1,6 +1,7 @@
 {
   "domain": "fing",
   "name": "Fing",
+  "categories": ["presence_location.network_presence"],
   "codeowners": ["@Lorenzo-Gasparini"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fing",

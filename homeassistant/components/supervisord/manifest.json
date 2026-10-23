@@ -1,6 +1,7 @@
 {
   "domain": "supervisord",
   "name": "Supervisord",
+  "categories": ["computers_network.monitoring"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/supervisord",
   "iot_class": "local_polling",

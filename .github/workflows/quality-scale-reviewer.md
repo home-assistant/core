@@ -349,7 +349,7 @@ Use this format and keep the visible part to one or two sentences:
 
 - Evidence: `<path>:<line>` and the relevant code.
 - Recommendation: <concrete change that achieves compliance>.
-- Rule: https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/<rule>
+- Rule: https://contributors.home-assistant.io/core/quality-scale/rules/<rule>
 
 </details>
 ```

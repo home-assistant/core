@@ -1,6 +1,7 @@
 {
   "domain": "fronius",
   "name": "Fronius",
+  "categories": ["energy.solar_batteries", "energy.meters_monitoring"],
   "codeowners": ["@farmio"],
   "config_flow": true,
   "dependencies": ["modbus"],

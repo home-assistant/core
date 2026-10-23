@@ -9,6 +9,7 @@ from pyimouapi.exceptions import (
     RequestFailedException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.imou.const import (
     CONF_API_URL,
@@ -22,8 +23,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import TEST_APP_ID, TEST_APP_SECRET, USER_INPUT
-
-from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="127.0.0.1",

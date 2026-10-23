@@ -7,6 +7,11 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    async_capture_events,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant.components.trace import ActionTrace
@@ -18,9 +23,6 @@ from homeassistant.helpers.trace import TraceElement
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util.uuid import random_uuid_hex
-
-from tests.common import async_capture_events, async_load_json_object_fixture
-from tests.typing import WebSocketGenerator
 
 
 def _find_run_id(traces, trace_type, item_id):
@@ -1015,6 +1017,99 @@ async def test_nested_traces(
     assert set(trace["trace"]) == {f"{prefix}/0"} | extra_trace_keys
     assert len(trace["trace"][f"{prefix}/0"]) == 1
     child_id = trace["trace"][f"{prefix}/0"][0]["child_id"]
+    assert child_id == {"domain": "script", "item_id": "moon", "run_id": moon_run_id}
+
+
+@pytest.mark.parametrize(
+    ("domain", "prefix"), [("automation", "action"), ("script", "sequence")]
+)
+async def test_nested_traces_script_started_listener(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    prefix: str,
+) -> None:
+    """Test an automation triggered by script_started is not a child of the caller."""
+    msg_id = 1
+
+    def next_id():
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
+
+    sun_config = {
+        "id": "sun",
+        "triggers": {"platform": "event", "event_type": "test_event"},
+        "actions": {"service": "script.moon"},
+    }
+    moon_config = {
+        "moon": {
+            "sequence": [
+                {"wait_for_trigger": {"trigger": "event", "event_type": "go_on"}},
+                {"event": "another_event"},
+            ]
+        }
+    }
+    listener_config = {
+        "id": "listener",
+        "triggers": {
+            "trigger": "event",
+            "event_type": "script_started",
+            "event_data": {"entity_id": "script.moon"},
+        },
+        "actions": {"event": "listened"},
+    }
+    if domain == "automation":
+        await _setup_automation_or_script(
+            hass, domain, [sun_config, listener_config], moon_config
+        )
+    else:
+        await _setup_automation_or_script(hass, domain, [sun_config], moon_config)
+        assert await async_setup_component(
+            hass, "automation", {"automation": listener_config}
+        )
+
+    listened = asyncio.Event()
+
+    @callback
+    def _handle_listened(_):
+        listened.set()
+
+    hass.bus.async_listen("listened", _handle_listened)
+    client = await hass_ws_client()
+
+    # Start "sun", which waits in "moon" while the listener runs
+    if domain == "automation":
+        hass.bus.async_fire("test_event")
+    else:
+        await hass.services.async_call("script", "turn_on", {"entity_id": "script.sun"})
+    await asyncio.wait_for(listened.wait(), 1)
+    hass.bus.async_fire("go_on")
+    await hass.async_block_till_done()
+
+    traces = []
+    for trace_domain in ("automation", "script"):
+        await client.send_json(
+            {"id": next_id(), "type": "trace/list", "domain": trace_domain}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        traces += response["result"]
+    moon_run_id = _find_run_id(traces, "script", "moon")
+    assert _find_run_id(traces, "automation", "listener")
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "trace/get",
+            "domain": domain,
+            "item_id": "sun",
+            "run_id": _find_run_id(traces, domain, "sun"),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    child_id = response["result"]["trace"][f"{prefix}/0"][0]["child_id"]
     assert child_id == {"domain": "script", "item_id": "moon", "run_id": moon_run_id}
 
 

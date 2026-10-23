@@ -17,6 +17,11 @@ from aioamazondevices.structures import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -34,8 +39,6 @@ from homeassistant.util import slugify
 
 from . import setup_integration
 from .const import TEST_USERNAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 LIST_ENTITY_ID_PREFIX = f"{TODO_DOMAIN.lower()}.{slugify(TEST_USERNAME)}_"
 MOCK_SHOPPING_LIST_ENTITY_ID = f"{LIST_ENTITY_ID_PREFIX}shopping_list"

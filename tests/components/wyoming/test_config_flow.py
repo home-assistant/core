@@ -4,6 +4,7 @@ from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from wyoming.info import Info
 
@@ -15,8 +16,6 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import EMPTY_INFO, SATELLITE_INFO, STT_INFO, TTS_INFO
-
-from tests.common import MockConfigEntry
 
 ADDON_DISCOVERY = HassioServiceInfo(
     config={

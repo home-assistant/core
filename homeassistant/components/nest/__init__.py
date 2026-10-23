@@ -25,8 +25,7 @@ import probatio
 
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.camera import Image, img_util
-from homeassistant.components.http import KEY_HASS_USER
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS_USER, HomeAssistantView
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_CLIENT_ID,
@@ -240,7 +239,7 @@ class SignalUpdateCallback:
             device_registry.async_remove_device(device_entry.id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None:
     """Set up Nest from a config entry with dispatch between old/new flows."""
     if DATA_SDM not in entry.data:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
@@ -332,12 +331,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None:
@@ -357,18 +354,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: NestConfigEntry) -> Non
         access_token=entry.data["token"]["access_token"],
         cloud_project_id=entry.data[CONF_CLOUD_PROJECT_ID],
     )
-    _LOGGER.debug("Deleting subscription '%s'", subscription_name)
-    try:
-        await admin_client.delete_subscription(subscription_name)
-    except ApiException as err:
-        _LOGGER.warning(
-            (
-                "Unable to delete subscription '%s'; Will be automatically cleaned up"
-                " by cloud console: %s"
-            ),
-            subscription_name,
-            err,
-        )
+    await api.async_delete_subscription(admin_client, subscription_name)
 
 
 class NestEventViewBase(HomeAssistantView, ABC):

@@ -9,6 +9,7 @@ import growattServer
 from growattServer import GrowattV1ApiErrorCode
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant import config_entries
@@ -35,8 +36,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT_PASSWORD = {
     CONF_USERNAME: "username",

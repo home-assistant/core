@@ -1,6 +1,10 @@
 {
   "domain": "unifiprotect",
   "name": "UniFi Protect",
+  "categories": [
+    "security_safety.cameras",
+    "security_safety.doorbells_intercoms"
+  ],
   "codeowners": ["@RaHehl"],
   "config_flow": true,
   "dependencies": ["http", "repairs", "unifi_discovery"],
@@ -9,5 +13,5 @@
   "iot_class": "local_push",
   "loggers": ["uiprotect"],
   "quality_scale": "platinum",
-  "requirements": ["uiprotect==23.1.2"]
+  "requirements": ["uiprotect==23.9.0"]
 }

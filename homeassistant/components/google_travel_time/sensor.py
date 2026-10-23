@@ -1,6 +1,6 @@
 """Support for Google travel time sensors."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import Any, override
 
@@ -50,7 +50,7 @@ from .helpers import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(minutes=10)
+SCAN_INTERVAL = dt.timedelta(minutes=10)
 FIELD_MASK = "routes.duration,routes.localized_values"
 
 SENSOR_DESCRIPTIONS = [

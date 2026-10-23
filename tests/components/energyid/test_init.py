@@ -5,6 +5,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.energyid import DOMAIN, _async_handle_state_change
 from homeassistant.components.energyid.const import (
@@ -20,8 +21,6 @@ from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_successful_setup(
@@ -1037,6 +1036,8 @@ async def test_unload_entry_unexpected_exception(hass: HomeAssistant) -> None:
 
             # Should return False due to exception (line 384)
             assert not result
+            assert entry.state is ConfigEntryState.FAILED_UNLOAD
+            assert entry.reason == "Error while unloading the EnergyID entry"
 
 
 # ============================================================================

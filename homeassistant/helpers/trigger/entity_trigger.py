@@ -65,10 +65,7 @@ def _create_deprecated_behavior_issue(deprecated: str, replacement: str) -> None
     if (hass := async_get_hass_or_none()) is None:
         return
 
-    from homeassistant.helpers.issue_registry import (  # noqa: PLC0415
-        IssueSeverity,
-        async_create_issue,
-    )
+    from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue  # noqa: PLC0415
 
     async_create_issue(
         hass,

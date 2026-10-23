@@ -4,20 +4,19 @@ from datetime import timedelta
 
 from fing_agent_api.models import DeviceResponse
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    AsyncMock,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.plugins import MockConfigEntry, SnapshotAssertion
 
 from homeassistant.components.fing.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import (
-    AsyncMock,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
-from tests.conftest import MockConfigEntry, SnapshotAssertion
 
 
 async def test_all_entities(
