@@ -242,10 +242,14 @@ async def test_yaml_import_success(
 @pytest.mark.usefixtures("mock_get_token")
 async def test_yaml_import_device_selection(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test YAML import only fetches and enables selected tanks, ignoring failing unselected tanks."""
+    """Test YAML import fetches selected tanks, skips missing 404 tanks, and propagates other errors."""
+    should_fail = False
 
     def fake_get_device_data(token: str, dev_id: str, **kwargs: Any) -> dict[str, Any]:
+        if should_fail:
+            raise _mock_http_error(requests.codes.internal_server_error)
         if dev_id == MOCK_DEVICE_ID:
             return dict(DEVICE_DATA)
         raise _mock_http_error(requests.codes.not_found)
@@ -255,7 +259,7 @@ async def test_yaml_import_device_selection(
             "platform": "tank_utility",
             "email": TEST_EMAIL,
             "password": TEST_PASSWORD,
-            "devices": [MOCK_DEVICE_ID],
+            "devices": [MOCK_DEVICE_ID, "missing_device"],
         }
     }
 
@@ -272,17 +276,28 @@ async def test_yaml_import_device_selection(
         assert await async_setup_component(hass, "sensor", yaml_with_devices)
         await hass.async_block_till_done()
 
-    mock_device_data.assert_called_once_with("mock_token", MOCK_DEVICE_ID)
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].data == {
-        CONF_EMAIL: TEST_EMAIL,
-        CONF_PASSWORD: TEST_PASSWORD,
-        "devices": [MOCK_DEVICE_ID],
-    }
+        assert mock_device_data.call_count == 2
+        entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(entries) == 1
+        assert entries[0].data == {
+            CONF_EMAIL: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+            "devices": [MOCK_DEVICE_ID, "missing_device"],
+        }
 
-    assert hass.states.get("sensor.my_propane_tank") is not None
-    assert hass.states.get("sensor.second_tank") is None
+        state = hass.states.get("sensor.my_propane_tank")
+        assert state is not None
+        assert state.state == "78.4"
+        assert hass.states.get("sensor.tank_utility_missing_device") is None
+
+        should_fail = True
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        state = hass.states.get("sensor.my_propane_tank")
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("mock_get_token")

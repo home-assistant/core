@@ -40,10 +40,17 @@ class TankUtilityDataUpdateCoordinator(
         if configured_devices is None:
             return device.get_data(email, password)
         token = auth.get_token(email, password)
-        return {
-            dev_id: device.get_device_data(token, dev_id)
-            for dev_id in configured_devices
-        }
+        data: dict[str, dict[str, Any]] = {}
+        for dev_id in configured_devices:
+            try:
+                data[dev_id] = device.get_device_data(token, dev_id)
+            except requests.exceptions.HTTPError as err:
+                if (
+                    err.response is None
+                    or err.response.status_code != requests.codes.not_found
+                ):
+                    raise
+        return data
 
     def _fetch_data(self) -> dict[str, dict[str, Any]]:
         """Fetch and flatten device data from Tank Utility API."""
