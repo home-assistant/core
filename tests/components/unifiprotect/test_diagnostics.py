@@ -150,7 +150,7 @@ async def test_public_only_diagnostics(
     assert "bootstrap" not in diag
     # anonymize_data scrambles values; assert the structure, not the content
     assert "name" in diag["public_bootstrap"]["nvr"]
-    assert "armMode" in diag["public_bootstrap"]["nvr"]
+    assert diag["public_bootstrap"]["nvr"]["armMode"] == {"status": "armed"}
     # the stream URLs carry the console host and a secret alias — never leak
     dumped_camera = diag["public_bootstrap"]["cameras"][0]
     assert dumped_camera["rtspsStreams"] == "**REDACTED**"
