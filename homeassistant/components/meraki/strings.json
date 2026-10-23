@@ -36,5 +36,11 @@
     "update_failed": {
       "message": "Error communicating with the Meraki Dashboard API: {error}"
     }
+  },
+  "issues": {
+    "deprecated_cmx": {
+      "description": "Setting up Meraki presence detection with the CMX location service in YAML is deprecated and will stop working. Remove the `meraki` platform from the `device_tracker` section of your `configuration.yaml` file, restart Home Assistant, and add the Meraki integration in the UI with a Meraki Dashboard API key instead. It tracks whether Wi-Fi and wired clients are connected, without their position on the map. Bluetooth devices are not tracked yet.",
+      "title": "Meraki presence detection with the CMX location service is being removed"
+    }
   }
 }

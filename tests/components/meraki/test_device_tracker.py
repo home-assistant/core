@@ -32,7 +32,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from . import api_error, setup_integration
@@ -68,6 +72,13 @@ async def meraki_client(
     await hass.async_block_till_done()
 
     return await hass_client()
+
+
+@pytest.mark.usefixtures("meraki_client")
+async def test_cmx_deprecated(issue_registry: ir.IssueRegistry) -> None:
+    """Test setting up the CMX location service in YAML raises a repair issue."""
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_cmx")
+    assert issue.breaks_in_ha_version == "2027.5.0"
 
 
 async def test_invalid_or_missing_data(

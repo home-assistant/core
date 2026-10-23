@@ -15,10 +15,15 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import DOMAIN
 from .coordinator import MerakiConfigEntry, MerakiDataUpdateCoordinator
 from .entity import MerakiEntity
 
@@ -48,6 +53,16 @@ async def async_setup_scanner(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up an endpoint for the Meraki tracker."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_cmx",
+        breaks_in_ha_version="2027.5.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_cmx",
+        learn_more_url="https://www.home-assistant.io/integrations/meraki",
+    )
     hass.http.register_view(MerakiView(config, async_see))
 
     return True
