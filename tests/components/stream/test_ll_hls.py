@@ -2,13 +2,18 @@
 
 import asyncio
 from collections import deque
+from functools import partial
 from http import HTTPStatus
+import io
 import itertools
 import math
 import re
+import threading
+from unittest.mock import patch
 from urllib.parse import urlparse
 
 from aiohttp import web
+import av
 from dateutil import parser
 import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
@@ -23,6 +28,7 @@ from homeassistant.components.stream.const import (
     HLS_PROVIDER,
 )
 from homeassistant.components.stream.core import Part
+from homeassistant.components.stream.worker import StreamState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -31,9 +37,18 @@ from .common import (
     DefaultSegment as Segment,
     dynamic_stream_settings,
     generate_h264_video,
+    generate_video_with_size_change,
 )
 from .conftest import WorkerSync
-from .test_hls import STREAM_SOURCE, HlsClient, HlsStreamFactory, make_playlist
+from .test_hls import (
+    BOTH_SIZES,
+    STREAM_SOURCE,
+    TEST_TIMEOUT,
+    HlsClient,
+    HlsStreamFactory,
+    init_size,
+    make_playlist,
+)
 
 SEGMENT_DURATION = 6
 TEST_PART_DURATION = 0.75
@@ -383,6 +398,114 @@ async def test_ll_hls_playlist_view_discontinuity(
     finally:
         stream_worker_sync.resume()
         await stream.stop()
+
+
+async def decode_ll_hls_playlist(
+    hls_client: HlsClient,
+) -> tuple[list[str], dict[str, bytes], list[tuple[int, int]]]:
+    """Decode the parts of each playlist segment with the init named before them.
+
+    Return the init URIs in playlist order, the inits by URI and the decoded
+    frame sizes. A complete segment's parts must join to the segment.
+    """
+    playlist_response = await hls_client.get("/playlist.m3u8")
+    assert playlist_response.status == HTTPStatus.OK
+    playlist = (await playlist_response.text()).splitlines()
+    map_re = re.compile(r'#EXT-X-MAP:URI="(?P<uri>.+?)"')
+    part_re = re.compile(r'#EXT-X-PART:.*URI="(?P<uri>.+?)"')
+    map_uris: list[str] = []
+    inits: dict[str, bytes] = {}
+    parts: list[bytes] = []
+    decoded_sizes: list[tuple[int, int]] = []
+
+    async def fetch(uri: str) -> bytes:
+        response = await hls_client.get("/" + uri.removeprefix("./"))
+        assert response.status == HTTPStatus.OK
+        return await response.read()
+
+    def decode() -> None:
+        data = inits[map_uris[-1]] + b"".join(parts)
+        with av.open(io.BytesIO(data)) as container:
+            decoded_sizes.extend(
+                (frame.width, frame.height) for frame in container.decode(video=0)
+            )
+        parts.clear()
+
+    for line in playlist:
+        if match := map_re.match(line):
+            map_uris.append(match.group("uri"))
+            inits[map_uris[-1]] = await fetch(map_uris[-1])
+        elif match := part_re.match(line):
+            parts.append(await fetch(match.group("uri")))
+        elif line.startswith("./segment/"):
+            segment = await fetch(line)
+            # Only the last segments list their parts
+            assert not parts or segment == b"".join(parts)
+            parts[:] = [segment]
+            decode()
+    # The parts of the segment in progress
+    decode()
+    return map_uris, inits, decoded_sizes
+
+
+@pytest.mark.parametrize(
+    "segment_duration",
+    [
+        pytest.param(6, id="change-in-progress"),
+        pytest.param(2, id="change-complete"),
+    ],
+)
+async def test_ll_hls_stream_picture_size_change(
+    hass: HomeAssistant, hls_stream: HlsStreamFactory, segment_duration: int
+) -> None:
+    """Test the parts after a size change decode with the init named before them."""
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "stream": {
+                CONF_LL_HLS: True,
+                CONF_SEGMENT_DURATION: segment_duration,
+                CONF_PART_DURATION: TEST_PART_DURATION,
+            }
+        },
+    )
+    # The size changes at 3 s, which ends the segment then in progress
+    source = await hass.async_add_executor_job(
+        partial(generate_video_with_size_change, "libx265", BOTH_SIZES, 3)
+    )
+
+    # Hold the worker at the end of the stream so the segments stay available
+    worker_ended = threading.Event()
+    release_worker = threading.Event()
+    discontinuity = StreamState.discontinuity
+
+    def hold_worker(stream_state: StreamState) -> None:
+        worker_ended.set()
+        release_worker.wait()
+        discontinuity(stream_state)
+
+    with patch.object(
+        StreamState, "discontinuity", autospec=True, side_effect=hold_worker
+    ):
+        stream = create_stream(hass, source, {}, dynamic_stream_settings())
+        stream.add_provider(HLS_PROVIDER)
+        try:
+            await stream.start()
+            assert await hass.async_add_executor_job(worker_ended.wait, TEST_TIMEOUT)
+            await hass.async_block_till_done()
+
+            map_uris, inits, decoded_sizes = await decode_ll_hls_playlist(
+                await hls_stream(stream)
+            )
+        finally:
+            release_worker.set()
+            await stream.stop()
+
+    # Every frame decodes at its source size, in source order
+    assert [size for size, _ in itertools.groupby(decoded_sizes)] == BOTH_SIZES
+    assert map_uris == ["./init/0.mp4", "./init/1.mp4"]
+    assert [init_size(init) for init in inits.values()] == BOTH_SIZES
 
 
 async def test_ll_hls_msn(

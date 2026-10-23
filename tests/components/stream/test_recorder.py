@@ -1,8 +1,11 @@
 """The tests for recording streams."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
+from functools import partial
 from io import BytesIO
+import itertools
 import os
 from pathlib import Path
 from unittest.mock import patch
@@ -13,6 +16,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
+    ATTR_SETTINGS,
     DOMAIN,
     HLS_PROVIDER,
     OUTPUT_IDLE_TIMEOUT,
@@ -112,10 +116,42 @@ async def test_record_stream_h265_is_hvc1(hass: HomeAssistant, filename: str) ->
         assert recording.streams.video[0].codec_tag == "hvc1"
 
 
-async def test_record_stream_h265_parameter_set_change(
-    hass: HomeAssistant, filename: str
+SIZE_CHANGE = partial(
+    generate_video_with_size_change, "libx265", [(480, 320), (640, 480)], 3
+)
+
+
+@pytest.mark.parametrize(
+    ("generate_source", "min_segment_duration"),
+    [
+        pytest.param(SIZE_CHANGE, 5.9, id="h265-size-change"),
+        pytest.param(
+            partial(SIZE_CHANGE, change_at_dts_zero=True),
+            5.9,
+            id="h265-size-change-negative-start",
+        ),
+        pytest.param(SIZE_CHANGE, 1.9, id="h265-segment-before-size-change"),
+        pytest.param(
+            partial(SIZE_CHANGE, change_at_dts_zero=True),
+            1.9,
+            id="h265-segment-before-size-change-negative-start",
+        ),
+        pytest.param(
+            partial(generate_h264_video, "mpegts", 6), 1.9, id="h264-b-frames"
+        ),
+    ],
+)
+async def test_record_stream_decode_times(
+    hass: HomeAssistant,
+    filename: str,
+    generate_source: Callable[[], BytesIO],
+    min_segment_duration: float,
 ) -> None:
-    """Test a h265 recording spans an in-band picture size change."""
+    """Test recorded decode times stay continuous across segments.
+
+    The worker gives the first keyframe a PTS equal to its DTS, unlike the
+    later keyframes, and a size change starts a new init.
+    """
     worker_finished = asyncio.Event()
 
     class MockStream(Stream):
@@ -126,10 +162,15 @@ async def test_record_stream_h265_parameter_set_change(
             await Stream.remove_provider(self, provider)
             worker_finished.set()
 
-    source = await hass.async_add_executor_job(
-        generate_video_with_size_change, "libx265", [(480, 320), (640, 480)], 3
-    )
-    with patch("homeassistant.components.stream.Stream", wraps=MockStream):
+    source = await hass.async_add_executor_job(generate_source)
+    with (
+        patch("homeassistant.components.stream.Stream", wraps=MockStream),
+        patch.object(
+            hass.data[DOMAIN][ATTR_SETTINGS],
+            "min_segment_duration",
+            min_segment_duration,
+        ),
+    ):
         stream = create_stream(hass, source, {}, dynamic_stream_settings())
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
@@ -142,9 +183,12 @@ async def test_record_stream_h265_parameter_set_change(
 
         await make_recording
 
-    # The recording continues past the change at 3 seconds
+    # The recording continues past the first segment
     with av.open(filename) as recording:
         assert recording.duration / av.time_base > 4
+        dts = [packet.dts for packet in recording.demux(video=0) if packet.size]
+    # Decode times advance by one frame (24 fps, 90 kHz) across segments
+    assert {later - earlier for earlier, later in itertools.pairwise(dts)} == {3750}
 
 
 async def test_record_lookback(hass: HomeAssistant, filename, h264_video) -> None:
@@ -210,12 +254,16 @@ def add_parts_to_segment(segment, source):
 
 
 async def test_recorder_discontinuity(
-    hass: HomeAssistant, filename, h264_video
+    hass: HomeAssistant, filename: str, h264_video: BytesIO
 ) -> None:
-    """Test recorder save across a discontinuity."""
+    """Test recorder save across a discontinuity.
+
+    The segment after the discontinuity starts where the first one ends,
+    whatever the first one's video_dts_shift.
+    """
 
     # Run
-    segment_1 = Segment(sequence=1, stream_id=0)
+    segment_1 = Segment(sequence=1, stream_id=0, video_dts_shift=1024)
     add_parts_to_segment(segment_1, h264_video)
     segment_1.duration = 4
     segment_2 = Segment(sequence=2, stream_id=1)
@@ -257,6 +305,11 @@ async def test_recorder_discontinuity(
         await make_recording
     # Assert
     assert os.path.exists(filename)
+    with av.open(filename) as recording:
+        packets = [packet for packet in recording.demux(video=0) if packet.size]
+    # Each segment has 5 seconds of frames
+    first, second = packets[0], packets[len(packets) // 2]
+    assert (second.pts - first.pts) * first.time_base == 5
 
 
 async def test_recorder_no_segments(hass: HomeAssistant, filename) -> None:

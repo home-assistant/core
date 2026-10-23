@@ -93,6 +93,9 @@ class Segment:
     duration: float = 0
     # Set on the first segment of a new init whose timestamps continue the stream
     new_init: bool = False
+    # Video decode times read back from the segment are later by this much:
+    # the mp4 muxer starts them at the first frame's PTS (its PTS - DTS)
+    video_dts_shift: int = 0
     parts: list[Part] = field(default_factory=list)
     # Store text of this segment's hls playlist for reuse
     # Use list[str] for easy appends

@@ -275,6 +275,9 @@ class StreamMuxer:
         self._video_extradata: bytes | None = None
         self._video_format = VideoFormat(0, 0, AVRational(0, 1))
         self._new_init = False
+        self._output_ts_offset: int | None = None
+        self._video_dts_shift = 0
+        self._audio_start_dts: float = -math.inf
 
     @staticmethod
     def _add_stream_from_template(
@@ -321,6 +324,13 @@ class StreamMuxer:
             # from 0. Helps from having to make some adjustments
             # in test_durations
             "avoid_negative_ts": "make_non_negative",
+            # A segment-local shift would break timestamp continuity between
+            # segments, so the shift of the first segment applies to all of them
+            **(
+                {"output_ts_offset": f"{self._output_ts_offset}us"}
+                if self._output_ts_offset
+                else {}
+            ),
             "fragment_index": str(sequence + 1),
             "video_track_timescale": str(int(1 / input_vstream.time_base)),
             # Only do extra fragmenting if we are using ll_hls
@@ -390,8 +400,25 @@ class StreamMuxer:
             )
         return container, output_vstream, output_astream
 
-    def reset(self, video_dts: int) -> None:
-        """Initialize a new stream segment."""
+    def reset(self, video_dts: int, video_dts_shift: int = 0) -> None:
+        """Initialize a new stream segment.
+
+        video_dts_shift is the PTS - DTS of the segment's first video frame.
+        """
+        if self._output_ts_offset is None:
+            # Rounded up, so the first segment needs no further shift
+            self._output_ts_offset = max(
+                0,
+                math.ceil(-video_dts * self._input_video_stream.time_base * 1_000_000),
+            )
+            if self._input_audio_stream:
+                # Audio that the offset leaves negative would shift the first
+                # segment again
+                self._audio_start_dts = math.ceil(
+                    -self._output_ts_offset
+                    / (self._input_audio_stream.time_base * 1_000_000)
+                )
+        self._video_dts_shift = video_dts_shift
         self._part_start_dts = self._segment_start_dts = video_dts
         self._segment = None
         self._memory_file = BytesIO()
@@ -478,6 +505,8 @@ class StreamMuxer:
 
         elif packet.stream == self._input_audio_stream:
             assert self._output_audio_stream
+            if packet.dts is not None and packet.dts < self._audio_start_dts:
+                return
             if self._audio_bsf_context:
                 for audio_packet in self._audio_bsf_context.filter(packet):
                     audio_packet.stream = self._output_audio_stream
@@ -497,6 +526,7 @@ class StreamMuxer:
             _stream_outputs=self._stream_state.outputs,
             start_time=self._start_time,
             new_init=self._new_init,
+            video_dts_shift=self._video_dts_shift,
         )
         self._new_init = False
         self._memory_file_pos = self._memory_file.tell()
@@ -588,7 +618,7 @@ class StreamMuxer:
             self._memory_file.close()  # We don't need the BytesIO object anymore
             self._start_time += dt.timedelta(seconds=segment_duration)
             # Reinitialize
-            self.reset(packet.dts)
+            self.reset(packet.dts, 0 if packet.pts is None else packet.pts - packet.dts)
         else:
             # For the last part, these will get set again elsewhere so we can skip
             # setting them here.

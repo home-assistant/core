@@ -73,6 +73,8 @@ class RecorderOutput(StreamOutput):
         output_a = None
 
         last_stream_id = -1
+        # The video_dts_shift of the previous segment
+        video_dts_shift = 0
         # The running duration of processed segments. Note that this is in av.time_base
         # units which seem to be defined inversely to how stream time_bases are defined
         running_duration = 0
@@ -84,6 +86,7 @@ class RecorderOutput(StreamOutput):
             # fmt: off
             nonlocal output, output_v, output_a
             nonlocal last_stream_id, running_duration, last_sequence
+            nonlocal video_dts_shift
             # fmt: on
             # Because the stream_worker is in a different
             # thread from the record service, the lookback
@@ -145,6 +148,10 @@ class RecorderOutput(StreamOutput):
                         (running_duration - source.start_time)
                         / (av.time_base * source_a.time_base)
                     )
+            else:
+                # The segment continues the timeline: undo the change of shift
+                pts_adjuster["video"] += video_dts_shift - segment.video_dts_shift  # type: ignore[operator]
+            video_dts_shift = segment.video_dts_shift
 
             # Remux video
             for packet in source.demux():

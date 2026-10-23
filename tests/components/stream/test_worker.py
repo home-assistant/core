@@ -292,11 +292,13 @@ class MockPyAv:
             video_stream=video_stream, audio_stream=audio_stream
         )
         self.capture_buffer = FakePyAvBuffer()
+        self.container_options: list[dict[str, str]] = []
 
     def open(self, stream_source, *args, **kwargs):
         """Return a stream or buffer depending on args."""
         if isinstance(stream_source, io.BytesIO):
             self.capture_buffer.memory_file = stream_source
+            self.container_options.append(kwargs.get("container_options", {}))
             return self.capture_buffer
         return self.container
 
@@ -511,6 +513,48 @@ async def test_discard_old_packets(hass: HomeAssistant) -> None:
     assert len(decoded_stream.audio_packets) == 0
 
 
+@pytest.mark.parametrize(
+    ("shift", "output_ts_offset"),
+    [
+        # The sequence starts one frame in, so the shifted one starts at 1 frame - 2 s
+        pytest.param(
+            -2, f"{math.ceil((2 - PACKET_DURATION) * 1_000_000)}us", id="negative-start"
+        ),
+        pytest.param(0, None, id="positive-start"),
+    ],
+)
+async def test_segment_timestamp_offset(
+    hass: HomeAssistant, shift: int, output_ts_offset: str | None
+) -> None:
+    """Test every segment gets the shift that makes the first one non-negative."""
+    packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
+    for packet in packets:
+        packet.dts += round(shift / VIDEO_TIME_BASE)
+        packet.pts += round(shift / VIDEO_TIME_BASE)
+    py_av = MockPyAv()
+
+    decoded_stream = await async_decode_stream(hass, packets, py_av=py_av)
+
+    assert len(decoded_stream.complete_segments) > 1
+    assert [options.get("output_ts_offset") for options in py_av.container_options] == [
+        output_ts_offset
+    ] * len(py_av.container_options)
+
+
+async def test_segment_video_dts_shift(hass: HomeAssistant) -> None:
+    """Test each segment records the PTS - DTS of its first keyframe."""
+    packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
+    for packet in packets:
+        packet.pts += 1000
+
+    decoded_stream = await async_decode_stream(hass, packets)
+
+    # The worker gives the first keyframe a PTS equal to its DTS
+    assert [segment.video_dts_shift for segment in decoded_stream.segments] == [0] + [
+        1000
+    ] * (len(decoded_stream.segments) - 1)
+
+
 async def test_packet_overflow(hass: HomeAssistant) -> None:
     """Packet is too far out of order, and looks like overflow, ending stream early."""
 
@@ -715,6 +759,40 @@ async def test_audio_packets_found(hass: HomeAssistant) -> None:
     assert len(complete_segments) == int((num_packets - 1 - 1) * SEGMENTS_PER_PACKET)
     assert len(decoded_stream.video_packets) == num_packets - 1
     assert len(decoded_stream.audio_packets) == 1
+
+
+@pytest.mark.parametrize(
+    ("shift", "audio_packets"),
+    [
+        pytest.param(-2, 1, id="negative-start"),
+        pytest.param(-PACKET_DURATION, 1, id="zero-start"),
+        pytest.param(0, 2, id="positive-start"),
+    ],
+)
+async def test_audio_before_first_video_frame(
+    hass: HomeAssistant, shift: fractions.Fraction | int, audio_packets: int
+) -> None:
+    """Test audio that would be negative in the output is dropped.
+
+    Two audio packets follow the first keyframe, 50 ms before it and at it.
+    """
+    py_av = MockPyAv(audio=True)
+    packets = list(PacketSequence(TEST_SEQUENCE_LENGTH + 2))
+    for packet in packets:
+        packet.dts += round(shift / VIDEO_TIME_BASE)
+        packet.pts += round(shift / VIDEO_TIME_BASE)
+    # The worker moves the first keyframe to one frame before the second one
+    video_start = PACKET_DURATION + shift
+    for offset in (0, fractions.Fraction(-1, 20)):
+        audio = packets.pop()
+        audio.stream = AUDIO_STREAM
+        audio.is_keyframe = False
+        audio.dts = audio.pts = round((video_start + offset) * AUDIO_SAMPLE_RATE)
+        packets.insert(1, audio)
+
+    decoded_stream = await async_decode_stream(hass, packets, py_av=py_av)
+
+    assert len(decoded_stream.audio_packets) == audio_packets
 
 
 async def test_pts_out_of_order(hass: HomeAssistant) -> None:
