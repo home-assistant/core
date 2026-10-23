@@ -28,7 +28,7 @@ def met_setup_fixture(request: pytest.FixtureRequest) -> Generator[Any]:
     if "disable_autouse_fixture" in request.keywords:
         yield
     else:
-        with patch("homeassistant.components.met.async_setup_entry", return_value=True):
+        with patch("homeassistant.components.met.async_setup_entry", return_value=None):
             yield
 
 

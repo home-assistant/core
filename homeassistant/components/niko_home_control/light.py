@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from nhc.controller import NHCController
 from nhc.light import NHCLight
 
 from homeassistant.components.light import (
@@ -13,7 +14,7 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NHCController, NikoHomeControlConfigEntry
+from . import NikoHomeControlConfigEntry
 from .entity import NikoHomeControlEntity
 
 

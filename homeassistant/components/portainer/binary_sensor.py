@@ -16,12 +16,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .coordinator import PortainerContainerData
+from .coordinator import (
+    PortainerContainerData,
+    PortainerCoordinatorData,
+    PortainerStackData,
+)
 from .entity import (
     PortainerContainerEntity,
-    PortainerCoordinatorData,
     PortainerEndpointEntity,
-    PortainerStackData,
     PortainerStackEntity,
 )
 

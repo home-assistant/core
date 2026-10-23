@@ -25,13 +25,18 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UndefinedType
 
 from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
-from .helpers import get_device_id
+from .helpers import (
+    MatterConfigEntry,
+    get_device_id,
+    get_discovery_key,
+    get_entity_unique_id,
+)
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint
 
-    from .discovery import MatterEntityInfo
+    from .models import MatterEntityInfo
 
 LOGGER = logging.getLogger(__name__)
 
@@ -100,6 +105,7 @@ class MatterEntity(Entity):
     # to coalesce attribute updates which arrive as separate events.
     _write_state_debounce_cooldown: float | None = None
     _write_state_debouncer: Debouncer[None] | None = None
+    _removal_scheduled = False
 
     def __init__(
         self,
@@ -118,12 +124,8 @@ class MatterEntity(Entity):
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
         # create unique_id based on "Operational Instance Name" and endpoint/device type
         node_device_id = get_device_id(server_info, endpoint)
-        self._attr_unique_id = (
-            f"{node_device_id}-"
-            f"{endpoint.endpoint_id}-"
-            f"{entity_info.entity_description.key}-"
-            f"{entity_info.primary_attribute.cluster_id}-"
-            f"{entity_info.primary_attribute.attribute_id}"
+        self._attr_unique_id = get_entity_unique_id(
+            node_device_id, endpoint, entity_info
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
@@ -160,8 +162,12 @@ class MatterEntity(Entity):
         """Find all labels for a Matter entity."""
 
         device_info = self._endpoint.device_info
-        labeling_list = VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
-            device_info.productID
+        labeling_list = (
+            VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
+                device_info.productID
+            )
+            if device_info is not None
+            else None
         )
 
         # get the labels from the UserLabel and FixedLabel clusters
@@ -330,6 +336,9 @@ class MatterEntity(Entity):
     @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
         """Call on update from the device."""
+        if event is EventType.NODE_UPDATED and self._required_attribute_removed():
+            self._async_remove_unsupported()
+            return
         self._attr_available = (
             self._endpoint.node.available and self._get_bridged_reachable()
         )
@@ -345,17 +354,69 @@ class MatterEntity(Entity):
         if data is None:
             return
         # handle edge case where a Feature is removed from a cluster
-        if (
-            self._entity_info.discovery_schema.featuremap_contains is not None
-            and not bool(data & self._entity_info.discovery_schema.featuremap_contains)
-        ):
+        if self._feature_removed(data):
             # this entity is no longer supported by the device
-            ent_reg = er.async_get(self.hass)
-            ent_reg.async_remove(self.entity_id)
-
+            self._async_remove_unsupported()
             return
         # all other cases, just update the entity
         self._on_matter_event(event, data)
+
+    @callback
+    def _feature_removed(self, feature_map: int | None) -> bool:
+        """Return if the FeatureMap no longer has the feature this entity needs."""
+        featuremap_contains = self._entity_info.discovery_schema.featuremap_contains
+        return (
+            feature_map is not None
+            and featuremap_contains is not None
+            and not bool(feature_map & featuremap_contains)
+        )
+
+    @callback
+    def _required_attribute_removed(self) -> bool:
+        """Return if the node data no longer has a required attribute."""
+        # Entities of an endpoint that left the node data are left to the endpoint removal
+        if not self._endpoint.has_attribute(
+            None, clusters.Descriptor.Attributes.DeviceTypeList
+        ):
+            return False
+        return not all(
+            self._endpoint.has_attribute(None, attribute)
+            for attribute in self._entity_info.discovery_schema.required_attributes
+        )
+
+    @callback
+    def _unsupported(self) -> bool:
+        """Return if the device no longer supports this entity."""
+        return self._required_attribute_removed() or self._feature_removed(
+            self._endpoint.get_attribute_value(
+                self._entity_info.primary_attribute.cluster_id,
+                FEATUREMAP_ATTRIBUTE_ID,
+            )
+        )
+
+    @callback
+    def _async_remove_unsupported(self) -> None:
+        """Remove this entity because the device no longer supports it."""
+        if self._removal_scheduled:
+            return
+        self._removal_scheduled = True
+        # Removing unsubscribes the entity, which must wait until the client has
+        # finished calling the subscribers of the current event
+        self.hass.loop.call_soon(self._async_remove_from_registry)
+
+    @callback
+    def _async_remove_from_registry(self) -> None:
+        """Remove this entity from the entity registry if it is still unsupported."""
+        self._removal_scheduled = False
+        # a later event of the same batch may have restored the support
+        if not self._unsupported():
+            return
+        entry = cast(MatterConfigEntry, self.platform.config_entry)
+        # let discovery add the entity again if the device supports it later
+        entry.runtime_data.adapter.discovered_entities.discard(
+            get_discovery_key(self._endpoint, self._entity_info)
+        )
+        er.async_get(self.hass).async_remove(self.entity_id)
 
     @callback
     def _update_from_device(self) -> None:

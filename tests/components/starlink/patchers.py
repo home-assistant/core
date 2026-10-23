@@ -8,7 +8,7 @@ from pytest_homeassistant.common import (
 )
 
 SETUP_ENTRY_PATCHER = patch(
-    "homeassistant.components.starlink.async_setup_entry", return_value=True
+    "homeassistant.components.starlink.async_setup_entry", return_value=None
 )
 
 LOCATION_DATA_SUCCESS_PATCHER = patch(

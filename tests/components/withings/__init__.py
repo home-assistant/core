@@ -69,7 +69,7 @@ async def prepare_webhook_setup(
     """Prepare webhooks by advancing past the registration delay."""
     freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 def load_goals_fixture(fixture: str = "withings/goals.json") -> Goals:
