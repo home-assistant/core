@@ -85,14 +85,18 @@ class HlsStreamOutput(StreamOutput):
     def _async_put(self, segment: Segment) -> None:
         """Async put and also update the target duration.
 
-        The target duration is calculated as the max duration of any given segment.
-        Technically it should not change per the hls spec, but some cameras adjust
-        their GOPs periodically so we need to account for this change.
+        The target duration is calculated as the max duration of any given segment,
+        at least the minimum segment duration: a segment cut at a parameter set
+        change can be shorter. Technically it should not change per the hls spec,
+        but some cameras adjust their GOPs periodically so we need to account for
+        this change.
         """
         super()._async_put(segment)
-        self._target_duration = (
-            max((s.duration for s in self._segments), default=segment.duration)
-            or self.stream_settings.min_segment_duration
+        self._target_duration = max(
+            [
+                self.stream_settings.min_segment_duration,
+                *(s.duration for s in self._segments),
+            ]
         )
 
     def discontinuity(self) -> None:

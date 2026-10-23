@@ -573,6 +573,31 @@ async def test_hls_playlist_view(
     await stream.stop()
 
 
+async def test_hls_playlist_target_duration_short_segment(
+    hass: HomeAssistant, setup_component: None, hls_stream, stream_worker_sync
+) -> None:
+    """Test the target duration after a segment shorter than the minimum."""
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    stream_worker_sync.pause()
+    hls = stream.add_provider(HLS_PROVIDER)
+    try:
+        # A segment cut early at a parameter set change, then one in progress
+        hls.put(Segment(sequence=0, stream_id=0, duration=0.25))
+        hls.put(Segment(sequence=1, stream_id=1))
+        await hass.async_block_till_done()
+
+        hls_client = await hls_stream(stream)
+        resp = await hls_client.get("/playlist.m3u8")
+        assert resp.status == HTTPStatus.OK
+        playlist = (await resp.text()).splitlines()
+    finally:
+        stream_worker_sync.resume()
+        await stream.stop()
+
+    min_segment_duration = hls.stream_settings.min_segment_duration
+    assert f"#EXT-X-TARGETDURATION:{min_segment_duration:.0f}" in playlist
+
+
 async def test_hls_max_segments(
     hass: HomeAssistant, setup_component, hls_stream, stream_worker_sync
 ) -> None:
@@ -685,37 +710,39 @@ async def test_hls_playlist_view_discontinuity_first_segment(
     stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
-    hls.put(Segment(sequence=0, stream_id=0, duration=SEGMENT_DURATION))
-    hls.put(Segment(sequence=1, stream_id=1, duration=SEGMENT_DURATION))
-    await hass.async_block_till_done()
+    try:
+        hls.put(Segment(sequence=0, stream_id=0, duration=SEGMENT_DURATION))
+        hls.put(Segment(sequence=1, stream_id=1, duration=SEGMENT_DURATION))
+        await hass.async_block_till_done()
 
-    hls_client = await hls_stream(stream)
+        hls_client = await hls_stream(stream)
 
-    # Rendered behind a segment of the previous discontinuity sequence
-    resp = await hls_client.get("/playlist.m3u8")
-    assert resp.status == HTTPStatus.OK
-    assert await resp.text() == make_playlist(
-        sequence=0,
-        segments=[make_segment(0), make_segment(1, discontinuity_sequence=1)],
-    )
+        # Rendered behind a segment of the previous discontinuity sequence
+        resp = await hls_client.get("/playlist.m3u8")
+        assert resp.status == HTTPStatus.OK
+        assert await resp.text() == make_playlist(
+            sequence=0,
+            segments=[make_segment(0), make_segment(1, discontinuity_sequence=1)],
+        )
 
-    for sequence in range(2, NUM_PLAYLIST_SEGMENTS + 1):
-        hls.put(Segment(sequence=sequence, stream_id=1, duration=SEGMENT_DURATION))
-    await hass.async_block_till_done()
+        for sequence in range(2, NUM_PLAYLIST_SEGMENTS + 1):
+            hls.put(Segment(sequence=sequence, stream_id=1, duration=SEGMENT_DURATION))
+        await hass.async_block_till_done()
 
-    # EXT-X-DISCONTINUITY-SEQUENCE counts the discontinuity that left the window
-    resp = await hls_client.get("/playlist.m3u8")
-    assert resp.status == HTTPStatus.OK
-    assert await resp.text() == make_playlist(
-        sequence=1,
-        discontinuity_sequence=1,
-        segments=[
-            make_segment(sequence) for sequence in range(1, NUM_PLAYLIST_SEGMENTS + 1)
-        ],
-    )
-
-    stream_worker_sync.resume()
-    await stream.stop()
+        # EXT-X-DISCONTINUITY-SEQUENCE counts the discontinuity that left the window
+        resp = await hls_client.get("/playlist.m3u8")
+        assert resp.status == HTTPStatus.OK
+        assert await resp.text() == make_playlist(
+            sequence=1,
+            discontinuity_sequence=1,
+            segments=[
+                make_segment(sequence)
+                for sequence in range(1, NUM_PLAYLIST_SEGMENTS + 1)
+            ],
+        )
+    finally:
+        stream_worker_sync.resume()
+        await stream.stop()
 
 
 async def test_hls_max_segments_discontinuity(
