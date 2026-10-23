@@ -1,6 +1,7 @@
 """Test the VRChat integration setup and updates."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from typing import Never
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -8,6 +9,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from vrchatapi.exceptions import UnauthorizedException
 from vrchatapi.highlevel import AccountIdMismatch
+from vrchatapi.highlevel.types import World
 from vrchatapi.websocket import VRChatEvent
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -16,7 +18,6 @@ from homeassistant.components.vrchat.const import DOMAIN, USER_AGENT
 from homeassistant.components.vrchat.coordinator import (
     VRChatAccountDataCoordinator,
     VRChatAccountSetupFailed,
-    VRChatUserDataCoordinator,
 )
 from homeassistant.components.vrchat.store import (
     InitialCurrentUserData,
@@ -27,11 +28,16 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.event import (
+    async_track_state_change_event,
+    async_track_state_report_event,
+)
 
 CURRENT_USER_ID = "usr_current"
 FRIEND_USER_ID = "usr_friend"
@@ -109,34 +115,6 @@ def _entity_id(entity_registry: er.EntityRegistry, unique_id: str) -> str:
     entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
     assert entity_id is not None
     return entity_id
-
-
-def test_entity_update_listener_snapshot() -> None:
-    """Test removing a listener during an update does not skip later listeners."""
-    coordinator = object.__new__(VRChatUserDataCoordinator)
-    second_listener = Mock()
-
-    def remove_second_listener(_: bool, __: bool) -> None:
-        coordinator._entity_update_listeners.remove(second_listener)
-
-    coordinator._entity_update_listeners = [remove_second_listener, second_listener]
-
-    coordinator.async_update_entities(True)
-
-    second_listener.assert_called_once_with(True, False)
-
-
-def test_entity_update_listener_removal_is_idempotent() -> None:
-    """Test removing an entity update listener multiple times is safe."""
-    coordinator = object.__new__(VRChatUserDataCoordinator)
-    coordinator._entity_update_listeners = []
-
-    remove_listener = coordinator.async_add_entity_update_listener(Mock())
-
-    remove_listener()
-    remove_listener()
-
-    assert not coordinator._entity_update_listeners
 
 
 def test_account_setup_exception_translation() -> None:
@@ -274,7 +252,7 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
             )
         )
         await hass.async_block_till_done()
-        assert coordinator.users[NEW_FRIEND_USER_ID].data["location"] == (
+        assert coordinator.data[NEW_FRIEND_USER_ID].data["location"] == (
             "wrld_test:instance"
         )
         new_friend_status_entity_id = _entity_id(
@@ -296,12 +274,12 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
             VRChatEvent("friend-delete", {"userId": NEW_FRIEND_USER_ID})
         )
         await hass.async_block_till_done()
-        assert NEW_FRIEND_USER_ID not in coordinator.users
+        assert NEW_FRIEND_USER_ID not in coordinator.data
         assert device_registry.async_get(new_friend_device.id) is None
 
         coordinator.client.current_user_data["friends"] = []
         await coordinator.client.fetch_users()
-        assert FRIEND_USER_ID not in coordinator.users
+        assert FRIEND_USER_ID not in coordinator.data
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
@@ -509,15 +487,6 @@ async def test_library_authentication_persists_cookie(hass: HomeAssistant) -> No
     coordinator.cookie_store.async_save.assert_awaited_once_with({"auth": "token"})
 
 
-def test_library_availability_updates_entities() -> None:
-    """Forward connection availability to existing entities."""
-    coordinator = object.__new__(VRChatAccountDataCoordinator)
-    user = Mock()
-    coordinator.users = {FRIEND_USER_ID: user}
-    coordinator._availability_updated(False)
-    user.async_update_entities.assert_called_once_with(force_refresh=False)
-
-
 async def test_home_assistant_stop_closes_library(hass: HomeAssistant) -> None:
     """Stop library-owned background work when Home Assistant stops."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id=CURRENT_USER_ID)
@@ -536,3 +505,369 @@ async def test_home_assistant_stop_closes_library(hass: HomeAssistant) -> None:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
     client.close.assert_awaited_once()
+
+
+@pytest.fixture
+async def loaded_entry(hass: HomeAssistant) -> AsyncGenerator[MockConfigEntry]:
+    """Load the integration with its real account and mocked network boundaries."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "user@example.com", CONF_PASSWORD: "password"},
+        unique_id=CURRENT_USER_ID,
+    )
+    entry.add_to_hass(hass)
+    InitialCurrentUserData[CURRENT_USER_ID] = CURRENT_USER.copy()
+    with (
+        patch(
+            "homeassistant.components.vrchat.coordinator.VRChatAPI.ws_connect",
+            new=AsyncMock(side_effect=lambda **kwargs: MockWebSocket()),
+        ),
+        patch(
+            "homeassistant.components.vrchat.coordinator.VRChatAPI.get_current_user",
+            new=AsyncMock(return_value=CURRENT_USER.copy()),
+        ),
+        patch(
+            "homeassistant.components.vrchat.coordinator.VRChatAPI.get_friends",
+            new=AsyncMock(return_value=[]),
+        ),
+        patch(
+            "homeassistant.components.vrchat.coordinator.VRChatAPI.get_user",
+            new=AsyncMock(return_value=FRIEND_USER.copy()),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        yield entry
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_deleted_friend_can_be_added_again(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Clear discovery records when a friend is removed, including repeated deletes."""
+    coordinator = loaded_entry.runtime_data
+    client = coordinator.client
+    entity_id = _entity_id(
+        entity_registry, f"status.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
+    )
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{CURRENT_USER_ID}:{FRIEND_USER_ID}"), loaded_entry.entry_id
+    )
+    assert device is not None
+
+    await client.handle_event(VRChatEvent("friend-delete", {"userId": FRIEND_USER_ID}))
+    await client.handle_event(VRChatEvent("friend-delete", {"userId": FRIEND_USER_ID}))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
+    assert entity_registry.async_get(entity_id) is None
+    assert device_registry.async_get(device.id) is None
+
+    await client.handle_event(
+        VRChatEvent("friend-active", {"userId": FRIEND_USER_ID, "user": FRIEND_USER})
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        _entity_id(entity_registry, f"status.{CURRENT_USER_ID}:{FRIEND_USER_ID}")
+        == entity_id
+    )
+    assert hass.states.get(entity_id).state == "active"
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{CURRENT_USER_ID}:{FRIEND_USER_ID}"), loaded_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_late_sensor_field_and_duplicate_updates(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Discover a sensor once when an existing user's previously absent field arrives."""
+    client = loaded_entry.runtime_data.client
+    await client.handle_event(VRChatEvent("friend-delete", {"userId": FRIEND_USER_ID}))
+    await hass.async_block_till_done()
+    friend = FRIEND_USER.copy()
+    friend.pop("statusDescription")
+    with patch.object(client.api, "get_user", new=AsyncMock(return_value=friend)):
+        await client.handle_event(
+            VRChatEvent("friend-active", {"userId": FRIEND_USER_ID, "user": friend})
+        )
+    await hass.async_block_till_done()
+    unique_id = f"statusDescription.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
+    assert entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id) is None
+    listeners_before = len(loaded_entry.runtime_data._listeners)
+    event = VRChatEvent(
+        "friend-update",
+        {"userId": FRIEND_USER_ID, "user": {"statusDescription": "New description"}},
+    )
+
+    await client.handle_event(event)
+    await hass.async_block_till_done()
+    entity_id = _entity_id(entity_registry, unique_id)
+    assert hass.states.get(entity_id).state == "New description"
+    assert len(loaded_entry.runtime_data._listeners) == listeners_before + 1
+
+    await client.handle_event(event)
+    await client.handle_event(event)
+    await hass.async_block_till_done()
+    assert _entity_id(entity_registry, unique_id) == entity_id
+    assert len(loaded_entry.runtime_data._listeners) == listeners_before + 1
+
+
+async def test_push_updates_only_affected_user(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Unchanged states must not be reported again for unrelated friends."""
+    entity_ids = hass.states.async_entity_ids(SENSOR_DOMAIN)
+    reports: list[str] = []
+
+    @callback
+    def record_report(event: Event) -> None:
+        reports.append(event.data["entity_id"])
+
+    remove_report = async_track_state_report_event(hass, entity_ids, record_report)
+    remove_change = async_track_state_change_event(hass, entity_ids, record_report)
+    await loaded_entry.runtime_data.client.handle_event(
+        VRChatEvent(
+            "friend-update",
+            {"userId": FRIEND_USER_ID, "user": {"displayName": "Renamed friend"}},
+        )
+    )
+    await hass.async_block_till_done()
+    remove_report()
+    remove_change()
+
+    assert set(reports) == {
+        _entity_id(entity_registry, f"{key}.{CURRENT_USER_ID}:{FRIEND_USER_ID}")
+        for key in ("state", "status", "statusDescription", "location")
+    }
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{CURRENT_USER_ID}:{FRIEND_USER_ID}"), loaded_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == "Renamed friend"
+
+
+async def test_world_updates_only_location_sensor(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Resolved metadata updates the location without reporting other data again."""
+    client = loaded_entry.runtime_data.client
+    world = {"id": "wrld_test", "name": "First world"}
+    await client.handle_event(
+        VRChatEvent(
+            "friend-location",
+            {
+                "userId": FRIEND_USER_ID,
+                "user": {"status": "active"},
+                "location": "wrld_test:instance",
+                "world": world,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    reports: list[str] = []
+
+    @callback
+    def record_report(event: Event) -> None:
+        reports.append(event.data["entity_id"])
+
+    entity_ids = hass.states.async_entity_ids(SENSOR_DOMAIN)
+    remove_report = async_track_state_report_event(hass, entity_ids, record_report)
+    remove_change = async_track_state_change_event(hass, entity_ids, record_report)
+    client.worlds.get("wrld_test", {"id": "wrld_test", "name": "Renamed world"})
+    await hass.async_block_till_done()
+    remove_report()
+    remove_change()
+
+    entity_id = _entity_id(
+        entity_registry, f"location.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
+    )
+    assert set(reports) == {entity_id}
+    assert hass.states.get(entity_id).state == "Renamed world"
+
+
+async def test_async_world_lookup_updates_location(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Publish world names and thumbnails after an in-flight SDK fetch resolves."""
+    fetch_started = asyncio.Event()
+    fetch_released = asyncio.Event()
+
+    async def fetch_world(world_id: str) -> World:
+        fetch_started.set()
+        await fetch_released.wait()
+        return {
+            "id": world_id,
+            "name": "Resolved world",
+            "thumbnailImageUrl": "https://example.com/world.png",
+        }
+
+    with patch.object(loaded_entry.runtime_data.client.api, "get_world", fetch_world):
+        await loaded_entry.runtime_data.client.handle_event(
+            VRChatEvent(
+                "friend-location",
+                {
+                    "userId": FRIEND_USER_ID,
+                    "user": {"status": "active"},
+                    "location": "wrld_test:instance",
+                },
+            )
+        )
+        await fetch_started.wait()
+        fetch_released.set()
+        await hass.async_block_till_done()
+
+    entity_id = _entity_id(
+        entity_registry, f"location.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "Resolved world"
+    assert state.attributes["entity_picture"] == "https://example.com/world.png"
+    assert state.attributes["instanceId"] == "instance"
+
+
+async def test_disconnect_and_reconnect_update_availability(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """Connection notifications make every entity unavailable and restore its state."""
+    previous_states = {
+        state.entity_id: state.state for state in hass.states.async_all(SENSOR_DOMAIN)
+    }
+    loaded_entry.runtime_data.client._set_available(False)
+    await hass.async_block_till_done()
+    assert {state.state for state in hass.states.async_all(SENSOR_DOMAIN)} == {
+        STATE_UNAVAILABLE
+    }
+
+    loaded_entry.runtime_data.client._set_available(True)
+    await hass.async_block_till_done()
+    assert {
+        state.entity_id: state.state for state in hass.states.async_all(SENSOR_DOMAIN)
+    } == previous_states
+
+
+async def test_push_during_disconnect_does_not_restore_availability(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A pushed snapshot must not restore availability before the SDK reconnects."""
+    client = loaded_entry.runtime_data.client
+    client._set_available(False)
+    await hass.async_block_till_done()
+
+    await client.handle_event(
+        VRChatEvent(
+            "friend-update",
+            {"userId": FRIEND_USER_ID, "user": {"status": "busy"}},
+        )
+    )
+    await hass.async_block_till_done()
+    assert {state.state for state in hass.states.async_all(SENSOR_DOMAIN)} == {
+        STATE_UNAVAILABLE
+    }
+
+    client._set_available(True)
+    await hass.async_block_till_done()
+    entity_id = _entity_id(
+        entity_registry, f"status.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
+    )
+    assert hass.states.get(entity_id).state == "busy"
+    assert STATE_UNAVAILABLE not in {
+        state.state for state in hass.states.async_all(SENSOR_DOMAIN)
+    }
+
+
+async def test_reload_removes_old_listeners(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """Unloading removes platform and entity subscriptions before a fresh load."""
+    coordinator = loaded_entry.runtime_data
+    listener_count = len(coordinator._listeners)
+    assert listener_count > 1
+    assert await hass.config_entries.async_unload(loaded_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not coordinator._listeners
+    assert coordinator.client.closed
+    assert coordinator.client.worlds.closed
+
+    assert await hass.config_entries.async_setup(loaded_entry.entry_id)
+    await hass.async_block_till_done()
+    replacement = loaded_entry.runtime_data
+    assert replacement is not coordinator
+    assert len(replacement._listeners) == listener_count
+    await coordinator.close()
+    assert not coordinator._listeners
+    assert replacement.client.available
+
+
+async def test_shared_friend_is_isolated_between_accounts(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """The same VRChat user has independent entities and devices for each account."""
+    other_id = "usr_other"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "other@example.com", CONF_PASSWORD: "password"},
+        unique_id=other_id,
+    )
+    entry.add_to_hass(hass)
+    InitialCurrentUserData[other_id] = {**CURRENT_USER, "id": other_id}
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    first_entity_id = _entity_id(
+        entity_registry, f"status.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
+    )
+    second_entity_id = _entity_id(
+        entity_registry, f"status.{other_id}:{FRIEND_USER_ID}"
+    )
+    assert first_entity_id != second_entity_id
+    first_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{CURRENT_USER_ID}:{FRIEND_USER_ID}"), loaded_entry.entry_id
+    )
+    second_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{other_id}:{FRIEND_USER_ID}"), entry.entry_id
+    )
+    assert first_device is not None
+    assert second_device is not None
+    assert first_device.id != second_device.id
+
+    await loaded_entry.runtime_data.client.handle_event(
+        VRChatEvent(
+            "friend-update", {"userId": FRIEND_USER_ID, "user": {"status": "busy"}}
+        )
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(first_entity_id).state == "busy"
+    assert hass.states.get(second_entity_id).state == "active"
+
+    await loaded_entry.runtime_data.client.handle_event(
+        VRChatEvent("friend-delete", {"userId": FRIEND_USER_ID})
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(first_entity_id) is None
+    assert hass.states.get(second_entity_id).state == "active"
+    assert device_registry.async_get(second_device.id) is not None
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from vrchatapi.highlevel import VRChatAccount, WorldCache
+from vrchatapi.highlevel import VRChatAccount, VRChatUser, WorldCache
 from vrchatapi.highlevel.presence import VRChatSpecialLocationString
 from vrchatapi.highlevel.types import World
 
@@ -17,11 +17,9 @@ from homeassistant.components.vrchat.const import (
     VRCHAT_USER_STATUS_OPTIONS,
     VRChatUserState,
 )
-from homeassistant.components.vrchat.coordinator import (
-    VRChatAccountDataCoordinator,
-    VRChatUserDataCoordinator,
-)
+from homeassistant.components.vrchat.coordinator import VRChatAccountDataCoordinator
 from homeassistant.components.vrchat.sensor import (
+    VRChatUserDataSensorEntity,
     VRChatUserLocationSensor,
     VRChatUserStateSensor,
     VRChatUserStatusDescriptionSensor,
@@ -29,34 +27,55 @@ from homeassistant.components.vrchat.sensor import (
 )
 from homeassistant.core import HomeAssistant
 
+USER_ID = "usr_test"
 
-def test_location_sensor_without_world_metadata() -> None:
+
+def _coordinator(hass: HomeAssistant, user: VRChatUser) -> VRChatAccountDataCoordinator:
+    """Expose an isolated user snapshot through an account coordinator."""
+    coordinator = VRChatAccountDataCoordinator(
+        hass, MockConfigEntry(domain=DOMAIN, unique_id=USER_ID)
+    )
+    coordinator.data = {USER_ID: user}
+    return coordinator
+
+
+def test_location_sensor_without_world_metadata(hass: HomeAssistant) -> None:
     """Test an unresolved world ID has no location state."""
     sensor = VRChatUserLocationSensor(
-        cast(
-            VRChatUserDataCoordinator,
-            SimpleNamespace(
-                data={"location": "wrld_test", "worldId": "wrld_test"},
-                world=None,
-                destination_world=None,
+        _coordinator(
+            hass,
+            cast(
+                VRChatUser,
+                SimpleNamespace(
+                    data={"location": "wrld_test", "worldId": "wrld_test"},
+                    world=None,
+                    destination_world=None,
+                ),
             ),
-        )
+        ),
+        USER_ID,
     )
 
     assert sensor.native_value is None
 
 
-def test_location_sensor_uses_world_id_for_empty_world_name() -> None:
+def test_location_sensor_uses_world_id_for_empty_world_name(
+    hass: HomeAssistant,
+) -> None:
     """Test an empty world name falls back to the world ID."""
     sensor = VRChatUserLocationSensor(
-        cast(
-            VRChatUserDataCoordinator,
-            SimpleNamespace(
-                data={"location": "wrld_test", "worldId": "wrld_test"},
-                world=SimpleNamespace(data={"name": ""}),
-                destination_world=None,
+        _coordinator(
+            hass,
+            cast(
+                VRChatUser,
+                SimpleNamespace(
+                    data={"location": "wrld_test", "worldId": "wrld_test"},
+                    world=SimpleNamespace(data={"name": ""}),
+                    destination_world=None,
+                ),
             ),
-        )
+        ),
+        USER_ID,
     )
 
     assert sensor.native_value == "wrld_test"
@@ -66,7 +85,9 @@ def test_location_sensor_uses_world_id_for_empty_world_name() -> None:
     "location",
     [pytest.param("private", id="private"), pytest.param("offline", id="offline")],
 )
-def test_special_location_overrides_previous_destination(location: str) -> None:
+def test_special_location_overrides_previous_destination(
+    hass: HomeAssistant, location: str
+) -> None:
     """An old destination must not hide an explicit private or offline location."""
     world = SimpleNamespace(
         data={
@@ -79,7 +100,9 @@ def test_special_location_overrides_previous_destination(location: str) -> None:
         world=world,
         destination_world=world,
     )
-    sensor = VRChatUserLocationSensor(cast(VRChatUserDataCoordinator, user))
+    sensor = VRChatUserLocationSensor(
+        _coordinator(hass, cast(VRChatUser, user)), USER_ID
+    )
     assert sensor.native_value == "Previous map"
     assert sensor.entity_picture == "https://example.com/previous.png"
 
@@ -104,17 +127,17 @@ def test_location_sensor_options_are_stable_and_unique(
         hass, MockConfigEntry(domain=DOMAIN, unique_id="usr_test")
     )
     account.client = cast(VRChatAccount, SimpleNamespace(worlds=cache))
-    sensor = VRChatUserLocationSensor(
-        cast(
-            VRChatUserDataCoordinator,
+    account.data = {
+        USER_ID: cast(
+            VRChatUser,
             SimpleNamespace(
                 data={"location": "offline", "status": "offline"},
                 world=None,
                 destination_world=None,
-                account=account,
             ),
         )
-    )
+    }
+    sensor = VRChatUserLocationSensor(account, USER_ID)
 
     assert sensor.options == [
         *VRChatSpecialLocationString,
@@ -136,14 +159,18 @@ def test_location_sensor_options_are_stable_and_unique(
     ]
 
 
-def test_location_follows_travel_and_preserves_pending_name() -> None:
+def test_location_follows_travel_and_preserves_pending_name(
+    hass: HomeAssistant,
+) -> None:
     """Keep the previous name during metadata retries and show travel images."""
     user = SimpleNamespace(
         data={"location": "wrld_first:instance", "worldId": "wrld_first"},
         world=SimpleNamespace(data={"name": "First world"}),
         destination_world=None,
     )
-    sensor = VRChatUserLocationSensor(cast(VRChatUserDataCoordinator, user))
+    sensor = VRChatUserLocationSensor(
+        _coordinator(hass, cast(VRChatUser, user)), USER_ID
+    )
     assert sensor.native_value == "First world"
 
     user.world = SimpleNamespace(data=None)
@@ -163,7 +190,9 @@ def test_location_follows_travel_and_preserves_pending_name() -> None:
     assert sensor.native_value == "Next world"
 
 
-def test_state_attributes_exclude_account_details_without_mutating_user() -> None:
+def test_state_attributes_exclude_account_details_without_mutating_user(
+    hass: HomeAssistant,
+) -> None:
     """Filter private and bulky fields while retaining other user metadata."""
     data = {
         "id": "usr_test",
@@ -186,7 +215,7 @@ def test_state_attributes_exclude_account_details_without_mutating_user() -> Non
     }
     original = data.copy()
     sensor = VRChatUserStateSensor(
-        cast(VRChatUserDataCoordinator, SimpleNamespace(data=data))
+        _coordinator(hass, cast(VRChatUser, SimpleNamespace(data=data))), USER_ID
     )
 
     assert sensor.extra_state_attributes == {
@@ -209,7 +238,7 @@ def test_user_state_options_are_strings() -> None:
     )
 
 
-def test_state_sensor_returns_strings() -> None:
+def test_state_sensor_returns_strings(hass: HomeAssistant) -> None:
     """Test state sensor enum values are plain strings."""
     assert (
         type(
@@ -220,31 +249,37 @@ def test_state_sensor_returns_strings() -> None:
         is str
     )
     sensor = VRChatUserLocationSensor(
-        cast(
-            VRChatUserDataCoordinator,
-            SimpleNamespace(
-                data={"location": "traveling", "worldId": "traveling"},
-                world=None,
-                destination_world=None,
+        _coordinator(
+            hass,
+            cast(
+                VRChatUser,
+                SimpleNamespace(
+                    data={"location": "traveling", "worldId": "traveling"},
+                    world=None,
+                    destination_world=None,
+                ),
             ),
-        )
+        ),
+        USER_ID,
     )
 
     assert type(sensor.native_value) is str
 
 
-def test_status_sensor_picture_and_description_icon() -> None:
+def test_status_sensor_picture_and_description_icon(hass: HomeAssistant) -> None:
     """Test status indicator and description icon selection."""
     user = cast(
-        VRChatUserDataCoordinator,
+        VRChatUser,
         SimpleNamespace(
             data={"status": "active", "location": "offline"},
             world=None,
             destination_world=None,
         ),
     )
-    status_sensor = VRChatUserStatusSensor(user)
-    description_sensor = VRChatUserStatusDescriptionSensor(user)
+    status_sensor = VRChatUserStatusSensor(_coordinator(hass, user), USER_ID)
+    description_sensor = VRChatUserStatusDescriptionSensor(
+        _coordinator(hass, user), USER_ID
+    )
 
     assert status_sensor.entity_picture is not None
     assert description_sensor.icon == "mdi:account-badge"
@@ -254,15 +289,20 @@ def test_status_sensor_picture_and_description_icon() -> None:
     assert description_sensor.icon is None
 
 
-def test_status_sensor_handles_missing_status() -> None:
+def test_status_sensor_handles_missing_status(hass: HomeAssistant) -> None:
     """Test status sensors return no value when status is missing."""
     user = cast(
-        VRChatUserDataCoordinator,
+        VRChatUser,
         SimpleNamespace(data={}, world=None, destination_world=None),
     )
 
-    assert VRChatUserStatusSensor(user).entity_picture is None
-    assert VRChatUserStatusDescriptionSensor(user).icon is None
+    assert (
+        VRChatUserStatusSensor(_coordinator(hass, user), USER_ID).entity_picture is None
+    )
+    assert (
+        VRChatUserStatusDescriptionSensor(_coordinator(hass, user), USER_ID).icon
+        is None
+    )
 
 
 def test_sensor_does_not_fall_back_from_empty_top_level_value() -> None:
@@ -277,14 +317,14 @@ def test_sensor_does_not_fall_back_from_empty_top_level_value() -> None:
     )
 
 
-def test_state_sensor_handles_unknown_presence() -> None:
+def test_state_sensor_handles_unknown_presence(hass: HomeAssistant) -> None:
     """Test state sensor returns no state when presence is unknown."""
     user = cast(
-        VRChatUserDataCoordinator,
+        VRChatUser,
         SimpleNamespace(data={"status": "active"}, world=None, destination_world=None),
     )
 
-    assert VRChatUserStateSensor(user).native_value is None
+    assert VRChatUserStateSensor(_coordinator(hass, user), USER_ID).native_value is None
 
 
 @pytest.mark.parametrize(
@@ -337,11 +377,11 @@ def test_state_sensor_handles_unknown_presence() -> None:
     ],
 )
 def test_state_sensor_avatar_fallbacks(
-    image_data: dict[str, str], expected: str | None
+    hass: HomeAssistant, image_data: dict[str, str], expected: str | None
 ) -> None:
     """Test state sensor avatar URL fallback order."""
     user = cast(
-        VRChatUserDataCoordinator,
+        VRChatUser,
         SimpleNamespace(
             data={
                 "location": "offline",
@@ -353,16 +393,16 @@ def test_state_sensor_avatar_fallbacks(
         ),
     )
 
-    sensor = VRChatUserStateSensor(user)
+    sensor = VRChatUserStateSensor(_coordinator(hass, user), USER_ID)
 
     assert sensor.entity_picture == expected
 
 
-def test_location_sensor_world_attributes() -> None:
+def test_location_sensor_world_attributes(hass: HomeAssistant) -> None:
     """Test location sensor exposes resolved world metadata."""
     world = SimpleNamespace(data={"id": "wrld_test", "name": "Test world"})
     user = cast(
-        VRChatUserDataCoordinator,
+        VRChatUser,
         SimpleNamespace(
             data={
                 "location": "wrld_test:instance",
@@ -374,7 +414,7 @@ def test_location_sensor_world_attributes() -> None:
         ),
     )
 
-    sensor = VRChatUserLocationSensor(user)
+    sensor = VRChatUserLocationSensor(_coordinator(hass, user), USER_ID)
 
     assert sensor.extra_state_attributes == {
         "instanceId": "instance",
@@ -383,25 +423,64 @@ def test_location_sensor_world_attributes() -> None:
     }
 
 
-async def test_entity_world_data_helpers() -> None:
+async def test_entity_world_data_helpers(hass: HomeAssistant) -> None:
     """Test world data lookup and update waiting helpers."""
     world_task = asyncio.create_task(asyncio.sleep(0))
     world = SimpleNamespace(
         data={"name": "Test world"}, task=world_task, get_data=AsyncMock()
     )
     user = cast(
-        VRChatUserDataCoordinator,
+        VRChatUser,
         SimpleNamespace(
             data={"location": "offline", "status": "offline"},
             world=world,
             destination_world=None,
         ),
     )
-    status_sensor = VRChatUserStatusSensor(user)
-    location_sensor = VRChatUserLocationSensor(user)
+    status_sensor = VRChatUserStatusSensor(_coordinator(hass, user), USER_ID)
+    location_sensor = VRChatUserLocationSensor(_coordinator(hass, user), USER_ID)
 
     assert status_sensor.vrchat_user_world_data_get("name") == "Test world"
     assert VRChatUserLocationSensor.should_add_based_on_user_data({})
     world.data = None
     await location_sensor.async_update()
     await world_task
+
+
+@pytest.mark.parametrize(
+    "sensor_class",
+    [
+        pytest.param(VRChatUserStatusSensor, id="status"),
+        pytest.param(VRChatUserStatusDescriptionSensor, id="description"),
+        pytest.param(VRChatUserStateSensor, id="state"),
+        pytest.param(VRChatUserLocationSensor, id="location"),
+    ],
+)
+def test_removed_user_is_unavailable_and_safe(
+    hass: HomeAssistant, sensor_class: type[VRChatUserDataSensorEntity]
+) -> None:
+    """A user disappearing before entity removal must not break state properties."""
+    coordinator = _coordinator(
+        hass,
+        cast(
+            VRChatUser,
+            SimpleNamespace(
+                data={"status": "active", "location": "offline"},
+                world=None,
+                destination_world=None,
+            ),
+        ),
+    )
+    sensor = sensor_class(coordinator, USER_ID)
+    unique_id = sensor.unique_id
+    coordinator.data.clear()
+
+    assert not sensor.available
+    assert sensor.user is None
+    assert sensor.user_data == {}
+    assert sensor.world is None
+    assert sensor.destination_world is None
+    assert sensor.native_value is None
+    assert sensor.entity_picture is None
+    assert sensor.unique_id == unique_id
+    assert sensor.device_info["identifiers"] == {(DOMAIN, f"{USER_ID}:{USER_ID}")}

@@ -1,50 +1,42 @@
 """Adapt library account updates to Home Assistant entities and devices."""
 
-from collections.abc import Callable
 import logging
 
-from propcache.api import cached_property
 from vrchatapi.exceptions import UnauthorizedException
-from vrchatapi.highlevel import (
-    AccountIdMismatch,
-    VRChatAccount,
-    VRChatAPI,
-    VRChatUser,
-    VRChatWorldData,
-)
-from vrchatapi.highlevel.types import User
+from vrchatapi.highlevel import AccountIdMismatch, VRChatAccount, VRChatAPI, VRChatUser
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
 )
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, USER_AGENT, VRCHAT_USER_PAGE_BASE_URL
-from .entity import VRChatUserDataEntity, vrchat_user_data_entity_classes_map
+from .const import DOMAIN, USER_AGENT
 from .store import InitialCurrentUserData, get_vrchat_auth_cookie_store
 
 _LOGGER = logging.getLogger(__name__)
 type VRChatConfigEntry = ConfigEntry[VRChatAccountDataCoordinator]
 
 
-class VRChatAccountDataCoordinator:
+class VRChatAccountDataCoordinator(DataUpdateCoordinator[dict[str, VRChatUser]]):
     """Own the HA lifecycle and translate library notifications."""
+
+    config_entry: VRChatConfigEntry
 
     def __init__(self, hass: HomeAssistant, entry: VRChatConfigEntry) -> None:
         """Initialize the integration adapter."""
-        self.hass = hass
-        self.config_entry = entry
+        super().__init__(hass, _LOGGER, config_entry=entry, name=DOMAIN)
+        self.data = {}
+        self.updated_user_id: str | None = None
+        self.world_update = False
+        self.force_refresh = False
         self.device_registry = dr.async_get(hass)
         assert entry.unique_id is not None
         self.cookie_store = get_vrchat_auth_cookie_store(hass, entry.unique_id)
-        self.users: dict[str, VRChatUserDataCoordinator] = {}
-        self.add_entities_callback_map: dict[str, AddConfigEntryEntitiesCallback] = {}
         self.client: VRChatAccount | None = None
 
     @property
@@ -68,6 +60,7 @@ class VRChatAccountDataCoordinator:
             on_auth_error=self._auth_error,
             on_authenticated=self._save_cookie,
         )
+        self.data = self.client.users
         try:
             await self.client.start(InitialCurrentUserData.pop(entry.unique_id, None))
         except UnauthorizedException as err:
@@ -91,40 +84,46 @@ class VRChatAccountDataCoordinator:
     async def _save_cookie(self, api: VRChatAPI) -> None:
         await self.cookie_store.async_save(api.cookie)
 
+    @callback
     def _user_updated(self, data: VRChatUser, world_update: bool) -> None:
-        if (user := self.users.get(data.id)) is None:
-            user = self.users[data.id] = VRChatUserDataCoordinator(self, data)
-        user.setup_entities()
-        user.async_update_entities(force_refresh=True, world_update=world_update)
-        if (device := user.device_entry) is not None:
+        self.updated_user_id = data.id
+        self.world_update = world_update
+        self.force_refresh = True
+        self.async_set_updated_data(self.data)
+        if (device := self._device_entry(data.id)) is not None:
             self.device_registry.async_update_device(
                 device.id,
                 name=data.data.get("displayName"),
             )
 
+    @callback
     def _user_removed(self, user_id: str) -> None:
-        if (user := self.users.pop(user_id, None)) is not None and (
-            device := user.device_entry
-        ) is not None:
+        if (device := self._device_entry(user_id)) is not None:
             self.device_registry.async_remove_device(device.id)
+        self.updated_user_id = user_id
+        self.world_update = False
+        self.force_refresh = False
+        self.async_set_updated_data(self.data)
 
+    @callback
     def _availability_updated(self, available: bool) -> None:
-        for user in self.users.values():
-            user.async_update_entities(force_refresh=available)
+        self.updated_user_id = None
+        self.world_update = False
+        self.force_refresh = available
+        self.async_update_listeners()
+
+    @callback
+    def _device_entry(self, user_id: str) -> dr.DeviceEntry | None:
+        return self.device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{self.config_entry.unique_id}:{user_id}"),
+            self.config_entry.entry_id,
+        )
 
     def _auth_error(self, error: Exception) -> None:
         _LOGGER.error(
             "VRChat authentication expired; reload the entry to sign in again: %s",
             error,
         )
-
-    def setup_entities(
-        self, platform: str, add_entities: AddConfigEntryEntitiesCallback
-    ) -> None:
-        """Register the platform and create entities for existing users."""
-        self.add_entities_callback_map[platform] = add_entities
-        for user in self.users.values():
-            user.setup_entities(platform)
 
     async def close(self) -> None:
         """Close account connections and background work."""
@@ -142,121 +141,3 @@ class VRChatAccountSetupFailed(ConfigEntryNotReady):
             translation_key="setup_failed",
             translation_placeholders={"config_entry_title": entry.title},
         )
-
-
-class VRChatUserDataCoordinator:
-    """Expose a library user to HA entities."""
-
-    def __init__(self, account: VRChatAccountDataCoordinator, user: VRChatUser) -> None:
-        """Initialize entity listeners for a library user."""
-        self.account = account
-        self.user = user
-        self.added_entity_map: dict[
-            type[VRChatUserDataEntity], VRChatUserDataEntity
-        ] = {}
-        self._entity_update_listeners: list[Callable[[bool, bool], None]] = []
-
-    @property
-    def data(self) -> User:
-        """Return the library user snapshot."""
-        return self.user.data
-
-    @property
-    def world(self) -> VRChatWorldData | None:
-        """Return the current world."""
-        return self.user.world
-
-    @property
-    def destination_world(self) -> VRChatWorldData | None:
-        """Return the destination world."""
-        return self.user.destination_world
-
-    def async_update_entities(
-        self, force_refresh: bool, world_update: bool = False
-    ) -> None:
-        """Notify added entities about account or world data changes."""
-        for listener in list(self._entity_update_listeners):
-            listener(force_refresh, world_update)
-
-    def async_add_entity_update_listener(
-        self, listener: Callable[[bool, bool], None]
-    ) -> Callable[[], None]:
-        """Add an entity update listener."""
-        self._entity_update_listeners.append(listener)
-
-        def remove_listener() -> None:
-            if listener in self._entity_update_listeners:
-                self._entity_update_listeners.remove(listener)
-
-        return remove_listener
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info."""
-        return self._calculate_device_info(self.data.get("displayName"))
-
-    def _calculate_device_info(self, name: str | None) -> DeviceInfo:
-        user_id = self.data["id"]
-        device_info = DeviceInfo(
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{self.account.config_entry.unique_id}:{user_id}",
-                )
-            },
-            name=name,
-            configuration_url=VRCHAT_USER_PAGE_BASE_URL + user_id,
-        )
-        if self.is_not_current_user:
-            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
-                self.account.hass,
-                (
-                    DOMAIN,
-                    f"{self.account.config_entry.unique_id}:"
-                    f"{self.account.config_entry.unique_id}",
-                ),
-                config_entry_id=self.account.config_entry.entry_id,
-            )
-        return device_info
-
-    @property
-    def device_entry(self) -> dr.DeviceEntry | None:
-        """Device entry that represents this user."""
-        identifier = next(iter(self.device_info["identifiers"]))
-        return self.account.device_registry.async_get_device_by_identifier(
-            identifier, self.account.config_entry.entry_id
-        )
-
-    @cached_property
-    def is_current_user(self) -> bool:
-        "Is current user."
-        return self.data["id"] == self.account.config_entry.unique_id
-
-    @cached_property
-    def is_not_current_user(self) -> bool:
-        "Is not current user."
-        return not self.is_current_user
-
-    def setup_entities(
-        self,
-        platform: str | None = None,
-    ) -> None:
-        """Setup entities of a specific platform. Or setup all platforms if None is specified. Do nothing if entity has already been setup."""
-        if platform is None:
-            for p in self.account.add_entities_callback_map:
-                self._setup_entities(p)
-        else:
-            self._setup_entities(platform)
-
-    def _setup_entities(
-        self,
-        platform: str,
-    ) -> None:
-        if platform not in self.account.add_entities_callback_map:
-            return
-        add_entities = self.account.add_entities_callback_map[platform]
-        for entity_cls in vrchat_user_data_entity_classes_map[platform]:
-            if entity_cls not in self.added_entity_map and entity_cls.should_add(self):
-                entity = entity_cls(self)
-                self.added_entity_map[entity_cls] = entity
-                add_entities([entity], update_before_add=True)

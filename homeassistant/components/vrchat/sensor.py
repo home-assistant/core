@@ -1,7 +1,7 @@
 """Setup sensors for the VRChat integration."""
 
 from collections.abc import Mapping
-from typing import Any, override
+from typing import Any, cast, override
 
 from vrchatapi.highlevel.presence import (
     VRCHAT_WORLD_ID_PREFIX,
@@ -15,9 +15,9 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     VRCHAT_USER_STATE_OPTIONS,
@@ -71,17 +71,38 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    config_entry.runtime_data.setup_entities(Platform.SENSOR, async_add_entities)
+    coordinator = config_entry.runtime_data
+    known_entities: set[tuple[str, type[VRChatUserDataSensorEntity]]] = set()
+
+    @callback
+    def async_add_new_entities() -> None:
+        known_entities.intersection_update(
+            (user_id, sensor_class)
+            for user_id, sensor_class in known_entities.copy()
+            if user_id in coordinator.data
+        )
+        new_entities: list[VRChatUserDataSensorEntity] = []
+        for user_id, user in coordinator.data.items():
+            for sensor_class in SENSOR_CLASSES:
+                key = (user_id, sensor_class)
+                if key not in known_entities and sensor_class.should_add(
+                    user, user_id == config_entry.unique_id
+                ):
+                    known_entities.add(key)
+                    new_entities.append(sensor_class(coordinator, user_id))
+        if new_entities:
+            async_add_entities(new_entities, update_before_add=True)
+
+    config_entry.async_on_unload(coordinator.async_add_listener(async_add_new_entities))
+    async_add_new_entities()
 
 
-class VRChatUserDataSensorEntity(
-    VRChatUserDataEntity, SensorEntity, platform=Platform.SENSOR
-):
+class VRChatUserDataSensorEntity(VRChatUserDataEntity, SensorEntity):
     """Base entity for all VRChat sensors."""
 
     @property
     @override
-    def native_value(self):
+    def native_value(self) -> StateType:
         """The state."""
         return self.vrchat_user_data_state
 
@@ -106,13 +127,13 @@ class VRChatUserStatusSensor(VRChatUserDataSensorEntity):
 
     @property
     @override
-    def entity_picture(self):
+    def entity_picture(self) -> str | None:
         """Return the user status indicator."""
-        status = self.native_value
+        status = self.vrchat_user_data_state
         if status is None:
             return None
         # VRChat renders offline and in-game states with the same solid-circle indicator.
-        if status == VRChatUserState.OFFLINE or is_user_in_game(self.user.data):
+        if status == VRChatUserState.OFFLINE or is_user_in_game(dict(self.user_data)):
             return VRCHAT_USER_STATUS_INDICATOR_MAP_IN_GAME.get(status)
         return VRCHAT_USER_STATUS_INDICATOR_MAP_NOT_IN_GAME.get(status)
 
@@ -127,7 +148,7 @@ class VRChatUserStatusDescriptionSensor(VRChatUserDataSensorEntity):
     def icon(self) -> str | None:
         """Show icon based on user status."""
         return VRCHAT_USER_STATUS_ICON_MAP.get(
-            VRChatUserStatusSensor.get_state_from_user_data(self.user.data)
+            VRChatUserStatusSensor.get_state_from_user_data(self.user_data)
         )
 
 
@@ -142,15 +163,18 @@ class VRChatUserStateSensor(VRChatUserDataSensorEntity):
 
     @property
     @override
-    def entity_picture(self):
+    def entity_picture(self) -> str | None:
         """Return the user icon or avatar image."""
-        user_data_get = self.user.data.get
+        user_data_get = self.user_data.get
         return process_vrchat_string(
-            user_data_get("iconUrl")
-            or user_data_get("userIcon")
-            or user_data_get("imageUrl")
-            or user_data_get("currentAvatarThumbnailImageUrl")
-            or user_data_get("currentAvatarImageUrl")
+            cast(
+                str | None,
+                user_data_get("iconUrl")
+                or user_data_get("userIcon")
+                or user_data_get("imageUrl")
+                or user_data_get("currentAvatarThumbnailImageUrl")
+                or user_data_get("currentAvatarImageUrl"),
+            )
         )
 
     @classmethod
@@ -173,7 +197,7 @@ class VRChatUserStateSensor(VRChatUserDataSensorEntity):
         """User data without credentials, account details, or large lists."""
         return {
             key: value
-            for key, value in self.user.data.items()
+            for key, value in self.user_data.items()
             if key not in _EXCLUDED_USER_ATTRIBUTES
         }
 
@@ -191,9 +215,9 @@ class VRChatUserLocationSensor(
 
     @property
     @override
-    def entity_picture(self):
+    def entity_picture(self) -> str | None:
         """Return the world thumbnail URL."""
-        if self.get_state_from_user_data(self.user.data, "location") in (
+        if self.get_state_from_user_data(self.user_data, "location") in (
             VRChatSpecialLocationString.PRIVATE,
             VRChatSpecialLocationString.OFFLINE,
         ):
@@ -204,7 +228,7 @@ class VRChatUserLocationSensor(
     @override
     def options(self):
         """Return special locations and all cached world names."""
-        client = self.user.account.client
+        client = self.coordinator.client
         assert client is not None
         special_options = [
             *(location.value for location in VRChatSpecialLocationString),
@@ -224,12 +248,12 @@ class VRChatUserLocationSensor(
     def vrchat_user_data_state(self):
         """World name."""
         if (
-            VRChatUserStateSensor.get_state_from_user_data(self.user.data)
+            VRChatUserStateSensor.get_state_from_user_data(self.user_data)
             == VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE
         ):
             self._attr_native_value = VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE.value
         elif (
-            location := self.get_state_from_user_data(self.user.data, "location")
+            location := self.get_state_from_user_data(self.user_data, "location")
         ) is not None and location.startswith(VRChatSpecialLocationString.TRAVELING):
             self._attr_native_value = VRChatSpecialLocationString.TRAVELING.value
         elif location in (
@@ -241,11 +265,11 @@ class VRChatUserLocationSensor(
             name = self.vrchat_user_world_data_get("name")
             if name == "":
                 self._attr_native_value = self.get_state_from_user_data(
-                    self.user.data, "worldId"
+                    self.user_data, "worldId"
                 )
             else:
                 if name is None:
-                    name = self.get_state_from_user_data(self.user.data, "worldId")
+                    name = self.get_state_from_user_data(self.user_data, "worldId")
                 # Preserve the last resolved name while metadata retries to avoid showing a world ID.
                 if name is not None and not name.startswith(VRCHAT_WORLD_ID_PREFIX):
                     self._attr_native_value = name
@@ -255,11 +279,19 @@ class VRChatUserLocationSensor(
     @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """World data."""
-        user_data_get = self.user.data.get
-        if (world := self.user.world) is not None and (data := world.data) is not None:
+        user_data_get = self.user_data.get
+        if (world := self.world) is not None and (data := world.data) is not None:
             return {"instanceId": user_data_get("instanceId"), **data}
         return {
             "id": user_data_get("worldId"),
             "instanceId": user_data_get("instanceId"),
             "travelingToLocation": user_data_get("travelingToLocation"),
         }
+
+
+SENSOR_CLASSES: tuple[type[VRChatUserDataSensorEntity], ...] = (
+    VRChatUserStatusSensor,
+    VRChatUserStatusDescriptionSensor,
+    VRChatUserStateSensor,
+    VRChatUserLocationSensor,
+)
