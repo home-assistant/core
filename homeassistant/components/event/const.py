@@ -44,7 +44,7 @@ class ButtonEventType(
     StrEnum,
     metaclass=EnumWithDeprecatedMembers,
     deprecated={
-        "MULTI_PRESS_ONGOING": ("ButtonEventType.MULTI_PRESS", "2027.5.0"),
+        "MULTI_PRESS_ONGOING": ("an integration specific event type", "2027.5.0"),
         "MULTI_PRESS_END": ("ButtonEventType.MULTI_PRESS", "2027.5.0"),
     },
 ):

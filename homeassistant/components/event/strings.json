@@ -26,6 +26,9 @@
             "single_press": "Single press"
           }
         },
+        "multi_press_count": {
+          "name": "Multi-press count"
+        },
         "press_count": {
           "name": "Press count"
         }
