@@ -168,6 +168,65 @@ async def test_chat_log_other_user(
             assert len(chat_log.content) == 3
 
 
+@pytest.mark.parametrize(
+    "user_id",
+    [
+        pytest.param("other-user-id", id="other_user"),
+        pytest.param(None, id="no_user"),
+    ],
+)
+async def test_active_chat_log_other_user(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_conversation_input: ConversationInput,
+    user_id: str | None,
+) -> None:
+    """Test a user cannot join the active chat log of another user."""
+    mock_conversation_input.context = Context(user_id=hass_admin_user.id)
+    other_input = ConversationInput(
+        text="Hello",
+        context=Context(user_id=user_id),
+        conversation_id=None,
+        device_id=None,
+        satellite_id=None,
+        language="en",
+        agent_id="mock-agent-id",
+    )
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input),
+        pytest.raises(Unauthorized),
+        async_get_chat_log(hass, session, other_input),
+    ):
+        pass
+
+
+async def test_chat_log_without_user_input_owner(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test the first user input claims a chat log opened without user input."""
+    with chat_session.async_get_chat_session(hass) as session:
+        with async_get_chat_log(hass, session) as chat_log:
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+
+        mock_conversation_input.context = Context(user_id=hass_admin_user.id)
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hello")
+            )
+
+        mock_conversation_input.context = Context(user_id="other-user-id")
+        with (
+            pytest.raises(Unauthorized),
+            async_get_chat_log(hass, session, mock_conversation_input),
+        ):
+            pass
+
+
 class AdminAPI(llm.API):
     """Test API that requires an admin user."""
 

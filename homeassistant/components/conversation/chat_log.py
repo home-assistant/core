@@ -15,6 +15,7 @@ import probatio
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import chat_session, frame, intent, llm, template
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
@@ -68,6 +69,20 @@ def _async_notify_subscribers(
             callback_func(conversation_id, event_type, data)
 
 
+def _check_owner(chat_log: ChatLog, user_input: ConversationInput | None) -> None:
+    """Raise if the user of the input may not continue the chat log.
+
+    A chat log opened without user input, like a conversation started by a
+    satellite, gets the user of the first input as its owner.
+    """
+    if user_input is None:
+        return
+    if chat_log.user_id is UNDEFINED:
+        chat_log.user_id = user_input.context.user_id
+    elif chat_log.user_id != user_input.context.user_id:
+        raise Unauthorized(context=user_input.context)
+
+
 @contextmanager
 def async_get_chat_log(
     hass: HomeAssistant,
@@ -86,6 +101,7 @@ def async_get_chat_log(
             raise RuntimeError(
                 "Cannot attach chat log delta listener unless initial caller"
             )
+        _check_owner(chat_log, user_input)
         if user_input is not None and (
             (content := chat_log.content[-1]).role != "user"
             or content.content != user_input.text
@@ -101,14 +117,13 @@ def async_get_chat_log(
         hass.data[DATA_CHAT_LOGS] = all_chat_logs
 
     is_new_log = session.conversation_id not in all_chat_logs
-    user_id = user_input.context.user_id if user_input else None
 
     if chat_log := all_chat_logs.get(session.conversation_id):
-        if user_input is not None and chat_log.user_id != user_id:
-            raise Unauthorized(context=user_input.context)
         chat_log = replace(chat_log, content=chat_log.content.copy())
     else:
-        chat_log = ChatLog(hass, session.conversation_id, user_id=user_id)
+        chat_log = ChatLog(hass, session.conversation_id)
+
+    _check_owner(chat_log, user_input)
 
     if chat_log_delta_listener:
         chat_log.delta_listener = chat_log_delta_listener
@@ -362,7 +377,7 @@ class ChatLog:
     conversation_id: str
     content: list[Content] = field(default_factory=lambda: [SystemContent(content="")])
     extra_system_prompt: str | None = None
-    user_id: str | None = None
+    user_id: str | UndefinedType | None = UNDEFINED
     llm_api: llm.APIInstance | None = None
     delta_listener: Callable[[ChatLog, dict], None] | None = None
     llm_input_provided_index = 0
