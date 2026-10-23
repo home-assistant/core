@@ -4918,7 +4918,9 @@
       "name": "Qube heat pump",
       "integration_type": "hub",
       "categories": [
-        "climate.heat_pumps_air_conditioning"
+        "climate.heat_pumps_air_conditioning",
+        "climate.thermostats_heating",
+        "climate.water_heaters"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
