@@ -10,6 +10,7 @@ from aioamazondevices.const.schedules import (
 )
 from aioamazondevices.structures import (
     AmazonDevice,
+    AmazonDeviceFeature,
     AmazonDeviceSensor,
     AmazonSchedule,
     AmazonVocalRecord,
@@ -91,8 +92,41 @@ TEST_DEVICE_1 = AmazonDevice(
         "dropin": "All",
     },
     voice_control_supported=True,
-    features={},
-    unsupported_features={},
+    features={
+        "temperatureSensor": {
+            "1": AmazonDeviceFeature(
+                properties=["temperature"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"temperature": "temperature"},
+            )
+        }
+    },
+    unsupported_features={
+        "toggle": {
+            "11": AmazonDeviceFeature(
+                properties=["toggleState"],
+                supported_operations=["turnOn", "turnOff"],
+                supported_modes=[],
+                friendly_name="Enable LED Indicator",
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={
+                    "__typename": "ToggleConfiguration",
+                    "friendlyName": {"value": {"text": "Enable LED Indicator"}},
+                },
+                sensor_keys={},
+            )
+        },
+    },
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
