@@ -57,6 +57,7 @@ TRUSTED_DEVICES = [
 ]
 
 FEATURES = {
+    "SND": True,
     "WIP": True,
     "LOC": True,
     "LCK": True,

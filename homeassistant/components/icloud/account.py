@@ -1071,6 +1071,11 @@ class IcloudDevice:
         return self._device.lost_mode_available
 
     @property
+    def sound_available(self) -> bool:
+        """Return whether the device can play a sound."""
+        return self._device.sound_available
+
+    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes."""
         return self._attrs
