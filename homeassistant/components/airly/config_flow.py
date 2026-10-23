@@ -49,21 +49,22 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
         use_nearest = False
 
         if user_input is not None:
+            location: dict[str, Any] = user_input[CONF_LOCATION]
             await self.async_set_unique_id(
-                f"{user_input[CONF_LOCATION][CONF_LATITUDE]}-{user_input[CONF_LOCATION][CONF_LONGITUDE]}"
+                f"{location[CONF_LATITUDE]}-{location[CONF_LONGITUDE]}"
             )
             self._abort_if_unique_id_configured()
 
             location_valid, errors = await self.async_check_location(
                 user_input[CONF_API_KEY],
-                user_input[CONF_LOCATION][CONF_LATITUDE],
-                user_input[CONF_LOCATION][CONF_LONGITUDE],
+                location[CONF_LATITUDE],
+                location[CONF_LONGITUDE],
             )
             if not location_valid and not errors:
                 location_valid, errors = await self.async_check_location(
                     user_input[CONF_API_KEY],
-                    user_input[CONF_LOCATION][CONF_LATITUDE],
-                    user_input[CONF_LOCATION][CONF_LONGITUDE],
+                    location[CONF_LATITUDE],
+                    location[CONF_LONGITUDE],
                     use_nearest=True,
                 )
                 use_nearest = location_valid
@@ -71,10 +72,14 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 if not location_valid:
                     return self.async_abort(reason="wrong_location")
-                location: dict[str, Any] = user_input.pop(CONF_LOCATION)
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
-                    data={**user_input, **location, CONF_USE_NEAREST: use_nearest},
+                    data={
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                        CONF_LATITUDE: location[CONF_LATITUDE],
+                        CONF_LONGITUDE: location[CONF_LONGITUDE],
+                        CONF_USE_NEAREST: use_nearest,
+                    },
                 )
 
         return self.async_show_form(

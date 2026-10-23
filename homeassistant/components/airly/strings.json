@@ -34,7 +34,7 @@
         },
         "data_description": {
           "api_key": "To generate API key go to {developer_registration_url}.",
-          "location": "The longitude and latitude of your location."
+          "location": "The location to get air quality data for."
         }
       }
     }
