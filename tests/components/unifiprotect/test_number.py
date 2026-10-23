@@ -806,6 +806,9 @@ async def test_chime_volume_set_value_without_public_chime(
             blocking=True,
         )
     assert exc_info.value.translation_key == "device_not_available"
+    assert exc_info.value.translation_placeholders == {
+        "device_name": chime.display_name
+    }
 
 
 async def test_chime_ring_volume_multiple_cameras(
