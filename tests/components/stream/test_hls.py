@@ -251,6 +251,15 @@ BOTH_SIZES = [(480, 320), (640, 480)]
         ),
         # and are tried again on the next keyframe
         pytest.param("libx265", {}, 1, BOTH_SIZES, BOTH_SIZES, id="h265-unparsed-once"),
+        # A change at DTS 0, after negative timestamps
+        pytest.param(
+            "libx265",
+            {"change_at_dts_zero": True},
+            0,
+            BOTH_SIZES,
+            BOTH_SIZES,
+            id="h265-change-at-dts-zero",
+        ),
         # avc1 samples keep their in-band parameter sets
         pytest.param("libx264", {}, 0, [(480, 320)], BOTH_SIZES, id="h264"),
     ],
@@ -298,36 +307,41 @@ async def test_hls_stream_picture_size_change(
     ):
         stream = create_stream(hass, source, {}, dynamic_stream_settings())
         stream.add_provider(HLS_PROVIDER)
-        await stream.start()
-        assert await hass.async_add_executor_job(worker_ended.wait, TEST_TIMEOUT)
-        await hass.async_block_till_done()
+        try:
+            await stream.start()
+            assert await hass.async_add_executor_job(worker_ended.wait, TEST_TIMEOUT)
+            await hass.async_block_till_done()
 
-        hls_client = await hls_stream(stream)
-        playlist_response = await hls_client.get("/playlist.m3u8")
-        assert playlist_response.status == HTTPStatus.OK
-        playlist = (await playlist_response.text()).splitlines()
+            hls_client = await hls_stream(stream)
+            playlist_response = await hls_client.get("/playlist.m3u8")
+            assert playlist_response.status == HTTPStatus.OK
+            playlist = (await playlist_response.text()).splitlines()
 
-        inits: dict[str, bytes] = {}
-        init_uri = ""
-        decoded_sizes = []
-        for line in playlist:
-            if line.startswith("#EXT-X-MAP:URI="):
-                init_uri = line.removeprefix("#EXT-X-MAP:URI=").strip('"')
-                init_response = await hls_client.get("/" + init_uri.removeprefix("./"))
-                assert init_response.status == HTTPStatus.OK
-                inits[init_uri] = await init_response.read()
-            elif line and not line.startswith("#"):
-                segment_response = await hls_client.get("/" + line.removeprefix("./"))
-                assert segment_response.status == HTTPStatus.OK
-                data = inits[init_uri] + await segment_response.read()
-                with av.open(io.BytesIO(data)) as container:
-                    decoded_sizes.extend(
-                        (frame.width, frame.height)
-                        for frame in container.decode(video=0)
+            inits: dict[str, bytes] = {}
+            init_uri = ""
+            decoded_sizes = []
+            for line in playlist:
+                if line.startswith("#EXT-X-MAP:URI="):
+                    init_uri = line.removeprefix("#EXT-X-MAP:URI=").strip('"')
+                    init_response = await hls_client.get(
+                        "/" + init_uri.removeprefix("./")
                     )
-
-        release_worker.set()
-        await stream.stop()
+                    assert init_response.status == HTTPStatus.OK
+                    inits[init_uri] = await init_response.read()
+                elif line and not line.startswith("#"):
+                    segment_response = await hls_client.get(
+                        "/" + line.removeprefix("./")
+                    )
+                    assert segment_response.status == HTTPStatus.OK
+                    data = inits[init_uri] + await segment_response.read()
+                    with av.open(io.BytesIO(data)) as container:
+                        decoded_sizes.extend(
+                            (frame.width, frame.height)
+                            for frame in container.decode(video=0)
+                        )
+        finally:
+            release_worker.set()
+            await stream.stop()
 
     # Every frame decodes at its source size, in source order
     assert [size for size, _ in itertools.groupby(decoded_sizes)] == decoded

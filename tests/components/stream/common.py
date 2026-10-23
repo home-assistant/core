@@ -150,6 +150,7 @@ def generate_video_with_size_change(
     keyframe_vps=True,
     first_size_keyframe_sets=True,
     extra_pps=False,
+    change_at_dts_zero=False,
 ):
     """Generate an MPEG-TS video whose picture size changes at a keyframe.
 
@@ -160,18 +161,32 @@ def generate_video_with_size_change(
     parameter sets; they come once, ahead of the second packet (the stream's
     extradata), as with a source that sends them out of band. With
     `extra_pps`, the first keyframe (the stream's extradata) also carries a
-    copy of its PPS with ID 1, which no later keyframe repeats.
+    copy of its PPS with ID 1, which no later keyframe repeats. With
+    `change_at_dts_zero`, timestamps start negative and the first keyframe of
+    the second size has DTS 0.
     """
     options = {"x265-params": "repeat-headers=1"} if encoder == "libx265" else {}
+    parts = [
+        av.open(generate_video(encoder, "mpegts", duration, size, options))
+        for size in sizes
+    ]
+    part_packets = [
+        [packet for packet in part.demux(video=0) if packet.dts is not None]
+        for part in parts
+    ]
+    lengths = [
+        packets[-1].dts + packets[-1].duration - packets[0].dts
+        for packets in part_packets
+    ]
     output = io.BytesIO()
-    container = av.open(output, mode="w", format="mpegts")
-    stream = None
-    offset = 0
-    for part_index, size in enumerate(sizes):
-        part = av.open(generate_video(encoder, "mpegts", duration, size, options))
-        if stream is None:
-            stream = container.add_stream_from_template(part.streams.video[0])
-        packets = [packet for packet in part.demux(video=0) if packet.dts is not None]
+    container = av.open(
+        output, mode="w", format="mpegts", options={"avoid_negative_ts": "disabled"}
+    )
+    stream = container.add_stream_from_template(parts[0].streams.video[0])
+    offset = -lengths[0] if change_at_dts_zero else 0
+    for part_index, (packets, length) in enumerate(
+        zip(part_packets, lengths, strict=True)
+    ):
         shift = offset - packets[0].dts
         out_of_band = b""
         for packet_index, packet in enumerate(packets):
@@ -207,7 +222,8 @@ def generate_video_with_size_change(
             packet.dts += shift
             packet.stream = stream
             container.mux(packet)
-        offset = packets[-1].dts + shift + packets[-1].duration
+        offset += length
+    for part in parts:
         part.close()
     container.close()
     output.seek(0)

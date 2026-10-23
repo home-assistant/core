@@ -422,7 +422,7 @@ class StreamMuxer:
             new_init = packet.is_keyframe and self._parameter_sets_changed(packet)
             if (
                 packet.is_keyframe
-                and packet.dts
+                and packet.dts is not None
                 and (
                     new_init
                     or (packet.dts - self._segment_start_dts) * packet.time_base
