@@ -4,9 +4,26 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from boschshcpy import OutdoorSirenService, SHCMotionDetector2, SHCOutdoorSiren
+from boschshcpy import (
+    OutdoorSirenService,
+    SHCMotionDetector2,
+    SHCOutdoorSiren,
+    SHCRoomThermostat2,
+    SHCShutterContact2Plus,
+    SHCSmartPlug,
+    SHCSmartPlugCompact,
+    SHCSmokeDetector,
+    SHCThermostatGen2,
+)
 from boschshcpy.device import SHCDevice
-from boschshcpy.services_impl import PirSensorConfigurationService
+from boschshcpy.services_impl import (
+    DisplayDirection,
+    DisplayedTemperatureConfiguration,
+    PirSensorConfigurationService,
+    PowerSwitchConfigurationService,
+    SmokeSensitivityService,
+    VibrationSensorService,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -71,6 +88,107 @@ MOTION_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCMotionDetector2](
 )
 
 
+def _vibration_select_option(device: SHCShutterContact2Plus, option: str) -> None:
+    """Write the Door/Window Contact II Plus's vibration sensitivity."""
+    device.sensitivity = VibrationSensorService.SensitivityState[option.upper()]
+
+
+VIBRATION_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCShutterContact2Plus](
+    key="vibration_sensitivity",
+    translation_key="vibration_sensitivity",
+    entity_category=EntityCategory.CONFIG,
+    options=["very_high", "high", "medium", "low", "very_low"],
+    current_option_fn=lambda device, options: device.sensitivity.name.lower(),
+    select_option_fn=_vibration_select_option,
+)
+
+
+def _smoke_select_option(device: SHCSmokeDetector, option: str) -> None:
+    """Write the Smoke Detector's smoke sensitivity."""
+    device.smoke_sensitivity = SmokeSensitivityService.SmokeSensitivityLevel[
+        option.upper()
+    ]
+
+
+SMOKE_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCSmokeDetector](
+    key="smoke_sensitivity",
+    translation_key="smoke_sensitivity",
+    entity_category=EntityCategory.CONFIG,
+    options=["high", "middle", "low"],
+    current_option_fn=lambda device, options: (
+        level.name.lower() if (level := device.smoke_sensitivity) else None
+    ),
+    select_option_fn=_smoke_select_option,
+)
+
+
+def _display_direction_select_option(
+    device: SHCThermostatGen2 | SHCRoomThermostat2, option: str
+) -> None:
+    """Write the thermostat's display direction."""
+    device.display_direction = DisplayDirection.Direction[option.upper()]
+
+
+DISPLAY_DIRECTION_DESCRIPTION = SHCSelectEntityDescription[
+    SHCThermostatGen2 | SHCRoomThermostat2
+](
+    key="display_direction",
+    translation_key="display_direction",
+    entity_category=EntityCategory.CONFIG,
+    options=["normal", "reversed"],
+    current_option_fn=lambda device, options: (
+        direction.name.lower() if (direction := device.display_direction) else None
+    ),
+    select_option_fn=_display_direction_select_option,
+)
+
+
+def _displayed_temperature_select_option(
+    device: SHCThermostatGen2 | SHCRoomThermostat2, option: str
+) -> None:
+    """Write which temperature the thermostat display shows."""
+    device.displayed_temperature = (
+        DisplayedTemperatureConfiguration.DisplayedTemperature[option.upper()]
+    )
+
+
+DISPLAYED_TEMPERATURE_DESCRIPTION = SHCSelectEntityDescription[
+    SHCThermostatGen2 | SHCRoomThermostat2
+](
+    key="displayed_temperature",
+    translation_key="displayed_temperature",
+    entity_category=EntityCategory.CONFIG,
+    options=["setpoint", "measured"],
+    current_option_fn=lambda device, options: (
+        shown.name.lower() if (shown := device.displayed_temperature) else None
+    ),
+    select_option_fn=_displayed_temperature_select_option,
+)
+
+
+def _state_after_power_outage_select_option(
+    device: SHCSmartPlug | SHCSmartPlugCompact, option: str
+) -> None:
+    """Write the Smart Plug's state after a power outage."""
+    device.state_after_power_outage = (
+        PowerSwitchConfigurationService.StateAfterPowerOutage[option.upper()]
+    )
+
+
+STATE_AFTER_POWER_OUTAGE_DESCRIPTION = SHCSelectEntityDescription[
+    SHCSmartPlug | SHCSmartPlugCompact
+](
+    key="state_after_power_outage",
+    translation_key="state_after_power_outage",
+    entity_category=EntityCategory.CONFIG,
+    options=["off", "on", "last_state"],
+    current_option_fn=lambda device, options: (
+        state.name.lower() if (state := device.state_after_power_outage) else None
+    ),
+    select_option_fn=_state_after_power_outage_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -82,7 +200,8 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
 
-    async_add_entities(
+    entities: list[SHCSelect] = []
+    entities.extend(
         SHCSelect(
             hass=hass,
             device=siren,
@@ -102,7 +221,7 @@ async def async_setup_entry(
             continue
         motion_detectors.append(detector)
 
-    async_add_entities(
+    entities.extend(
         SHCSelect(
             hass=hass,
             device=detector,
@@ -112,6 +231,87 @@ async def async_setup_entry(
         )
         for detector in motion_detectors
     )
+
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=contact,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=VIBRATION_SENSITIVITY_DESCRIPTION,
+        )
+        for contact in session.device_helper.shutter_contacts2
+        if isinstance(contact, SHCShutterContact2Plus)
+    )
+
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=smoke_detector,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SMOKE_SENSITIVITY_DESCRIPTION,
+        )
+        for smoke_detector in session.device_helper.smoke_detectors
+        if smoke_detector.smoke_sensitivity is not None
+    )
+
+    thermostats = [
+        thermostat
+        for thermostat in (
+            *session.device_helper.thermostats,
+            *session.device_helper.roomthermostats,
+        )
+        if isinstance(thermostat, (SHCThermostatGen2, SHCRoomThermostat2))
+    ]
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=thermostat,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=DISPLAY_DIRECTION_DESCRIPTION,
+        )
+        for thermostat in thermostats
+        if thermostat.supports_display_direction
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=thermostat,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=DISPLAYED_TEMPERATURE_DESCRIPTION,
+        )
+        for thermostat in thermostats
+        if thermostat.supports_displayed_temperature
+    )
+
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=plug,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=STATE_AFTER_POWER_OUTAGE_DESCRIPTION,
+        )
+        for plug in session.device_helper.smart_plugs
+        if plug.state_after_power_outage is not None
+    )
+
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=compact_plug,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=STATE_AFTER_POWER_OUTAGE_DESCRIPTION,
+        )
+        for compact_plug in session.device_helper.smart_plugs_compact
+        if compact_plug.state_after_power_outage is not None
+    )
+
+    async_add_entities(entities)
 
 
 class SHCSelect[_DeviceT: SHCDevice](SHCEntity, SelectEntity):

@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from pykoplenti import ApiClient, SettingsData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.number import (
     ATTR_MAX,
@@ -16,8 +17,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = [
     pytest.mark.usefixtures("mock_plenticore_client"),

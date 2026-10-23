@@ -4,10 +4,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import override
+import operator
+from typing import cast, override
 
+from uiprotect import ChimeRingtoneNotSetError
 from uiprotect.data import Camera, Chime, Light, ModelType, ProtectAdoptableDeviceModel
 from uiprotect.data.public_devices import (
+    PublicChime,
     PublicDeviceModel,
     PublicLight,
     SensorFeatureCapability,
@@ -16,9 +19,11 @@ from uiprotect.data.public_devices import (
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     PermRequired,
@@ -87,6 +92,8 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         # The public setter refuses a camera whose only microphone is a
         # hot-plugged module, so the gate is the built-in flag in both modes.
         ufp_required_field="feature_flags.has_mic",
+        # Protect refuses the setter while the microphone is disabled.
+        ufp_public_enabled_fn=operator.attrgetter("is_mic_enabled"),
         ufp_public_value="mic_volume",
         ufp_set_method="set_mic_volume",
         ufp_perm=PermRequired.WRITE,
@@ -172,7 +179,6 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_step=1,
         ufp_public_value="light_device_settings.pir_sensitivity",
         ufp_set_method="set_sensitivity",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription[Light](
         key="duration",
@@ -184,7 +190,6 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_step=15,
         ufp_public_value="light_device_settings.pir_duration_seconds",
         ufp_set_method_fn=_set_pir_duration,
-        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -313,7 +318,7 @@ async def async_setup_entry(
         model_descriptions=_MODEL_DESCRIPTIONS,
     )
     if not data.api.is_public_only:
-        # The ring volume per paired camera is a private-only chime setting.
+        # The ring volume numbers are enumerated from the private chime.
         entities += _async_all_chime_ring_volume_entities(data)
     async_add_entities(entities)
 
@@ -355,6 +360,8 @@ class ChimeRingVolumeNumber(ProtectDeviceEntity, NumberEntity):
     """A UniFi Protect Number Entity for ring volume per camera on a chime."""
 
     device: Chime
+    # The ring settings are read from and written to the public chime.
+    _ufp_uses_public = True
     _state_attrs = ("_attr_available", "_attr_native_value")
     _attr_native_max_value: float = 100
     _attr_native_min_value: float = 0
@@ -388,7 +395,9 @@ class ChimeRingVolumeNumber(ProtectDeviceEntity, NumberEntity):
 
     def _get_ring_volume(self) -> int | None:
         """Get the ring volume for this camera from the chime's ring settings."""
-        for ring_setting in self.device.ring_settings:
+        if (public := cast("PublicChime | None", self._ufp_public_obj)) is None:
+            return None
+        for ring_setting in public.ring_settings:
             if ring_setting.camera_id == self._camera_id:
                 return ring_setting.volume
         return None
@@ -404,10 +413,16 @@ class ChimeRingVolumeNumber(ProtectDeviceEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new ring volume value."""
-        camera = self.data.api.bootstrap.cameras.get(self._camera_id)
-        if camera is None:
-            _LOGGER.warning(
-                "Cannot set ring volume: camera %s not found", self._camera_id
-            )
-            return
-        await self.device.set_volume_for_camera_public(camera, int(value))
+        public = cast("PublicChime", self._ufp_set_target())
+        try:
+            await public.set_volume_for_camera(self._camera_id, int(value))
+        except ChimeRingtoneNotSetError as err:
+            # The library checks every paired camera, so name the one it reports.
+            camera = self.data.api.public_bootstrap.cameras.get(err.camera_id)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="chime_ringtone_not_set",
+                translation_placeholders={
+                    "camera_name": camera.display_name if camera else err.camera_id
+                },
+            ) from err

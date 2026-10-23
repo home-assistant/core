@@ -4,12 +4,11 @@ from datetime import datetime
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.config import label_registry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import label_registry as lr
-
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(name="client")

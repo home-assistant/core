@@ -87,7 +87,7 @@ class NmapTrackedDevices:
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NmapTrackerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NmapTrackerConfigEntry) -> None:
     """Set up Nmap Tracker from a config entry."""
     if (devices := hass.data.get(NMAP_TRACKER_DATA)) is None:
         devices = hass.data[NMAP_TRACKER_DATA] = NmapTrackedDevices()
@@ -95,22 +95,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: NmapTrackerConfigEntry) 
     await scanner.async_setup()
     entry.runtime_data = scanner
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: NmapTrackerConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        _async_untrack_devices(hass, entry)
-
-    return unload_ok
+    _async_untrack_devices(hass, entry)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate config entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
@@ -136,8 +132,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.version,
         entry.minor_version,
     )
-
-    return True
 
 
 @callback

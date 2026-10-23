@@ -5,6 +5,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "pubsub_api_error": "[%key:component::nest::config::error::pubsub_api_error%]",
@@ -78,7 +79,7 @@
         "title": "Configure Cloud Pub/Sub topic"
       },
       "pubsub_topic_confirm": {
-        "description": "The Nest Device Access Console needs to be configured to publish device events to your Pub/Sub topic.\n\n1. Visit the [Device Access Console]({device_access_console_url}).\n2. Open the project.\n3. Enable *Events* and set the Pub/Sub topic name to `{topic_name}`\n4. Click *Add & Validate* to verify the topic is configured correctly.\n\nSee the integration documentation for [more info]({more_info_url}).",
+        "description": "The Nest Device Access Console needs to be configured to publish device events to your Pub/Sub topic.\n\n1. Visit the [Device Access Console]({device_access_console_url}).\n2. Open the project.\n3. If *Events* are already enabled with a different topic, disable them first.\n4. Enable *Events* and set the Pub/Sub topic name to `{topic_name}`.\n5. Click *Add & Validate* to verify the topic is configured correctly.\n\nSee the integration documentation for [more info]({more_info_url}).",
         "submit": "Confirm",
         "title": "Enable events"
       },
@@ -109,7 +110,6 @@
         }
       },
       "motion": {
-        "name": "[%key:component::event::entity_component::motion::name%]",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -131,8 +131,17 @@
     "device_api_error": {
       "message": "Error communicating with the Device Access API, please see logs for details."
     },
+    "legacy_entry": {
+      "message": "This config entry uses the legacy Nest API and will be removed"
+    },
     "reauth_required": {
       "message": "Reauthentication is required, please follow the instructions in the UI to reauthenticate your account."
+    },
+    "subscriber_configuration_error": {
+      "message": "Configuration error in the Nest subscriber"
+    },
+    "subscriber_create_failed": {
+      "message": "Failed to create the Nest subscriber"
     },
     "subscriber_error": {
       "message": "Subscriber failed to connect to Google, please see logs for details."

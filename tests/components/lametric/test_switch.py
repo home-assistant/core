@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from demetriek import LaMetricConnectionError, LaMetricError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.lametric.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.switch import (
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -163,3 +162,37 @@ async def test_no_bluetooth_switch_without_bluetooth(
 
     assert entities
     assert not any(entity.domain == SWITCH_DOMAIN for entity in entities)
+
+
+async def test_screensaver(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the LaMetric screensaver control."""
+    state = hass.states.get("switch.frenck_s_lametric_screensaver")
+    assert state
+    assert state.state == STATE_OFF
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry.entity_category is EntityCategory.CONFIG
+    assert entry.unique_id == "SA110405124500W00BS9-screensaver"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.frenck_s_lametric_screensaver"},
+        blocking=True,
+    )
+
+    mock_lametric.display.assert_called_once_with(screensaver_enabled=True)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.frenck_s_lametric_screensaver"},
+        blocking=True,
+    )
+
+    mock_lametric.display.assert_called_with(screensaver_enabled=False)

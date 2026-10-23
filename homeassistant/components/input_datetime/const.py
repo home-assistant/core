@@ -1,5 +1,6 @@
 """Constants for the input_datetime component."""
 
+import datetime as dt
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
@@ -14,6 +15,17 @@ DATA_INPUT_DATETIME: HassKey[InputDatetimeData] = HassKey(DOMAIN)
 
 ATTR_DATETIME: Final = "datetime"
 ATTR_TIMESTAMP: Final = "timestamp"
+
+CONF_HAS_DATE = "has_date"
+CONF_HAS_TIME = "has_time"
+CONF_INITIAL = "initial"
+
+DEFAULT_TIME = dt.time(0, 0, 0)
+
+
+FMT_DATE = "%Y-%m-%d"
+FMT_TIME = "%H:%M:%S"
+FMT_DATETIME = f"{FMT_DATE} {FMT_TIME}"
 
 
 class InputDatetimeEntityCapabilityAttribute(StrEnum):
