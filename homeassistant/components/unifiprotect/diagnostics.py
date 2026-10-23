@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from .data import UFPConfigEntry
 
-# Stream URLs carry the console host and a secret alias.
+# Redact on top of the library anonymizer: stream URLs hold a secret alias.
 TO_REDACT = {"rtspsStreams"}
 
 
