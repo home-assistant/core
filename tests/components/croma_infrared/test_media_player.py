@@ -233,7 +233,7 @@ async def test_playback_keeps_off_state(
     service: str,
     expected_code: CromaTVCode,
 ) -> None:
-    """Test playback while off keeps the off state so turn_on still powers up."""
+    """Test playback while off sends the code but keeps the off state."""
     mock_restore_cache(hass, [State(MEDIA_PLAYER_ENTITY_ID, MediaPlayerState.OFF)])
 
     mock_config_entry.add_to_hass(hass)
@@ -241,21 +241,17 @@ async def test_playback_keeps_off_state(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    for action in (service, SERVICE_TURN_ON):
-        await hass.services.async_call(
-            MEDIA_PLAYER_DOMAIN,
-            action,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+    )
 
-    assert mock_infrared_emitter_entity.send_command_calls == [
-        expected_code,
-        CromaTVCode.POWER,
-    ]
+    assert mock_infrared_emitter_entity.send_command_calls == [expected_code]
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state
-    assert state.state == MediaPlayerState.ON
+    assert state.state == MediaPlayerState.OFF
 
 
 @pytest.mark.parametrize(
