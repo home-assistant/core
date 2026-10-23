@@ -205,9 +205,10 @@ class AbstractTemplateEntity(Entity):
     ) -> None:
         """Set up a list template and an item template validated against it.
 
-        The item validator must read the list from list_attribute. The rendered
-        item is kept so it can be revalidated when only the list changes, since
-        unchanged template results do not trigger an update.
+        The item validator must read the list from list_attribute. The raw
+        rendered item is cached because the item attribute holds None when
+        validation fails, and an unchanged item template does not re-render,
+        so the cache is needed to revalidate the item when only the list changes.
         """
         # The list template must be set up first, the item validator reads it.
         self.setup_template(
