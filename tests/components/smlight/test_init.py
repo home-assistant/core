@@ -1,9 +1,10 @@
 "Test SMLIGHT SLZB device integration initialization."
 
+import asyncio
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pysmlight import Info
+from pysmlight import Firmware, Info
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError, SmlightError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -116,6 +117,37 @@ async def test_async_setup_no_internet(
     assert entity is not None
     assert entity.state == STATE_ON
     assert entity.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
+
+
+async def test_slow_firmware_catalog_does_not_block_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test local entities load while the firmware catalog is pending."""
+    catalog_ready = asyncio.Event()
+    get_firmware = mock_smlight_client.get_firmware_version.side_effect
+
+    async def slow_catalog(*args: object, **kwargs: object) -> list[Firmware]:
+        await catalog_ready.wait()
+        return get_firmware(*args, **kwargs)
+
+    mock_smlight_client.get_firmware_version.side_effect = slow_catalog
+    entry = await setup_integration(hass, mock_config_entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.mock_title_core_chip_temp") is not None
+    state = hass.states.get("update.mock_title_core_firmware")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
+
+    catalog_ready.set()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.mock_title_core_firmware")
+    assert state is not None
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize("error", [SmlightConnectionError, SmlightAuthError])
