@@ -1,7 +1,5 @@
 """Tests for the BLUETTI Modbus expansion packs."""
 
-from unittest.mock import patch
-
 from bluetti_modbus_lib import AGGREGATE_SLAVE_ID
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusTimeoutError
@@ -10,6 +8,7 @@ import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_load_json_object_fixture,
     load_json_object_fixture,
 )
 from pytest_homeassistant.typing import WebSocketGenerator
@@ -128,24 +127,50 @@ async def test_pack_that_stops_answering(
 
 
 @pytest.mark.usefixtures("three_packs")
-async def test_pack_count_change_reloads(
+async def test_pack_that_answers_later_is_added(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_modbus_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """A pack added or removed reloads the entry to update its devices."""
+    """A pack that did not answer at setup gets its entities once it does."""
+    pack = mock_modbus_connection.for_unit(43)
+    pack.fail_requests(ModbusTimeoutError("timed out"))
     await setup_integration(hass, mock_config_entry)
 
-    summary = mock_modbus_connection.for_unit(AGGREGATE_SLAVE_ID)
-    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
-        await _tick(hass, freezer)
-        reload.assert_not_called()
+    assert hass.states.get(PACK_4_SOC_ENTITY) is None
 
-        summary.holding[PACK_COUNT_ADDRESS] = 3
-        await _tick(hass, freezer)
+    pack.fail_requests(None)
+    await _tick(hass, freezer)
 
-    reload.assert_called_once_with(mock_config_entry.entry_id)
+    state = hass.states.get(PACK_4_SOC_ENTITY)
+    assert state is not None
+    assert state.state == "79"
+
+
+@pytest.mark.usefixtures("three_packs")
+async def test_packs_that_swap_slots_keep_their_readings(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_modbus_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Each pack's entities follow its serial number, not its slot."""
+    await setup_integration(hass, mock_config_entry)
+
+    registers = await async_load_json_object_fixture(
+        hass, "balco260_expansion_packs_registers.json", DOMAIN
+    )
+    mock_modbus_connection.for_unit(42).load_raw(registers["43"])
+    mock_modbus_connection.for_unit(43).load_raw(registers["42"])
+    await _tick(hass, freezer)
+
+    state = hass.states.get(PACK_3_SOC_ENTITY)
+    assert state is not None
+    assert state.state == "85"
+    state = hass.states.get(PACK_4_SOC_ENTITY)
+    assert state is not None
+    assert state.state == "79"
 
 
 @pytest.mark.parametrize("count", [1, 0])
@@ -190,3 +215,27 @@ async def test_remove_a_pack_that_is_gone(
     for device, removable in ((gone, True), (attached, False), (main, False)):
         response = await client.remove_device(device.id)
         assert response["success"] is removable
+
+
+@pytest.mark.usefixtures("three_packs")
+async def test_remove_a_pack_while_not_loaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Without the entry loaded, which packs are attached is unknown."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, mock_config_entry)
+    pack = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "4201"), mock_config_entry.entry_id
+    )
+    assert pack is not None
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(pack.id)
+
+    assert response["success"] is False
+    # Rejected by the integration, not an error raised while checking.
+    assert response["error"]["code"] == "home_assistant_error"

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from bluetti_modbus_lib import (
     EXPANSION_PACK_FIRST_SLAVE_ID,
@@ -28,7 +28,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -392,15 +392,33 @@ async def async_setup_entry(
         BluettiModbusSensor(entry=entry, description=description)
         for description in SENSOR_DESCRIPTIONS
     )
-    async_add_entities(
-        BluettiModbusPackSensor(
-            entry=entry, description=description, unit_id=unit_id, values=values
+
+    coordinator = entry.runtime_data.coordinator
+    known_packs: set[str] = set()
+
+    @callback
+    def _async_add_new_packs() -> None:
+        """Add the packs seen for the first time, told apart by serial number."""
+        new_packs = {
+            pack_serial: (unit_id, values)
+            for unit_id, values in coordinator.pack_values.items()
+            if values["b_serial"]
+            and (pack_serial := str(values["b_serial"])) not in known_packs
+        }
+        known_packs.update(new_packs)
+        async_add_entities(
+            BluettiModbusPackSensor(
+                entry=entry,
+                description=description,
+                unit_id=unit_id,
+                values=values,
+            )
+            for unit_id, values in new_packs.values()
+            for description in PACK_SENSOR_DESCRIPTIONS
         )
-        for unit_id, values in entry.runtime_data.coordinator.pack_values.items()
-        # A pack is told apart by its serial number.
-        if values["b_serial"]
-        for description in PACK_SENSOR_DESCRIPTIONS
-    )
+
+    _async_add_new_packs()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_packs))
 
 
 # The built-in pack's sensors, which each expansion pack has too.
@@ -463,8 +481,8 @@ class BluettiModbusPackSensor(BluettiModbusEntity, SensorEntity):
         """Initialize an expansion pack sensor."""
         super().__init__(entry=entry, field_name=description.key)
         self.entity_description = description
-        self._unit_id = unit_id
         pack_serial = str(values["b_serial"])
+        self._pack_serial = pack_serial
         self._attr_unique_id = f"{pack_serial}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, pack_serial)},
@@ -478,15 +496,29 @@ class BluettiModbusPackSensor(BluettiModbusEntity, SensorEntity):
         )
 
     @property
+    def _values(self) -> dict[str, Any] | None:
+        """This pack's values from the last poll, wherever its slot is now."""
+        return next(
+            (
+                values
+                for values in self.coordinator.pack_values.values()
+                if str(values["b_serial"]) == self._pack_serial
+            ),
+            None,
+        )
+
+    @property
     @override
     def available(self) -> bool:
         """Return whether the pack reported data in the last poll."""
-        values = self.coordinator.pack_values.get(self._unit_id)
+        values = self._values
         return super().available and values is not None and pack_is_reporting(values)
 
     @property
     @override
     def native_value(self) -> StateType:
         """Return the pack's most recently read value."""
-        values = self.coordinator.pack_values[self._unit_id]
+        values = self._values
+        if TYPE_CHECKING:
+            assert values is not None
         return self.entity_description.value_fn(values[self._field_name])

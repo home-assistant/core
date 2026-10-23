@@ -36,7 +36,6 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._device = device
         self._pack_summary = pack_summary
         self._packs = packs
-        self._pack_count: int | None = None
         # Each expansion pack's values, by unit ID, for the packs that answered
         # the last poll.
         self.pack_values: dict[int, dict[str, Any]] = {}
@@ -81,12 +80,6 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         The count includes the built-in pack. A pack that fails to answer
         only leaves its own entities unavailable.
         """
-        if self._pack_count is None:
-            self._pack_count = count
-        elif count != self._pack_count:
-            # Pack devices are created at setup.
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
-
         pack_values: dict[int, dict[str, Any]] = {}
         # Unit IDs in order, so the first count - 1 are the packs counted.
         for unit_id, pack in list(self._packs.items())[: max(count - 1, 0)]:

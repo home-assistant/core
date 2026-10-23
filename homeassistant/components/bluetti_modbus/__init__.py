@@ -8,6 +8,7 @@ from bluetti_modbus_lib import (
 from modbus_connection import ModbusTcpParams
 
 from homeassistant.components.modbus import async_get_unit
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
@@ -99,6 +100,9 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: BluettiModbusConfigEntry, device: dr.AnyDeviceEntry
 ) -> bool:
     """Allow removing an expansion pack that is no longer attached."""
+    # Which packs are attached is only known while the entry is loaded.
+    if entry.state is not ConfigEntryState.LOADED:
+        return False
     runtime_data = entry.runtime_data
     attached = {runtime_data.serial} | {
         str(values["b_serial"])
