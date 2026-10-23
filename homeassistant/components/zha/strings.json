@@ -569,7 +569,7 @@
         "name": "Breath sensitivity"
       },
       "brightness_level": {
-        "name": "[%key:component::entity::sensor::brightness_level::name%]"
+        "name": "[%key:component::zha::entity::sensor::brightness_level::name%]"
       },
       "button_delay": {
         "name": "Button delay"
