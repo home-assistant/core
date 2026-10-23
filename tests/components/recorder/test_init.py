@@ -2805,7 +2805,9 @@ async def test_setting_up_recorder_fails_entity_registry_listener(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test recorder setup fails if an entity registry listener is in place."""
-    async_track_entity_registry_updated_event(hass, "test.test", lambda x: x)
+    async_track_entity_registry_updated_event(
+        hass, "0123456789abcdef0123456789abcdef", lambda x: x
+    )
     recorder_helper.async_initialize_recorder(hass)
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
         assert not await async_setup_component(
@@ -2816,7 +2818,7 @@ async def test_setting_up_recorder_fails_entity_registry_listener(
         await hass.async_block_till_done()
     assert (
         "The recorder entity registry listener must be installed before "
-        "async_track_entity_registry_updated_event is called" in caplog.text
+        "entity registry updated events are tracked" in caplog.text
     )
 
 
