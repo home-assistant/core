@@ -14,7 +14,6 @@ from homeassistant.components import (
     fan,
     input_number,
     media_player,
-    vacuum,
     valve,
 )
 from homeassistant.components.alarm_control_panel import (
@@ -277,12 +276,7 @@ async def async_api_turn_on(
     elif domain == REMOTE_DOMAIN:
         service = RemoteService.TURN_ON
     elif domain == VACUUM_DOMAIN:
-        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
-        if (
-            not supported & vacuum.VacuumEntityFeature.TURN_ON
-            and supported & vacuum.VacuumEntityFeature.START
-        ):
-            service = VacuumService.START
+        service = VacuumService.START
     elif domain == TIMER_DOMAIN:
         service = TimerService.START
     elif domain == MEDIA_PLAYER_DOMAIN:
@@ -332,12 +326,7 @@ async def async_api_turn_off(
     elif domain == HUMIDIFIER_DOMAIN:
         service = HumidifierService.TURN_OFF
     elif domain == VACUUM_DOMAIN:
-        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
-        if (
-            not supported & vacuum.VacuumEntityFeature.TURN_OFF
-            and supported & vacuum.VacuumEntityFeature.RETURN_HOME
-        ):
-            service = VacuumService.RETURN_TO_BASE
+        service = VacuumService.RETURN_TO_BASE
     elif domain == TIMER_DOMAIN:
         service = TimerService.CANCEL
     elif domain == MEDIA_PLAYER_DOMAIN:
