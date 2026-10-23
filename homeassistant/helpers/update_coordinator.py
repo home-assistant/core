@@ -37,7 +37,12 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
-from .restore_state import _async_get_restore_store_manager
+from .restore_state import (
+    RESTORE_SCOPE_CONFIG_ENTRIES,
+    RESTORE_SCOPE_DOMAINS,
+    RestoreScope,
+    _async_get_restore_store_manager,
+)
 from .typing import UNDEFINED, UndefinedType
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
@@ -668,20 +673,16 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 
 
 class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
-    """DataUpdateCoordinator that persists data and restores it on startup.
+    """DataUpdateCoordinator that persists data and restores it on creation.
 
-    The data must be JSON-serializable. It is restored by async_restore_data, which
-    async_config_entry_first_refresh calls automatically; coordinators not driven by
-    that method must call async_restore_data manually before their first update.
-    Data is saved after each successful refresh and after async_set_updated_data,
-    batched by save_delay. The data of all restore coordinators is kept in a single
-    store; first separated by the config entry or domain; then by storage_key which
-    allows multiple coordinators to be used. storage_key must be a stable unique
-    identifier within the provided config entry or domain. Stored data is
-    automatically removed when the config entry is removed if one was provided.
-    Creating a coordinator with a config entry (or domain) and storage_key
-    combination that is already in use by another live coordinator raises
-    ValueError.
+    The data must be JSON-serializable. storage_key must be stable and unique
+    within the config entry, or the domain when there is no config entry; a
+    second live coordinator with the same key raises ValueError. Coordinators
+    with a config entry release their key on unload or failed setup, but domain
+    scoped ones only release it in async_shutdown, so shut the old one down
+    before recreating it, e.g. on a YAML reload. Stored data is restored at the
+    end of __init__, so a subclass assigning self.data in its own __init__
+    after calling super shadows it.
     """
 
     def __init__(
@@ -701,11 +702,11 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         save_delay: float = RESTORE_SAVE_DELAY,
     ) -> None:
         """Initialize the restoring data update coordinator."""
+        storage_scope: RestoreScope
         if config_entry is not None:
-            # Entry ids (uppercase ULIDs) cannot collide with domains (lowercase)
-            storage_scope = config_entry.entry_id
+            storage_scope = (RESTORE_SCOPE_CONFIG_ENTRIES, config_entry.entry_id)
         elif domain is not None:
-            storage_scope = domain
+            storage_scope = (RESTORE_SCOPE_DOMAINS, domain)
         else:
             raise ValueError("config_entry or domain is required")
         store_manager = _async_get_restore_store_manager(hass)
@@ -725,29 +726,14 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         self._storage_key = storage_key
         self._storage_scope = storage_scope
         self._store_manager = store_manager
+        if (stored := store_manager.async_get(storage_scope, storage_key)) is not None:
+            self.data = stored
 
     @override
     async def async_shutdown(self) -> None:
         """Free the storage key so it can be reused by a new coordinator."""
         self._store_manager.async_unregister(self._storage_scope, self._storage_key)
         await super().async_shutdown()
-
-    @override
-    async def _async_setup(self) -> None:
-        """Set up the coordinator and restore stored data."""
-        self.async_restore_data()
-        await super()._async_setup()
-
-    @callback
-    def async_restore_data(self) -> None:
-        """Restore the data from the store.
-
-        Called automatically by async_config_entry_first_refresh. Coordinators not
-        driven by that method must call this once before their first update.
-        """
-        stored = self._store_manager.async_get(self._storage_scope, self._storage_key)
-        if stored is not None:
-            self.data = stored
 
     @callback
     def _schedule_save(self) -> None:

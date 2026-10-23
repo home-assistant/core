@@ -1,6 +1,7 @@
 """Support for restoring entity states on startup."""
 
 from abc import ABC, abstractmethod
+import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Self, cast, override
@@ -105,11 +106,19 @@ class StoredState:
 
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
-    """Load the restore state task."""
+    """Load the restore state task and the restore coordinator store.
+
+    Called from bootstrap before config entries are set up, so stored coordinator
+    data is available when coordinators are created and is never overwritten by a
+    save happening before the load.
+    """
     data = async_get(hass)
     if load_empty:
         data.set_load_empty()
-    await data.async_setup()
+    await asyncio.gather(
+        data.async_setup(),
+        _async_get_restore_store_manager(hass).async_load(load_empty=load_empty),
+    )
 
 
 @callback
@@ -500,23 +509,30 @@ class RestoreEntity(Entity):
 
 RESTORE_STORAGE_KEY = "core.restore_state_update_coordinator"
 RESTORE_STORAGE_VERSION = 1
+RESTORE_SCOPE_CONFIG_ENTRIES = "config_entries"
+RESTORE_SCOPE_DOMAINS = "domains"
+
+type RestoreScope = tuple[str, str]
 
 
 class _RestoreStoreManager:
     """Manage the single store holding the data of all restore coordinators.
 
-    The store maps a scope, a config entry id or an integration domain, to a map
-    of storage key to coordinator data.
+    The store keeps config entry and domain scopes in separate top-level buckets,
+    each mapping a config entry id or domain to a map of storage key to data.
     """
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the store manager."""
         self._hass = hass
-        self._store: Store[dict[str, dict[str, Any]]] = Store(
+        self._store: Store[dict[str, dict[str, dict[str, Any]]]] = Store(
             hass, RESTORE_STORAGE_VERSION, RESTORE_STORAGE_KEY
         )
-        self._data: dict[str, dict[str, Any]] = {}
-        self._active_keys: set[tuple[str, str]] = set()
+        self._data: dict[str, dict[str, dict[str, Any]]] = {
+            RESTORE_SCOPE_CONFIG_ENTRIES: {},
+            RESTORE_SCOPE_DOMAINS: {},
+        }
+        self._active_keys: set[tuple[RestoreScope, str]] = set()
 
     async def async_load(self, *, load_empty: bool = False) -> None:
         """Load the store.
@@ -525,11 +541,18 @@ class _RestoreStoreManager:
         """
         if load_empty:
             self._store.set_load_empty()
-        if (stored := await self._store.async_load()) is not None:
+        try:
+            stored = await self._store.async_load()
+        except UnsupportedStorageVersionError:
+            raise
+        except HomeAssistantError as exc:
+            _LOGGER.error("Error loading restore coordinator data", exc_info=exc)
+            stored = None
+        if stored is not None:
             self._data = stored
 
     @callback
-    def async_register(self, scope: str, storage_key: str) -> None:
+    def async_register(self, scope: RestoreScope, storage_key: str) -> None:
         """Register a coordinator's storage key.
 
         Raises ValueError if another live coordinator already uses the same
@@ -538,47 +561,51 @@ class _RestoreStoreManager:
         key = (scope, storage_key)
         if key in self._active_keys:
             raise ValueError(
-                f"Storage key {storage_key!r} is already in use for {scope!r}"
+                f"Storage key {storage_key!r} is already in use for {scope[1]!r}"
             )
         self._active_keys.add(key)
 
     @callback
-    def async_unregister(self, scope: str, storage_key: str) -> None:
+    def async_unregister(self, scope: RestoreScope, storage_key: str) -> None:
         """Unregister a coordinator's storage key, freeing it for reuse."""
         self._active_keys.discard((scope, storage_key))
 
     @callback
-    def async_get(self, scope: str, storage_key: str) -> Any:
+    def async_get(self, scope: RestoreScope, storage_key: str) -> Any:
         """Return the data stored for a coordinator, or None if nothing is stored."""
-        return self._data.get(scope, {}).get(storage_key)
+        bucket, scope_id = scope
+        return self._data[bucket].get(scope_id, {}).get(storage_key)
 
     @callback
     def async_schedule_save(
-        self, scope: str, storage_key: str, data: Any, delay: float
+        self, scope: RestoreScope, storage_key: str, data: Any, delay: float
     ) -> None:
         """Schedule saving the data of a coordinator."""
-        self._data.setdefault(scope, {})[storage_key] = data
+        bucket, scope_id = scope
+        self._data[bucket].setdefault(scope_id, {})[storage_key] = data
         self._store.async_delay_save(self._data_to_save, delay)
 
     @callback
-    def async_remove_data(self, scope: str, storage_key: str) -> None:
+    def async_remove_data(self, scope: RestoreScope, storage_key: str) -> None:
         """Remove the data stored for a coordinator."""
-        if storage_key not in self._data.get(scope, {}):
+        bucket, scope_id = scope
+        scope_data = self._data[bucket].get(scope_id, {})
+        if storage_key not in scope_data:
             return
-        del self._data[scope][storage_key]
-        if not self._data[scope]:
-            del self._data[scope]
+        del scope_data[storage_key]
+        if not scope_data:
+            del self._data[bucket][scope_id]
         self._store.async_delay_save(self._data_to_save)
 
     @callback
     def async_clear_config_entry(self, entry_id: str) -> None:
         """Remove all data stored for a config entry."""
-        if self._data.pop(entry_id, None) is None:
+        if self._data[RESTORE_SCOPE_CONFIG_ENTRIES].pop(entry_id, None) is None:
             return
         self._store.async_delay_save(self._data_to_save)
 
     @callback
-    def _data_to_save(self) -> dict[str, dict[str, Any]]:
+    def _data_to_save(self) -> dict[str, dict[str, dict[str, Any]]]:
         """Return the data to save."""
         return self._data
 
@@ -593,18 +620,6 @@ DATA_RESTORE_STORE: HassKey[_RestoreStoreManager] = HassKey(
 def _async_get_restore_store_manager(hass: HomeAssistant) -> _RestoreStoreManager:
     """Get the manager of the restore coordinator store."""
     return _RestoreStoreManager(hass)
-
-
-async def async_load_coordinator_data(
-    hass: HomeAssistant, *, load_empty: bool = False
-) -> None:
-    """Load the store shared by all restore coordinators.
-
-    Called from bootstrap before config entries are set up, so stored data is
-    available when coordinators restore it and is never overwritten by a save
-    happening before the load.
-    """
-    await _async_get_restore_store_manager(hass).async_load(load_empty=load_empty)
 
 
 @callback
