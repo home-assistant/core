@@ -1667,11 +1667,20 @@ async def test_public_only_select_nvr_arm_profile_follows_public_ws(
     assert hass.states.get(entity_id).state == "Home (p1)"
 
 
+@pytest.mark.parametrize(
+    "success",
+    [
+        pytest.param(True, id="resync_ok"),
+        # A failed endpoint, e.g. liveviews, keeps what the others applied.
+        pytest.param(False, id="resync_partial"),
+    ],
+)
 async def test_public_only_select_nvr_arm_profile_follows_public_resync(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    success: bool,
 ) -> None:
     """Arm profiles the library resync refetched show up without another refresh."""
     pb = ufp_public_only.api.public_bootstrap
@@ -1679,6 +1688,7 @@ async def test_public_only_select_nvr_arm_profile_follows_public_resync(
     pb.arm_mode = _make_nvr_arm_mode(profile_id="p1")
 
     await setup_public_only()
+    ufp_public_only.api.update_public.reset_mock()
 
     entity_id = entity_registry.async_get_entity_id(
         Platform.SELECT, DOMAIN, f"{UNIFI_MAC}_nvr_arm_profile"
@@ -1696,12 +1706,13 @@ async def test_public_only_select_nvr_arm_profile_follows_public_resync(
         "p2": _make_arm_profile("p2", "Away"),
     }
     pb.arm_mode = _make_nvr_arm_mode(profile_id="p2")
-    ufp_public_only.public_resync()
+    ufp_public_only.public_resync(success=success)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state.state == "Away (p2)"
     assert set(state.attributes[ATTR_OPTIONS]) == {"Home (p1)", "Away (p2)"}
+    ufp_public_only.api.update_public.assert_not_awaited()
 
 
 async def test_select_nvr_arm_profile_decoupled_from_private_websocket(
