@@ -141,7 +141,7 @@ async def test_first_active_quality_is_default(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """The first active quality is the default; inactive ones get no entity."""
-    set_active_rtsps_qualities(camera_all, ChannelQuality.MEDIUM)
+    set_active_rtsps_qualities(ufp, camera_all, ChannelQuality.MEDIUM)
 
     await init_entry(hass, ufp, [camera_all])
 
@@ -164,7 +164,7 @@ async def test_no_active_stream(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """A camera with no active stream is exposed for snapshots and raises a repair."""
-    set_active_rtsps_qualities(camera)
+    set_active_rtsps_qualities(ufp, camera)
 
     await init_entry(hass, ufp, [camera])
 
@@ -237,7 +237,7 @@ async def test_package_camera_without_stream(
 ) -> None:
     """The package camera stays available for snapshots when its stream is off."""
     # the package stream is off (the console default)
-    set_active_rtsps_qualities(doorbell, ChannelQuality.HIGH)
+    set_active_rtsps_qualities(ufp, doorbell, ChannelQuality.HIGH)
 
     await init_entry(hass, ufp, [doorbell])
 
@@ -644,7 +644,7 @@ async def test_snapshot_low_quality_without_stream(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ) -> None:
     """Without a live stream, snapshots are requested at low quality."""
-    set_active_rtsps_qualities(camera)
+    set_active_rtsps_qualities(ufp, camera)
 
     await init_entry(hass, ufp, [camera])
 
@@ -828,7 +828,7 @@ async def test_stream_capability_published_on_prime(
     hass: HomeAssistant, ufp: MockUFPFixture, camera_all: ProtectCamera
 ) -> None:
     """Gaining a stream publishes the STREAM capability when nothing else changes."""
-    set_active_rtsps_qualities(camera_all)
+    set_active_rtsps_qualities(ufp, camera_all)
 
     await init_entry(hass, ufp, [camera_all])
 
@@ -1120,7 +1120,7 @@ async def test_ignored_rtsp_repair_kept_on_reload(
     prepare_reload: Callable[[MockUFPFixture, ProtectCamera], None],
 ) -> None:
     """An ignored RTSP repair is kept when it's still valid or can't be checked."""
-    set_active_rtsps_qualities(camera)
+    set_active_rtsps_qualities(ufp, camera)
     await init_entry(hass, ufp, [camera])
     issue_id = f"rtsp_disabled_{camera.id}"
     ir.async_ignore_issue(hass, DOMAIN, issue_id, True)

@@ -1,7 +1,7 @@
 """Test helpers for UniFi Protect."""
 
 from collections.abc import Callable, Iterator, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 from typing import Any
@@ -82,6 +82,8 @@ class MockUFPFixture:
     events_subscription: Callable[[ProtectEvent, EventChange], None] | None = None
     devices_ws_state_subscription: Callable[[WebsocketState], None] | None = None
     events_ws_state_subscription: Callable[[WebsocketState], None] | None = None
+    # Active RTSPS qualities the fake console reports, keyed by camera id.
+    rtsps_qualities: dict[str, tuple[ChannelQuality, ...]] = field(default_factory=dict)
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
@@ -264,7 +266,11 @@ async def init_entry(
 
     reset_objects(ufp.api.bootstrap)
     for device in devices:
+        old_id = device.id
         add_device(ufp.api.bootstrap, device, regenerate_ids)
+        # Copies share their original's id until regenerated, so keep the old entry.
+        if (qualities := ufp.rtsps_qualities.get(old_id)) is not None:
+            ufp.rtsps_qualities[device.id] = qualities
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
@@ -278,18 +284,19 @@ _RTSPS_URLS: dict[ChannelQuality, str] = {
     ChannelQuality.PACKAGE: "rtsps://127.0.0.1:7441/test_package_alias?enableSrtp",
 }
 
-_ACTIVE_RTSPS_QUALITIES = "test_active_rtsps_qualities"
 
-
-def set_active_rtsps_qualities(camera: Camera, *qualities: ChannelQuality) -> None:
+def set_active_rtsps_qualities(
+    ufp: MockUFPFixture, camera: Camera, *qualities: ChannelQuality
+) -> None:
     """Set the RTSPS qualities the console reports active for a test camera."""
-    # pydantic rejects unknown attributes on the model.
-    object.__setattr__(camera, _ACTIVE_RTSPS_QUALITIES, qualities)
+    ufp.rtsps_qualities[camera.id] = qualities
 
 
-def active_rtsps_qualities(camera: Camera) -> tuple[ChannelQuality, ...]:
+def active_rtsps_qualities(
+    rtsps_qualities: dict[str, tuple[ChannelQuality, ...]], camera_id: str
+) -> tuple[ChannelQuality, ...]:
     """Return a test camera's active RTSPS qualities (only high by default)."""
-    return getattr(camera, _ACTIVE_RTSPS_QUALITIES, (ChannelQuality.HIGH,))
+    return rtsps_qualities.get(camera_id, (ChannelQuality.HIGH,))
 
 
 def public_rtsps_for(*qualities: ChannelQuality) -> RTSPSStreams:

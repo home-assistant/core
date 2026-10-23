@@ -58,10 +58,10 @@ from . import _patch_discovery
 from .utils import (
     MockUFPFixture,
     active_rtsps_qualities,
+    generate_random_ids,
     make_public_bootstrap,
     make_public_camera,
     public_rtsps_for,
-    set_active_rtsps_qualities,
 )
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
@@ -179,8 +179,16 @@ def bootstrap_fixture(nvr: NVR):
     return Bootstrap.from_unifi_dict(**data)
 
 
+@pytest.fixture(name="rtsps_qualities")
+def mock_rtsps_qualities() -> dict[str, tuple[ChannelQuality, ...]]:
+    """Active RTSPS qualities the fake console reports, keyed by camera id."""
+    return {}
+
+
 @pytest.fixture(name="ufp_client")
-def mock_ufp_client(bootstrap: Bootstrap):
+def mock_ufp_client(
+    bootstrap: Bootstrap, rtsps_qualities: dict[str, tuple[ChannelQuality, ...]]
+):
     """Mock ProtectApiClient for testing."""
     client = Mock()
     client.bootstrap = bootstrap
@@ -235,7 +243,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
         """Fetch a camera's RTSPS streams (used by the repair flow)."""
         camera = client.bootstrap.cameras.get(camera_id)
         return (
-            public_rtsps_for(*active_rtsps_qualities(camera))
+            public_rtsps_for(*active_rtsps_qualities(rtsps_qualities, camera_id))
             if camera is not None
             else None
         )
@@ -247,7 +255,10 @@ def mock_ufp_client(bootstrap: Bootstrap):
 
 @pytest.fixture(name="ufp")
 def mock_entry(
-    hass: HomeAssistant, ufp_config_entry: MockConfigEntry, ufp_client: ProtectApiClient
+    hass: HomeAssistant,
+    ufp_config_entry: MockConfigEntry,
+    ufp_client: ProtectApiClient,
+    rtsps_qualities: dict[str, tuple[ChannelQuality, ...]],
 ):
     """Mock ProtectApiClient for testing."""
 
@@ -260,7 +271,9 @@ def mock_entry(
 
         mock_api.return_value = ufp_client
 
-        ufp = MockUFPFixture(ufp_config_entry, ufp_client)
+        ufp = MockUFPFixture(
+            ufp_config_entry, ufp_client, rtsps_qualities=rtsps_qualities
+        )
 
         def subscribe(ws_callback: Callable[[WSSubscriptionMessage], None]) -> Any:
             ufp.ws_subscription = ws_callback
@@ -317,7 +330,9 @@ def mock_entry(
             for camera in ufp_client.bootstrap.cameras.values():
                 public = make_public_camera(camera)
                 public.rtsps_streams = (
-                    public_rtsps_for(*active_rtsps_qualities(camera))
+                    public_rtsps_for(
+                        *active_rtsps_qualities(ufp.rtsps_qualities, camera.id)
+                    )
                     if camera.state is StateType.CONNECTED
                     else None
                 )
@@ -355,10 +370,14 @@ def camera_fixture(fixed_now: datetime):
 
 
 @pytest.fixture(name="camera_all")
-def camera_all_fixture(camera: Camera):
+def camera_all_fixture(
+    camera: Camera, rtsps_qualities: dict[str, tuple[ChannelQuality, ...]]
+):
     """Mock UniFi Protect Camera device."""
 
     all_camera = camera.model_copy()
+    # Own id so its qualities don't collide with other copies of ``camera``.
+    all_camera.id, _ = generate_random_ids()
     all_camera.channels = [all_camera.channels[0].model_copy()]
 
     medium_channel = all_camera.channels[0].model_copy()
@@ -369,8 +388,10 @@ def camera_all_fixture(camera: Camera):
     low_channel.id = 2
     all_camera.channels.append(low_channel)
 
-    set_active_rtsps_qualities(
-        all_camera, ChannelQuality.HIGH, ChannelQuality.MEDIUM, ChannelQuality.LOW
+    rtsps_qualities[all_camera.id] = (
+        ChannelQuality.HIGH,
+        ChannelQuality.MEDIUM,
+        ChannelQuality.LOW,
     )
     return all_camera
 
@@ -392,10 +413,16 @@ def camera_all_features_fixture(fixed_now: datetime):
 
 
 @pytest.fixture(name="doorbell")
-def doorbell_fixture(camera: Camera, fixed_now: datetime):
+def doorbell_fixture(
+    camera: Camera,
+    fixed_now: datetime,
+    rtsps_qualities: dict[str, tuple[ChannelQuality, ...]],
+):
     """Mock UniFi Protect Camera device (with chime)."""
 
     doorbell = camera.model_copy()
+    # Own id so its qualities don't collide with other copies of ``camera``.
+    doorbell.id, _ = generate_random_ids()
     doorbell.channels = [c.model_copy() for c in doorbell.channels]
 
     package_channel = doorbell.channels[0].model_copy()
@@ -403,7 +430,7 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
     package_channel.fps = 2
 
     doorbell.channels.append(package_channel)
-    set_active_rtsps_qualities(doorbell, ChannelQuality.HIGH, ChannelQuality.PACKAGE)
+    rtsps_qualities[doorbell.id] = (ChannelQuality.HIGH, ChannelQuality.PACKAGE)
     doorbell.feature_flags.video_modes = [VideoMode.DEFAULT, VideoMode.HIGH_FPS]
     doorbell.feature_flags.smart_detect_types = [
         SmartDetectObjectType.PERSON,

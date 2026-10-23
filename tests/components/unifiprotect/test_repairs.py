@@ -76,7 +76,7 @@ async def _raise_and_assert_repair(
     hass_ws_client: WebSocketGenerator,
 ) -> tuple[TestClient, str]:
     """Set up a streamless camera, assert its repair exists, return (client, issue_id)."""
-    set_active_rtsps_qualities(doorbell)
+    set_active_rtsps_qualities(ufp, doorbell)
 
     await init_entry(hass, ufp, [doorbell])
     assert await async_setup_component(hass, "repairs", {})
@@ -242,7 +242,7 @@ async def test_rtsp_no_repair_when_suppressed(
     extra_options: dict[str, bool],
 ) -> None:
     """No repair for third-party cameras or when RTSP is globally disabled."""
-    set_active_rtsps_qualities(doorbell)
+    set_active_rtsps_qualities(ufp, doorbell)
     doorbell.is_third_party_camera = third_party
     hass.config_entries.async_update_entry(
         ufp.entry, options={**ufp.entry.options, **extra_options}
