@@ -1262,6 +1262,7 @@ class _ScriptRun:
     async def _async_wait_with_optional_timeout(
         self,
         futures: list[asyncio.Future[None]],
+        done: asyncio.Future[None],
         timeout_handle: asyncio.TimerHandle | None,
         timeout_future: asyncio.Future[None] | None,
         unsub: Callable[[], None],
@@ -1274,7 +1275,7 @@ class _ScriptRun:
                 timeout_handle.cancel()
 
             unsub()
-        if timeout_future and timeout_future.done():
+        if timeout_future and timeout_future.done() and not done.done():
             self._async_handle_timeout()
             return True
         return False
@@ -1322,6 +1323,9 @@ class _ScriptRun:
         async def async_done(
             variables: dict[str, Any], context: Context | None = None
         ) -> None:
+            # The timeout already won, possibly before the waiter resumed.
+            if timeout_future and timeout_future.done():
+                return
             self._async_set_remaining_time_var(timeout_handle)
             self._variables["wait"]["completed"] = True
             self._variables["wait"]["trigger"] = variables["trigger"]
@@ -1343,7 +1347,7 @@ class _ScriptRun:
             return
         self._changed()
         timed_out = await self._async_wait_with_optional_timeout(
-            futures, timeout_handle, timeout_future, remove_triggers
+            futures, done, timeout_handle, timeout_future, remove_triggers
         )
         if self._stop.done():
             return
@@ -1411,7 +1415,7 @@ class _ScriptRun:
         )
         self._changed()
         if await self._async_wait_with_optional_timeout(
-            futures, timeout_handle, timeout_future, unsub
+            futures, done, timeout_handle, timeout_future, unsub
         ):
             self._async_abort_unless_continue_on_timeout()
 
