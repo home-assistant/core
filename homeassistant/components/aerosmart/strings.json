@@ -50,50 +50,74 @@
   },
   "entity": {
     "sensor": {
+      "active_fan_level": {
+        "name": "Active fan level"
+      },
+      "air_condenser_solenoid_valve_operating_hours": {
+        "name": "Air condenser solenoid valve operating hours"
+      },
+      "boiler_temperature_overshoot": {
+        "name": "Boiler temperature overshoot"
+      },
+      "brine_temperature_after_outdoor_air_preheating": {
+        "name": "Brine temperature after outdoor air preheating"
+      },
       "carbon_dioxide": {
         "name": "CO2"
-      },
-      "coarse_dust_filter_operating_hours": {
-        "name": "Coarse dust filter operating hours"
-      },
-      "coarse_dust_filter_monitoring_mode": {
-        "name": "Coarse dust filter monitoring mode"
       },
       "coarse_dust_filter_maximum_conveyed_volume": {
         "name": "Coarse dust filter maximum conveyed volume"
       },
+      "coarse_dust_filter_monitoring_mode": {
+        "name": "Coarse dust filter monitoring mode"
+      },
+      "coarse_dust_filter_operating_hours": {
+        "name": "Coarse dust filter operating hours"
+      },
       "coarse_dust_filter_service_life": {
         "name": "Coarse dust filter service life"
       },
-      "outdoor_air_temperature_cooling_off": {
-        "name": "Outdoor air temperature cooling off"
+      "compressor_motor_operating_hours": {
+        "name": "Compressor motor operating hours"
       },
-      "outdoor_air_temperature_cooling_on": {
-        "name": "Outdoor air temperature cooling on"
+      "conveyed_air_volume_since_filter_change": {
+        "name": "Conveyed air volume since filter change"
       },
-      "extract_air_fan_operating_hours": {
-        "name": "Extract air fan operating hours"
+      "domestic_hot_water_heating_delay": {
+        "name": "Domestic hot water heating delay"
       },
-      "supply_air_fan_operating_hours": {
-        "name": "Supply air fan operating hours"
+      "domestic_hot_water_temperature_space_heating_lockout": {
+        "name": "Domestic hot water temperature space heating lockout"
       },
-      "extract_air_fan_speed": {
-        "name": "Extract air fan speed"
+      "electric_heating_element_operating_hours": {
+        "name": "Electric heating element operating hours"
       },
-      "supply_air_fan_speed": {
-        "name": "Supply air fan speed"
+      "evaporator_coil_temperature": {
+        "name": "Evaporator coil temperature"
       },
       "extract_air_fan_actual_speed": {
         "name": "Extract air fan actual speed"
       },
-      "supply_air_fan_actual_speed": {
-        "name": "Supply air fan actual speed"
+      "extract_air_fan_operating_hours": {
+        "name": "Extract air fan operating hours"
       },
-      "maximum_permissible_extract_air_fan_speed": {
-        "name": "Maximum permissible extract air fan speed"
+      "extract_air_fan_speed": {
+        "name": "Extract air fan speed"
       },
-      "maximum_permissible_supply_air_fan_speed": {
-        "name": "Maximum permissible supply air fan speed"
+      "fan_level_0_operating_hours": {
+        "name": "Fan level 0 operating hours"
+      },
+      "fan_level_1_operating_hours": {
+        "name": "Fan level 1 operating hours"
+      },
+      "fan_level_2_operating_hours": {
+        "name": "Fan level 2 operating hours"
+      },
+      "fan_level_3_operating_hours": {
+        "name": "Fan level 3 operating hours"
+      },
+      "fan_level_reduction": {
+        "name": "Fan level reduction"
       },
       "fine_dust_filter_operating_hours": {
         "name": "Fine dust filter operating hours"
@@ -101,20 +125,14 @@
       "fine_dust_filter_service_life": {
         "name": "Fine dust filter service life"
       },
+      "frost_protection_operating_hours": {
+        "name": "Frost protection operating hours"
+      },
       "heat_pump": {
         "name": "Heat pump"
       },
-      "compressor_motor_operating_hours": {
-        "name": "Compressor motor operating hours"
-      },
-      "liquid_refrigerant_solenoid_valve_operating_hours": {
-        "name": "Liquid refrigerant solenoid valve operating hours"
-      },
-      "hot_gas_solenoid_valve_operating_hours": {
-        "name": "Hot gas solenoid valve operating hours"
-      },
-      "air_condenser_solenoid_valve_operating_hours": {
-        "name": "Air condenser solenoid valve operating hours"
+      "heat_pump_central_unit_address": {
+        "name": "Heat pump central unit address"
       },
       "heat_pump_high_pressure": {
         "name": "Heat pump high pressure"
@@ -143,35 +161,47 @@
       "heat_pump_status_remaining_time": {
         "name": "Heat pump status remaining time"
       },
-      "evaporator_coil_temperature": {
-        "name": "Evaporator coil temperature"
+      "heating_stage_1_operating_hours": {
+        "name": "Heating stage 1 operating hours"
       },
-      "heat_pump_central_unit_address": {
-        "name": "Heat pump central unit address"
+      "heating_stage_2_operating_hours": {
+        "name": "Heating stage 2 operating hours"
       },
-      "boiler_temperature_overshoot": {
-        "name": "Boiler temperature overshoot"
-      },
-      "hot_water_tank_upper_temperature": {
-        "name": "Hot water tank upper temperature"
+      "hot_gas_solenoid_valve_operating_hours": {
+        "name": "Hot gas solenoid valve operating hours"
       },
       "hot_water_heat_pump_temperature": {
         "name": "Hot water heat pump temperature"
       },
-      "electric_heating_element_operating_hours": {
-        "name": "Electric heating element operating hours"
+      "hot_water_tank_upper_temperature": {
+        "name": "Hot water tank upper temperature"
       },
-      "domestic_hot_water_temperature_space_heating_lockout": {
-        "name": "Domestic hot water temperature space heating lockout"
+      "liquid_refrigerant_solenoid_valve_operating_hours": {
+        "name": "Liquid refrigerant solenoid valve operating hours"
       },
-      "domestic_hot_water_heating_delay": {
-        "name": "Domestic hot water heating delay"
+      "maximum_permissible_extract_air_fan_speed": {
+        "name": "Maximum permissible extract air fan speed"
       },
-      "temporary_boiler_temperature": {
-        "name": "Temporary boiler temperature"
+      "maximum_permissible_supply_air_fan_speed": {
+        "name": "Maximum permissible supply air fan speed"
       },
-      "outdoor_air_temperature_shading": {
-        "name": "Outdoor air temperature shading"
+      "outdoor_air_brine_circuit_operating_hours": {
+        "name": "Outdoor air brine circuit operating hours"
+      },
+      "outdoor_air_temperature": {
+        "name": "Outdoor air temperature"
+      },
+      "outdoor_air_temperature_airflow_reduction_10percent": {
+        "name": "Outdoor air temperature airflow reduction 10%"
+      },
+      "outdoor_air_temperature_airflow_reduction_20percent": {
+        "name": "Outdoor air temperature airflow reduction 20%"
+      },
+      "outdoor_air_temperature_cooling_off": {
+        "name": "Outdoor air temperature cooling off"
+      },
+      "outdoor_air_temperature_cooling_on": {
+        "name": "Outdoor air temperature cooling on"
       },
       "outdoor_air_temperature_frost_protection": {
         "name": "Outdoor air temperature frost protection"
@@ -182,74 +212,41 @@
       "outdoor_air_temperature_frost_protection_on": {
         "name": "Outdoor air temperature frost protection on"
       },
-      "outdoor_air_temperature_airflow_reduction_10percent": {
-        "name": "Outdoor air temperature airflow reduction 10%"
-      },
-      "outdoor_air_temperature_airflow_reduction_20percent": {
-        "name": "Outdoor air temperature airflow reduction 20%"
-      },
       "outdoor_air_temperature_heating_and_cooling_threshold": {
         "name": "Outdoor air temperature heating and cooling threshold"
       },
-      "brine_temperature_after_outdoor_air_preheating": {
-        "name": "Brine temperature after outdoor air preheating"
-      },
-      "outdoor_air_temperature_summer_mode_on": {
-        "name": "Outdoor air temperature summer mode on"
+      "outdoor_air_temperature_shading": {
+        "name": "Outdoor air temperature shading"
       },
       "outdoor_air_temperature_summer_mode_off": {
         "name": "Outdoor air temperature summer mode off"
       },
-      "outdoor_air_brine_circuit_operating_hours": {
-        "name": "Outdoor air brine circuit operating hours"
-      },
-      "outdoor_air_temperature": {
-        "name": "Outdoor air temperature"
-      },
-      "room_temperature_shading": {
-        "name": "Room temperature shading"
+      "outdoor_air_temperature_summer_mode_on": {
+        "name": "Outdoor air temperature summer mode on"
       },
       "room_air_temperature": {
         "name": "Room air temperature"
       },
-      "summer_mode": {
-        "name": "Summer mode"
-      },
-      "fan_level_reduction": {
-        "name": "Fan level reduction"
-      },
-      "active_fan_level": {
-        "name": "Active fan level"
-      },
-      "total_conveyed_air_volume": {
-        "name": "Total conveyed air volume"
-      },
-      "conveyed_air_volume_since_filter_change": {
-        "name": "Conveyed air volume since filter change"
+      "room_temperature_shading": {
+        "name": "Room temperature shading"
       },
       "shading_operating_hours": {
         "name": "Shading operating hours"
       },
-      "frost_protection_operating_hours": {
-        "name": "Frost protection operating hours"
+      "summer_mode": {
+        "name": "Summer mode"
       },
-      "heating_stage_1_operating_hours": {
-        "name": "Heating stage 1 operating hours"
+      "supply_air_fan_actual_speed": {
+        "name": "Supply air fan actual speed"
       },
-      "heating_stage_2_operating_hours": {
-        "name": "Heating stage 2 operating hours"
+      "supply_air_fan_operating_hours": {
+        "name": "Supply air fan operating hours"
       },
-      "fan_level_0_operating_hours": {
-        "name": "Fan level 0 operating hours"
+      "supply_air_fan_speed": {
+        "name": "Supply air fan speed"
       },
-      "fan_level_1_operating_hours": {
-        "name": "Fan level 1 operating hours"
-      },
-      "fan_level_2_operating_hours": {
-        "name": "Fan level 2 operating hours"
-      },
-      "fan_level_3_operating_hours": {
-        "name": "Fan level 3 operating hours"
+      "supply_and_extract_airflow_balance": {
+        "name": "Supply and extract airflow balance"
       },
       "target_extract_airflow": {
         "name": "Target extract airflow"
@@ -257,8 +254,11 @@
       "target_supply_airflow": {
         "name": "Target supply airflow"
       },
-      "supply_and_extract_airflow_balance": {
-        "name": "Supply and extract airflow balance"
+      "temporary_boiler_temperature": {
+        "name": "Temporary boiler temperature"
+      },
+      "total_conveyed_air_volume": {
+        "name": "Total conveyed air volume"
       }
     }
   },
