@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -34,6 +34,7 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     DOMAIN,
     INVERTER_ERROR_CODES,
+    FroniusDeviceInfo,
     InverterStatusCodeOption,
     MeterLocationCodeOption,
     OhmPilotStateCodeOption,
@@ -130,6 +131,8 @@ class FroniusSensorEntityDescription(FroniusEntityDescription, SensorEntityDescr
     # Handling such values shall mitigate spikes in delta calculations.
     invalid_when_falsy: bool = False
     value_fn: Callable[[StateType], StateType] | None = None
+    # set for readings of a single MPPT module, which get their own child device
+    mppt_no: int | None = None
 
 
 INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
@@ -170,6 +173,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     FroniusSensorEntityDescription(
         key="current_dc",
         default_value=0,
+        mppt_no=1,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -177,29 +181,29 @@ INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     FroniusSensorEntityDescription(
         key="current_dc_2",
         default_value=0,
+        mppt_no=2,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="current_dc_mppt_no",
-        translation_placeholders={"mppt_no": "2"},
+        translation_key="current_dc",
     ),
     FroniusSensorEntityDescription(
         key="current_dc_3",
         default_value=0,
+        mppt_no=3,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="current_dc_mppt_no",
-        translation_placeholders={"mppt_no": "3"},
+        translation_key="current_dc",
     ),
     FroniusSensorEntityDescription(
         key="current_dc_4",
         default_value=0,
+        mppt_no=4,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="current_dc_mppt_no",
-        translation_placeholders={"mppt_no": "4"},
+        translation_key="current_dc",
     ),
     FroniusSensorEntityDescription(
         key="power_ac",
@@ -219,6 +223,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     FroniusSensorEntityDescription(
         key="voltage_dc",
         default_value=0,
+        mppt_no=1,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -226,29 +231,29 @@ INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     FroniusSensorEntityDescription(
         key="voltage_dc_2",
         default_value=0,
+        mppt_no=2,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="voltage_dc_mppt_no",
-        translation_placeholders={"mppt_no": "2"},
+        translation_key="voltage_dc",
     ),
     FroniusSensorEntityDescription(
         key="voltage_dc_3",
         default_value=0,
+        mppt_no=3,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="voltage_dc_mppt_no",
-        translation_placeholders={"mppt_no": "3"},
+        translation_key="voltage_dc",
     ),
     FroniusSensorEntityDescription(
         key="voltage_dc_4",
         default_value=0,
+        mppt_no=4,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="voltage_dc_mppt_no",
-        translation_placeholders={"mppt_no": "4"},
+        translation_key="voltage_dc",
     ),
     # device status entities
     FroniusSensorEntityDescription(
@@ -306,7 +311,7 @@ def _modbus_mppt_descriptions(
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
             translation_key="modbus_mppt_current_dc",
-            translation_placeholders={"mppt_no": str(mppt_no)},
+            mppt_no=mppt_no,
         ),
         FroniusSensorEntityDescription(
             key=f"mppt_{mppt_no}_voltage_dc",
@@ -315,7 +320,7 @@ def _modbus_mppt_descriptions(
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
             translation_key="modbus_mppt_voltage_dc",
-            translation_placeholders={"mppt_no": str(mppt_no)},
+            mppt_no=mppt_no,
         ),
         FroniusSensorEntityDescription(
             key=f"mppt_{mppt_no}_power_dc",
@@ -323,7 +328,7 @@ def _modbus_mppt_descriptions(
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="modbus_mppt_power_dc",
-            translation_placeholders={"mppt_no": str(mppt_no)},
+            mppt_no=mppt_no,
         ),
         FroniusSensorEntityDescription(
             key=f"mppt_{mppt_no}_energy",
@@ -331,8 +336,7 @@ def _modbus_mppt_descriptions(
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
             invalid_when_falsy=True,
-            translation_key="modbus_mppt_energy",
-            translation_placeholders={"mppt_no": str(mppt_no)},
+            mppt_no=mppt_no,
         ),
     ]
 
@@ -835,6 +839,20 @@ STORAGE_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
 ]
 
 
+def _inverter_device_info(
+    inverter_info: FroniusDeviceInfo, mppt_no: int | None
+) -> DeviceInfo | ChildDeviceInfo:
+    """Return the inverter device, or the child device of one of its MPPT modules."""
+    if mppt_no is None:
+        return inverter_info.device_info
+    return ChildDeviceInfo(
+        identifiers={(DOMAIN, f"{inverter_info.unique_id}-mppt-{mppt_no}")},
+        parent_device_id=inverter_info.device_id,
+        translation_key="mppt",
+        translation_placeholders={"mppt_no": str(mppt_no)},
+    )
+
+
 class _FroniusSensorEntity(FroniusEntity, SensorEntity):
     """Defines a Fronius coordinator sensor entity."""
 
@@ -892,8 +910,9 @@ class InverterSensor(_FroniusSensorEntity):
     ) -> None:
         """Set up an individual Fronius inverter sensor."""
         super().__init__(coordinator, description, solar_net_id)
-        # device_info created in __init__ from a `GetInverterInfo` request
-        self._attr_device_info = coordinator.inverter_info.device_info
+        self._attr_device_info = _inverter_device_info(
+            coordinator.inverter_info, description.mppt_no
+        )
         self._attr_unique_id = (
             f"{coordinator.inverter_info.unique_id}-{description.key}"
         )
@@ -910,8 +929,10 @@ class ModbusInverterSensor(_FroniusSensorEntity):
     ) -> None:
         """Set up an individual Fronius Modbus inverter sensor."""
         super().__init__(coordinator, description, solar_net_id)
-        # attach to the same device as the SolarAPI inverter sensors
-        self._attr_device_info = coordinator.inverter_info.device_info
+        # attach to the same devices as the SolarAPI inverter sensors
+        self._attr_device_info = _inverter_device_info(
+            coordinator.inverter_info, description.mppt_no
+        )
         self._attr_unique_id = (
             f"{coordinator.inverter_info.unique_id}-modbus-{description.key}"
         )

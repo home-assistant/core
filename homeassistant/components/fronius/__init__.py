@@ -329,6 +329,7 @@ class FroniusSolarNet:
                 },
             ) from err
 
+        device_registry = dr.async_get(self.hass)
         for inverter in _inverter_info["inverters"]:
             solar_net_id = inverter["device_id"]["value"]
             unique_id = inverter["unique_id"]["value"]
@@ -345,9 +346,14 @@ class FroniusSolarNet:
                     config_entry_id=self.config_entry.entry_id,
                 ),
             )
+            device_entry = device_registry.async_get_or_create_from_info(
+                config_entry_id=self.config_entry.entry_id,
+                device_info=device_info,
+            )
             inverter_infos.append(
                 FroniusDeviceInfo(
                     device_info=device_info,
+                    device_id=device_entry.id,
                     solar_net_id=solar_net_id,
                     unique_id=unique_id,
                 )
