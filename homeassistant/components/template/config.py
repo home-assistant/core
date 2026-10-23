@@ -32,6 +32,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
@@ -77,9 +78,16 @@ from . import (
     switch as switch_platform,
     update as update_platform,
     vacuum as vacuum_platform,
+    water_heater as water_heater_platform,
     weather as weather_platform,
 )
-from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS, TemplateConfig
+from .const import (
+    CONF_DEFAULT_ENTITY_ID,
+    CONF_TRIGGER_VARIABLES,
+    DOMAIN,
+    PLATFORMS,
+    TemplateConfig,
+)
 from .helpers import async_get_blueprints
 
 _LOGGER = logging.getLogger(__name__)
@@ -107,6 +115,7 @@ _DEFAULT_NAMES = {
     Platform.SWITCH: switch_platform.DEFAULT_NAME,
     Platform.UPDATE: update_platform.DEFAULT_NAME,
     Platform.VACUUM: vacuum_platform.DEFAULT_NAME,
+    Platform.WATER_HEATER: water_heater_platform.DEFAULT_NAME,
     Platform.WEATHER: weather_platform.DEFAULT_NAME,
 }
 
@@ -169,6 +178,18 @@ def validate_entity_config_with_conditions_has_trigger(obj: dict) -> dict:
     return obj
 
 
+def validate_trigger_variables_has_trigger(obj: dict) -> dict:
+    """Validate that trigger variables have triggers."""
+    if CONF_TRIGGER_VARIABLES in obj and CONF_TRIGGERS not in obj:
+        raise probatio.Invalid(
+            f"The {CONF_TRIGGER_VARIABLES} option requires a trigger, remove the"
+            f" {CONF_TRIGGER_VARIABLES} option or rewrite configuration to use a"
+            " trigger"
+        )
+
+    return obj
+
+
 def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict], dict]:
     """Validate that config does not contain trigger and action."""
     domains = set(keys)
@@ -176,7 +197,7 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
     def validate(obj: dict):
         options = set(obj.keys())
         if found_domains := domains.intersection(options):
-            invalid = {CONF_TRIGGERS, CONF_ACTIONS}
+            invalid = {CONF_TRIGGERS, CONF_TRIGGER_VARIABLES, CONF_ACTIONS}
             if found_invalid := invalid.intersection(set(obj.keys())):
                 raise probatio.Invalid(
                     f"Unsupported option(s) found for domain"
@@ -244,6 +265,7 @@ CONFIG_SECTION_SCHEMA = probatio.All(
             probatio.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
             probatio.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
             probatio.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
+            probatio.Optional(CONF_TRIGGER_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             probatio.Optional(CONF_UNIQUE_ID): cv.string,
             probatio.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             probatio.Optional(ALARM_CONTROL_PANEL_DOMAIN): probatio.All(
@@ -303,6 +325,10 @@ CONFIG_SECTION_SCHEMA = probatio.All(
             probatio.Optional(VACUUM_DOMAIN): probatio.All(
                 probatio.EnsureList(), [vacuum_platform.VACUUM_YAML_SCHEMA]
             ),
+            probatio.Optional(WATER_HEATER_DOMAIN): probatio.All(
+                probatio.EnsureList(),
+                [water_heater_platform.WATER_HEATER_YAML_SCHEMA],
+            ),
             probatio.Optional(WEATHER_DOMAIN): probatio.All(
                 probatio.EnsureList(),
                 [
@@ -319,6 +345,7 @@ CONFIG_SECTION_SCHEMA = probatio.All(
     ),
     validate_binary_sensor_auto_off_has_trigger,
     validate_entity_config_with_conditions_has_trigger,
+    validate_trigger_variables_has_trigger,
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = probatio.All(

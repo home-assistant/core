@@ -4,7 +4,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.qnap.sensor import _VOLUME_MON_COND, QNAPVolumeSensor
+from homeassistant.components.qnap.sensor import (
+    _SYSTEM_MON_COND,
+    _VOLUME_MON_COND,
+    QNAPSystemSensor,
+    QNAPVolumeSensor,
+)
 
 from .conftest import TEST_SERIAL
 
@@ -45,4 +50,21 @@ def test_volume_percentage_used(
         {"Volume 1": {"free_size": free_size, "total_size": total_size}}
     )
     sensor = _volume_sensor(coordinator)
+    assert sensor.native_value == expected
+
+
+@pytest.mark.parametrize(
+    ("temp_c", "expected"),
+    [
+        (42, 42),
+        ("42", 42),
+        (None, None),
+    ],
+)
+def test_system_temperature(temp_c: int | str | None, expected: int | None) -> None:
+    """Test the system temperature sensor handles a missing reading."""
+    coordinator = _make_coordinator({})
+    coordinator.data["system_stats"]["system"]["temp_c"] = temp_c
+    description = next(desc for desc in _SYSTEM_MON_COND if desc.key == "system_temp")
+    sensor = QNAPSystemSensor(coordinator, description, TEST_SERIAL)
     assert sensor.native_value == expected

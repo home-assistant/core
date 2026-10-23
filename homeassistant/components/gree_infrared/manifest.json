@@ -1,6 +1,7 @@
 {
   "domain": "gree_infrared",
   "name": "Gree Infrared",
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@Dr-Blank"],
   "config_flow": true,
   "dependencies": ["infrared"],

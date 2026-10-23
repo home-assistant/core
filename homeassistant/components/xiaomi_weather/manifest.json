@@ -1,6 +1,7 @@
 {
   "domain": "xiaomi_weather",
   "name": "Xiaomi Weather",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@shirok1"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_weather",

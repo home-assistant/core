@@ -1,6 +1,7 @@
 {
   "domain": "generic",
   "name": "Generic Camera",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@davet2001"],
   "config_flow": true,
   "dependencies": ["http", "stream"],

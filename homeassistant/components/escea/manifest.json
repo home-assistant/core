@@ -1,6 +1,7 @@
 {
   "domain": "escea",
   "name": "Escea",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@lazdavila"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/escea",

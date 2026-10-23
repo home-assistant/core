@@ -71,7 +71,7 @@ async def test_import(hass: HomeAssistant) -> None:
             "homeassistant.components.firmata.async_setup", return_value=True
         ) as mock_setup,
         patch(
-            "homeassistant.components.firmata.async_setup_entry", return_value=True
+            "homeassistant.components.firmata.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(

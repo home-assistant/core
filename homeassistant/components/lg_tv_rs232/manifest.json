@@ -1,6 +1,7 @@
 {
   "domain": "lg_tv_rs232",
   "name": "LG TV via Serial",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@balloob"],
   "config_flow": true,
   "dependencies": ["usb"],

@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ezviz import (
     ATTR_TYPE_CAMERA,
@@ -15,14 +16,12 @@ from homeassistant.components.ezviz import (
 from homeassistant.const import CONF_PASSWORD, CONF_TYPE, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.ezviz.async_setup_entry", return_value=True
+        "homeassistant.components.ezviz.async_setup_entry", return_value=None
     ) as setup_entry_mock:
         yield setup_entry_mock
 

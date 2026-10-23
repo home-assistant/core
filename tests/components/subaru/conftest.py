@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from subarulink.const import COUNTRY_USA
 
 from homeassistant import config_entries
@@ -36,8 +37,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .api_responses import TEST_VIN_2_EV, VEHICLE_DATA, VEHICLE_STATUS_EV
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_API = "homeassistant.components.subaru.SubaruAPI."
 MOCK_API_DEVICE_REGISTERED = f"{MOCK_API}device_registered"

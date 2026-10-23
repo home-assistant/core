@@ -1,6 +1,7 @@
 {
   "domain": "denon_rs232",
   "name": "Denon RS-232",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@balloob"],
   "config_flow": true,
   "dependencies": ["usb"],

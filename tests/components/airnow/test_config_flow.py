@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock
 
 from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
 
 from homeassistant import config_entries
 from homeassistant.components.airnow.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, async_load_json_array_fixture
 
 
 @pytest.mark.usefixtures("setup_airnow")

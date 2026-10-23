@@ -10,6 +10,13 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions, PartialBackupOptions
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_call_logger_set_level,
+    async_fire_time_changed,
+    async_get_persistent_notifications,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from zwave_js_server.client import Client
 from zwave_js_server.const import SecurityClass
 from zwave_js_server.event import Event
@@ -48,14 +55,6 @@ from .common import (
     EATON_RF9640_ENTITY,
     TEST_SENSITIVE_NETWORK_KEY,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    async_call_logger_set_level,
-    async_fire_time_changed,
-    async_get_persistent_notifications,
-)
-from tests.typing import WebSocketGenerator
 
 CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 

@@ -1,6 +1,7 @@
 {
   "domain": "caldav",
   "name": "CalDAV",
+  "categories": ["productivity_information.calendars_todos"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/caldav",

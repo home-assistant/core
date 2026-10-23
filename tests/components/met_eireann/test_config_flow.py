@@ -15,7 +15,7 @@ from homeassistant.data_entry_flow import FlowResultType
 def met_setup_fixture():
     """Patch Met Éireann setup entry."""
     with patch(
-        "homeassistant.components.met_eireann.async_setup_entry", return_value=True
+        "homeassistant.components.met_eireann.async_setup_entry", return_value=None
     ):
         yield
 

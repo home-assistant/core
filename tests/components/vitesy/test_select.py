@@ -6,6 +6,11 @@ from aiovitesy.api import VitesyDevice, VitesyModeStatus
 from aiovitesy.exceptions import VitesyError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -21,8 +26,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import DEVICE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 MODE = "select.kitchen_shelfy_mode"
 AIR_QUALITY_SCORE = "sensor.kitchen_shelfy_air_quality_score"

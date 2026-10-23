@@ -14,6 +14,12 @@ from httpx2 import (
     Response,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from pythonxbox.api.provider.smartglass.models import SmartglassConsoleList
 from pythonxbox.common.exceptions import AuthenticationException
 import respx
@@ -38,13 +44,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.mark.usefixtures("xbox_live_client")

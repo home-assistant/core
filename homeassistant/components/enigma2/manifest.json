@@ -1,6 +1,7 @@
 {
   "domain": "enigma2",
   "name": "Enigma2 (OpenWebif)",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@autinerd"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/enigma2",

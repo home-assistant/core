@@ -1,6 +1,7 @@
 {
   "domain": "opengarage",
   "name": "OpenGarage",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@danielhiversen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/opengarage",

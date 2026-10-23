@@ -30,6 +30,15 @@
     "step": {}
   },
   "exceptions": {
+    "async_migrate_entry_failed": {
+      "message": "Failed to migrate the config entry."
+    },
+    "async_setup_entry_failed": {
+      "message": "Failed to set up the config entry."
+    },
+    "async_unload_entry_failed": {
+      "message": "Failed to unload the config entry."
+    },
     "component_import_err": {
       "message": "Unable to import {domain}: {error}"
     },
@@ -107,6 +116,9 @@
     },
     "platform_schema_validator_err": {
       "message": "Unknown error when validating config for {domain} from integration {p_name} - {error}."
+    },
+    "platform_setup_failed": {
+      "message": "Failed to set up the {platform} {domain} platform."
     },
     "scene_config_reload_failed": {
       "message": "Failed to reload the Home Assistant scene platform configuration - {error}"

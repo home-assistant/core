@@ -24,6 +24,11 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode
 from tesla_fleet_api.exceptions import (
@@ -47,6 +52,7 @@ from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from tesla_protocol.command import vcsec_pb2
 from teslemetry_stream import TeslemetryStreamAuthenticationError
 
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -139,8 +145,6 @@ from .const import (
     VEHICLE_DATA_ASLEEP,
     VIN,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 LIVE_STATUS_ENTITY_ID = "sensor.energy_site_battery_power"
 
@@ -1940,6 +1944,126 @@ async def test_local_gateway_repair_cleared_without_subentry(
     assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
 
 
+def _create_gateway_issue(
+    hass: HomeAssistant, site_id: int, entry_id: str, config_entry_id: str | None
+) -> str:
+    """Create a gateway repair issue owned by the given config entry."""
+    issue_id = f"gateway_not_found_{site_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        config_entry_id=config_entry_id,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="gateway_not_found",
+        translation_placeholders={"site": "Energy Site"},
+        data={"entry_id": entry_id, "subentry_id": "subentry_id"},
+    )
+    return issue_id
+
+
+@pytest.mark.parametrize(
+    ("key_error", "connect_error"),
+    [
+        pytest.param(None, PowerwallConnectionError("unreachable"), id="not_found"),
+        pytest.param(
+            PrivateKeyError("malformed", "Not a valid PEM private key"),
+            None,
+            id="key_load_failure",
+        ),
+    ],
+)
+async def test_ignored_gateway_repair_kept_on_setup(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+    key_error: Exception | None,
+    connect_error: Exception | None,
+) -> None:
+    """An ignored gateway repair is kept when it's still valid or can't be checked."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    _create_gateway_issue(hass, SITE_ID, entry.entry_id, entry.entry_id)
+    ir.async_ignore_issue(hass, DOMAIN, GATEWAY_ISSUE_ID, True)
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    dismissed_version = issue.dismissed_version
+    assert dismissed_version is not None
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    mock_powerwall_connect.side_effect = connect_error
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+            side_effect=key_error,
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
+            return_value=None,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    assert issue.dismissed_version == dismissed_version
+    assert not [event for event in events if event.data["action"] == "remove"]
+
+
+async def test_stale_gateway_repairs_deleted_on_setup(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Gateway repairs of the entry's sites which aren't set up are deleted.
+
+    Gateway repairs owned by another config entry, or created before issues were
+    linked to their config entry, are left alone.
+    """
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain=DOMAIN)
+    other_entry.add_to_hass(hass)
+    # Site 98765 is in the products but without access, 111 is gone
+    stale_issue_ids = [
+        _create_gateway_issue(hass, site_id, entry.entry_id, entry.entry_id)
+        for site_id in (98765, 111)
+    ]
+    kept_issue_ids = [
+        _create_gateway_issue(hass, 222, other_entry.entry_id, other_entry.entry_id),
+        _create_gateway_issue(hass, 333, entry.entry_id, None),
+    ]
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    for issue_id in stale_issue_ids:
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    for issue_id in kept_issue_ids:
+        assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_gateway_repairs_refresh_cancelled_on_setup_failure(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, mock_live_status: AsyncMock
+) -> None:
+    """A failed setup leaves the gateway repairs alone."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    issue_id = _create_gateway_issue(hass, 111, entry.entry_id, entry.entry_id)
+    mock_live_status.side_effect = TeslaFleetError
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
 async def test_stale_cleanup_preserves_foreign_subentry(hass: HomeAssistant) -> None:
     """Energy stale-subentry cleanup does not remove other subentry types."""
     entry = mock_config_entry()
@@ -2449,19 +2573,34 @@ async def _paired_entry(
         await hass.async_block_till_done()
 
 
-async def test_vehicle_bluetooth_out_of_range(hass: HomeAssistant) -> None:
-    """A paired vehicle out of range still gets a router, and skips Bluetooth."""
-    async with _paired_entry(hass, MagicMock(return_value=None)) as (
-        router,
-        bluetooth_vehicle,
-        cloud,
-    ):
-        assert isinstance(router, VehicleRouter)
+async def test_vehicle_bluetooth_out_of_range(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A paired vehicle out of range skips Bluetooth and logs why."""
+    with patch(
+        "homeassistant.components.teslemetry.async_address_reachability_diagnostics",
+        return_value="unknown (never seen by any scanner)",
+    ) as mock_diagnostics:
+        async with _paired_entry(hass, MagicMock(return_value=None)) as (
+            router,
+            bluetooth_vehicle,
+            cloud,
+        ):
+            assert isinstance(router, VehicleRouter)
 
-        assert await router.flash_lights() == CLOUD_RESULT
+            with caplog.at_level(logging.DEBUG):
+                assert await router.flash_lights() == CLOUD_RESULT
 
-        cloud.assert_awaited_once()
-        bluetooth_vehicle.flash_lights.assert_not_called()
+            cloud.assert_awaited_once()
+            bluetooth_vehicle.flash_lights.assert_not_called()
+
+    mock_diagnostics.assert_called_with(
+        hass, ADDRESS, BluetoothReachabilityIntent.CONNECTION
+    )
+    assert (
+        f"Vehicle {VIN} is not reachable over Bluetooth, using cloud: "
+        "unknown (never seen by any scanner)"
+    ) in caplog.text
 
 
 async def test_vehicle_router_resumes_bluetooth_when_vehicle_returns(

@@ -1,6 +1,7 @@
 {
   "domain": "spotify",
   "name": "Spotify",
+  "categories": ["media_entertainment.music_radio_services"],
   "codeowners": ["@frenck", "@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

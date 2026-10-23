@@ -1,6 +1,7 @@
 {
   "domain": "nmap_tracker",
   "name": "Nmap Tracker",
+  "categories": ["presence_location.network_presence"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["network"],

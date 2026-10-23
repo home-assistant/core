@@ -1,6 +1,7 @@
 {
   "domain": "samsung_exlink",
   "name": "Samsung TV via ExLink",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@balloob"],
   "config_flow": true,
   "dependencies": ["usb"],

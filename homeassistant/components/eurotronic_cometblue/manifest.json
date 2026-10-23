@@ -7,6 +7,7 @@
       "service_uuid": "47e9ee00-47e9-11e4-8939-164230d1df67"
     }
   ],
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@rikroe"],
   "config_flow": true,
   "dependencies": ["bluetooth"],

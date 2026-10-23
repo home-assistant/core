@@ -15,7 +15,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.core import HomeAssistant, callback
 
-from . import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 LOGGER = logging.getLogger(__name__)
 

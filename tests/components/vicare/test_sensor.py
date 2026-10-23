@@ -8,6 +8,11 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from PyViCare.PyViCareService import ViCareDeviceAccessor
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,8 +26,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

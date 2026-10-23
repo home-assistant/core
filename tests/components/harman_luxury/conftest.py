@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from aioharmanluxury import DeviceInfo, HarmanLuxuryState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.harman_luxury.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -13,8 +14,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_SERIAL = "48b782c2-60ac-40c1-a169-8d7ccb81dcc1"

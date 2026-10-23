@@ -1,6 +1,7 @@
 {
   "domain": "homee",
   "name": "Homee",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@Taraman17"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homee",

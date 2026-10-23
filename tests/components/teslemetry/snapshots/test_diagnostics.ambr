@@ -326,6 +326,12 @@
     ]),
     'vehicles': list([
       dict({
+        'bluetooth': dict({
+          'address': None,
+          'backend': 'cloud',
+          'in_range': None,
+          'paired': False,
+        }),
         'data': dict({
           'access_type': 'OWNER',
           'api_version': 71,
@@ -691,5 +697,29 @@
         }),
       }),
     ]),
+  })
+# ---
+# name: test_diagnostics_bluetooth[in_range]
+  dict({
+    'address': '**REDACTED**',
+    'backend': 'router',
+    'in_range': True,
+    'paired': True,
+  })
+# ---
+# name: test_diagnostics_bluetooth[key_load_failed]
+  dict({
+    'address': '**REDACTED**',
+    'backend': 'cloud',
+    'in_range': None,
+    'paired': True,
+  })
+# ---
+# name: test_diagnostics_bluetooth[out_of_range]
+  dict({
+    'address': '**REDACTED**',
+    'backend': 'router',
+    'in_range': False,
+    'paired': True,
   })
 # ---
