@@ -54,17 +54,6 @@
         "name": "Start scan"
       }
     },
-    "select": {
-      "dali_scan": {
-        "name": "Scan method",
-        "state": {
-          "current_device_list": "Refresh current device list",
-          "new_installation": "New installation",
-          "none": "None",
-          "system_extension": "Find new devices"
-        }
-      }
-    },
     "sensor": {
       "air_humidity": {
         "name": "Air humidity"
@@ -86,11 +75,6 @@
       },
       "eco2": {
         "name": "Estimated carbon dioxide"
-      }
-    },
-    "switch": {
-      "scan_control": {
-        "name": "Scan"
       }
     }
   },
