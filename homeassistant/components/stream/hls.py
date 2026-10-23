@@ -116,6 +116,32 @@ class HlsStreamOutput(StreamOutput):
                 self._segments.pop()
 
 
+def peak_bit_rate(segments: list[Segment], target_duration: float) -> float:
+    """Return the peak segment bit rate of complete segments (RFC 8216 4.1).
+
+    The peak is the highest bit rate of contiguous segments lasting 0.5 to 1.5
+    target durations; without such segments, the bit rate over all of them.
+    """
+    peak = 0.0
+    for start in range(len(segments)):
+        size = 0
+        duration = 0.0
+        for segment in segments[start:]:
+            size += segment.data_size_with_init
+            duration += segment.duration
+            if duration > 1.5 * target_duration:
+                break
+            if duration >= 0.5 * target_duration:
+                peak = max(peak, size * 8 / duration)
+    if peak:
+        return peak
+    return (
+        sum(s.data_size_with_init for s in segments)
+        * 8
+        / sum(s.duration for s in segments)
+    )
+
+
 class HlsMasterPlaylistView(StreamView):
     """Stream view used only for Chromecast compatibility."""
 
@@ -124,7 +150,7 @@ class HlsMasterPlaylistView(StreamView):
     cors_allowed = True
 
     @staticmethod
-    def render(track: StreamOutput) -> str:
+    def render(track: HlsStreamOutput) -> str:
         """Render M3U8 file."""
         # Need to calculate max bandwidth as
         # input_container.bit_rate doesn't seem to work.
@@ -133,16 +159,9 @@ class HlsMasterPlaylistView(StreamView):
         # hls spec already allows for 25% variation
         if not (segment := track.get_segment(track.sequences[-2])):
             return ""
-        # Over all complete segments: one cut at a parameter set change can be
-        # little more than a keyframe
         if not (complete := [s for s in track.get_segments() if s.complete]):
             return ""
-        bandwidth = round(
-            sum(s.data_size_with_init for s in complete)
-            * 8
-            / sum(s.duration for s in complete)
-            * 1.2
-        )
+        bandwidth = round(peak_bit_rate(complete, track.target_duration) * 1.2)
         codecs = get_codec_string(segment.init)
         lines = [
             "#EXTM3U",
@@ -156,7 +175,9 @@ class HlsMasterPlaylistView(StreamView):
         self, request: web.Request, stream: Stream, sequence: str, part_num: str
     ) -> web.Response:
         """Return m3u8 playlist."""
-        track = stream.add_provider(HLS_PROVIDER)
+        track: HlsStreamOutput = cast(
+            HlsStreamOutput, stream.add_provider(HLS_PROVIDER)
+        )
         await stream.start()
         # Make sure at least two segments are ready (last one may not be complete)
         if not track.sequences and not await track.recv():

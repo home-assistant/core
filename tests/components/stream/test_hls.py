@@ -1,11 +1,13 @@
 """The tests for hls streams."""
 
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from http import HTTPStatus
 import io
 import itertools
+import sys
 import threading
-from unittest.mock import patch
+from unittest.mock import DEFAULT, patch
 from urllib.parse import urlparse
 
 import av
@@ -24,11 +26,7 @@ from homeassistant.components.stream.const import (
 )
 from homeassistant.components.stream.core import Orientation, Part
 from homeassistant.components.stream.fmp4utils import find_box
-from homeassistant.components.stream.worker import (
-    StreamState,
-    VideoFormat,
-    hevc_keyframe_format,
-)
+from homeassistant.components.stream.worker import StreamState, hevc_keyframe_format
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -40,6 +38,7 @@ from .common import (
     dynamic_stream_settings,
     generate_video_with_size_change,
 )
+from .conftest import WorkerSync
 
 STREAM_SOURCE = "some-stream-source"
 INIT_BYTES = b"\x00\x00\x00\x08moov"
@@ -76,6 +75,9 @@ class HlsClient:
             # Strip off the master playlist suffix and replace with path
             url = "/".join(self.parsed_url.path.split("/")[:-1]) + path
         return await self.http_client.get(url, headers=headers)
+
+
+type HlsStreamFactory = Callable[[Stream], Awaitable[HlsClient]]
 
 
 @pytest.fixture
@@ -215,6 +217,7 @@ async def test_hls_stream(
 
 
 BOTH_SIZES = [(480, 320), (640, 480)]
+ALWAYS = sys.maxsize
 
 
 @pytest.mark.parametrize(
@@ -251,7 +254,7 @@ BOTH_SIZES = [(480, 320), (640, 480)]
         ),
         # Parameter sets that do not parse keep the current init
         pytest.param(
-            "libx265", {}, None, [(480, 320)], [(480, 320)], id="h265-unparsed"
+            "libx265", {}, ALWAYS, [(480, 320)], [(480, 320)], id="h265-unparsed"
         ),
         # and are tried again on the next keyframe
         pytest.param("libx265", {}, 1, BOTH_SIZES, BOTH_SIZES, id="h265-unparsed-once"),
@@ -295,13 +298,13 @@ BOTH_SIZES = [(480, 320), (640, 480)]
         pytest.param("libx264", {}, 0, [(480, 320)], BOTH_SIZES, id="h264"),
     ],
 )
+@pytest.mark.usefixtures("setup_component")
 async def test_hls_stream_picture_size_change(
     hass: HomeAssistant,
-    setup_component: None,
-    hls_stream,
+    hls_stream: HlsStreamFactory,
     encoder: str,
-    source_options: dict[str, bool],
-    size_errors: int | None,
+    source_options: dict[str, bool | int],
+    size_errors: int,
     init_sizes: list[tuple[int, int]],
     decoded: list[tuple[int, int]],
 ) -> None:
@@ -310,13 +313,6 @@ async def test_hls_stream_picture_size_change(
     source = generate_video_with_size_change(
         encoder, BOTH_SIZES, duration=5, **source_options
     )
-    size_calls = itertools.count()
-
-    def keyframe_format(extradata: bytes, keyframe: bytes) -> VideoFormat:
-        """Fail the first `size_errors` calls, or every call for None."""
-        if size_errors is None or next(size_calls) < size_errors:
-            raise av.FFmpegError(1094995529, "Invalid data")
-        return hevc_keyframe_format(extradata, keyframe)
 
     # Hold the worker at the end of the stream so the segments stay available
     worker_ended = threading.Event()
@@ -332,9 +328,16 @@ async def test_hls_stream_picture_size_change(
         patch.object(
             StreamState, "discontinuity", autospec=True, side_effect=hold_worker
         ),
+        # The first `size_errors` parameter set changes do not decode
         patch(
             "homeassistant.components.stream.worker.hevc_keyframe_format",
-            side_effect=keyframe_format,
+            wraps=hevc_keyframe_format,
+            side_effect=itertools.chain(
+                itertools.repeat(
+                    av.FFmpegError(1094995529, "Invalid data"), size_errors
+                ),
+                itertools.repeat(DEFAULT),
+            ),
         ),
     ):
         stream = create_stream(hass, source, {}, dynamic_stream_settings())
@@ -344,39 +347,9 @@ async def test_hls_stream_picture_size_change(
             assert await hass.async_add_executor_job(worker_ended.wait, TEST_TIMEOUT)
             await hass.async_block_till_done()
 
-            hls_client = await hls_stream(stream)
-            playlist_response = await hls_client.get("/playlist.m3u8")
-            assert playlist_response.status == HTTPStatus.OK
-            playlist = (await playlist_response.text()).splitlines()
-
-            inits: dict[str, bytes] = {}
-            init_uri = ""
-            decoded_sizes = []
-            for line in playlist:
-                if line.startswith("#EXT-X-MAP:URI="):
-                    init_uri = line.removeprefix("#EXT-X-MAP:URI=").strip('"')
-                    init_response = await hls_client.get(
-                        "/" + init_uri.removeprefix("./")
-                    )
-                    assert init_response.status == HTTPStatus.OK
-                    inits[init_uri] = await init_response.read()
-                elif line and not line.startswith("#"):
-                    segment_response = await hls_client.get(
-                        "/" + line.removeprefix("./")
-                    )
-                    assert segment_response.status == HTTPStatus.OK
-                    data = inits[init_uri] + await segment_response.read()
-                    with av.open(io.BytesIO(data)) as container:
-                        video = container.streams.video[0]
-                        decoded_sizes.extend(
-                            (frame.width, frame.height)
-                            for frame in container.decode(video=0)
-                        )
-                        # The init's aspect ratio is the one of the SPS in use
-                        assert (
-                            video.sample_aspect_ratio
-                            == video.codec_context.sample_aspect_ratio
-                        )
+            playlist, inits, decoded_sizes = await decode_playlist(
+                await hls_stream(stream)
+            )
         finally:
             release_worker.set()
             await stream.stop()
@@ -387,6 +360,41 @@ async def test_hls_stream_picture_size_change(
     # One discontinuity sequence per size
     assert list(inits) == [f"./init/{index}.mp4" for index in range(len(init_sizes))]
     assert playlist.count("#EXT-X-DISCONTINUITY") == len(init_sizes) - 1
+
+
+async def decode_playlist(
+    hls_client: HlsClient,
+) -> tuple[list[str], dict[str, bytes], list[tuple[int, int]]]:
+    """Decode each playlist segment with the init its EXT-X-MAP names.
+
+    Return the playlist lines, the inits by URI and the decoded frame sizes.
+    """
+    playlist_response = await hls_client.get("/playlist.m3u8")
+    assert playlist_response.status == HTTPStatus.OK
+    playlist = (await playlist_response.text()).splitlines()
+    inits: dict[str, bytes] = {}
+    init_uri = ""
+    decoded_sizes: list[tuple[int, int]] = []
+    for line in playlist:
+        if line.startswith("#EXT-X-MAP:URI="):
+            init_uri = line.removeprefix("#EXT-X-MAP:URI=").strip('"')
+            init_response = await hls_client.get("/" + init_uri.removeprefix("./"))
+            assert init_response.status == HTTPStatus.OK
+            inits[init_uri] = await init_response.read()
+        elif line and not line.startswith("#"):
+            segment_response = await hls_client.get("/" + line.removeprefix("./"))
+            assert segment_response.status == HTTPStatus.OK
+            data = inits[init_uri] + await segment_response.read()
+            with av.open(io.BytesIO(data)) as container:
+                video = container.streams.video[0]
+                decoded_sizes.extend(
+                    (frame.width, frame.height) for frame in container.decode(video=0)
+                )
+                # The init's aspect ratio is the one of the SPS in use
+                assert (
+                    video.sample_aspect_ratio == video.codec_context.sample_aspect_ratio
+                )
+    return playlist, inits, decoded_sizes
 
 
 def init_size(init: bytes) -> tuple[int, int]:
@@ -602,8 +610,11 @@ async def test_hls_playlist_view(
     await stream.stop()
 
 
+@pytest.mark.usefixtures("setup_component")
 async def test_hls_playlist_target_duration_short_segment(
-    hass: HomeAssistant, setup_component: None, hls_stream, stream_worker_sync
+    hass: HomeAssistant,
+    hls_stream: HlsStreamFactory,
+    stream_worker_sync: WorkerSync,
 ) -> None:
     """Test the target duration after a segment shorter than the minimum."""
     stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
@@ -627,21 +638,54 @@ async def test_hls_playlist_target_duration_short_segment(
     assert f"#EXT-X-TARGETDURATION:{min_segment_duration:.0f}" in playlist
 
 
-async def test_hls_master_playlist_bandwidth_short_segment(
-    hass: HomeAssistant, setup_component: None, hls_stream, stream_worker_sync
+@pytest.mark.parametrize(
+    ("segments", "bit_rate"),
+    [
+        # A segment cut at a parameter set change holds little more than a
+        # keyframe; it counts together with the segment before it
+        pytest.param([(2.0, 2000), (0.05, 500)], 2516 * 8 / 2.05, id="short-segment"),
+        # The peak, not the average over the buffer
+        pytest.param(
+            [(2.0, 250_000), (2.0, 250_000), (2.0, 250_000), (2.0, 2_000_000)],
+            2_000_008 * 8 / 2.0,
+            id="bit-rate-increase",
+        ),
+        # An earlier peak after the bit rate drops
+        pytest.param(
+            [(2.0, 2_000_000), (2.0, 250_000)],
+            2_000_008 * 8 / 2.0,
+            id="bit-rate-decrease",
+        ),
+        # Contiguous segments lasting more than 1.5 target durations do not count
+        pytest.param(
+            [(0.8, 1_000_000), (2.0, 1000), (0.8, 1_000_000)],
+            1_001_016 * 8 / 2.8,
+            id="window-too-long",
+        ),
+        # A segment of half the target duration counts on its own
+        pytest.param([(2.0, 1000), (1.0, 1000)], 1008 * 8 / 1.0, id="half-target"),
+        # No segments as long as half the target duration: all of them count
+        pytest.param(
+            [(0.05, 500), (0.05, 1500)], 2016 * 8 / 0.1, id="only-short-segments"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_component")
+async def test_hls_master_playlist_bandwidth(
+    hass: HomeAssistant,
+    hls_stream: HlsStreamFactory,
+    stream_worker_sync: WorkerSync,
+    segments: list[tuple[float, int]],
+    bit_rate: float,
 ) -> None:
-    """Test the master playlist bandwidth when a short segment is second to last."""
+    """Test the master playlist bandwidth is the peak bit rate plus 20 %."""
     stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
     try:
-        # A segment cut at a parameter set change holds little more than a keyframe
-        for sequence, stream_id, duration, size in (
-            (0, 0, 2.0, 2000),
-            (1, 0, 0.05, 500),
-            (2, 1, 0, 0),
-        ):
-            segment = Segment(sequence=sequence, stream_id=stream_id, init=INIT_BYTES)
+        # Complete segments, then one in progress
+        for sequence, (duration, size) in enumerate([*segments, (0, 0)]):
+            segment = Segment(sequence=sequence, init=INIT_BYTES)
             segment.parts = [Part(duration, has_keyframe=True, data=bytes(size))]
             segment.duration = duration
             hls.put(segment)
@@ -659,9 +703,7 @@ async def test_hls_master_playlist_bandwidth_short_segment(
         stream_worker_sync.resume()
         await stream.stop()
 
-    # Bits of the complete segments over their duration, plus 20 %
-    bandwidth = round((2000 + 500 + 2 * len(INIT_BYTES)) * 8 / 2.05 * 1.2)
-    assert f"#EXT-X-STREAM-INF:BANDWIDTH={bandwidth}," in master_playlist
+    assert f"#EXT-X-STREAM-INF:BANDWIDTH={round(bit_rate * 1.2)}," in master_playlist
 
 
 async def test_hls_max_segments(
@@ -769,8 +811,11 @@ async def test_hls_playlist_view_discontinuity(
         await stream.stop()
 
 
+@pytest.mark.usefixtures("setup_component")
 async def test_hls_playlist_view_discontinuity_first_segment(
-    hass: HomeAssistant, setup_component, hls_stream, stream_worker_sync
+    hass: HomeAssistant,
+    hls_stream: HlsStreamFactory,
+    stream_worker_sync: WorkerSync,
 ) -> None:
     """Test a discontinuity segment that becomes the first playlist segment."""
     stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())

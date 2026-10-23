@@ -32,7 +32,8 @@ from .common import (
     dynamic_stream_settings,
     generate_h264_video,
 )
-from .test_hls import STREAM_SOURCE, HlsClient, make_playlist
+from .conftest import WorkerSync
+from .test_hls import STREAM_SOURCE, HlsClient, HlsStreamFactory, make_playlist
 
 SEGMENT_DURATION = 6
 TEST_PART_DURATION = 0.75
@@ -331,7 +332,7 @@ async def test_ll_hls_playlist_view(
 
 
 async def test_ll_hls_playlist_view_discontinuity(
-    hass: HomeAssistant, hls_stream, stream_worker_sync
+    hass: HomeAssistant, hls_stream: HlsStreamFactory, stream_worker_sync: WorkerSync
 ) -> None:
     """Test a discontinuity between segments rendered with parts."""
     await async_setup_component(
