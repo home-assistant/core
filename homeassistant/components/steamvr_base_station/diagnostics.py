@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import SteamVRBaseStationConfigEntry
 
-TO_REDACT = {"discovery_keys", "serial", "unique_id"}
+TO_REDACT = {"discovery_keys", "serial", "title", "unique_id"}
 
 
 async def async_get_config_entry_diagnostics(
