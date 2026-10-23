@@ -23,7 +23,6 @@ from uiprotect.data import (
 )
 from uiprotect.data.devices import Hotplug
 from uiprotect.data.public_devices import PublicRingSettings, SensorFeatureCapability
-from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.number import (
