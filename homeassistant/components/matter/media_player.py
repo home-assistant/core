@@ -17,19 +17,19 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, MATTER_2000_TO_UNIX_EPOCH_OFFSET
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
-from .media_helpers import raise_for_playback_status
 from .models import MatterDiscoverySchema
 
 STATE_WRITE_DEBOUNCE_COOLDOWN = 0.1
 
 PlaybackState = clusters.MediaPlayback.Enums.PlaybackStateEnum
+PlaybackStatus = clusters.MediaPlayback.Enums.StatusEnum
 PlaybackCommands = clusters.MediaPlayback.Commands
 
 PLAYBACK_STATE_MAP = {
@@ -37,6 +37,15 @@ PLAYBACK_STATE_MAP = {
     PlaybackState.kPaused: MediaPlayerState.PAUSED,
     PlaybackState.kNotPlaying: MediaPlayerState.IDLE,
     PlaybackState.kBuffering: MediaPlayerState.BUFFERING,
+}
+
+# Translation keys for the PlaybackResponse statuses that are not success
+PLAYBACK_STATUS_ERRORS = {
+    PlaybackStatus.kInvalidStateForCommand: "media_playback_invalid_state",
+    PlaybackStatus.kNotAllowed: "media_playback_not_allowed",
+    PlaybackStatus.kNotActive: "media_playback_not_active",
+    PlaybackStatus.kSpeedOutOfRange: "media_playback_speed_out_of_range",
+    PlaybackStatus.kSeekOutOfRange: "media_playback_seek_out_of_range",
 }
 
 # Optional Media Playback commands, supported when in the AcceptedCommandList
@@ -155,7 +164,19 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
 
     async def _send_playback_command(self, command: ClusterCommand) -> None:
         """Send a Media Playback command and check its PlaybackResponse."""
-        raise_for_playback_status(await self.send_device_command(command))
+        response = await self.send_device_command(command)
+        status = response["status"]
+        if status == PlaybackStatus.kSuccess:
+            return
+        placeholders = None
+        if (translation_key := PLAYBACK_STATUS_ERRORS.get(status)) is None:
+            translation_key = "media_playback_failed"
+            placeholders = {"status": str(status)}
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders=placeholders,
+        )
 
     @callback
     @override
