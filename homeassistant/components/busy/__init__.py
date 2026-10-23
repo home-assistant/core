@@ -1,6 +1,7 @@
 """The BUSY Bar integration."""
 
 from functools import partial
+import logging
 
 from busylib import AsyncBusyBar
 from busylib.exceptions import BusyBarAPIError, BusyBarError
@@ -13,6 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import BusyConfigEntry, BusyCoordinator
 
+_LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
@@ -63,3 +65,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: BusyConfigEntry) -> Non
     """
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
     await entry.runtime_data.client.aclose()
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: BusyConfigEntry) -> None:
+    """Revoke this entry's credential when it is removed.
+
+    A token may revoke itself; unreachable devices must not prevent removal.
+    """
+    try:
+        async with await async_create_client(
+            hass, entry.data[CONF_HOST], entry.data[CONF_TOKEN]
+        ) as client:
+            await client.access_tokens_revoke(entry.data[CONF_TOKEN][:8])
+    except BusyBarError, OSError:
+        _LOGGER.warning("Unable to revoke BUSY Bar access token; remove it on the bar")

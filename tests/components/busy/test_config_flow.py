@@ -13,16 +13,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import DEVICE_ID, HOST
+from . import DEVICE_ID, HOST, MAC
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 def discovery(host: str = HOST, name: str | None = "Office") -> ZeroconfServiceInfo:
-    """Build a standard HTTP announcement from the bar.
-
-    Include the stable service name and the currently announced address.
-    """
+    """Build a standard HTTP announcement from the bar."""
     return ZeroconfServiceInfo(
         ip_address=ip_address(host),
         ip_addresses=[ip_address(host)],
@@ -34,16 +31,17 @@ def discovery(host: str = HOST, name: str | None = "Office") -> ZeroconfServiceI
     )
 
 
-async def start_user(hass: HomeAssistant) -> ConfigFlowResult:
-    """Submit a manual address through the user form.
-
-    Start without input before configuring the flow as the frontend does.
-    """
+async def start_flow(
+    hass: HomeAssistant, source: str = SOURCE_USER
+) -> ConfigFlowResult:
+    """Submit the initial form for manual or zeroconf setup."""
     result = await hass.config_entries.flow.async_init(
-        "busy", context={"source": SOURCE_USER}
+        "busy",
+        context={"source": source},
+        data={SOURCE_USER: None, SOURCE_ZEROCONF: discovery()}[source],
     )
     return await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": HOST}
+        result["flow_id"], {SOURCE_USER: {"host": HOST}, SOURCE_ZEROCONF: {}}[source]
     )
 
 
@@ -53,10 +51,7 @@ async def test_pair(
     mock_client: AsyncMock,
     source: str,
 ) -> None:
-    """Confirm manual and discovered pairing share one stable identity.
-
-    Exercise both entry points and verify the resulting token and unique ID.
-    """
+    """Confirm manual and discovered pairing share one stable identity."""
     result = await hass.config_entries.flow.async_init(
         "busy",
         context={"source": source},
@@ -67,19 +62,16 @@ async def test_pair(
         result["flow_id"], {SOURCE_USER: {"host": HOST}, SOURCE_ZEROCONF: {}}[source]
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {"host": HOST, "token": "token"}
+    assert result["data"] == {"host": HOST, "token": "12345678-token"}
     assert result["result"].unique_id == DEVICE_ID
     mock_client.access_token_mint.assert_awaited_once()
-    assert mock_client.__aexit__.await_count == 2
+    assert mock_client.__aexit__.await_count == 1
 
 
 async def test_key_retry(hass: HomeAssistant, mock_client: AsyncMock) -> None:
-    """Request a key, reject a wrong one and accept a corrected key.
-
-    Keep the flow active through a refusal and a successful retry.
-    """
+    """Request a key, reject a wrong one and accept a corrected key."""
     mock_client.access.return_value = types.HttpAccessInfo(mode="key")
-    result = await start_user(hass)
+    result = await start_flow(hass)
     assert result["step_id"] == "key"
     mock_client.access_token_mint.assert_not_called()
     mock_client.access_token_mint.side_effect = BusyBarAPIError(
@@ -94,19 +86,23 @@ async def test_key_retry(hass: HomeAssistant, mock_client: AsyncMock) -> None:
         result["flow_id"], {"password": "correct"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    result = await start_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"password": "correct"}
+    )
+    assert result["reason"] == "already_configured"
+    assert mock_client.access_token_mint.await_count == 2
 
 
 async def test_disabled(hass: HomeAssistant, mock_client: AsyncMock) -> None:
-    """Abort from the access mode without trying to mint a token.
-
-    Check that disabled access prevents token issuance.
-    """
+    """Abort from the access mode without trying to mint a token."""
     mock_client.access.return_value = types.HttpAccessInfo(mode="disabled")
-    result = await start_user(hass)
+    result = await start_flow(hass)
     assert result["reason"] == "http_api_disabled"
     mock_client.access_token_mint.assert_not_called()
 
 
+@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_ZEROCONF])
 @pytest.mark.parametrize(
     ("method", "error", "expected"),
     [
@@ -128,38 +124,42 @@ async def test_disabled(hass: HomeAssistant, mock_client: AsyncMock) -> None:
 async def test_errors(
     hass: HomeAssistant,
     mock_client: AsyncMock,
+    source: str,
     method: str,
     error: Exception,
     expected: str,
 ) -> None:
-    """Keep connectivity failures separate from authentication refusals.
-
-    Inject failures at each request boundary and inspect the form error.
-    """
+    """Keep connectivity failures separate from authentication refusals."""
     getattr(mock_client, method).side_effect = error
-    result = await start_user(hass)
-    assert result["step_id"] == "user"
+    result = await start_flow(hass, source)
+    assert (
+        result["step_id"]
+        == {SOURCE_USER: "user", SOURCE_ZEROCONF: "zeroconf_confirm"}[source]
+    )
+    assert (
+        mock_client.access_token_mint.await_count
+        == {"access": 0, "status_device": 0, "access_token_mint": 1}[method]
+    )
     assert result["errors"] == {"base": expected}
     getattr(mock_client, method).side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": HOST}
+        result["flow_id"], {SOURCE_USER: {"host": HOST}, SOURCE_ZEROCONF: {}}[source]
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ID
 
 
-@pytest.mark.parametrize("token", [None, "token"])
+@pytest.mark.parametrize(("token", "mac"), [(None, MAC), ("token", None)])
 async def test_incomplete_pairing(
     hass: HomeAssistant,
     mock_client: AsyncMock,
     token: str | None,
+    mac: str | None,
 ) -> None:
-    """Reject incomplete pairing responses.
-
-    Require both a token and the USB MAC used by discovery.
-    """
+    """Reject incomplete pairing responses."""
     mock_client.access_token_mint.return_value.token = token
-    mock_client.status_device.return_value = types.StatusDevice()
-    result = await start_user(hass)
+    mock_client.status_device.return_value = types.StatusDevice(usb_mac=mac)
+    result = await start_flow(hass)
     assert result["reason"] == "cannot_connect"
 
 
@@ -168,13 +168,12 @@ async def test_manual_duplicate(
     mock_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Prevent manually pairing an already configured bar.
-
-    Keep the existing entry when the same identity is added again.
-    """
+    """Prevent manually pairing an already configured bar."""
     mock_config_entry.add_to_hass(hass)
-    result = await start_user(hass)
-    assert result["reason"] == "already_configured"
+    for _ in range(2):
+        result = await start_flow(hass)
+        assert result["reason"] == "already_configured"
+    mock_client.access_token_mint.assert_not_awaited()
 
 
 async def test_discovery_updates_host(
@@ -182,10 +181,7 @@ async def test_discovery_updates_host(
     mock_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Update a configured bar when its DHCP address changes.
-
-    Preserve the token and avoid pairing the same device twice.
-    """
+    """Update a configured bar when its DHCP address changes."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         "busy", context={"source": SOURCE_ZEROCONF}, data=discovery("192.168.50.21")
@@ -198,10 +194,7 @@ async def test_discovery_updates_host(
 async def test_discovered_identity_mismatch(
     hass: HomeAssistant, mock_client: AsyncMock
 ) -> None:
-    """Reject a different device now answering at the discovered address.
-
-    Compare the API identity with the original discovery.
-    """
+    """Reject a different device now answering at the discovered address."""
     mock_client.status_device.return_value = types.StatusDevice(
         usb_mac="00:11:22:33:44:55"
     )
@@ -210,3 +203,14 @@ async def test_discovered_identity_mismatch(
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["reason"] == "wrong_device"
+    mock_client.access_token_mint.assert_not_awaited()
+
+
+async def test_missing_token_cleanup(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
+    """Revoke an issued credential whose secret is absent."""
+    mock_client.access_token_mint.return_value.token = None
+    result = await start_flow(hass)
+    assert result["reason"] == "cannot_connect"
+    mock_client.access_tokens_revoke.assert_awaited_once_with("12345678")

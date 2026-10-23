@@ -14,17 +14,14 @@ from . import DEVICE_ID, HOST, MAC
 
 @pytest.fixture
 def mock_client() -> Generator[AsyncMock]:
-    """Provide a client with typed device responses.
-
-    Return real response models while mocking all network operations.
-    """
+    """Provide a client with typed device responses."""
     client = AsyncMock(spec=AsyncBusyBar)
     client.__aenter__.return_value = client
     client.base_url = f"http://{HOST}"
     client.access.return_value = types.HttpAccessInfo(mode="enabled")
     client.access_token_mint.return_value = types.AccessToken(
-        token="token",
-        short_id="1234",
+        token="12345678-token",
+        short_id="12345678",
         display_id="1234",
         name="Home Assistant",
         created_at=0,
@@ -45,15 +42,12 @@ def mock_client() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Provide a paired bar.
-
-    Keep the device identity and token stable across setup scenarios.
-    """
+    """Provide a paired bar."""
     return MockConfigEntry(
         domain="busy",
         unique_id=DEVICE_ID,
         title="BUSY Bar",
-        data={"host": HOST, "token": "token"},
+        data={"host": HOST, "token": "12345678-token"},
     )
 
 
@@ -63,10 +57,7 @@ async def init_integration(
     mock_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
-    """Set up the sensor platform with a paired bar.
-
-    Attach the entry and wait for entity setup to finish.
-    """
+    """Set up the sensor platform with a paired bar."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -75,10 +66,7 @@ async def init_integration(
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
-    """Isolate config flows from platform setup.
-
-    Exercise pairing independently from the sensor platform.
-    """
+    """Isolate config flows from platform setup."""
     with patch(
         "homeassistant.components.busy.async_setup_entry", return_value=None
     ) as setup:

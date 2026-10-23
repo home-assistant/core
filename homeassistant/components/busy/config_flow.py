@@ -107,24 +107,21 @@ class BusyConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="http_api_disabled")
                 if mode == "key" and password is None:
                     return await self.async_step_key()
-                token = (
-                    await client.access_token_mint(
-                        f"Home Assistant {self.hass.config.location_name}"
-                    )
-                ).token
-            if not token:
-                return self.async_abort(reason="cannot_connect")
-            async with await async_create_client(
-                self.hass, self._host, token
-            ) as client:
                 device = await client.status_device()
-            device_id = (device.usb_mac or "").replace(":", "").lower()
-            if not device_id:
-                return self.async_abort(reason="cannot_connect")
-            if self.unique_id is not None and self.unique_id != device_id:
-                return self.async_abort(reason="wrong_device")
-            await self.async_set_unique_id(device_id)
-            self._abort_if_unique_id_configured()
+                device_id = (device.usb_mac or "").replace(":", "").lower()
+                if not device_id:
+                    return self.async_abort(reason="cannot_connect")
+                if self.unique_id is not None and self.unique_id != device_id:
+                    return self.async_abort(reason="wrong_device")
+                await self.async_set_unique_id(device_id)
+                self._abort_if_unique_id_configured()
+                issued = await client.access_token_mint(
+                    f"Home Assistant {self.hass.config.location_name}"
+                )
+                if not issued.token:
+                    await client.access_tokens_revoke(issued.short_id)
+                    return self.async_abort(reason="cannot_connect")
+                token = issued.token
         except BusyBarAPIError as err:
             errors["base"] = (
                 "invalid_auth" if err.status_code in (401, 403) else "cannot_connect"
