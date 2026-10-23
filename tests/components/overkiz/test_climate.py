@@ -684,8 +684,8 @@ async def test_zone_control_zone_set_derogation_setpoint(
 ) -> None:
     """Test a derogation started outside Home Assistant can be adjusted.
 
-    The derogation is already on: only the setpoint is sent, so that each step
-    of a slider stays quick.
+    The derogation is already on: only the setpoint is sent, and the applied
+    setpoint it changes is refreshed, so that each step of a slider stays quick.
     """
     await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
     await _async_set_zone_control_operating_mode(hass, freezer, mock_client, "cooling")
@@ -704,7 +704,36 @@ async def test_zone_control_zone_set_derogation_setpoint(
     assert_commands_call(
         mock_client,
         device_url=ZONE_CONTROL_ZONE.device_url,
-        commands=[("setCoolingTargetTemperature", [24.0])],
+        commands=[
+            ("setCoolingTargetTemperature", [24.0]),
+            ("refreshTargetTemperature", []),
+        ],
+    )
+
+
+async def test_zone_control_zone_manual_step_sends_the_setpoint_only(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a step of a manual zone with its derogation on sends the setpoint only."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    await _async_set_zone_control_operating_mode(hass, freezer, mock_client, "heating")
+    await _async_set_zone_program(hass, freezer, mock_client, "manu", "on")
+    mock_client.execute_action_group.reset_mock()
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {ATTR_ENTITY_ID: ZONE_CONTROL_ZONE.entity_id, ATTR_TEMPERATURE: 21.0},
+        blocking=True,
+    )
+
+    assert_commands_call(
+        mock_client,
+        device_url=ZONE_CONTROL_ZONE.device_url,
+        commands=[("setHeatingTargetTemperature", [21.0])],
     )
 
 
