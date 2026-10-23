@@ -12,8 +12,6 @@ from homeassistant.components import (
     cover,
     event,
     fan,
-    input_button,
-    input_select,
     lawn_mower,
     light,
     media_player,
@@ -66,8 +64,15 @@ from homeassistant.components.humidifier import (
     HumidifierServiceArgument,
 )
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
+from homeassistant.components.input_button import (
+    DOMAIN as INPUT_BUTTON_DOMAIN,
+    InputButtonService,
+)
+from homeassistant.components.input_select import (
+    DOMAIN as INPUT_SELECT_DOMAIN,
+    InputSelectService,
+    InputSelectServiceArgument,
+)
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
     LawnMowerEntityFeature,
@@ -794,7 +799,7 @@ class SceneTrait(_Trait):
         if self.state.domain == BUTTON_DOMAIN:
             service = ButtonService.PRESS
         elif self.state.domain == INPUT_BUTTON_DOMAIN:
-            service = input_button.SERVICE_PRESS
+            service = InputButtonService.PRESS
 
         # Don't block for scripts or buttons, as they can be slow.
         await self.hass.services.async_call(
@@ -2304,10 +2309,10 @@ class ModesTrait(_Trait):
             option = settings["option"]
             await self.hass.services.async_call(
                 INPUT_SELECT_DOMAIN,
-                input_select.SERVICE_SELECT_OPTION,
+                InputSelectService.SELECT_OPTION,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    input_select.ATTR_OPTION: option,
+                    InputSelectServiceArgument.OPTION: option,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
