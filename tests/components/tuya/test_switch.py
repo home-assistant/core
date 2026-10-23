@@ -1,6 +1,5 @@
 """Test Tuya switch platform."""
 
-from copy import copy
 import re
 from typing import Any
 from unittest.mock import patch
@@ -24,7 +23,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
+from . import (
+    TuyaNotificationHelper,
+    add_indexed_switches,
+    check_selective_state_update,
+    initialize_entry,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -316,10 +320,7 @@ async def test_hwsb_switch_with_quirk(
 @pytest.fixture
 def ggq_indexed_switch(mock_device: CustomerDevice) -> None:
     """Add an indexed switch DP, as the fixture only exposes the single "switch"."""
-    for container in (mock_device.function, mock_device.status_range):
-        container["switch_1"] = copy(container["switch"])
-        container["switch_1"].code = "switch_1"
-    mock_device.status["switch_1"] = False
+    add_indexed_switches(mock_device, 1)
 
 
 @pytest.mark.usefixtures("ggq_indexed_switch")
