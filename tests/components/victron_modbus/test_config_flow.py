@@ -17,7 +17,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import OTHER_SERIAL, P1LINK, SERIAL, VM_3P75CT, set_identity
+from . import OTHER_SERIAL, SERIAL, VM_3P75CT, set_identity
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -353,67 +353,3 @@ async def test_zeroconf_flow_ignored_device(hass: HomeAssistant, mock_unit) -> N
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert probed == ["192.168.1.110"]
-
-
-async def test_reconfigure_flow(
-    hass: HomeAssistant, mock_unit, mock_config_entry: MockConfigEntry
-) -> None:
-    """The same device at a new address updates the entry in place."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.110"}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data == {"host": "192.168.1.110", "model": "vm_3p75ct"}
-
-
-async def test_reconfigure_flow_wrong_device(
-    hass: HomeAssistant, mock_unit, mock_config_entry: MockConfigEntry
-) -> None:
-    """Another device at the new address is refused, leaving the entry as is."""
-    mock_config_entry.add_to_hass(hass)
-    set_identity(mock_unit, P1LINK, serial=OTHER_SERIAL)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.110"}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "wrong_device"
-    assert mock_config_entry.data["host"] == HOST
-
-
-@IDENTIFY_ERRORS
-async def test_reconfigure_flow_errors(
-    hass: HomeAssistant,
-    mock_unit,
-    mock_config_entry: MockConfigEntry,
-    error: Exception,
-    reason: str,
-) -> None:
-    """An identification error is shown, and reconfiguring recovers from it."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    with _failing_identify(error):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "192.168.1.110"}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": reason}
-    assert mock_config_entry.data["host"] == HOST
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.110"}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"

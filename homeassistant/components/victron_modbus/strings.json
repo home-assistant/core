@@ -5,8 +5,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_serial": "[%key:component::victron_modbus::config::error::no_serial%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unsupported_device": "[%key:component::victron_modbus::config::error::unsupported_device%]",
-      "wrong_device": "The device at this address is not the device that was set up here."
+      "unsupported_device": "[%key:component::victron_modbus::config::error::unsupported_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -18,15 +17,6 @@
     "step": {
       "confirm": {
         "description": "Do you want to set up the {model} found at {host}?"
-      },
-      "reconfigure": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "host": "[%key:component::victron_modbus::config::step::user::data_description::host%]"
-        },
-        "description": "Update the address of this device."
       },
       "user": {
         "data": {
@@ -72,7 +62,7 @@
   },
   "exceptions": {
     "device_mismatch": {
-      "message": "The device at this address is not the device that was set up here. Reconfigure the integration with the address of the right device."
+      "message": "The device at this address is not the device that was set up here. Remove the integration and add the right device."
     },
     "modbus_error": {
       "message": "Error communicating with the device."

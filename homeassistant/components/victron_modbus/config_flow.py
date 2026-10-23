@@ -110,33 +110,6 @@ class VictronModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Update the address of this device."""
-        errors: dict[str, str] = {}
-        reconfigure_entry = self._get_reconfigure_entry()
-        if user_input is not None:
-            host = user_input[CONF_HOST]
-            try:
-                model, serial = await self._async_identify(host)
-            except IdentifyError as err:
-                errors["base"] = err.reason
-            else:
-                await self.async_set_unique_id(serial)
-                self._abort_if_unique_id_mismatch(reason="wrong_device")
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    data_updates={CONF_HOST: host, CONF_MODEL: model},
-                )
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER, user_input or reconfigure_entry.data
-            ),
-            errors=errors,
-        )
-
     @property
     def _title(self) -> str:
         """The model and serial number, which tell two devices of a model apart."""
