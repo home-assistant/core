@@ -1,6 +1,8 @@
 """Fixtures for the London Air tests."""
 
+from collections.abc import Generator
 from datetime import datetime
+from unittest.mock import AsyncMock, patch
 from zoneinfo import ZoneInfo
 
 from pylondonair import Authority, LondonAirData, Pollutant, Site
@@ -85,3 +87,13 @@ def london_air_data() -> LondonAirData:
             "Merton": merton,
         },
     )
+
+
+@pytest.fixture
+def mock_london_air_client() -> Generator[AsyncMock]:
+    """Mock the London Air client."""
+    with patch(
+        "homeassistant.components.london_air.sensor.LondonAirClient"
+    ) as mock_client_cls:
+        mock_client_cls.return_value.async_update = AsyncMock()
+        yield mock_client_cls.return_value

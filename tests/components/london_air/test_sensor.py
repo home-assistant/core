@@ -1,26 +1,27 @@
 """The tests for the london_air platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-from pylondonair import LondonAirConnectionError, LondonAirData
+from pylondonair import LondonAirConnectionError, LondonAirData, LondonAirUpdateError
+import pytest
 
 from homeassistant.components.london_air.sensor import CONF_LOCATIONS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.setup import async_setup_component
 
 VALID_CONFIG = {"sensor": {"platform": "london_air", CONF_LOCATIONS: ["Merton"]}}
 
 
-async def test_valid_state(hass: HomeAssistant, london_air_data: LondonAirData) -> None:
+async def test_valid_state(
+    hass: HomeAssistant,
+    london_air_data: LondonAirData,
+    mock_london_air_client: AsyncMock,
+) -> None:
     """Test for operational london_air sensor with proper attributes."""
-    with patch(
-        "homeassistant.components.london_air.sensor.LondonAirClient"
-    ) as mock_client_cls:
-        mock_client_cls.return_value.async_update = AsyncMock(
-            return_value=london_air_data
-        )
-        assert await async_setup_component(hass, "sensor", VALID_CONFIG)
-        await hass.async_block_till_done()
+    mock_london_air_client.async_update.return_value = london_air_data
+    assert await async_setup_component(hass, "sensor", VALID_CONFIG)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.merton")
     assert state is not None
@@ -47,16 +48,28 @@ async def test_valid_state(hass: HomeAssistant, london_air_data: LondonAirData) 
     assert pollutants[0]["summary"] == "PM10 is Low"
 
 
-async def test_api_failure(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            LondonAirConnectionError("Request to London Air API failed"),
+            id="connection-error",
+        ),
+        pytest.param(
+            LondonAirUpdateError("Invalid JSON from London Air API"),
+            id="update-error",
+        ),
+    ],
+)
+async def test_api_failure(
+    hass: HomeAssistant,
+    error: LondonAirConnectionError | LondonAirUpdateError,
+    mock_london_air_client: AsyncMock,
+) -> None:
     """Test for failure in the API."""
-    with patch(
-        "homeassistant.components.london_air.sensor.LondonAirClient"
-    ) as mock_client_cls:
-        mock_client_cls.return_value.async_update = AsyncMock(
-            side_effect=LondonAirConnectionError("Request to London Air API failed")
-        )
-        assert await async_setup_component(hass, "sensor", VALID_CONFIG)
-        await hass.async_block_till_done()
+    mock_london_air_client.async_update.side_effect = error
+    assert await async_setup_component(hass, "sensor", VALID_CONFIG)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.merton")
     assert state is not None
@@ -65,22 +78,53 @@ async def test_api_failure(hass: HomeAssistant) -> None:
     assert state.attributes["sites"] == 0
 
 
-async def test_authority_without_sites(
-    hass: HomeAssistant, london_air_data: LondonAirData
+@pytest.mark.parametrize(
+    ("location", "entity_id"),
+    [
+        pytest.param(
+            "City of London",
+            "sensor.city_of_london",
+            id="authority-without-sites",
+        ),
+        pytest.param(
+            "Barking and Dagenham",
+            "sensor.barking_and_dagenham",
+            id="authority-not-in-data",
+        ),
+    ],
+)
+async def test_authority_without_site_data(
+    hass: HomeAssistant,
+    location: str,
+    entity_id: str,
+    london_air_data: LondonAirData,
+    mock_london_air_client: AsyncMock,
 ) -> None:
-    """Test an authority that reports no sites (e.g. City of London)."""
-    config = {"sensor": {"platform": "london_air", CONF_LOCATIONS: ["City of London"]}}
-    with patch(
-        "homeassistant.components.london_air.sensor.LondonAirClient"
-    ) as mock_client_cls:
-        mock_client_cls.return_value.async_update = AsyncMock(
-            return_value=london_air_data
-        )
-        assert await async_setup_component(hass, "sensor", config)
-        await hass.async_block_till_done()
+    """Test an authority with no usable site data."""
+    config = {"sensor": {"platform": "london_air", CONF_LOCATIONS: [location]}}
+    mock_london_air_client.async_update.return_value = london_air_data
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.city_of_london")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unknown"
     assert state.attributes["updated"] is None
     assert state.attributes["sites"] == 0
+
+
+async def test_second_update_throttled(
+    hass: HomeAssistant,
+    london_air_data: LondonAirData,
+    mock_london_air_client: AsyncMock,
+) -> None:
+    """Test that a second update within the scan interval does not refetch."""
+    mock_london_air_client.async_update.return_value = london_air_data
+    assert await async_setup_component(hass, "sensor", VALID_CONFIG)
+    await hass.async_block_till_done()
+    assert mock_london_air_client.async_update.await_count == 1
+
+    (platform,) = async_get_platforms(hass, "london_air")
+    entity = platform.entities["sensor.merton"]
+    await entity.async_device_update()
+    assert mock_london_air_client.async_update.await_count == 1
