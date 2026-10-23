@@ -1,5 +1,6 @@
 """Test the Xbox event platform."""
 
+import asyncio
 from collections.abc import Generator
 from datetime import timedelta
 from typing import Any
@@ -231,6 +232,57 @@ async def test_xbox360_unlocks(
     assert state == snapshot
     # Both people online share the mocked unlocks, and only answers are cached.
     assert xbox_live_client.titlehub.get_title_info.await_count == titlehub_calls
+
+
+@pytest.mark.freeze_time("2021-03-06T18:50:00+00:00")
+async def test_unlocks_announced_in_order(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a slow game lookup holds back the unlocks of the next update."""
+    achievements = xbox_live_client.achievements
+    achievements.get_achievements_xboxone_recent_unlocks.return_value = xboxone()
+    achievements.get_achievements_xbox360_recent_unlocks.return_value = xbox360(
+        "Supercharged", "Databass"
+    )
+    title = TitleHubResponse(
+        **await async_load_json_object_fixture(
+            hass, "titlehub_titleinfo_xbox360.json", DOMAIN
+        )
+    )
+    hold = True
+    release = asyncio.Event()
+
+    async def get_title_info(title_id: str) -> TitleHubResponse:
+        if hold:
+            await release.wait()
+        return title
+
+    xbox_live_client.titlehub.get_title_info.side_effect = get_title_info
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    await setup_integration(hass, config_entry)
+
+    achievements.get_achievements_xbox360_recent_unlocks.return_value = xbox360(
+        "Keep on Truckin'", "Supercharged", "Databass"
+    )
+    await next_update(hass, freezer)
+
+    hold = False
+    achievements.get_achievements_xbox360_recent_unlocks.return_value = xbox360(
+        "Flex Those Muscles", "Keep on Truckin'", "Supercharged", "Databass"
+    )
+    await next_update(hass, freezer)
+
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert unlocked(events) == ["Keep on Truckin'", "Flex Those Muscles"]
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes["name"] == "Flex Those Muscles"
 
 
 @pytest.mark.freeze_time("2026-09-13T16:00:00+00:00")

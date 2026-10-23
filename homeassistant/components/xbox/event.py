@@ -1,5 +1,6 @@
 """Event platform for the Xbox integration."""
 
+import asyncio
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, override
 
@@ -61,6 +62,7 @@ class XboxAchievementEventEntity(
         super().__init__(coordinator)
         self.xuid = xuid
         self.last_unlock: datetime | None = None
+        self._trigger_lock = asyncio.Lock()
 
         self._attr_unique_id = f"{xuid}_{EVENT_ACHIEVEMENT_UNLOCKED}"
         self._attr_device_info = DeviceInfo(
@@ -108,28 +110,30 @@ class XboxAchievementEventEntity(
 
     async def _async_trigger_unlocks(self, unlocks: list[AchievementUnlock]) -> None:
         """Trigger an event for each unlock, oldest first."""
-        for unlock in unlocks:
-            game, image = unlock.game, unlock.image
-            if unlock.game is None and (
-                title := await self.coordinator.async_get_360_title(unlock.title_id)
-            ):
-                game, image = title.name, title.display_image
+        # A batch still looking up its game holds back the next, to keep the order.
+        async with self._trigger_lock:
+            for unlock in unlocks:
+                game, image = unlock.game, unlock.image
+                if unlock.game is None and (
+                    title := await self.coordinator.async_get_360_title(unlock.title_id)
+                ):
+                    game, image = title.name, title.display_image
 
-            self._trigger_event(
-                EVENT_ACHIEVEMENT_UNLOCKED,
-                {
-                    "name": unlock.name,
-                    "description": unlock.description,
-                    "gamerscore": unlock.gamerscore,
-                    "game": game,
-                    "title_id": unlock.title_id,
-                    "rarity": unlock.rarity,
-                    "rarity_percentage": unlock.rarity_percentage,
-                    "time_unlocked": unlock.time_unlocked,
-                    "image": to_https(image) if image else None,
-                },
-            )
-            self.async_write_ha_state()
+                self._trigger_event(
+                    EVENT_ACHIEVEMENT_UNLOCKED,
+                    {
+                        "name": unlock.name,
+                        "description": unlock.description,
+                        "gamerscore": unlock.gamerscore,
+                        "game": game,
+                        "title_id": unlock.title_id,
+                        "rarity": unlock.rarity,
+                        "rarity_percentage": unlock.rarity_percentage,
+                        "time_unlocked": unlock.time_unlocked,
+                        "image": to_https(image) if image else None,
+                    },
+                )
+                self.async_write_ha_state()
 
     @override
     async def async_added_to_hass(self) -> None:
