@@ -11,11 +11,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from . import PARTITION_SCHEMA
+from .const import (
     CONF_PARTITIONNAME,
     CONF_PARTITIONS,
     DATA_EVL,
-    PARTITION_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
 )
@@ -41,8 +41,8 @@ async def async_setup_platform(
         entity = EnvisalinkSensor(
             entity_config_data[CONF_PARTITIONNAME],
             part_num,
-            hass.data[DATA_EVL].alarm_state["partition"][part_num],
-            hass.data[DATA_EVL],
+            hass.data[DATA_EVL].controller.alarm_state["partition"][part_num],
+            hass.data[DATA_EVL].controller,
         )
 
         entities.append(entity)

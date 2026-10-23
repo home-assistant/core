@@ -12,7 +12,7 @@ from propcache.api import cached_property
 from zha.application.platforms import EntityStateChangedEvent
 from zha.mixins import LogMixin
 
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -132,9 +132,9 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
             identifiers={(DOMAIN, ieee)},
-            manufacturer=zha_device_info[ATTR_MANUFACTURER],
-            model=zha_device_info[ATTR_MODEL],
-            name=zha_device_info[ATTR_NAME],
+            manufacturer=zha_device_info["manufacturer"],
+            model=zha_device_info["model"],
+            name=zha_device_info["name"],
         )
 
     def _update_capability_attrs(self) -> None:
@@ -178,7 +178,6 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
             self.entity_id,
             self.entity_data,
-            self.device_info,
             self.remove_future,
         )
 
@@ -191,6 +190,15 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             self.entity_data.entity.subscribe_state(
                 self._handle_zha_entity_state_changed
             )
+        )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update the gateway entity reference to the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self.entity_data.device_proxy.gateway_proxy.update_entity_reference(
+            self, old_entity_id
         )
 
     @callback

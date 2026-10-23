@@ -5,6 +5,7 @@ from typing import Final
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from systembridgeconnector.const import EventKey, EventType
 from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
@@ -40,8 +41,6 @@ from . import (
     mock_data_listener,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 REGISTER_MODULES: Final[list[Module]] = [
     Module.SYSTEM,

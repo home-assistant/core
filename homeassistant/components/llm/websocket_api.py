@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -16,7 +16,7 @@ def async_setup(hass: HomeAssistant) -> None:
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "llm/api/list"})
+@websocket_api.websocket_command({probatio.Required("type"): "llm/api/list"})
 @callback
 def websocket_list_apis(
     hass: HomeAssistant,
@@ -30,5 +30,14 @@ def websocket_list_apis(
     """
     connection.send_result(
         msg["id"],
-        {"apis": [{"id": api.id, "name": api.name} for api in async_get_apis(hass)]},
+        {
+            "apis": [
+                {
+                    "id": api.id,
+                    "name": api.name,
+                    "requires_admin": api.requires_admin,
+                }
+                for api in async_get_apis(hass)
+            ]
+        },
     )

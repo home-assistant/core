@@ -6,18 +6,22 @@ Reauthentication when issue with credentials are reported.
 Configuration of options through options flow.
 """
 
-from collections.abc import Mapping
+import asyncio
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+import json
 import operator
 import socket
 from types import MappingProxyType
 from typing import Any, override
 
+import aiounifi
 from aiounifi.interfaces.sites import Sites
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntryState,
+    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -54,13 +58,16 @@ from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DPI_RESTRICTIONS,
     DOMAIN,
+    LOGGER,
 )
-from .errors import AuthenticationRequired, CannotConnect
+from .errors import AuthenticationRequired, CannotConnect, MfaRequired
 from .hub import UnifiHub, get_unifi_api
 
+DEFAULT_HOST = "unifi"
 DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
+SITE_REQUEST_TIMEOUT = 10
 
 
 class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -82,70 +89,41 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the UniFi Network flow."""
         self.config: dict[str, Any] = {}
-        self.reauth_schema: dict[vol.Marker, Any] = {}
+        self.reauth_schema: dict[probatio.Marker, Any] = {}
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            self.config = {
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-                CONF_PORT: user_input.get(CONF_PORT),
-                CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
-                CONF_SITE_ID: DEFAULT_SITE_ID,
-            }
+            self.config = _config_from_input(user_input)
+            data_schema = self._build_form_schema(
+                self.config[CONF_HOST],
+                self.config[CONF_USERNAME],
+                self.config[CONF_PORT],
+                self.config[CONF_VERIFY_SSL],
+            )
 
-            try:
-                hub = await get_unifi_api(self.hass, MappingProxyType(self.config))
-                await hub.sites.update()
-                self.sites = hub.sites
-
-            except AuthenticationRequired:
-                errors["base"] = "faulty_credentials"
-
-            except CannotConnect:
-                errors["base"] = "service_unavailable"
-
-            else:
-                if self.source == SOURCE_REAUTH:
-                    if (
-                        (reauth_unique_id := self._get_reauth_entry().unique_id)
-                        is not None
-                    ) and reauth_unique_id in self.sites:
-                        return await self.async_step_site(
-                            {CONF_SITE_ID: reauth_unique_id}
-                        )
-                    raise AbortFlow("unknown_site_id")
-
+            with _catch_unifi_api_flow_errors(errors):
+                self.sites = await self._async_update_sites(self.config)
                 return await self.async_step_site()
-
-        if not (host := self.config.get(CONF_HOST, "")) and await _async_discover_unifi(
-            self.hass
-        ):
-            host = "unifi"
-
-        data = self.reauth_schema or {
-            vol.Required(CONF_HOST, default=host): str,
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Optional(
-                CONF_PORT, default=self.config.get(CONF_PORT, DEFAULT_PORT)
-            ): int,
-            vol.Optional(
-                CONF_VERIFY_SSL,
-                default=self.config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-            ): bool,
-        }
+        else:
+            host = self.config.get(CONF_HOST)
+            if not host:
+                host = await _async_discover_unifi(self.hass)
+            if not host:
+                host = DEFAULT_HOST
+            data_schema = self._build_form_schema(
+                host=host,
+                verify_ssl=self.config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data),
+            data_schema=data_schema,
             errors=errors,
         )
 
@@ -157,24 +135,8 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             unique_id = user_input[CONF_SITE_ID]
             self.config[CONF_SITE_ID] = self.sites[unique_id].name
 
-            config_entry = await self.async_set_unique_id(unique_id)
-            abort_reason = "configuration_updated"
-
-            if self.source == SOURCE_REAUTH:
-                config_entry = self._get_reauth_entry()
-                abort_reason = "reauth_successful"
-
-            if config_entry:
-                if (
-                    config_entry.state is ConfigEntryState.LOADED
-                    and (hub := config_entry.runtime_data)
-                    and hub.available
-                ):
-                    return self.async_abort(reason="already_configured")
-
-                return self.async_update_and_abort(
-                    config_entry, data=self.config, reason=abort_reason
-                )
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
 
             site_nice_name = self.sites[unique_id].description
             return self.async_create_entry(title=site_nice_name, data=self.config)
@@ -185,7 +147,9 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         site_names = {site.site_id: site.description for site in self.sites.values()}
         return self.async_show_form(
             step_id="site",
-            data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(site_names)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_SITE_ID): probatio.In(site_names)}
+            ),
         )
 
     async def async_step_reauth(
@@ -193,23 +157,53 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Trigger a reauthentication flow."""
         reauth_entry = self._get_reauth_entry()
-
         self.context["title_placeholders"] = {
             CONF_HOST: reauth_entry.data[CONF_HOST],
             CONF_NAME: reauth_entry.title,
         }
 
-        self.reauth_schema = {
-            vol.Required(CONF_HOST, default=reauth_entry.data[CONF_HOST]): str,
-            vol.Required(CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=reauth_entry.data[CONF_PORT]): int,
-            vol.Required(
-                CONF_VERIFY_SSL, default=reauth_entry.data[CONF_VERIFY_SSL]
-            ): bool,
-        }
+        return await self.async_step_reconfigure()
 
-        return await self.async_step_user()
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow."""
+        config_entry = self._get_reauth_or_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            config_data = _config_from_input(user_input)
+            data_schema = self._build_form_schema(
+                config_data[CONF_HOST],
+                config_data[CONF_USERNAME],
+                config_data[CONF_PORT],
+                config_data[CONF_VERIFY_SSL],
+            )
+
+            with _catch_unifi_api_flow_errors(errors):
+                sites = await self._async_update_sites(config_data)
+
+                if (
+                    (unique_id := config_entry.unique_id) is not None
+                ) and unique_id in sites:
+                    config_data[CONF_SITE_ID] = sites[unique_id].name
+                    return self.async_update_reload_and_abort(
+                        config_entry, data_updates=config_data
+                    )
+                raise AbortFlow("unknown_site_id")
+        else:
+            data_schema = self._build_form_schema(
+                config_entry.data[CONF_HOST],
+                config_entry.data[CONF_USERNAME],
+                config_entry.data[CONF_PORT],
+                config_entry.data[CONF_VERIFY_SSL],
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=data_schema,
+            errors=errors,
+        )
 
     @override
     async def async_step_integration_discovery(
@@ -242,6 +236,16 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             if entry.data.get(CONF_HOST) in known_hosts:
                 return self.async_abort(reason="already_configured")
 
+        # Entries are keyed by site and a console may announce no address.
+        # Not the device registry: it also holds clients, which a console can be.
+        loaded_entries: list[UnifiConfigEntry] = (
+            self.hass.config_entries.async_loaded_entries(DOMAIN)
+        )
+        if any(
+            mac_address in entry.runtime_data.api.devices for entry in loaded_entries
+        ):
+            return self.async_abort(reason="already_configured")
+
         self.context["title_placeholders"] = {
             CONF_NAME: (
                 discovery_info.get("name")
@@ -254,6 +258,66 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context["configuration_url"] = f"https://{host}"
 
         return await self.async_step_user()
+
+    def _build_form_schema(
+        self,
+        host: str = DEFAULT_HOST,
+        username: str = "",
+        port: int = DEFAULT_PORT,
+        verify_ssl: bool = DEFAULT_VERIFY_SSL,
+    ) -> probatio.Schema:
+        return probatio.Schema(
+            {
+                probatio.Required(CONF_HOST, default=host): str,
+                probatio.Required(CONF_USERNAME, default=username): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                probatio.Optional(CONF_PORT, default=port): int,
+                probatio.Optional(
+                    CONF_VERIFY_SSL,
+                    default=verify_ssl,
+                ): bool,
+            }
+        )
+
+    async def _async_update_sites(self, data: Mapping[str, Any]) -> Sites:
+        """Get updated sites through UniFi API."""
+        hub = await get_unifi_api(self.hass, MappingProxyType(data))
+        try:
+            async with asyncio.timeout(SITE_REQUEST_TIMEOUT):
+                await hub.sites.update()
+        except (
+            aiounifi.Forbidden,
+            aiounifi.LoginRequired,
+            aiounifi.NoPermission,
+            aiounifi.Unauthorized,
+        ) as err:
+            LOGGER.warning(
+                "UniFi Network at %s rejected the site request: %s",
+                data[CONF_HOST],
+                type(err).__name__,
+            )
+            raise AuthenticationRequired from err
+        # aiounifi 97 does not wrap JSON decode errors, newer releases do
+        except (TimeoutError, json.JSONDecodeError, aiounifi.AiounifiException) as err:
+            LOGGER.warning(
+                "Error fetching sites from UniFi Network at %s: %r",
+                data[CONF_HOST],
+                err,
+            )
+            raise CannotConnect from err
+        if not hub.sites.values():
+            # aiounifi 97 returns no sites when the console answers with HTML,
+            # as it does while the Network application is missing or starting
+            LOGGER.warning("No sites found on UniFi Network at %s", data[CONF_HOST])
+            raise CannotConnect
+        return hub.sites
+
+    @callback
+    def _get_reauth_or_reconfigure_entry(self) -> ConfigEntry:
+        """Return the config entry the current flow is modifying."""
+        if self.source == SOURCE_REAUTH:
+            return self._get_reauth_entry()
+        return self._get_reconfigure_entry()
 
 
 class UnifiOptionsFlowHandler(OptionsFlow):
@@ -323,23 +387,23 @@ class UnifiOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_TRACK_CLIENTS,
                         default=self.hub.config.option_track_clients,
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_TRACK_DEVICES,
                         default=self.hub.config.option_track_devices,
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_BLOCK_CLIENT, default=selected_clients_to_block
                     ): cv.multi_select(clients_to_block),
-                    vol.Required(CONF_MORE_OPTIONS): section(
-                        vol.Schema(
+                    probatio.Required(CONF_MORE_OPTIONS): section(
+                        probatio.Schema(
                             {
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_CLIENT_SOURCE,
                                     default=self.options.get(CONF_CLIENT_SOURCE, []),
                                 ): cv.multi_select(
@@ -350,40 +414,40 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                                         )
                                     )
                                 ),
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_TRACK_WIRED_CLIENTS,
                                     default=self.hub.config.option_track_wired_clients,
                                 ): bool,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_SSID_FILTER,
                                     default=selected_ssids_to_filter,
                                 ): cv.multi_select(ssid_filter),
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_DETECTION_TIME,
                                     default=int(
                                         self.hub.config.option_detection_time.total_seconds()
                                     ),
                                 ): int,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_IGNORE_WIRED_BUG,
                                     default=self.hub.config.option_ignore_wired_bug,
                                 ): bool,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_IGNORE_LOCAL_MAC,
                                     default=self.hub.config.option_ignore_local_mac,
                                 ): bool,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_DPI_RESTRICTIONS,
                                     default=self.options.get(
                                         CONF_DPI_RESTRICTIONS,
                                         DEFAULT_DPI_RESTRICTIONS,
                                     ),
                                 ): bool,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_ALLOW_BANDWIDTH_SENSORS,
                                     default=self.hub.config.option_allow_bandwidth_sensors,
                                 ): bool,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_ALLOW_UPTIME_SENSORS,
                                     default=self.hub.config.option_allow_uptime_sensors,
                                 ): bool,
@@ -403,3 +467,28 @@ async def _async_discover_unifi(hass: HomeAssistant) -> str | None:
         return await hass.async_add_executor_job(socket.gethostbyname, "unifi")
     except socket.gaierror:
         return None
+
+
+def _config_from_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Build config entry data from user input."""
+    return {
+        CONF_HOST: user_input[CONF_HOST],
+        CONF_USERNAME: user_input[CONF_USERNAME],
+        CONF_PASSWORD: user_input[CONF_PASSWORD],
+        CONF_PORT: user_input.get(CONF_PORT),
+        CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
+        CONF_SITE_ID: DEFAULT_SITE_ID,
+    }
+
+
+@contextmanager
+def _catch_unifi_api_flow_errors(errors: dict[str, str]) -> Iterator[None]:
+    """Map UniFi API exceptions to config flow form errors."""
+    try:
+        yield
+    except MfaRequired:
+        errors["base"] = "mfa_required"
+    except AuthenticationRequired:
+        errors["base"] = "faulty_credentials"
+    except CannotConnect:
+        errors["base"] = "service_unavailable"

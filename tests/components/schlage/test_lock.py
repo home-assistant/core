@@ -4,11 +4,12 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 from pyschlage.code import AccessCode
 from pyschlage.exceptions import Error as SchlageError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.components.schlage.const import (
@@ -30,8 +31,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import MockSchlageConfigEntry
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 async def test_lock_attributes(
@@ -247,7 +246,7 @@ async def test_add_code_service_invalid_code(
     """Test add_code service rejects invalid PIN codes."""
     mock_lock.access_codes = {}
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_CODE,

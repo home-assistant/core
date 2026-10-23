@@ -327,5 +327,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication with Withings failed. Please reauthenticate."
+    }
   }
 }

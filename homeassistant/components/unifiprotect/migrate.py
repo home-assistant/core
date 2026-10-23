@@ -1,10 +1,9 @@
 """UniFi Protect data migrations."""
 
-from itertools import chain
 import logging
-from typing import TypedDict
+from typing import NamedTuple
 
-from uiprotect.data import Bootstrap
+from uiprotect.data import Bootstrap, ModelType
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -16,88 +15,12 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN
 from .data import UFPConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class EntityRef(TypedDict):
-    """Entity ref parameter variable."""
-
-    id: str
-    platform: Platform
-
-
-class EntityUsage(TypedDict):
-    """Entity usages response variable."""
-
-    automations: dict[str, list[str]]
-    scripts: dict[str, list[str]]
-
-
-@callback
-def check_if_used(
-    hass: HomeAssistant, entry: UFPConfigEntry, entities: dict[str, EntityRef]
-) -> dict[str, EntityUsage]:
-    """Check for usages of entities and return them."""
-
-    entity_registry = er.async_get(hass)
-    refs: dict[str, EntityUsage] = {
-        ref: {"automations": {}, "scripts": {}} for ref in entities
-    }
-
-    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
-        for ref_id, ref in entities.items():
-            if (
-                entity.domain == ref["platform"]
-                and entity.disabled_by is None
-                and ref["id"] in entity.unique_id
-            ):
-                entity_automations = automations_with_entity(hass, entity.entity_id)
-                entity_scripts = scripts_with_entity(hass, entity.entity_id)
-                if entity_automations:
-                    refs[ref_id]["automations"][entity.entity_id] = entity_automations
-                if entity_scripts:
-                    refs[ref_id]["scripts"][entity.entity_id] = entity_scripts
-
-    return refs
-
-
-@callback
-def create_repair_if_used(
-    hass: HomeAssistant,
-    entry: UFPConfigEntry,
-    breaks_in: str,
-    entities: dict[str, EntityRef],
-) -> None:
-    """Create repairs for used entities that are deprecated."""
-
-    usages = check_if_used(hass, entry, entities)
-    for ref_id, refs in usages.items():
-        issue_id = f"deprecate_{ref_id}"
-        automations = refs["automations"]
-        scripts = refs["scripts"]
-        if automations or scripts:
-            items = sorted(
-                set(chain.from_iterable(chain(automations.values(), scripts.values())))
-            )
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                issue_id,
-                is_fixable=False,
-                breaks_in_ha_version=breaks_in,
-                severity=IssueSeverity.WARNING,
-                translation_key=issue_id,
-                translation_placeholders={
-                    "items": "* `" + "`\n* `".join(items) + "`\n"
-                },
-            )
-        else:
-            _LOGGER.debug("No found usages of %s", ref_id)
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 async def async_migrate_data(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
@@ -107,9 +30,9 @@ async def async_migrate_data(hass: HomeAssistant, entry: UFPConfigEntry) -> None
     runs in both connection modes (no bootstrap required).
     """
 
-    _LOGGER.debug("Start Migrate: async_deprecate_hdr")
-    async_deprecate_hdr(hass, entry)
-    _LOGGER.debug("Completed Migrate: async_deprecate_hdr")
+    _LOGGER.debug("Start Migrate: async_remove_hdr_switch")
+    async_remove_hdr_switch(hass, entry)
+    _LOGGER.debug("Completed Migrate: async_remove_hdr_switch")
 
     _LOGGER.debug("Start Migrate: async_remove_aiport_devices")
     async_remove_aiport_devices(hass, entry)
@@ -122,6 +45,10 @@ async def async_migrate_data(hass: HomeAssistant, entry: UFPConfigEntry) -> None
     _LOGGER.debug("Start Migrate: async_remove_package_binary_sensor")
     async_remove_package_binary_sensor(hass, entry)
     _LOGGER.debug("Completed Migrate: async_remove_package_binary_sensor")
+
+    _LOGGER.debug("Start Migrate: async_migrate_sensor_signal_strength")
+    async_migrate_sensor_signal_strength(hass, entry)
+    _LOGGER.debug("Completed Migrate: async_migrate_sensor_signal_strength")
 
 
 # Device type (``ProtectAdoptableDeviceModel.type``) reported by AI Ports. Matched
@@ -162,6 +89,8 @@ def async_migrate_insecure_cameras(hass: HomeAssistant, entry: UFPConfigEntry) -
     Added in 2026.7.0
     """
     registry = er.async_get(hass)
+    # The rename must land before the camera platform sets up. Only the removal waits.
+    removals: list[_Removal] = []
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
         if entity.domain != Platform.CAMERA or not entity.unique_id.endswith(
             "_insecure"
@@ -176,14 +105,16 @@ def async_migrate_insecure_cameras(hass: HomeAssistant, entry: UFPConfigEntry) -
                 entity.entity_id, new_unique_id=secure_unique_id
             )
             continue
-        _async_repair_if_used(
-            hass,
-            entity,
-            f"insecure_camera_removed_{entity.unique_id}",
-            "insecure_camera_removed",
-            {"replacement": secure_entity_id},
+        removals.append(
+            _Removal(
+                entity.domain,
+                entity.unique_id,
+                f"insecure_camera_removed_{entity.unique_id}",
+                "insecure_camera_removed",
+                {"replacement": secure_entity_id},
+            )
         )
-        registry.async_remove(entity.entity_id)
+    _async_remove_when_started(hass, entry, removals)
 
 
 @callback
@@ -231,6 +162,51 @@ def _async_repair_if_used(
     )
 
 
+class _Removal(NamedTuple):
+    """An entity to remove once startup is done, with the repair if it is used."""
+
+    domain: str
+    unique_id: str
+    issue_id: str
+    translation_key: str
+    placeholders: dict[str, str] | None = None
+
+
+@callback
+def _async_remove_when_started(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    removals: list[_Removal],
+) -> None:
+    """Remove entities once startup is done, raising a repair for used ones.
+
+    Before the automations are loaded every entity looks unused, so removing
+    earlier would drop the repair for good.
+    """
+    if not removals:
+        return
+
+    @callback
+    def _async_remove(_hass: HomeAssistant) -> None:
+        registry = er.async_get(hass)
+        for removal in removals:
+            entity_id = registry.async_get_entity_id(
+                removal.domain, DOMAIN, removal.unique_id
+            )
+            if entity_id is None or (entity := registry.async_get(entity_id)) is None:
+                continue
+            _async_repair_if_used(
+                hass,
+                entity,
+                removal.issue_id,
+                removal.translation_key,
+                removal.placeholders,
+            )
+            registry.async_remove(entity_id)
+
+    entry.async_on_unload(async_at_started(hass, _async_remove))
+
+
 @callback
 def async_remove_package_binary_sensor(
     hass: HomeAssistant, entry: UFPConfigEntry
@@ -246,28 +222,85 @@ def async_remove_package_binary_sensor(
     Added in 2026.7.0
     """
     registry = er.async_get(hass)
+    removals: list[_Removal] = []
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
         if entity.domain != Platform.BINARY_SENSOR or not entity.unique_id.endswith(
             "_smart_obj_package"
         ):
             continue
-        _async_repair_if_used(
-            hass,
-            entity,
-            f"package_binary_sensor_removed_{entity.unique_id}",
-            "package_binary_sensor_removed",
+        removals.append(
+            _Removal(
+                entity.domain,
+                entity.unique_id,
+                f"package_binary_sensor_removed_{entity.unique_id}",
+                "package_binary_sensor_removed",
+            )
         )
-        registry.async_remove(entity.entity_id)
+    _async_remove_when_started(hass, entry, removals)
 
 
-# Release that removes the deprecated mirrors.
-SENSE_SETTING_MIRROR_BREAKS_IN = "2026.11.0"
+@callback
+def async_remove_hdr_switch(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
+    """Remove the HDR mode switch.
 
-# Sense settings whose read-only mirror is deprecated, keyed by the mirror's own
+    The switch could not represent the auto HDR mode, so it was deprecated in
+    2024.4.0 in favor of the HDR mode select. Remove each stale ``{mac}_hdr_mode``
+    switch, raising a repair first if a still-enabled one is referenced by an
+    automation or script.
+
+    Added in 2026.11.0
+    """
+    # Drop the stored record of the old deprecation repair.
+    ir.async_delete_issue(hass, DOMAIN, "deprecate_hdr_switch")
+    registry = er.async_get(hass)
+    removals: list[_Removal] = []
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if entity.domain != Platform.SWITCH or not entity.unique_id.endswith(
+            "_hdr_mode"
+        ):
+            continue
+        removals.append(
+            _Removal(
+                entity.domain,
+                entity.unique_id,
+                f"hdr_switch_removed_{entity.unique_id}",
+                "hdr_switch_removed",
+            )
+        )
+    _async_remove_when_started(hass, entry, removals)
+
+
+@callback
+def async_migrate_sensor_signal_strength(
+    hass: HomeAssistant, entry: UFPConfigEntry
+) -> None:
+    """Rename the ``{mac}_ble_signal`` unique_id to ``{mac}_signal_strength``.
+
+    Renamed because sensors connect over Bluetooth or SuperLink. The entity keeps
+    its history and customizations. If the new entity already exists (after a
+    downgrade and upgrade), the old one is dropped.
+
+    Added in 2026.11.0
+    """
+    registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if entity.domain != Platform.SENSOR or not entity.unique_id.endswith(
+            "_ble_signal"
+        ):
+            continue
+        mac = entity.unique_id.removesuffix("_ble_signal")
+        new_unique_id = f"{mac}_signal_strength"
+        if registry.async_get_entity_id(Platform.SENSOR, DOMAIN, new_unique_id):
+            registry.async_remove(entity.entity_id)
+            continue
+        registry.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
+
+
+# Removed read-only mirrors of the sense setting controls, keyed by the mirror's
 # (platform, key) and pointing at the (platform, key) of the control that
-# replaces it. Camera and light entities reuse these key strings, so the match
-# is scoped to the sensor MACs below.
-_SENSE_SETTING_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str]] = {
+# replaces it. Camera and light entities reuse these keys, so the match is
+# scoped to sensor MACs.
+_SENSE_SETTING_MIRRORS: dict[tuple[str, str], tuple[Platform, str]] = {
     (Platform.BINARY_SENSOR, "motion_enabled"): (Platform.SWITCH, "motion"),
     (Platform.BINARY_SENSOR, "temperature"): (Platform.SWITCH, "temperature"),
     (Platform.BINARY_SENSOR, "humidity"): (Platform.SWITCH, "humidity"),
@@ -278,74 +311,357 @@ _SENSE_SETTING_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str]] = {
 
 
 @callback
-def async_deprecate_sense_setting_mirrors(
-    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+def async_remove_sense_setting_mirrors(
+    hass: HomeAssistant, entry: UFPConfigEntry, sensor_macs: set[str]
 ) -> None:
-    """Deprecate the read-only mirrors of the sense setting controls.
+    """Remove the read-only mirrors of the sense setting controls.
 
-    Those controls write through the public API, which the local user's write
-    permission does not gate, so the switch or number is now available to every
-    user and the ``PermRequired.NO_WRITE`` mirror only duplicates its state.
-
-    The mirrors keep working until the removal, so a dashboard or automation
-    referencing one does not break without warning. Two releases is enough
-    here: the replacement holds the same state, so the migration is an entity
-    id swap, and the repair points at the exact entity to swap in.
+    Deprecated in 2026.9.0: the switch or number they mirror writes through the
+    public API and is available to every user. Remove each stale entry, raising
+    a repair first if a still-enabled one is referenced by an automation or
+    script, and drop the stored deprecation repair.
 
     Runs after platform setup, unlike the other migrations in this file: the
-    repair needs the replacement switch/number to already be in the registry
-    so it can name it, and that entity is only created once the platform is
-    set up.
+    repair names the replacement, which only exists once the platform is set up.
 
-    Added in 2026.9.0
+    Added in 2026.11.0
     """
-    if not (macs := {sensor.mac for sensor in bootstrap.sensors.values()}):
+    if not sensor_macs:
         return
     registry = er.async_get(hass)
+    removals: list[_Removal] = []
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
         mac, _, key = entity.unique_id.partition("_")
-        replacement = _SENSE_SETTING_REPLACEMENTS.get((entity.domain, key))
-        if replacement is None or mac not in macs:
+        replacement = _SENSE_SETTING_MIRRORS.get((entity.domain, key))
+        if replacement is None or mac not in sensor_macs:
             continue
+        ir.async_delete_issue(
+            hass, DOMAIN, f"sense_setting_mirror_deprecated_{entity.unique_id}"
+        )
         replacement_platform, replacement_key = replacement
-        # The device may not support the setting at all (no capability match),
-        # in which case there is nothing to point the repair at.
+        issue_id = f"sense_setting_mirror_removed_{entity.unique_id}"
         if replacement_entity_id := registry.async_get_entity_id(
             replacement_platform, DOMAIN, f"{mac}_{replacement_key}"
         ):
-            _async_repair_if_used(
-                hass,
-                entity,
-                f"sense_setting_mirror_deprecated_{entity.unique_id}",
-                "sense_setting_mirror_deprecated",
-                {"replacement": replacement_entity_id},
-                breaks_in=SENSE_SETTING_MIRROR_BREAKS_IN,
+            removals.append(
+                _Removal(
+                    entity.domain,
+                    entity.unique_id,
+                    issue_id,
+                    "sense_setting_mirror_removed",
+                    {"replacement": replacement_entity_id},
+                )
             )
         else:
-            _async_repair_if_used(
-                hass,
-                entity,
-                f"sense_setting_mirror_deprecated_{entity.unique_id}",
-                "sense_setting_mirror_deprecated_no_replacement",
-                breaks_in=SENSE_SETTING_MIRROR_BREAKS_IN,
+            removals.append(
+                _Removal(
+                    entity.domain,
+                    entity.unique_id,
+                    issue_id,
+                    "sense_setting_mirror_removed_no_replacement",
+                )
             )
+    _async_remove_when_started(hass, entry, removals)
+
+
+# Release that removes the deprecated light mirrors.
+LIGHT_SETTING_MIRROR_BREAKS_IN = "2027.1.0"
+
+# Light mirrors keyed by their own (platform, key), pointing at the (platform,
+# key) of the control that replaces them and the repair text. ``None`` is the
+# light entity itself, whose unique_id is the bare MAC.
+_LIGHT_MIRROR_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str | None, str]] = {
+    (Platform.BINARY_SENSOR, "light"): (
+        Platform.LIGHT,
+        None,
+        "setting_mirror_deprecated",
+    ),
+    (Platform.BINARY_SENSOR, "status_light"): (
+        Platform.SWITCH,
+        "status_light",
+        "setting_mirror_deprecated",
+    ),
+    (Platform.SENSOR, "sensitivity"): (
+        Platform.NUMBER,
+        "sensitivity",
+        "setting_mirror_deprecated",
+    ),
+    # The sensor shows the raw mode, the select its own option names.
+    (Platform.SENSOR, "light_motion"): (
+        Platform.SELECT,
+        "light_motion",
+        "setting_mirror_deprecated_light_mode",
+    ),
+}
 
 
 @callback
-def async_deprecate_hdr(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
-    """Check for usages of hdr_mode switch and raise repair if it is used.
+def async_deprecate_light_setting_mirrors(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Deprecate the read-only mirrors of the light controls.
 
-    UniFi Protect v3.0.22 changed how HDR works so it is
-    no longer a simple on/off toggle. There is Always On,
-    Always Off and Auto. So it has been migrated to a
-    select. The old switch is now deprecated.
+    The light and its controls write through the public API, which the local
+    user's write permission does not gate, so they are now available to every
+    user and the ``PermRequired.NO_WRITE`` mirrors only duplicate them.
 
-    Added in 2024.4.0
+    Runs after platform setup so the repair can name the replacement.
+
+    Added in 2026.11.0
     """
-
-    create_repair_if_used(
+    _async_deprecate_setting_mirrors(
         hass,
         entry,
-        "2024.10.0",
-        {"hdr_switch": {"id": "hdr_mode", "platform": Platform.SWITCH}},
+        {light.mac for light in bootstrap.lights.values()},
+        _LIGHT_MIRROR_REPLACEMENTS,
+        LIGHT_SETTING_MIRROR_BREAKS_IN,
+    )
+
+
+# Release that removes the deprecated private-only entities.
+PRIVATE_ONLY_BREAKS_IN = "2027.1.0"
+
+# Device setup and device data entities that rely on the private API, keyed by
+# device model and then by (platform, key). Scoped by model because other
+# devices may reuse the keys.
+PRIVATE_ONLY_ENTITIES: dict[ModelType, frozenset[tuple[Platform, str]]] = {
+    ModelType.CAMERA: frozenset(
+        {
+            (Platform.SWITCH, "ssh"),
+            (Platform.BINARY_SENSOR, "ssh"),
+            (Platform.SENSOR, "lens_type"),
+            (Platform.SENSOR, "voltage"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
+            (Platform.SENSOR, "oldest_recording"),
+            (Platform.SENSOR, "storage_used"),
+            (Platform.SENSOR, "write_rate"),
+            (Platform.SENSOR, "stats_rx"),
+            (Platform.SENSOR, "stats_tx"),
+        }
+    ),
+    ModelType.LIGHT: frozenset(
+        {
+            (Platform.SWITCH, "ssh"),
+            (Platform.BINARY_SENSOR, "ssh"),
+            (Platform.SELECT, "paired_camera"),
+            (Platform.SENSOR, "paired_camera"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
+        }
+    ),
+    ModelType.VIEWPORT: frozenset(
+        {
+            (Platform.SWITCH, "ssh"),
+            (Platform.BINARY_SENSOR, "ssh"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
+        }
+    ),
+    ModelType.SENSOR: frozenset(
+        {
+            (Platform.SELECT, "mount_type"),
+            (Platform.SENSOR, "mount_type"),
+            (Platform.SELECT, "paired_camera"),
+            (Platform.SENSOR, "paired_camera"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
+        }
+    ),
+    ModelType.CHIME: frozenset(
+        {
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
+        }
+    ),
+    ModelType.NVR: frozenset(
+        {
+            (Platform.SWITCH, "analytics_enabled"),
+            (Platform.SWITCH, "insights_enabled"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "cpu_utilization"),
+            (Platform.SENSOR, "cpu_temperature"),
+            (Platform.SENSOR, "memory_utilization"),
+        }
+    ),
+}
+
+
+@callback
+def async_is_new_private_only_entity(
+    hass: HomeAssistant, model: ModelType | None, mac: str, key: str
+) -> bool:
+    """Return whether a deprecated private-only entity is not registered yet.
+
+    New installs do not get entities that are about to be removed.
+    """
+    if model is None or model not in PRIVATE_ONLY_ENTITIES:
+        return False
+    platforms = [
+        platform
+        for platform, entity_key in PRIVATE_ONLY_ENTITIES[model]
+        if entity_key == key
+    ]
+    if not platforms:
+        return False
+    registry = er.async_get(hass)
+    return not any(
+        registry.async_get_entity_id(platform, DOMAIN, f"{mac}_{key}")
+        for platform in platforms
+    )
+
+
+@callback
+def async_deprecate_private_only_entities(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Deprecate the entities that only the private API provides.
+
+    The official API does not provide them, and they are not requested from
+    Ubiquiti.
+
+    Waits for startup to finish: before the automations are loaded, every entity
+    looks unused and the repair would be dropped.
+
+    Added in 2026.11.0
+    """
+
+    @callback
+    def _async_deprecate(_hass: HomeAssistant) -> None:
+        models: dict[str, ModelType] = {bootstrap.nvr.mac: ModelType.NVR}
+        for devices, device_model in (
+            (bootstrap.cameras, ModelType.CAMERA),
+            (bootstrap.lights, ModelType.LIGHT),
+            (bootstrap.viewers, ModelType.VIEWPORT),
+            (bootstrap.sensors, ModelType.SENSOR),
+            (bootstrap.chimes, ModelType.CHIME),
+        ):
+            models.update(
+                dict.fromkeys((d.mac for d in devices.values()), device_model)
+            )
+        registry = er.async_get(hass)
+        for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+            mac, _, key = entity.unique_id.partition("_")
+            model = models.get(mac)
+            if (
+                model is None
+                or (entity.domain, key) not in PRIVATE_ONLY_ENTITIES[model]
+            ):
+                continue
+            _async_repair_if_used(
+                hass,
+                entity,
+                # SSH, mount type and paired camera share a unique_id across
+                # two platforms.
+                f"private_only_entity_deprecated_{entity.domain}_{entity.unique_id}",
+                "private_only_entity_deprecated",
+                breaks_in=PRIVATE_ONLY_BREAKS_IN,
+            )
+
+    entry.async_on_unload(async_at_started(hass, _async_deprecate))
+
+
+@callback
+def _async_deprecate_setting_mirrors(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    macs: set[str],
+    replacements: dict[tuple[str, str], tuple[Platform, str | None, str]],
+    breaks_in: str,
+) -> None:
+    """Raise a repair for each used mirror, pointing at its replacement.
+
+    The mirror keys are shared across device types, so the match is scoped to
+    ``macs``. Waits for startup to finish, like ``_async_remove_when_started``.
+    """
+    if not macs:
+        return
+
+    @callback
+    def _async_deprecate(_hass: HomeAssistant) -> None:
+        registry = er.async_get(hass)
+        for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+            mac, _, key = entity.unique_id.partition("_")
+            mirror = (entity.domain, key)
+            if mirror not in replacements or mac not in macs:
+                continue
+            platform, replacement_key, translation_key = replacements[mirror]
+            replacement_id = registry.async_get_entity_id(
+                platform,
+                DOMAIN,
+                mac if replacement_key is None else f"{mac}_{replacement_key}",
+            )
+            # Nothing to point the repair at before the replacement exists.
+            if replacement_id is None:
+                continue
+            _async_repair_if_used(
+                hass,
+                entity,
+                f"setting_mirror_deprecated_{entity.unique_id}",
+                translation_key,
+                {"replacement": replacement_id},
+                breaks_in=breaks_in,
+            )
+
+    entry.async_on_unload(async_at_started(hass, _async_deprecate))
+
+
+# Camera entities on the private API that a public event entity replaces, keyed
+# by their own (platform, key), pointing at the event entity and the repair text.
+_RING_AND_MOTION_SENSOR_REPLACEMENTS: dict[
+    tuple[str, str], tuple[Platform, str | None, str]
+] = {
+    (Platform.BINARY_SENSOR, "doorbell"): (
+        Platform.EVENT,
+        "doorbell",
+        "doorbell_sensor_deprecated",
+    ),
+    (Platform.SENSOR, "doorbell_last_trip_time"): (
+        Platform.EVENT,
+        "doorbell",
+        "last_event_sensor_deprecated",
+    ),
+    (Platform.SENSOR, "motion_last_trip_time"): (
+        Platform.EVENT,
+        "motion_detection",
+        "last_event_sensor_deprecated",
+    ),
+}
+
+
+@callback
+def async_is_new_ring_or_motion_sensor(
+    hass: HomeAssistant, platform: Platform, mac: str, key: str
+) -> bool:
+    """Return whether a deprecated camera ring or motion sensor is not registered yet.
+
+    New installs do not get entities that are about to be removed. Matched per
+    platform: the doorbell text and event entities share the binary sensor's key.
+    """
+    if (platform, key) not in _RING_AND_MOTION_SENSOR_REPLACEMENTS:
+        return False
+    return (
+        er.async_get(hass).async_get_entity_id(platform, DOMAIN, f"{mac}_{key}") is None
+    )
+
+
+@callback
+def async_deprecate_ring_and_motion_sensors(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Deprecate the camera ring and motion sensors on the private API.
+
+    The doorbell and motion detection event entities cover them through the
+    public API.
+
+    Runs after platform setup so the repair can name the replacement.
+
+    Added in 2026.11.0
+    """
+    _async_deprecate_setting_mirrors(
+        hass,
+        entry,
+        {camera.mac for camera in bootstrap.cameras.values()},
+        _RING_AND_MOTION_SENSOR_REPLACEMENTS,
+        PRIVATE_ONLY_BREAKS_IN,
     )

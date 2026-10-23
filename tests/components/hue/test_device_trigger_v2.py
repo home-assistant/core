@@ -6,6 +6,11 @@ from unittest.mock import Mock, patch
 from aiohue.v2.models.button import ButtonEvent
 import attr
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_get_device_automations,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation, hue
@@ -33,12 +38,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import create_config_entry, setup_platform
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_get_device_automations,
-)
 
 WALL_SWITCH_DEVICE_ID = "3ff06175-29e8-44a8-8fe7-af591b0025da"
 WALL_SWITCH_BUTTON_PRESS = {
@@ -181,13 +180,22 @@ async def test_get_triggers_for_composite_device_id(
         config_entry_id=other_entry.entry_id, identifiers={("other", "1")}
     )
     composite_id = "composite00000000000000000000ab"
-    # Simulate a migration split: both devices carry the pre-migration composite id
+    # Simulate a migration split: both devices carry the pre-migration composite id,
+    # with the non-hue config entry as the composite's former primary
     device_registry._devices[hue_wall_switch_device.id] = attr.evolve(
-        hue_wall_switch_device, composite_device_id=composite_id
+        hue_wall_switch_device,
+        composite_device_id=composite_id,
+        composite_primary_config_entry=other_entry.entry_id,
     )
     device_registry._devices[other_device.id] = attr.evolve(
-        other_device, composite_device_id=composite_id
+        other_device,
+        composite_device_id=composite_id,
+        composite_primary_config_entry=other_entry.entry_id,
     )
+    # The restored composite is based on the non-hue split, so the hue config entry is
+    # only reachable through the composite's merged config entries
+    composite_device = device_registry.async_get(composite_id)
+    assert composite_device.config_entry_id == other_entry.entry_id
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, composite_id

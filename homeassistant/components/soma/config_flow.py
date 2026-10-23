@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from api.soma_api import SomaApi
+import probatio
 from requests import RequestException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -32,11 +32,13 @@ class SomaFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow start."""
         if user_input is None:
             data = {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                probatio.Required(CONF_HOST): str,
+                probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
             }
 
-            return self.async_show_form(step_id="user", data_schema=vol.Schema(data))
+            return self.async_show_form(
+                step_id="user", data_schema=probatio.Schema(data)
+            )
 
         return await self.async_step_creation(user_input)
 

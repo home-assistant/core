@@ -36,9 +36,8 @@ rules:
 
   # Silver
   action-exceptions:
-    status: exempt
-    comment: |
-      No custom actions are defined.
+    status: todo
+    comment: SteamloopConnectionError is not handled in climate and switch actions
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done

@@ -5,7 +5,7 @@ import dataclasses
 import logging
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -51,7 +51,7 @@ def agent_id_validator(value: Any) -> str:
     """Validate agent ID."""
     hass = async_get_hass()
     if async_get_agent(hass, cv.string(value)) is None:
-        raise vol.Invalid("invalid agent ID")
+        raise probatio.Invalid("invalid agent ID")
     return value
 
 

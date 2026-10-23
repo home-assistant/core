@@ -7,6 +7,7 @@ import pathlib
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import template
 from homeassistant.components.blueprint import (
@@ -15,7 +16,7 @@ from homeassistant.components.blueprint import (
     BlueprintInUse,
     DomainBlueprints,
 )
-from homeassistant.components.template import DOMAIN, SERVICE_RELOAD
+from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
     ALARM_CONTROL_PANEL_DOMAIN,
     BINARY_SENSOR_DOMAIN,
@@ -31,13 +32,11 @@ from homeassistant.components.template.config import (
     VACUUM_DOMAIN,
     WEATHER_DOMAIN,
 )
-from homeassistant.const import STATE_ON
+from homeassistant.const import SERVICE_RELOAD, STATE_ON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml as yaml_util
-
-from tests.common import async_mock_service
 
 BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(template.__file__).parent / "blueprints"
 

@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.labs import (
     EVENT_LABS_UPDATED,
@@ -14,9 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import assert_stored_labs_data
-
-from tests.common import MockUser
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(
@@ -282,7 +281,7 @@ async def test_websocket_update_validates_enabled_parameter(
     msg = await client.receive_json()
 
     assert not msg["success"]
-    # Validation error from voluptuous
+    # Validation error from probatio
 
 
 async def test_storage_persists_preview_feature_across_calls(

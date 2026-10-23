@@ -7,11 +7,22 @@ from typing import cast, override
 
 from uiprotect.data import (
     NVR,
+    AlarmHubBatteryStatus,
+    AlarmHubCoverStatus,
+    AlarmHubInput,
+    AlarmHubInputStatus,
+    AlarmHubInputType,
     Fob,
+    LinkStation,
     ModelType,
     MountType,
+    OnOffState,
     ProtectAdoptableDeviceModel,
+    PublicRelayInput,
+    Relay,
+    RelayInputState,
     Sensor,
+    SmartDetectObjectType,
 )
 from uiprotect.data.nvr import UOSDisk
 from uiprotect.data.public_devices import (
@@ -28,7 +39,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
+)
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
@@ -38,41 +52,31 @@ from .entity import (
     ProtectDeviceEntity,
     ProtectEntityDescription,
     ProtectEventMixin,
-    ProtectFobEntity,
     ProtectIsOnEntity,
     ProtectNVREntity,
+    ProtectPublicChannelEntity,
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
+from .migrate import async_is_new_ring_or_motion_sensor
 
 _KEY_DOOR = "door"
 PARALLEL_UPDATES = 0
 
-
-def _async_motion_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
-    # Mirrors Sensor.is_motion_sensor_enabled over the public API.
-    sensor = cast(PublicSensor, obj)
-    return sensor.mount_type is not MountType.LEAK and sensor.motion_settings.is_enabled
-
-
-def _async_contact_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
-    # Mirrors Sensor.is_contact_sensor_enabled over the public API.
-    return cast(PublicSensor, obj).is_contact_sensor_enabled
+_ALARM_HUB_INPUT_DEVICE_CLASS: dict[AlarmHubInputType, BinarySensorDeviceClass] = {
+    AlarmHubInputType.MOTION: BinarySensorDeviceClass.MOTION,
+    AlarmHubInputType.ENTRY: BinarySensorDeviceClass.OPENING,
+    AlarmHubInputType.SMOKE: BinarySensorDeviceClass.SMOKE,
+    # No dedicated glass-break class; SOUND is the closest fit.
+    AlarmHubInputType.GLASS_BREAK: BinarySensorDeviceClass.SOUND,
+    AlarmHubInputType.EMERGENCY_BUTTON: BinarySensorDeviceClass.SAFETY,
+}
 
 
-def _async_leak_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
-    # Leak-mounted (UP Sense), or the capability map advertises water_leak with a
-    # leak channel enabled — the USL family detects leaks without a leak mount.
-    # Settings alone are not a valid gate: sensors without the capability report
-    # inert default leak settings.
-    sensor = cast(PublicSensor, obj)
-    return sensor.is_leak_sensor_enabled or (
-        sensor.supports(SensorFeatureCapability.WATER_LEAK)
-        and (
-            sensor.leak_settings.is_internal_enabled
-            or sensor.leak_settings.is_external_enabled
-        )
-    )
+_RELAY_INPUT_STATE_MAP: dict[RelayInputState, bool] = {
+    RelayInputState.ON: True,
+    RelayInputState.OFF: False,
+}
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -181,7 +185,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_person",
         translation_key="detections_person",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_person",
+        ufp_capability=SmartDetectObjectType.PERSON,
         ufp_value="is_person_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -189,7 +193,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_vehicle",
         translation_key="detections_vehicle",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_vehicle",
+        ufp_capability=SmartDetectObjectType.VEHICLE,
         ufp_value="is_vehicle_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -197,7 +201,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_animal",
         translation_key="detections_animal",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_animal",
+        ufp_capability=SmartDetectObjectType.ANIMAL,
         ufp_value="is_animal_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -205,7 +209,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_package",
         translation_key="detections_package",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_package",
+        ufp_capability=SmartDetectObjectType.PACKAGE,
         ufp_value="is_package_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -213,7 +217,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_licenseplate",
         translation_key="detections_license_plate",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_license_plate",
+        ufp_capability=SmartDetectObjectType.LICENSE_PLATE,
         ufp_value="is_license_plate_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -221,7 +225,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_smoke",
         translation_key="detections_smoke",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_smoke",
+        ufp_capability=SmartDetectObjectType.SMOKE,
         ufp_value="is_smoke_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -229,7 +233,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_cmonx",
         translation_key="detections_co_alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_co",
+        ufp_capability=SmartDetectObjectType.CMONX,
         ufp_value="is_co_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -237,7 +241,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_siren",
         translation_key="detections_siren",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_siren",
+        ufp_capability=SmartDetectObjectType.SIREN,
         ufp_value="is_siren_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -245,7 +249,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_baby_cry",
         translation_key="detections_baby_cry",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_baby_cry",
+        ufp_capability=SmartDetectObjectType.BABY_CRY,
         ufp_value="is_baby_cry_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -253,7 +257,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_speak",
         translation_key="detections_speaking",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_speaking",
+        ufp_capability=SmartDetectObjectType.SPEAK,
         ufp_value="is_speaking_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -261,7 +265,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_bark",
         translation_key="detections_barking",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_bark",
+        ufp_capability=SmartDetectObjectType.BARK,
         ufp_value="is_bark_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -269,7 +273,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_car_alarm",
         translation_key="detections_car_alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_car_alarm",
+        ufp_capability=SmartDetectObjectType.BURGLAR,
         ufp_value="is_car_alarm_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -277,7 +281,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_car_horn",
         translation_key="detections_car_horn",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_car_horn",
+        ufp_capability=SmartDetectObjectType.CAR_HORN,
         ufp_value="is_car_horn_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -285,7 +289,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_glass_break",
         translation_key="detections_glass_break",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="can_detect_glass_break",
+        ufp_capability=SmartDetectObjectType.GLASS_BREAK,
         ufp_value="is_glass_break_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
@@ -308,7 +312,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_obj_any",
         translation_key="object_detected",
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="feature_flags.smart_detect_types",
         ufp_public_value="is_smart_currently_detected",
         ufp_event_driven=True,
         entity_registry_enabled_default=False,
@@ -316,7 +320,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_obj_person",
         translation_key="person_detected",
-        ufp_required_field="can_detect_person",
+        ufp_capability=SmartDetectObjectType.PERSON,
         ufp_public_value="is_person_currently_detected",
         ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_person_detection_on"),
@@ -324,7 +328,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_obj_vehicle",
         translation_key="vehicle_detected",
-        ufp_required_field="can_detect_vehicle",
+        ufp_capability=SmartDetectObjectType.VEHICLE,
         ufp_public_value="is_vehicle_currently_detected",
         ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_vehicle_detection_on"),
@@ -332,7 +336,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_obj_animal",
         translation_key="animal_detected",
-        ufp_required_field="can_detect_animal",
+        ufp_capability=SmartDetectObjectType.ANIMAL,
         ufp_public_value="is_animal_currently_detected",
         ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_animal_detection_on"),
@@ -348,7 +352,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_audio_smoke",
         translation_key="smoke_alarm_detected",
-        ufp_required_field="can_detect_smoke",
+        ufp_capability=SmartDetectObjectType.SMOKE,
         ufp_public_value="is_smoke_currently_detected",
         ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_smoke_detection_on"),
@@ -357,7 +361,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="smart_audio_cmonx",
         translation_key="co_alarm_detected",
         device_class=BinarySensorDeviceClass.CO,
-        ufp_required_field="can_detect_co",
+        ufp_capability=SmartDetectObjectType.CMONX,
         ufp_public_value="is_cmonx_currently_detected",
         ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_co_detection_on"),
@@ -365,7 +369,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_audio_siren",
         translation_key="siren_detected",
-        ufp_required_field="can_detect_siren",
+        ufp_capability=SmartDetectObjectType.SIREN,
         ufp_public_value="is_siren_currently_detected",
         ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_siren_detection_on"),
@@ -373,7 +377,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_audio_baby_cry",
         translation_key="baby_cry_detected",
-        ufp_required_field="can_detect_baby_cry",
+        ufp_capability=SmartDetectObjectType.BABY_CRY,
         ufp_public_value="is_baby_cry_currently_detected",
         ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_baby_cry_detection_on"),
@@ -381,7 +385,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_audio_speak",
         translation_key="speaking_detected",
-        ufp_required_field="can_detect_speaking",
+        ufp_capability=SmartDetectObjectType.SPEAK,
         ufp_public_value="is_speaking_currently_detected",
         ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_speaking_detection_on"),
@@ -389,7 +393,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_audio_bark",
         translation_key="barking_detected",
-        ufp_required_field="can_detect_bark",
+        ufp_capability=SmartDetectObjectType.BARK,
         ufp_public_value="is_bark_currently_detected",
         ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_bark_detection_on"),
@@ -397,7 +401,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_audio_car_alarm",
         translation_key="car_alarm_detected",
-        ufp_required_field="can_detect_car_alarm",
+        ufp_capability=SmartDetectObjectType.BURGLAR,
         ufp_public_value="is_car_alarm_currently_detected",
         ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_car_alarm_detection_on"),
@@ -405,7 +409,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_audio_car_horn",
         translation_key="car_horn_detected",
-        ufp_required_field="can_detect_car_horn",
+        ufp_capability=SmartDetectObjectType.CAR_HORN,
         ufp_public_value="is_car_horn_currently_detected",
         ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_car_horn_detection_on"),
@@ -413,7 +417,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_audio_glass_break",
         translation_key="glass_break_detected",
-        ufp_required_field="can_detect_glass_break",
+        ufp_capability=SmartDetectObjectType.GLASS_BREAK,
         ufp_public_value="is_glass_break_currently_detected",
         ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_glass_break_detection_on"),
@@ -463,7 +467,7 @@ MOUNTABLE_SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="contact",
         device_class=BinarySensorDeviceClass.DOOR,
         ufp_public_value="is_opened",
-        ufp_public_enabled_fn=_async_contact_sensor_enabled_public,
+        ufp_public_enabled_fn=operator.attrgetter("is_contact_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.OPEN,
     ),
 )
@@ -473,7 +477,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="leak",
         device_class=BinarySensorDeviceClass.MOISTURE,
         ufp_public_value="is_leak_detected",
-        ufp_public_enabled_fn=_async_leak_sensor_enabled_public,
+        ufp_public_enabled_fn=operator.attrgetter("is_leak_detection_enabled"),
         ufp_capability=SensorFeatureCapability.WATER_LEAK,
     ),
     ProtectBinaryEntityDescription(
@@ -486,7 +490,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_public_value="is_motion_detected",
-        ufp_public_enabled_fn=_async_motion_sensor_enabled_public,
+        ufp_public_enabled_fn=operator.attrgetter("is_motion_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.MOTION,
     ),
     ProtectBinaryEntityDescription(
@@ -500,42 +504,6 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="status_light",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="led_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="motion_enabled",
-        translation_key="motion_detection_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="motion_settings.is_enabled",
-        ufp_capability=SensorFeatureCapability.MOTION,
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="temperature",
-        translation_key="temperature_sensor_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="temperature_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="humidity",
-        translation_key="humidity_sensor_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="humidity_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="light",
-        translation_key="light_sensor_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="light_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="alarm",
-        translation_key="alarm_sound_detection",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="alarm_settings.is_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
 )
@@ -595,7 +563,7 @@ class ProtectDeviceBinarySensor(
 class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
     """A UniFi Protect Device Binary Sensor that can change device class at runtime."""
 
-    device: Sensor
+    device: Sensor | PublicSensor
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_device_class")
 
     @callback
@@ -694,10 +662,67 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
             self._async_event_with_immediate_end()
 
 
+class ProtectRelayInputBinarySensor(
+    ProtectPublicChannelEntity[PublicRelayInput], BinarySensorEntity
+):
+    """Binary sensor for a single relay input channel (Public API)."""
+
+    _state_attrs = ("_attr_available", "_attr_is_on")
+
+    def __init__(
+        self,
+        data: ProtectData,
+        relay: Relay,
+        relay_input: PublicRelayInput,
+    ) -> None:
+        """Initialize the relay input binary sensor."""
+        # The description key keeps the legacy ``{mac}_relay_input_{id}`` unique ID.
+        description = BinarySensorEntityDescription(
+            key=f"relay_input_{relay_input.id}", translation_key="relay_input"
+        )
+        super().__init__(data, relay, description, relay_input.id)
+        self._attr_translation_placeholders = {
+            "input_name": relay_input.name or str(relay_input.id),
+        }
+
+    @callback
+    @override
+    def _async_get_channel(self, device: PublicDeviceModel) -> PublicRelayInput | None:
+        return cast(Relay, device).get_input(self._channel_id)
+
+    @callback
+    @override
+    def _async_update_from_channel(self, channel: PublicRelayInput) -> None:
+        self._attr_is_on = (
+            _RELAY_INPUT_STATE_MAP.get(channel.state)
+            if channel.state is not None
+            else None
+        )
+
+
 MODEL_DESCRIPTIONS_WITH_CLASS = (
     (_MODEL_DESCRIPTIONS, ProtectDeviceBinarySensor),
     (_MOUNTABLE_MODEL_DESCRIPTIONS, MountableProtectDeviceBinarySensor),
 )
+
+
+@callback
+def _async_model_entities(
+    data: ProtectData,
+    *,
+    ufp_device: ProtectAdoptableDeviceModel | None = None,
+    public_device: PublicDeviceModel | None = None,
+) -> list[BaseProtectEntity]:
+    entities: list[BaseProtectEntity] = []
+    for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
+        entities += async_all_device_entities(
+            data,
+            klass,
+            model_descriptions=model_descriptions,
+            ufp_device=ufp_device,
+            public_device=public_device,
+        )
+    return entities
 
 
 @callback
@@ -711,6 +736,9 @@ def _async_event_entities(
             ProtectEventBinarySensor(data, device, description)
             for description in EVENT_SENSORS
             if description.has_required(device)
+            and not async_is_new_ring_or_motion_sensor(
+                data.hass, Platform.BINARY_SENSOR, device.mac, description.key
+            )
         )
     return entities
 
@@ -728,6 +756,43 @@ def _async_nvr_entities(
         for description in DISK_SENSORS
         if disk.has_disk
     ]
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ProtectAlarmHubBinaryEntityDescription(BinarySensorEntityDescription):
+    """Describes a UniFi Protect alarm hub (public API) binary sensor."""
+
+    value_fn: Callable[[LinkStation], bool]
+
+
+def _alarm_hub_tamper(hub: LinkStation) -> bool:
+    """Return whether the alarm hub tamper cover is open."""
+    cover = hub.alarm_hub_cover
+    return cover is not None and cover.status is AlarmHubCoverStatus.OPEN
+
+
+def _alarm_hub_battery_problem(hub: LinkStation) -> bool:
+    """Return whether the backup battery is low or critical."""
+    battery = hub.alarm_hub_battery
+    return battery is not None and battery.battery_status in (
+        AlarmHubBatteryStatus.LOW,
+        AlarmHubBatteryStatus.CRITICAL,
+    )
+
+
+ALARM_HUB_BINARY_SENSORS: tuple[ProtectAlarmHubBinaryEntityDescription, ...] = (
+    ProtectAlarmHubBinaryEntityDescription(
+        key="tamper",
+        device_class=BinarySensorDeviceClass.TAMPER,
+        value_fn=_alarm_hub_tamper,
+    ),
+    ProtectAlarmHubBinaryEntityDescription(
+        key="battery",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_alarm_hub_battery_problem,
+    ),
+)
 
 
 def _fob_battery_low(fob: Fob) -> bool | None:
@@ -754,27 +819,95 @@ FOB_BINARY_SENSORS: tuple[ProtectFobBinaryEntityDescription, ...] = (
 )
 
 
-class ProtectFobBinarySensor(ProtectFobEntity, BinarySensorEntity):
-    """A binary sensor entity for a UniFi Protect key fob (Public API)."""
+class ProtectAlarmHubBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
+    """A hub-level binary sensor for a UniFi Protect alarm hub."""
 
-    entity_description: ProtectFobBinaryEntityDescription
-    _fob_state_attrs = ("_attr_available", "_attr_is_on")
-
-    def __init__(
-        self,
-        data: ProtectData,
-        fob: Fob,
-        description: ProtectFobBinaryEntityDescription,
-    ) -> None:
-        """Initialize the key fob binary sensor."""
-        self.entity_description = description
-        self._attr_unique_id = f"{fob.mac}_{description.key}"
-        super().__init__(data, fob)
+    entity_description: ProtectAlarmHubBinaryEntityDescription
+    _state_attrs = ("_attr_available", "_attr_is_on")
+    _ufp_uses_public = True
 
     @callback
     @override
-    def _async_update_from_fob(self, fob: Fob) -> None:
-        self._attr_is_on = self.entity_description.value_fn(fob)
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if (hub := self._ufp_public_obj) is not None:
+            self._attr_is_on = self.entity_description.value_fn(cast(LinkStation, hub))
+
+
+class ProtectAlarmHubZoneBinarySensor(
+    ProtectPublicChannelEntity[AlarmHubInput], BinarySensorEntity
+):
+    """A wired-input (zone) binary sensor for a UniFi Protect alarm hub."""
+
+    _state_attrs = ("_attr_available", "_attr_is_on")
+
+    def __init__(
+        self, data: ProtectData, hub: LinkStation, input_id: int, zone: AlarmHubInput
+    ) -> None:
+        """Initialize the zone binary sensor."""
+        device_class = (
+            _ALARM_HUB_INPUT_DEVICE_CLASS.get(zone.input_type)
+            if zone.input_type is not None
+            else None
+        )
+        description = BinarySensorEntityDescription(
+            key=f"input_{input_id}",
+            device_class=device_class,
+        )
+        super().__init__(data, hub, description, input_id)
+        if zone.name:
+            # Device-provided names take precedence over the translated default.
+            self._attr_name = zone.name
+        else:
+            self._attr_translation_key = "alarm_hub_zone"
+            self._attr_translation_placeholders = {"zone": str(input_id)}
+
+    @callback
+    @override
+    def _async_get_channel(self, device: PublicDeviceModel) -> AlarmHubInput | None:
+        zone = cast(LinkStation, device).get_alarm_hub_input(self._channel_id)
+        # An unreadable zone is unavailable rather than a definite "not
+        # triggered". FAULT/SHORT/CUT are known states and read off.
+        if zone is None or zone.status is AlarmHubInputStatus.UNKNOWN:
+            return None
+        return zone
+
+    @callback
+    @override
+    def _async_update_from_channel(self, channel: AlarmHubInput) -> None:
+        self._attr_is_on = channel.status is AlarmHubInputStatus.ALARM
+
+
+@callback
+def _async_alarm_hub_entities(
+    data: ProtectData, hub: LinkStation
+) -> list[ProtectDeviceEntity]:
+    """Build the binary sensors for one alarm hub."""
+    entities: list[ProtectDeviceEntity] = [
+        ProtectAlarmHubBinarySensor(data, hub, description)
+        for description in ALARM_HUB_BINARY_SENSORS
+    ]
+    entities += [
+        ProtectAlarmHubZoneBinarySensor(data, hub, input_id, zone)
+        for input_id, zone in hub.alarm_hub_inputs.items()
+        if zone.enable is OnOffState.ON and zone.input_type is not None
+    ]
+    return entities
+
+
+class ProtectFobBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
+    """A binary sensor entity for a UniFi Protect key fob (Public API)."""
+
+    entity_description: ProtectFobBinaryEntityDescription
+    _state_attrs = ("_attr_available", "_attr_is_on")
+    _ufp_uses_public = True
+
+    @callback
+    @override
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if (fob := self._ufp_public_obj) is not None:
+            self._attr_is_on = self.entity_description.value_fn(cast(Fob, fob))
 
 
 async def async_setup_entry(
@@ -784,6 +917,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors for UniFi Protect integration."""
     data = entry.runtime_data
+    platform = async_get_current_platform()
 
     @callback
     def _add_new_public_device(device: PublicDeviceModel) -> None:
@@ -792,13 +926,31 @@ async def async_setup_entry(
                 ProtectFobBinarySensor(data, device, description)
                 for description in FOB_BINARY_SENSORS
             )
+            return
+        if isinstance(device, LinkStation):
+            if device.is_alarm_hub:
+                async_add_entities(_async_alarm_hub_entities(data, device))
+            return
+        async_add_entities(_async_model_entities(data, public_device=device))
+
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        entities = _async_model_entities(data, ufp_device=device)
+        # AiPort inherits from Camera but should not create camera-specific entities
+        if device.is_adopted and device.model is ModelType.CAMERA:
+            entities += _async_event_entities(data, ufp_device=device)
+        async_add_entities(entities)
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
     )
+    data.async_subscribe_adopt(_add_new_device)
+    async_remove_unsupported_sense_entities(
+        hass, Platform.BINARY_SENSOR, data, (*SENSE_SENSORS, *MOUNTABLE_SENSE_SENSORS)
+    )
 
     # The public bootstrap is primed only with an API key and supported NVR
-    # firmware; without it there are no fobs to expose.
+    # firmware; without it there are no fobs or alarm hubs to expose.
     api = data.api
     if api.has_public_bootstrap:
         async_add_entities(
@@ -806,34 +958,30 @@ async def async_setup_entry(
             for fob in api.public_bootstrap.fobs.values()
             for description in FOB_BINARY_SENSORS
         )
-
-    # Everything below is driven by the private bootstrap, which public-only
-    # entries do not have.
-    if api.is_public_only:
-        return
-
-    async_remove_unsupported_sense_entities(
-        hass, Platform.BINARY_SENSOR, data, (*SENSE_SENSORS, *MOUNTABLE_SENSE_SENSORS)
-    )
+        for hub in api.public_bootstrap.alarm_hubs.values():
+            async_add_entities(_async_alarm_hub_entities(data, hub))
 
     @callback
-    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities: list[BaseProtectEntity] = []
-        for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
-            entities += async_all_device_entities(
-                data, klass, model_descriptions=model_descriptions, ufp_device=device
-            )
-        # AiPort inherits from Camera but should not create camera-specific entities
-        if device.is_adopted and device.model is ModelType.CAMERA:
-            entities += _async_event_entities(data, ufp_device=device)
-        async_add_entities(entities)
-
-    data.async_subscribe_adopt(_add_new_device)
-    entities: list[BaseProtectEntity] = []
-    for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
-        entities += async_all_device_entities(
-            data, klass, model_descriptions=model_descriptions
+    def _add_relay_inputs(relay: Relay) -> None:
+        live_unique_ids = {entity.unique_id for entity in platform.entities.values()}
+        async_add_entities(
+            [
+                ProtectRelayInputBinarySensor(data, relay, relay_input)
+                for relay_input in relay.inputs
+                if f"{relay.mac}_relay_input_{relay_input.id}" not in live_unique_ids
+            ]
         )
-    entities += _async_event_entities(data)
-    entities += _async_nvr_entities(data)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.relay_signal, _add_relay_inputs)
+    )
+    if api.has_public_bootstrap:
+        for relay in api.public_bootstrap.relays.values():
+            _add_relay_inputs(relay)
+
+    entities = _async_model_entities(data)
+    if not api.is_public_only:
+        # Doorbell ring and NVR disks read the private bootstrap.
+        entities += _async_event_entities(data)
+        entities += _async_nvr_entities(data)
     async_add_entities(entities)

@@ -1,11 +1,13 @@
 """Config flow for llama.cpp integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, cast, override
 
 import openai
-import voluptuous as vol
+import probatio
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -18,6 +20,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
+from homeassistant.helpers.field_visibility import FieldCondition
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -53,10 +56,15 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_BASE_URL, default=DEFAULT_BASE_URL): str,
-        vol.Optional(CONF_API_KEY): str,
+        probatio.Required(CONF_BASE_URL, default=DEFAULT_BASE_URL): str,
+        probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
+    }
+)
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
 
@@ -75,25 +83,68 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match(user_input)
-            try:
-                self.client = await async_create_client(self.hass, user_input)
-                self.models = await async_list_models(self.client)
-            except HomeAssistantError as err:
-                LOGGER.error("Connection validation failed: %s", err)
-                errors["base"] = err.translation_key or "unknown"
-            except Exception:  # pylint: disable=broad-except # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            errors = await self._async_validate_input(user_input)
+            if not errors:
                 self.data = user_input
                 return await self.async_step_model()
 
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def _async_validate_input(self, data: Mapping[str, Any]) -> dict[str, str]:
+        """Validate the connection and return errors, if any."""
+        try:
+            self.client = await async_create_client(self.hass, data)
+            self.models = await async_list_models(self.client)
+        except HomeAssistantError as err:
+            LOGGER.error("Connection validation failed: %s", err)
+            return {"base": err.translation_key or "unknown"}
+        except Exception:  # pylint: disable=broad-except # noqa: BLE001
+            LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}
+        return {}
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new API key."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            errors = await self._async_validate_input(
+                {**reauth_entry.data, **user_input}
+            )
+            if not errors:
+                # The update listener already reloads the entry when data changes
+                reload = (
+                    reauth_entry.data.get(CONF_API_KEY) == user_input[CONF_API_KEY]
+                    or not reauth_entry.update_listeners
+                )
+                result = self.async_update_and_abort(
+                    reauth_entry, data_updates=user_input
+                )
+                if reload:
+                    self.hass.config_entries.async_schedule_reload(
+                        reauth_entry.entry_id
+                    )
+                return result
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            description_placeholders={CONF_BASE_URL: reauth_entry.data[CONF_BASE_URL]},
             errors=errors,
         )
 
@@ -153,9 +204,9 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="model",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_CHAT_MODEL,
                         ): SelectSelector(
                             SelectSelectorConfig(
@@ -191,7 +242,6 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
 class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     """Flow for managing conversation subentries."""
 
-    last_rendered_recommended = False
     options: dict[str, Any] | None = None
     models: list[str] | None = None
 
@@ -222,9 +272,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
             CONF_CHAT_MODEL: recommended_model(models),
         }
-        self.last_rendered_recommended = cast(
-            bool, self.options.get(CONF_RECOMMENDED, False)
-        )
         return await self.async_step_init()
 
     async def async_step_reconfigure(
@@ -243,9 +290,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
         if self.options is None:
             self.options = self._get_reconfigure_subentry().data.copy()
-            self.last_rendered_recommended = cast(
-                bool, self.options.get(CONF_RECOMMENDED, False)
-            )
 
         try:
             models = await self._get_models()
@@ -267,7 +311,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 return self.async_show_form(
                     step_id="init",
                     data_schema=self.add_suggested_values_to_schema(
-                        vol.Schema(
+                        probatio.Schema(
                             llama_cpp_config_option_schema(self.hass, options, models)
                         ),
                         user_input,
@@ -275,33 +319,23 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     errors={"base": err.translation_key or "unknown"},
                 )
 
-            if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
-                if self.source == "user":
-                    return self.async_create_entry(
-                        title=model_name_to_title(user_input[CONF_CHAT_MODEL]),
-                        data=user_input,
-                    )
-                return self.async_update_and_abort(
-                    self._get_entry(),
-                    self._get_reconfigure_subentry(),
-                    data=user_input,
+            if self.source == "user":
+                return self.async_create_entry(
                     title=model_name_to_title(user_input[CONF_CHAT_MODEL]),
+                    data=user_input,
                 )
-
-            self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
-
-            options = {
-                CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
-                CONF_PROMPT: user_input[CONF_PROMPT],
-                CONF_CHAT_MODEL: user_input[CONF_CHAT_MODEL],
-                CONF_LLM_HASS_API: user_input.get(CONF_LLM_HASS_API, []),
-            }
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=user_input,
+                title=model_name_to_title(user_input[CONF_CHAT_MODEL]),
+            )
 
         schema = llama_cpp_config_option_schema(self.hass, options, models)
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(schema), options
+                probatio.Schema(schema), options
             ),
         )
 
@@ -321,11 +355,11 @@ def llama_cpp_config_option_schema(
     ]
     LOGGER.debug("Available LLM APIs: %s", hass_apis)
 
-    schema: dict[vol.Required | vol.Optional, Any] = {}
+    schema: dict[probatio.Required | probatio.Optional, Any] = {}
 
     schema.update(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_PROMPT,
                 description={
                     "suggested_value": options.get(
@@ -333,14 +367,14 @@ def llama_cpp_config_option_schema(
                     )
                 },
             ): TemplateSelector(),
-            vol.Optional(
+            probatio.Optional(
                 CONF_LLM_HASS_API,
             ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
         }
     )
     schema.update(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_CHAT_MODEL,
                 description={"suggested_value": options.get(CONF_CHAT_MODEL)},
                 default=options.get(CONF_CHAT_MODEL, recommended_model(models)),
@@ -352,31 +386,35 @@ def llama_cpp_config_option_schema(
                     custom_value=True,
                 ),
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
             ): bool,
         }
     )
 
-    if options.get(CONF_RECOMMENDED):
-        return schema
-
+    not_recommended: FieldCondition = {
+        "field": CONF_RECOMMENDED,
+        "value": False,
+    }
     schema.update(
         {
-            vol.Optional(
+            data_entry_flow.Optional(
                 CONF_MAX_TOKENS,
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=RECOMMENDED_MAX_TOKENS,
+                visible=not_recommended,
             ): int,
-            vol.Optional(
+            data_entry_flow.Optional(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
                 default=RECOMMENDED_TOP_P,
+                visible=not_recommended,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
+            data_entry_flow.Optional(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=RECOMMENDED_TEMPERATURE,
+                visible=not_recommended,
             ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
         }
     )

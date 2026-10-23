@@ -3,11 +3,11 @@
 import logging
 from typing import Any, override
 
+import probatio
 import sqlalchemy
 from sqlalchemy.engine import Engine, Result
 from sqlalchemy.exc import MultipleResultsFound, NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
-import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
 from homeassistant.components.sensor import CONF_STATE_CLASS
@@ -43,19 +43,21 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 
-OPTIONS_SCHEMA: vol.Schema = vol.Schema(
+OPTIONS_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        vol.Required(CONF_QUERY): selector.TemplateSelector(),
-        vol.Required(CONF_COLUMN_NAME): selector.TextSelector(),
-        vol.Required(CONF_ADDITIONAL_OPTIONS): section(
-            vol.Schema(
+        probatio.Required(CONF_QUERY): selector.TemplateSelector(),
+        probatio.Required(CONF_COLUMN_NAME): selector.TextSelector(),
+        probatio.Required(CONF_ADDITIONAL_OPTIONS): section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
-                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(),
-                    vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                    probatio.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
+                    probatio.Optional(
+                        CONF_UNIT_OF_MEASUREMENT
+                    ): selector.TextSelector(),
+                    probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
                         selector.DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
-                    vol.Optional(CONF_STATE_CLASS): selector.StateClassSelector(),
+                    probatio.Optional(CONF_STATE_CLASS): selector.StateClassSelector(),
                 }
             ),
             {"collapsed": True},
@@ -63,12 +65,14 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA: vol.Schema = vol.Schema(
+CONFIG_SCHEMA: probatio.Schema = probatio.Schema(
     {
         # Approved exemption: user names the SQL query sensor
         # pylint: disable-next=home-assistant-config-flow-name-field
-        vol.Required(CONF_NAME, default="Select SQL Query"): selector.TextSelector(),
-        vol.Optional(CONF_DB_URL): selector.TextSelector(),
+        probatio.Required(
+            CONF_NAME, default="Select SQL Query"
+        ): selector.TextSelector(),
+        probatio.Optional(CONF_DB_URL): selector.TextSelector(),
     }
 )
 

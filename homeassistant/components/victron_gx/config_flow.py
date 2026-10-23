@@ -5,6 +5,7 @@ import logging
 from typing import Any, override
 from urllib.parse import urlparse
 
+import probatio
 from victron_mqtt import (
     AuthenticationError,
     CannotConnectError,
@@ -13,7 +14,6 @@ from victron_mqtt import (
     PairingToken,
     request_pairing_token,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -23,7 +23,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -33,7 +32,7 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.redact import async_redact_data
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_INSTALLATION_ID, CONF_MQTT_TOKEN_PAIRING, CONF_SERIAL, DOMAIN
+from .const import CONF_INSTALLATION_ID, CONF_MQTT_TOKEN_PAIRING, DOMAIN
 
 DEFAULT_HOST = "venus.local"
 DEFAULT_PORT = 1883
@@ -45,34 +44,38 @@ TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 ENTRY_TITLE_FORMAT = "Victron OS {installation_id} ({host}:{port})"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): selector.TextSelector(),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_USERNAME): selector.TextSelector(),
-        vol.Optional(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(CONF_HOST, default=DEFAULT_HOST): selector.TextSelector(),
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Optional(CONF_USERNAME): selector.TextSelector(),
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
-        vol.Required(CONF_SSL, default=False): selector.BooleanSelector(),
+        probatio.Required(CONF_SSL, default=False): selector.BooleanSelector(),
     }
 )
 
-STEP_SSDP_AUTH_DATA_SCHEMA = vol.Schema(
+STEP_SSDP_AUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
+        probatio.Optional(
+            probatio.Secret(CONF_PASSWORD), default=""
+        ): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_SSL): selector.BooleanSelector(),
+        probatio.Optional(CONF_SSL): selector.BooleanSelector(),
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_USERNAME, default=""): selector.TextSelector(),
-        vol.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
+        probatio.Optional(CONF_USERNAME, default=""): selector.TextSelector(),
+        probatio.Optional(
+            probatio.Secret(CONF_PASSWORD), default=""
+        ): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_SSL): selector.BooleanSelector(),
+        probatio.Optional(CONF_SSL): selector.BooleanSelector(),
     }
 )
 
@@ -94,7 +97,6 @@ async def validate_input(data: dict[str, Any]) -> str:
             password=data.get(CONF_PASSWORD) or None,
             use_ssl=data.get(CONF_SSL, False),
             installation_id=data.get(CONF_INSTALLATION_ID) or None,
-            serial=data.get(CONF_SERIAL) or None,
         )
 
         await hub.connect()
@@ -118,10 +120,8 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self.hostname: str | None = None
-        self.serial: str | None = None
         self.installation_id: str | None = None
         self.friendly_name: str | None = None
-        self.model_name: str | None = None
         self.mqtt_token_pairing = False
         self.ssdp_use_ssl = True
 
@@ -136,7 +136,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 "User input received: %s",
                 async_redact_data(user_input, TO_REDACT),
             )
-            data = {**user_input, CONF_SERIAL: self.serial, CONF_MODEL: self.model_name}
+            data = dict(user_input)
 
             try:
                 installation_id = await validate_input(data)
@@ -187,9 +187,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         self.hostname = str(hostname)
-        self.serial = discovery_info.upnp["serialNumber"]
         self.installation_id = discovery_info.upnp["X_VrmPortalId"]
-        self.model_name = discovery_info.upnp["modelName"]
         self.friendly_name = discovery_info.upnp["friendlyName"]
         self.mqtt_token_pairing = discovery_info.upnp.get("X_MqttTokenPairing") == "1"
 
@@ -235,9 +233,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             data: dict[str, Any] = {
                 CONF_HOST: self.hostname,
                 CONF_PORT: DEFAULT_SSL_PORT,
-                CONF_SERIAL: self.serial,
                 CONF_INSTALLATION_ID: self.installation_id,
-                CONF_MODEL: self.model_name,
                 CONF_SSL: True,
             }
             try:
@@ -308,9 +304,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 data: dict[str, Any] = {
                     CONF_HOST: self.hostname,
                     CONF_PORT: DEFAULT_SSL_PORT,
-                    CONF_SERIAL: self.serial,
                     CONF_INSTALLATION_ID: self.installation_id,
-                    CONF_MODEL: self.model_name,
                     CONF_MQTT_TOKEN_PAIRING: True,
                     CONF_USERNAME: credentials.token_name,
                     CONF_PASSWORD: credentials.password,
@@ -364,9 +358,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             data: dict[str, Any] = {
                 CONF_HOST: self.hostname,
                 CONF_PORT: DEFAULT_SSL_PORT if use_ssl else DEFAULT_PORT,
-                CONF_SERIAL: self.serial,
                 CONF_INSTALLATION_ID: self.installation_id,
-                CONF_MODEL: self.model_name,
                 CONF_USERNAME: "remoteconsole",
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
                 CONF_SSL: use_ssl,
@@ -463,9 +455,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         if reauth_entry.data.get(CONF_MQTT_TOKEN_PAIRING):
             self.hostname = reauth_entry.data[CONF_HOST]
-            self.serial = reauth_entry.data.get(CONF_SERIAL)
             self.installation_id = reauth_entry.data[CONF_INSTALLATION_ID]
-            self.model_name = reauth_entry.data.get(CONF_MODEL)
             return await self.async_step_ssdp_token_pairing()
         return await self.async_step_reauth_confirm()
 

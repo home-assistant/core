@@ -5,22 +5,16 @@ import logging
 from operator import ior
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
     PLATFORM_SCHEMA as FAN_PLATFORM_SCHEMA,
-    SERVICE_OSCILLATE,
-    SERVICE_SET_DIRECTION,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     FanEntity,
     FanEntityFeature,
     FanEntityStateAttribute,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -59,9 +53,9 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = FAN_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(FAN_DOMAIN),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(FAN_DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -181,27 +175,27 @@ class FanGroup(GroupEntity, FanEntity):
         if percentage == 0:
             await self.async_turn_off()
         await self._async_call_supported_entities(
-            SERVICE_SET_PERCENTAGE,
+            FanService.SET_PERCENTAGE,
             FanEntityFeature.SET_SPEED,
-            {ATTR_PERCENTAGE: percentage},
+            {FanServiceArgument.PERCENTAGE: percentage},
         )
 
     @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self._async_call_supported_entities(
-            SERVICE_OSCILLATE,
+            FanService.OSCILLATE,
             FanEntityFeature.OSCILLATE,
-            {ATTR_OSCILLATING: oscillating},
+            {FanServiceArgument.OSCILLATING: oscillating},
         )
 
     @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self._async_call_supported_entities(
-            SERVICE_SET_DIRECTION,
+            FanService.SET_DIRECTION,
             FanEntityFeature.DIRECTION,
-            {ATTR_DIRECTION: direction},
+            {FanServiceArgument.DIRECTION: direction},
         )
 
     @override
@@ -216,14 +210,14 @@ class FanGroup(GroupEntity, FanEntity):
             await self.async_set_percentage(percentage)
             return
         await self._async_call_supported_entities(
-            SERVICE_TURN_ON, FanEntityFeature.TURN_ON, {}
+            FanService.TURN_ON, FanEntityFeature.TURN_ON, {}
         )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fans off."""
         await self._async_call_supported_entities(
-            SERVICE_TURN_OFF, FanEntityFeature.TURN_OFF, {}
+            FanService.TURN_OFF, FanEntityFeature.TURN_OFF, {}
         )
 
     async def _async_call_supported_entities(
@@ -313,10 +307,12 @@ class FanGroup(GroupEntity, FanEntity):
             self._speed_count = 100
 
         self._set_attr_most_frequent(
-            "_oscillating", FanEntityFeature.OSCILLATE, ATTR_OSCILLATING
+            "_oscillating",
+            FanEntityFeature.OSCILLATE,
+            FanEntityStateAttribute.OSCILLATING,
         )
         self._set_attr_most_frequent(
-            "_direction", FanEntityFeature.DIRECTION, ATTR_DIRECTION
+            "_direction", FanEntityFeature.DIRECTION, FanEntityStateAttribute.DIRECTION
         )
 
         self._attr_supported_features = FanEntityFeature(

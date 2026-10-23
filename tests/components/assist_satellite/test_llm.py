@@ -31,4 +31,11 @@ def _llm_context() -> llm.LLMContext:
 async def test_broadcast_tool_offered(hass: HomeAssistant) -> None:
     """Test the broadcast intent is exposed as an LLM tool."""
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
-    assert "assist_satellite__HassBroadcast" in [tool.name for tool in result.tools]
+    tools = {tool.name: tool for tool in result.tools}
+    assert "assist_satellite__HassBroadcast" in tools
+
+    tool = tools["assist_satellite__HassBroadcast"]
+    assert tool.title == "Broadcast message"
+    assert tool.integration == "assist_satellite"
+    # A broadcast announces again on every call and takes nothing away.
+    assert tool.annotations == llm.ToolAnnotations(destructive=False, open_world=False)

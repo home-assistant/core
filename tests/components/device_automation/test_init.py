@@ -4,9 +4,16 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import attr
+import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
-import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components import automation, device_automation
@@ -33,9 +40,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import RequirementsNotFound
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
-from tests.typing import WebSocketGenerator
 
 
 @attr.s(frozen=True, slots=True)
@@ -75,7 +79,7 @@ def fake_integration(hass: HomeAssistant) -> None:
         f"{FAKE_DOMAIN}.device_action",
         Mock(
             ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
-                {vol.Required("domain"): FAKE_DOMAIN}
+                {probatio.Required("domain"): FAKE_DOMAIN}
             ),
             async_get_actions=_async_get_actions,
             spec=["ACTION_SCHEMA", "async_get_actions"],
@@ -87,7 +91,7 @@ def fake_integration(hass: HomeAssistant) -> None:
         f"{FAKE_DOMAIN}.device_condition",
         Mock(
             CONDITION_SCHEMA=toggle_entity.CONDITION_SCHEMA.extend(
-                {vol.Required("domain"): FAKE_DOMAIN}
+                {probatio.Required("domain"): FAKE_DOMAIN}
             ),
             async_get_conditions=_async_get_conditions,
             spec=["CONDITION_SCHEMA", "async_get_conditions"],
@@ -98,10 +102,11 @@ def fake_integration(hass: HomeAssistant) -> None:
         hass,
         f"{FAKE_DOMAIN}.device_trigger",
         Mock(
-            TRIGGER_SCHEMA=vol.All(
+            TRIGGER_SCHEMA=probatio.All(
                 toggle_entity.TRIGGER_SCHEMA,
-                vol.Schema(
-                    {vol.Required("domain"): FAKE_DOMAIN}, extra=vol.ALLOW_EXTRA
+                probatio.Schema(
+                    {probatio.Required("domain"): FAKE_DOMAIN},
+                    extra=probatio.ALLOW_EXTRA,
                 ),
             ),
             async_get_triggers=_async_get_triggers,
@@ -311,10 +316,10 @@ async def test_websocket_get_action_capabilities(
 
     async def _async_get_action_capabilities(
         hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List action capabilities."""
         if config["type"] == "turn_on":
-            return {"extra_fields": vol.Schema({vol.Optional("code"): str})}
+            return {"extra_fields": probatio.Schema({probatio.Optional("code"): str})}
         return {}
 
     module_cache = hass.data[loader.DATA_COMPONENTS]
@@ -473,7 +478,7 @@ async def test_websocket_get_condition_capabilities(
 
     async def _async_get_condition_capabilities(
         hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List condition capabilities."""
         return await toggle_entity.async_get_condition_capabilities(hass, config)
 
@@ -771,7 +776,7 @@ async def test_websocket_get_trigger_capabilities(
 
     async def _async_get_trigger_capabilities(
         hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List trigger capabilities."""
         return await toggle_entity.async_get_trigger_capabilities(hass, config)
 
@@ -1340,8 +1345,28 @@ BAD_AUTOMATIONS = [
     ),
 ]
 
-BAD_TRIGGERS = BAD_CONDITIONS = [
+BAD_CONDITIONS = [
     *BAD_AUTOMATIONS,
+    ({"domain": "light"}, "required key not provided at '{path}device_id'"),
+]
+
+BAD_TRIGGERS = [
+    (
+        {"device_id": "very_unique", "domain": "light"},
+        "expected type to be one of",
+    ),
+    (
+        {"device_id": "wrong", "domain": "light"},
+        "Unknown device 'wrong'",
+    ),
+    (
+        {"device_id": "wrong"},
+        "required key not provided at '{path}domain'",
+    ),
+    (
+        {"device_id": "very_unique", "domain": "light", "entity_id": "wrong"},
+        "Unknown entity 'wrong'",
+    ),
     ({"domain": "light"}, "required key not provided at '{path}device_id'"),
 ]
 
@@ -1926,9 +1951,9 @@ async def test_validate_config_rewrites_composite_device_id(
             "entity_id": entity.entity_id,
             "type": "turned_on",
         },
-        vol.Schema(
-            {vol.Required("device_id"): str, vol.Required("domain"): str},
-            extra=vol.ALLOW_EXTRA,
+        probatio.Schema(
+            {probatio.Required("device_id"): str, probatio.Required("domain"): str},
+            extra=probatio.ALLOW_EXTRA,
         ),
         DeviceAutomationType.TRIGGER,
     )

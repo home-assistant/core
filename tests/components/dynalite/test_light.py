@@ -4,6 +4,7 @@ from unittest.mock import Mock, PropertyMock
 
 from dynalite_devices_lib.light import DynaliteChannelLightDevice
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -28,8 +29,6 @@ from .common import (
     get_entry_id_from_hass,
     run_service_tests,
 )
-
-from tests.common import mock_restore_cache
 
 
 @pytest.fixture

@@ -112,6 +112,9 @@
     "button": {
       "led_pulse": {
         "name": "LED next color"
+      },
+      "sync_time": {
+        "name": "Sync time"
       }
     },
     "light": {

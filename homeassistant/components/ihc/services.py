@@ -1,6 +1,6 @@
 """Support for IHC services."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -19,34 +19,34 @@ from .const import (
 )
 from .util import async_pulse, async_set_bool, async_set_float, async_set_int
 
-SET_RUNTIME_VALUE_BOOL_SCHEMA = vol.Schema(
+SET_RUNTIME_VALUE_BOOL_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_IHC_ID): cv.positive_int,
-        vol.Required(ATTR_VALUE): cv.boolean,
-        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
+        probatio.Required(ATTR_IHC_ID): cv.positive_int,
+        probatio.Required(ATTR_VALUE): cv.boolean,
+        probatio.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
     }
 )
 
-SET_RUNTIME_VALUE_INT_SCHEMA = vol.Schema(
+SET_RUNTIME_VALUE_INT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_IHC_ID): cv.positive_int,
-        vol.Required(ATTR_VALUE): vol.Coerce(int),
-        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
+        probatio.Required(ATTR_IHC_ID): cv.positive_int,
+        probatio.Required(ATTR_VALUE): probatio.Coerce(int),
+        probatio.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
     }
 )
 
-SET_RUNTIME_VALUE_FLOAT_SCHEMA = vol.Schema(
+SET_RUNTIME_VALUE_FLOAT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_IHC_ID): cv.positive_int,
-        vol.Required(ATTR_VALUE): vol.Coerce(float),
-        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
+        probatio.Required(ATTR_IHC_ID): cv.positive_int,
+        probatio.Required(ATTR_VALUE): probatio.Coerce(float),
+        probatio.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
     }
 )
 
-PULSE_SCHEMA = vol.Schema(
+PULSE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_IHC_ID): cv.positive_int,
-        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
+        probatio.Required(ATTR_IHC_ID): cv.positive_int,
+        probatio.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
     }
 )
 
