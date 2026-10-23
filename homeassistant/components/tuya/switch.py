@@ -101,28 +101,7 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    DeviceCategory.CJKG: (
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "1"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "2"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_3,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "3"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_4,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "4"},
-        ),
-    ),
+    DeviceCategory.CJKG: _channel_switches(4, translation_key="switch"),
     DeviceCategory.CL: (
         TuyaSwitchEntityDescription(
             key=DPCode.CONTROL_BACK,
