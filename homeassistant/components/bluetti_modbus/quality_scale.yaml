@@ -87,9 +87,7 @@ rules:
     comment: >-
       No icons.json yet - non-device-class entities currently fall back to
       the default icon (icon: None in the entity registry snapshots).
-  reconfiguration-flow:
-    status: todo
-    comment: Split off to a follow-up PR to keep this one reviewable.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repairable issues are raised.
