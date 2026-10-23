@@ -17,7 +17,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Keep config flow tests from setting up the integration."""
     with patch(
         "homeassistant.components.victron_modbus.async_setup_entry",
-        return_value=True,
+        new_callable=AsyncMock,
+        return_value=None,
     ) as mock:
         yield mock
 
