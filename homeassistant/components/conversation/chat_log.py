@@ -766,10 +766,12 @@ class ChatLog:
                 for call_index, tool_call in enumerate(tool_calls):
                     if not tool_call.external or tool_call.tool_name in tool_names:
                         continue
+                    # A name renamed in an earlier turn may carry an old prefix.
+                    intent_name = tool_call.tool_name.rpartition("__")[2]
                     matches = [
                         name
                         for name in intent_tool_names
-                        if name.endswith(f"__{tool_call.tool_name}")
+                        if name == intent_name or name.endswith(f"__{intent_name}")
                     ]
                     if len(matches) == 1:
                         tool_calls[call_index] = replace(

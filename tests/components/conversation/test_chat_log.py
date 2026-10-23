@@ -480,6 +480,12 @@ def _other_tool(name: str) -> llm.Tool:
             [_intent_tool("HassTurnOn")], "HassTurnOn", "HassTurnOn", id="matching"
         ),
         pytest.param(
+            [_intent_tool("intent__HassTurnOn")],
+            "device-control__intent__HassTurnOn",
+            "intent__HassTurnOn",
+            id="merged_to_single_api",
+        ),
+        pytest.param(
             [_intent_tool("intent__HassTurnOn"), _intent_tool("other__HassTurnOn")],
             "HassTurnOn",
             "HassTurnOn",
