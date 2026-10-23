@@ -65,26 +65,16 @@ async def trigger_subscription_callback_debounced(
 
 
 @pytest.mark.parametrize(
-    ("value", "index", "attr_name", "expected"),
+    ("value", "attr_name", "expected"),
     [
-        pytest.param(None, 0, "position", None, id="none_value"),
-        pytest.param({0: 30}, 0, "position", 30, id="dict_int_key"),
-        pytest.param({"0": 30}, 0, "position", 30, id="dict_str_key"),
-        pytest.param({0: 0}, 0, "position", 0, id="dict_int_key_falsy_value"),
-        pytest.param({1: 30}, 0, "position", None, id="dict_missing_key"),
-        pytest.param(
-            SimpleNamespace(position=30), 0, "position", 30, id="object_attribute"
-        ),
-        pytest.param(
-            SimpleNamespace(), 0, "position", None, id="object_missing_attribute"
-        ),
+        pytest.param(None, "position", None, id="none_value"),
+        pytest.param(SimpleNamespace(position=30), "position", 30, id="attribute"),
+        pytest.param(SimpleNamespace(), "position", None, id="missing_attribute"),
     ],
 )
-def test_extract_struct_field(
-    value: Any, index: int, attr_name: str, expected: Any
-) -> None:
-    """Test extracting a field from a Matter struct value in either representation."""
-    assert _extract_struct_field(value, index, attr_name) == expected
+def test_extract_struct_field(value: Any, attr_name: str, expected: Any) -> None:
+    """Test extracting a field from a Matter struct value."""
+    assert _extract_struct_field(value, attr_name) == expected
 
 
 @pytest.mark.parametrize(
@@ -93,37 +83,62 @@ def test_extract_struct_field(
         pytest.param(None, None, id="none_tag_list"),
         pytest.param([], None, id="empty_tag_list"),
         pytest.param(
-            [{"1": NAMESPACE_CLOSURE_PANEL, "2": 0}],
+            [
+                clusters.Globals.Structs.semtag(
+                    namespaceID=NAMESPACE_CLOSURE_PANEL, tag=0
+                )
+            ],
             ClosurePanelRole.POSITION,
             id="lift_tag",
         ),
         pytest.param(
-            [{"1": NAMESPACE_CLOSURE_PANEL, "2": 1}],
+            [
+                clusters.Globals.Structs.semtag(
+                    namespaceID=NAMESPACE_CLOSURE_PANEL, tag=1
+                )
+            ],
             ClosurePanelRole.TILT,
             id="tilt_tag",
         ),
         pytest.param(
-            [{"1": NAMESPACE_CLOSURE_PANEL, "2": 2}],
+            [
+                clusters.Globals.Structs.semtag(
+                    namespaceID=NAMESPACE_CLOSURE_PANEL, tag=2
+                )
+            ],
             ClosurePanelRole.POSITION,
             id="sliding_tag",
         ),
         pytest.param(
-            [{"1": NAMESPACE_CLOSURE_PANEL, "2": 3}],
+            [
+                clusters.Globals.Structs.semtag(
+                    namespaceID=NAMESPACE_CLOSURE_PANEL, tag=3
+                )
+            ],
             ClosurePanelRole.POSITION,
             id="rotate_tag",
         ),
         pytest.param(
-            [{"1": NAMESPACE_CLOSURE_PANEL, "2": 99}],
+            [
+                clusters.Globals.Structs.semtag(
+                    namespaceID=NAMESPACE_CLOSURE_PANEL, tag=99
+                )
+            ],
             None,
             id="unrecognized_closure_panel_tag",
         ),
         pytest.param(
-            [{"1": 999, "2": 0}],
+            [clusters.Globals.Structs.semtag(namespaceID=999, tag=0)],
             None,
             id="tag_from_another_namespace_is_ignored",
         ),
         pytest.param(
-            [{"1": 999, "2": 0}, {"1": NAMESPACE_CLOSURE_PANEL, "2": 1}],
+            [
+                clusters.Globals.Structs.semtag(namespaceID=999, tag=0),
+                clusters.Globals.Structs.semtag(
+                    namespaceID=NAMESPACE_CLOSURE_PANEL, tag=1
+                ),
+            ],
             ClosurePanelRole.TILT,
             id="skips_other_namespace_tag_then_matches",
         ),
@@ -1109,7 +1124,6 @@ async def test_closure_cover_garage_door(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.ClosureControl.Commands.Stop(),
-        timed_request_timeout_ms=1000,
     )
     matter_client.send_device_command.reset_mock()
 

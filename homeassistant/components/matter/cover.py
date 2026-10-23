@@ -107,26 +107,10 @@ class OperationalStatus(IntEnum):
     RESERVED = 0b11
 
 
-def _extract_struct_field(value: Any, index: int, attr_name: str) -> Any:
-    """Extract a field from a Matter struct value.
-
-    Matter server can expose cluster struct attributes either as objects or
-    simple dictionaries keyed by the TLV field index. We normalize access by
-    first checking dict keys and falling back to attribute lookup.
-    Normalize NullValue to None before field extraction.
-    """
+def _extract_struct_field(value: Any, attr_name: str) -> Any:
+    """Extract a field from a Matter struct value, normalizing NullValue to None."""
     if value is None or value is NullValue:
         return None
-    if isinstance(value, dict):
-        if index in value:
-            value = value[index]
-        elif (index_str := str(index)) in value:
-            value = value[index_str]
-        else:
-            return None
-        if value is None or value is NullValue:
-            return None
-        return value
     result = getattr(value, attr_name, None)
     if result is None or result is NullValue:
         return None
@@ -142,8 +126,8 @@ def _get_closure_device_class(tag_list: Any) -> CoverDeviceClass | None:
     """
     fallback_device_class: CoverDeviceClass | None = None
     for tag in tag_list or ():
-        namespace_id = _extract_struct_field(tag, 1, "namespaceID")
-        tag_id = _extract_struct_field(tag, 2, "tag")
+        namespace_id = _extract_struct_field(tag, "namespaceID")
+        tag_id = _extract_struct_field(tag, "tag")
         if namespace_id == NAMESPACE_CLOSURE_COVERING:
             if (
                 device_class := CLOSURE_COVERING_TAG_TO_DEVICE_CLASS.get(tag_id)
@@ -165,9 +149,9 @@ CLOSURE_PANEL_TAG_TO_ROLE = {
 def _get_closure_panel_role(tag_list: Any) -> ClosurePanelRole | None:
     """Return the functional role of a ClosurePanel endpoint from its TagList."""
     for tag in tag_list or ():
-        if _extract_struct_field(tag, 1, "namespaceID") != NAMESPACE_CLOSURE_PANEL:
+        if _extract_struct_field(tag, "namespaceID") != NAMESPACE_CLOSURE_PANEL:
             continue
-        role = CLOSURE_PANEL_TAG_TO_ROLE.get(_extract_struct_field(tag, 2, "tag"))
+        role = CLOSURE_PANEL_TAG_TO_ROLE.get(_extract_struct_field(tag, "tag"))
         if role is not None:
             return role
     return None
@@ -656,12 +640,12 @@ class MatterClosure(MatterEntity, CoverEntity):
                 clusters.ClosureControl.Enums.MainStateEnum.kMoving,
                 clusters.ClosureControl.Enums.MainStateEnum.kWaitingForMotion,
             )
-            and _extract_struct_field(overall_current_state, 0, "position") == fully_at
+            and _extract_struct_field(overall_current_state, "position") == fully_at
         ):
             return
         command_kwargs: dict[str, Any] = {"position": target}
         if self._motion_latching_supported() and _extract_struct_field(
-            overall_current_state, 1, "latch"
+            overall_current_state, "latch"
         ):
             command_kwargs["latch"] = False
         await self.send_device_command(
@@ -672,10 +656,7 @@ class MatterClosure(MatterEntity, CoverEntity):
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop movement."""
-        await self.send_device_command(
-            clusters.ClosureControl.Commands.Stop(),
-            timed_request_timeout_ms=1000,
-        )
+        await self.send_device_command(clusters.ClosureControl.Commands.Stop())
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -707,8 +688,8 @@ class MatterClosure(MatterEntity, CoverEntity):
             None, clusters.ClosureDimension.Attributes.CurrentState
         )
         if (
-            _extract_struct_field(current_state, 0, "position") != target_position
-            and _extract_struct_field(current_state, 1, "latch")
+            _extract_struct_field(current_state, "position") != target_position
+            and _extract_struct_field(current_state, "latch")
             and _remote_unlatch_supported(
                 panel,
                 clusters.ClosureDimension.Attributes.FeatureMap,
@@ -743,8 +724,8 @@ class MatterClosure(MatterEntity, CoverEntity):
         )
 
         closure_panels = self._closure_panels
-        position = _extract_struct_field(overall_current_state, 0, "position")
-        target_position = _extract_struct_field(overall_target_state, 0, "position")
+        position = _extract_struct_field(overall_current_state, "position")
+        target_position = _extract_struct_field(overall_target_state, "position")
 
         # chip's MatterIntEnum maps an unrecognized value to kUnknownEnumValue
         # via _missing_ instead of raising, so these constructions never fail.
@@ -791,8 +772,8 @@ class MatterClosure(MatterEntity, CoverEntity):
                     panel_target = panel.get_attribute_value(
                         None, clusters.ClosureDimension.Attributes.TargetState
                     )
-                    current_pos = _extract_struct_field(panel_state, 0, "position")
-                    target_pos = _extract_struct_field(panel_target, 0, "position")
+                    current_pos = _extract_struct_field(panel_state, "position")
+                    target_pos = _extract_struct_field(panel_target, "position")
                     if isinstance(current_pos, int) and isinstance(target_pos, int):
                         if target_pos < current_pos:
                             self._attr_is_opening = True
@@ -815,7 +796,7 @@ class MatterClosure(MatterEntity, CoverEntity):
                 None, clusters.ClosureDimension.Attributes.CurrentState
             )
             self._attr_current_cover_position = _percent100ths_to_ha_position(
-                _extract_struct_field(position_state, 0, "position")
+                _extract_struct_field(position_state, "position")
             )
             supported_features |= CoverEntityFeature.SET_POSITION
         else:
@@ -825,7 +806,7 @@ class MatterClosure(MatterEntity, CoverEntity):
                 None, clusters.ClosureDimension.Attributes.CurrentState
             )
             self._attr_current_cover_tilt_position = _percent100ths_to_ha_position(
-                _extract_struct_field(tilt_state, 0, "position")
+                _extract_struct_field(tilt_state, "position")
             )
             supported_features |= CoverEntityFeature.SET_TILT_POSITION
         else:
