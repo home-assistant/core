@@ -11,8 +11,9 @@ from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_array_fixture,
+    async_load_json_object_fixture,
 )
-from tplink_omada_client.devices import OmadaListDevice
+from tplink_omada_client.devices import OmadaGateway, OmadaListDevice
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -399,6 +400,83 @@ async def test_cleanup_recreates_device_when_reappears(
         entity_registry.async_get_entity_id("update", DOMAIN, update_unique_id)
         is not None
     )
+
+
+async def test_cleanup_recreates_gateway_ports_after_successful_refresh(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a returning gateway is not rebuilt from stale port data."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    gateway_mac = "AA-BB-CC-DD-EE-FF"
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, gateway_mac), mock_config_entry.entry_id
+    )
+
+    def gateway_port_entities() -> list[er.RegistryEntry]:
+        return [
+            entry
+            for entry in entity_registry.entities.values()
+            if entry.platform == DOMAIN
+            and entry.domain in {"binary_sensor", "switch"}
+            and entry.unique_id.startswith(f"{gateway_mac}_")
+        ]
+
+    assert gateway_port_entities()
+
+    site_client = mock_omada_client.get_site_client.return_value
+
+    # Remove the gateway from the controller's device list and clean up.
+    site_client.get_devices = AsyncMock(
+        side_effect=partial(_get_devices_without, hass, gateway_mac)
+    )
+    freezer.tick(timedelta(hours=1, seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, gateway_mac), mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert not gateway_port_entities()
+
+    # The gateway returns, but its refresh fails: no port entities are built
+    # from the cached port lists, and registration stays retryable.
+    site_client.get_gateway = AsyncMock(
+        side_effect=OmadaClientException("gateway unavailable")
+    )
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    site_client.get_devices = AsyncMock(
+        return_value=[OmadaListDevice(device) for device in devices_data]
+    )
+    freezer.tick(timedelta(hours=1, seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not gateway_port_entities()
+
+    # A successful refresh rebuilds the port entities.
+    gateway_data = await async_load_json_object_fixture(
+        hass, "gateway-TL-ER7212PC.json", DOMAIN
+    )
+    site_client.get_gateway = AsyncMock(return_value=OmadaGateway(gateway_data))
+    freezer.tick(timedelta(hours=1, seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, gateway_mac), mock_config_entry.entry_id
+    )
+    assert gateway_port_entities()
 
 
 async def test_cleanup_drops_switch_port_coordinator(

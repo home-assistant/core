@@ -1,17 +1,20 @@
 """Controller for sharing Omada API coordinators between platforms."""
 
 from collections.abc import Awaitable, Callable
+import logging
 from typing import TYPE_CHECKING
 
 from tplink_omada_client import OmadaClient, OmadaSiteClient
-from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
+from tplink_omada_client.devices import OmadaGateway, OmadaListDevice, OmadaSwitch
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
 
+from .const import DOMAIN
 from .coordinator import (
     OmadaClientsCoordinator,
     OmadaControllerStatusCoordinator,
@@ -20,6 +23,8 @@ from .coordinator import (
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OmadaSiteController:
@@ -104,8 +109,17 @@ class OmadaSiteController:
                 return
 
             for device in devices_to_process:
-                processed_devices.add(dr.format_mac(device.mac))
-                await entity_callback(device)
+                mac = dr.format_mac(device.mac)
+                try:
+                    await entity_callback(device)
+                except Exception:
+                    # Leave the device unprocessed so the next device-list
+                    # update retries instead of skipping it forever.
+                    _LOGGER.exception(
+                        "Failed to register entities for Omada device %s", mac
+                    )
+                    continue
+                processed_devices.add(mac)
 
         @callback
         def _handle_devices_update() -> None:
@@ -125,12 +139,40 @@ class OmadaSiteController:
             processed.discard(mac)
 
     async def async_remove_device(self, mac: str, device_entry: dr.DeviceEntry) -> None:
-        """Remove a device entry and drop its cached port coordinator."""
+        """Remove a device entry and drop its cached coordinator state."""
+        mac = dr.format_mac(mac)
         self._forget_device_registration(mac)
-        coordinator = self._switch_port_coordinators.pop(dr.format_mac(mac), None)
+        gateway_coordinator = self._gateway_coordinator
+        if (
+            gateway_coordinator is not None
+            and dr.format_mac(gateway_coordinator.mac) == mac
+        ):
+            gateway_coordinator.invalidate()
+        coordinator = self._switch_port_coordinators.pop(mac, None)
         if coordinator is not None:
             await coordinator.async_shutdown()
         dr.async_get(self._hass).async_remove_device(device_entry.id)
+
+    async def async_get_gateway(self, mac: str) -> OmadaGateway | None:
+        """Return gateway data, refreshing first when the cache was dropped.
+
+        Raises HomeAssistantError when a required refresh fails, so registration
+        retries on the next device-list update instead of rebuilding entities
+        from stale port data.
+        """
+        coordinator = self._gateway_coordinator
+        if coordinator is None:
+            return None
+        gateway = (coordinator.data or {}).get(mac)
+        if gateway is not None:
+            return gateway
+        await coordinator.async_refresh()
+        if not coordinator.last_update_success:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="gateway_unavailable",
+            )
+        return (coordinator.data or {}).get(mac)
 
     @property
     def controller_client(self) -> OmadaClient:
