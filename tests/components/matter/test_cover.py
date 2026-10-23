@@ -1814,6 +1814,31 @@ async def test_closure_cover_gate(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_closure_gate"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            # Add the Instantaneous feature bit to the fixture's FeatureMap.
+            "1/260/65532": 43 | clusters.ClosureControl.Bitmaps.Feature.kInstantaneous,
+        }
+    ],
+)
+@pytest.mark.usefixtures("matter_node")
+async def test_closure_cover_instantaneous_has_no_stop(
+    hass: HomeAssistant,
+) -> None:
+    """Test an Instantaneous closure doesn't advertise STOP.
+
+    Stop is non-conformant (and rejected) on Instantaneous closures: there's
+    no in-progress motion for it to interrupt.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert not (state.attributes["supported_features"] & CoverEntityFeature.STOP)
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_closure_roof_window_matterbridge"])
 @pytest.mark.usefixtures("matter_node")
 async def test_closure_cover_roof_window_real_device(
@@ -1832,6 +1857,35 @@ async def test_closure_cover_roof_window_real_device(
     assert state.state == CoverState.OPEN
     # raw percent100ths 4999 -> HA position (100 - floor(4999/100))
     assert state.attributes["current_position"] == 51
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_garage_door"])
+async def test_closure_cover_unknown_current_position_state(
+    hass: HomeAssistant,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+    matter_client: MagicMock,
+) -> None:
+    """Test an out-of-range OverallCurrentState position reads as unknown.
+
+    chip's MatterIntEnum maps an unrecognized raw value to kUnknownEnumValue
+    via `_missing_` instead of raising, so a non-conformant device reporting
+    a position outside CurrentPositionEnum's range must not crash and must
+    read as unknown, not as open or closed.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.OverallCurrentState.attribute_id,
+        {0: 99},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
@@ -1912,6 +1966,16 @@ async def test_closure_cover_feature_map_subscription_on_all_children(
     assert state
     # Tilt should be restored
     assert state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+    # The Tilt panel becoming active again must re-add its CurrentState and
+    # TargetState subscriptions, not just recompute supported_features from
+    # the live TagList/FeatureMap (which would mask a stale subscription set).
+    dim = clusters.ClosureDimension
+    for attribute in (dim.Attributes.CurrentState, dim.Attributes.TargetState):
+        path = create_attribute_path(3, dim.id, attribute.attribute_id)
+        assert any(
+            call.kwargs.get("attr_path_filter") == path
+            for call in matter_client.subscribe_events.call_args_list
+        )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
