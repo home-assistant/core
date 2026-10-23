@@ -5,8 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from dobiss_nxt import Light
 import pytest
-
-from tests.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 LIGHTS = (
     Light(4, 0, "Kitchen", True, "Ground floor"),

@@ -8,14 +8,13 @@ from dobiss_nxt import (
     DobissProtocolError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import USER_INPUT
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_client", "mock_setup_entry")
 
@@ -50,7 +49,10 @@ async def test_errors_and_recovery(
     """Keep the form usable after a failed connection."""
     mock_client.discover_lights.side_effect = exception
     result = await hass.config_entries.flow.async_init(
-        "dobiss", context={"source": SOURCE_USER}, data=USER_INPUT
+        "dobiss", context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
@@ -68,9 +70,10 @@ async def test_duplicate(
     """Do not create a second configuration for the same normalized host."""
     mock_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        "dobiss",
-        context={"source": SOURCE_USER},
-        data=USER_INPUT | {"host": "DOBISS.local"},
+        "dobiss", context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT | {"host": "DOBISS.local"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -80,9 +83,10 @@ async def test_duplicate(
 async def test_invalid_host(hass: HomeAssistant, mock_client: AsyncMock) -> None:
     """Reject an unexpected URL without contacting it."""
     result = await hass.config_entries.flow.async_init(
-        "dobiss",
-        context={"source": SOURCE_USER},
-        data=USER_INPUT | {"host": "http://dobiss.local/path"},
+        "dobiss", context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT | {"host": "http://dobiss.local/path"}
     )
     assert result["errors"] == {"host": "invalid_host"}
     mock_client.discover_lights.assert_not_called()
@@ -97,7 +101,10 @@ async def test_status_error(hass: HomeAssistant, mock_client: AsyncMock) -> None
     """Discovery alone is insufficient to validate setup."""
     mock_client.light_states.side_effect = DobissConnectionError
     result = await hass.config_entries.flow.async_init(
-        "dobiss", context={"source": SOURCE_USER}, data=USER_INPUT
+        "dobiss", context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
     assert result["errors"] == {"base": "cannot_connect"}
     mock_client.light_states.side_effect = None
@@ -111,9 +118,10 @@ async def test_status_error(hass: HomeAssistant, mock_client: AsyncMock) -> None
 async def test_empty_secret(hass: HomeAssistant, mock_client: AsyncMock) -> None:
     """Handle a missing secret without creating a client."""
     result = await hass.config_entries.flow.async_init(
-        "dobiss",
-        context={"source": SOURCE_USER},
-        data=USER_INPUT | {"api_secret": ""},
+        "dobiss", context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT | {"api_secret": ""}
     )
     assert result["errors"] == {"base": "invalid_auth"}
     mock_client.discover_lights.assert_not_called()

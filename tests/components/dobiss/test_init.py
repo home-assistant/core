@@ -4,12 +4,11 @@ from unittest.mock import AsyncMock
 
 from dobiss_nxt import DobissAuthenticationError, DobissConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_unload(
