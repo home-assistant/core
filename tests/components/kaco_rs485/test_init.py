@@ -18,6 +18,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
+from . import CYCLES_UNTIL_DARK, run_cycles
+
 
 async def test_setup_and_unload_entry(
     hass: HomeAssistant, init_integration: MockConfigEntry
@@ -159,14 +161,38 @@ async def test_an_entry_with_every_inverter_disabled_does_not_open_the_port(
 
 
 @pytest.fixture
+def silenced() -> tuple[int, ...]:
+    """Addresses that have stopped answering; tests override this."""
+    return ()
+
+
+@pytest.fixture
+async def dark_inverters(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_integration: MockConfigEntry,
+    mock_bus: FakeBus,
+    silenced: tuple[int, ...],
+) -> None:
+    """Let the silenced inverters go dark."""
+    assert mock_bus.opened
+    mock_bus.silence(*silenced)
+    await run_cycles(hass, freezer, CYCLES_UNTIL_DARK)
+
+
+@pytest.fixture
 async def ws_client(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, dark_inverters: None
 ) -> MockHAClientWebSocket:
-    """A websocket client that can remove devices."""
+    """A websocket client that can remove devices.
+
+    Connects after the cycles have run: the jump in time would drop it.
+    """
     assert await async_setup_component(hass, "config", {})
     return await hass_ws_client(hass)
 
 
+@pytest.mark.parametrize("silenced", [(2,)])
 async def test_a_removed_inverter_is_no_longer_polled(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -175,7 +201,7 @@ async def test_a_removed_inverter_is_no_longer_polled(
     mock_bus: FakeBus,
     ws_client: MockHAClientWebSocket,
 ) -> None:
-    """Test deleting an inverter's device drops it from the entry and the bus."""
+    """Test deleting a dark inverter's device drops it from the entry and the bus."""
     device = _device(device_registry, init_integration, 2)
 
     response = await ws_client.remove_device(device.id)
@@ -187,6 +213,7 @@ async def test_a_removed_inverter_is_no_longer_polled(
     assert await _polled(hass, freezer, mock_bus) == {1, 4}
 
 
+@pytest.mark.parametrize("silenced", [(1, 2, 4)])
 async def test_removing_every_inverter_releases_the_port(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -196,8 +223,6 @@ async def test_removing_every_inverter_releases_the_port(
     ws_client: MockHAClientWebSocket,
 ) -> None:
     """Test an entry left with no inverters stops holding the bus."""
-    assert mock_bus.opened
-
     for address in (1, 2, 4):
         device = _device(device_registry, init_integration, address)
         assert (await ws_client.remove_device(device.id))["success"]
@@ -207,6 +232,21 @@ async def test_removing_every_inverter_releases_the_port(
     assert not mock_bus.opened
     assert await _polled(hass, freezer, mock_bus) == set()
     assert init_integration.state is ConfigEntryState.LOADED
+
+
+async def test_an_answering_inverter_is_not_removed(
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    ws_client: MockHAClientWebSocket,
+) -> None:
+    """Test an inverter that still answers cannot be deleted; it is not gone."""
+    device = _device(device_registry, init_integration, 2)
+
+    response = await ws_client.remove_device(device.id)
+
+    assert not response["success"]
+    assert device_registry.async_get(device.id) is not None
+    assert init_integration.data[CONF_ADDRESSES] == [1, 2, 4]
 
 
 async def test_a_foreign_device_is_not_removed(

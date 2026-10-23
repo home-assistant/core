@@ -1,5 +1,6 @@
 """KACO RS485 integration."""
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -35,9 +36,15 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Stop polling an inverter whose device the user deleted.
 
-    Always allowed: at night a live inverter looks the same as a removed one.
+    Refused while it still answers. Once dark it may be removed or just asleep.
     """
     if (address := _address(entry, device_entry)) is None:
+        return False
+    if (
+        entry.state is ConfigEntryState.LOADED
+        and (state := entry.runtime_data.data.get(address)) is not None
+        and state.available
+    ):
         return False
 
     addresses = [a for a in entry.data[CONF_ADDRESSES] if a != address]
