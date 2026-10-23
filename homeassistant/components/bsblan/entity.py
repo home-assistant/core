@@ -18,7 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BSBLanData, get_bsblan_device_info
-from .const import DEFAULT_HOT_WATER_MAX_TEMP, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_HOT_WATER_MAX_TEMP, DEFAULT_PORT, DOMAIN, Setpoint
 from .coordinator import BSBLanCoordinator, BSBLanFastCoordinator, BSBLanSlowCoordinator
 from .helpers import first_temperature, validate_setpoint_order
 
@@ -126,9 +126,9 @@ class BSBLanCircuitEntity(BSBLanDualCoordinatorEntity):
             return None
         return first_temperature(config.temp_reduced_setpoint)
 
-    def _validate_setpoint(self, temperature: float, *, reduced: bool) -> None:
+    def _validate_setpoint(self, temperature: float, setpoint: Setpoint) -> None:
         """Keep the reduced setpoint at or below the comfort setpoint."""
-        if reduced:
+        if setpoint is Setpoint.REDUCED:
             validate_setpoint_order(
                 temperature, "reduced_above_comfort", maximum=self._comfort_setpoint
             )
@@ -137,9 +137,9 @@ class BSBLanCircuitEntity(BSBLanDualCoordinatorEntity):
                 temperature, "comfort_below_reduced", minimum=self._reduced_setpoint
             )
 
-    async def _async_set_setpoint(self, temperature: float, *, reduced: bool) -> None:
+    async def _async_set_setpoint(self, temperature: float, setpoint: Setpoint) -> None:
         """Write the comfort or reduced setpoint."""
-        if reduced:
+        if setpoint is Setpoint.REDUCED:
             await self._async_thermostat(
                 temp_reduced_setpoint=temperature, refresh_config=True
             )
@@ -235,9 +235,9 @@ class BSBLanWaterHeaterDeviceEntity(BSBLanDualCoordinatorEntity):
             return None
         return first_temperature(dhw_config.reduced_setpoint)
 
-    def _validate_setpoint(self, temperature: float, *, reduced: bool) -> None:
+    def _validate_setpoint(self, temperature: float, setpoint: Setpoint) -> None:
         """Keep the reduced setpoint at or below the nominal setpoint."""
-        if reduced:
+        if setpoint is Setpoint.REDUCED:
             validate_setpoint_order(
                 temperature, "reduced_above_nominal", maximum=self._nominal_setpoint
             )
@@ -246,9 +246,9 @@ class BSBLanWaterHeaterDeviceEntity(BSBLanDualCoordinatorEntity):
                 temperature, "nominal_below_reduced", minimum=self._reduced_setpoint
             )
 
-    async def _async_set_setpoint(self, temperature: float, *, reduced: bool) -> None:
+    async def _async_set_setpoint(self, temperature: float, setpoint: Setpoint) -> None:
         """Write the nominal or reduced setpoint."""
-        if reduced:
+        if setpoint is Setpoint.REDUCED:
             await self._async_set_hot_water(
                 SetHotWaterParam(reduced_setpoint=temperature),
                 "set_temperature_error",
