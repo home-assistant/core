@@ -1,6 +1,6 @@
 """Common fixtures for the AWS S3 tests."""
 
-from collections.abc import AsyncIterator, Generator
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -11,6 +11,7 @@ from homeassistant.components.aws_s3.backup import suggested_filenames
 from homeassistant.components.aws_s3.const import DOMAIN
 from homeassistant.components.backup import AgentBackup
 
+from . import mock_streaming_body
 from .const import CONFIG_ENTRY_DATA
 
 
@@ -60,16 +61,13 @@ def mock_client(mock_agent_backup: AgentBackup) -> Generator[AsyncMock]:
         client.create_multipart_upload.return_value = {"UploadId": "upload_id"}
         client.upload_part.return_value = {"ETag": "etag"}
 
-        # to simplify this mock, we assume that backup is always
-        # "iterated" over, while metadata is always "read" as a whole
-        class MockStream:
-            async def iter_chunks(self) -> AsyncIterator[bytes]:
-                yield b"backup data"
-
-            async def read(self) -> bytes:
-                return json.dumps(mock_agent_backup.as_dict()).encode()
-
-        client.get_object.return_value = {"Body": MockStream()}
+        objects = {
+            tar_file: b"backup data",
+            metadata_file: json.dumps(mock_agent_backup.as_dict()).encode(),
+        }
+        client.get_object.side_effect = lambda **kwargs: {
+            "Body": mock_streaming_body(objects[kwargs["Key"].rsplit("/", 1)[-1]])
+        }
         client.head_bucket.return_value = {}
 
         create_client.return_value.__aenter__.return_value = client

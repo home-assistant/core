@@ -1,12 +1,15 @@
 """Test the AWS S3 backup platform."""
 
-from collections.abc import AsyncGenerator
+import asyncio
+from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
 from io import StringIO
 import json
 from time import time
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
-from botocore.exceptions import ConnectTimeoutError
+from aiobotocore.response import StreamingBody
+from aiohttp import ClientConnectionError
+from botocore.exceptions import ConnectTimeoutError, ResponseStreamingError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import (
@@ -36,7 +39,7 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import setup_integration
+from . import mock_streaming_body, setup_integration
 from .const import USER_INPUT
 
 
@@ -485,6 +488,7 @@ async def test_cache_expiration(
         }
     ]
 
+    mock_client.get_object.side_effect = None
     mock_client.get_object.return_value = {"Body": mock_body}
 
     # First call should query S3
@@ -839,3 +843,89 @@ async def test_agent_download_backup_parametrized(
     expected_tar_key = f"{expected_key_prefix}{tar_filename}"
 
     mock_client.get_object.assert_any_call(Bucket="test", Key=expected_tar_key)
+
+
+async def _aclose(streams: list[AsyncIterator[bytes]]) -> None:
+    await streams.pop().aclose()
+
+
+async def _drop(streams: list[AsyncIterator[bytes]]) -> None:
+    streams.pop()
+
+
+@pytest.mark.parametrize(
+    "chunks_read",
+    [pytest.param(0, id="unstarted"), pytest.param(1, id="partially_read")],
+)
+@pytest.mark.parametrize(
+    "stop", [pytest.param(_aclose, id="aclose"), pytest.param(_drop, id="drop")]
+)
+async def test_agent_download_closes_body_on_early_stop(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    chunks_read: int,
+    stop: Callable[[list[AsyncIterator[bytes]]], Awaitable[None]],
+) -> None:
+    """Test the download closes the body when the consumer stops early."""
+    agent = S3BackupAgent(hass, mock_config_entry)
+    await agent.async_list_backups()
+    reader = asyncio.StreamReader()
+    reader.feed_data(b"backup data" * 1000)
+    response = MagicMock(content=reader)
+    mock_client.get_object.side_effect = None
+    mock_client.get_object.return_value = {"Body": StreamingBody(response, "11000")}
+
+    streams = [await agent.async_download_backup("23e64aec")]
+    for _ in range(chunks_read):
+        await anext(streams[0])
+    response.close.assert_not_called()
+
+    await stop(streams)
+
+    response.close.assert_called_once()
+
+
+async def test_agent_download_closes_body_when_exhausted(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the download closes the body when fully read and then stops."""
+    agent = S3BackupAgent(hass, mock_config_entry)
+    await agent.async_list_backups()
+    body = mock_streaming_body(b"backup data")
+    mock_client.get_object.side_effect = None
+    mock_client.get_object.return_value = {"Body": body}
+
+    stream = await agent.async_download_backup("23e64aec")
+    assert [chunk async for chunk in stream] == [b"backup data"]
+    body.close.assert_called_once()
+
+    with pytest.raises(StopAsyncIteration):
+        await anext(stream)
+    await stream.aclose()
+    body.close.assert_called_once()
+
+
+async def test_agent_download_closes_body_on_read_error(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the download closes the body when reading fails and keeps failing."""
+    agent = S3BackupAgent(hass, mock_config_entry)
+    await agent.async_list_backups()
+    reader = asyncio.StreamReader()
+    reader.set_exception(ClientConnectionError())
+    response = MagicMock(content=reader)
+    mock_client.get_object.side_effect = None
+    mock_client.get_object.return_value = {"Body": StreamingBody(response, "11")}
+
+    stream = await agent.async_download_backup("23e64aec")
+    with pytest.raises(ResponseStreamingError):
+        await anext(stream)
+    response.close.assert_called_once()
+
+    with pytest.raises(ResponseStreamingError):
+        await anext(stream)
