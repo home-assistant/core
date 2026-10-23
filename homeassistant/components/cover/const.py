@@ -22,6 +22,11 @@ ATTR_POSITION = "position"
 ATTR_SPEED = "speed"
 ATTR_TILT_POSITION = "tilt_position"
 
+SPEED_DEFAULT = "default"
+SPEED_FAST = "fast"
+SPEED_SILENT = "silent"
+SPEED_SLOW = "slow"
+
 
 class CoverEntityCapabilityAttribute(StrEnum):
     """Capability attributes for cover entities."""
