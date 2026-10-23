@@ -1,13 +1,14 @@
 """Tests for stale shade cleanup in the PowerView coordinator."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from aiopvapi.helpers.aiorequest import PvApiMaintenance
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -32,19 +33,23 @@ async def test_refresh_failures(
     freezer: FrozenDateTimeFactory,
     get_shades_kwargs: dict,
 ) -> None:
-    """Test the coordinator marks the update failed on each error path."""
+    """Test shade entities become unavailable when the hub update fails."""
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = entry.runtime_data.coordinator
-    with patch.object(coordinator.shades, "get_shades", AsyncMock(**get_shades_kwargs)):
+    with patch(
+        "homeassistant.components.hunterdouglas_powerview.Shades.get_shades",
+        **get_shades_kwargs,
+    ):
         freezer.tick(timedelta(seconds=61))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert not coordinator.last_update_success
+    covers = hass.states.async_all("cover")
+    assert covers
+    assert all(state.state == STATE_UNAVAILABLE for state in covers)
 
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")
