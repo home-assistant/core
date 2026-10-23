@@ -13,7 +13,6 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.nx584.const import (
     CONF_ENTITY_NAMESPACES,
     CONF_EXCLUDE_ZONES,
-    CONF_PLATFORMS,
     CONF_ZONE_TYPES,
     DOMAIN,
 )
@@ -112,38 +111,6 @@ async def test_setup_entry_ipv6_host(
     mock_client.assert_called_with(f"http://[fe80::1]:{TEST_PORT}")
 
 
-@pytest.mark.usefixtures("mock_client", "mock_watcher")
-@pytest.mark.parametrize(
-    ("platform", "other_domain"),
-    [
-        pytest.param(
-            ALARM_CONTROL_PANEL_DOMAIN, BINARY_SENSOR_DOMAIN, id="alarm_control_panel"
-        ),
-        pytest.param(
-            BINARY_SENSOR_DOMAIN, ALARM_CONTROL_PANEL_DOMAIN, id="binary_sensor"
-        ),
-    ],
-)
-async def test_setup_entry_imported_platform_only(
-    hass: HomeAssistant, platform: str, other_domain: str
-) -> None:
-    """Test an imported entry sets up only the platforms it was imported from."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT, CONF_PLATFORMS: [platform]},
-        unique_id=f"{TEST_HOST}:{TEST_PORT}",
-    )
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.async_entity_ids(platform)
-    assert hass.states.async_entity_ids(other_domain) == []
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state is ConfigEntryState.NOT_LOADED
-
-
 @pytest.mark.parametrize(
     "side_effect",
     [
@@ -197,50 +164,28 @@ async def test_setup_entry_zone_fetch_not_ready(
     assert hass.states.get("binary_sensor.front")
 
 
-@pytest.mark.usefixtures("mock_watcher")
-async def test_setup_entry_alarm_only_skips_zones(
-    hass: HomeAssistant, mock_client: MagicMock
-) -> None:
-    """Test an entry without zone sensors does not fetch the zones."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-            CONF_PLATFORMS: [ALARM_CONTROL_PANEL_DOMAIN],
-        },
-        unique_id=f"{TEST_HOST}:{TEST_PORT}",
-    )
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.runtime_data.zones == []
-    mock_client.return_value.get_version.assert_not_called()
-
-
 @pytest.mark.usefixtures("mock_client", "mock_watcher", "mock_hass_config")
 @pytest.mark.parametrize("hass_config", [ALARM_YAML])
 async def test_import_alarm_only(
     hass: HomeAssistant, hass_config: ConfigType, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test a YAML alarm panel alone imports and keeps its entity ID."""
+    """Test a YAML alarm panel alone imports and sets up both platforms."""
     await _async_setup_yaml(hass, hass_config, ALARM_CONTROL_PANEL_DOMAIN)
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-    assert entries[0].data[CONF_NAME] == "House"
-    assert entries[0].data[CONF_PLATFORMS] == [ALARM_CONTROL_PANEL_DOMAIN]
+    assert entries[0].data == {
+        CONF_HOST: TEST_HOST,
+        CONF_PORT: TEST_PORT,
+        CONF_NAME: "House",
+    }
     assert hass.states.get("alarm_control_panel.house")
-    assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == []
-
-    # The imported platform set is stored, so a reload keeps it.
-    assert await hass.config_entries.async_reload(entries[0].entry_id)
-    await hass.async_block_till_done()
-    assert hass.states.get("alarm_control_panel.house")
-    assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == []
+    assert sorted(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == [
+        "binary_sensor.back",
+        "binary_sensor.front",
+        "binary_sensor.inside",
+    ]
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
@@ -267,18 +212,20 @@ async def test_import_alarm_default_name(
 async def test_import_binary_sensor_only(
     hass: HomeAssistant, hass_config: ConfigType, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test YAML zone sensors alone import with their zone settings."""
+    """Test YAML zone sensors alone import with their zone settings and an alarm."""
     await _async_setup_yaml(hass, hass_config, BINARY_SENSOR_DOMAIN)
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-    assert entries[0].data[CONF_PLATFORMS] == [BINARY_SENSOR_DOMAIN]
+    assert entries[0].data == {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     assert entries[0].options == {
         CONF_EXCLUDE_ZONES: [2],
         CONF_ZONE_TYPES: {"3": "motion"},
     }
-    assert hass.states.async_entity_ids(ALARM_CONTROL_PANEL_DOMAIN) == []
+    assert hass.states.async_entity_ids(ALARM_CONTROL_PANEL_DOMAIN) == [
+        "alarm_control_panel.nx584"
+    ]
     assert hass.states.get("binary_sensor.front").attributes["device_class"] == (
         "opening"
     )
@@ -318,7 +265,6 @@ async def test_import_both_platforms(
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
         CONF_NAME: "House",
-        CONF_PLATFORMS: [ALARM_CONTROL_PANEL_DOMAIN, BINARY_SENSOR_DOMAIN],
     }
     assert entries[0].options == {
         CONF_EXCLUDE_ZONES: [2],
@@ -353,10 +299,6 @@ async def test_import_both_platforms_at_once(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].data[CONF_NAME] == "House"
-    assert entries[0].data[CONF_PLATFORMS] == [
-        ALARM_CONTROL_PANEL_DOMAIN,
-        BINARY_SENSOR_DOMAIN,
-    ]
     assert entries[0].options[CONF_EXCLUDE_ZONES] == [2]
 
 

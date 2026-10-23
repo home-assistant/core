@@ -16,11 +16,10 @@ from homeassistant.const import (
     CONF_PORT,
 )
 
-from . import PLATFORMS, create_client
+from . import create_client
 from .const import (
     CONF_ENTITY_NAMESPACES,
     CONF_EXCLUDE_ZONES,
-    CONF_PLATFORMS,
     CONF_ZONE_TYPES,
     DEFAULT_HOST,
     DEFAULT_NAME,
@@ -116,10 +115,6 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
         if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, unique_id
         ):
-            # An entry set up from the UI has every platform and keeps them.
-            if CONF_PLATFORMS in entry.data:
-                imported = {*entry.data[CONF_PLATFORMS], platform}
-                data[CONF_PLATFORMS] = [p for p in PLATFORMS if p in imported]
             # Each platform owns its keys; the other platform's keys are kept.
             return self.async_update_reload_and_abort(
                 entry,
@@ -139,8 +134,6 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
-        # Only the platforms configured in YAML are set up, as before the import.
-        data[CONF_PLATFORMS] = [platform]
         return self.async_create_entry(
             title=data.get(CONF_NAME, DEFAULT_NAME),
             data=_with_entity_namespace(data, platform, namespace),

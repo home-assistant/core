@@ -8,7 +8,6 @@ import requests
 from homeassistant.components.nx584.const import (
     CONF_ENTITY_NAMESPACES,
     CONF_EXCLUDE_ZONES,
-    CONF_PLATFORMS,
     CONF_ZONE_TYPES,
     DOMAIN,
 )
@@ -106,7 +105,7 @@ async def test_user_flow_already_configured(
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_client")
 async def test_import_flow(hass: HomeAssistant) -> None:
-    """Test the import keeps the zone settings and the imported platform."""
+    """Test the import keeps the zone settings."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -121,11 +120,7 @@ async def test_import_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "NX584"
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
-        CONF_PLATFORMS: [Platform.BINARY_SENSOR],
-    }
+    assert result["data"] == {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     assert result["options"] == {
         CONF_EXCLUDE_ZONES: [2],
         CONF_ZONE_TYPES: {"3": "motion"},

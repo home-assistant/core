@@ -1,7 +1,7 @@
 """Support for NX584 alarm control panels."""
 
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_PLATFORMS, DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,9 +38,8 @@ class NX584Data:
     """Runtime data of an NX584 config entry."""
 
     client: nx584_client.Client
-    # Fetched only for entries that set up the zone sensors.
-    zones: list[dict[str, Any]] = field(default_factory=list)
-    version: str = ""
+    zones: list[dict[str, Any]]
+    version: str
 
 
 type NX584ConfigEntry = ConfigEntry[NX584Data]
@@ -64,30 +63,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> bool:
     """Set up NX584 from a config entry."""
-    platforms: list[Platform] = entry.data.get(CONF_PLATFORMS, PLATFORMS)
-    data = NX584Data(create_client(entry.data[CONF_HOST], entry.data[CONF_PORT]))
+    client = create_client(entry.data[CONF_HOST], entry.data[CONF_PORT])
     try:
-        if Platform.BINARY_SENSOR in platforms:
-            data.zones, data.version = await hass.async_add_executor_job(
-                _fetch_zones, data.client
-            )
-        else:
-            await hass.async_add_executor_job(data.client.list_zones)
+        zones, version = await hass.async_add_executor_job(_fetch_zones, client)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as err:
         raise ConfigEntryNotReady(
             f"Unable to connect to the NX584 server at {entry.data[CONF_HOST]}"
         ) from err
 
-    entry.runtime_data = data
-    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    entry.runtime_data = NX584Data(client, zones, version)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(
-        entry, entry.data.get(CONF_PLATFORMS, PLATFORMS)
-    )
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_import_yaml(
