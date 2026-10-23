@@ -98,7 +98,7 @@ rules:
     status: exempt
     comment: |
       Each Minecraft server represents a single, fixed device per config entry,
-      that lives and goes with the config entry
+      that lives and goes with the config entry.
 
   # Platinum
   async-dependency:
