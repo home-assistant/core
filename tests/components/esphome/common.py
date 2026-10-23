@@ -2,6 +2,8 @@
 
 from datetime import datetime
 
+from pytest_homeassistant.common import async_fire_time_changed
+
 from homeassistant.components import assist_satellite
 from homeassistant.components.assist_satellite import AssistSatelliteEntity
 from homeassistant.components.esphome import DOMAIN
@@ -12,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 
 class MockDashboardRefresh:

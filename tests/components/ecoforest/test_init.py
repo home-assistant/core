@@ -3,11 +3,10 @@
 from unittest.mock import patch
 
 from pyecoforest.exceptions import EcoforestAuthenticationRequired
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_authentication_failed(

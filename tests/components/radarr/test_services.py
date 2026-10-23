@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aiopyarr import ArrAuthenticationException, ArrConnectionException
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.radarr.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import create_entry, setup_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_get_queue_service(

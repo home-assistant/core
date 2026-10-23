@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, call, mock_open, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import notify
 from homeassistant.components.file import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.components.notify import ATTR_TITLE_DEFAULT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from aiohttp import ClientError
 from opengarage.errors import ResponseError, TransportError, UnsupportedFeatureError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import light
 from homeassistant.const import (
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "light.garage_abcdef_light"
 

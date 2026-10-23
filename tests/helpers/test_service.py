@@ -10,6 +10,19 @@ from unittest.mock import AsyncMock, Mock, call as mock_call, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockModule,
+    MockUser,
+    RegistryEntryWithDefaults,
+    async_mock_service,
+    mock_area_registry,
+    mock_device_registry,
+    mock_integration,
+    mock_registry,
+)
 from pytest_unordered import unordered
 
 # To prevent circular import when running just this file
@@ -55,20 +68,6 @@ from homeassistant.loader import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockModule,
-    MockUser,
-    RegistryEntryWithDefaults,
-    async_mock_service,
-    mock_area_registry,
-    mock_device_registry,
-    mock_integration,
-    mock_registry,
-)
 
 SUPPORT_A = 1
 SUPPORT_B = 2
@@ -1754,6 +1753,108 @@ async def test_call_with_sync_attr(hass: HomeAssistant, mock_entities) -> None:
     assert mock_method.call_count == 1
     # We pass empty kwargs because both entity_id and area_id are filtered out
     assert mock_method.mock_calls[0][2] == {}
+
+
+@pytest.mark.parametrize(
+    ("target", "expected_entity_ids"),
+    [
+        (
+            {"entity_id": "all", "exclude": {"entity_id": "light.kitchen"}},
+            {"light.living_room", "light.bedroom", "light.bathroom"},
+        ),
+        (
+            {
+                "entity_id": ["light.kitchen", "light.bedroom"],
+                "exclude": {"entity_id": ["light.bedroom"]},
+            },
+            {"light.kitchen"},
+        ),
+    ],
+)
+async def test_entity_service_call_exclude(
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    mock_entities_method: AsyncMock,
+    target: dict[str, Any],
+    expected_entity_ids: set[str],
+) -> None:
+    """Test excluded entities are not called and exclude isn't passed on."""
+    await service.entity_service_call(
+        hass,
+        mock_entities,
+        "test_method",
+        ServiceCall(hass, "test_domain", "test_service", {**target, "value": 1}),
+    )
+
+    assert {
+        call.args[0].entity_id for call in mock_entities_method.mock_calls
+    } == expected_entity_ids
+    for call in mock_entities_method.mock_calls:
+        assert call.kwargs == {"value": 1}
+
+
+async def test_async_extract_entities_all_exclude(
+    hass: HomeAssistant, mock_entities: dict[str, MockEntity]
+) -> None:
+    """Test async_extract_entities removes excluded entities when targeting all."""
+    call = ServiceCall(
+        hass,
+        "light",
+        "turn_on",
+        {"entity_id": "all", "exclude": {"entity_id": ["light.kitchen"]}},
+    )
+    extracted = await service.async_extract_entities(mock_entities.values(), call)
+    assert {entity.entity_id for entity in extracted} == {
+        "light.living_room",
+        "light.bedroom",
+        "light.bathroom",
+    }
+
+
+async def test_service_call_exclude(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the exclude block of a target is passed on to the service call."""
+    calls = async_mock_service(hass, "test_domain", "test_service")
+    entry = entity_registry.async_get_or_create("light", "test", "unique")
+
+    await service.async_call_from_config(
+        hass,
+        {
+            "action": "test_domain.test_service",
+            "target": {
+                "area_id": "kitchen",
+                "exclude": {
+                    "area_id": "{{ 'pantry' }}",
+                    "entity_id": [entry.id, "light.static"],
+                },
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert dict(calls[0].data) == {
+        "area_id": ["kitchen"],
+        "exclude": {
+            "area_id": "pantry",
+            "entity_id": [entry.entity_id, "light.static"],
+        },
+    }
+
+    with pytest.raises(
+        exceptions.HomeAssistantError,
+        match="Template rendered invalid excluded entity IDs",
+    ):
+        service.async_prepare_call_from_config(
+            hass,
+            {
+                "action": "test_domain.test_service",
+                "target": {
+                    "area_id": "kitchen",
+                    "exclude": {"entity_id": "{{ 'invalid' }}"},
+                },
+            },
+        )
 
 
 async def test_call_single_entity_uses_parallel_updates(

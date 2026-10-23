@@ -6,11 +6,10 @@ from unittest.mock import patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.auth import indieauth
 from homeassistant.core import HomeAssistant
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 REQUEST_SCHEME = "https"
 REQUEST_NETLOC = "homeassistant.example"

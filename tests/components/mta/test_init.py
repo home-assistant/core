@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from pymta import MTAFeedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mta.const import (
     CONF_LINE,
@@ -15,8 +16,6 @@ from homeassistant.components.mta.const import (
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_no_subentries(

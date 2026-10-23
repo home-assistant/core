@@ -14,6 +14,7 @@ from pyipp import (
     Printer,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.ipp.const import CONF_BASE_PATH, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -26,8 +27,6 @@ from . import (
     MOCK_ZEROCONF_IPP_SERVICE_INFO,
     MOCK_ZEROCONF_IPPS_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry, load_fixture
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

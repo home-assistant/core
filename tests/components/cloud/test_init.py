@@ -12,6 +12,7 @@ from hass_nabucasa import (
     LogoutEvent,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.cloud import (
@@ -48,8 +49,6 @@ from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockUser
 
 REMOTE_UI_UNIQUE_ID = "cloud-remote-ui-connectivity"
 

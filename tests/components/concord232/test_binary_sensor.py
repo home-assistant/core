@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 import requests
 
 from homeassistant.components.binary_sensor import (
@@ -18,8 +19,6 @@ from homeassistant.components.concord232.binary_sensor import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
 
 VALID_CONFIG = {
     BINARY_SENSOR_DOMAIN: {
