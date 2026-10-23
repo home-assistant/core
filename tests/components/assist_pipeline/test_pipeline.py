@@ -2991,3 +2991,113 @@ async def test_pipeline_audio_agent_unsupported_audio_output(
         await pipeline_input.validate()
 
     assert exc_info.value.code == "tts-not-supported"
+
+
+@pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_vad_ends_audio(
+    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
+) -> None:
+    """Test voice activity detection ends the audio for the agent like for STT."""
+    chunks_read = 0
+
+    async def satellite_audio() -> AsyncGenerator[bytes]:
+        nonlocal chunks_read
+        # More audio than the voice command, like a satellite that keeps streaming
+        for _ in range(20):
+            chunks_read += 1
+            yield make_10ms_chunk(b"audio")
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    with patch(
+        "homeassistant.components.assist_pipeline.default_pipeline.VoiceCommandSegmenter"
+    ) as mock_vad:
+        # Speech in the first 3 chunks, then the end of the voice command
+        mock_vad.return_value.process.side_effect = [True, True, True, False]
+        mock_vad.return_value.in_command = True
+
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=_STT_METADATA,
+            stt_stream=satellite_audio(),
+            pipeline_id=AUDIO_AGENT_ID,
+            tts_audio_output="wav",
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
+        )
+
+    assert len(mock_audio_agent.received_audio) == 3
+    assert chunks_read < 20
+    event_types = [event.type for event in events]
+    assert event_types.index(PipelineEventType.STT_VAD_START) < event_types.index(
+        PipelineEventType.STT_VAD_END
+    )
+    # The transcript of the agent comes after the end of the voice command
+    assert event_types.index(PipelineEventType.STT_VAD_END) < event_types.index(
+        PipelineEventType.STT_END
+    )
+
+
+@pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_skips_local_handling(
+    hass: HomeAssistant,
+    mock_audio_agent: MockAudioConversationEntity,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test the agent handles text when only it can speak the response."""
+    events: list[assist_pipeline.PipelineEvent] = []
+    pipeline = Pipeline(
+        conversation_engine=AUDIO_AGENT_ID,
+        conversation_language="en",
+        language="en",
+        name="Audio output",
+        stt_engine=None,
+        stt_language=None,
+        tts_engine=None,
+        tts_language=None,
+        tts_voice=None,
+        wake_word_entity=None,
+        wake_word_id=None,
+        prefer_local_intents=True,
+    )
+    local_response = intent.IntentResponse("en")
+    local_response.async_set_speech("Handled locally")
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        intent_input="turn on the kitchen light",
+        session=mock_chat_session,
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.INTENT,
+            end_stage=assist_pipeline.PipelineStage.TTS,
+            event_callback=events.append,
+            tts_audio_output="wav",
+        ),
+    )
+
+    # Local handling would answer without any way to speak the response
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_handle_sentence_triggers",
+            return_value="Triggered",
+        ) as mock_triggers,
+        patch(
+            "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_handle_intents",
+            return_value=local_response,
+        ) as mock_intents,
+    ):
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+    mock_triggers.assert_not_called()
+    mock_intents.assert_not_called()
+
+    intent_end = next(
+        event for event in events if event.type == PipelineEventType.INTENT_END
+    )
+    assert intent_end.data
+    assert intent_end.data["processed_locally"] is False
+    assert any(event.type == PipelineEventType.TTS_END for event in events)

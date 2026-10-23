@@ -835,11 +835,13 @@ class _DefaultPipelineProcessor:
                 processed_locally = agent_id == conversation.HOME_ASSISTANT_AGENT
                 all_targets_in_satellite_area = False
                 intent_response: intent.IntentResponse | None = None
-                # Sentence triggers and local intents need a transcript
+                # Sentence triggers and local intents need a transcript, and
+                # nothing could speak their response without the agent
                 if (
                     not processed_locally
                     and not self._intent_agent_only
                     and audio is None
+                    and not self._agent_audio_output
                 ):
                     # Sentence triggers override conversation agent
                     if (
