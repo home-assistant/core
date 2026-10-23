@@ -154,7 +154,12 @@ def async_get_chat_session(
         if session.conversation_id == conversation_id:
             if context is not None:
                 session.async_check_owner(context)
-            yield session
+            # A task that inherits the session can outlive the caller.
+            session.in_use += 1
+            try:
+                yield session
+            finally:
+                session.in_use -= 1
             return
 
         # If it's not the same conversation ID, we will create a new session
