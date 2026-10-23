@@ -30,6 +30,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DOMAIN
 from .util import get_ssl_context
@@ -273,7 +274,18 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         """Handle new sensor_update event from WebSocket stream."""
         if self.latest_sensor is not None:
             merged_sensors = dict(self.latest_sensor.sensors)
-            merged_sensors.update(sensor.sensors)
+            for key, val in sensor.sensors.items():
+                existing = merged_sensors.get(key)
+                if isinstance(existing, dict):
+                    if isinstance(val, dict):
+                        merged_sensors[key] = {
+                            **existing,
+                            **{k: v for k, v in val.items() if v is not None},
+                        }
+                    else:
+                        merged_sensors[key] = {**existing, "value": val}
+                else:
+                    merged_sensors[key] = val
 
             merged_temp = (
                 list(sensor.raw_temp)
@@ -304,6 +316,22 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 )
                 or sensor.temp_unit != "°C"
             )
+            old_temp_unit = self.latest_sensor.temp_unit
+            new_temp_unit = (
+                sensor.temp_unit if has_declared_temp_unit else old_temp_unit
+            )
+
+            def _retain_temp(
+                new_val: float | None, old_val: float | None
+            ) -> float | None:
+                if new_val is not None:
+                    return new_val
+                if old_val is None or old_temp_unit == new_temp_unit:
+                    return old_val
+                return round(
+                    TemperatureConverter.convert(old_val, old_temp_unit, new_temp_unit),
+                    2,
+                )
 
             self.latest_sensor = SensorData(
                 last_update=sensor.last_update or self.latest_sensor.last_update,
@@ -311,24 +339,20 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 raw_temp=merged_temp,
                 raw_user=merged_user,
                 raw_data=merged_data,
-                temp_unit=sensor.temp_unit
-                if has_declared_temp_unit
-                else self.latest_sensor.temp_unit,
+                temp_unit=new_temp_unit,
                 dew_heater=sensor.dew_heater
                 if sensor.dew_heater is not None
                 else self.latest_sensor.dew_heater,
-                dew_point=sensor.dew_point
-                if sensor.dew_point is not None
-                else self.latest_sensor.dew_point,
-                frost_point=sensor.frost_point
-                if sensor.frost_point is not None
-                else self.latest_sensor.frost_point,
+                dew_point=_retain_temp(sensor.dew_point, self.latest_sensor.dew_point),
+                frost_point=_retain_temp(
+                    sensor.frost_point, self.latest_sensor.frost_point
+                ),
                 fan_duty_cycle=sensor.fan_duty_cycle
                 if sensor.fan_duty_cycle is not None
                 else self.latest_sensor.fan_duty_cycle,
-                heat_index=sensor.heat_index
-                if sensor.heat_index is not None
-                else self.latest_sensor.heat_index,
+                heat_index=_retain_temp(
+                    sensor.heat_index, self.latest_sensor.heat_index
+                ),
                 wind_direction=sensor.wind_direction
                 if sensor.wind_direction is not None
                 else self.latest_sensor.wind_direction,
@@ -341,9 +365,9 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 camera_sqm_adu=sensor.camera_sqm_adu
                 if sensor.camera_sqm_adu is not None
                 else self.latest_sensor.camera_sqm_adu,
-                cpu_temperature=sensor.cpu_temperature
-                if sensor.cpu_temperature is not None
-                else self.latest_sensor.cpu_temperature,
+                cpu_temperature=_retain_temp(
+                    sensor.cpu_temperature, self.latest_sensor.cpu_temperature
+                ),
             )
         else:
             self.latest_sensor = sensor

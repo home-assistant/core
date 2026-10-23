@@ -474,12 +474,18 @@ async def test_hardware_sensor_fahrenheit_units(
         callback(celsius_metadata_update)
     await hass.async_block_till_done()
 
-    dew_state = hass.states.get("sensor.indi_allsky_dew_point")
-    assert dew_state is not None
-    assert dew_state.state == "68.0"
-    assert (
-        dew_state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
-    )
+    for entity_id, expected in (
+        ("sensor.indi_allsky_dew_point", "68.0"),
+        ("sensor.indi_allsky_frost_point", "50.0"),
+        ("sensor.indi_allsky_heat_index", "70.0"),
+        ("sensor.indi_allsky_cpu_temperature", "113.0"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert float(state.state) == pytest.approx(float(expected), abs=0.05)
+        assert (
+            state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
+        )
 
 
 async def test_dynamic_hardware_sensor_discovery(
@@ -595,6 +601,25 @@ async def test_dynamic_hardware_sensor_discovery(
     state = hass.states.get("sensor.indi_allsky_sht4x_i2c_sht40_temperature")
     assert state is not None
     assert state.state == "21.0"
+    assert state.attributes.get("unit_of_measurement") == "°C"
+    assert state.attributes.get("device_class") == "temperature"
+    assert state.attributes.get("state_class") == "measurement"
+
+    # Verify subsequent value-only dictionary update preserves previously discovered metadata
+    value_only_dict_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": {"value": 22.5},
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(value_only_dict_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_sht4x_i2c_sht40_temperature")
+    assert state is not None
+    assert state.state == "22.5"
     assert state.attributes.get("unit_of_measurement") == "°C"
     assert state.attributes.get("device_class") == "temperature"
     assert state.attributes.get("state_class") == "measurement"
