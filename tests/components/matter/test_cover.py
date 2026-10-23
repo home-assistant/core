@@ -2121,6 +2121,102 @@ async def test_closure_cover_movement_direction_from_child_targets(
     assert state.state == CoverState.OPENING
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_closure_tilt_only"])
+async def test_closure_cover_slats_orientation_movement_direction(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test movement direction inference for a sole SlatsOrientation Tilt panel.
+
+    A SlatsOrientation panel is closed at both 0% and 100% and open at 50%,
+    so comparing its raw percent100ths directly (like the general monotonic
+    0%=open/100%=closed panels) reports the wrong direction.
+    """
+    cover_states = hass.states.async_all(Platform.COVER)
+    assert len(cover_states) == 1
+    entity_id = cover_states[0].entity_id
+
+    ctrl = clusters.ClosureControl
+    dim = clusters.ClosureDimension
+    parent_ep = 1
+    child_ep = 2  # Check against the fixture
+
+    set_node_attribute(
+        matter_node,
+        child_ep,
+        dim.id,
+        dim.Attributes.FeatureMap.attribute_id,
+        83 | dim.Bitmaps.Feature.kModulation,
+    )
+    set_node_attribute(
+        matter_node,
+        child_ep,
+        dim.id,
+        dim.Attributes.ModulationType.attribute_id,
+        dim.Enums.ModulationTypeEnum.kSlatsOrientation.value,
+    )
+
+    # Parent is moving but has no target
+    set_node_attribute(
+        matter_node,
+        parent_ep,
+        ctrl.id,
+        ctrl.Attributes.MainState.attribute_id,
+        ctrl.Enums.MainStateEnum.kMoving.value,
+    )
+    set_node_attribute(
+        matter_node,
+        parent_ep,
+        ctrl.id,
+        ctrl.Attributes.OverallTargetState.attribute_id,
+        None,
+    )
+
+    # Child panel starts fully closed (0%) and moves towards 50% (open):
+    # raw percent100ths increases, but this is opening, not closing.
+    set_node_attribute(
+        matter_node,
+        child_ep,
+        dim.id,
+        dim.Attributes.CurrentState.attribute_id,
+        {0: 0},
+    )
+    set_node_attribute(
+        matter_node,
+        child_ep,
+        dim.id,
+        dim.Attributes.TargetState.attribute_id,
+        {0: 5000},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPENING
+
+    # Child panel starts fully open (50%) and moves towards 0% (closed):
+    # raw percent100ths decreases, but this is closing, not opening.
+    set_node_attribute(
+        matter_node,
+        child_ep,
+        dim.id,
+        dim.Attributes.CurrentState.attribute_id,
+        {0: 5000},
+    )
+    set_node_attribute(
+        matter_node,
+        child_ep,
+        dim.id,
+        dim.Attributes.TargetState.attribute_id,
+        {0: 0},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
 async def test_closure_cover_infer_movement_from_child_panels(
     hass: HomeAssistant,

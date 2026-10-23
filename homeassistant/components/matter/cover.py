@@ -858,10 +858,24 @@ class MatterClosure(MatterEntity, CoverEntity):
                 current_pos = _extract_struct_field(panel_state, "position")
                 target_pos = _extract_struct_field(panel_target, "position")
                 if isinstance(current_pos, int) and isinstance(target_pos, int):
-                    if target_pos < current_pos:
-                        self._attr_is_opening = True
-                    elif target_pos > current_pos:
-                        self._attr_is_closing = True
+                    # A SlatsOrientation panel is closed at both 0% and 100%
+                    # and open at 50%, so raw percent100ths can't be compared
+                    # directly; go through its HA position (always
+                    # higher=more open) like the general convention below.
+                    to_ha_position = (
+                        _slats_percent100ths_to_ha_position
+                        if _is_slats_orientation_tilt(direction_panel)
+                        else _percent100ths_to_ha_position
+                    )
+                    current_ha_position = to_ha_position(current_pos)
+                    target_ha_position = to_ha_position(target_pos)
+                    if isinstance(current_ha_position, int) and isinstance(
+                        target_ha_position, int
+                    ):
+                        if target_ha_position > current_ha_position:
+                            self._attr_is_opening = True
+                        elif target_ha_position < current_ha_position:
+                            self._attr_is_closing = True
             elif target_position in (
                 clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToPedestrianPosition,
                 clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToVentilationPosition,
