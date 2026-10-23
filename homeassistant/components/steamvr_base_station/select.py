@@ -21,6 +21,7 @@ CHANNEL = SelectEntityDescription(
     key="channel",
     translation_key="channel",
     entity_category=EntityCategory.CONFIG,
+    entity_registry_enabled_default=False,
     options=[str(channel) for channel in range(CHANNEL_MIN, CHANNEL_MAX + 1)],
 )
 

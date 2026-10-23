@@ -33,6 +33,7 @@ def platforms() -> list[Platform]:
     return [Platform.SELECT]
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_entities(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -63,7 +64,7 @@ async def test_power_mode_follows_advertisements(
     assert hass.states.get(POWER_MODE).state == expected
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_channel_follows_advertisements(hass: HomeAssistant) -> None:
     """Test the channel reflects the advertised channel."""
     inject_bluetooth_service_info_bleak(hass, make_service_info(payload(channel=7)))
@@ -93,7 +94,7 @@ async def test_select_power_mode(
     mock_set_power.assert_awaited_once_with(ANY, target)
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_select_channel(hass: HomeAssistant, mock_set_channel: AsyncMock) -> None:
     """Test choosing a channel moves the station to it."""
     await hass.services.async_call(
@@ -132,6 +133,7 @@ async def test_standby_not_supported(
     assert raised.value.translation_key == "not_supported"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_unparsable_advertisement(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
