@@ -55,7 +55,7 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 1
 
     _pending_macs: list[str]
-    _roles: dict[str, str | None]
+    _chosen_roles: dict[str, str | None]
 
     async def async_step_reconfigure(
         self, user_input: dict[str, str | None] | None = None
@@ -77,25 +77,32 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self._pending_macs:
             return self.async_abort(reason="no_sensors_found")
 
-        self._roles = dict(entry.data[CFG_ROLES])
+        self._chosen_roles = {}
         return await self.async_step_sensor_role()
 
     async def async_step_sensor_role(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Ask for the role of each discovered sensor, one sensor per step."""
+        entry = self._get_reconfigure_entry()
+        # The integration keeps saving the roles sensors report while this flow
+        # is open, so read the saved roles as they are now rather than when the
+        # flow started, and change only the ones the user was asked about.
         if user_input is not None:
             mac = self._pending_macs.pop(0)
             role = user_input[CONF_ROLE]
-            self._roles[mac] = None if role == ROLE_UNKNOWN else role
+            self._chosen_roles[mac] = None if role == ROLE_UNKNOWN else role
             if not self._pending_macs:
                 return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(), data_updates={CFG_ROLES: self._roles}
+                    entry,
+                    data_updates={
+                        CFG_ROLES: {**entry.data[CFG_ROLES], **self._chosen_roles}
+                    },
                 )
 
         mac = self._pending_macs[0]
         # A role newer firmware reported may not be one of the selector options.
-        suggested = self._roles.get(mac)
+        suggested = entry.data[CFG_ROLES].get(mac)
         if suggested not in ROLE_OPTIONS:
             suggested = ROLE_UNKNOWN
         return self.async_show_form(
@@ -104,9 +111,7 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 SENSOR_ROLE_SCHEMA, {CONF_ROLE: suggested}
             ),
             description_placeholders={
-                "sensor": self._sensor_name(
-                    self._get_reconfigure_entry().entry_id, mac
-                ),
+                "sensor": self._sensor_name(entry.entry_id, mac),
                 "docs_url": DOCS_URL,
             },
             last_step=len(self._pending_macs) == 1,

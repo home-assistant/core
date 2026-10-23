@@ -34,6 +34,7 @@ SECOND_MAC = "a4cf1218f160"
 MAINS_MAC = "c001eat5"
 SOLAR_MAC = "cafebabe"
 UNKNOWN_MAC = "d3adb33f"
+LATE_MAC = "0a0b0c0d0e0f"
 # A role newer firmware might report that this integration does not know.
 UNRECOGNISED_ROLE = "gas"
 
@@ -259,6 +260,44 @@ def _suggested_values(result: ConfigFlowResult) -> list[Any]:
     """Return the suggested value of each field on a form."""
     assert result["data_schema"] is not None
     return [key.description["suggested_value"] for key in result["data_schema"].schema]
+
+
+async def test_reconfigure_uses_roles_saved_while_it_is_open(
+    hass: HomeAssistant,
+    reconfigure_entry: MockConfigEntry,
+    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+) -> None:
+    """Roles reported while the flow is open are suggested, and not overwritten."""
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+
+    # While the first step is shown, the unassigned sensor reports a role and a
+    # sensor the flow doesn't know about appears with one.
+    await fire({"event": "now_relaying_for", "mac": UNKNOWN_MAC, "role": ROLE_WATER})
+    await fire({"event": "device_found", "mac": LATE_MAC, "device_type": "sensor"})
+    await fire({"event": "now_relaying_for", "mac": LATE_MAC, "role": ROLE_APPLIANCE})
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ROLE: ROLE_HOUSENET}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ROLE: ROLE_SOLAR}
+    )
+    assert _suggested_values(result) == [ROLE_WATER]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ROLE: ROLE_WATER}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert reconfigure_entry.data[CFG_ROLES] == {
+        MAINS_MAC: ROLE_HOUSENET,
+        SOLAR_MAC: ROLE_SOLAR,
+        UNKNOWN_MAC: ROLE_WATER,
+        LATE_MAC: ROLE_APPLIANCE,
+    }
 
 
 async def test_reconfigure_steps_show_current_role_and_device_name(
