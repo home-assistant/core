@@ -15,13 +15,14 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BSBLanConfigEntry, BSBLanData
-from .const import Setpoint
+from .const import DOMAIN, Setpoint
 from .entity import BSBLanCircuitEntity
-from .helpers import circuit_temperature_bounds, first_temperature, setpoint_to_change
+from .helpers import circuit_temperature_bounds, first_temperature
 
 PARALLEL_UPDATES = 1
 
@@ -204,27 +205,18 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         """Set the setpoint of the comfort level currently in effect."""
         temperature = kwargs[ATTR_TEMPERATURE]
         hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-        # Switching to heat or off leaves automatic mode, so the comfort
-        # setpoint is the one to write
+        if (hvac_mode or self.hvac_mode) == HVACMode.AUTO:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature_in_auto_mode",
+            )
+        # Switching to heat or off writes the comfort setpoint
         setpoint = (
-            self._setpoint_to_change(temperature)
-            if hvac_mode in (None, HVACMode.AUTO)
+            Setpoint.REDUCED
+            if hvac_mode is None and self.preset_mode == PRESET_ECO
             else Setpoint.NORMAL
         )
         self._validate_setpoint(temperature, setpoint)
         if hvac_mode is not None:
             await self.async_set_hvac_mode(hvac_mode)
         await self._async_set_setpoint(temperature, setpoint)
-
-    def _setpoint_to_change(self, temperature: float) -> Setpoint:
-        """Return the setpoint a new target temperature changes."""
-        if self._hvac_mode_value != BSBLAN_AUTOMATIC_MODE:
-            if self.preset_mode == PRESET_ECO:
-                return Setpoint.REDUCED
-            return Setpoint.NORMAL
-        return setpoint_to_change(
-            temperature,
-            current=first_temperature(self._circuit_state.current_setpoint),
-            normal=self._comfort_setpoint,
-            reduced=self._reduced_setpoint,
-        )
