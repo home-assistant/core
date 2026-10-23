@@ -213,8 +213,8 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         """Set the setpoint of the comfort level currently in effect."""
         temperature = kwargs[ATTR_TEMPERATURE]
         hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-        if (hvac_mode or self.hvac_mode) == HVACMode.AUTO:
-            # Scenes restore the target before the preset, rounded to the display unit
+        if (mode := hvac_mode or self.hvac_mode) in (HVACMode.AUTO, HVACMode.OFF):
+            # Scenes replay the saved target, rounded to the display unit
             if not any(
                 setpoint is not None and abs(temperature - setpoint) < 0.3
                 for setpoint in (
@@ -225,12 +225,16 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
             ):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="set_temperature_in_auto_mode",
+                    translation_key=(
+                        "set_temperature_in_auto_mode"
+                        if mode == HVACMode.AUTO
+                        else "set_temperature_when_off"
+                    ),
                 )
             if hvac_mode is not None:
                 await self.async_set_hvac_mode(hvac_mode)
             return
-        # Switching to heat or off writes the comfort setpoint
+        # Switching to heat writes the comfort setpoint
         setpoint = (
             Setpoint.REDUCED
             if hvac_mode is None and self.preset_mode == PRESET_ECO
