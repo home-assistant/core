@@ -1,7 +1,5 @@
 {
   "common": {
-    "code": "Access code",
-    "code_input_description": "Code to toggle switchable outputs",
     "encryption_key": "Integration encryption key",
     "encryption_key_description": "If the alarm panel requires encryption, enter the integration encryption key here."
   },
@@ -214,10 +212,10 @@
     "step": {
       "init": {
         "data": {
-          "code": "[%key:component::satel_integra::common::code%]"
+          "code": "Access code"
         },
         "data_description": {
-          "code": "[%key:component::satel_integra::common::code_input_description%]"
+          "code": "Code to toggle switchable outputs"
         }
       }
     }
