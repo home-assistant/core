@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 import json
 import logging
+from pathlib import Path
 from typing import Any
 
 import ollama
@@ -127,7 +128,7 @@ def _convert_content(
                     translation_domain=DOMAIN,
                     translation_key="unsupported_attachment_type",
                 )
-            images.append(ollama.Image(value=attachment.path.read_bytes()))
+            images.append(ollama.Image(value=attachment.path))
         return ollama.Message(
             role=MessageRole.USER.value,
             content=chat_content.content,
@@ -139,6 +140,17 @@ def _convert_content(
             content=chat_content.content,
         )
     raise TypeError(f"Unexpected content type: {type(chat_content)}")
+
+
+def _read_images(messages: list[ollama.Message]) -> None:
+    """Replace image paths with their bytes.
+
+    The ollama client would otherwise read the files on the event loop.
+    """
+    for message in messages:
+        for image in message.images or ():
+            if isinstance(image.value, Path):
+                image.value = image.value.read_bytes()
 
 
 async def _transform_stream(
@@ -225,14 +237,15 @@ class OllamaBaseLLMEntity(Entity):
                 for tool in chat_log.llm_api.tools
             ]
 
-        # Attachments are read from disk, so convert outside the event loop.
         message_history: MessageHistory = MessageHistory(
-            await self.hass.async_add_executor_job(
-                lambda: [_convert_content(content) for content in chat_log.content]
-            )
+            [_convert_content(content) for content in chat_log.content]
         )
         max_messages = int(settings.get(CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY))
         self._trim_history(message_history, max_messages)
+        if any(message.images for message in message_history.messages):
+            await self.hass.async_add_executor_job(
+                _read_images, message_history.messages
+            )
 
         output_format: dict[str, Any] | None = None
         if structure:

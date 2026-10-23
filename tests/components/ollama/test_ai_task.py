@@ -330,7 +330,6 @@ async def test_generate_data_with_unsupported_file_format(
         }
 
     with (
-        patch.object(Path, "read_bytes", return_value=b"image bytes"),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
             side_effect=[
