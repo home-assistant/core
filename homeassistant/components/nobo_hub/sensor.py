@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import ATTR_MODEL, ATTR_NAME, UnitOfTemperature
+from homeassistant.const import ATTR_NAME, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,7 +44,7 @@ async def async_setup_entry(
         new_components = [
             serial
             for serial, component in hub.components.items()
-            if component[ATTR_MODEL].has_temp_sensor and serial not in known_components
+            if component["model"].has_temp_sensor and serial not in known_components
         ]
         known_components.update(new_components)
         async_add_entities(
@@ -83,7 +83,7 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
             serial_number=component[ATTR_SERIAL],
             name=component[ATTR_NAME],
             manufacturer=NOBO_MANUFACTURER,
-            model=component[ATTR_MODEL].name,
+            model=component["model"].name,
             via_device_id=self._hub_device_id,
             suggested_area=suggested_area,
         )
