@@ -737,7 +737,7 @@ bluetooth-auto-recovery==1.6.4
 bluetooth-data-tools==1.29.24
 
 # homeassistant.components.bluetti_modbus
-bluetti-modbus==0.51.2
+bluetti-modbus==0.52.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -2289,7 +2289,7 @@ pyevilgenius==2.0.0
 pyezvizapi==1.0.5.0
 
 # homeassistant.components.fibaro
-pyfibaro==0.8.3
+pyfibaro==0.8.4
 
 # homeassistant.components.fido
 pyfido==2.1.2
