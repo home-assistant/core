@@ -374,6 +374,10 @@ def _async_process_entry_method_result(
         )
         if result:
             return
+    else:
+        _LOGGER.error(  # type: ignore[unreachable]
+            "%s.%s returned %r, which is not supported", domain, method, result
+        )
     raise ConfigEntryError(
         translation_domain=HOMEASSISTANT_DOMAIN,
         translation_key=f"{method}_failed",
