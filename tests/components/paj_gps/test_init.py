@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pajgps_api.models.device import Device
-from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
+from pajgps_api.pajgps_api_error import (
+    AuthenticationError,
+    RequestError,
+    TokenRefreshError,
+)
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -66,3 +70,35 @@ async def test_auth_error_during_update_starts_reauth(
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize(
+    "method", ["get_devices", "get_all_last_positions", "get_last_sensor_data"]
+)
+async def test_request_error_during_update_does_not_start_reauth(
+    hass: HomeAssistant,
+    mock_paj_gps_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    method: str,
+) -> None:
+    """Test that a transient request error while polling does not start reauth."""
+    mock_paj_gps_api.get_devices.return_value = [
+        Device(
+            **{
+                **await async_load_json_object_fixture(hass, "device.json", DOMAIN),
+                "device_models": [{"alarm_volt": 1}],
+            }
+        )
+    ]
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # pajgps-api raises RequestError when the token refresh or login hits a 5xx
+    getattr(mock_paj_gps_api, method).side_effect = RequestError("Service unavailable")
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not hass.config_entries.flow.async_progress()
