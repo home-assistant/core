@@ -44,6 +44,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import (
     set_node_attribute,
+    set_node_attribute_and_notify,
     setup_integration_with_node_fixture,
     snapshot_matter_entities,
     trigger_subscription_callback,
@@ -258,14 +259,39 @@ async def test_camera_capabilities_updated(
     assert camera.camera_capabilities.two_way_audio is True
 
     # Dropping the speaker feature disables two way audio.
-    set_node_attribute(matter_node, 1, 1361, 65532, 0b1011)
-    await trigger_subscription_callback(hass, matter_client)
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=1361,
+        attribute_id=65532,
+        value=0b1011,
+    )
     assert camera.camera_capabilities.two_way_audio is False
 
-    # So does the camera reporting that talk is not supported.
-    set_node_attribute(matter_node, 1, 1361, 65532, 27)
-    set_node_attribute(matter_node, 1, 1361, 9, 0)
-    await trigger_subscription_callback(hass, matter_client)
+    # Restoring it enables two way audio again.
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=1361,
+        attribute_id=65532,
+        value=27,
+    )
+    assert camera.camera_capabilities.two_way_audio is True
+
+    # The camera reporting that talk is not supported disables it.
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=1361,
+        attribute_id=9,
+        value=0,
+    )
     assert camera.camera_capabilities.two_way_audio is False
 
 
