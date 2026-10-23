@@ -37,6 +37,7 @@ from .const import (
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_ROUTING_PREFERENCE,
     CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
@@ -182,6 +183,9 @@ class GoogleTravelTimeSensor(SensorEntity):
                     destination=self._resolved_destination,
                     hass=self.hass,
                     travel_mode=travel_mode,
+                    travel_routing_preference=self._config_entry.options.get(
+                        CONF_TRAVEL_ROUTING_PREFERENCE
+                    ),
                     units=self._config_entry.options[CONF_UNITS],
                     language=self._config_entry.options.get(CONF_LANGUAGE),
                     avoid=self._config_entry.options.get(CONF_AVOID),
