@@ -31,12 +31,38 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "fault": {
+        "name": "Fault"
+      }
+    },
     "sensor": {
+      "ac_current": {
+        "name": "AC current"
+      },
       "ac_power": {
         "name": "AC power"
       },
+      "ac_voltage": {
+        "name": "AC voltage"
+      },
+      "daily_peak_power": {
+        "name": "Daily peak power"
+      },
+      "daily_uptime": {
+        "name": "Daily operating hours"
+      },
       "daily_yield": {
         "name": "Daily yield"
+      },
+      "dc_current": {
+        "name": "DC current"
+      },
+      "dc_power": {
+        "name": "DC power"
+      },
+      "dc_voltage": {
+        "name": "DC voltage"
       },
       "status": {
         "name": "Status",
@@ -158,6 +184,9 @@
           "waiting_for_shutdown": "Waiting for shutdown",
           "waiting_for_wind": "Waiting for wind"
         }
+      },
+      "total_uptime": {
+        "name": "Total operating hours"
       },
       "total_yield": {
         "name": "Total yield"

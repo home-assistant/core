@@ -1,5 +1,6 @@
 """Test the homewizard config flow."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -113,6 +114,48 @@ async def test_repair_created_for_cloud_disabled_predictive_mode(
     await hass.config_entries.async_remove(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_repair_shown_again_after_restart(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an issue reloaded inactive after a restart is shown again."""
+    mock_homewizardenergy.combined.return_value.system.cloud_enabled = False
+    mock_homewizardenergy.combined.return_value.batteries.mode = "predictive"
+    mock_config_entry.add_to_hass(hass)
+    issue_id = battery_mode_cloud_issue_id(mock_config_entry.entry_id)
+    hass_storage[ir.STORAGE_KEY] = {
+        "version": ir.STORAGE_VERSION_MAJOR,
+        "minor_version": ir.STORAGE_VERSION_MINOR,
+        "data": {
+            "issues": [
+                {
+                    "config_entry_id": None,
+                    "created": "2026-01-01T00:00:00+00:00",
+                    "dismissed_version": None,
+                    "domain": DOMAIN,
+                    "is_persistent": False,
+                    "issue_id": issue_id,
+                }
+            ]
+        },
+    }
+    await issue_registry.async_load()
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert not issue.active
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.active
+    assert issue.config_entry_id == mock_config_entry.entry_id
 
 
 async def test_repair_auto_resolves_when_cloud_is_re_enabled(

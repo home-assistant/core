@@ -67,7 +67,7 @@ from .const import (
 from .coordinator import async_create_client, model_alias
 
 if TYPE_CHECKING:
-    from . import AnthropicConfigEntry
+    from .coordinator import AnthropicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

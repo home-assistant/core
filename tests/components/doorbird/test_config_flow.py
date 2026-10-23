@@ -43,7 +43,7 @@ async def test_user_form(hass: HomeAssistant, doorbird_api: DoorBird) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.doorbird.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -299,7 +299,7 @@ async def test_form_zeroconf_correct_oui(
         ) as mock_setup,
         patch(
             "homeassistant.components.doorbird.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -383,7 +383,7 @@ async def test_form_user_cannot_connect(hass: HomeAssistant) -> None:
         patch("homeassistant.components.doorbird.async_setup", return_value=True),
         patch(
             "homeassistant.components.doorbird.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -419,7 +419,7 @@ async def test_form_user_invalid_auth(hass: HomeAssistant) -> None:
         patch("homeassistant.components.doorbird.async_setup", return_value=True),
         patch(
             "homeassistant.components.doorbird.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -458,7 +458,7 @@ async def test_form_user_doorbird_not_found(
         ) as mock_setup,
         patch(
             "homeassistant.components.doorbird.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -504,7 +504,7 @@ async def test_form_user_doorbird_unknown_exception(
         ) as mock_setup,
         patch(
             "homeassistant.components.doorbird.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -548,7 +548,7 @@ async def test_options_flow(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.doorbird.async_setup_entry", return_value=True
+        "homeassistant.components.doorbird.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -609,7 +609,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.doorbird.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
