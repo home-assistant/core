@@ -1093,6 +1093,29 @@ async def test_mode_reported_while_powered_off_is_remembered(
     ]
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_room_airconditioner"])
+@pytest.mark.parametrize(
+    "attributes",
+    [{"1/6/0": True, "1/513/28": 3, "1/513/65532": 3, "0/40/2": 0, "0/40/4": 0}],
+)
+async def test_unsupported_reported_mode_keeps_remembered_mode(
+    hass: HomeAssistant, matter_client: MagicMock, matter_node: MatterNode
+) -> None:
+    """A reported mode the entity does not support does not replace history."""
+    set_node_attribute(matter_node, 1, 513, 28, 8)
+    await trigger_subscription_callback(hass, matter_client)
+    set_node_attribute(matter_node, 1, 513, 28, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    matter_client.reset_mock()
+
+    await hass.services.async_call(
+        "climate", "turn_on", {"entity_id": ROOM_AC_ENTITY_ID}, blocking=True
+    )
+    matter_client.write_attribute.assert_called_once_with(
+        node_id=matter_node.node_id, attribute_path="1/513/28", value=3
+    )
+
+
 @pytest.mark.parametrize(
     "stored_mode",
     [pytest.param(None, id="no-history"), pytest.param("heat", id="stale-history")],
