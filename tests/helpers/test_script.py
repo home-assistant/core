@@ -1453,7 +1453,7 @@ async def test_wait_trigger_matches_with_zero_timeout(
 
 
 def _wait_for_trigger_branches_action(timeout: int) -> dict[str, Any]:
-    """Return a wait_for_trigger action with on_trigger and on_timeout."""
+    """Return a wait_for_trigger action with on_complete and on_timeout."""
     return {
         "wait_for_trigger": {
             "platform": "state",
@@ -1461,13 +1461,13 @@ def _wait_for_trigger_branches_action(timeout: int) -> dict[str, Any]:
             "to": "off",
         },
         "timeout": timeout,
-        "on_trigger": {"event": "test_event", "event_data": {"branch": "trigger"}},
+        "on_complete": {"event": "test_event", "event_data": {"branch": "complete"}},
         "on_timeout": {"event": "test_event", "event_data": {"branch": "timeout"}},
     }
 
 
-async def test_wait_for_trigger_on_trigger(hass: HomeAssistant) -> None:
-    """Test on_trigger actions run when the wait trigger fires."""
+async def test_wait_for_trigger_on_complete(hass: HomeAssistant) -> None:
+    """Test on_complete actions run when the wait trigger fires."""
     events = async_capture_events(hass, "test_event")
     sequence = cv.SCRIPT_SCHEMA(
         [
@@ -1491,8 +1491,8 @@ async def test_wait_for_trigger_on_trigger(hass: HomeAssistant) -> None:
         raise
 
     assert not script_obj.is_running
-    assert [event.data["branch"] for event in events] == ["trigger", "after"]
-    assert list(trace.trace_get(clear=False)) == ["0", "0/on_trigger/0", "1"]
+    assert [event.data["branch"] for event in events] == ["complete", "after"]
+    assert list(trace.trace_get(clear=False)) == ["0", "0/on_complete/0", "1"]
 
 
 async def test_wait_for_trigger_on_timeout(hass: HomeAssistant) -> None:
@@ -1549,6 +1549,112 @@ async def test_wait_for_trigger_on_timeout_zero_timeout(hass: HomeAssistant) -> 
     assert list(trace.trace_get(clear=False)) == ["0", "0/on_timeout/0"]
 
 
+async def test_wait_for_trigger_on_timeout_then_abort(hass: HomeAssistant) -> None:
+    """Test on_timeout actions run before aborting when not continuing on timeout."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {**_wait_for_trigger_branches_action(5), "continue_on_timeout": False},
+            {"event": "test_event", "event_data": {"branch": "after"}},
+        ]
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+
+    try:
+        hass.states.async_set("switch.test", "on")
+        hass.async_create_task(script_obj.async_run(context=Context()))
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        assert script_obj.is_running
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+        await hass.async_block_till_done()
+    except AssertionError, TimeoutError:
+        await script_obj.async_stop()
+        raise
+
+    assert not script_obj.is_running
+    assert [event.data["branch"] for event in events] == ["timeout"]
+    variable_wait = {"wait": {"completed": False, "trigger": None, "remaining": 0.0}}
+    expected_trace = {
+        "0": [
+            {
+                "error": "TimeoutError",
+                "result": {**variable_wait, "timeout": True},
+                "variables": variable_wait,
+            }
+        ],
+        "0/on_timeout/0": [
+            {
+                "result": {"event": "test_event", "event_data": {"branch": "timeout"}},
+                "variables": variable_wait,
+            }
+        ],
+    }
+    assert_action_trace(expected_trace, expected_script_execution="aborted")
+
+
+async def test_wait_for_trigger_on_timeout_then_abort_zero_timeout(
+    hass: HomeAssistant,
+) -> None:
+    """Test on_timeout actions run before aborting with a zero timeout."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {**_wait_for_trigger_branches_action(0), "continue_on_timeout": False},
+            {"event": "test_event", "event_data": {"branch": "after"}},
+        ]
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert [event.data["branch"] for event in events] == ["timeout"]
+    assert list(trace.trace_get(clear=False)) == ["0", "0/on_timeout/0"]
+
+
+async def test_wait_for_trigger_nested_abort_in_on_timeout(
+    hass: HomeAssistant,
+) -> None:
+    """Test an abort in a nested on_timeout skips the rest of the outer on_timeout."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "wait_for_trigger": {
+                    "platform": "state",
+                    "entity_id": "switch.test",
+                    "to": "off",
+                },
+                "timeout": 0,
+                "on_timeout": [
+                    {
+                        **_wait_for_trigger_branches_action(0),
+                        "continue_on_timeout": False,
+                    },
+                    {"event": "test_event", "event_data": {"branch": "outer"}},
+                ],
+            },
+            {"event": "test_event", "event_data": {"branch": "after"}},
+        ]
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert [event.data["branch"] for event in events] == ["timeout"]
+    assert list(trace.trace_get(clear=False)) == [
+        "0",
+        "0/on_timeout/0",
+        "0/on_timeout/0/on_timeout/0",
+    ]
+    assert trace.script_execution_get() == "aborted"
+
+
 async def test_wait_for_trigger_branches_not_run_when_stopped(
     hass: HomeAssistant,
 ) -> None:
@@ -1569,27 +1675,18 @@ async def test_wait_for_trigger_branches_not_run_when_stopped(
     assert events == []
 
 
-@pytest.mark.parametrize("branch", ["on_trigger", "on_timeout"])
+@pytest.mark.parametrize("branch", ["on_complete", "on_timeout"])
 @pytest.mark.parametrize(
-    ("options", "expected_error"),
+    "options",
     [
-        pytest.param({}, "requires timeout to be set", id="no_timeout"),
-        pytest.param(
-            {"continue_on_timeout": True},
-            "requires timeout to be set",
-            id="no_timeout_continue",
-        ),
-        pytest.param(
-            {"timeout": 5, "continue_on_timeout": False},
-            "cannot be used when continue_on_timeout is false",
-            id="no_continue",
-        ),
+        pytest.param({}, id="no_timeout"),
+        pytest.param({"continue_on_timeout": True}, id="no_timeout_continue"),
     ],
 )
 def test_wait_for_trigger_branches_invalid(
-    branch: str, options: dict[str, Any], expected_error: str
+    branch: str, options: dict[str, Any]
 ) -> None:
-    """Test branches are rejected unless the wait can time out and continue."""
+    """Test branches are rejected unless the wait can time out."""
     action = {
         "wait_for_trigger": {
             "platform": "state",
@@ -1599,21 +1696,22 @@ def test_wait_for_trigger_branches_invalid(
         **options,
         branch: {"event": "test_event"},
     }
-    with pytest.raises(probatio.Invalid, match=f"{branch} {expected_error}"):
+    with pytest.raises(probatio.Invalid, match=f"{branch} requires timeout to be set"):
         cv.SCRIPT_SCHEMA([action])
 
 
-@pytest.mark.parametrize("branch", ["on_trigger", "on_timeout"])
+@pytest.mark.parametrize("branch", ["on_complete", "on_timeout"])
 @pytest.mark.parametrize(
     "options",
     [
         pytest.param({"timeout": 5}, id="timeout"),
         pytest.param({"timeout": 0}, id="zero_timeout"),
         pytest.param({"timeout": 5, "continue_on_timeout": True}, id="continue"),
+        pytest.param({"timeout": 5, "continue_on_timeout": False}, id="no_continue"),
     ],
 )
 def test_wait_for_trigger_branches_valid(branch: str, options: dict[str, Any]) -> None:
-    """Test branches are accepted when the wait can time out and continue."""
+    """Test branches are accepted when the wait can time out."""
     action = {
         "wait_for_trigger": {
             "platform": "state",
@@ -1627,7 +1725,7 @@ def test_wait_for_trigger_branches_valid(branch: str, options: dict[str, Any]) -
 
 
 async def test_wait_for_trigger_branches_referenced(hass: HomeAssistant) -> None:
-    """Test references in on_trigger and on_timeout are found."""
+    """Test references in on_complete and on_timeout are found."""
     sequence = cv.SCRIPT_SCHEMA(
         {
             "wait_for_trigger": {
@@ -1636,10 +1734,10 @@ async def test_wait_for_trigger_branches_referenced(hass: HomeAssistant) -> None
                 "to": "off",
             },
             "timeout": 5,
-            "on_trigger": {
+            "on_complete": {
                 "action": "test.script",
                 "target": {
-                    "entity_id": ["light.on_trigger"],
+                    "entity_id": ["light.on_complete"],
                     "area_id": ["trigger_area"],
                 },
             },
@@ -1654,7 +1752,7 @@ async def test_wait_for_trigger_branches_referenced(hass: HomeAssistant) -> None
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    assert script_obj.referenced_entities == {"switch.test", "light.on_trigger"}
+    assert script_obj.referenced_entities == {"switch.test", "light.on_complete"}
     assert script_obj.referenced_devices == {"timeout_device"}
     assert script_obj.referenced_areas == {"trigger_area"}
     assert script_obj.referenced_labels == {"timeout_label"}

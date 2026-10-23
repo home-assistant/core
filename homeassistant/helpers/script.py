@@ -46,8 +46,8 @@ from homeassistant.const import (
     CONF_FOR_EACH,
     CONF_IF,
     CONF_MODE,
+    CONF_ON_COMPLETE,
     CONF_ON_TIMEOUT,
-    CONF_ON_TRIGGER,
     CONF_PARALLEL,
     CONF_REPEAT,
     CONF_RESPONSE_VARIABLE,
@@ -366,7 +366,7 @@ async def async_validate_action_config(
         ] = await trigger_helper.async_validate_trigger_config(
             hass, config[CONF_WAIT_FOR_TRIGGER]
         )
-        for key in (CONF_ON_TRIGGER, CONF_ON_TIMEOUT):
+        for key in (CONF_ON_COMPLETE, CONF_ON_TIMEOUT):
             if key in config:
                 config[key] = await async_validate_actions_config(hass, config[key])
 
@@ -1251,6 +1251,9 @@ class _ScriptRun:
     def _async_handle_timeout(self) -> None:
         """Handle timeout."""
         self._variables["wait"]["remaining"] = 0.0
+
+    def _async_abort_unless_continue_on_timeout(self) -> None:
+        """Abort the script if it should not continue after a timeout."""
         if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
             self._log(_TIMEOUT_MSG)
             trace_set_result(wait=self._variables["wait"], timeout=True)
@@ -1262,16 +1265,19 @@ class _ScriptRun:
         timeout_handle: asyncio.TimerHandle | None,
         timeout_future: asyncio.Future[None] | None,
         unsub: Callable[[], None],
-    ) -> None:
+    ) -> bool:
+        """Wait for the futures, return True if the wait timed out."""
         try:
             await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
-            if timeout_future and timeout_future.done():
-                self._async_handle_timeout()
         finally:
             if timeout_future and not timeout_future.done() and timeout_handle:
                 timeout_handle.cancel()
 
             unsub()
+        if timeout_future and timeout_future.done():
+            self._async_handle_timeout()
+            return True
+        return False
 
     def _async_set_remaining_time_var(
         self, timeout_handle: asyncio.TimerHandle | None
@@ -1304,6 +1310,7 @@ class _ScriptRun:
             self._changed()
             self._async_handle_timeout()
             await self._async_run_wait_for_trigger_branch(CONF_ON_TIMEOUT)
+            self._async_abort_unless_continue_on_timeout()
             return
 
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
@@ -1335,17 +1342,19 @@ class _ScriptRun:
         if not remove_triggers:
             return
         self._changed()
-        await self._async_wait_with_optional_timeout(
+        timed_out = await self._async_wait_with_optional_timeout(
             futures, timeout_handle, timeout_future, remove_triggers
         )
         if self._stop.done():
             return
-        await self._async_run_wait_for_trigger_branch(
-            CONF_ON_TRIGGER if self._variables["wait"]["completed"] else CONF_ON_TIMEOUT
-        )
+        if not timed_out:
+            await self._async_run_wait_for_trigger_branch(CONF_ON_COMPLETE)
+            return
+        await self._async_run_wait_for_trigger_branch(CONF_ON_TIMEOUT)
+        self._async_abort_unless_continue_on_timeout()
 
     async def _async_run_wait_for_trigger_branch(self, branch: str) -> None:
-        """Run the on_trigger or on_timeout actions of a wait_for_trigger."""
+        """Run the on_complete or on_timeout actions of a wait_for_trigger."""
         if branch not in self._action:
             return
         scripts = await self._script._async_get_wait_for_trigger_scripts(  # noqa: SLF001
@@ -1375,6 +1384,7 @@ class _ScriptRun:
         if timeout == 0:
             self._changed()
             self._async_handle_timeout()
+            self._async_abort_unless_continue_on_timeout()
             return
 
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
@@ -1396,9 +1406,10 @@ class _ScriptRun:
             self._hass, wait_template, async_script_wait, self._variables
         )
         self._changed()
-        await self._async_wait_with_optional_timeout(
+        if await self._async_wait_with_optional_timeout(
             futures, timeout_handle, timeout_future, unsub
-        )
+        ):
+            self._async_abort_unless_continue_on_timeout()
 
     ## Conversation actions ##
 
@@ -1738,7 +1749,7 @@ class Script:
                     target,
                     referenced,
                     [
-                        *step.get(CONF_ON_TRIGGER, []),
+                        *step.get(CONF_ON_COMPLETE, []),
                         *step.get(CONF_ON_TIMEOUT, []),
                     ],
                 )
@@ -1811,7 +1822,7 @@ class Script:
                 Script._find_referenced_devices(
                     referenced,
                     [
-                        *step.get(CONF_ON_TRIGGER, []),
+                        *step.get(CONF_ON_COMPLETE, []),
                         *step.get(CONF_ON_TIMEOUT, []),
                     ],
                 )
@@ -1888,7 +1899,7 @@ class Script:
                 Script._find_referenced_entities(
                     referenced,
                     [
-                        *step.get(CONF_ON_TRIGGER, []),
+                        *step.get(CONF_ON_COMPLETE, []),
                         *step.get(CONF_ON_TIMEOUT, []),
                     ],
                 )
@@ -2291,11 +2302,11 @@ class Script:
     async def _async_prep_wait_for_trigger_scripts(
         self, step: int
     ) -> dict[str, Script]:
-        """Prepare the on_trigger and on_timeout scripts of a wait_for_trigger."""
+        """Prepare the on_complete and on_timeout scripts of a wait_for_trigger."""
         action = self.sequence[step]
         step_name = action.get(CONF_ALIAS, f"Wait for trigger at step {step + 1}")
         scripts: dict[str, Script] = {}
-        for branch in (CONF_ON_TRIGGER, CONF_ON_TIMEOUT):
+        for branch in (CONF_ON_COMPLETE, CONF_ON_TIMEOUT):
             if branch not in action:
                 continue
             sub_script = Script(
