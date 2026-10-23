@@ -81,7 +81,7 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_HOST): str,
-                    probatio.Required(CONF_API_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
                     probatio.Required(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
@@ -113,7 +113,7 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Schema(
                     {
                         probatio.Required(CONF_HOST): str,
-                        probatio.Required(CONF_API_TOKEN): str,
+                        probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
                         probatio.Required(CONF_VERIFY_SSL): bool,
                     }
                 ),
@@ -182,7 +182,7 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
                     probatio.Required(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
@@ -218,7 +218,9 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_API_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_TOKEN)): str}
+            ),
             description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
             errors=errors,
         )

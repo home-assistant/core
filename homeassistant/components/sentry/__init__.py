@@ -40,7 +40,7 @@ from .const import (
 LOGGER_INFO_REGEX = re.compile(r"^(\w+)\.?(\w+)?\.?(\w+)?\.?(\w+)?(?:\..*)?$")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Sentry from a config entry."""
 
     # Migrate environment from config entry data to config entry options
@@ -112,8 +112,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_call_later(hass, 3600, update_system_info)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, update_system_info)
-
-    return True
 
 
 def process_before_send(

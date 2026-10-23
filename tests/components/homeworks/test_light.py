@@ -4,6 +4,7 @@ from unittest.mock import ANY, MagicMock
 
 from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,8 +17,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_light_attributes_state_update(

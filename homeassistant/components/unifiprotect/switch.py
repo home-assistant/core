@@ -3,15 +3,13 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Literal, override
+from typing import Any, Literal, cast, override
 
 from uiprotect.data import (
     Camera,
-    DeviceState,
     ModelType,
     ProtectAdoptableDeviceModel,
     PublicDeviceModel,
-    PublicHdrMode,
     PublicRelayOutput,
     RecordingMode,
     Relay,
@@ -25,13 +23,11 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
+from .const import DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
@@ -40,11 +36,13 @@ from .entity import (
     ProtectEntityDescription,
     ProtectIsOnEntity,
     ProtectNVREntity,
+    ProtectPublicChannelEntity,
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
+from .migrate import async_is_new_private_only_entity
 from .utils import async_ufp_instance_command
 
 ATTR_PREV_MIC = "prev_mic_level"
@@ -61,10 +59,6 @@ class ProtectSwitchEntityDescription(
 
 async def _set_highfps(obj: PublicCamera, value: bool) -> None:
     await obj.set_video_mode(VideoMode.HIGH_FPS if value else VideoMode.DEFAULT)
-
-
-async def _set_hdr(obj: Camera, value: bool) -> None:
-    await obj.set_hdr_mode_public(PublicHdrMode.AUTO if value else PublicHdrMode.OFF)
 
 
 CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
@@ -84,16 +78,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_led_status",
         ufp_public_value="led_settings.is_enabled",
         ufp_set_method="set_status_light",
-        ufp_perm=PermRequired.WRITE,
-    ),
-    ProtectSwitchEntityDescription[Camera](
-        key="hdr_mode",
-        translation_key="hdr_mode",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        ufp_required_field="feature_flags.has_hdr",
-        ufp_value="hdr_mode",
-        ufp_set_method_fn=_set_hdr,
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription[Camera](
@@ -382,7 +366,6 @@ LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_public_value="light_device_settings.is_indicator_enabled",
         ufp_set_method="set_status_light",
-        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -553,10 +536,24 @@ async def async_setup_entry(
         entities += _make_entities(ProtectPrivacyModeSwitch, _PRIVACY_DESCRIPTIONS)
         async_add_entities(entities)
 
+    relay_output_unique_ids: set[str] = set()
+
+    @callback
+    def _add_relay_outputs(relay: Relay) -> None:
+        entities: list[ProtectRelayOutputSwitch] = []
+        for output in relay.outputs:
+            unique_id = f"{relay.mac}_relay_output_{output.id}"
+            if unique_id in relay_output_unique_ids:
+                continue
+            relay_output_unique_ids.add(unique_id)
+            entities.append(ProtectRelayOutputSwitch(data, relay, output))
+        if entities:
+            async_add_entities(entities)
+
     @callback
     def _add_new_public_device(device: PublicDeviceModel) -> None:
         if isinstance(device, Relay):
-            async_add_entities(_relay_output_switches(data, device))
+            _add_relay_outputs(device)
             return
         async_add_entities(
             async_all_device_entities(
@@ -568,6 +565,9 @@ async def async_setup_entry(
     data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.relay_signal, _add_relay_outputs)
     )
     entities: list[BaseProtectEntity] = []
     entities += _make_entities(ProtectSwitch, _MODEL_DESCRIPTIONS)
@@ -581,42 +581,27 @@ async def async_setup_entry(
             entities.extend(
                 ProtectNVRSwitch(data, device=nvr, description=switch)
                 for switch in NVR_SWITCHES
+                if not async_is_new_private_only_entity(
+                    hass, ModelType.NVR, nvr.mac, switch.key
+                )
             )
     async_add_entities(entities)
 
-    # Relays exist only in the public API; a relay adopted later arrives
-    # through the public add signal in either mode.
     if api.has_public_bootstrap:
-        relay_entities = [
-            entity
-            for relay in api.public_bootstrap.relays.values()
-            for entity in _relay_output_switches(data, relay)
-        ]
-        if relay_entities:
-            async_add_entities(relay_entities)
+        for relay in api.public_bootstrap.relays.values():
+            _add_relay_outputs(relay)
 
 
-@callback
-def _relay_output_switches(
-    data: ProtectData, relay: Relay
-) -> list[ProtectRelayOutputSwitch]:
-    """Build one switch per output channel of a relay."""
-    return [ProtectRelayOutputSwitch(data, relay, output) for output in relay.outputs]
-
-
-class ProtectRelayOutputSwitch(SwitchEntity):
+class ProtectRelayOutputSwitch(
+    ProtectPublicChannelEntity[PublicRelayOutput], SwitchEntity
+):
     """Switch entity for a single relay output channel (Public API).
 
-    The relay device and its outputs are exposed through UniFi Protect's
-    public integration API and cached in :attr:`ProtectApiClient.public_bootstrap`.
-    Each output channel is represented as its own switch entity; turning it
-    on/off goes through :meth:`Relay.activate_output`.
+    Each output channel is its own switch; turning it on/off goes through
+    :meth:`Relay.activate_output`.
     """
 
-    _attr_has_entity_name = True
-    _attr_attribution = DEFAULT_ATTRIBUTION
-    _attr_should_poll = False
-    _attr_translation_key = "relay_output"
+    _state_attrs = ("_attr_available", "_attr_is_on")
 
     def __init__(
         self,
@@ -625,75 +610,30 @@ class ProtectRelayOutputSwitch(SwitchEntity):
         output: PublicRelayOutput,
     ) -> None:
         """Initialize the relay output switch."""
-        self.data = data
-        self._relay_id = relay.id
-        self._relay_mac = relay.mac
-        self._output_id = output.id
-        self._attr_unique_id = f"{relay.mac}_relay_output_{output.id}"
+        # The description key keeps the legacy ``{mac}_relay_output_{id}`` unique ID.
+        description = SwitchEntityDescription(
+            key=f"relay_output_{output.id}", translation_key="relay_output"
+        )
+        super().__init__(data, relay, description, output.id)
         self._attr_translation_placeholders = {
             "output_name": output.name or str(output.id),
         }
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, relay.mac)},
-            identifiers={(DOMAIN, relay.mac)},
-            manufacturer=DEFAULT_BRAND,
-            name=relay.name,
-            model="Relay",
-            via_device_id=data.nvr_device_id,
-        )
-        self._update_from_relay(relay)
 
     @property
     def _relay(self) -> Relay | None:
-        api = self.data.api
-        if not api.has_public_bootstrap:
-            return None
-        return api.public_bootstrap.relays.get(self._relay_id)
+        return cast(Relay | None, self.data.async_get_public_device(self.device))
 
     @callback
-    def _update_from_relay(self, relay: Relay) -> None:
-        """Refresh ``_attr_is_on`` and availability from the cached relay."""
-        output = relay.get_output(self._output_id)
-        if output is None:
-            self._attr_available = False
-            self._attr_is_on = None
-            return
-        # A relay that dropped off the console stays in the bootstrap.
-        self._attr_available = (
-            self.data.last_public_update_success
-            and relay.state is DeviceState.CONNECTED
-        )
-        self._attr_is_on = (
-            _RELAY_STATE_MAP.get(output.state) if output.state is not None else None
-        )
-
-    @callback
-    def _async_updated(self, _obj: PublicDeviceModel | None) -> None:
-        """Handle a public devices WS update for this relay.
-
-        The state is always re-read from the public bootstrap: the library
-        merges WS updates into it before dispatching, and ``None`` carries no
-        object to read.
-        """
-        prev_state = (self._attr_available, self._attr_is_on)
-        if (relay := self._relay) is None:
-            # Gone from the bootstrap (delete event): commands cannot succeed.
-            self._attr_available = False
-        else:
-            self._update_from_relay(relay)
-        if (self._attr_available, self._attr_is_on) != prev_state:
-            self.async_write_ha_state()
-
     @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to public relay WS updates dispatched by ProtectData."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.data.async_subscribe_public(self._relay_mac, self._async_updated)
+    def _async_get_channel(self, device: PublicDeviceModel) -> PublicRelayOutput | None:
+        return cast(Relay, device).get_output(self._channel_id)
+
+    @callback
+    @override
+    def _async_update_from_channel(self, channel: PublicRelayOutput) -> None:
+        self._attr_is_on = (
+            _RELAY_STATE_MAP.get(channel.state) if channel.state is not None else None
         )
-        # Refresh from the bootstrap: a WS update or delete that landed between
-        # entity construction and this subscription would otherwise be missed.
-        self._async_updated(None)
 
     async def _activate_output(self, state: Literal["on", "off"]) -> None:
         """Send activate_output to the relay, raising if unavailable."""
@@ -702,12 +642,12 @@ class ProtectRelayOutputSwitch(SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="relay_not_available",
             )
-        if relay.get_output(self._output_id) is None:
+        if relay.get_output(self._channel_id) is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="relay_not_available",
             )
-        await relay.activate_output(self._output_id, state=state)
+        await relay.activate_output(self._channel_id, state=state)
 
     @async_ufp_instance_command
     @override

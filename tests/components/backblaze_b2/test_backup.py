@@ -1,35 +1,41 @@
 """Backblaze B2 backup agent tests."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 from io import StringIO
 import json
 import logging
 import threading
 import time
-from unittest.mock import Mock, patch
+from typing import Any
+from unittest.mock import Mock, call, patch
 
 from b2sdk._internal.raw_simulator import BucketSimulator
 from b2sdk.v2.exception import B2Error
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.backblaze_b2.backup import (
     _parse_metadata,
+    _ProgressListener,
+    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.backblaze_b2.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, BackupAgentError
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import BACKUP_METADATA, TEST_BACKUP
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -145,7 +151,7 @@ async def test_agents_delete(
         response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     mock_main.delete.assert_called_once()
     mock_metadata.delete.assert_called_once()
 
@@ -159,7 +165,7 @@ async def test_agents_delete_not_found(
     await client.send_json_auto_id({"type": "backup/delete", "backup_id": "random"})
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_agents_download(
@@ -480,6 +486,91 @@ async def test_metadata_file_invalid_json_during_list(
         response = await client.receive_json()
 
     assert response["success"]
+
+
+async def _backup_stream() -> AsyncIterator[bytes]:
+    yield b"\0" * 20000
+
+
+async def _open_backup_stream() -> AsyncIterator[bytes]:
+    return _backup_stream()
+
+
+async def test_upload_progress(hass: HomeAssistant) -> None:
+    """Test that upload progress from the B2 worker threads is reported."""
+    on_progress = Mock()
+    (agent,) = await async_get_backup_agents(hass)
+
+    await agent.async_upload_backup(
+        open_stream=_open_backup_stream,
+        backup=TEST_BACKUP,
+        on_progress=on_progress,
+    )
+
+    # The mocked upload reads the stream in 8192 byte chunks
+    assert on_progress.call_args_list == [
+        call(bytes_uploaded=8192),
+        call(bytes_uploaded=16384),
+        call(bytes_uploaded=20000),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_error"),
+    [
+        (TimeoutError, BackupAgentError),
+        (asyncio.CancelledError, asyncio.CancelledError),
+    ],
+)
+async def test_upload_progress_after_failed_upload(
+    hass: HomeAssistant,
+    error: type[BaseException],
+    expected_error: type[BaseException],
+) -> None:
+    """Test that a B2 worker outliving a failed upload no longer reports progress."""
+    upload_failed = threading.Event()
+
+    def upload_unbound_stream_sync(*args: Any) -> None:
+        upload_failed.wait()
+        # A part buffered before the failure finishes uploading
+        args[-1].bytes_completed(8192)
+
+    on_progress = Mock()
+    (agent,) = await async_get_backup_agents(hass)
+
+    with (
+        patch.object(agent, "_upload_unbound_stream_sync", upload_unbound_stream_sync),
+        patch(
+            "homeassistant.components.backblaze_b2.backup.asyncio.wait_for",
+            side_effect=error,
+        ),
+        pytest.raises(expected_error),
+    ):
+        await agent.async_upload_backup(
+            open_stream=_open_backup_stream,
+            backup=TEST_BACKUP,
+            on_progress=on_progress,
+        )
+
+    upload_failed.set()
+    await hass.async_block_till_done()
+
+    on_progress.assert_not_called()
+
+
+async def test_upload_progress_after_loop_closed(hass: HomeAssistant) -> None:
+    """Test that a B2 worker reporting progress after shutdown does not raise."""
+    on_progress = Mock()
+    listener = _ProgressListener(hass, on_progress)
+
+    with patch.object(
+        hass.loop,
+        "call_soon_threadsafe",
+        side_effect=RuntimeError("Event loop is closed"),
+    ):
+        listener.bytes_completed(8192)
+
+    on_progress.assert_not_called()
 
 
 async def test_upload_with_cleanup_and_logging(

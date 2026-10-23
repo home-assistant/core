@@ -87,14 +87,19 @@ async def handle_webhook(
 ) -> web.Response:
     """Handle incoming webhook with Traccar Client request."""
     if not (requestdata := dict(request.query)):
-        try:
-            requestdata = _parse_json_body(await request.json())
-        except JSONDecodeError as error:
-            LOGGER.error("Error parsing JSON body: %s", error)
-            return web.Response(
-                text="Invalid JSON",
-                status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            )
+        # Traccar Client 10 posts its data as a form
+        if request.content_type == "application/x-www-form-urlencoded":
+            form = await request.post()
+            requestdata = {key: str(value) for key, value in form.items()}
+        else:
+            try:
+                requestdata = _parse_json_body(await request.json())
+            except JSONDecodeError as error:
+                LOGGER.error("Error parsing JSON body: %s", error)
+                return web.Response(
+                    text="Invalid JSON",
+                    status=HTTPStatus.UNPROCESSABLE_ENTITY,
+                )
     try:
         data = WEBHOOK_SCHEMA(requestdata)
     except probatio.MultipleInvalid as error:
@@ -126,7 +131,7 @@ async def handle_webhook(
     return web.Response(text=f"Setting location for {device}")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TraccarConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TraccarConfigEntry) -> None:
     """Configure based on config entry."""
     entry.runtime_data = set()
     webhook.async_register(
@@ -134,13 +139,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TraccarConfigEntry) -> b
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: TraccarConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TraccarConfigEntry) -> None:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

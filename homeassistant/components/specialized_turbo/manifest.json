@@ -41,6 +41,7 @@
       "local_name": "SPECIALIZED*"
     }
   ],
+  "categories": ["vehicles_transport.bikes_scooters"],
   "codeowners": ["@JamieMagee"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

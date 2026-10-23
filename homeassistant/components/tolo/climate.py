@@ -55,7 +55,7 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = 1
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ToloConfigEntry
@@ -63,11 +63,12 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         """Initialize TOLO Sauna Climate entity."""
         super().__init__(coordinator, entry)
 
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{entry.entry_id}_climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     @override
-    def current_temperature(self) -> int:
+    def native_current_temperature(self) -> int:
         """Return current temperature."""
         return self.coordinator.data.status.current_temperature
 
@@ -79,7 +80,7 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> int:
+    def native_target_temperature(self) -> int:
         """Return target temperature."""
         return self.coordinator.data.settings.target_temperature
 

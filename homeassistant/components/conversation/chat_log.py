@@ -13,7 +13,7 @@ from typing import Any, Literal, TypedDict, cast
 import probatio
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import chat_session, frame, intent, llm, template
 from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
@@ -24,6 +24,9 @@ from .const import DOMAIN, ChatLogEventType
 from .models import ConversationInput, ConversationResult
 
 DATA_CHAT_LOGS: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_logs")
+DATA_CHAT_LOG_OWNERS: HassKey[dict[str, str | None]] = HassKey(
+    "conversation_chat_log_owners"
+)
 DATA_SUBSCRIPTIONS: HassKey[
     list[Callable[[str, ChatLogEventType, dict[str, Any]], None]]
 ] = HassKey("conversation_chat_log_subscriptions")
@@ -68,6 +71,39 @@ def _async_notify_subscribers(
             callback_func(conversation_id, event_type, data)
 
 
+@callback
+def _async_check_owner(
+    hass: HomeAssistant,
+    session: chat_session.ChatSession,
+    user_input: ConversationInput | None,
+) -> None:
+    """Raise if the user of the input may not continue the conversation.
+
+    The user of the first input becomes the owner of the conversation. This
+    includes a conversation started without user input, like by a satellite.
+    Owners are kept apart from the chat log, because parallel requests each
+    work on their own copy of it.
+    """
+    if user_input is None:
+        return
+    owners = hass.data.get(DATA_CHAT_LOG_OWNERS)
+    if owners is None:
+        owners = {}
+        hass.data[DATA_CHAT_LOG_OWNERS] = owners
+    conversation_id = session.conversation_id
+    if conversation_id not in owners:
+        owners[conversation_id] = user_input.context.user_id
+
+        @callback
+        def remove_owner() -> None:
+            """Remove the owner when the session ends."""
+            owners.pop(conversation_id, None)
+
+        session.async_on_cleanup(remove_owner)
+    elif owners[conversation_id] != user_input.context.user_id:
+        raise Unauthorized(context=user_input.context)
+
+
 @contextmanager
 def async_get_chat_log(
     hass: HomeAssistant,
@@ -86,6 +122,7 @@ def async_get_chat_log(
             raise RuntimeError(
                 "Cannot attach chat log delta listener unless initial caller"
             )
+        _async_check_owner(hass, session, user_input)
         if user_input is not None and (
             (content := chat_log.content[-1]).role != "user"
             or content.content != user_input.text
@@ -99,6 +136,8 @@ def async_get_chat_log(
     if all_chat_logs is None:
         all_chat_logs = {}
         hass.data[DATA_CHAT_LOGS] = all_chat_logs
+
+    _async_check_owner(hass, session, user_input)
 
     is_new_log = session.conversation_id not in all_chat_logs
 
@@ -276,7 +315,7 @@ class AssistantContent:
             "agent_id": self.agent_id,
             "created": self.created,
         }
-        if self.content:
+        if self.content is not None:
             result["content"] = self.content
         if self.thinking_content:
             result["thinking_content"] = self.thinking_content
@@ -522,8 +561,10 @@ class ChatLog:
 
         The keys content and tool_calls will be concatenated
         if they appear multiple times.
+
+        An explicit empty content string is preserved as a silent response.
         """
-        current_content = ""
+        current_content: str | None = None
         current_thinking_content = ""
         current_native: Any = None
         current_tool_calls: list[llm.ToolInput] = []
@@ -536,8 +577,8 @@ class ChatLog:
             if "role" not in delta:
                 # ToolResultContentDeltaDict will always have a role
                 assistant_delta = cast(AssistantContentDeltaDict, delta)
-                if delta_content := assistant_delta.get("content"):
-                    current_content += delta_content
+                if (delta_content := assistant_delta.get("content")) is not None:
+                    current_content = (current_content or "") + delta_content
                 if delta_thinking_content := assistant_delta.get("thinking_content"):
                     current_thinking_content += delta_thinking_content
                 if delta_native := assistant_delta.get("native"):
@@ -571,14 +612,14 @@ class ChatLog:
             # Starting a new message
             # Yield the previous message if it has content
             if (
-                current_content
+                current_content is not None
                 or current_thinking_content
                 or current_tool_calls
                 or current_native
             ):
                 content: AssistantContent | ToolResultContent = AssistantContent(
                     agent_id=agent_id,
-                    content=current_content or None,
+                    content=current_content,
                     thinking_content=current_thinking_content or None,
                     tool_calls=current_tool_calls or None,
                     native=current_native,
@@ -590,13 +631,13 @@ class ChatLog:
                     yield tool_result
                     if self.delta_listener:
                         self.delta_listener(self, tool_result.as_dict())
-                current_content = ""
+                current_content = None
                 current_thinking_content = ""
                 current_native = None
                 current_tool_calls = []
 
             if delta["role"] == "assistant":
-                current_content = delta.get("content") or ""
+                current_content = delta.get("content")
                 current_thinking_content = delta.get("thinking_content") or ""
                 current_tool_calls = delta.get("tool_calls") or []
                 current_native = delta.get("native")
@@ -635,14 +676,14 @@ class ChatLog:
                 )
 
         if (
-            current_content
+            current_content is not None
             or current_thinking_content
             or current_tool_calls
             or current_native
         ):
             content = AssistantContent(
                 agent_id=agent_id,
-                content=current_content or None,
+                content=current_content,
                 thinking_content=current_thinking_content or None,
                 tool_calls=current_tool_calls or None,
                 native=current_native,
@@ -716,7 +757,9 @@ class ChatLog:
         if not user_llm_hass_api:
             pass
         elif isinstance(user_llm_hass_api, llm.API):
-            llm_api = await user_llm_hass_api.async_get_api_instance(llm_context)
+            llm_api = await llm.async_get_authorized_api_instance(
+                user_llm_hass_api, llm_context
+            )
         else:
             try:
                 llm_api = await llm.async_get_api(

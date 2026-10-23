@@ -16,7 +16,7 @@ from .const import OAUTH_SCOPES, PLATFORMS
 from .coordinator import TwitchConfigEntry, TwitchCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> None:
     """Set up Twitch from a config entry."""
     implementation = cast(
         LocalOAuth2Implementation,
@@ -40,10 +40,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> None:
     """Unload Twitch config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

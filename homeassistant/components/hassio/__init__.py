@@ -18,6 +18,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import frontend
 from homeassistant.components.homeassistant import async_set_stop_handler
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.components.onboarding import async_is_onboarded
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE, HASSIO_USER_NAME, Platform
@@ -28,6 +29,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     discovery_flow,
     issue_registry as ir,
+    system_state,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -51,16 +53,18 @@ from . import (  # noqa: F401
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState
 from .addon_panel import async_setup_addon_panel, async_setup_addon_panel_coordinator
 from .auth import async_setup_auth_view
+from .auto_update import AutoUpdateManager
 from .config import HassioConfigStore, StoredHassioConfig
 from .config_entry import async_get_hassio_entry
 from .const import (
     ADDONS_COORDINATOR,
+    DATA_AUTO_UPDATE,
     DATA_COMPONENT,
     DATA_HASSIO_HOST,
-    DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     ENTRY_DATA_USER,
+    ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
     ISSUE_MOUNT_MOUNT_FAILED,
     JOBS_COORDINATOR,
     MAIN_COORDINATOR,
@@ -102,6 +106,7 @@ from .websocket_api import async_load_websocket_api
 # All references to addons will eventually be refactored and deprecated
 get_apps_list = get_addons_list
 __all__ = [
+    "DOMAIN",
     "AddonError",
     "AddonInfo",
     "AddonManager",
@@ -340,7 +345,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if legacy_data is not None:
         legacy_user_id = legacy_data.get("hassio_user")
 
-    hass.data[DATA_HASSIO_SUPERVISOR_USER] = await _async_get_or_create_supervisor_user(
+    hass.data[DATA_SUPERVISOR_USER] = await _async_get_or_create_supervisor_user(
         hass, entry, legacy_user_id
     )
 
@@ -368,7 +373,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
     # Deprecated in 2026.8: remove this legacy store migration path after the
     # deprecation window for .storage/hassio has elapsed.
@@ -386,7 +391,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         remove_legacy_store = True
 
     # Async setup runs first unconditionally and always populates this field
-    user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
+    user = hass.data[DATA_SUPERVISOR_USER]
     if entry.data.get(ENTRY_DATA_USER) != user.id:
         hass.config_entries.async_update_entry(
             entry,
@@ -454,6 +459,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     issues_coordinator = SupervisorIssuesCoordinator(hass, entry)
     hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues_coordinator
 
+    auto_update = AutoUpdateManager(hass, entry, coordinator)
+    await auto_update.async_setup()
+    hass.data[DATA_AUTO_UPDATE] = auto_update
+
     @callback
     def _refresh_main_coordinator_on_mount_issue(_: IssueSubscriptionEvent) -> None:
         coordinator.config_entry.async_create_task(hass, coordinator.async_refresh())
@@ -463,6 +472,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             IssueSubscription(
                 event_callback=_refresh_main_coordinator_on_mount_issue,
                 key=ISSUE_MOUNT_MOUNT_FAILED,
+            )
+        )
+    )
+
+    @callback
+    def _mirror_host_reboot_required(_: IssueSubscriptionEvent) -> None:
+        system_state.async_set_host_reboot_required(
+            hass,
+            any(
+                issue.key == ISSUE_KEY_SYSTEM_REBOOT_REQUIRED
+                for issue in issues_coordinator.issues
+            ),
+        )
+
+    entry.async_on_unload(
+        issues_coordinator.subscribe(
+            IssueSubscription(
+                event_callback=_mirror_host_reboot_required,
+                key=ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
             )
         )
     )
@@ -551,18 +579,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if remove_legacy_store:
         await legacy_store.async_remove()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    # Pop coordinators and entry-level data
-    hass.data.pop(MAIN_COORDINATOR, None)
-    hass.data.pop(ADDONS_COORDINATOR, None)
-    hass.data.pop(STATS_COORDINATOR, None)
-    hass.data.pop(JOBS_COORDINATOR, None)
-    hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
-
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        # Pop coordinators and entry-level data
+        hass.data.pop(MAIN_COORDINATOR, None)
+        hass.data.pop(ADDONS_COORDINATOR, None)
+        hass.data.pop(STATS_COORDINATOR, None)
+        hass.data.pop(JOBS_COORDINATOR, None)
+        hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
+        hass.data.pop(DATA_AUTO_UPDATE, None)

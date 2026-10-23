@@ -5,7 +5,8 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
-from arcam.fmj import IncomingVideoAspectRatio, IncomingVideoColorspace, IntOrTypeEnum
+from arcam.fmj.codecs import IncomingVideoAspectRatio, IncomingVideoColorspace
+from arcam.fmj.models import IntOrTypeEnum
 from arcam.fmj.state import IncomingAudioConfig, IncomingAudioFormat, State
 
 from homeassistant.components.sensor import (

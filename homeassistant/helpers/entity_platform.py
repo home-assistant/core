@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from datetime import timedelta
 from logging import Logger, getLogger
-from typing import TYPE_CHECKING, Any, Protocol, cast, overload, override
+from typing import TYPE_CHECKING, Any, Protocol, overload, override
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -538,7 +538,8 @@ class EntityPlatform:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
-            return False
+            # Not a failure, setup is retried in the background
+            return True
         except TimeoutError:
             logger.error(
                 (
@@ -836,6 +837,56 @@ class EntityPlatform:
                 already_exists = True
         return (already_exists, restored)
 
+    @callback
+    def _async_get_entity_device(
+        self, entity: Entity, config_entry_id: str, config_subentry_id: str | None
+    ) -> dr.AnyDeviceEntry | None:
+        """Return the device of an entity.
+
+        A device info with fields gets or creates the device, otherwise the device
+        entry set on the entity is used.
+        """
+        if (device_info := entity.device_info) is None:
+            return entity.device_entry
+        dev_reg = dr.async_get(self.hass)
+        if isinstance(device_info, dr.ChildDeviceInfo):
+            return dev_reg.async_get_or_create_child_from_info(
+                config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
+                device_info=device_info,
+            )
+        if isinstance(device_info, dr.DeviceInfo):
+            # A device info without any field means no device
+            if not device_info.as_dict():
+                return entity.device_entry
+            return dev_reg.async_get_or_create_from_info(
+                config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
+                device_info=device_info,
+            )
+        # An integration can still describe its device with a plain mapping, which
+        # its type does not allow. To be deprecated.
+        device_info_fields = dict(device_info)  # type: ignore[unreachable]
+        # A device info without any field means no device
+        if not device_info_fields:
+            return entity.device_entry
+        # An explicit parent_device_id of None, as a dynamically built device info
+        # may carry, means a main device
+        if (
+            parent_device_id := device_info_fields.pop("parent_device_id", None)
+        ) is not None:
+            return dev_reg.async_get_or_create_child(
+                config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
+                parent_device_id=parent_device_id,
+                **device_info_fields,
+            )
+        return dev_reg.async_get_or_create(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            **device_info_fields,
+        )
+
     def _check_device_attach(self, entity: Entity, reason: str) -> None:
         """Check the entity does not attach a device and report it if it does.
 
@@ -868,6 +919,7 @@ class EntityPlatform:
             self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
         try:
+            await entity.async_prepare_to_add_to_hass()
             restored = await self._async_add_entity_impl(
                 entity, update_before_add, entity_registry, config_subentry_id
             )
@@ -896,9 +948,11 @@ class EntityPlatform:
 
         def remove_entity_cb() -> None:
             """Remove entity from entities dict."""
-            del self.entities[entity_id]
-            del self.domain_entities[entity_id]
-            del self.domain_platform_entities[entity_id]
+            # The entity_id may have changed since the entity was added
+            current_entity_id = entity.entity_id
+            del self.entities[current_entity_id]
+            del self.domain_entities[current_entity_id]
+            del self.domain_platform_entities[current_entity_id]
 
         entity.async_on_remove(remove_entity_cb)
 
@@ -923,7 +977,7 @@ class EntityPlatform:
                 entity.add_to_platform_abort()
             raise
 
-    async def _async_add_entity_impl(  # noqa: C901
+    async def _async_add_entity_impl(
         self,
         entity: Entity,
         update_before_add: bool,
@@ -1021,47 +1075,21 @@ class EntityPlatform:
 
             device: dr.AnyDeviceEntry | None
             if self.config_entry:
-                if device_info := entity.device_info:
-                    dev_reg = dr.async_get(self.hass)
-                    try:
-                        # A device info carrying a parent_device_id registers a child
-                        # device. An explicit None (as a dynamically built device info
-                        # may carry) means a main device, so check `is not None`.
-                        if device_info.get("parent_device_id") is not None:
-                            device = dev_reg.async_get_or_create_child(
-                                config_entry_id=self.config_entry.entry_id,
-                                config_subentry_id=config_subentry_id,
-                                **cast("dr.ChildDeviceInfo", device_info),
-                            )
-                        else:
-                            # An explicit parent_device_id=None means a main device;
-                            # drop the key as async_get_or_create is main-only.
-                            device = dev_reg.async_get_or_create(
-                                config_entry_id=self.config_entry.entry_id,
-                                config_subentry_id=config_subentry_id,
-                                **cast(
-                                    "dr.DeviceInfo",
-                                    {
-                                        key: value
-                                        for key, value in device_info.items()
-                                        if key != "parent_device_id"
-                                    },
-                                ),
-                            )
-                    except (HomeAssistantError, TypeError) as exc:
-                        # A TypeError signals a bad key in the device info passed as
-                        # keyword arguments.
-                        self.logger.error(
-                            "%s: Not adding entity, error adding device: %s",
-                            self.platform_name,
-                            str(exc),
-                        )
-                        entity.add_to_platform_abort()
-                        return None
-
-                    entity.device_entry = device
-                else:
-                    device = entity.device_entry
+                try:
+                    device = self._async_get_entity_device(
+                        entity, self.config_entry.entry_id, config_subentry_id
+                    )
+                except (HomeAssistantError, TypeError) as exc:
+                    # A TypeError signals a bad key in the device info passed as
+                    # keyword arguments.
+                    self.logger.error(
+                        "%s: Not adding entity, error adding device: %s",
+                        self.platform_name,
+                        str(exc),
+                    )
+                    entity.add_to_platform_abort()
+                    return None
+                entity.device_entry = device
             else:
                 self._check_device_attach(entity, "without a config entry")
                 device = None
@@ -1136,11 +1164,6 @@ class EntityPlatform:
                 )
                 entity.add_to_platform_abort()
                 return None
-
-            if device and device.disabled and not entry.disabled:
-                entry = entity_registry.async_update_entity(
-                    entry.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
-                )
 
             entity.registry_entry = entry
             entity.entity_id = entry.entity_id
@@ -1232,6 +1255,16 @@ class EntityPlatform:
         """
         await self.async_reset()
         self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name].remove(self)
+
+    @callback
+    def async_move_entity(self, old_entity_id: str, new_entity_id: str) -> None:
+        """Move an entity whose entity_id has changed to its new entity_id."""
+        for entities in (
+            self.entities,
+            self.domain_entities,
+            self.domain_platform_entities,
+        ):
+            entities[new_entity_id] = entities.pop(old_entity_id)
 
     async def async_remove_entity(self, entity_id: str) -> None:
         """Remove entity id from platform."""

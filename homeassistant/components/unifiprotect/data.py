@@ -21,6 +21,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicDeviceModel,
+    Relay,
     WSAction,
     WSSubscriptionMessage,
 )
@@ -48,6 +49,7 @@ from .const import (
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
     DISPATCH_PUBLIC_ADD,
+    DISPATCH_RELAYS,
     DOMAIN,
 )
 from .utils import async_get_devices_by_type
@@ -83,7 +85,12 @@ def _async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
 # Device families the public API alone provides; the private bootstrap has no
 # store for them, so hybrid has no adopt path either and their add always goes
 # through the public add signal.
-_PUBLIC_ONLY_MODELS = {ModelType.FOB, ModelType.RELAY, ModelType.SIREN}
+_PUBLIC_ONLY_MODELS = {
+    ModelType.FOB,
+    ModelType.LINK_STATION,
+    ModelType.RELAY,
+    ModelType.SIREN,
+}
 
 
 def _pair_public_private[
@@ -155,9 +162,15 @@ class ProtectData:
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
+        self.relay_signal = _async_dispatch_id(entry, DISPATCH_RELAYS)
         self.public_add_signal = _async_dispatch_id(entry, DISPATCH_PUBLIC_ADD)
         # PTZ patrol cache: camera_id -> list of patrols
         self.ptz_patrols: dict[str, list[PTZPatrol]] = {}
+
+    @property
+    def hass(self) -> HomeAssistant:
+        """Return the Home Assistant instance."""
+        return self._hass
 
     @property
     def disable_stream(self) -> bool:
@@ -400,7 +413,8 @@ class ProtectData:
 
         DEVICES_WS_SUBSCRIBED_MODELS is an empty set, which the API client treats
         as "all models", so messages are not pre-filtered. NVR messages signal
-        the mode's NVR object so alarm entities pick up the new arm state.
+        the mode's NVR object so alarm entities pick up the new arm state, and
+        re-signal the cameras when the doorbell messages change.
         Every other public device inherits ``PublicDeviceModel`` and is
         dispatched by mac.
         Frames without a merged object dispatch ``None`` and subscribers re-read
@@ -416,6 +430,8 @@ class ProtectData:
             return
         if new_obj.model is ModelType.NVR:
             self._async_signal_nvr_update()
+            if "doorbellSettings" in message.changed_data:
+                self._async_signal_public_doorbell_settings()
             return
         if isinstance(new_obj, PublicDeviceModel):
             if new_obj.model is ModelType.CAMERA:
@@ -423,6 +439,12 @@ class ProtectData:
             if message.action is WSAction.ADD:
                 self._async_dispatch_new_public_device(new_obj)
             self._async_signal_public_update(new_obj.mac, new_obj)
+            if (
+                isinstance(new_obj, Relay)
+                and self.api.has_public_bootstrap
+                and new_obj.id in self.api.public_bootstrap.relays
+            ):
+                async_dispatcher_send(self._hass, self.relay_signal, new_obj)
 
     @callback
     def _async_reenumerate_camera_on_public_change(
@@ -528,13 +550,21 @@ class ProtectData:
             return
         self._async_process_public_updates()
         # A device that appeared during the gap gets no add frame, so re-offer
-        # everything; the dispatch helper drops what platforms already know.
+        # everything. Platforms and dispatch helpers drop what they already know.
         if self.api.has_public_bootstrap:
             for public in list(self.api.public_bootstrap.cameras.values()):
                 async_dispatcher_send(self._hass, self.channels_signal, public)
             for device in list(self.api.public_bootstrap.all_devices()):
                 if isinstance(device, PublicDeviceModel):
                     self._async_dispatch_new_public_device(device)
+            for relay in list(self.api.public_bootstrap.relays.values()):
+                async_dispatcher_send(self._hass, self.relay_signal, relay)
+
+    @callback
+    def _async_signal_public_doorbell_settings(self) -> None:
+        """Signal the public cameras so the doorbell text options follow the NVR."""
+        for camera in list(self.api.public_bootstrap.cameras.values()):
+            self._async_signal_public_update(camera.mac, camera)
 
     @callback
     def _async_signal_nvr_update(self) -> None:
@@ -697,17 +727,6 @@ class ProtectData:
             self._pending_camera_ids.remove(device.id)
             async_dispatcher_send(self._hass, self.channels_signal, device)
 
-        # trigger update for all Cameras with LCD screens
-        # when NVR Doorbell settings updates
-        if "doorbell_settings" in changed_data:
-            _LOGGER.debug(
-                "Doorbell messages updated. Updating devices with LCD screens"
-            )
-            self.api.bootstrap.nvr.update_all_messages()
-            for camera in self.get_cameras():
-                if camera.feature_flags.has_lcd_screen:
-                    self._async_signal_device_update(camera)
-
     @callback
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
         """Process a message from the websocket."""
@@ -844,10 +863,21 @@ class ProtectData:
             return None
         # Migrated entities target dedicated public device models, which all
         # inherit from PublicDeviceModel (carrying mac/state).
-        return cast(
-            "PublicDeviceModel | None",
-            api.public_bootstrap.get(device.model, device.id),
-        )
+        public_bootstrap = api.public_bootstrap
+        if (public := public_bootstrap.get(device.model, device.id)) is None and (
+            store := public_bootstrap.store_for(device.model)
+        ):
+            # A device re-adopted while the websocket was down is only known
+            # under its new id after the resync.
+            public = next(
+                (
+                    obj
+                    for obj in store.values()
+                    if getattr(obj, "mac", None) == device.mac
+                ),
+                None,
+            )
+        return cast("PublicDeviceModel | None", public)
 
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
