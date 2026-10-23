@@ -79,10 +79,31 @@ def london_air_data() -> LondonAirData:
         centre_latitude_wgs84="6712603.132989",
         centre_longitude_wgs84="-9901.534748",
     )
+    barnet = Authority(
+        name="Barnet",
+        code="3",
+        centre_latitude="51.60904",
+        centre_longitude="-0.20629",
+        sites=(
+            Site(
+                site_code="BA1",
+                site_name="Barnet Test Site",
+                site_type="Background",
+                latitude="51.61000",
+                longitude="-0.20500",
+                updated=UPDATED,
+                pollutants=(),
+                status="no_species_data",
+                number_of_pollutants=0,
+            ),
+        ),
+        status="Low",
+    )
     return LondonAirData(
         group_name="London",
         time_to_live=38,
         authorities={
+            "Barnet": barnet,
             "City of London": city_of_london,
             "Merton": merton,
         },

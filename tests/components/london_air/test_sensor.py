@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock
 
-from pylondonair import LondonAirConnectionError, LondonAirData, LondonAirUpdateError
+from pylondonair import (
+    NO_SPECIES_DATA,
+    LondonAirConnectionError,
+    LondonAirData,
+    LondonAirUpdateError,
+)
 import pytest
 
 from homeassistant.components.london_air.sensor import CONF_LOCATIONS
@@ -46,6 +51,10 @@ async def test_valid_state(
     assert pollutants[0]["quality"] == "Low"
     assert int(pollutants[0]["index"]) == 2
     assert pollutants[0]["summary"] == "PM10 is Low"
+
+    (platform,) = async_get_platforms(hass, "london_air")
+    entity = platform.entities["sensor.merton"]
+    assert entity.site_data == sites
 
 
 @pytest.mark.parametrize(
@@ -111,6 +120,26 @@ async def test_authority_without_site_data(
     assert state.state == "unknown"
     assert state.attributes["updated"] is None
     assert state.attributes["sites"] == 0
+
+
+async def test_site_without_pollutants(
+    hass: HomeAssistant,
+    london_air_data: LondonAirData,
+    mock_london_air_client: AsyncMock,
+) -> None:
+    """Test a site that reports no pollutant data."""
+    config = {"sensor": {"platform": "london_air", CONF_LOCATIONS: ["Barnet"]}}
+    mock_london_air_client.async_update.return_value = london_air_data
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.barnet")
+    assert state is not None
+    assert state.state == "Low"
+    site = state.attributes["data"][0]
+    assert site["pollutants"] == [NO_SPECIES_DATA]
+    assert site["pollutants_status"] == "no_species_data"
+    assert site["number_of_pollutants"] == 0
 
 
 async def test_second_update_throttled(
