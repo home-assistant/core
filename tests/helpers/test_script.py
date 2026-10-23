@@ -5922,7 +5922,17 @@ async def test_update_logger(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test updating logger."""
-    sequence = cv.SCRIPT_SCHEMA({"event": "test_event"})
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "wait_for_trigger": {"platform": "event", "event_type": "test_event"},
+                "timeout": 0,
+                "on_complete": {"event": "test_event"},
+                "on_timeout": {"event": "test_event"},
+            },
+        ]
+    )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     await script_obj.async_run(context=Context())
@@ -5932,6 +5942,9 @@ async def test_update_logger(
 
     log_name = "testing.123"
     script_obj.update_logger(logging.getLogger(log_name))
+    wait_data = script_obj._wait_for_trigger_data[1]
+    assert wait_data["on_complete"]._logger.name == log_name
+    assert wait_data["on_timeout"]._logger.name == log_name
 
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
