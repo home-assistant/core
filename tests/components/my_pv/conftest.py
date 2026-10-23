@@ -91,12 +91,8 @@ def setup_values() -> dict[str, Any]:
 
 @pytest.fixture
 def data_values() -> dict[str, Any]:
-    """The setup values."""
+    """The data values."""
     return DATA_VALUE
-
-
-def _data_value_lookup(key):
-    return DATA_VALUE.get(key)
 
 
 @pytest.fixture
@@ -125,7 +121,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_my_pv_client(
-    setup_configuration: dict[str, Any], setup_values: dict[str, Any]
+    setup_configuration: dict[str, Any],
+    setup_values: dict[str, Any],
+    data_values: dict[str, Any],
 ) -> Generator[AsyncMock]:
     """Mock the my-PV client across the integration."""
     with (
@@ -169,6 +167,5 @@ def mock_my_pv_client(
         client.get_data_value = Mock(side_effect=data_values.get)
         client.supports_data = Mock(side_effect=DATA_CONFIGURATION.__contains__)
         client.fetch_data = AsyncMock(return_value=True)
-        client.get_data_value = Mock(side_effect=DATA_VALUE.get)
 
         yield client
