@@ -254,9 +254,15 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
         try:
             session = await relay.start(offer_sdp, on_answer, on_candidate)
         except (LitterRobotException, ClientError, TimeoutError) as err:
-            if self._relays.pop(session_id, None) is not relay:
+            owned = self._relays.pop(session_id, None) is relay
+            # start() leaves nothing open on these errors; close the relay
+            # anyway rather than rely on the library to clean up after itself
+            await relay.close()
+            if not owned:
                 # the viewer closed the session while it was starting
-                _LOGGER.debug("WebRTC session %s closed while starting", session_id)
+                _LOGGER.debug(
+                    "WebRTC session %s closed while starting: %s", session_id, err
+                )
                 return
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

@@ -333,7 +333,7 @@ async def test_webrtc_offer_failure(
     hass_ws_client: WebSocketGenerator,
     error: Exception,
 ) -> None:
-    """A relay that fails to start reports why and is not kept."""
+    """A relay that fails to start reports why, and is closed and not kept."""
     await _setup(hass, mock_account_with_litterrobot_5_pro)
     client = await hass_ws_client(hass)
 
@@ -350,6 +350,7 @@ async def test_webrtc_offer_failure(
         "message": "Failed to start the camera stream: refused",
     }
     assert _state(hass) == CameraState.IDLE
+    relay.close.assert_awaited_once()
 
     await _send_candidate(client, session_id, {"candidate": "candidate:1"})
     relay.send_candidate.assert_not_awaited()
@@ -464,7 +465,8 @@ async def test_viewer_leaving_before_a_failed_start_is_not_an_error(
         # the teardown closed the socket under start()
         raise ClientError("connection reset")
 
-    with patch(RELAY, return_value=_relay(start)):
+    relay = _relay(start)
+    with patch(RELAY, return_value=relay):
         subscription_id, session_id = await _send_offer(client)
         await _unsubscribe(client, subscription_id)
         connected.set()
@@ -472,6 +474,8 @@ async def test_viewer_leaving_before_a_failed_start_is_not_an_error(
 
     assert failed.is_set()
     assert not [r for r in caplog.records if r.levelno >= logging.ERROR]
+    # closed by the teardown, and again once start() failed
+    assert relay.close.await_count == 2
     # nothing else was sent for the offer: the next message answers this
     await _send_candidate(client, session_id, {"candidate": "candidate:1"})
 
