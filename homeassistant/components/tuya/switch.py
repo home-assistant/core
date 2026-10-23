@@ -282,6 +282,73 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
+    DeviceCategory.DGHSXJ: (
+        TuyaSwitchEntityDescription(
+            key=DPCode.WIRELESS_BATTERYLOCK,
+            translation_key="battery_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.CRY_DETECTION_SWITCH,
+            translation_key="cry_detection",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.DECIBEL_SWITCH,
+            translation_key="sound_detection",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.RECORD_SWITCH,
+            translation_key="video_recording",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MOTION_RECORD,
+            translation_key="motion_recording",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.BASIC_PRIVATE,
+            translation_key="privacy_mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.BASIC_FLIP,
+            translation_key="flip",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.BASIC_OSD,
+            translation_key="time_watermark",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.BASIC_WDR,
+            translation_key="wide_dynamic_range",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MOTION_TRACKING,
+            translation_key="motion_tracking",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MOTION_SWITCH,
+            translation_key="motion_alarm",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MOTION_AREA_SWITCH,
+            translation_key="motion_detection_zone",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.IPC_AUTO_SIREN,
+            translation_key="auto_siren",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.DJ: (
         # There are sockets available with an RGB light
         # that advertise as `dj`, but provide an additional
@@ -1024,9 +1091,6 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
         ),
     ),
 }
-
-# Smart Camera - Low power consumption camera (duplicate of `sp`)
-SWITCHES[DeviceCategory.DGHSXJ] = SWITCHES[DeviceCategory.SP]
 
 
 async def async_setup_entry(

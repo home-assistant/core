@@ -96,6 +96,18 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
             fallback_color_data_mode=FallbackColorDataMode.V2,
         ),
     ),
+    DeviceCategory.DGHSXJ: (
+        TuyaLightEntityDescription(
+            key=DPCode.FLOODLIGHT_SWITCH,
+            brightness=DPCode.FLOODLIGHT_LIGHTNESS,
+            name="Floodlight",
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.BASIC_INDICATOR,
+            name="Indicator light",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.DJ: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
@@ -398,9 +410,6 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
         ),
     ),
 }
-
-# Smart Camera - Low power consumption camera (duplicate of `sp`)
-LIGHTS[DeviceCategory.DGHSXJ] = LIGHTS[DeviceCategory.SP]
 
 
 async def async_setup_entry(
