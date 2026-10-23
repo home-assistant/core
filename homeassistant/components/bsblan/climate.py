@@ -217,7 +217,11 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
             # Scenes restore the target before the preset, rounded to the display unit
             if not any(
                 setpoint is not None and abs(temperature - setpoint) < 0.3
-                for setpoint in (self._comfort_setpoint, self._reduced_setpoint)
+                for setpoint in (
+                    self.native_target_temperature,
+                    self._comfort_setpoint,
+                    self._reduced_setpoint,
+                )
             ):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,

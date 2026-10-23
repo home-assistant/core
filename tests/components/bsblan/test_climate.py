@@ -721,19 +721,25 @@ async def test_set_temperature_rejected_in_auto(
 
 @pytest.mark.usefixtures("mock_reduced_setpoint")
 @pytest.mark.parametrize(
-    ("temperature", "preset", "temporary_mode"),
-    [(20.0, PRESET_COMFORT, 2), (17.0, PRESET_ECO, 1)],
+    ("current_setpoint", "temperature", "preset", "temporary_mode"),
+    [
+        ("20.0", 20.0, PRESET_COMFORT, 2),
+        ("20.0", 17.0, PRESET_ECO, 1),
+        # Shifted by a room unit, matches neither comfort nor reduced
+        ("21.0", 21.0, PRESET_COMFORT, 2),
+    ],
 )
 async def test_restore_scene_in_auto(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    current_setpoint: str,
     temperature: float,
     preset: str,
     temporary_mode: int,
 ) -> None:
     """Test restoring a scene in auto only applies its mode and preset."""
-    mock_bsblan.state.return_value = _circuit_state(1, "20.0")
+    mock_bsblan.state.return_value = _circuit_state(1, current_setpoint)
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     await async_reproduce_state(
