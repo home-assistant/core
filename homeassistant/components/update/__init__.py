@@ -163,10 +163,13 @@ async def _async_render_release_notes(
     hass: HomeAssistant, entity: UpdateEntity
 ) -> str | None:
     """Render release notes messages followed by the entity release notes."""
+    release_notes = await entity.async_release_notes()
+    # Like the state, but a skipped version can still be installed
+    if entity.latest_version == entity.installed_version or not entity.has_update:
+        return release_notes
     release_notes_messages = await _async_render_release_notes_messages(
         hass, entity.release_notes_messages
     )
-    release_notes = await entity.async_release_notes()
 
     if release_notes_messages is None:
         return release_notes
@@ -201,15 +204,20 @@ async def _async_render_release_notes_messages(
         if message.translation_domain == DOMAIN:
             translation = entity_component_translations.get(
                 "component.update.entity_component.release_notes_messages."
-                f"{message.translation_key}",
-                message.translation_key,
+                f"{message.translation_key}"
             )
         else:
             translation = entity_translations.get(
                 f"component.{message.translation_domain}.entity.update."
-                f"release_notes_messages.{message.translation_key}",
-                message.translation_key,
+                f"release_notes_messages.{message.translation_key}"
             )
+        if translation is None:
+            _LOGGER.warning(
+                "Missing translation for release notes message %s of %s",
+                message.translation_key,
+                message.translation_domain,
+            )
+            continue
         if message.translation_placeholders is not None:
             with suppress(KeyError):
                 translation = translation.format(**message.translation_placeholders)
@@ -217,4 +225,4 @@ async def _async_render_release_notes_messages(
             f'<ha-alert alert-type="{message.severity}">{translation}</ha-alert>'
         )
 
-    return "\n\n".join(rendered_messages)
+    return "\n\n".join(rendered_messages) or None
