@@ -222,21 +222,18 @@ async def test_setup_oauth_reauth_error(
         DOMAIN,
     )
 
-    with (
-        patch.object(config_entry, "async_start_reauth") as mock_async_start_reauth,
-        patch(
-            "homeassistant.components.google_sheets.OAuth2Session.async_ensure_token_valid",
-            side_effect=OAuth2TokenRequestReauthError(
-                domain=DOMAIN, request_info=Mock()
-            ),
-        ),
+    with patch(
+        "homeassistant.components.google_sheets.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestReauthError(domain=DOMAIN, request_info=Mock()),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_async_start_reauth.assert_called_once_with(hass, None, None)
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 async def test_setup_oauth_transient_error(

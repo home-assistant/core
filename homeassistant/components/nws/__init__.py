@@ -11,7 +11,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import debounce, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    debounce,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.event import (
@@ -19,6 +23,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.location import Coordinates, get_state_coordinates
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -36,6 +41,7 @@ from .const import (
     RETRY_STOP,
 )
 from .coordinator import NWSObservationDataUpdateCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +75,16 @@ class NWSData:
     location_entity_id: str | None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the National Weather Service (NWS) integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
     """Set up a National Weather Service entry."""
     api_key = entry.data[CONF_API_KEY]
     location_entity_id: str | None = None
@@ -258,12 +273,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def device_info(entry: ConfigEntry, nws_data: NWSData) -> DeviceInfo:

@@ -116,7 +116,7 @@ async def _async_service_temperature_set(
     kwargs: dict[str, Any] = {}
     min_temp = entity.min_temp
     max_temp = entity.max_temp
-    temp_unit = entity.temperature_unit
+    temp_unit = entity.native_temperature_unit
 
     if (
         (target_low_temp := service_call.data.get(ATTR_TARGET_TEMP_LOW))
@@ -138,7 +138,7 @@ async def _async_service_temperature_set(
             _LOGGER.debug(
                 "Check valid temperature %d %s (%d %s) in range %d %s - %d %s",
                 check_temp,
-                entity.temperature_unit,
+                temp_unit,
                 temp,
                 hass.config.units.temperature_unit,
                 min_temp,

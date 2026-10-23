@@ -194,6 +194,7 @@ async def test_agents_list_backups_fail_cloud(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {"cloud.cloud": "Failed to list backups"},
         "backups": [],
         "last_attempted_automatic_backup": None,
@@ -791,7 +792,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     mock_delete_file.assert_called_once_with(
         filename="462e16810d6841228828d9dd2f9e341e.tar",
         storage_type=StorageType.BACKUP,
@@ -821,7 +822,8 @@ async def test_agents_delete_fail_cloud(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {"cloud.cloud": "Failed to delete backup"}
+        "agent_error_translations": {},
+        "agent_errors": {"cloud.cloud": "Failed to delete backup"},
     }
 
 
@@ -843,7 +845,7 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 @pytest.mark.parametrize("event_type", ["login", "logout"])

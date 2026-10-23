@@ -1,7 +1,7 @@
 """Support for KNX select entities."""
 
 import logging
-from typing import Any, override
+from typing import override
 
 from xknx.devices import RawValue
 from xknx.dpt import DPTBase, DPTEnum
@@ -28,7 +28,6 @@ from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    CONF_VALUE,
     KNX_ADDRESS,
     KNX_MODULE_KEY,
     SelectConf,
@@ -41,8 +40,19 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
-from .storage.entity_store_schema import KnxEntityData
-from .storage.util import ConfigExtractor
+from .storage.entity_store_schema import (
+    KnxEntityData,
+    SelectCustomOptions,
+    SelectKnxConfig,
+    SelectOptionsFromDpt,
+)
+from .storage.knx_selector import (
+    GroupAddressConfig,
+    PayloadValue,
+    RawPayload,
+    SelectOption,
+    state_and_passive,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +80,9 @@ async def async_setup_entry(
             KnxYamlSelect(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.SELECT):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.SELECT, SelectKnxConfig
+    ):
         entities.extend(
             KnxUiSelect(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -97,7 +109,7 @@ def _options_from_enum_dpt(dpt: str) -> tuple[dict[str, int], int]:
 
 
 def _options_from_custom_config(
-    options: list[ConfigType], dpt: str | None
+    options: list[SelectOption], dpt: str | None
 ) -> tuple[dict[str, int], int]:
     """Return option payloads and payload length of manually configured options.
 
@@ -110,13 +122,13 @@ def _options_from_custom_config(
     payload_length = raw_payload_length(transcoder) if transcoder is not None else None
     option_payloads: dict[str, int] = {}
     for option in options:
-        name = option[SelectConf.OPTION]
-        if CONF_VALUE in option:
-            assert transcoder is not None  # typed values require a DPT
-            option_payloads[name] = _payload_from_value(transcoder, option[CONF_VALUE])
-        else:
-            option_payloads[name] = int(option[CONF_PAYLOAD], 16)
-            payload_length = option[CONF_PAYLOAD_LENGTH]
+        match option.data:
+            case PayloadValue(value=value):
+                assert transcoder is not None  # typed values require a DPT
+                option_payloads[option.name] = _payload_from_value(transcoder, value)
+            case RawPayload(payload=payload, payload_length=option_length):
+                option_payloads[option.name] = payload
+                payload_length = option_length
     assert payload_length is not None  # set from the DPT or a raw option
     return option_payloads, payload_length
 
@@ -201,34 +213,33 @@ class KnxUiSelect(_KNXSelect, KnxUiEntity):
     _device: RawValue
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[SelectKnxConfig],
     ) -> None:
         """Initialize a KNX select."""
-        knx_conf = ConfigExtractor(config.knx)
-        source = knx_conf.get(SelectConf.OPTIONS_SOURCE)
-        # the group address key tells how options are defined
-        if SelectConf.GA_ENUM in source:
-            ga_key = SelectConf.GA_ENUM
-            dpt = knx_conf.get_dpt(SelectConf.OPTIONS_SOURCE, ga_key)
-            assert dpt is not None  # already checked by validation
-            self._option_payloads, payload_length = _options_from_enum_dpt(dpt)
-        else:
-            ga_key = SelectConf.GA_CUSTOM
-            self._option_payloads, payload_length = _options_from_custom_config(
-                source[SelectConf.CUSTOM_OPTIONS],
-                knx_conf.get_dpt(SelectConf.OPTIONS_SOURCE, ga_key),
-            )
+        knx_conf = config.knx
+        group_address: GroupAddressConfig
+        match knx_conf.options_source:
+            case SelectOptionsFromDpt(ga_enum=group_address):
+                assert group_address.dpt is not None  # already checked by validation
+                self._option_payloads, payload_length = _options_from_enum_dpt(
+                    group_address.dpt
+                )
+            case SelectCustomOptions(ga_custom=group_address, custom_options=options):
+                self._option_payloads, payload_length = _options_from_custom_config(
+                    options, group_address.dpt
+                )
 
         self._device = RawValue(
             knx_module.xknx,
             name=config.entity.xknx_name,
             payload_length=payload_length,
-            group_address=knx_conf.get_write(SelectConf.OPTIONS_SOURCE, ga_key),
-            group_address_state=knx_conf.get_state_and_passive(
-                SelectConf.OPTIONS_SOURCE, ga_key
-            ),
-            respond_to_read=knx_conf.get(CONF_RESPOND_TO_READ),
-            sync_state=knx_conf.get(CONF_SYNC_STATE),
+            group_address=group_address.write,
+            group_address_state=state_and_passive(group_address),
+            respond_to_read=knx_conf.respond_to_read,
+            sync_state=knx_conf.sync_state,
         )
         super().__init__(
             knx_module=knx_module,

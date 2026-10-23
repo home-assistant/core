@@ -1,6 +1,6 @@
 """Support for KNX weather entities."""
 
-from typing import Any, override
+from typing import override
 
 from xknx.devices import Weather as XknxWeather
 
@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_SYNC_STATE, KNX_MODULE_KEY
+from .const import KNX_MODULE_KEY
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -29,24 +29,8 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import WeatherSchema
-from .storage.const import (
-    CONF_GA_AIR_PRESSURE,
-    CONF_GA_BRIGHTNESS_EAST,
-    CONF_GA_BRIGHTNESS_NORTH,
-    CONF_GA_BRIGHTNESS_SOUTH,
-    CONF_GA_BRIGHTNESS_WEST,
-    CONF_GA_DAY_NIGHT,
-    CONF_GA_FROST_ALARM,
-    CONF_GA_HUMIDITY,
-    CONF_GA_RAIN_ALARM,
-    CONF_GA_TEMPERATURE,
-    CONF_GA_WIND_ALARM,
-    CONF_GA_WIND_BEARING,
-    CONF_GA_WIND_SPEED,
-    CONF_INVERT_DAY_NIGHT,
-)
-from .storage.entity_store_schema import KnxEntityData
-from .storage.util import ConfigExtractor
+from .storage.entity_store_schema import KnxEntityData, WeatherKnxConfig
+from .storage.knx_selector import state_and_passive
 
 
 async def async_setup_entry(
@@ -72,7 +56,9 @@ async def async_setup_entry(
             KnxYamlWeather(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.WEATHER):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.WEATHER, WeatherKnxConfig
+    ):
         entities.extend(
             KnxUiWeather(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -190,7 +176,10 @@ class KnxUiWeather(_KnxWeather, KnxUiEntity):
     _device: XknxWeather
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[WeatherKnxConfig],
     ) -> None:
         """Initialize of a KNX weather device."""
         super().__init__(
@@ -198,41 +187,33 @@ class KnxUiWeather(_KnxWeather, KnxUiEntity):
             unique_id=unique_id,
             entity_config=config.entity,
         )
-        knx_conf = ConfigExtractor(config.knx)
+        knx_conf = config.knx
         self._device = XknxWeather(
             knx_module.xknx,
             name=config.entity.xknx_name,
-            sync_state=knx_conf.get(CONF_SYNC_STATE),
-            group_address_temperature=knx_conf.get_state_and_passive(
-                CONF_GA_TEMPERATURE
+            sync_state=knx_conf.sync_state,
+            group_address_temperature=state_and_passive(knx_conf.ga_temperature),
+            group_address_brightness_south=state_and_passive(
+                knx_conf.ga_brightness_south
             ),
-            group_address_brightness_south=knx_conf.get_state_and_passive(
-                CONF_GA_BRIGHTNESS_SOUTH
+            group_address_brightness_east=state_and_passive(
+                knx_conf.ga_brightness_east
             ),
-            group_address_brightness_east=knx_conf.get_state_and_passive(
-                CONF_GA_BRIGHTNESS_EAST
+            group_address_brightness_west=state_and_passive(
+                knx_conf.ga_brightness_west
             ),
-            group_address_brightness_west=knx_conf.get_state_and_passive(
-                CONF_GA_BRIGHTNESS_WEST
+            group_address_brightness_north=state_and_passive(
+                knx_conf.ga_brightness_north
             ),
-            group_address_brightness_north=knx_conf.get_state_and_passive(
-                CONF_GA_BRIGHTNESS_NORTH
-            ),
-            group_address_wind_speed=knx_conf.get_state_and_passive(CONF_GA_WIND_SPEED),
-            group_address_wind_bearing=knx_conf.get_state_and_passive(
-                CONF_GA_WIND_BEARING
-            ),
-            group_address_rain_alarm=knx_conf.get_state_and_passive(CONF_GA_RAIN_ALARM),
-            group_address_frost_alarm=knx_conf.get_state_and_passive(
-                CONF_GA_FROST_ALARM
-            ),
-            group_address_wind_alarm=knx_conf.get_state_and_passive(CONF_GA_WIND_ALARM),
-            group_address_day_night=knx_conf.get_state_and_passive(CONF_GA_DAY_NIGHT),
-            group_address_air_pressure=knx_conf.get_state_and_passive(
-                CONF_GA_AIR_PRESSURE
-            ),
-            group_address_humidity=knx_conf.get_state_and_passive(CONF_GA_HUMIDITY),
+            group_address_wind_speed=state_and_passive(knx_conf.ga_wind_speed),
+            group_address_wind_bearing=state_and_passive(knx_conf.ga_wind_bearing),
+            group_address_rain_alarm=state_and_passive(knx_conf.ga_rain_alarm),
+            group_address_frost_alarm=state_and_passive(knx_conf.ga_frost_alarm),
+            group_address_wind_alarm=state_and_passive(knx_conf.ga_wind_alarm),
+            group_address_day_night=state_and_passive(knx_conf.ga_day_night),
+            group_address_air_pressure=state_and_passive(knx_conf.ga_air_pressure),
+            group_address_humidity=state_and_passive(knx_conf.ga_humidity),
             # xknx treats a raw `1` as day, so its default is inverted compared to
             # DPT 1.024 (0 = day, 1 = night) which the UI flag represents.
-            invert_day_night=not knx_conf.get(CONF_INVERT_DAY_NIGHT),
+            invert_day_night=not knx_conf.invert_day_night,
         )

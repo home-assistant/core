@@ -148,6 +148,7 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_vilfo_client", "mock_setup_entry")
 async def test_form_wrong_host(
     hass: HomeAssistant,
     mock_is_valid_host: AsyncMock,
@@ -170,6 +171,15 @@ async def test_form_wrong_host(
     )
 
     assert result["errors"] == {"base": "invalid_host"}
+
+    mock_is_valid_host.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "testadmin.vilfo.com", CONF_ACCESS_TOKEN: "test-token"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

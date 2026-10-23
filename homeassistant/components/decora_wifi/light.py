@@ -18,6 +18,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -172,9 +173,11 @@ class DecoraWifiLight(LightEntity):
 
         try:
             self._switch.update_attributes(attribs)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except ValueError:
-            _LOGGER.error("Failed to turn on myLeviton switch")
+        except ValueError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_on_failed",
+            ) from err
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
@@ -182,9 +185,11 @@ class DecoraWifiLight(LightEntity):
         attribs = {"power": "OFF"}
         try:
             self._switch.update_attributes(attribs)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except ValueError:
-            _LOGGER.error("Failed to turn off myLeviton switch")
+        except ValueError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_off_failed",
+            ) from err
 
     @Throttle(timedelta(seconds=30))
     def update(self) -> None:

@@ -3,10 +3,17 @@
 from datetime import timedelta
 from typing import override
 
-from aiowaqi import WAQIAirQuality, WAQIClient, WAQIError, WAQIUnknownStationError
+from aiowaqi import (
+    WAQIAirQuality,
+    WAQIAuthenticationError,
+    WAQIClient,
+    WAQIError,
+    WAQIUnknownStationError,
+)
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -45,6 +52,8 @@ class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
             air_quality = await self._client.get_by_station_number(
                 self.subentry.data[CONF_STATION_NUMBER]
             )
+        except WAQIAuthenticationError as exc:
+            raise ConfigEntryAuthFailed from exc
         except WAQIUnknownStationError as exc:
             ir.async_create_issue(
                 self.hass,

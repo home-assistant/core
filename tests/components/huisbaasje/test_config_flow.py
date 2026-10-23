@@ -1,5 +1,7 @@
 """Test the Huisbaasje config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from energyflip import (
@@ -14,6 +16,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch a successful login and entry setup."""
+    with (
+        patch("energyflip.EnergyFlip.authenticate", return_value=None),
+        patch("energyflip.EnergyFlip.customer_overview", return_value=None),
+        patch("energyflip.EnergyFlip.get_user_id", return_value="test-id"),
+        patch(
+            "homeassistant.components.huisbaasje.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -57,6 +74,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "username": "test-username",
         "password": "test-password",
     }
+    assert form_result["result"].unique_id == "test-id"
     assert len(mock_authenticate.mock_calls) == 1
     assert len(mock_customer_overview.mock_calls) == 1
     assert len(mock_get_user_id.mock_calls) == 1
@@ -84,6 +102,18 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert form_result["type"] is FlowResultType.FORM
     assert form_result["errors"] == {"base": "invalid_auth"}
 
+    with _patch_success():
+        form_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert form_result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_authenticate_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error in authenticate."""
@@ -106,6 +136,18 @@ async def test_form_authenticate_cannot_connect(hass: HomeAssistant) -> None:
     assert form_result["type"] is FlowResultType.FORM
     assert form_result["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        form_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert form_result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_authenticate_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle an unknown error in authenticate."""
@@ -127,6 +169,18 @@ async def test_form_authenticate_unknown_error(hass: HomeAssistant) -> None:
 
     assert form_result["type"] is FlowResultType.FORM
     assert form_result["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        form_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert form_result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_customer_overview_cannot_connect(hass: HomeAssistant) -> None:
@@ -153,6 +207,18 @@ async def test_form_customer_overview_cannot_connect(hass: HomeAssistant) -> Non
     assert form_result["type"] is FlowResultType.FORM
     assert form_result["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        form_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert form_result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_customer_overview_authentication_error(hass: HomeAssistant) -> None:
     """Test we handle an unknown error in customer_overview."""
@@ -178,6 +244,18 @@ async def test_form_customer_overview_authentication_error(hass: HomeAssistant) 
     assert form_result["type"] is FlowResultType.FORM
     assert form_result["errors"] == {"base": "invalid_auth"}
 
+    with _patch_success():
+        form_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert form_result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_customer_overview_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle an unknown error in customer_overview."""
@@ -202,6 +280,18 @@ async def test_form_customer_overview_unknown_error(hass: HomeAssistant) -> None
 
     assert form_result["type"] is FlowResultType.FORM
     assert form_result["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        form_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert form_result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_entry_exists(hass: HomeAssistant) -> None:

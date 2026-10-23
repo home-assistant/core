@@ -119,6 +119,10 @@ async def test_config_entry_unregistered_uuid(
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == (
+        f"Failed to set up switch_as_x for unknown entity {fake_uuid}"
+    )
 
 
 @pytest.mark.parametrize("use_entity_registry_id", [True, False])

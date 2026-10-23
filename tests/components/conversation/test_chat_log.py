@@ -1,5 +1,6 @@
 """Test the conversation session."""
 
+from collections.abc import AsyncGenerator
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.conversation import (
     AssistantContent,
+    AssistantContentDeltaDict,
     ConversationInput,
     ConverseError,
     ToolResultContent,
@@ -21,17 +23,18 @@ from homeassistant.components.conversation import (
 from homeassistant.components.conversation.chat_log import (
     DATA_CHAT_LOGS,
     Attachment,
+    ChatLog,
     ChatLogEventType,
     async_subscribe_chat_logs,
 )
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import chat_session, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -128,6 +131,79 @@ async def test_unknown_llm_api(
 
     assert str(exc_info.value) == "Error getting LLM API unknown-api"
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
+
+
+class AdminAPI(llm.API):
+    """Test API that requires an admin user."""
+
+    async def async_get_api_instance(
+        self, llm_context: llm.LLMContext
+    ) -> llm.APIInstance:
+        """Return the API instance."""
+        return llm.APIInstance(self, "Admin API Prompt", llm_context, [])
+
+
+@pytest.mark.parametrize(
+    "user_id",
+    [
+        pytest.param(None, id="no_user"),
+        pytest.param("unknown-user", id="unknown_user"),
+        pytest.param("non-admin-user", id="non_admin_user"),
+    ],
+)
+async def test_llm_api_object_requires_admin_unauthorized(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    user_id: str | None,
+) -> None:
+    """Test an admin-only LLM API object is refused for a non-admin context."""
+    MockUser(id="non-admin-user").add_to_hass(hass)
+    api = AdminAPI(hass=hass, id="admin-api", name="Admin", requires_admin=True)
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        pytest.raises(Unauthorized),
+    ):
+        await chat_log.async_provide_llm_data(
+            llm.LLMContext(
+                platform="test",
+                context=Context(user_id=user_id),
+                language="en",
+                assistant=None,
+                device_id=None,
+            ),
+            user_llm_hass_api=api,
+        )
+
+    assert chat_log.llm_api is None
+
+
+async def test_llm_api_object_requires_admin_authorized(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test an admin-only LLM API object is allowed for an admin user."""
+    api = AdminAPI(hass=hass, id="admin-api", name="Admin", requires_admin=True)
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        await chat_log.async_provide_llm_data(
+            llm.LLMContext(
+                platform="test",
+                context=Context(user_id=hass_admin_user.id),
+                language="en",
+                assistant=None,
+                device_id=None,
+            ),
+            user_llm_hass_api=api,
+        )
+
+    assert chat_log.llm_api
+    assert chat_log.llm_api.api is api
 
 
 async def test_multiple_llm_apis(
@@ -759,6 +835,57 @@ async def test_add_delta_content_stream(
         assert chat_log.content[2:] == results
 
 
+@freeze_time("2025-10-31 12:00:00")
+@pytest.mark.parametrize(
+    ("deltas", "expected_content"),
+    [
+        pytest.param([{"role": "assistant"}], [], id="role-only"),
+        pytest.param([{"role": "assistant", "content": ""}], [""], id="empty-message"),
+        pytest.param([{"role": "assistant"}, {"content": ""}], [""], id="empty-delta"),
+        pytest.param(
+            [
+                {"role": "assistant", "content": ""},
+                {"role": "assistant", "content": "Next"},
+            ],
+            ["", "Next"],
+            id="empty-before-next-message",
+        ),
+        pytest.param(
+            [{"role": "assistant", "content": ""}, {"content": "Hello"}],
+            ["Hello"],
+            id="text-after-empty-delta",
+        ),
+    ],
+)
+async def test_add_delta_content_stream_empty_content(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    deltas: list[AssistantContentDeltaDict],
+    expected_content: list[str],
+) -> None:
+    """Test explicit empty content is preserved but role-only messages are not."""
+
+    async def stream() -> AsyncGenerator[AssistantContentDeltaDict]:
+        for delta in deltas:
+            yield delta
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        results = [
+            content
+            async for content in chat_log.async_add_delta_content_stream(
+                "mock-agent-id", stream()
+            )
+        ]
+
+    assert results == [
+        AssistantContent(agent_id="mock-agent-id", content=content)
+        for content in expected_content
+    ]
+
+
 async def test_add_delta_content_stream_errors(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
@@ -869,6 +996,43 @@ async def test_chat_log_continue_conversation(
             )
         )
         assert chat_log.continue_conversation is True
+
+
+@pytest.mark.parametrize(
+    ("content", "expected_content"),
+    [
+        pytest.param(None, {}, id="absent-content"),
+        pytest.param("", {"content": ""}, id="empty-content"),
+        pytest.param("Hello", {"content": "Hello"}, id="nonempty-content"),
+    ],
+)
+async def test_assistant_content_serialization(
+    hass: HomeAssistant,
+    content: str | None,
+    expected_content: dict[str, str],
+) -> None:
+    """Test chat logs and events distinguish empty text from absent text."""
+    chat_log = ChatLog(hass, "test-conversation")
+    message = AssistantContent(agent_id="test-agent", content=content)
+    expected_message = {
+        "role": "assistant",
+        "agent_id": "test-agent",
+        "created": message.created,
+        **expected_content,
+    }
+    event_callback = Mock()
+    unsubscribe = async_subscribe_chat_logs(hass, event_callback)
+
+    chat_log.async_add_assistant_content_without_tools(message)
+
+    assert message.as_dict() == expected_message
+    assert chat_log.as_dict()["content"][-1] == expected_message
+    event_callback.assert_called_once_with(
+        "test-conversation",
+        ChatLogEventType.CONTENT_ADDED,
+        {"content": expected_message},
+    )
+    unsubscribe()
 
 
 @freeze_time("2025-10-31 12:00:00")

@@ -56,7 +56,14 @@ CURRENT_TRIGGER_SCHEMA = probatio.All(
     probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
-TRIGGER_SCHEMA = probatio.Any(HVAC_MODE_TRIGGER_SCHEMA, CURRENT_TRIGGER_SCHEMA)
+TRIGGER_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        "hvac_mode_changed": HVAC_MODE_TRIGGER_SCHEMA,
+        "current_temperature_changed": CURRENT_TRIGGER_SCHEMA,
+        "current_humidity_changed": CURRENT_TRIGGER_SCHEMA,
+    },
+)
 
 
 async def async_get_triggers(

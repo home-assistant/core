@@ -78,6 +78,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterCapabilityAttribute,
 )
 from homeassistant.const import (
+    ATTR_CODE,
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     SERVICE_ALARM_ARM_AWAY,
@@ -103,6 +104,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.helpers import network
+from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
 from homeassistant.util.unit_conversion import (
@@ -135,6 +137,7 @@ from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_
 
 _LOGGER = logging.getLogger(__name__)
 DIRECTIVE_NOT_SUPPORTED = "Entity does not support directive"
+TO_REDACT_SERVICE_DATA = {ATTR_CODE}
 
 MIN_MAX_TEMP = {
     CLIMATE_DOMAIN: {
@@ -159,6 +162,30 @@ HANDLERS: Registry[
         Coroutine[Any, Any, AlexaResponse],
     ],
 ] = Registry()
+
+
+async def _async_call_service(
+    hass: ha.HomeAssistant,
+    directive: AlexaDirective,
+    domain: str,
+    service: str,
+    service_data: dict[str, Any],
+    *,
+    blocking: bool,
+    context: ha.Context,
+) -> None:
+    """Call an action and log it with the Alexa directive that triggered it."""
+    _LOGGER.debug(
+        "Calling action %s.%s for Alexa directive %s.%s with data: %s",
+        domain,
+        service,
+        directive.namespace,
+        directive.name,
+        async_redact_data(service_data, TO_REDACT_SERVICE_DATA),
+    )
+    await hass.services.async_call(
+        domain, service, service_data, blocking=blocking, context=context
+    )
 
 
 @HANDLERS.register(("Alexa.Discovery", "Discover"))
@@ -257,7 +284,9 @@ async def async_api_turn_on(
         if not supported & power_features:
             service = media_player.SERVICE_MEDIA_PLAY
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         domain,
         service,
         {ATTR_ENTITY_ID: entity.entity_id},
@@ -310,7 +339,9 @@ async def async_api_turn_off(
         if not supported & power_features:
             service = media_player.SERVICE_MEDIA_STOP
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         domain,
         service,
         {ATTR_ENTITY_ID: entity.entity_id},
@@ -332,7 +363,9 @@ async def async_api_set_brightness(
     entity = directive.entity
     brightness = int(directive.payload["brightness"])
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_BRIGHTNESS_PCT: brightness},
@@ -355,7 +388,9 @@ async def async_api_adjust_brightness(
     brightness_delta = int(directive.payload["brightnessDelta"])
 
     # set brightness
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_TURN_ON,
         {
@@ -384,7 +419,9 @@ async def async_api_set_color(
         float(directive.payload["color"]["brightness"]),
     )
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_RGB_COLOR: rgb},
@@ -406,7 +443,9 @@ async def async_api_set_color_temperature(
     entity = directive.entity
     kelvin = int(directive.payload["colorTemperatureInKelvin"])
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: kelvin},
@@ -432,7 +471,9 @@ async def async_api_decrease_color_temp(
     )
 
     value = max(min_kelvin, current - 500)
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: value},
@@ -458,7 +499,9 @@ async def async_api_increase_color_temp(
     )
 
     value = min(max_kelvin, current + 500)
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: value},
@@ -486,7 +529,9 @@ async def async_api_activate(
     elif domain == INPUT_BUTTON_DOMAIN:
         service = input_button.SERVICE_PRESS
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         domain,
         service,
         {ATTR_ENTITY_ID: entity.entity_id},
@@ -515,7 +560,9 @@ async def async_api_deactivate(
     entity = directive.entity
     domain = entity.domain
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         domain,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: entity.entity_id},
@@ -542,7 +589,9 @@ async def async_api_lock(
 ) -> AlexaResponse:
     """Process a lock request."""
     entity = directive.entity
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_LOCK,
         {ATTR_ENTITY_ID: entity.entity_id},
@@ -591,7 +640,9 @@ async def async_api_unlock(
         raise AlexaInvalidDirectiveError(msg)
 
     entity = directive.entity
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_UNLOCK,
         {ATTR_ENTITY_ID: entity.entity_id},
@@ -623,8 +674,14 @@ async def async_api_set_volume(
         media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_VOLUME_SET, data, blocking=False, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_VOLUME_SET,
+        data,
+        blocking=False,
+        context=context,
     )
 
     return directive.response()
@@ -671,7 +728,9 @@ async def async_api_select_input(
         media_player.ATTR_INPUT_SOURCE: media_input,
     }
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         media_player.SERVICE_SELECT_SOURCE,
         data,
@@ -710,8 +769,14 @@ async def async_api_adjust_volume(
         media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_VOLUME_SET, data, blocking=False, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_VOLUME_SET,
+        data,
+        blocking=False,
+        context=context,
     )
 
     return directive.response()
@@ -748,8 +813,14 @@ async def async_api_adjust_volume_step(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
     for _ in range(abs(volume_int)):
-        await hass.services.async_call(
-            entity.domain, service_volume, data, blocking=False, context=context
+        await _async_call_service(
+            hass,
+            directive,
+            entity.domain,
+            service_volume,
+            data,
+            blocking=False,
+            context=context,
         )
 
     return directive.response()
@@ -771,8 +842,14 @@ async def async_api_set_mute(
         media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
     }
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_VOLUME_MUTE, data, blocking=False, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_VOLUME_MUTE,
+        data,
+        blocking=False,
+        context=context,
     )
 
     return directive.response()
@@ -789,8 +866,14 @@ async def async_api_play(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_MEDIA_PLAY, data, blocking=False, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_MEDIA_PLAY,
+        data,
+        blocking=False,
+        context=context,
     )
 
     return directive.response()
@@ -807,8 +890,14 @@ async def async_api_pause(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_MEDIA_PAUSE, data, blocking=False, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_MEDIA_PAUSE,
+        data,
+        blocking=False,
+        context=context,
     )
 
     return directive.response()
@@ -835,16 +924,28 @@ async def async_api_stop(
         }
         await asyncio.gather(
             *(
-                hass.services.async_call(
-                    entity.domain, service, data, blocking=False, context=context
+                _async_call_service(
+                    hass,
+                    directive,
+                    entity.domain,
+                    service,
+                    data,
+                    blocking=False,
+                    context=context,
                 )
                 for feature, service in feature_services.items()
                 if feature & supported
             )
         )
     else:
-        await hass.services.async_call(
-            entity.domain, SERVICE_MEDIA_STOP, data, blocking=False, context=context
+        await _async_call_service(
+            hass,
+            directive,
+            entity.domain,
+            SERVICE_MEDIA_STOP,
+            data,
+            blocking=False,
+            context=context,
         )
 
     return directive.response()
@@ -861,8 +962,14 @@ async def async_api_next(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_MEDIA_NEXT_TRACK, data, blocking=False, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_MEDIA_NEXT_TRACK,
+        data,
+        blocking=False,
+        context=context,
     )
 
     return directive.response()
@@ -879,7 +986,9 @@ async def async_api_previous(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_MEDIA_PREVIOUS_TRACK,
         data,
@@ -967,7 +1076,9 @@ async def async_api_set_target_temp(
 
     service = SERVICE_SET_TEMPERATURE[domain]
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         service,
         data,
@@ -1059,7 +1170,9 @@ async def async_api_adjust_target_temp(
 
     service = SERVICE_SET_TEMPERATURE[domain]
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         service,
         data,
@@ -1136,8 +1249,8 @@ async def async_api_set_thermostat_mode(
         data[climate.ATTR_HVAC_MODE] = ha_mode
 
     response = directive.response()
-    await hass.services.async_call(
-        CLIMATE_DOMAIN, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, CLIMATE_DOMAIN, service, data, blocking=False, context=context
     )
     response.add_context_property(
         {
@@ -1193,8 +1306,8 @@ async def async_api_arm(
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, entity.domain, service, data, blocking=False, context=context
     )
 
     # return 0 until alarm integration supports an exit delay
@@ -1237,10 +1350,16 @@ async def async_api_disarm(
     if "authorization" in payload:
         value = payload["authorization"]["value"]
         if payload["authorization"]["type"] == "FOUR_DIGIT_PIN":
-            data["code"] = value
+            data[ATTR_CODE] = value
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_ALARM_DISARM, data, blocking=True, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_ALARM_DISARM,
+        data,
+        blocking=True,
+        context=context,
     )
 
     response.add_context_property(
@@ -1362,8 +1481,8 @@ async def async_api_set_mode(
     if not service:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, domain, service, data, blocking=False, context=context
     )
 
     response = directive.response()
@@ -1426,8 +1545,8 @@ async def async_api_toggle_on(
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, domain, service, data, blocking=False, context=context
     )
 
     response = directive.response()
@@ -1465,8 +1584,8 @@ async def async_api_toggle_off(
         fan.ATTR_OSCILLATING: False,
     }
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, domain, service, data, blocking=False, context=context
     )
 
     response = directive.response()
@@ -1581,8 +1700,8 @@ async def async_api_set_range(
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, domain, service, data, blocking=False, context=context
     )
 
     response = directive.response()
@@ -1751,8 +1870,8 @@ async def async_api_adjust_range(
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, domain, service, data, blocking=False, context=context
     )
 
     response = directive.response()
@@ -1804,7 +1923,9 @@ async def async_api_changechannel(
         media_player.ATTR_MEDIA_CONTENT_TYPE: (media_player.MediaType.CHANNEL),
     }
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         media_player.SERVICE_PLAY_MEDIA,
         data,
@@ -1844,8 +1965,14 @@ async def async_api_skipchannel(
         service_media = SERVICE_MEDIA_NEXT_TRACK
 
     for _ in range(abs(channel)):
-        await hass.services.async_call(
-            entity.domain, service_media, data, blocking=False, context=context
+        await _async_call_service(
+            hass,
+            directive,
+            entity.domain,
+            service_media,
+            data,
+            blocking=False,
+            context=context,
         )
 
     response = directive.response()
@@ -1892,7 +2019,9 @@ async def async_api_seek(
         media_player.ATTR_MEDIA_SEEK_POSITION: seek_position,
     }
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         MEDIA_PLAYER_DOMAIN,
         media_player.SERVICE_MEDIA_SEEK,
         data,
@@ -1932,7 +2061,9 @@ async def async_api_set_eq_mode(
         msg = f"failed to map sound mode {mode} to a mode on {entity.entity_id}"
         raise AlexaInvalidValueError(msg)
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         media_player.SERVICE_SELECT_SOUND_MODE,
         data,
@@ -1980,8 +2111,8 @@ async def async_api_hold(
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, entity.domain, service, data, blocking=False, context=context
     )
 
     return directive.response()
@@ -2007,8 +2138,8 @@ async def async_api_resume(
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, entity.domain, service, data, blocking=False, context=context
     )
 
     return directive.response()

@@ -8,6 +8,7 @@ automations that reference those services.
 This checker flags:
 - ``hass.services.async_register(...)`` / ``hass.services.register(...)``
 - ``async_register_admin_service(...)`` (both bare name and attribute forms)
+- ``async_setup_services(...)``, the conventional helper from ``services.py``
 
 Entity services (``async_register_entity_service``) in platform
 ``async_setup_entry`` are NOT flagged, as those are tied to the
@@ -44,6 +45,12 @@ def _is_service_registration(node: nodes.Call) -> bool:
             return True
         # service.async_register_admin_service(...)
         case nodes.Attribute(attrname="async_register_admin_service"):
+            return True
+        # async_setup_services(...) / services.async_setup_services(...)
+        case (
+            nodes.Name(name="async_setup_services")
+            | nodes.Attribute(attrname="async_setup_services")
+        ):
             return True
 
     return False

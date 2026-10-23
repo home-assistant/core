@@ -252,6 +252,17 @@ async def test_flow_fails_db_url(hass: HomeAssistant) -> None:
 
     assert result["errors"] == {CONF_DB_URL: "db_url_invalid"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=DATA_CONFIG,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        ENTRY_CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_fails_invalid_query(hass: HomeAssistant) -> None:
     """Test config flow fails incorrect db url."""
@@ -536,6 +547,19 @@ async def test_options_flow_fails_db_url(hass: HomeAssistant) -> None:
         )
 
     assert result["errors"] == {CONF_DB_URL: "db_url_invalid"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_QUERY: "SELECT 5 as size",
+            CONF_COLUMN_NAME: "size",
+            CONF_ADDITIONAL_OPTIONS: {
+                CONF_UNIT_OF_MEASUREMENT: "MiB",
+            },
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:

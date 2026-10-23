@@ -142,6 +142,7 @@ async def _transform_stream(
     has_choices = False
 
     tool_calls: dict[int, dict[str, str]] = {}
+    images: list[Any] = []
 
     async for chunk in chunks:
         if not chunk.choices:
@@ -196,10 +197,19 @@ async def _transform_stream(
                 for tool_call in completed_tool_calls
             ]
 
+        # OpenRouter returns generated images in a non-standard `images` field that
+        # the OpenAI SDK preserves as an extra attribute.
+        if delta_images := (choice.delta.model_extra or {}).get("images"):
+            images.extend(delta_images)
+
         if data:
             yield data
 
+    if images:
+        yield {"native": images}
+
     if not has_choices:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.error("API returned empty choices")
         raise HomeAssistantError("API returned empty response")
 
@@ -263,12 +273,15 @@ class OpenRouterEntity(Entity):
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: probatio.Schema | None = None,
+        force_image: bool = False,
     ) -> None:
         """Generate an answer for the chat log."""
 
         model = self.model
 
         extra_body: dict[str, Any] = {"provider": {"require_parameters": True}}
+        if force_image:
+            extra_body["modalities"] = ["image", "text"]
 
         tools: list[ChatCompletionFunctionToolParam | dict[str, Any]] = []
         if chat_log.llm_api:
@@ -379,6 +392,7 @@ class OpenRouterEntity(Entity):
             try:
                 result = await client.chat.completions.create(**model_args, stream=True)
             except openai.OpenAIError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
 

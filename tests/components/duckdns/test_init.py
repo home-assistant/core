@@ -94,7 +94,8 @@ async def test_setup_backoff(
 
         _LOGGER.debug("Backoff")
         for idx in range(1, len(BACKOFF_INTERVALS)):
-            tme += BACKOFF_INTERVALS[idx]
+            # Every setup retry starts a new coordinator with the first retry_after
+            tme += BACKOFF_INTERVALS[0] + timedelta(seconds=1)
             async_fire_time_changed(hass, tme)
             await hass.async_block_till_done()
 

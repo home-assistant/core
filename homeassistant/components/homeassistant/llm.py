@@ -66,10 +66,9 @@ DYNAMIC_CONTEXT_PROMPT = (
     " This tool will provide the needed real-time"
     " information (like temperature from the local"
     " weather, lock status, etc.).\n"
-    "    3.  Use the tool's response** to answer the"
-    " user accurately"
-    ' (e.g., "The temperature outside is'
-    ' [value from tool].").\n'
+    "    3.  Use the tool's response to answer the"
+    " user accurately, stating the actual value or"
+    " state it returned.\n"
     "For general knowledge questions not about the"
     " home: Answer truthfully from internal"
     " knowledge.\n"

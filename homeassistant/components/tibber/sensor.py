@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
@@ -997,7 +996,7 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=home-as
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: TibberConfigEntry,
         add_sensor_callback: Callable[[TibberRtDataCoordinator, Any], None],
         tibber_home: TibberHome,
     ) -> None:

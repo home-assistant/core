@@ -214,6 +214,14 @@ def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     return func
 
 
+@callback
+def async_noop() -> None:
+    """Do nothing; use instead of `lambda: None` where a callback is expected.
+
+    For example, as the unsubscribe function when nothing was subscribed.
+    """
+
+
 def is_callback(func: Callable[..., Any]) -> bool:
     """Check if function is safe to be called in the event loop."""
     return getattr(func, "_hass_callback", False) is True

@@ -14,7 +14,7 @@ from .const import DOMAIN, PLATFORMS
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> None:
     """Set up Enphase Envoy from a config entry."""
 
     host = entry.data[CONF_HOST]
@@ -93,16 +93,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> None:
     """Unload a config entry."""
     coordinator = entry.runtime_data
     coordinator.async_cancel_token_refresh()
     coordinator.async_cancel_firmware_refresh()
     coordinator.async_cancel_mac_verification()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

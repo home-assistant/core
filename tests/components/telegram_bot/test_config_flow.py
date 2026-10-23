@@ -473,6 +473,7 @@ async def test_create_webhook_entry(
     assert result["data"][CONF_API_ENDPOINT] == api_endpoint
     assert result["data"][CONF_URL] == webhook_url
     assert result["data"][CONF_TRUSTED_NETWORKS] == ["149.154.160.0/20"]
+    assert result["result"].unique_id == "mock api key"
 
 
 async def test_reauth_flow(
@@ -633,6 +634,7 @@ async def test_subentry_flow_chat_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "chat_not_found"
 
     # test: chat id already configured
@@ -803,6 +805,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         assert result["data"][CONF_API_KEY] == "mock api key"
         assert result["data"][CONF_API_ENDPOINT] == "http://mock_api_endpoint"
         assert result["options"][ATTR_PARSER] == PARSER_MD
+        assert result["result"].unique_id == "mock api key"
 
         # test: import 2nd entry failed due to duplicate
 

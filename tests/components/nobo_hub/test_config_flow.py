@@ -81,16 +81,22 @@ async def test_configure_with_discover(
 
 
 @pytest.mark.parametrize(
-    ("discovered", "expected_devices", "selected_device"),
+    ("discovered", "expected_devices", "selected_device", "expected_unique_id"),
     [
         # Same IP+prefix hidden; sibling with same prefix at a different IP shown.
         (
             [("1.1.1.1", "111111111"), ("2.2.2.2", "111111111")],
             {"2.2.2.2", "manual"},
             "2.2.2.2",
+            "111111111999",
         ),
         # Same IP, different prefix → different hub (e.g. replacement), shown.
-        ([("1.1.1.1", "222222222")], {"1.1.1.1", "manual"}, "1.1.1.1"),
+        (
+            [("1.1.1.1", "222222222")],
+            {"1.1.1.1", "manual"},
+            "1.1.1.1",
+            "222222222999",
+        ),
     ],
     ids=["sibling_different_ip", "replaced_hub"],
 )
@@ -100,6 +106,7 @@ async def test_configure_filters_configured_hubs(
     discovered: list[tuple[str, str]],
     expected_devices: set[str],
     selected_device: str,
+    expected_unique_id: str,
 ) -> None:
     """Configured (IP, prefix) pairs are hidden; the user can pick a remaining one."""
     MockConfigEntry(
@@ -139,6 +146,7 @@ async def test_configure_filters_configured_hubs(
         )
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["result"].unique_id == expected_unique_id
 
 
 async def test_configure_skips_user_step_when_all_configured(
@@ -178,6 +186,7 @@ async def test_configure_skips_user_step_when_all_configured(
         )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "999999999999"
 
 
 async def test_configure_manual(

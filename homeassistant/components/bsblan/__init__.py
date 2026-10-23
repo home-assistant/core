@@ -153,7 +153,7 @@ def _async_manage_outdated_firmware_issue(
         ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> None:
     """Set up BSB-LAN from a config entry."""
 
     # create config using BSBLANConfig
@@ -252,7 +252,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 
     # Create coordinators with the already-initialized client
     fast_coordinator = BSBLanFastCoordinator(hass, entry, bsblan, circuits)
-    slow_coordinator = BSBLanSlowCoordinator(hass, entry, bsblan)
+    slow_coordinator = BSBLanSlowCoordinator(hass, entry, bsblan, circuits)
+    entry.async_on_unload(slow_coordinator.async_add_listener(lambda: None))
 
     # Perform first refresh of fast coordinator (required for entities)
     await fast_coordinator.async_config_entry_first_refresh()
@@ -293,16 +294,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> None:
     """Unload BSBLAN config entry."""
     ir.async_delete_issue(hass, DOMAIN, _issue_id_for_entry(entry.entry_id))
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> None:
     """Migrate old config entries to the latest schema."""
     LOGGER.debug(
         "Migrating BSB-LAN entry from version %s.%s",
@@ -372,5 +371,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> 
             data = {**entry.data}
 
         hass.config_entries.async_update_entry(entry, data=data, minor_version=3)
-
-    return True

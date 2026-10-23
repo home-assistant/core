@@ -40,39 +40,33 @@ class DeclarativeSwitchEntityDescription(SwitchEntityDescription):
 SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
     CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE,
-        name="Pairing Mode",
         translation_key="pairing_mode",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE: (
         DeclarativeSwitchEntityDescription(
             key=CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE,
-            name="Pairing Mode",
             translation_key="pairing_mode",
             entity_category=EntityCategory.CONFIG,
         )
     ),
     CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS,
-        name="Lock Physical Controls",
         translation_key="lock_physical_controls",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.MUTE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.MUTE,
-        name="Mute",
         translation_key="mute",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE,
-        name="Sleep Mode",
         translation_key="sleep_mode",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.AIRPLAY_ENABLE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.AIRPLAY_ENABLE,
-        name="AirPlay Enable",
         translation_key="airplay_enable",
         entity_category=EntityCategory.CONFIG,
     ),
@@ -203,14 +197,6 @@ class DeclarativeCharacteristicSwitch(CharacteristicEntity, SwitchEntity):
         """Initialise a HomeKit switch."""
         self.entity_description: DeclarativeSwitchEntityDescription = description
         super().__init__(conn, info, char)
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        if name := self.accessory.name:
-            return f"{name} {self.entity_description.name}"
-        return f"{self.entity_description.name}"
 
     @override
     def get_characteristic_types(self) -> list[str]:

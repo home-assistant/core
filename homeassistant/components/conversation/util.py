@@ -33,6 +33,7 @@ def async_get_result_from_chat_log(
         intent_response = intent.IntentResponse(language=user_input.language)
 
     if not isinstance((last_content := chat_log.content[-1]), AssistantContent):
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(
             "Last content in chat log is not an AssistantContent: %s."
             " This could be due to the model not returning a valid response",

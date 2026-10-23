@@ -395,10 +395,10 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     climate and water_heater platforms.
     """
 
-    _attr_current_temperature: float | None
-    _attr_target_temperature: float | None
-    _attr_target_temperature_low: float | None
-    _attr_target_temperature_high: float | None
+    _attr_native_current_temperature: float | None
+    _attr_native_target_temperature: float | None
+    _attr_native_target_temperature_low: float | None
+    _attr_native_target_temperature_high: float | None
 
     _feature_preset_mode: bool = False
     _optimistic: bool
@@ -442,7 +442,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
                 msg, CONF_CURRENT_TEMP_TEMPLATE, "current temperature"
             )
         ) is not UNDEFINED:
-            self._attr_current_temperature = value
+            self._attr_native_current_temperature = value
 
     @override
     async def _subscribe_topics(self) -> None:
@@ -468,8 +468,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format = climate.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
-    _attr_target_temperature_low: float | None = None
-    _attr_target_temperature_high: float | None = None
+    _attr_native_target_temperature_low: float | None = None
+    _attr_native_target_temperature_high: float | None = None
     _single_and_range_setpoints: bool
     _parked_target_temperature: float | None = None
     _parked_target_temperature_range: tuple[float | None, float | None] = (None, None)
@@ -492,7 +492,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             )
         )
         # Make sure the min an max temp is converted to the correct when not set
-        self._attr_temperature_unit = config.get(
+        self._attr_native_temperature_unit = config.get(
             CONF_TEMPERATURE_UNIT, self.hass.config.units.temperature_unit
         )
         if (min_temp := config.get(CONF_TEMP_MIN)) is not None:
@@ -518,15 +518,15 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             TemperatureConverter.convert(
                 DEFAULT_CLIMATE_INITIAL_TEMPERATURE,
                 UnitOfTemperature.CELSIUS,
-                self.temperature_unit,
+                self.native_temperature_unit,
             ),
         )
         if self._topic[CONF_TEMP_STATE_TOPIC] is None or self._optimistic:
-            self._attr_target_temperature = init_temp
+            self._attr_native_target_temperature = init_temp
         if self._topic[CONF_TEMP_LOW_STATE_TOPIC] is None or self._optimistic:
-            self._attr_target_temperature_low = init_temp
+            self._attr_native_target_temperature_low = init_temp
         if self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None or self._optimistic:
-            self._attr_target_temperature_high = init_temp
+            self._attr_native_target_temperature_high = init_temp
 
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_fan_mode = FAN_LOW
@@ -678,7 +678,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             )
         ) is UNDEFINED:
             return
-        self._attr_target_temperature = value
+        self._attr_native_target_temperature = value
         if value is not None:
             self._park_range_setpoints()
 
@@ -691,7 +691,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             )
         ) is UNDEFINED:
             return
-        self._attr_target_temperature_low = value
+        self._attr_native_target_temperature_low = value
         if value is not None:
             self._park_single_setpoint()
 
@@ -704,7 +704,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             )
         ) is UNDEFINED:
             return
-        self._attr_target_temperature_high = value
+        self._attr_native_target_temperature_high = value
         if value is not None:
             self._park_single_setpoint()
 
@@ -795,12 +795,12 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         self.add_subscription(
             CONF_CURRENT_TEMP_TOPIC,
             self._handle_current_temperature_received,
-            {"_attr_current_temperature"},
+            {"_attr_native_current_temperature"},
         )
         setpoints = {
-            "_attr_target_temperature",
-            "_attr_target_temperature_low",
-            "_attr_target_temperature_high",
+            "_attr_native_target_temperature",
+            "_attr_native_target_temperature_low",
+            "_attr_native_target_temperature_high",
         }
         self.add_subscription(
             CONF_TEMP_STATE_TOPIC,
@@ -830,7 +830,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             if self._optimistic or self._topic[CONF_TEMP_STATE_TOPIC] is None:
                 optimistic_update = True
-                self._attr_target_temperature = temperature
+                self._attr_native_target_temperature = temperature
                 # We reset low and high setpoints when a single setpoint is set
                 self._park_range_setpoints()
             mqtt_payload = self._command_templates[CONF_TEMP_COMMAND_TEMPLATE](
@@ -842,7 +842,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         if (target_temp_low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
             if self._optimistic or self._topic[CONF_TEMP_LOW_STATE_TOPIC] is None:
                 optimistic_update = True
-                self._attr_target_temperature_low = target_temp_low
+                self._attr_native_target_temperature_low = target_temp_low
                 # We reset the single setpoint when a setpoint range is set
                 self._park_single_setpoint()
             mqtt_payload = self._command_templates[CONF_TEMP_LOW_COMMAND_TEMPLATE](
@@ -854,7 +854,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         if (target_temp_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
             if self._optimistic or self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None:
                 optimistic_update = True
-                self._attr_target_temperature_high = target_temp_high
+                self._attr_native_target_temperature_high = target_temp_high
                 self._park_single_setpoint()
             mqtt_payload = self._command_templates[CONF_TEMP_HIGH_COMMAND_TEMPLATE](
                 target_temp_high
@@ -922,19 +922,25 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
     def _park_single_setpoint(self) -> None:
         """Park and reset the single setpoint when a setpoint range is active."""
-        if not self._single_and_range_setpoints or self.target_temperature is None:
+        if (
+            not self._single_and_range_setpoints
+            or self.native_target_temperature is None
+        ):
             return
-        self._parked_target_temperature = self.target_temperature
-        self._attr_target_temperature = None
+        self._parked_target_temperature = self.native_target_temperature
+        self._attr_native_target_temperature = None
 
     def _park_range_setpoints(self) -> None:
         """Park and reset the setpoint range when a single setpoint is active."""
-        temp_range = (self.target_temperature_low, self.target_temperature_high)
+        temp_range = (
+            self.native_target_temperature_low,
+            self.native_target_temperature_high,
+        )
         if not self._single_and_range_setpoints or temp_range == (None, None):
             return
         self._parked_target_temperature_range = temp_range
-        self._attr_target_temperature_low = None
-        self._attr_target_temperature_high = None
+        self._attr_native_target_temperature_low = None
+        self._attr_native_target_temperature_high = None
 
     def _swap_setpoints(self, hvac_mode: HVACMode) -> None:
         """Swap optimistic single and range setpoints on an HVAC mode change.
@@ -952,8 +958,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         if self._optimistic or self._topic[CONF_TEMP_STATE_TOPIC] is None:
             if uses_range:
                 self._park_single_setpoint()
-            elif self.target_temperature is None:
-                self._attr_target_temperature = self._parked_target_temperature
+            elif self.native_target_temperature is None:
+                self._attr_native_target_temperature = self._parked_target_temperature
         if self._optimistic or (
             self._topic[CONF_TEMP_LOW_STATE_TOPIC] is None
             and self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None
@@ -961,12 +967,12 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             if not uses_range:
                 self._park_range_setpoints()
             elif (
-                self.target_temperature_low is None
-                and self.target_temperature_high is None
+                self.native_target_temperature_low is None
+                and self.native_target_temperature_high is None
             ):
                 (
-                    self._attr_target_temperature_low,
-                    self._attr_target_temperature_high,
+                    self._attr_native_target_temperature_low,
+                    self._attr_native_target_temperature_high,
                 ) = self._parked_target_temperature_range
 
     @override

@@ -154,6 +154,7 @@ async def test_duplicate_name(
 async def test_invalid_ics(
     hass: HomeAssistant,
     mock_process_uploaded_file: MagicMock,
+    tmp_path: Path,
 ) -> None:
     """Test invalid ics content raises error."""
     result = await hass.config_entries.flow.async_init(
@@ -175,3 +176,21 @@ async def test_invalid_ics(
     )
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {CONF_ICS_FILE: "invalid_ics_file"}
+
+    valid_ics = tmp_path / "valid.ics"
+    await hass.async_add_executor_job(
+        valid_ics.write_text,
+        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nEND:VCALENDAR\n",
+    )
+    mock_process_uploaded_file.side_effect = None
+    mock_process_uploaded_file.return_value.__enter__.return_value = valid_ics
+    with patch(
+        "homeassistant.components.local_calendar.async_setup_entry",
+        return_value=True,
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ICS_FILE: file_id[CONF_ICS_FILE]},
+        )
+        await hass.async_block_till_done()
+    assert result4["type"] is FlowResultType.CREATE_ENTRY

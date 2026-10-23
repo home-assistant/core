@@ -2,6 +2,7 @@
 
 import datetime
 from datetime import timedelta
+import errno
 import textwrap
 from unittest.mock import patch
 
@@ -9,14 +10,17 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.local_calendar.const import DOMAIN
+from homeassistant.components.local_calendar.store import LocalCalendarStore
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
     FRIENDLY_NAME,
+    STORAGE_KEY,
     TEST_ENTITY,
     ClientFixture,
     GetEventsFn,
@@ -1007,6 +1011,46 @@ async def test_delete_invalid_event_id(
     assert not resp.get("success")
     assert "error" in resp
     assert resp["error"].get("code") == "failed"
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            errno.EACCES, "os_write_permission_denied", id="permission_denied"
+        ),
+        pytest.param(errno.ENOSPC, "os_write_no_space", id="no_space"),
+        pytest.param(errno.EROFS, "os_write_read_only", id="read_only"),
+        pytest.param(errno.ENOENT, "os_write_dir_not_found", id="dir_not_found"),
+        pytest.param(errno.EIO, "os_write_error", id="other"),
+    ],
+)
+async def test_create_event_write_error(
+    hass: HomeAssistant, error: int, translation_key: str
+) -> None:
+    """Test creating an event when the calendar can't be written."""
+    with (
+        patch.object(LocalCalendarStore, "_store", side_effect=OSError(error, "Error")),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            "calendar",
+            "create_event",
+            {
+                "start_date_time": "1997-07-14T17:00:00+00:00",
+                "end_date_time": "1997-07-15T04:00:00+00:00",
+                "summary": "Bastille Day Party",
+            },
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {
+        "path": hass.config.path(f".storage/local_calendar.{STORAGE_KEY}.ics")
+    }
 
 
 @pytest.mark.parametrize(

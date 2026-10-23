@@ -162,3 +162,135 @@ async def test_form_error_mapping_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+def _mock_client(user_id: str = "test-user-1") -> MagicMock:
+    """Return a mock CieloClient that validates successfully."""
+    mock_client = MagicMock()
+    mock_client.user_id = user_id
+    mock_client.get_or_refresh_token = AsyncMock(return_value="new-token")
+    mock_client.get_devices_data = AsyncMock(
+        return_value=_devices_payload({"dev1": MagicMock()})
+    )
+    return mock_client
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reauthentication updates the API key and token."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(MOCK_CIELO_CLIENT_CTOR, return_value=_mock_client()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "  new-api-key  "},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_API_KEY: "new-api-key",
+        CONF_TOKEN: "new-token",
+    }
+
+
+@pytest.mark.parametrize(
+    ("method", "side_effect", "devices", "error"),
+    [
+        pytest.param(
+            "get_or_refresh_token",
+            AuthenticationError,
+            {"dev1": MagicMock()},
+            "invalid_auth",
+            id="invalid_auth",
+        ),
+        pytest.param(
+            "get_devices_data",
+            ConnectionError,
+            {"dev1": MagicMock()},
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(
+            "get_devices_data",
+            Exception,
+            {"dev1": MagicMock()},
+            "unknown",
+            id="unknown",
+        ),
+        pytest.param(
+            "get_devices_data",
+            None,
+            {},
+            "no_devices",
+            id="no_devices",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    method: str,
+    side_effect: type[Exception] | None,
+    devices: dict[str, MagicMock],
+    error: str,
+) -> None:
+    """Test reauthentication errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_client = _mock_client()
+    mock_client.get_devices_data.return_value = _devices_payload(devices)
+    getattr(mock_client, method).side_effect = side_effect
+
+    with patch(MOCK_CIELO_CLIENT_CTOR, return_value=mock_client):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "new-api-key"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    with patch(MOCK_CIELO_CLIENT_CTOR, return_value=_mock_client()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "new-api-key"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_API_KEY: "new-api-key",
+        CONF_TOKEN: "new-token",
+    }
+
+
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reauthentication aborts when the API key belongs to another account."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch(MOCK_CIELO_CLIENT_CTOR, return_value=_mock_client("other-user")):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "new-api-key"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == {
+        CONF_API_KEY: "test-api-key-",
+        CONF_TOKEN: "valid-test-token",
+    }

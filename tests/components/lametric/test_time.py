@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.lametric.const import SCAN_INTERVAL
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -21,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_START_TIME = "time.frenck_s_lametric_screensaver_start_time"
 ENTITY_END_TIME = "time.frenck_s_lametric_screensaver_end_time"
@@ -114,8 +115,9 @@ async def test_set_value_around_dst(
 
     time_based = mock_lametric.device.return_value.display.screensaver.modes.time_based
     time_based.start_time = expected
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_START_TIME)
     assert state

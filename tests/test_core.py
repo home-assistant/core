@@ -3123,6 +3123,13 @@ async def test_get_release_channel(
         assert get_release_channel() == release_channel
 
 
+def test_async_noop() -> None:
+    """Test async_noop is a callback that does nothing."""
+    assert ha.is_callback(ha.async_noop)
+    assert HassJob(ha.async_noop).job_type is ha.HassJobType.Callback
+    assert ha.async_noop() is None
+
+
 def test_is_callback_check_partial() -> None:
     """Test is_callback_check_partial matches HassJob."""
 

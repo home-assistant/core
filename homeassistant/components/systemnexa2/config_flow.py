@@ -118,6 +118,7 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self._async_create_device_entry()
 
         if self.source == SOURCE_RECONFIGURE:
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="reconfigure",
                 data_schema=self.add_suggested_values_to_schema(

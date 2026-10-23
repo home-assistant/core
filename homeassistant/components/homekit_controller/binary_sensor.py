@@ -137,19 +137,12 @@ class HomeKitBatteryLowSensor(HomeKitEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
 
     @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.STATUS_LO_BATT]
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        if name := self.accessory.name:
-            return f"{name} Low Battery"
-        return "Low Battery"
 
     @property
     @override
@@ -181,13 +174,11 @@ REJECT_CHAR_BY_TYPE = {
 CHARACTERISTIC_BINARY_SENSORS: dict[str, HomeKitBinarySensorEntityDescription] = {
     CharacteristicsTypes.STATUS_LO_BATT: HomeKitBinarySensorEntityDescription(
         key=CharacteristicsTypes.STATUS_LO_BATT,
-        name="Low Battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     CharacteristicsTypes.STATUS_FAULT: HomeKitBinarySensorEntityDescription(
         key=CharacteristicsTypes.STATUS_FAULT,
-        name="Problem",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -209,14 +200,6 @@ class CharacteristicBinarySensor(CharacteristicEntity, BinarySensorEntity):
         """Initialise a HomeKit characteristic binary sensor."""
         self.entity_description = description
         super().__init__(conn, info, char)
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        if name := self.accessory.name:
-            return f"{name} {self.entity_description.name}"
-        return f"{self.entity_description.name}"
 
     @override
     def get_characteristic_types(self) -> list[str]:

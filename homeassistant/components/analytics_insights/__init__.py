@@ -32,7 +32,7 @@ class AnalyticsInsightsData:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AnalyticsInsightsConfigEntry
-) -> bool:
+) -> None:
     """Set up Homeassistant Analytics from a config entry."""
     client = HomeassistantAnalyticsClient(session=async_get_clientsession(hass))
 
@@ -56,12 +56,10 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: AnalyticsInsightsConfigEntry
-) -> bool:
+) -> None:
     """Migrate to a new version."""
     # Migration for switching add-ons to apps
     if entry.version < 2:
@@ -80,11 +78,9 @@ async def async_migrate_entry(
 
         hass.config_entries.async_update_entry(entry, version=2, options=options)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AnalyticsInsightsConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

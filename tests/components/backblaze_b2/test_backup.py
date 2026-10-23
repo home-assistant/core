@@ -145,7 +145,7 @@ async def test_agents_delete(
         response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     mock_main.delete.assert_called_once()
     mock_metadata.delete.assert_called_once()
 
@@ -159,7 +159,7 @@ async def test_agents_delete_not_found(
     await client.send_json_auto_id({"type": "backup/delete", "backup_id": "random"})
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_agents_download(

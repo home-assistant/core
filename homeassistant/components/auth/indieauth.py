@@ -21,9 +21,13 @@ MAX_FETCH_BYTES = 10240
 
 
 async def verify_redirect_uri(
-    hass: HomeAssistant, client_id: str, redirect_uri: str
+    hass: HomeAssistant,
+    client_id: str,
+    redirect_uri: str,
+    *,
+    allow_loopback_port_change: bool = False,
 ) -> bool:
-    """Verify that the client and redirect uri match."""
+    """Verify the redirect URI, allowing loopback port changes only with PKCE."""
     try:
         client_id_parts = _parse_client_id(client_id)
     except ValueError:
@@ -63,6 +67,16 @@ async def verify_redirect_uri(
     redirect_uris = await fetch_redirect_uris(hass, client_id)
     if redirect_uri in redirect_uris:
         return True
+    # RFC 8252 requires PKCE for native clients choosing a loopback callback port.
+    if (
+        allow_loopback_port_change
+        and (loopback_uri := _without_loopback_port(redirect_uri)) is not None
+        and any(
+            _without_loopback_port(registered_uri) == loopback_uri
+            for registered_uri in redirect_uris
+        )
+    ):
+        return True
     _LOGGER.debug(
         "redirect_uri %s is not among the advertised redirect uris %s for client_id %s",
         redirect_uri,
@@ -70,6 +84,36 @@ async def verify_redirect_uri(
         client_id,
     )
     return False
+
+
+def _without_loopback_port(uri: str) -> str | None:
+    """Remove only the port from an HTTP loopback redirect URI."""
+    try:
+        parts = urlparse(uri)
+        port = parts.port
+    except ValueError:
+        return None
+
+    if (
+        parts.scheme != "http"
+        or parts.hostname not in ("127.0.0.1", "::1", "localhost")
+        or parts.username is not None
+        or "#" in uri
+        or port == 0
+    ):
+        return None
+
+    # urlparse lowercases the scheme, but only the port may differ.
+    scheme = uri[: len(parts.scheme)]
+    prefix = f"{scheme}://{parts.netloc}"
+    if not uri.startswith(prefix):
+        return None
+    if port is None:
+        return uri
+
+    # Preserve the original spelling, path and query, including an empty query.
+    host = parts.netloc.rsplit(":", 1)[0]
+    return f"{scheme}://{host}{uri[len(prefix) :]}"
 
 
 class LinkTagParser(HTMLParser):
@@ -199,10 +243,7 @@ def _parse_link_tag_redirect_uris(url: str, body: bytes) -> list[str]:
     parser = LinkTagParser("redirect_uri")
     parser.feed(body.decode(errors="replace"))
 
-    # Authorization endpoints verifying that a redirect_uri is allowed for use
-    # by a client MUST look for an exact match of the given redirect_uri in the
-    # request against the list of redirect_uris discovered after resolving any
-    # relative URLs.
+    # Resolve relative URLs before comparing registered redirect URIs.
     return [urljoin(url, found) for found in parser.found]
 
 
@@ -214,10 +255,9 @@ def _parse_metadata_document_redirect_uris(
     Per draft-ietf-oauth-client-id-metadata-document the document only counts
     when the client_id URL is https with a path and no fragment, the response
     was a direct 200 (not redirected), the document's client_id round-trips,
-    and every redirect_uris entry is an absolute, fragment-free URI matched
-    exactly. The url and its document are client-controlled and fetched
-    unauthenticated, so rejections log at DEBUG (higher levels would be a
-    log-flood vector).
+    and every redirect_uris entry is an absolute, fragment-free URI. The url
+    and its document are client-controlled and fetched unauthenticated, so
+    rejections log at DEBUG (higher levels would be a log-flood vector).
     """
     # A body at the read cap may be truncated; a truncated prefix must not be
     # trusted even if it happens to be parseable.
@@ -261,8 +301,7 @@ def _parse_metadata_document_redirect_uris(
         )
         return []
 
-    # redirect_uris entries are returned unmodified for RFC 6749 exact matching
-    # rather than resolving relative references.
+    # Return entries unmodified; redirect verification handles loopback ports.
     redirect_uris = document.get("redirect_uris")
     if not isinstance(redirect_uris, list) or not all(
         isinstance(redirect_uri, str) and _is_valid_metadata_redirect_uri(redirect_uri)

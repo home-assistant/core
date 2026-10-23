@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BesenConfigEntry,
-) -> bool:
+) -> None:
     """Set up Besen from a config entry."""
 
     address = entry.data[CONF_ADDRESS]
@@ -71,13 +71,12 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant,
     entry: BesenConfigEntry,
-) -> bool:
+) -> None:
     """Unload a Besen config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

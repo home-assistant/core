@@ -3,9 +3,12 @@
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, override
 
-from aiohttp import ClientError
 import probatio
-from pyrituals import Account, AuthenticationException
+from ritualsgenie import (
+    RitualsGenie,
+    RitualsGenieAuthenticationError,
+    RitualsGenieError,
+)
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -34,17 +37,17 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             session = async_get_clientsession(self.hass)
-            account = Account(
+            client = RitualsGenie(
                 email=user_input[CONF_EMAIL],
                 password=user_input[CONF_PASSWORD],
                 session=session,
             )
 
             try:
-                await account.authenticate()
-            except AuthenticationException:
+                await client.login()
+            except RitualsGenieAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except ClientError:
+            except RitualsGenieError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(user_input[CONF_EMAIL])
@@ -77,17 +80,17 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             session = async_get_clientsession(self.hass)
-            account = Account(
+            client = RitualsGenie(
                 email=reauth_entry.unique_id,
                 password=user_input[CONF_PASSWORD],
                 session=session,
             )
 
             try:
-                await account.authenticate()
-            except AuthenticationException:
+                await client.login()
+            except RitualsGenieAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except ClientError:
+            except RitualsGenieError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(

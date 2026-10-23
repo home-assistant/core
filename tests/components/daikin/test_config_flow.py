@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aiohttp import ClientError, web_exceptions
 from pydaikin.exceptions import DaikinException
@@ -74,6 +74,7 @@ async def test_user(hass: HomeAssistant, mock_daikin) -> None:
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][KEY_MAC] == MAC
+    assert result["result"].unique_id == MAC
 
 
 async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
@@ -106,7 +107,12 @@ async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
         (Exception, "unknown"),
     ],
 )
-async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) -> None:
+async def test_device_abort(
+    hass: HomeAssistant,
+    mock_daikin: MagicMock,
+    s_effect: type[Exception] | Exception,
+    reason: str,
+) -> None:
     """Test device abort."""
     mock_daikin.side_effect = s_effect
 
@@ -125,7 +131,15 @@ async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) 
     assert result["errors"] == {"base": reason}
     assert result["step_id"] == "user"
 
+    mock_daikin.side_effect = AsyncMock(return_value=mock_daikin)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: HOST},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_daikin")
 async def test_api_password_abort(hass: HomeAssistant) -> None:
     """Test device abort."""
     result = await hass.config_entries.flow.async_init(
@@ -142,6 +156,12 @@ async def test_api_password_abort(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "api_password"}
     assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: HOST},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

@@ -168,8 +168,7 @@ class ModbusBaseEntity(Entity):
 
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
-        # also runs when the add is aborted after the first update is scheduled,
-        # and a rename removes and re-adds the entity, so it must not stop it
+        # also runs when the add is aborted after the first update is scheduled
         self.async_on_remove(self._async_cancel_updates)
         self._cancel_call = self._async_call_later(
             self._hub.config_delay + 0.1, self.async_await_connection

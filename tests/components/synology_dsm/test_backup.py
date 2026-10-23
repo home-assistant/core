@@ -379,6 +379,7 @@ async def test_agents_list_backups_error(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {
             "synology_dsm.mocked_syno_dsm_entry": "Failed to list backups"
         },
@@ -474,7 +475,11 @@ async def test_agents_get_backup_not_existing(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}, "backup": None}
+    assert response["result"] == {
+        "agent_error_translations": {},
+        "agent_errors": {},
+        "backup": None,
+    }
 
 
 async def test_agents_get_backup_error(
@@ -495,6 +500,7 @@ async def test_agents_get_backup_error(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {
             "synology_dsm.mocked_syno_dsm_entry": "Failed to list backups"
         },
@@ -517,7 +523,11 @@ async def test_agents_get_backup_defect_meta(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}, "backup": None}
+    assert response["result"] == {
+        "agent_error_translations": {},
+        "agent_errors": {},
+        "backup": None,
+    }
 
 
 async def test_agents_download(
@@ -712,7 +722,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     mock: AsyncMock = setup_dsm_with_filestation.file.delete_file
     assert len(mock.mock_calls) == 2
     assert mock.call_args_list[0].kwargs["filename"] == f"{BASE_FILENAME}.tar"
@@ -750,7 +760,7 @@ async def test_agents_delete_not_existing(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 @pytest.mark.parametrize(
@@ -797,9 +807,10 @@ async def test_agents_delete_error(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {
             "synology_dsm.mocked_syno_dsm_entry": "Failed to delete backup"
-        }
+        },
     }
     assert f"Failed to delete backup: {expected_log}" in caplog.text
     mock: AsyncMock = setup_dsm_with_filestation.file.delete_file

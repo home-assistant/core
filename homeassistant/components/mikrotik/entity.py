@@ -27,16 +27,18 @@ class MikrotikBaseEntity(CoordinatorEntity[MikrotikDataUpdateCoordinator]):
 
         self._serial = coordinator.api.serial_number
 
-    def _base_device_info(self) -> dr.DeviceInfo:
-        """Return the device info fields shared by all Mikrotik devices."""
+    def _device_info(self, identifier: str, name: str | None) -> dr.DeviceInfo:
+        """Return the device info of a Mikrotik device."""
         coordinator = self.coordinator
         return dr.DeviceInfo(
             configuration_url=URL.build(
                 scheme="http",
                 host=coordinator.host,
             ),
+            identifiers={(DOMAIN, identifier)},
             manufacturer="Mikrotik",
             model=coordinator.model,
+            name=name,
             sw_version=coordinator.firmware,
             serial_number=self._serial,
         )
@@ -52,11 +54,7 @@ class MikrotikEntity(MikrotikBaseEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, description)
-        self._attr_device_info = dr.DeviceInfo(
-            **self._base_device_info(),
-            identifiers={(DOMAIN, self._serial)},
-            name=coordinator.hostname,
-        )
+        self._attr_device_info = self._device_info(self._serial, coordinator.hostname)
         self._attr_unique_id = f"{self._serial}_{description.key}"
 
 
@@ -76,15 +74,11 @@ class MikrotikDeviceEntity(MikrotikBaseEntity):
         name = interface.get("name")
         ident = f"{slugify(interface.get('mac-address'))}_{name}"
 
-        self._attr_device_info = dr.DeviceInfo(
-            **self._base_device_info(),
-            identifiers={(DOMAIN, ident)},
-            name=name,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                config_entry.runtime_data.hass,
-                (DOMAIN, coordinator.api.serial_number),
-                config_entry_id=config_entry.entry_id,
-            ),
+        self._attr_device_info = self._device_info(ident, name)
+        self._attr_device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+            config_entry.runtime_data.hass,
+            (DOMAIN, coordinator.api.serial_number),
+            config_entry_id=config_entry.entry_id,
         )
         self._attr_unique_id = ident
         self._interface = interface

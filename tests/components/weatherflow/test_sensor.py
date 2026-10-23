@@ -1,11 +1,13 @@
 """Tests for the WeatherFlow sensor platform."""
 
+import json
 from unittest.mock import patch
 
 import pytest
 from pyweatherflowudp.aioudp import LocalEndpoint
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sensor import ATTR_LAST_RESET
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -20,6 +22,7 @@ from . import HUB_ADDRESS, setup_integration
 from tests.common import (
     MockConfigEntry,
     load_fixture_bytes,
+    load_json_object_fixture,
     mock_restore_cache_with_extra_data,
     snapshot_platform,
 )
@@ -27,6 +30,7 @@ from tests.common import (
 LAST_STRIKE_DISTANCE = "sensor.st_00000001_lightning_last_distance"
 LAST_STRIKE_ENERGY = "sensor.st_00000001_lightning_last_energy"
 LAST_STRIKE_TIME = "sensor.st_00000001_lightning_last_strike"
+LIGHTNING_COUNT = "sensor.st_00000001_lightning_count"
 RAIN_LAST_MINUTE = "sensor.st_00000001_precipitation"
 STATION_PRESSURE = "sensor.st_00000001_air_pressure"
 VAPOR_PRESSURE = "sensor.st_00000001_vapor_pressure"
@@ -71,6 +75,62 @@ async def test_unit_system(
     await setup_integration(hass, mock_config_entry, mock_udp_endpoint)
 
     assert hass.states.get(entity_id).attributes[ATTR_UNIT_OF_MEASUREMENT] == unit
+
+
+async def test_last_reset_only_advances_after_accumulation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_udp_endpoint: LocalEndpoint,
+) -> None:
+    """Test last_reset only changes when the previous report accumulated."""
+
+    def feed_observation(epoch: int, rain: float, strikes: int = 0) -> None:
+        data = load_json_object_fixture("obs_st.json", "weatherflow")
+        data["obs"][0][0] = epoch
+        data["obs"][0][12] = rain
+        data["obs"][0][15] = strikes
+        mock_udp_endpoint.feed_datagram(json.dumps(data).encode(), HUB_ADDRESS)
+
+    # The setup observation reports 0.12 mm of rain at epoch 1510855980.
+    await setup_integration(hass, mock_config_entry, mock_udp_endpoint)
+
+    state = hass.states.get(RAIN_LAST_MINUTE)
+    assert state.state == "0.12"
+    assert state.attributes[ATTR_LAST_RESET] == "2017-11-16T18:13:00+00:00"
+    assert (
+        hass.states.get(LIGHTNING_COUNT).attributes[ATTR_LAST_RESET]
+        == "2017-11-16T18:13:00+00:00"
+    )
+
+    # The previous report accumulated rain, so this report starts a new cycle.
+    feed_observation(1510856040, 0)
+    await hass.async_block_till_done()
+    state = hass.states.get(RAIN_LAST_MINUTE)
+    assert state.state == "0"
+    assert state.attributes[ATTR_LAST_RESET] == "2017-11-16T18:14:00+00:00"
+
+    # Nothing accumulated since, so a run of empty reports keeps the cycle.
+    feed_observation(1510856100, 0)
+    await hass.async_block_till_done()
+    state = hass.states.get(RAIN_LAST_MINUTE)
+    assert state.attributes[ATTR_LAST_RESET] == "2017-11-16T18:14:00+00:00"
+    feed_observation(1510856160, 0.5)
+    await hass.async_block_till_done()
+    state = hass.states.get(RAIN_LAST_MINUTE)
+    assert state.state == "0.5"
+    assert state.attributes[ATTR_LAST_RESET] == "2017-11-16T18:14:00+00:00"
+
+    # The 0.5 mm report is flushed into statistics by the next report's reset.
+    feed_observation(1510856220, 0)
+    await hass.async_block_till_done()
+    state = hass.states.get(RAIN_LAST_MINUTE)
+    assert state.attributes[ATTR_LAST_RESET] == "2017-11-16T18:17:00+00:00"
+
+    # A sensor that never accumulates keeps its initial last_reset.
+    assert (
+        hass.states.get(LIGHTNING_COUNT).attributes[ATTR_LAST_RESET]
+        == "2017-11-16T18:13:00+00:00"
+    )
 
 
 async def test_last_strike_restored_until_next_strike(

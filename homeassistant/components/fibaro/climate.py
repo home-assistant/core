@@ -165,9 +165,9 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
                 self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
         if tempunit == "F":
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
         else:
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
         if self._fan_mode_device:
             fan_modes = self._fan_mode_device.supported_modes
@@ -353,7 +353,7 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._temp_sensor_device:
             device = self._temp_sensor_device
@@ -364,7 +364,7 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._target_temp_device:
             device = self._target_temp_device

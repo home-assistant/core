@@ -418,10 +418,13 @@ class ESPHomeManager:
                     response_dict = {"response": response}
 
                 except TemplateError as ex:
-                    # pylint: disable-next=home-assistant-exception-not-translated
-                    raise HomeAssistantError(
-                        f"Error rendering response template: {ex}"
-                    ) from ex
+                    self._send_service_call_response(
+                        call_id,
+                        success=False,
+                        error_message=f"Error rendering response template: {ex}",
+                        response_data=b"",
+                    )
+                    return
             else:
                 response_dict = {"response": action_response}
 
@@ -511,14 +514,18 @@ class ESPHomeManager:
         new_state = event_data["new_state"]
         old_state = event_data["old_state"]
 
-        if new_state is None or old_state is None:
+        if new_state is None:
             return
 
-        # Only communicate changes to the state or attribute tracked
-        if (not attribute and old_state.state == new_state.state) or (
-            attribute
-            and old_state.attributes.get(attribute)
-            == new_state.attributes.get(attribute)
+        # Only communicate changes to the state or attribute tracked, an entity
+        # created after the subscription has no old state and is always sent
+        if old_state is not None and (
+            (not attribute and old_state.state == new_state.state)
+            or (
+                attribute
+                and old_state.attributes.get(attribute)
+                == new_state.attributes.get(attribute)
+            )
         ):
             return
 
@@ -761,8 +768,6 @@ class ESPHomeManager:
                 hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
 
-        entry_data.first_connect_done.set()
-
         if device_info.voice_assistant_feature_flags_compat(api_version) and (
             Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
         ):
@@ -771,6 +776,9 @@ class ESPHomeManager:
                 self.entry, [Platform.ASSIST_SATELLITE]
             )
             entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
+
+        # Setup can wait for this, so only after the platforms are forwarded
+        entry_data.first_connect_done.set()
 
         if device_info.zwave_proxy_feature_flags:
             entry_data.disconnect_callbacks.add(

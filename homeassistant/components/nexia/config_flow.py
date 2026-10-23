@@ -1,5 +1,6 @@
 """Config flow for Nexia integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -36,6 +37,11 @@ DATA_SCHEMA = probatio.Schema(
                 BRAND_TRANE: BRAND_TRANE_NAME,
             }
         ),
+    }
+)
+REAUTH_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -107,6 +113,50 @@ class NexiaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new password."""
+        errors = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            try:
+                info = await validate_input(
+                    self.hass,
+                    {
+                        CONF_BRAND: reauth_entry.data.get(CONF_BRAND, BRAND_NEXIA),
+                        CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(str(info["house_id"]))
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
+            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            errors=errors,
         )
 
 

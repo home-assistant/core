@@ -28,13 +28,13 @@ from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.start import async_at_started
 
 from .config_flow import normalize_hkid
 from .const import (
@@ -258,7 +258,7 @@ class HKDevice:
         for callback_ in self._availability_callbacks:
             callback_()
 
-    async def _async_populate_ble_accessory_state(self, event: Event) -> None:
+    async def _async_populate_ble_accessory_state(self, hass: HomeAssistant) -> None:
         """Populate the BLE accessory state without blocking startup.
 
         If the accessory was asleep at startup we need to retry
@@ -309,10 +309,7 @@ class HKDevice:
             # previously we force an update after startup
             # is complete.
             entry.async_on_unload(
-                self.hass.bus.async_listen(
-                    EVENT_HOMEASSISTANT_STARTED,
-                    self._async_populate_ble_accessory_state,
-                )
+                async_at_started(self.hass, self._async_populate_ble_accessory_state)
             )
         else:
             await self.pairing.async_populate_accessories_state(

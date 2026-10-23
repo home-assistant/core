@@ -5,16 +5,17 @@ from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
     hass: HomeAssistant,
-    config_entry,
+    config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
-    setup_watttime,
     snapshot: SnapshotAssertion,
+    setup_watttime: None,
 ) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(

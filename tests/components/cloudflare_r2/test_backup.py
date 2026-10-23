@@ -260,7 +260,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     # Should delete both the tar and the metadata file
     assert mock_client.delete_object.call_count == 2
 
@@ -284,7 +284,7 @@ async def test_agents_delete_not_throwing_on_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_client.delete_object.call_count == 0
 
 
@@ -525,11 +525,12 @@ async def test_error_during_delete(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {
             f"{DOMAIN}.{mock_config_entry.entry_id}": (
                 "Failed during async_delete_backup"
             )
-        }
+        },
     }
 
 

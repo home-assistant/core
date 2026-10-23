@@ -5,8 +5,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.template import DATA_COORDINATORS, DOMAIN, trigger_entity
+from homeassistant.components.template import DOMAIN, trigger_entity
 from homeassistant.components.template.coordinator import TriggerUpdateCoordinator
+from homeassistant.components.template.helpers import DATA_COORDINATORS
 from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,

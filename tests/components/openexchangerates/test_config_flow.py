@@ -56,6 +56,7 @@ async def test_user_create_entry(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_invalid_auth(
     hass: HomeAssistant,
     mock_latest_rates_config_flow: AsyncMock,
@@ -74,7 +75,17 @@ async def test_form_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
+    mock_latest_rates_config_flow.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_key": "test-api-key"},
+    )
+    await hass.async_block_till_done()
 
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect(
     hass: HomeAssistant,
     mock_latest_rates_config_flow: AsyncMock,
@@ -93,7 +104,17 @@ async def test_form_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_latest_rates_config_flow.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_key": "test-api-key"},
+    )
+    await hass.async_block_till_done()
 
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_unknown_error(
     hass: HomeAssistant,
     mock_latest_rates_config_flow: AsyncMock,
@@ -111,6 +132,15 @@ async def test_form_unknown_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    mock_latest_rates_config_flow.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_key": "test-api-key"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_already_configured_service(
@@ -164,6 +194,7 @@ async def test_currencies_timeout(hass: HomeAssistant, currencies: AsyncMock) ->
     assert result["reason"] == "timeout_connect"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_latest_rates_timeout(
     hass: HomeAssistant,
     mock_latest_rates_config_flow: AsyncMock,
@@ -190,6 +221,15 @@ async def test_latest_rates_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "timeout_connect"}
+
+    mock_latest_rates_config_flow.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_key": "test-api-key"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(

@@ -3,11 +3,12 @@
 import probatio
 import pytest
 
-from homeassistant.components.template import DOMAIN, PLATFORMS
+from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
     async_validate_config_section,
 )
+from homeassistant.components.template.const import PLATFORMS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,

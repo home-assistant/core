@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 from egauge_async.exceptions import EgaugeAuthenticationError
 from freezegun.api import FrozenDateTimeFactory
-from httpx import ConnectError
+from httpx2 import ConnectError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

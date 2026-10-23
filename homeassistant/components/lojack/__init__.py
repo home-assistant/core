@@ -26,7 +26,7 @@ class LoJackData:
 type LoJackConfigEntry = ConfigEntry[LoJackData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> None:
     """Set up LoJack from a config entry."""
     session = async_get_clientsession(hass)
 
@@ -65,12 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.client.close()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.client.close()

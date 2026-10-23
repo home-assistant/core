@@ -5,7 +5,7 @@ import logging
 from typing import override
 
 import aiohttp
-from theben_conexa_smgw import ConexaSMGW, checkNetworkConnection
+from theben_conexa_smgw import ConexaSMGW, ConexaSmgwErr, checkNetworkConnection
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -13,7 +13,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_utc_time_change
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +62,8 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
             )
         except (TimeoutError, aiohttp.ClientError) as e:
             raise ConfigEntryAuthFailed("Authentication failed") from e
+        except ConexaSmgwErr as e:
+            raise ConfigEntryNotReady(f"Unexpected reply from gateway: {e}") from e
 
         self.gateway_info = self._api.gatewayInfo
 
@@ -79,7 +81,10 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
     async def _async_update_data(self) -> dict[str, ConexaSMGW.MeterValue]:
         """Fetch data from API endpoint."""
 
-        return await self._api.getLatestValues()
+        try:
+            return await self._api.getLatestValues()
+        except ConexaSmgwErr as e:
+            raise UpdateFailed(f"Unexpected reply from gateway: {e}") from e
 
     async def _scheduled_update(self, now: datetime) -> None:
         """Triggered exactly at the time pattern specified in async_init."""

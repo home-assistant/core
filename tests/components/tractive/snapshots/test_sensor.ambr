@@ -25,8 +25,11 @@
     'name': None,
     'object_id_base': 'Activity time',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Activity time',
     'platform': 'tractive',
@@ -41,6 +44,7 @@
 # name: test_sensor[sensor.test_pet_activity_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Pet Activity time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
@@ -77,8 +81,11 @@
     'name': None,
     'object_id_base': 'Daily goal',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Daily goal',
     'platform': 'tractive',
@@ -93,6 +100,7 @@
 # name: test_sensor[sensor.test_pet_daily_goal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Pet Daily goal',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
@@ -130,8 +138,11 @@
     'name': None,
     'object_id_base': 'Day sleep',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Day sleep',
     'platform': 'tractive',
@@ -146,6 +157,7 @@
 # name: test_sensor[sensor.test_pet_day_sleep-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Pet Day sleep',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
@@ -184,8 +196,11 @@
     'name': None,
     'object_id_base': 'Night sleep',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Night sleep',
     'platform': 'tractive',
@@ -200,6 +215,7 @@
 # name: test_sensor[sensor.test_pet_night_sleep-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Pet Night sleep',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
@@ -238,8 +254,11 @@
     'name': None,
     'object_id_base': 'Rest time',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Rest time',
     'platform': 'tractive',
@@ -254,6 +273,7 @@
 # name: test_sensor[sensor.test_pet_rest_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Pet Rest time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,

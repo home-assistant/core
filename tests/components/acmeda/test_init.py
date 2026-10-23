@@ -7,6 +7,7 @@ import aiopulse
 import pytest
 
 from homeassistant.components.acmeda.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -69,3 +70,19 @@ async def test_update_devices_renames_device(
         (DOMAIN, str(mock_roller.id)), mock_config_entry.entry_id
     )
     assert device.name == "Living room blind"
+
+
+@pytest.mark.usefixtures("mock_hub")
+async def test_unload_hub_reset_failed(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test unloading fails when the hub cannot be reset."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # A hub without an API reports that it could not be reset
+    mock_config_entry.runtime_data.api = None
+
+    assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert mock_config_entry.reason == "Could not reset the Acmeda hub while unloading"

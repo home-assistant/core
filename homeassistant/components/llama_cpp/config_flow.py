@@ -1,5 +1,6 @@
 """Config flow for llama.cpp integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, cast, override
 
@@ -59,6 +60,11 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
     }
 )
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+    }
+)
 
 
 class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -75,25 +81,68 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match(user_input)
-            try:
-                self.client = await async_create_client(self.hass, user_input)
-                self.models = await async_list_models(self.client)
-            except HomeAssistantError as err:
-                LOGGER.error("Connection validation failed: %s", err)
-                errors["base"] = err.translation_key or "unknown"
-            except Exception:  # pylint: disable=broad-except # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            errors = await self._async_validate_input(user_input)
+            if not errors:
                 self.data = user_input
                 return await self.async_step_model()
 
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def _async_validate_input(self, data: Mapping[str, Any]) -> dict[str, str]:
+        """Validate the connection and return errors, if any."""
+        try:
+            self.client = await async_create_client(self.hass, data)
+            self.models = await async_list_models(self.client)
+        except HomeAssistantError as err:
+            LOGGER.error("Connection validation failed: %s", err)
+            return {"base": err.translation_key or "unknown"}
+        except Exception:  # pylint: disable=broad-except # noqa: BLE001
+            LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}
+        return {}
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new API key."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            errors = await self._async_validate_input(
+                {**reauth_entry.data, **user_input}
+            )
+            if not errors:
+                # The update listener already reloads the entry when data changes
+                reload = (
+                    reauth_entry.data.get(CONF_API_KEY) == user_input[CONF_API_KEY]
+                    or not reauth_entry.update_listeners
+                )
+                result = self.async_update_and_abort(
+                    reauth_entry, data_updates=user_input
+                )
+                if reload:
+                    self.hass.config_entries.async_schedule_reload(
+                        reauth_entry.entry_id
+                    )
+                return result
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            description_placeholders={CONF_BASE_URL: reauth_entry.data[CONF_BASE_URL]},
             errors=errors,
         )
 

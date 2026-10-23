@@ -5,7 +5,7 @@ import pathlib
 import textwrap
 
 from freezegun.api import FrozenDateTimeFactory
-from httpx import Response
+from httpx2 import Response
 import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
@@ -211,6 +211,51 @@ async def test_api_date_event(
     # Overlap with event end
     events = await get_events("2007-07-09T00:00:00Z", "2007-07-11T00:00:00Z")
     assert len(events) == 1
+
+
+STATUS_EVENT_ICS = textwrap.dedent(
+    """\
+    BEGIN:VCALENDAR
+    VERSION:2.0
+    BEGIN:VEVENT
+    SUMMARY:Bastille Day Party
+    DTSTART:19970714
+    DTEND:19970715
+    {status}
+    END:VEVENT
+    END:VCALENDAR
+    """
+)
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_status"),
+    [
+        pytest.param("STATUS:TENTATIVE", "tentative", id="tentative"),
+        pytest.param("STATUS:CONFIRMED", "confirmed", id="confirmed"),
+        pytest.param("", None, id="no_status"),
+    ],
+)
+@respx.mock
+async def test_event_status(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    get_events: GetEventsFn,
+    status: str,
+    expected_status: str | None,
+) -> None:
+    """Test that the rfc5545 STATUS property is returned by the API."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200, text=STATUS_EVENT_ICS.format(status=status)
+        )
+    )
+    await setup_integration(hass, config_entry)
+
+    events = await get_events("1997-07-13T00:00:00", "1997-07-16T00:00:00")
+
+    assert len(events) == 1
+    assert events[0]["status"] == expected_status
 
 
 CANCELLED_EVENT_ICS = textwrap.dedent(

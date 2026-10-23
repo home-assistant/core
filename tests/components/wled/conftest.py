@@ -85,6 +85,7 @@ def mock_wled(
         )
         wled.connected = False
         wled.host = "127.0.0.1"
+        wled.firmware_available.return_value = True
 
         yield wled
 

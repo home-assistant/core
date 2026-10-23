@@ -1,7 +1,7 @@
 """Tests for the Portainer button platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, _Call, call, patch
 
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
@@ -139,24 +139,44 @@ async def test_buttons_invalid_auth_starts_reauth(
 
 
 @pytest.mark.parametrize(
-    ("action", "client_method"),
+    ("entity_id", "client_method", "expected_call"),
     [
-        ("prune", "images_prune"),
+        pytest.param(
+            "button.my_environment_prune_unused_images",
+            "images_prune",
+            call(endpoint_id=1, dangling=False, until=timedelta(days=0)),
+            id="images",
+        ),
+        pytest.param(
+            "button.my_environment_prune_unused_volumes",
+            "prune_volumes",
+            call(1),
+            id="volumes",
+        ),
+        pytest.param(
+            "button.my_environment_prune_build_cache",
+            "prune_build_cache",
+            call(1, all_cache=True),
+            id="build_cache",
+        ),
+        pytest.param(
+            "button.my_environment_prune_unused_networks",
+            "prune_networks",
+            call(1),
+            id="networks",
+        ),
     ],
 )
 async def test_buttons_endpoint(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    action: str,
+    entity_id: str,
     client_method: str,
+    expected_call: _Call,
 ) -> None:
-    """Test pressing a Portainer endpoint button triggers call."""
+    """Test pressing a Portainer endpoint button calls the library."""
     await setup_integration(hass, mock_config_entry)
-
-    entity_id = f"button.my_environment_{action}_unused_images"
-    method_mock = getattr(mock_portainer_client, client_method)
-    pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -165,7 +185,7 @@ async def test_buttons_endpoint(
         blocking=True,
     )
 
-    assert len(method_mock.mock_calls) == pre_calls + 1
+    assert getattr(mock_portainer_client, client_method).mock_calls == [expected_call]
 
 
 @pytest.mark.parametrize(

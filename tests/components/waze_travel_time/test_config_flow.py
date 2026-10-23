@@ -1,5 +1,7 @@
 """Test the Waze Travel Time config flow."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from homeassistant import config_entries
@@ -202,9 +204,10 @@ async def test_dupe(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("invalidate_config_entry")
 async def test_invalid_config_entry(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    invalidate_config_entry: MagicMock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -221,6 +224,16 @@ async def test_invalid_config_entry(
     assert result2["errors"] == {"base": "cannot_connect"}
 
     assert "Error trying to validate entry" in caplog.text
+
+    invalidate_config_entry.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG_FLOW_USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_update")

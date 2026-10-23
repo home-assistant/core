@@ -2,10 +2,11 @@
 
 import datetime
 from http.cookies import Morsel
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import CookieJar
 from tesla_powerwall import AccessDeniedError, ApiError, LoginResponse
+from tesla_powerwall.error import MissingAttributeError
 
 from homeassistant.components.powerwall.const import (
     AUTH_COOKIE_KEY,
@@ -377,3 +378,25 @@ async def test_setup_non_404_api_error_propagates(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_api_changed(hass: HomeAssistant) -> None:
+    """Test setup fails when the Powerwall API has changed."""
+    mock_powerwall = await _mock_powerwall_with_fixtures(hass)
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
+        patch(
+            "homeassistant.components.powerwall._login_and_fetch_base_info",
+            side_effect=MissingAttributeError(Mock(), "din", "operation"),
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "The Powerwall API has changed"

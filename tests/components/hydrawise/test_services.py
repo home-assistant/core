@@ -1,9 +1,13 @@
 """Test Hydrawise services."""
 
 from datetime import datetime
+from typing import Any
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
+from pydrawise import APIError, NotAuthorizedError
 from pydrawise.schema import Zone
+import pytest
 
 from homeassistant.components.hydrawise.const import (
     ATTR_DURATION,
@@ -15,6 +19,7 @@ from homeassistant.components.hydrawise.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -91,3 +96,44 @@ async def test_suspend(
     mock_pydrawise.suspend_zone.assert_called_once_with(
         zones[0], until=datetime(2026, 1, 1, 0, 0, 0)
     )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "api_method"),
+    [
+        (SERVICE_START_WATERING, {}, "start_zone"),
+        (SERVICE_SUSPEND, {ATTR_UNTIL: datetime(2026, 1, 1, 0, 0, 0)}, "suspend_zone"),
+        (SERVICE_RESUME, {}, "resume_zone"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        (APIError("Boom"), "command_error"),
+        (ClientError("Boom"), "command_error"),
+        (TimeoutError, "command_error"),
+        (NotAuthorizedError("HTTP 401"), "invalid_auth"),
+    ],
+)
+@pytest.mark.usefixtures("mock_added_config_entry")
+async def test_service_api_error(
+    hass: HomeAssistant,
+    mock_pydrawise: AsyncMock,
+    service: str,
+    service_data: dict[str, Any],
+    api_method: str,
+    side_effect: Exception,
+    translation_key: str,
+) -> None:
+    """Test that API errors in the services raise a translated error."""
+    getattr(mock_pydrawise, api_method).side_effect = side_effect
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "binary_sensor.zone_one_watering", **service_data},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == translation_key

@@ -1,0 +1,12 @@
+{
+  "domain": "hydroquebec_peak",
+  "name": "Hydro-Québec Peak Events",
+  "codeowners": ["@Beat-YT"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hydroquebec_peak",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["hydropeak_opendata"],
+  "quality_scale": "bronze",
+  "requirements": ["hydropeak-opendata==0.2.0"]
+}

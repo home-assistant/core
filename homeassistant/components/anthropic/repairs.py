@@ -17,12 +17,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import (
-    CONF_CHAT_MODEL,
-    CONF_THINKING_EFFORT,
-    DOMAIN,
-    THINKING_EFFORT_NONE_SUPPORTED_MODELS,
-)
+from .const import CONF_CHAT_MODEL, CONF_THINKING_EFFORT, DOMAIN
 from .coordinator import model_alias
 
 if TYPE_CHECKING:
@@ -196,11 +191,8 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             **subentry.data,
             CONF_CHAT_MODEL: user_input[CONF_CHAT_MODEL],
         }
-        if (
-            subentry.data.get(CONF_THINKING_EFFORT) == "none"
-            and (alias := model_alias(user_input[CONF_CHAT_MODEL]))
-            not in THINKING_EFFORT_NONE_SUPPORTED_MODELS
-        ):
+        if subentry.data.get(CONF_THINKING_EFFORT) == "none":
+            alias = model_alias(user_input[CONF_CHAT_MODEL])
             model_info = next(
                 (
                     model
@@ -213,14 +205,10 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                 model_info = await entry.runtime_data.client.models.retrieve(
                     user_input[CONF_CHAT_MODEL], timeout=10.0
                 )
-            if (
-                model_info.capabilities
-                and (
-                    model_info.capabilities.thinking.types.adaptive.supported
-                    or model_info.capabilities.effort.supported
-                )
-                and model_alias(model_info.id)
-                not in THINKING_EFFORT_NONE_SUPPORTED_MODELS
+            if (capabilities := model_info.capabilities) and (
+                not capabilities.thinking.types.disabled.supported
+                if capabilities.thinking.types.adaptive.supported
+                else capabilities.effort.supported
             ):
                 updated_data.pop(CONF_THINKING_EFFORT)
 

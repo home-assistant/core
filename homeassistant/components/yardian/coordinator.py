@@ -98,6 +98,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
         except NetworkException as e:
             raise UpdateFailed("Failed to communicate with device") from e
         except Exception as e:  # safety net for tests to surface failure reason
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("Unexpected error while fetching Yardian data")
             raise UpdateFailed(f"Unexpected error: {type(e).__name__}: {e}") from e
 

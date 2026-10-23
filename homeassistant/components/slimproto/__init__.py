@@ -12,7 +12,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 type SlimProtoConfigEntry = ConfigEntry[SlimServer]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SlimProtoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SlimProtoConfigEntry) -> None:
     """Set up from a config entry."""
     slimserver = SlimServer()
     await slimserver.start()
@@ -31,8 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlimProtoConfigEntry) ->
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
 
-    return True
-
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
@@ -43,9 +41,7 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SlimProtoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SlimProtoConfigEntry) -> None:
     """Unload a config entry."""
-    unload_success = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_success:
-        await entry.runtime_data.stop()
-    return unload_success
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.stop()

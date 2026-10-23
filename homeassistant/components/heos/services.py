@@ -7,15 +7,15 @@ from typing import Final
 import probatio
 from pyheos import CommandAuthenticationError, Heos, HeosError
 
-from homeassistant.components.media_player import ATTR_MEDIA_VOLUME_LEVEL
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_VOLUME_LEVEL,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    issue_registry as ir,
-)
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.service import async_register_platform_entity_service
 from homeassistant.helpers.typing import VolDictType, VolSchemaType
 
 from .const import (
@@ -62,6 +62,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _sign_out_handler,
         schema=HEOS_SIGN_OUT_SCHEMA,
     )
+    for description in MEDIA_PLAYER_ENTITY_SERVICES:
+        async_register_platform_entity_service(
+            hass,
+            DOMAIN,
+            description.name,
+            entity_domain=MEDIA_PLAYER_DOMAIN,
+            schema=description.schema,
+            func=description.method_name,
+            supports_response=description.supports_response,
+        )
 
 
 @dataclass(frozen=True)
@@ -72,15 +82,6 @@ class EntityServiceDescription:
     method_name: str
     schema: VolDictType | VolSchemaType | None = None
     supports_response: SupportsResponse = SupportsResponse.NONE
-
-    def async_register(self, platform: entity_platform.EntityPlatform) -> None:
-        """Register the service with the platform."""
-        platform.async_register_entity_service(
-            self.name,
-            self.schema,
-            self.method_name,
-            supports_response=self.supports_response,
-        )
 
 
 REMOVE_FROM_QUEUE_SCHEMA: Final[VolDictType] = {
@@ -124,13 +125,6 @@ MEDIA_PLAYER_ENTITY_SERVICES: Final = (
     EntityServiceDescription(SERVICE_GROUP_VOLUME_DOWN, "async_group_volume_down"),
     EntityServiceDescription(SERVICE_GROUP_VOLUME_UP, "async_group_volume_up"),
 )
-
-
-def register_media_player_services() -> None:
-    """Register media_player entity services."""
-    platform = entity_platform.async_get_current_platform()
-    for service in MEDIA_PLAYER_ENTITY_SERVICES:
-        service.async_register(platform)
 
 
 def _get_controller(hass: HomeAssistant) -> Heos:

@@ -275,6 +275,7 @@ async def test_bluetooth_step_uses_discovery_name_for_unknown_bulb_name(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == AVEA_DISCOVERY_INFO.name
+    assert result["result"].unique_id == AVEA_DISCOVERY_INFO.address
 
 
 async def test_bluetooth_step_cannot_connect_recovers(hass: HomeAssistant) -> None:

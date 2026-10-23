@@ -194,6 +194,10 @@ class TeslemetryEnergyHistoryEntity(TeslemetryPollingEntity):
 
         super().__init__(data.history_coordinator, key)
 
+    @override
+    async def async_update(self) -> None:
+        """Keep the streamed totals; the stream is their only source."""
+
 
 class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Wall Connector Entities."""

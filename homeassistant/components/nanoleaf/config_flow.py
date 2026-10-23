@@ -93,6 +93,44 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._get_reauth_entry().title}
         return await self.async_step_link()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Nanoleaf host."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            nanoleaf = Nanoleaf(
+                async_get_clientsession(self.hass),
+                user_input[CONF_HOST],
+                reconfigure_entry.data[CONF_TOKEN],
+            )
+            try:
+                await nanoleaf.get_info()
+            except Unavailable:
+                errors["base"] = "cannot_connect"
+            except InvalidToken:
+                errors["base"] = "invalid_token"
+            except Exception:
+                _LOGGER.exception("Unknown error connecting to Nanoleaf")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(nanoleaf.name)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_HOST: user_input[CONF_HOST]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                USER_SCHEMA, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
+        )
+
     @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo

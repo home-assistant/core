@@ -39,7 +39,7 @@ __all__ = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> None:
     """Set up Spotify from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
@@ -75,9 +75,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
         raise ConfigEntryAuthFailed
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> None:
     """Unload Spotify config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

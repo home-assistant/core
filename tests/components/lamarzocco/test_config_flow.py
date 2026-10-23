@@ -392,6 +392,7 @@ async def test_bluetooth_discovery(
         CONF_TOKEN: "dummyToken",
         CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
+    assert result["result"].unique_id == "GS012345"
 
 
 async def test_bluetooth_discovery_already_configured(
@@ -488,6 +489,7 @@ async def test_dhcp_discovery(
         CONF_TOKEN: None,
         CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
+    assert result["result"].unique_id == "GS012345"
 
 
 async def test_dhcp_discovery_abort_on_hostname_changed(

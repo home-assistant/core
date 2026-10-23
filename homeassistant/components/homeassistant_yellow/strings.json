@@ -14,6 +14,14 @@
       }
     }
   },
+  "exceptions": {
+    "not_hassio": {
+      "message": "Home Assistant is not running on Home Assistant OS, the Home Assistant Yellow entry will be removed"
+    },
+    "unsupported_board": {
+      "message": "Home Assistant is not running on a Home Assistant Yellow ({board}), the Home Assistant Yellow entry will be removed"
+    }
+  },
   "issues": {
     "multi_pan_migration": {
       "fix_flow": {

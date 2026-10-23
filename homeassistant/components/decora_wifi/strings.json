@@ -22,6 +22,14 @@
       }
     }
   },
+  "exceptions": {
+    "turn_off_failed": {
+      "message": "Failed to turn off the myLeviton switch."
+    },
+    "turn_on_failed": {
+      "message": "Failed to turn on the myLeviton switch."
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_cannot_connect": {
       "description": "Importing the YAML configuration for {integration_title} failed because the myLeviton service could not be reached. Please check your network connectivity and then remove the `decora_wifi` YAML configuration from your `configuration.yaml` file and set up the integration again using the UI.",

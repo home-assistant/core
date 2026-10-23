@@ -153,7 +153,10 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxConsoleStatusCoordinator]):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.data.get(self._console.id) is not None
+        return (
+            super().available
+            and self.coordinator.data.get(self._console.id) is not None
+        )
 
     @property
     @override

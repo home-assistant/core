@@ -91,6 +91,7 @@ async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_IMPORT_PLUGINS: False,
     }
+    assert result["result"].unique_id == "hc2-111111"
 
 
 async def test_config_flow_user_initiated_auth_failure(

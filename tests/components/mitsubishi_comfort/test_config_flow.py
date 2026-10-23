@@ -73,6 +73,7 @@ async def test_user_step_success(
             }
         },
     }
+    assert result["result"].unique_id == "user-12345"
     mock_setup_entry.assert_called_once()
 
 
@@ -129,6 +130,7 @@ async def test_user_step_persists_partial_records(
             "mac": "11:22:33:44:55:66",
         },
     }
+    assert result["result"].unique_id == "user-12345"
 
 
 def _partial_device_info() -> DeviceInfo:
@@ -201,6 +203,7 @@ async def test_user_step_retry_replays_partial_credentials(
 async def test_user_step_empty_account_response_keeps_cached_credentials(
     hass: HomeAssistant,
     mock_cloud_account: AsyncMock,
+    mock_device_info: DeviceInfo,
 ) -> None:
     """Test a transient empty device list does not wipe recovered fields.
 
@@ -226,10 +229,12 @@ async def test_user_step_empty_account_response_keeps_cached_credentials(
     )
     assert result["errors"] == {"base": "no_devices"}
 
+    mock_cloud_account.discover_devices.return_value = {MOCK_SERIAL: mock_device_info}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
     )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_cloud_account.discover_devices.call_args.kwargs[
         "cached_credentials"
     ] == {
@@ -244,6 +249,7 @@ async def test_user_step_empty_account_response_keeps_cached_credentials(
 async def test_user_step_username_change_drops_cached_credentials(
     hass: HomeAssistant,
     mock_cloud_account: AsyncMock,
+    mock_device_info: DeviceInfo,
 ) -> None:
     """Test fields recovered for one account are not replayed for another."""
     mock_cloud_account.discover_devices.return_value = {
@@ -267,6 +273,13 @@ async def test_user_step_username_change_drops_cached_credentials(
     assert (
         mock_cloud_account.discover_devices.call_args.kwargs["cached_credentials"] == {}
     )
+
+    mock_cloud_account.discover_devices.return_value = {MOCK_SERIAL: mock_device_info}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "other@example.com", CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -319,6 +332,7 @@ async def test_user_step_username_change_drops_cached_credentials(
 async def test_user_step_errors(
     hass: HomeAssistant,
     mock_cloud_account: AsyncMock,
+    mock_device_info: DeviceInfo,
     side_effect: Exception | None,
     discover_return: dict | None,
     expected_error: str,
@@ -338,6 +352,14 @@ async def test_user_step_errors(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+
+    mock_cloud_account.login.side_effect = None
+    mock_cloud_account.discover_devices.return_value = {MOCK_SERIAL: mock_device_info}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_step_already_configured(

@@ -2784,6 +2784,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "grandstream_home": {
+      "name": "Grandstream Home",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "graphite": {
       "name": "Graphite",
       "integration_type": "hub",
@@ -2894,6 +2900,12 @@
       "name": "Harvey",
       "integration_type": "virtual",
       "supported_by": "aquacell"
+    },
+    "hase_iq": {
+      "name": "Hase iQ",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "hassio": {
       "name": "Home Assistant Supervisor",
@@ -3240,6 +3252,12 @@
     "hydrawise": {
       "name": "Hunter Hydrawise",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "hydroquebec_peak": {
+      "name": "Hydro-Qu\u00e9bec Peak Events",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3698,7 +3716,7 @@
     "keyboard_remote": {
       "name": "Keyboard Remote",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "keymitt_ble": {
@@ -4271,6 +4289,12 @@
           "config_flow": true,
           "iot_class": "assumed_state",
           "name": "Marantz Infrared"
+        },
+        "marantz_rs232": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Marantz RS-232"
         }
       }
     },
@@ -4309,13 +4333,13 @@
       "supported_by": "whirlpool"
     },
     "mcp": {
-      "name": "Model Context Protocol",
+      "name": "Model Context Protocol Client",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "mcp_server": {
-      "name": "Model Context Protocol Server",
+      "name": "Model Context Protocol",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push",
@@ -6827,6 +6851,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "smartyplants": {
+      "name": "SmartyPlants",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "smhi": {
       "name": "SMHI",
       "integration_type": "service",
@@ -8389,6 +8419,12 @@
           "config_flow": false,
           "iot_class": "assumed_state",
           "name": "Xiaomi TV"
+        },
+        "xiaomi_weather": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Xiaomi Weather"
         },
         "xiaomi": {
           "integration_type": "hub",

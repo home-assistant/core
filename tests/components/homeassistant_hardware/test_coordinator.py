@@ -2,22 +2,26 @@
 
 from unittest.mock import AsyncMock, Mock, call, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from ha_silabs_firmware_client import FirmwareManifest, ManifestMissing
 import pytest
 from yarl import URL
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
+    FIRMWARE_REFRESH_INTERVAL,
     FirmwareUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_firmware_update_coordinator_fetching(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the firmware update coordinator loads manifests."""
     session = async_get_clientsession(hass)
@@ -46,13 +50,17 @@ async def test_firmware_update_coordinator_fetching(
     coordinator.async_add_listener(listener)
 
     # The first update will fail
-    await coordinator.async_refresh()
+    freezer.tick(FIRMWARE_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert listener.mock_calls == [call()]
     assert coordinator.data is None
     assert "GitHub release assets haven't been uploaded yet" in caplog.text
 
     # The second will succeed
-    await coordinator.async_refresh()
+    freezer.tick(FIRMWARE_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert listener.mock_calls == [call(), call()]
     assert coordinator.data == manifest
 

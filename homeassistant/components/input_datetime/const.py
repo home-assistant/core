@@ -1,6 +1,19 @@
 """Constants for the input_datetime component."""
 
 from enum import StrEnum
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import InputDatetimeData
+
+DOMAIN: Final = "input_datetime"
+
+DATA_INPUT_DATETIME: HassKey[InputDatetimeData] = HassKey(DOMAIN)
+
+ATTR_DATETIME: Final = "datetime"
+ATTR_TIMESTAMP: Final = "timestamp"
 
 
 class InputDatetimeEntityCapabilityAttribute(StrEnum):

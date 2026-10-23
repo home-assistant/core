@@ -214,6 +214,13 @@ async def test_bluetooth_flow_no_device(hass: HomeAssistant) -> None:
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        FIXTURE_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_name_from_discovery() -> None:
     """Test we can create a name from discovery info."""

@@ -139,7 +139,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
     """Establish connection with velbus."""
     controller = Velbus(
         dsn=entry.data[CONF_PORT],
@@ -163,14 +163,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
     """Unload (close) the velbus connection."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await entry.runtime_data.controller.stop()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        await entry.runtime_data.controller.stop()
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
@@ -203,7 +202,7 @@ async def async_remove_config_entry_device(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: VelbusConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.error(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
@@ -243,4 +242,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-    return True

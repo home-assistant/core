@@ -5,7 +5,7 @@ import logging
 from typing import Any, Final, override
 
 from my_pv import MyPVLocalDevice
-from my_pv.exceptions import MyPVAuthenticationError
+from my_pv.exceptions import MyPVAuthenticationError, MyPVDeviceNotSupportedError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -93,6 +93,8 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
         except MyPVAuthenticationError:
             password_needed = True
+        except MyPVDeviceNotSupportedError:
+            return self.async_abort(reason="unsupported_device")
         finally:
             await device.disconnect()
 
@@ -142,6 +144,8 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_BASE] = "cannot_connect"
             except MyPVAuthenticationError:
                 password_needed = True
+            except MyPVDeviceNotSupportedError:
+                return self.async_abort(reason="unsupported_device")
             finally:
                 await device.disconnect()
 

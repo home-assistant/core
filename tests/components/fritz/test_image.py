@@ -11,7 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -170,6 +170,7 @@ async def test_image_update(
 @pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES})])
 async def test_image_update_unavailable(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
     fc_class_mock,
     fh_class_mock,
@@ -200,7 +201,11 @@ async def test_image_update_unavailable(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
+
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     # fritzbox is available again
     fc_class_mock().call_action_side_effect(None)
@@ -210,7 +215,7 @@ async def test_image_update_unavailable(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
-    assert state.state != STATE_UNKNOWN
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_migrate_to_new_unique_id(

@@ -1,5 +1,7 @@
 """Tests for StarLine config flow."""
 
+from unittest.mock import patch
+
 import requests_mock
 
 from homeassistant import config_entries
@@ -16,6 +18,27 @@ TEST_APP_SLID = "slidtoken"
 TEST_APP_UID = "123"
 TEST_APP_USERNAME = "sluser"
 TEST_APP_PASSWORD = "slpassword"
+
+
+def _mock_success(mock: requests_mock.Mocker) -> None:
+    """Register successful StarLine API responses."""
+    mock.get(
+        "https://id.starline.ru/apiV3/application/getCode/",
+        text='{"state": 1, "desc": {"code": "' + TEST_APP_CODE + '"}}',
+    )
+    mock.get(
+        "https://id.starline.ru/apiV3/application/getToken/",
+        text='{"state": 1, "desc": {"token": "' + TEST_APP_TOKEN + '"}}',
+    )
+    mock.post(
+        "https://id.starline.ru/apiV3/user/login/",
+        text='{"state": 1, "desc": {"user_token": "' + TEST_APP_SLID + '"}}',
+    )
+    mock.post(
+        "https://developer.starline.ru/json/v2/auth.slid",
+        text='{"code": 200, "user_id": "' + TEST_APP_UID + '"}',
+        cookies={"slnet": TEST_APP_SLNET},
+    )
 
 
 async def test_flow_works(hass: HomeAssistant) -> None:
@@ -104,6 +127,29 @@ async def test_step_auth_app_code_falls(hass: HomeAssistant) -> None:
         assert result["step_id"] == "auth_app"
         assert result["errors"] == {"base": "error_auth_app"}
 
+        _mock_success(mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                config_flow.CONF_APP_ID: TEST_APP_ID,
+                config_flow.CONF_APP_SECRET: TEST_APP_SECRET,
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "auth_user"
+
+        with patch(
+            "homeassistant.components.starline.async_setup_entry", return_value=True
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={
+                    config_flow.CONF_USERNAME: TEST_APP_USERNAME,
+                    config_flow.CONF_PASSWORD: TEST_APP_PASSWORD,
+                },
+            )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_step_auth_app_token_falls(hass: HomeAssistant) -> None:
     """Test config flow works when app auth token fails."""
@@ -133,6 +179,29 @@ async def test_step_auth_app_token_falls(hass: HomeAssistant) -> None:
         assert result["step_id"] == "auth_app"
         assert result["errors"] == {"base": "error_auth_app"}
 
+        _mock_success(mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                config_flow.CONF_APP_ID: TEST_APP_ID,
+                config_flow.CONF_APP_SECRET: TEST_APP_SECRET,
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "auth_user"
+
+        with patch(
+            "homeassistant.components.starline.async_setup_entry", return_value=True
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={
+                    config_flow.CONF_USERNAME: TEST_APP_USERNAME,
+                    config_flow.CONF_PASSWORD: TEST_APP_PASSWORD,
+                },
+            )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_step_auth_user_falls(hass: HomeAssistant) -> None:
     """Test config flow works when user fails."""
@@ -148,4 +217,5 @@ async def test_step_auth_user_falls(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth_user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "error_auth_user"}

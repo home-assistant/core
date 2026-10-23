@@ -28,9 +28,6 @@
     }
   },
   "exceptions": {
-    "image_read_error": {
-      "message": "Error reading image from {path}: {error}"
-    },
     "invalid_media_type": {
       "message": "Selected media {id} has type {mime_type}, which is not an image, and cannot be shown by {entity}."
     },

@@ -553,6 +553,7 @@ async def test_async_delete_repair_issue(
     issue_registry.issues[(DOMAIN, identifier)] = ir.IssueEntry(
         active=True,
         breaks_in_ha_version=None,
+        config_entry_id=None,
         created=dt_util.utcnow(),
         data={},
         dismissed_version=None,

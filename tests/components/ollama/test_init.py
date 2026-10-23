@@ -4,7 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import attr
-from httpx import ConnectError
+from httpx2 import ConnectError
 from ollama import ResponseError
 import pytest
 

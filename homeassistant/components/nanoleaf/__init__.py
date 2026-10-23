@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BUTTON, Platform.EVENT, Platform.LIGHT]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> None:
     """Set up Nanoleaf from a config entry."""
     nanoleaf = Nanoleaf(
         async_get_clientsession(hass), entry.data[CONF_HOST], entry.data[CONF_TOKEN]
@@ -64,28 +64,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> 
                 hass, f"nanoleaf_gesture_{nanoleaf.serial_no}", gesture_type
             )
 
-    event_listener = asyncio.create_task(
-        nanoleaf.listen_events(
-            state_callback=light_event_callback,
-            effects_callback=light_event_callback,
-            touch_callback=touch_event_callback if supports_touch else None,
+    if nanoleaf.supports_events:
+        event_listener = asyncio.create_task(
+            nanoleaf.listen_events(
+                state_callback=light_event_callback,
+                effects_callback=light_event_callback,
+                touch_callback=touch_event_callback if supports_touch else None,
+            )
         )
-    )
 
-    async def _cancel_listener() -> None:
-        event_listener.cancel()
-        with suppress(asyncio.CancelledError):
-            await event_listener
+        async def _cancel_listener() -> None:
+            event_listener.cancel()
+            with suppress(asyncio.CancelledError):
+                await event_listener
 
-    entry.async_on_unload(_cancel_listener)
+        entry.async_on_unload(_cancel_listener)
 
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

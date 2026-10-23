@@ -2,11 +2,13 @@
 
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from homewizard_energy.errors import DisabledError, RequestError
 import pytest
 
 from homeassistant.components.homewizard.const import (
     DOMAIN,
+    UPDATE_INTERVAL,
     battery_mode_cloud_issue_id,
 )
 from homeassistant.components.homewizard.repairs import async_create_fix_flow
@@ -18,7 +20,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
@@ -112,6 +114,7 @@ async def test_repair_auto_resolves_when_cloud_is_re_enabled(
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
     issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test repair issue is auto-resolved when compatibility is restored."""
     mock_homewizardenergy.combined.return_value.system.cloud_enabled = False
@@ -125,8 +128,9 @@ async def test_repair_auto_resolves_when_cloud_is_re_enabled(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     mock_homewizardenergy.combined.return_value.system.cloud_enabled = True
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 

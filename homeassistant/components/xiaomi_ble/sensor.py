@@ -192,6 +192,13 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # High frequency impedance sensor (ohm)
+    (ExtendedSensorDeviceClass.IMPEDANCE_HIGH, Units.OHM): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.IMPEDANCE_HIGH),
+        native_unit_of_measurement=Units.OHM,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:omega",
+    ),
     # Low frequency impedance sensor (ohm)
     (ExtendedSensorDeviceClass.IMPEDANCE_LOW, Units.OHM): SensorEntityDescription(
         key=str(ExtendedSensorDeviceClass.IMPEDANCE_LOW),

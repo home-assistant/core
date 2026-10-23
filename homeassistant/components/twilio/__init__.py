@@ -54,18 +54,16 @@ async def handle_webhook(
     return web.Response(text="")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Configure based on config entry."""
     webhook.async_register(
         hass, DOMAIN, "Twilio", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    return True
 
 
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

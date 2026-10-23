@@ -76,9 +76,6 @@
       }
     },
     "button": {
-      "restart": {
-        "name": "Restart"
-      },
       "restart_wifi": {
         "name": "Restart Wi-Fi"
       }

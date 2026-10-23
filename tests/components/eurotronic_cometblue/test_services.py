@@ -6,13 +6,14 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.eurotronic_cometblue import DOMAIN
+from homeassistant.components.eurotronic_cometblue.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .conftest import setup_with_selected_platforms
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "climate.comet_blue_aa_bb_cc_dd_ee_ff"
 
@@ -233,7 +234,8 @@ async def test_set_holiday(
         },
         blocking=True,
     )
-    await mock_config_entry.runtime_data.async_refresh()
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Testing against device data as holiday is not directly exposed as entity state
     # Datetime is also floored to hours in local time

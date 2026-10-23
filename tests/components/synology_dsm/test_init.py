@@ -2,7 +2,11 @@
 
 from unittest.mock import MagicMock, patch
 
-from synology_dsm.exceptions import SynologyDSMLoginInvalidException
+import pytest
+from synology_dsm.exceptions import (
+    SynologyDSMLogin2SAForcedException,
+    SynologyDSMLoginInvalidException,
+)
 
 from homeassistant.components.synology_dsm.const import (
     CONF_BACKUP_PATH,
@@ -55,11 +59,18 @@ async def test_services_registered(hass: HomeAssistant, mock_dsm: MagicMock) -> 
             assert hass.services.has_service(DOMAIN, service)
 
 
-async def test_reauth_triggered(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(SynologyDSMLoginInvalidException(USERNAME), id="invalid_auth"),
+        pytest.param(SynologyDSMLogin2SAForcedException(USERNAME), id="otp_enforced"),
+    ],
+)
+async def test_reauth_triggered(hass: HomeAssistant, side_effect: Exception) -> None:
     """Test if reauthentication flow is triggered."""
     with patch(
         "homeassistant.components.synology_dsm.SynoApi.async_setup",
-        side_effect=SynologyDSMLoginInvalidException(USERNAME),
+        side_effect=side_effect,
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,

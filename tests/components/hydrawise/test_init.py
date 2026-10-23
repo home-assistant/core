@@ -96,6 +96,9 @@ async def test_update_version(
     await hass.config_entries.async_setup(mock_config_entry_legacy.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry_legacy.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        mock_config_entry_legacy.error_reason_translation_key == "missing_credentials"
+    )
 
     # Make sure reauth flow has been initiated
     assert any(mock_config_entry_legacy.async_get_active_flows(hass, {"reauth"}))

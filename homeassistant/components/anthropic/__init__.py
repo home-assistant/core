@@ -26,7 +26,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> None:
     """Set up Anthropic from a config entry."""
     coordinator = AnthropicCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -51,12 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
             )
             break
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> None:
     """Unload Anthropic."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_options(
@@ -163,7 +161,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> None:
     """Migrate entry."""
     LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
@@ -221,5 +219,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) 
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
     )
-
-    return True

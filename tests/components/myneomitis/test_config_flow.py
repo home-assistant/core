@@ -123,3 +123,98 @@ async def test_abort_if_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Test successful reauthentication flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        CONF_EMAIL: TEST_EMAIL,
+        "name": "MyNeomitis (test@example.com)",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "new-password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_EMAIL: TEST_EMAIL,
+        CONF_PASSWORD: "new-password",
+        CONF_USER_ID: "user-123",
+    }
+    mock_pyaxenco_client.login.assert_awaited_with(TEST_EMAIL, "new-password")
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(ClientConnectionError(), "cannot_connect", id="connection"),
+        pytest.param(make_client_response_error(401), "invalid_auth", id="401"),
+        pytest.param(make_client_response_error(403), "unknown", id="403"),
+        pytest.param(make_client_response_error(500), "cannot_connect", id="500"),
+        pytest.param(ClientError("Network error"), "unknown", id="client_error"),
+        pytest.param(RuntimeError("boom"), "unknown", id="unexpected"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauthentication flow errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+    mock_pyaxenco_client.login.side_effect = side_effect
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "new-password"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    mock_pyaxenco_client.login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "new-password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Test reauthentication aborts when logging in to a different account."""
+    mock_config_entry.add_to_hass(hass)
+    mock_pyaxenco_client.user_id = "other-user"
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "new-password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_PASSWORD] == TEST_PASSWORD

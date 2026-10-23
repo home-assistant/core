@@ -48,7 +48,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -87,7 +87,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._room.room_temp
 
@@ -101,7 +101,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the (override)temperature we try to reach.
 
         As we set the override, we report back the override. The actual set point is

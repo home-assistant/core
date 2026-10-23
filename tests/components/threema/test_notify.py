@@ -11,6 +11,8 @@ from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.threema.client import (
     ThreemaAuthError,
     ThreemaConnectionError,
+    ThreemaNoCreditsError,
+    ThreemaRateLimitError,
     ThreemaSendError,
 )
 from homeassistant.components.threema.const import SUBENTRY_TYPE_RECIPIENT
@@ -210,8 +212,16 @@ async def test_send_message_e2e(
             "Error sending message: Connection error",
         ),
         (ThreemaAuthError("Invalid credentials"), "Invalid authentication"),
+        (
+            ThreemaNoCreditsError("No credits"),
+            "The Threema Gateway account has no credits left",
+        ),
+        (
+            ThreemaRateLimitError("Rate limit exceeded", retry_after=60),
+            "The Threema Gateway rate limit was exceeded",
+        ),
     ],
-    ids=["send_error", "connection_error", "auth_error"],
+    ids=["send_error", "connection_error", "auth_error", "no_credits", "rate_limited"],
 )
 async def test_send_message_error(
     hass: HomeAssistant,

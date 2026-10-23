@@ -63,7 +63,7 @@ def _a1_device() -> DummyDevice:
             A1Attributes.current_humidity: 60,
         },
     )
-    device.modes = list(MideaA1Device._default_modes.values())
+    device.modes = list(dict.fromkeys(MideaA1Device._default_modes.values()))
     return device
 
 

@@ -10,7 +10,7 @@ from .coordinator import EpionConfigEntry, EpionCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EpionConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EpionConfigEntry) -> None:
     """Set up the Epion coordinator from a config entry."""
     api = Epion(entry.data[CONF_API_KEY])
     coordinator = EpionCoordinator(hass, entry, api)
@@ -18,9 +18,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EpionConfigEntry) -> boo
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EpionConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EpionConfigEntry) -> None:
     """Unload Epion config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

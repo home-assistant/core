@@ -241,6 +241,7 @@ async def test_agents_list_backups_ignores_wrong_typed_metadata(
 async def test_agents_list_backups_fail(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
     mock_api: MagicMock,
 ) -> None:
     """Test agent list backups fails."""
@@ -253,8 +254,9 @@ async def test_agents_list_backups_fail(
     assert response["success"]
     assert response["result"]["backups"] == []
     assert response["result"]["agent_errors"] == {
-        TEST_AGENT_ID: "Failed to list backups: some error"
+        TEST_AGENT_ID: "Failed to list backups"
     }
+    assert "Failed to list backups: some error" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -317,6 +319,7 @@ async def test_agents_download(
 async def test_agents_download_fail(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
     mock_api: MagicMock,
 ) -> None:
     """Test agent download backup fails."""
@@ -337,6 +340,7 @@ async def test_agents_download_fail(
     assert resp.status == 500
     content = await resp.content.read()
     assert "Failed to download backup" in content.decode()
+    assert "Failed to download backup: some error" in caplog.text
 
 
 async def test_agents_download_file_not_found(
@@ -587,7 +591,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
     mock_api.delete_file.assert_called_once()
     assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
@@ -596,6 +600,7 @@ async def test_agents_delete(
 async def test_agents_delete_fail(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
     mock_api: MagicMock,
 ) -> None:
     """Test agent delete backup fails."""
@@ -613,8 +618,16 @@ async def test_agents_delete_fail(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {TEST_AGENT_ID: "Failed to delete backup: some error"}
+        "agent_error_translations": {
+            TEST_AGENT_ID: {
+                "translation_domain": "google_drive",
+                "translation_key": "delete_failed",
+                "translation_placeholders": None,
+            }
+        },
+        "agent_errors": {TEST_AGENT_ID: "Failed to delete backup"},
     }
+    assert "Failed to delete backup: some error" in caplog.text
 
 
 async def test_agents_delete_not_found(
@@ -637,6 +650,6 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
     mock_api.delete_file.assert_not_called()

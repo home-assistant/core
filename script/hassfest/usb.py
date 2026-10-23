@@ -7,9 +7,17 @@ from .serializer import format_python_namespace
 def generate_and_validate(integrations: dict[str, Integration]) -> str:
     """Validate and generate usb data."""
     match_list = []
+    dependents = []
 
     for domain in sorted(integrations):
-        match_types = integrations[domain].manifest.get("usb", [])
+        manifest = integrations[domain].manifest
+
+        if "usb" in manifest.get("dependencies", []) or "usb" in manifest.get(
+            "after_dependencies", []
+        ):
+            dependents.append(domain)
+
+        match_types = manifest.get("usb", [])
 
         if not match_types:
             continue
@@ -22,7 +30,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
             for entry in match_types
         )
 
-    return format_python_namespace({"USB": match_list})
+    return format_python_namespace({"USB": match_list, "USB_DEPENDENTS": dependents})
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:

@@ -145,6 +145,27 @@ async def test_form_error(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_hostname"}
 
+    with (
+        patch(
+            "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+            return_value=RetrieveDNS(),
+        ),
+        patch(
+            "homeassistant.components.dnsip.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOSTNAME: "home-assistant.io",
+                CONF_ADDITIONAL_OPTIONS: {},
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_already_exist(hass: HomeAssistant) -> None:
     """Test flow when unique id already exist."""
@@ -381,6 +402,29 @@ async def test_options_error(hass: HomeAssistant, p_input: dict[str, str]) -> No
         assert result2["errors"] == {"resolver": "invalid_resolver"}
     if p_input[CONF_IPV6]:
         assert result2["errors"] == {"resolver_ipv6": "invalid_resolver"}
+
+    with (
+        patch(
+            "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+            return_value=RetrieveDNS(),
+        ),
+        patch(
+            "homeassistant.components.dnsip.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_RESOLVER: "192.168.200.34",
+                CONF_RESOLVER_IPV6: "2001:4860:4860::8888",
+                CONF_PORT: 53,
+                CONF_PORT_IPV6: 53,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_cannot_configure_options_for_myip(hass: HomeAssistant) -> None:

@@ -1,6 +1,8 @@
 """Test the Kodi config flow."""
 
-from unittest.mock import AsyncMock, PropertyMock, patch
+from collections.abc import Generator
+from contextlib import contextmanager
+from unittest.mock import ANY, AsyncMock, PropertyMock, patch
 
 import pytest
 
@@ -9,7 +11,15 @@ from homeassistant.components.kodi.config_flow import (
     CannotConnectError,
     InvalidAuthError,
 )
-from homeassistant.components.kodi.const import DEFAULT_TIMEOUT, DOMAIN
+from homeassistant.components.kodi.const import CONF_WS_PORT, DEFAULT_TIMEOUT, DOMAIN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -26,6 +36,26 @@ from .util import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@contextmanager
+def _patch_kodi_success() -> Generator[None]:
+    """Patch a reachable Kodi and the entry setup."""
+    with (
+        patch(
+            "homeassistant.components.kodi.config_flow.Kodi.ping",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.kodi.config_flow.get_kodi_connection",
+            return_value=MockConnection(),
+        ),
+        patch(
+            "homeassistant.components.kodi.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -59,6 +89,7 @@ async def test_user_flow(hass: HomeAssistant, user_flow: str) -> None:
         result = await hass.config_entries.flow.async_configure(user_flow, TEST_HOST)
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_HOST["host"]
     assert result["data"] == {
@@ -320,6 +351,14 @@ async def test_form_invalid_auth(hass: HomeAssistant, user_flow: str) -> None:
     assert result["step_id"] == "ws_port"
     assert result["errors"] == {}
 
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_WS_PORT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_cannot_connect_http(hass: HomeAssistant, user_flow: str) -> None:
     """Test we handle cannot connect over HTTP error."""
@@ -339,6 +378,14 @@ async def test_form_cannot_connect_http(hass: HomeAssistant, user_flow: str) -> 
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_HOST
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_exception_http(hass: HomeAssistant, user_flow: str) -> None:
     """Test we handle generic exception over HTTP."""
@@ -357,6 +404,14 @@ async def test_form_exception_http(hass: HomeAssistant, user_flow: str) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
+
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_HOST
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect_ws(hass: HomeAssistant, user_flow: str) -> None:
@@ -421,6 +476,14 @@ async def test_form_cannot_connect_ws(hass: HomeAssistant, user_flow: str) -> No
     assert result["step_id"] == "ws_port"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_WS_PORT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_exception_ws(hass: HomeAssistant, user_flow: str) -> None:
     """Test we handle generic exception over WebSocket."""
@@ -464,6 +527,14 @@ async def test_form_exception_ws(hass: HomeAssistant, user_flow: str) -> None:
     assert result["step_id"] == "ws_port"
     assert result["errors"] == {"base": "unknown"}
 
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_WS_PORT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_discovery(hass: HomeAssistant) -> None:
     """Test discovery flow works."""
@@ -505,6 +576,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
         "name": "hostname",
         "timeout": DEFAULT_TIMEOUT,
     }
+    assert result["result"].unique_id == UUID
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -665,3 +737,95 @@ async def test_discovery_without_unique_id(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_uuid"
+
+
+REAUTH_ENTRY_DATA = {
+    CONF_NAME: "name",
+    CONF_HOST: "1.1.1.1",
+    CONF_PORT: 8080,
+    CONF_WS_PORT: 9090,
+    CONF_USERNAME: "user",
+    CONF_PASSWORD: "old_password",
+    CONF_SSL: False,
+}
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test reauth updates the credentials."""
+    entry = MockConfigEntry(domain=DOMAIN, data=REAUTH_ENTRY_DATA, unique_id=UUID)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        _patch_kodi_success(),
+        patch(
+            "homeassistant.components.kodi.config_flow.get_kodi_connection",
+            return_value=MockConnection(),
+        ) as mock_get_connection,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new_user", CONF_PASSWORD: "new_password"},
+        )
+        await hass.async_block_till_done()
+
+    mock_get_connection.assert_called_once_with(
+        "1.1.1.1", 8080, None, "new_user", "new_password", False, session=ANY
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data == REAUTH_ENTRY_DATA | {
+        CONF_USERNAME: "new_user",
+        CONF_PASSWORD: "new_password",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(InvalidAuthError, "invalid_auth", id="invalid_auth"),
+        pytest.param(CannotConnectError, "cannot_connect", id="cannot_connect"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant, side_effect: type[Exception], error: str
+) -> None:
+    """Test reauth handles errors and can recover."""
+    entry = MockConfigEntry(domain=DOMAIN, data=REAUTH_ENTRY_DATA, unique_id=UUID)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.kodi.config_flow.Kodi.ping",
+            side_effect=side_effect,
+        ),
+        patch(
+            "homeassistant.components.kodi.config_flow.get_kodi_connection",
+            return_value=MockConnection(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new_user", CONF_PASSWORD: "wrong_password"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new_user", CONF_PASSWORD: "new_password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == "new_password"

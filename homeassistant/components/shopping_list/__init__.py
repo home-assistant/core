@@ -65,7 +65,7 @@ async def _async_setup(hass: HomeAssistant) -> None:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ShoppingListConfigEntry
-) -> bool:
+) -> None:
     """Set up shopping list from config flow."""
     data = config_entry.runtime_data = ShoppingData(hass)
     await data.async_load()
@@ -83,8 +83,6 @@ async def async_setup_entry(
     websocket_api.async_register_command(hass, websocket_handle_reorder)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    return True
 
 
 class ShoppingListView(http.HomeAssistantView):

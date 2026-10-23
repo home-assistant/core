@@ -365,3 +365,4 @@ async def test_dhcp(
     assert len(mock_setup.mock_calls) == 1
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "600"

@@ -91,7 +91,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     _attr_preset_modes = [PRESET_NONE, PRESET_HOLIDAY_MODE]
     _attr_swing_modes = [*SWING_MODES_TO_OVERKIZ]
     _attr_target_temperature_step = 1.0
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
     def __init__(
@@ -179,7 +179,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> int | None:
+    def native_target_temperature(self) -> int | None:
         """Return the target temperature."""
         if (
             temperature := self.device.states.get(OverkizState.CORE_TARGET_TEMPERATURE)
@@ -190,7 +190,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> int | None:
+    def native_current_temperature(self) -> int | None:
         """Return current temperature."""
         if (
             state := self.device.states.get(OverkizState.OVP_ROOM_TEMPERATURE)
@@ -345,7 +345,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         # In all the hvac modes except AUTO, the temperature
         # command parameter is the target temperature
         temperature_command = None
-        target_temperature = target_temperature or self.target_temperature
+        target_temperature = target_temperature or self.native_target_temperature
         if hvac_mode == OverkizCommandParam.AUTO:
             # In hvac mode AUTO, the temperature command
             # parameter is a temperature_change which is the

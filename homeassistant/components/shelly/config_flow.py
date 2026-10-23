@@ -94,12 +94,14 @@ from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
+    get_device_from_manufacturer_data,
     get_http_port,
     get_info_auth,
     get_info_gen,
     get_model_name,
     get_rpc_device_wakeup_period,
     get_ws_context,
+    is_device_supported,
     mac_address_from_name,
 )
 
@@ -444,6 +446,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.info[CONF_MAC], raise_on_progress=False)
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
+        if not is_device_supported(self.info):
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": get_model_name(self.info)},
+            )
+
         self.host = host
         self.port = port
         self.verify_ssl = verify_ssl
@@ -507,6 +515,15 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             self.device_name = device_data.name
             await self.async_set_unique_id(device_data.mac, raise_on_progress=False)
             self._abort_if_unique_id_configured()
+            if (
+                device := get_device_from_manufacturer_data(
+                    device_data.discovery_info.manufacturer_data
+                )
+            ) and not device.supported:
+                return self.async_abort(
+                    reason="unsupported_device",
+                    description_placeholders={"model": device.name},
+                )
             self.context.update(
                 {
                     "title_placeholders": {"name": self.device_name},
@@ -782,6 +799,15 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         # Check if already configured - abort if device is already set up
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured()
+        if (
+            device := get_device_from_manufacturer_data(
+                discovery_info.manufacturer_data
+            )
+        ) and not device.supported:
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": device.name},
+            )
 
         # Store BLE device and name for WiFi provisioning
         self.ble_device = async_ble_device_from_address(
@@ -1201,6 +1227,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # so need to check here since we just got the info
             mac = self.info[CONF_MAC]
             await self._async_handle_zeroconf_mac_discovery(mac, host, port)
+
+        if not is_device_supported(self.info):
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": get_model_name(self.info)},
+            )
 
         self.host = host
         self.port = port

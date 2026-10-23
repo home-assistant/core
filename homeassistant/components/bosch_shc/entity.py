@@ -46,13 +46,13 @@ class SHCBaseEntity(Entity):
             else:
                 self.schedule_update_ha_state()
 
-        self._device.subscribe_callback(self.entity_id, on_state_changed)
+        self._device.subscribe_callback(self.unique_id, on_state_changed)
 
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
-        self._device.unsubscribe_callback(self.entity_id)
+        self._device.unsubscribe_callback(self.unique_id)
 
     @property
     def device_id(self) -> str:
@@ -95,14 +95,14 @@ class SHCEntity(SHCBaseEntity):
             self.schedule_update_ha_state()
 
         for service in self._device.device_services:
-            service.subscribe_callback(self.entity_id, on_state_changed)
+            service.subscribe_callback(self.unique_id, on_state_changed)
 
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
         for service in self._device.device_services:
-            service.unsubscribe_callback(self.entity_id)
+            service.unsubscribe_callback(self.unique_id)
 
     @property
     @override

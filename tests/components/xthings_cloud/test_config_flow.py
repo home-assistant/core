@@ -103,3 +103,114 @@ async def test_user_flow_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication flow updates the tokens."""
+    mock_config_entry.add_to_hass(hass)
+    mock_api_client.async_login.return_value = {
+        "token": "new_token",
+        "refresh_token": "new_refresh_token",
+        "user_id": MOCK_USER_ID,
+        "client_id": "mock_client_id",
+    }
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new_password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_EMAIL: MOCK_EMAIL,
+        CONF_TOKEN: "new_token",
+        CONF_REFRESH_TOKEN: "new_refresh_token",
+    }
+    mock_api_client.async_login.assert_called_with(
+        MOCK_EMAIL, "new_password", client_id="mock_instance_id"
+    )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(
+            XthingsCloudAuthError("Auth failed", code=21014),
+            "password_wrong",
+            id="password_wrong",
+        ),
+        pytest.param(
+            XthingsCloudApiError("API error", code=22001),
+            "device_not_found",
+            id="api_error_code",
+        ),
+        pytest.param(
+            XthingsCloudApiError("Connection failed", code=0),
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(RuntimeError("unexpected"), "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_error_and_recover(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauthentication flow shows error then recovers on retry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_api_client.async_login.side_effect = side_effect
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    mock_api_client.async_login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication flow aborts when logging in to another account."""
+    mock_config_entry.add_to_hass(hass)
+    mock_api_client.async_login.return_value = {
+        "token": "new_token",
+        "refresh_token": "new_refresh_token",
+        "user_id": "another_user_id",
+        "client_id": "mock_client_id",
+    }
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_TOKEN] == MOCK_TOKEN

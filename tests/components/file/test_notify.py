@@ -1,5 +1,6 @@
 """The tests for the notify file platform."""
 
+import errno
 import os
 from typing import Any
 from unittest.mock import MagicMock, call, mock_open, patch
@@ -10,8 +11,8 @@ import pytest
 from homeassistant.components import notify
 from homeassistant.components.file import DOMAIN
 from homeassistant.components.notify import ATTR_TITLE_DEFAULT
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -148,7 +149,19 @@ async def test_notify_file_not_allowed(
     ],
     ids=["not_allowed"],
 )
-async def test_notify_file_write_access_failed(
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            errno.EACCES, "os_write_permission_denied", id="permission_denied"
+        ),
+        pytest.param(errno.ENOSPC, "os_write_no_space", id="no_space"),
+        pytest.param(errno.EROFS, "os_write_read_only", id="read_only"),
+        pytest.param(errno.ENOENT, "os_write_dir_not_found", id="dir_not_found"),
+        pytest.param(errno.EIO, "os_write_error", id="other"),
+    ],
+)
+async def test_notify_file_write_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_is_allowed_path: MagicMock,
@@ -156,6 +169,8 @@ async def test_notify_file_write_access_failed(
     params: dict[str, Any],
     data: dict[str, Any],
     options: dict[str, Any],
+    error: int,
+    translation_key: str,
 ) -> None:
     """Test the notify file fails."""
     domain = notify.DOMAIN
@@ -179,7 +194,9 @@ async def test_notify_file_write_access_failed(
         patch("homeassistant.components.file.notify.open", m_open, create=True),
         patch("homeassistant.components.file.notify.os.stat") as mock_st,
     ):
-        mock_st.side_effect = OSError("Access Failed")
-        with pytest.raises(ServiceValidationError) as exc:
+        mock_st.side_effect = OSError(error, "Error")
+        with pytest.raises(HomeAssistantError) as exc:
             await hass.services.async_call(domain, service, params, blocking=True)
-        assert f"{exc.value!r}" == "ServiceValidationError('write_access_failed')"
+    assert exc.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc.value.translation_key == translation_key
+    assert exc.value.translation_placeholders == {"path": "mock_file"}

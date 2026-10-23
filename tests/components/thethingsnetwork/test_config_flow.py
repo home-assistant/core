@@ -36,6 +36,7 @@ async def test_user(hass: HomeAssistant, mock_ttnclient) -> None:
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_APP_ID] == APP_ID
     assert result["data"][CONF_API_KEY] == API_KEY
+    assert result["result"].unique_id == APP_ID
 
 
 @pytest.mark.parametrize(

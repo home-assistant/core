@@ -115,7 +115,9 @@ async def test_room_update(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> 
     await assert_distance(hass, 1)
 
     time = dt_util.utcnow() + datetime.timedelta(seconds=7)
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=time):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.utcnow", return_value=time
+    ):
         await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
         await assert_state(hass, BEDROOM)
         await assert_distance(hass, 10)

@@ -160,7 +160,20 @@ async def test_info(
 
 @pytest.mark.parametrize(
     "side_effect",
-    [Exception("Oops"), HomeAssistantError("Boom!"), BackupAgentUnreachableError],
+    [
+        Exception("Oops"),
+        HomeAssistantError("Boom!"),
+        BackupAgentUnreachableError,
+        BackupAgentError(
+            translation_domain=DOMAIN, translation_key="agent_operation_failed"
+        ),
+        BackupAgentError(translation_key="agent_operation_failed"),
+        BackupAgentError(
+            translation_domain="test",
+            translation_key="custom_error",
+            translation_placeholders={"attempts": 3},  # type: ignore[dict-item]
+        ),
+    ],
 )
 async def test_info_with_errors(
     hass: HomeAssistant,
@@ -224,7 +237,14 @@ async def test_details(
 
 @pytest.mark.parametrize(
     "side_effect",
-    [Exception("Oops"), HomeAssistantError("Boom!"), BackupAgentUnreachableError],
+    [
+        Exception("Oops"),
+        HomeAssistantError("Boom!"),
+        BackupAgentUnreachableError,
+        BackupAgentError(
+            translation_domain=DOMAIN, translation_key="agent_operation_failed"
+        ),
+    ],
 )
 async def test_details_with_errors(
     hass: HomeAssistant,
@@ -341,7 +361,15 @@ async def test_delete(
     ],
 )
 @pytest.mark.parametrize(
-    "side_effect", [None, HomeAssistantError("Boom!"), BackupAgentUnreachableError]
+    "side_effect",
+    [
+        None,
+        HomeAssistantError("Boom!"),
+        BackupAgentUnreachableError,
+        BackupAgentError(
+            translation_domain=DOMAIN, translation_key="agent_operation_failed"
+        ),
+    ],
 )
 async def test_delete_with_errors(
     hass: HomeAssistant,

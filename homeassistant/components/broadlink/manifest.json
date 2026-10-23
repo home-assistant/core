@@ -1,7 +1,7 @@
 {
   "domain": "broadlink",
   "name": "Broadlink",
-  "codeowners": ["@danielhiversen", "@felipediel", "@L-I-Am"],
+  "codeowners": ["@danielhiversen", "@felipediel", "@L-I-Am", "@DAB-LABS"],
   "config_flow": true,
   "dhcp": [
     {

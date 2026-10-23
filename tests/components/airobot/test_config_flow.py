@@ -152,6 +152,7 @@ async def test_dhcp_discovery(
     assert result["data"][CONF_USERNAME] == "T01A1B2C3"
     assert result["data"][CONF_PASSWORD] == "test-password"
     assert result["data"][CONF_MAC] == "b8d61aabcdef"
+    assert result["result"].unique_id == "T01A1B2C3"
 
 
 @pytest.mark.parametrize(

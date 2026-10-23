@@ -1,6 +1,7 @@
 """Test the Reolink services."""
 
 from datetime import datetime
+import errno
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
@@ -15,7 +16,7 @@ from homeassistant.components.reolink.services import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_FILENAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -238,9 +239,23 @@ async def test_snapshot_past_service_errors(
 
 
 @pytest.mark.usefixtures("camera_config_entry")
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            errno.EACCES, "os_write_permission_denied", id="permission_denied"
+        ),
+        pytest.param(errno.ENOSPC, "os_write_no_space", id="no_space"),
+        pytest.param(errno.EROFS, "os_write_read_only", id="read_only"),
+        pytest.param(errno.ENOENT, "os_write_dir_not_found", id="dir_not_found"),
+        pytest.param(errno.EIO, "os_write_error", id="other"),
+    ],
+)
 async def test_snapshot_past_service_write_error(
     hass: HomeAssistant,
     reolink_host: MagicMock,
+    error: int,
+    translation_key: str,
 ) -> None:
     """Test the snapshot_past service when the image can not be written to disk."""
     reolink_host.baichuan.snapshot_past = AsyncMock(return_value=b"image")
@@ -248,12 +263,12 @@ async def test_snapshot_past_service_write_error(
     with (
         patch(
             "homeassistant.components.reolink.services.open",
-            side_effect=OSError("Test error"),
+            side_effect=OSError(error, "Error"),
             create=True,
         ),
         patch("homeassistant.components.reolink.services.os.makedirs"),
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -265,3 +280,7 @@ async def test_snapshot_past_service_write_error(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": TEST_FILE}

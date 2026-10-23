@@ -37,7 +37,6 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_same_state,
     async_track_state_added_domain,
-    async_track_state_change,
     async_track_state_change_event,
     async_track_state_change_filtered,
     async_track_state_removed_domain,
@@ -143,170 +142,6 @@ async def test_track_point_in_time_drift_rearm(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
-
-
-async def test_track_state_change_from_to_state_match(hass: HomeAssistant) -> None:
-    """Test track_state_change with from and to state matchers."""
-    from_and_to_state_runs = []
-    only_from_runs = []
-    only_to_runs = []
-    match_all_runs = []
-    no_to_from_specified_runs = []
-
-    def from_and_to_state_callback(entity_id, old_state, new_state):
-        from_and_to_state_runs.append(1)
-
-    def only_from_state_callback(entity_id, old_state, new_state):
-        only_from_runs.append(1)
-
-    def only_to_state_callback(entity_id, old_state, new_state):
-        only_to_runs.append(1)
-
-    def match_all_callback(entity_id, old_state, new_state):
-        match_all_runs.append(1)
-
-    def no_to_from_specified_callback(entity_id, old_state, new_state):
-        no_to_from_specified_runs.append(1)
-
-    async_track_state_change(
-        hass, "light.Bowl", from_and_to_state_callback, "on", "off"
-    )
-    async_track_state_change(hass, "light.Bowl", only_from_state_callback, "on", None)
-    async_track_state_change(
-        hass, "light.Bowl", only_to_state_callback, None, ["off", "standby"]
-    )
-    async_track_state_change(
-        hass, "light.Bowl", match_all_callback, MATCH_ALL, MATCH_ALL
-    )
-    async_track_state_change(hass, "light.Bowl", no_to_from_specified_callback)
-
-    hass.states.async_set("light.Bowl", "on")
-    await hass.async_block_till_done()
-    assert len(from_and_to_state_runs) == 0
-    assert len(only_from_runs) == 0
-    assert len(only_to_runs) == 0
-    assert len(match_all_runs) == 1
-    assert len(no_to_from_specified_runs) == 1
-
-    hass.states.async_set("light.Bowl", "off")
-    await hass.async_block_till_done()
-    assert len(from_and_to_state_runs) == 1
-    assert len(only_from_runs) == 1
-    assert len(only_to_runs) == 1
-    assert len(match_all_runs) == 2
-    assert len(no_to_from_specified_runs) == 2
-
-    hass.states.async_set("light.Bowl", "on")
-    await hass.async_block_till_done()
-    assert len(from_and_to_state_runs) == 1
-    assert len(only_from_runs) == 1
-    assert len(only_to_runs) == 1
-    assert len(match_all_runs) == 3
-    assert len(no_to_from_specified_runs) == 3
-
-    hass.states.async_set("light.Bowl", "on")
-    await hass.async_block_till_done()
-    assert len(from_and_to_state_runs) == 1
-    assert len(only_from_runs) == 1
-    assert len(only_to_runs) == 1
-    assert len(match_all_runs) == 3
-    assert len(no_to_from_specified_runs) == 3
-
-    hass.states.async_set("light.Bowl", "off")
-    await hass.async_block_till_done()
-    assert len(from_and_to_state_runs) == 2
-    assert len(only_from_runs) == 2
-    assert len(only_to_runs) == 2
-    assert len(match_all_runs) == 4
-    assert len(no_to_from_specified_runs) == 4
-
-    hass.states.async_set("light.Bowl", "off")
-    await hass.async_block_till_done()
-    assert len(from_and_to_state_runs) == 2
-    assert len(only_from_runs) == 2
-    assert len(only_to_runs) == 2
-    assert len(match_all_runs) == 4
-    assert len(no_to_from_specified_runs) == 4
-
-
-async def test_track_state_change(hass: HomeAssistant) -> None:
-    """Test track_state_change."""
-    # 2 lists to track how often our callbacks get called
-    specific_runs = []
-    wildcard_runs = []
-    wildercard_runs = []
-
-    def specific_run_callback(entity_id, old_state, new_state):
-        specific_runs.append(1)
-
-    # This is the rare use case
-    async_track_state_change(hass, "light.Bowl", specific_run_callback, "on", "off")
-
-    @ha.callback
-    def wildcard_run_callback(entity_id, old_state, new_state):
-        wildcard_runs.append((old_state, new_state))
-
-    # This is the most common use case
-    async_track_state_change(hass, "light.Bowl", wildcard_run_callback)
-
-    async def wildercard_run_callback(entity_id, old_state, new_state):
-        wildercard_runs.append((old_state, new_state))
-
-    async_track_state_change(hass, MATCH_ALL, wildercard_run_callback)
-
-    # Adding state to state machine
-    hass.states.async_set("light.Bowl", "on")
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 0
-    assert len(wildcard_runs) == 1
-    assert len(wildercard_runs) == 1
-    assert wildcard_runs[-1][0] is None
-    assert wildcard_runs[-1][1] is not None
-
-    # Set same state should not trigger a state change/listener
-    hass.states.async_set("light.Bowl", "on")
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 0
-    assert len(wildcard_runs) == 1
-    assert len(wildercard_runs) == 1
-
-    # State change off -> on
-    hass.states.async_set("light.Bowl", "off")
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 1
-    assert len(wildcard_runs) == 2
-    assert len(wildercard_runs) == 2
-
-    # State change off -> off
-    hass.states.async_set("light.Bowl", "off", {"some_attr": 1})
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 1
-    assert len(wildcard_runs) == 3
-    assert len(wildercard_runs) == 3
-
-    # State change off -> on
-    hass.states.async_set("light.Bowl", "on")
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 1
-    assert len(wildcard_runs) == 4
-    assert len(wildercard_runs) == 4
-
-    hass.states.async_remove("light.bowl")
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 1
-    assert len(wildcard_runs) == 5
-    assert len(wildercard_runs) == 5
-    assert wildcard_runs[-1][0] is not None
-    assert wildcard_runs[-1][1] is None
-    assert wildercard_runs[-1][0] is not None
-    assert wildercard_runs[-1][1] is None
-
-    # Set state for different entity id
-    hass.states.async_set("switch.kitchen", "on")
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 1
-    assert len(wildcard_runs) == 5
-    assert len(wildercard_runs) == 6
 
 
 async def test_async_track_state_change_filtered(hass: HomeAssistant) -> None:
@@ -4938,21 +4773,6 @@ async def test_async_track_device_registry_updated_event_with_a_callback_that_th
     unsub2()
 
     assert event_data[0] == {"action": "create", "device_id": device_id}
-
-
-async def test_track_state_change_deprecated(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test track_state_change is deprecated."""
-    async_track_state_change(
-        hass, "light.Bowl", lambda entity_id, old_state, new_state: None, "on", "off"
-    )
-
-    assert (
-        "Detected code that calls `async_track_state_change` instead "
-        "of `async_track_state_change_event` which is deprecated and "
-        "will be removed in Home Assistant 2025.5. Please report this issue"
-    ) in caplog.text
 
 
 async def test_track_point_in_time_repr(

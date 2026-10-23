@@ -94,13 +94,10 @@ async def async_send_text_commands(
             try:
                 resp = await assistant.assist(command)
             except RpcError as err:
-                _LOGGER.error(
-                    "Failed to send command '%s' to Google Assistant: %s",
-                    command,
-                    err,
-                )
                 raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="grpc_error"
+                    translation_domain=DOMAIN,
+                    translation_key="grpc_error",
+                    translation_placeholders={"command": command},
                 ) from err
             text_response = resp[0]
             _LOGGER.debug("command: %s\nresponse: %s", command, text_response)

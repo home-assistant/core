@@ -154,7 +154,7 @@ async def _async_get_image(
     that we can scale, however the majority of cases
     are handled.
     """
-    with suppress(asyncio.CancelledError, TimeoutError):
+    with suppress(TimeoutError):
         async with asyncio.timeout(timeout):
             image_bytes = (
                 await async_get_stream_image(
@@ -914,7 +914,14 @@ async def ws_camera_stream(
         connection.send_result(msg["id"], {"url": url})
     except HomeAssistantError as ex:
         _LOGGER.error("Error requesting stream: %s", ex)
-        connection.send_error(msg["id"], "start_stream_failed", str(ex))
+        connection.send_error(
+            msg["id"],
+            "start_stream_failed",
+            str(ex),
+            translation_domain=ex.translation_domain,
+            translation_key=ex.translation_key,
+            translation_placeholders=ex.translation_placeholders,
+        )
     except TimeoutError:
         _LOGGER.error("Timeout getting stream source")
         connection.send_error(

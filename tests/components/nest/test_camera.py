@@ -969,3 +969,66 @@ async def test_webrtc_refresh_expired_stream(
         auth.captured_requests[1][2].get("command")
         == "sdm.devices.commands.CameraLiveStream.ExtendWebRtcStream"
     )
+
+
+@pytest.mark.usefixtures("webrtc_camera_device")
+async def test_webrtc_refresh_failed_precondition(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    hass_ws_client: WebSocketGenerator,
+    auth: FakeAuth,
+) -> None:
+    """Test a WebRTC stream that can't be extended is not refreshed again."""
+    now = utcnow()
+    auth.responses = [
+        aiohttp.web.json_response(
+            {
+                "results": {
+                    "answerSdp": "v=0\r\ns=-\r\n",
+                    "mediaSessionId": "yP2grqz0Y1V_wgiX9KEbMWHoLd...",
+                    "expiresAt": (now + datetime.timedelta(seconds=90)).isoformat(
+                        timespec="seconds"
+                    ),
+                },
+            }
+        ),
+        aiohttp.web.json_response(
+            {
+                "error": {
+                    "code": 400,
+                    "message": (
+                        "WebRtc error caused by invalid session or user id mismatch."
+                    ),
+                    "status": "FAILED_PRECONDITION",
+                }
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        ),
+    ]
+    await setup_platform()
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "camera/webrtc/offer",
+            "entity_id": "camera.my_camera",
+            "offer": "a=recvonly",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    # The stream extension fails because the session is no longer valid
+    await fire_alarm(hass, now + datetime.timedelta(seconds=60))
+    # Retrying the extension can't succeed, so it is not attempted again
+    await fire_alarm(hass, now + datetime.timedelta(minutes=10))
+    await fire_alarm(hass, now + datetime.timedelta(hours=1))
+
+    extend_requests = [
+        request
+        for request in auth.captured_requests
+        if request[2].get("command")
+        == "sdm.devices.commands.CameraLiveStream.ExtendWebRtcStream"
+    ]
+    assert len(extend_requests) == 1

@@ -370,3 +370,97 @@ async def test_import_already_configured_aborts(
     )
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+
+
+@pytest.mark.parametrize("connection_method", ["wifi"], indirect=True)
+@pytest.mark.usefixtures("mock_setup_entry", "mock_pysaj_saj")
+async def test_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication updates the password."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new_password"}
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+    assert mock_config_entry.data == {
+        **MOCK_USER_INPUT_WIFI,
+        CONF_PASSWORD: "new_password",
+    }
+
+
+@pytest.mark.parametrize("connection_method", ["wifi"], indirect=True)
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(
+            pysaj.UnauthorizedException("auth failed"),
+            "invalid_auth",
+            id="invalid_auth",
+        ),
+        pytest.param(
+            pysaj.UnexpectedResponseException("bad response"),
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pysaj_saj: MagicMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reauthentication errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_pysaj_saj.read.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new_password"}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": error}
+
+    mock_pysaj_saj.read.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new_password"}
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
+@pytest.mark.parametrize("connection_method", ["wifi"], indirect=True)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pysaj_saj: MagicMock,
+) -> None:
+    """Test reauthentication aborts when a different inverter answers."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_pysaj_saj.serialnumber = "OTHER_SERIAL"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new_password"}
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "unique_id_mismatch"
+    assert mock_config_entry.data == MOCK_USER_INPUT_WIFI

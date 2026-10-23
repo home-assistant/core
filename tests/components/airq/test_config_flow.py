@@ -309,6 +309,7 @@ async def test_user_flow_succeeds_during_zeroconf_discovery(
     assert user_result2["type"] is FlowResultType.CREATE_ENTRY
     assert user_result2["title"] == TEST_DEVICE_INFO["name"]
     assert user_result2["data"] == TEST_USER_DATA
+    assert user_result2["result"].unique_id == TEST_DEVICE_INFO["id"]
 
     # 4. The zeroconf discovery flow should now be aborted: completing
     #    the user flow created a config entry for this unique_id, so

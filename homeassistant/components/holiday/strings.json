@@ -27,6 +27,9 @@
       "user": {
         "data": {
           "country": "[%key:common::config_flow::data::country%]"
+        },
+        "data_description": {
+          "country": "The country to get the holidays for."
         }
       }
     }

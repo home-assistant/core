@@ -16,6 +16,7 @@ from .conftest import API_KEY, ORGANISATION_ID
 from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_API_KEY: API_KEY}
+NEW_API_KEY = "new-api-key"
 
 
 @pytest.mark.usefixtures("mock_hortos_client", "mock_setup_entry")
@@ -147,3 +148,91 @@ async def test_duplicate_organisation_aborts(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_hortos_client", "mock_setup_entry")
+async def test_reauth(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+    """Test reauthentication replaces the API key."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_API_KEY: NEW_API_KEY}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(
+            HortosAuthenticationError("nope"), "invalid_auth", id="invalid_auth"
+        ),
+        pytest.param(
+            HortosConnectionError("boom"), "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(RuntimeError("surprise"), "unknown", id="unknown"),
+    ],
+)
+async def test_reauth_errors_recover(
+    hass: HomeAssistant,
+    mock_hortos_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test reauthentication errors are shown and the flow can still finish."""
+    mock_config_entry.add_to_hass(hass)
+    mock_hortos_client.authenticate.side_effect = side_effect
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    mock_hortos_client.authenticate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_API_KEY: NEW_API_KEY}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_wrong_account(
+    hass: HomeAssistant,
+    mock_hortos_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication with an API key of another organisation aborts."""
+    mock_config_entry.add_to_hass(hass)
+    tokens = mock_hortos_client.authenticate.return_value
+    mock_hortos_client.authenticate.return_value = type(tokens)(
+        token=tokens.token,
+        expires_at=tokens.expires_at,
+        refresh_token=tokens.refresh_token,
+        refresh_expires_at=tokens.refresh_expires_at,
+        organisation=Organisation(id="other-organisation"),
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == {CONF_API_KEY: API_KEY}

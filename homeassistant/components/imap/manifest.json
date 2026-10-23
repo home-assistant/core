@@ -8,5 +8,5 @@
   "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["aioimaplib"],
-  "requirements": ["aioimaplib==2.0.1"]
+  "requirements": ["aioimaplib==2.0.3"]
 }

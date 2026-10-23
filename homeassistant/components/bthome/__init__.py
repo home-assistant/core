@@ -179,7 +179,7 @@ def format_discovered_event_class(address: str) -> SignalType[str, BTHomeBleEven
     return SignalType(f"{DOMAIN}_discovered_event_class_{address}")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> None:
     """Set up BTHome Bluetooth from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -207,12 +207,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> bo
 
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> None:

@@ -182,6 +182,20 @@ async def test_user_step_error(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
 
+    with (
+        patch("homeassistant.components.casper_glow.config_flow.CasperGlow.handshake"),
+        patch(
+            "homeassistant.components.casper_glow.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ADDRESS: CASPER_GLOW_DISCOVERY_INFO.address},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry

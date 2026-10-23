@@ -45,7 +45,18 @@ POSITION_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     }
 )
 
-_ACTION_SCHEMA = probatio.Any(CMD_ACTION_SCHEMA, POSITION_ACTION_SCHEMA)
+_ACTION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        "open": CMD_ACTION_SCHEMA,
+        "close": CMD_ACTION_SCHEMA,
+        "stop": CMD_ACTION_SCHEMA,
+        "open_tilt": CMD_ACTION_SCHEMA,
+        "close_tilt": CMD_ACTION_SCHEMA,
+        "set_position": POSITION_ACTION_SCHEMA,
+        "set_tilt_position": POSITION_ACTION_SCHEMA,
+    },
+)
 
 
 async def async_validate_action_config(

@@ -121,7 +121,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
         | ClimateEntityFeature.PRESET_MODE
     )
     _attr_target_temperature_step = PRECISION_TENTHS
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
     _attr_translation_key = "thermostat"
 
@@ -146,7 +146,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
 
         self._attr_preset_mode = PRESET_MODE_AUTO if _automatic else PRESET_MODE_MANUAL
 
-        self._attr_current_temperature = values[0] / 10
+        self._attr_native_current_temperature = values[0] / 10
 
         self._attr_hvac_action = None
         if not _active:
@@ -158,7 +158,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
         if _mode in API_STATUS:
             self._attr_hvac_mode = API_STATUS[_mode]["hvac_mode"]
 
-        self._attr_target_temperature = values[4] / 10
+        self._attr_native_target_temperature = values[4] / 10
 
     @callback
     @override
@@ -181,7 +181,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
         await self.coordinator.api.set_clima_status(
             self._device.index, ClimaComelitCommand.SET, target_temp
         )
-        self._attr_target_temperature = target_temp
+        self._attr_native_target_temperature = target_temp
         self.async_write_ha_state()
 
     @bridge_api_call
@@ -212,6 +212,6 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
         self._attr_preset_mode = preset_mode
 
         if preset_mode == PRESET_MODE_AUTO:
-            self._attr_target_temperature = PRESET_MODE_AUTO_TARGET_TEMP
+            self._attr_native_target_temperature = PRESET_MODE_AUTO_TARGET_TEMP
 
         self.async_write_ha_state()

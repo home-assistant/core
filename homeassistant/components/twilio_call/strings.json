@@ -1,0 +1,7 @@
+{
+  "exceptions": {
+    "call_failed": {
+      "message": "Failed to call: {targets}."
+    }
+  }
+}
