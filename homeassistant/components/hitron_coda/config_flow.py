@@ -64,17 +64,6 @@ class HitronCodaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Import credentials from the legacy device tracker platform."""
-        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-        try:
-            await self._async_validate_input(user_input)
-        except InvalidAuth:
-            return self.async_abort(reason="invalid_auth")
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
-
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:

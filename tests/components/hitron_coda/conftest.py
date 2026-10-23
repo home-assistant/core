@@ -30,6 +30,10 @@ def mock_client() -> Generator[MagicMock]:
             "homeassistant.components.hitron_coda.coordinator.HitronCodaClient",
             new=mock,
         ),
+        patch(
+            "homeassistant.components.hitron_coda.device_tracker.HitronCodaClient",
+            new=mock,
+        ),
     ):
         client = mock.return_value
         client.get_devices.return_value = DEVICES.copy()

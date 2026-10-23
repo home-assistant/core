@@ -2,8 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
@@ -31,12 +29,8 @@
   },
   "issues": {
     "deprecated_yaml": {
-      "description": "The Hitron CODA router configuration has been imported automatically. Remove only the entries with `platform: hitron_coda` from the `device_tracker` section in `configuration.yaml`, then restart Home Assistant. Keep any entries for other device tracker platforms.",
-      "title": "Remove the Hitron CODA YAML configuration"
-    },
-    "yaml_import_failed": {
-      "description": "The YAML configuration for the Hitron CODA router at `{host}` could not be imported. Check the router connection and credentials in `configuration.yaml`, then restart Home Assistant.",
-      "title": "Unable to import Hitron CODA YAML configuration"
+      "description": "Hitron CODA device tracking configured in YAML is being removed. To migrate, note the entity IDs of your Hitron CODA trackers. Remove only the entries with `platform: hitron_coda` from the `device_tracker` section in `configuration.yaml` and remove their tracked devices from `known_devices.yaml`. Keep entries for other platforms and devices. Restart Home Assistant, then add Rogers Hitron CODA from Settings > Devices & services and enable the devices you want to track. Restore their previous entity IDs or update any person associations and automations that use them.",
+      "title": "Migrate Hitron CODA device tracking to the UI"
     }
   }
 }

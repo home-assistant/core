@@ -10,7 +10,8 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.components.hitron_coda.api import CannotConnect, InvalidAuth
 from homeassistant.components.hitron_coda.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntryState
+from homeassistant.components.hitron_coda.device_tracker import async_get_scanner
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import (
@@ -18,7 +19,6 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
 )
 from homeassistant.helpers.issue_registry import IssueRegistry
-from homeassistant.setup import async_setup_component
 
 from .const import CONFIG, DEVICES, MAC, NEW_MAC
 
@@ -244,70 +244,87 @@ async def test_unload(
     mock_client.get_devices.assert_not_called()
 
 
-@pytest.mark.parametrize(
-    ("yaml_options", "consider_home"),
-    [
-        pytest.param({CONF_CONSIDER_HOME: 30}, 30, id="custom"),
-        pytest.param({}, 180, id="legacy-default"),
-    ],
-)
-async def test_yaml_import(
+async def test_registered_client_absent_at_startup(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
-    yaml_options: dict[str, int],
-    consider_home: int,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: EntityRegistry,
 ) -> None:
-    """Migrate YAML credentials and the configured polling interval."""
-    assert await async_setup_component(
-        hass,
+    """Restore an enabled tracker even when its client is away on startup or reload."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
         "device_tracker",
-        {
-            "device_tracker": [
-                {
-                    "platform": DOMAIN,
-                    **CONFIG,
-                    "interval_seconds": 30,
-                    **yaml_options,
-                }
-            ]
-        },
+        DOMAIN,
+        MAC.lower(),
+        config_entry=mock_config_entry,
+        suggested_object_id="phone",
+        original_name="phone",
+        disabled_by=None,
     )
+    mock_client.get_devices.return_value = {}
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].source == SOURCE_IMPORT
-    assert entries[0].data == {
-        **CONFIG,
-        "scan_interval": 30,
-        CONF_CONSIDER_HOME: consider_home,
-    }
-    assert entries[0].runtime_data.update_interval == timedelta(seconds=30)
-    assert entries[0].runtime_data.consider_home == timedelta(seconds=consider_home)
+    assert hass.states.get(ENTITY_ID).state == STATE_NOT_HOME
+    assert hass.states.get(ENTITY_ID).attributes["host_name"] == "phone"
+
+    mock_client.get_devices.return_value = DEVICES.copy()
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_HOME
+    assert (
+        len(async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id))
+        == 1
+    )
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    mock_client.get_devices.return_value = {}
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_NOT_HOME
+
+
+async def test_legacy_scanner(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    issue_registry: IssueRegistry,
+) -> None:
+    """Keep legacy devices updated and request manual migration without importing."""
+    scanner = await async_get_scanner(hass, {"device_tracker": CONFIG})
+    assert scanner is not None
+    assert await hass.async_add_executor_job(scanner.scan_devices) == [MAC]
+    assert scanner.get_device_name(MAC) == "phone"
+    mock_client.get_devices.return_value = {}
+    assert await hass.async_add_executor_job(scanner.scan_devices) == []
+    assert not hass.config_entries.async_entries(DOMAIN)
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
     assert issue is not None
     assert issue.translation_key == "deprecated_yaml"
-    assert (
-        issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
-        is None
-    )
+    assert issue.breaks_in_ha_version == "2027.5.0"
 
 
 @pytest.mark.parametrize("error", [CannotConnect, InvalidAuth])
-async def test_yaml_import_failure(
+async def test_legacy_scanner_update_failure(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    error: type[Exception],
+) -> None:
+    """Do not lose legacy device names when a subsequent scan fails."""
+    scanner = await async_get_scanner(hass, {"device_tracker": CONFIG})
+    assert scanner is not None
+    mock_client.get_devices.side_effect = error
+    assert await hass.async_add_executor_job(scanner.scan_devices) == [MAC]
+    assert scanner.get_device_name(MAC) == "phone"
+
+
+@pytest.mark.parametrize("error", [CannotConnect, InvalidAuth])
+async def test_legacy_scanner_setup_failure(
     hass: HomeAssistant,
     mock_client: MagicMock,
     issue_registry: IssueRegistry,
     error: type[Exception],
 ) -> None:
-    """Keep failed YAML imports visible in Repairs without creating an entry."""
+    """Show the migration repair even when the legacy router is unreachable."""
     mock_client.get_devices.side_effect = error
-    assert await async_setup_component(
-        hass,
-        "device_tracker",
-        {"device_tracker": [{"platform": DOMAIN, **CONFIG}]},
-    )
-    await hass.async_block_till_done()
+    assert await async_get_scanner(hass, {"device_tracker": CONFIG}) is None
     assert not hass.config_entries.async_entries(DOMAIN)
-    issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_failed")
-    assert issue is not None
-    assert issue.translation_placeholders == {"host": CONFIG["host"]}
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml") is not None
