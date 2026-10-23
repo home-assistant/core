@@ -647,7 +647,17 @@ class MatterClosure(MatterEntity, CoverEntity):
         overall_current_state = self.get_matter_attribute_value(
             clusters.ClosureControl.Attributes.OverallCurrentState
         )
-        if _extract_struct_field(overall_current_state, 0, "position") == fully_at:
+        main_state = self.get_matter_attribute_value(
+            clusters.ClosureControl.Attributes.MainState
+        )
+        if (
+            main_state
+            not in (
+                clusters.ClosureControl.Enums.MainStateEnum.kMoving,
+                clusters.ClosureControl.Enums.MainStateEnum.kWaitingForMotion,
+            )
+            and _extract_struct_field(overall_current_state, 0, "position") == fully_at
+        ):
             return
         command_kwargs: dict[str, Any] = {"position": target}
         if self._motion_latching_supported() and _extract_struct_field(

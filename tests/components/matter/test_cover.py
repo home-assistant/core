@@ -1166,6 +1166,62 @@ async def test_closure_cover_garage_door(
     assert state.state == "unknown"
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_closure_garage_door"])
+async def test_closure_cover_open_while_close_pending(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Open is still sent while an opposite move is pending.
+
+    OverallCurrentState keeps reporting the position the closure hasn't left
+    yet while MainState is WaitingForMotion (spec 5.4.8.2.4), so a reported
+    position matching the requested end position doesn't mean no command is
+    needed.
+    """
+    cover_states = hass.states.async_all(Platform.COVER)
+    assert len(cover_states) == 1
+    entity_id = cover_states[0].entity_id
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPEN
+
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.MainState.attribute_id,
+        clusters.ClosureControl.Enums.MainStateEnum.kWaitingForMotion.value,
+    )
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.OverallTargetState.attribute_id,
+        {0: clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed.value},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    # OverallCurrentState still reports FullyOpened (the pending Close hasn't
+    # moved it yet): Open must be sent, not skipped as a no-op.
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.ClosureControl.Commands.MoveTo(
+            position=clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyOpen
+        ),
+        timed_request_timeout_ms=1000,
+    )
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
 async def test_closure_cover_venetian_blinds(
     hass: HomeAssistant,
