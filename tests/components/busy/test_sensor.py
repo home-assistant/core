@@ -24,10 +24,7 @@ async def test_sensors(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Snapshot the three readings and their shared device metadata.
-
-    Compare platform snapshots and verify the shared device registry record.
-    """
+    """Snapshot the three readings and their shared device metadata."""
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
     device = device_registry.async_get_device_by_identifier(
         ("busy", init_integration.unique_id), init_integration.entry_id
@@ -47,10 +44,7 @@ async def test_poll_failure_and_recovery(
     init_integration: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Share two requests per poll and recover without reloading.
-
-    Advance the polling timer through a failed request and recovery.
-    """
+    """Share two requests per poll and recover without reloading."""
     mock_client.wifi_status.side_effect = BusyBarRequestError("offline")
     freezer.tick(30)
     async_fire_time_changed(hass)
@@ -73,10 +67,7 @@ async def test_missing_readings(
     mock_config_entry: MockConfigEntry,
     firmware: types.StatusFirmware | None,
 ) -> None:
-    """Handle optional metadata and a disconnected Wi-Fi network.
-
-    Represent absent fields as unknown instead of failing setup.
-    """
+    """Handle optional metadata and a disconnected Wi-Fi network."""
     mock_client.status.return_value = types.Status(firmware=firmware)
     mock_client.wifi_status.return_value = types.StatusResponse(
         state=types.WifiState.DISCONNECTED

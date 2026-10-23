@@ -15,16 +15,14 @@ async def test_setup_unload(
     mock_client: AsyncMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Validate the token before polling and close the client on unload.
-
-    Check the initial request counts and release the client after unload.
-    """
+    """Validate the token before polling and close the client on unload."""
     assert init_integration.state is ConfigEntryState.LOADED
     mock_client.access_tokens_list.assert_awaited_once()
     mock_client.status.assert_awaited_once()
     mock_client.wifi_status.assert_awaited_once()
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     mock_client.aclose.assert_awaited_once()
+    mock_client.access_tokens_revoke.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
@@ -61,13 +59,33 @@ async def test_setup_failure(
     error: Exception,
     state: ConfigEntryState,
 ) -> None:
-    """Distinguish permanent token refusal from retryable connection failures.
-
-    Assert the entry state and ensure no reauthentication flow is started.
-    """
+    """Distinguish permanent token refusal from retryable connection failures."""
     getattr(mock_client, method).side_effect = error
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is state
     mock_client.aclose.assert_awaited_once()
     assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        None,
+        BusyBarRequestError("offline"),
+        BusyBarAPIError("refused", status_code=401),
+        OSError("offline"),
+    ],
+)
+async def test_remove(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    init_integration: MockConfigEntry,
+    error: Exception | None,
+) -> None:
+    """Remove the entry and revoke only its own credential."""
+    mock_client.access_tokens_revoke.side_effect = error
+    assert await hass.config_entries.async_remove(init_integration.entry_id)
+    mock_client.access_tokens_revoke.assert_awaited_once_with("12345678")
+    mock_client.__aexit__.assert_awaited_once()
+    assert not hass.config_entries.async_entries("busy")
