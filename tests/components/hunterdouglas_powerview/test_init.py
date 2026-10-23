@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
@@ -11,7 +10,6 @@ from homeassistant.components.hunterdouglas_powerview.util import async_connect_
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 
 from .const import MOCK_MAC, MOCK_SERIAL
 
