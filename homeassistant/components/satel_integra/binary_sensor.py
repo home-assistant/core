@@ -1,10 +1,15 @@
 """Support for Satel Integra zone states- represented as binary sensors."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import override
+
+from satel_integra import SatelRtcAndStatus
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import EntityCategory
@@ -28,6 +33,26 @@ from .entity import SatelIntegraEntity, SatelIntegraPanelEntity
 PARALLEL_UPDATES = 0
 
 
+@dataclass(frozen=True, kw_only=True)
+class SatelIntegraSystemStatusBinarySensorEntityDescription(
+    BinarySensorEntityDescription
+):
+    """Describes a Satel Integra system status binary sensor."""
+
+    is_on_fn: Callable[[SatelRtcAndStatus | None], bool | None]
+
+
+SYSTEM_STATUS_BINARY_SENSORS = (
+    SatelIntegraSystemStatusBinarySensorEntityDescription(
+        key="system_trouble",
+        translation_key="system_trouble",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda status: status.troubles if status is not None else None,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SatelConfigEntry,
@@ -39,10 +64,12 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            SatelIntegraSystemTroubleBinarySensor(
+            SatelIntegraSystemStatusBinarySensor(
                 runtime_data.coordinator_system_status,
                 config_entry.entry_id,
+                description,
             )
+            for description in SYSTEM_STATUS_BINARY_SENSORS
         ]
     )
 
@@ -120,23 +147,23 @@ class SatelIntegraBinarySensor[_CoordinatorT: SatelIntegraBaseCoordinator](
         return self.coordinator.data.get(self._device_number)
 
 
-class SatelIntegraSystemTroubleBinarySensor(
+class SatelIntegraSystemStatusBinarySensor(
     SatelIntegraPanelEntity[SatelIntegraSystemStatusCoordinator], BinarySensorEntity
 ):
-    """Representation of the overall Satel Integra system trouble status."""
+    """Representation of a Satel Integra system status binary sensor."""
 
-    _attr_device_class = BinarySensorDeviceClass.PROBLEM
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_translation_key = "system_trouble"
+    entity_description: SatelIntegraSystemStatusBinarySensorEntityDescription
 
     def __init__(
         self,
         coordinator: SatelIntegraSystemStatusCoordinator,
         config_entry_id: str,
+        description: SatelIntegraSystemStatusBinarySensorEntityDescription,
     ) -> None:
-        """Initialize the system trouble sensor."""
+        """Initialize the system status binary sensor."""
         super().__init__(coordinator, config_entry_id)
-        self._attr_unique_id = f"{config_entry_id}_system_trouble"
+        self.entity_description = description
+        self._attr_unique_id = f"{config_entry_id}_{description.key}"
         self._attr_is_on = self._get_state_from_coordinator()
 
     @callback
@@ -147,7 +174,5 @@ class SatelIntegraSystemTroubleBinarySensor(
         self.async_write_ha_state()
 
     def _get_state_from_coordinator(self) -> bool | None:
-        """Return whether the panel reports an active system trouble."""
-        if (system_status := self.coordinator.data) is None:
-            return None
-        return system_status.troubles
+        """Return the state described by the entity description."""
+        return self.entity_description.is_on_fn(self.coordinator.data)
