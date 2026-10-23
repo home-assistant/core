@@ -23,7 +23,7 @@ from tplink_omada_client.exceptions import (
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import (
     OmadaCoordinator,
-    async_cleanup_client_trackers,
+    cleanup_client_trackers,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -147,8 +147,8 @@ async def test_automatic_missing_client_cleanup(
 ) -> None:
     """Test missing client trackers are removed during initial startup cleanup.
 
-    This validates the cleanup mechanism scheduled immediately on entry setup,
-    which runs as a background task.
+    The device tracker platform removes stale trackers when it is set up,
+    before it registers trackers for the current client list.
     """
 
     mock_config_entry = MockConfigEntry(
@@ -287,7 +287,7 @@ async def test_cleanup_helpers_remove_unknown_clients(
         disabled_by=er.RegistryEntryDisabler.INTEGRATION,
     )
 
-    await async_cleanup_client_trackers(hass, controller)
+    cleanup_client_trackers(hass, controller)
 
     assert entity_registry.async_get(unknown_client_entity_1.entity_id) is None
     assert entity_registry.async_get(unknown_client_entity_2.entity_id) is None
@@ -481,6 +481,84 @@ async def test_recreated_tracker_enabled_when_device_registered(
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
     assert entity_entry.disabled_by is None
+
+
+async def test_startup_cleanup_runs_before_trackers_are_registered(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a stale tracker does not keep the entity ID of a same-named client."""
+    mock_config_entry.add_to_hass(hass)
+
+    stale_tracker = entity_registry.async_get_or_create(
+        domain="device_tracker",
+        platform=DOMAIN,
+        unique_id="scanner_Default_11-11-11-11-11-11",
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+        suggested_object_id="banana",
+    )
+    assert stale_tracker.entity_id == "device_tracker.banana"
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "device_tracker", DOMAIN, "scanner_Default_2C-71-FF-ED-34-83"
+        )
+        == "device_tracker.banana"
+    )
+
+
+async def test_hourly_cleanup_runs_before_trackers_are_registered(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the hourly sweep frees an entity ID before adding a same-named client."""
+    banana_mac = "2C-71-FF-ED-34-83"
+    site_client = mock_omada_clients_only_client.get_site_client.return_value
+    site_client.get_known_clients.side_effect = partial(
+        _get_known_clients_without, hass, banana_mac
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert (
+        entity_registry.async_get_entity_id(
+            "device_tracker", DOMAIN, f"scanner_Default_{banana_mac}"
+        )
+        is None
+    )
+
+    stale_tracker = entity_registry.async_get_or_create(
+        domain="device_tracker",
+        platform=DOMAIN,
+        unique_id="scanner_Default_11-11-11-11-11-11",
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+        suggested_object_id="banana",
+    )
+    assert stale_tracker.entity_id == "device_tracker.banana"
+
+    # The client becomes known again on the next hourly sweep
+    site_client.get_known_clients.side_effect = partial(
+        _get_known_clients_without, hass, ""
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "device_tracker", DOMAIN, f"scanner_Default_{banana_mac}"
+        )
+        == "device_tracker.banana"
+    )
 
 
 async def test_preserved_tracker_recreated_when_client_returns(

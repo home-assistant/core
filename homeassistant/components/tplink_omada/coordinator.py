@@ -356,7 +356,8 @@ def _unique_id_to_mac(unique_id: str | None) -> str | None:
     return dr.format_mac(mac)
 
 
-async def async_cleanup_client_trackers(
+@callback
+def cleanup_client_trackers(
     hass: HomeAssistant,
     controller: OmadaSiteController,
 ) -> None:
