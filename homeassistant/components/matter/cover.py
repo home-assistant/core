@@ -830,7 +830,14 @@ class MatterClosure(MatterEntity, CoverEntity):
 
         self._attr_is_opening = False
         self._attr_is_closing = False
-        if main_state == clusters.ClosureControl.Enums.MainStateEnum.kMoving:
+        if main_state in (
+            clusters.ClosureControl.Enums.MainStateEnum.kMoving,
+            # A pending move the closure hasn't started yet still has a
+            # direction: OverallCurrentState keeps reporting the position it
+            # hasn't left (spec 5.4.8.2.4), so showing plain open/closed here
+            # would hide it.
+            clusters.ClosureControl.Enums.MainStateEnum.kWaitingForMotion,
+        ):
             if (
                 target_position
                 == clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyOpen

@@ -1288,6 +1288,12 @@ async def test_closure_cover_open_while_close_pending(
     )
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
+    # The pending Close already has a direction, even though MainState isn't
+    # Moving yet: showing plain "open" here would hide it.
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
+
     # OverallCurrentState still reports FullyOpened (the pending Close hasn't
     # moved it yet): Open must be sent, not skipped as a no-op.
     await hass.services.async_call(
