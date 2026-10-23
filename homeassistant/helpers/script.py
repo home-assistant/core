@@ -1350,8 +1350,6 @@ class _ScriptRun:
         self, branch: Literal["on_complete", "on_timeout"]
     ) -> None:
         """Run the on_complete or on_timeout actions of a wait_for_trigger."""
-        if branch not in self._action:
-            return
         wait_data = await self._script._async_get_wait_for_trigger_data(  # noqa: SLF001
             self._step
         )
