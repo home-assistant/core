@@ -9,7 +9,7 @@ import requests
 from yarl import URL
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PLATFORM, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -75,9 +75,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> bo
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_import_yaml(
-    hass: HomeAssistant, platform: Platform, import_data: dict[str, Any]
-) -> None:
+async def async_import_yaml(hass: HomeAssistant, import_data: dict[str, Any]) -> None:
     """Import a YAML platform into the config entry of its server."""
     # The alarm and binary sensor platforms of one server import one at a time,
     # so the second one merges into the entry the first one created.
@@ -85,7 +83,7 @@ async def async_import_yaml(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={CONF_PLATFORM: platform, **import_data},
+            data=import_data,
         )
 
     if (

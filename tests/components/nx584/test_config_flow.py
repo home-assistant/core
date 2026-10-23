@@ -8,20 +8,12 @@ import pytest
 import requests
 
 from homeassistant.components.nx584.const import (
-    CONF_ENTITY_NAMESPACES,
     CONF_EXCLUDE_ZONES,
     CONF_ZONE_TYPES,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigFlowResult
-from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PLATFORM,
-    CONF_PORT,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -31,7 +23,6 @@ from .conftest import TEST_HOST, TEST_PORT
 from tests.common import MockConfigEntry
 
 IMPORT_DATA = {
-    CONF_PLATFORM: Platform.ALARM_CONTROL_PANEL,
     CONF_HOST: TEST_HOST,
     CONF_PORT: TEST_PORT,
     CONF_NAME: "House",
@@ -176,7 +167,6 @@ async def test_import_flow(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_PLATFORM: Platform.BINARY_SENSOR,
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
             CONF_EXCLUDE_ZONES: [2],
@@ -203,7 +193,6 @@ async def test_import_flow_merges_into_existing_entry(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_PLATFORM: Platform.BINARY_SENSOR,
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
             CONF_EXCLUDE_ZONES: [1],
@@ -223,7 +212,6 @@ async def test_import_flow_merges_into_existing_entry(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_PLATFORM: Platform.ALARM_CONTROL_PANEL,
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
             CONF_NAME: "House",
@@ -241,50 +229,6 @@ async def test_import_flow_merges_into_existing_entry(
         CONF_EXCLUDE_ZONES: [1],
         CONF_ZONE_TYPES: {},
     }
-
-
-@pytest.mark.usefixtures("mock_setup_entry", "mock_client")
-async def test_import_flow_entity_namespaces(hass: HomeAssistant) -> None:
-    """Test each import updates only its own platform's entity namespace."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-            CONF_ENTITY_NAMESPACES: {
-                Platform.ALARM_CONTROL_PANEL: "security",
-                Platform.BINARY_SENSOR: "zones",
-            },
-        },
-    )
-    entry.add_to_hass(hass)
-
-    async def _async_import(platform: Platform, namespace: dict[str, str]) -> None:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_PLATFORM: platform,
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-                **namespace,
-            },
-        )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
-
-    await _async_import(Platform.BINARY_SENSOR, {CONF_ENTITY_NAMESPACE: "sensors"})
-    assert entry.data[CONF_ENTITY_NAMESPACES] == {
-        Platform.ALARM_CONTROL_PANEL: "security",
-        Platform.BINARY_SENSOR: "sensors",
-    }
-
-    # A namespace removed from the YAML is removed from the entry.
-    await _async_import(Platform.ALARM_CONTROL_PANEL, {})
-    assert entry.data[CONF_ENTITY_NAMESPACES] == {Platform.BINARY_SENSOR: "sensors"}
-
-    await _async_import(Platform.BINARY_SENSOR, {})
-    assert CONF_ENTITY_NAMESPACES not in entry.data
 
 
 @pytest.mark.parametrize(
@@ -310,7 +254,6 @@ async def test_import_flow_errors(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_PLATFORM: Platform.ALARM_CONTROL_PANEL,
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
             CONF_NAME: "NX584",
