@@ -972,6 +972,7 @@ def _check_deprecation(
         DOMAIN,
         f"deprecated_entity_{unique_id}",
         breaks_in_ha_version=description.breaks_in_ha_version,
+        config_entry_id=entity_entry.config_entry_id,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key=description.deprecated,
