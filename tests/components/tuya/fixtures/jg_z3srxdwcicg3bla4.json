@@ -1,0 +1,140 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "EVOL - Beer & Wine JC-115",
+  "category": "jg",
+  "product_id": "z3srxdwcicg3bla4",
+  "product_name": "EVOL - Beer & Wine JC-115",
+  "online": true,
+  "sub": false,
+  "time_zone": "-03:00",
+  "active_time": "2025-11-27T19:22:50+00:00",
+  "create_time": "2025-11-27T19:22:50+00:00",
+  "update_time": "2025-11-27T19:22:50+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 5,
+        "max": 20,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 5,
+        "max": 20,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -10,
+        "max": 50,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch": true,
+    "temp_set": 11,
+    "temp_current": 11,
+    "switch_led": false
+  },
+  "set_up": false,
+  "support_local": true,
+  "local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "switch",
+      "config_item": {
+        "statusFormat": {
+          "switch": "$"
+        },
+        "valueDesc": {},
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "z3srxdwcicg3bla4"
+      }
+    },
+    "2": {
+      "value_convert": "default",
+      "status_code": "temp_set",
+      "config_item": {
+        "statusFormat": {
+          "temp_set": "$"
+        },
+        "valueDesc": {
+          "unit": "\u2103",
+          "min": 5,
+          "max": 20,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "z3srxdwcicg3bla4"
+      }
+    },
+    "6": {
+      "value_convert": "default",
+      "status_code": "temp_current",
+      "config_item": {
+        "statusFormat": {
+          "temp_current": "$"
+        },
+        "valueDesc": {
+          "unit": "\u2103",
+          "min": -10,
+          "max": 50,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "z3srxdwcicg3bla4"
+      }
+    },
+    "11": {
+      "value_convert": "default",
+      "status_code": "switch_led",
+      "config_item": {
+        "statusFormat": {
+          "switch_led": "$"
+        },
+        "valueDesc": {},
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "z3srxdwcicg3bla4"
+      }
+    }
+  }
+}

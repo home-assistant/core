@@ -148,7 +148,9 @@ async def websocket_supervisor_api(
             params=msg.get(ATTR_PARAMS),
         )
     except HassioAPIError as err:
-        _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
+        # The frontend renews the ingress session when validation fails
+        log = _LOGGER.debug if command == "/ingress/validate_session" else _LOGGER.error
+        log("Failed to call %s - %s", command, err)
         connection.send_error(
             msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
         )
