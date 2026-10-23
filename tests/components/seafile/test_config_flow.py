@@ -69,7 +69,7 @@ async def test_full_flow(hass: HomeAssistant, mock_seafile_client: AsyncMock) ->
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "user@example.com (seafile.example.com)"
     assert result["data"] == {CONF_URL: URL, CONF_TOKEN: TOKEN, CONF_VERIFY_SSL: True}
-    assert result["result"].unique_id == f"seafile.example.com:443_{ACCOUNT_EMAIL}"
+    assert result["result"].unique_id == ACCOUNT_EMAIL
     assert result["subentries"] == [
         ConfigSubentryData(
             data={CONF_LIBRARY_ID: LIBRARY_ID},
@@ -95,7 +95,7 @@ async def test_flow_without_libraries(
 
     result = await hass.config_entries.flow.async_configure(flow_id, {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == f"seafile.example.com:443_{ACCOUNT_EMAIL}"
+    assert result["result"].unique_id == ACCOUNT_EMAIL
     assert result["subentries"] == ()
 
 
@@ -127,7 +127,7 @@ async def test_two_factor_authentication(
 
     result = await hass.config_entries.flow.async_configure(flow_id, {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == f"seafile.example.com:443_{ACCOUNT_EMAIL}"
+    assert result["result"].unique_id == ACCOUNT_EMAIL
 
 
 @pytest.mark.parametrize(
@@ -162,7 +162,7 @@ async def test_two_factor_errors(
     assert result["step_id"] == "libraries"
     result = await hass.config_entries.flow.async_configure(flow_id, {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == f"seafile.example.com:443_{ACCOUNT_EMAIL}"
+    assert result["result"].unique_id == ACCOUNT_EMAIL
 
 
 @pytest.mark.parametrize(
@@ -193,7 +193,7 @@ async def test_login_errors(
     assert result["step_id"] == "libraries"
     result = await hass.config_entries.flow.async_configure(flow_id, {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == f"seafile.example.com:443_{ACCOUNT_EMAIL}"
+    assert result["result"].unique_id == ACCOUNT_EMAIL
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -213,7 +213,7 @@ async def test_token_revoked_after_connection_error(
     result = await hass.config_entries.flow.async_configure(flow_id, USER_INPUT)
     result = await hass.config_entries.flow.async_configure(flow_id, {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == f"seafile.example.com:443_{ACCOUNT_EMAIL}"
+    assert result["result"].unique_id == ACCOUNT_EMAIL
     assert result["data"][CONF_TOKEN] == TOKEN
 
 

@@ -75,12 +75,6 @@ STEP_OTP_DATA_SCHEMA = probatio.Schema(
 )
 
 
-def _unique_id(url: str, email: str) -> str:
-    """Return the unique ID of an account on a server."""
-    parsed = URL(url)
-    return f"{parsed.host}:{parsed.port}{parsed.path.rstrip('/')}_{email}"
-
-
 def _library_options(libraries: list[Library]) -> list[SelectOptionDict]:
     """Return the libraries that can be added, sorted by name."""
     return [
@@ -132,9 +126,9 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._async_revoke_token(client)
             errors["base"] = "cannot_connect"
         else:
-            await self.async_set_unique_id(
-                _unique_id(self._user_input[CONF_URL], account.email)
-            )
+            # The account's internal user ID, which never changes; it is a
+            # random virtual ID, except for the account created at server setup.
+            await self.async_set_unique_id(account.email)
             self._abort_if_unique_id_configured()
             return await self.async_step_libraries()
         return None
@@ -265,7 +259,10 @@ class LibrarySubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="cannot_connect")
         self._libraries = {library.id: library for library in libraries}
 
-        configured = {subentry.unique_id for subentry in entry.subentries.values()}
+        configured = {
+            subentry.unique_id
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LIBRARY)
+        }
         options = [
             option
             for option in _library_options(libraries)

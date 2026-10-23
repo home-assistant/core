@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import SUBENTRY_TYPE_LIBRARY
 from .coordinator import SeafileConfigEntry, SeafileData, SeafileDataUpdateCoordinator
 from .entity import SeafileEntity
 
@@ -63,7 +64,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Seafile sensors."""
     coordinator = entry.runtime_data
-    for subentry in entry.subentries.values():
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LIBRARY):
         async_add_entities(
             (
                 SeafileSensor(coordinator, subentry, description)

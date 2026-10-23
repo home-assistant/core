@@ -65,7 +65,7 @@ def mock_config_entry() -> MockConfigEntry:
         entry_id="01K7SEAF1LEENTRY000000000A",
         title="user@example.com (seafile.example.com)",
         data={CONF_URL: URL, CONF_TOKEN: TOKEN, CONF_VERIFY_SSL: True},
-        unique_id=f"seafile.example.com:443_{ACCOUNT_EMAIL}",
+        unique_id=ACCOUNT_EMAIL,
         subentries_data=[
             ConfigSubentryDataWithId(
                 data={CONF_LIBRARY_ID: LIBRARY_ID},

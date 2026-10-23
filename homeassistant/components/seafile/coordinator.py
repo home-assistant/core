@@ -20,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_LIBRARY_ID, DOMAIN, LOGGER
+from .const import CONF_LIBRARY_ID, DOMAIN, LOGGER, SUBENTRY_TYPE_LIBRARY
 
 type SeafileConfigEntry = ConfigEntry[SeafileDataUpdateCoordinator]
 
@@ -62,7 +62,9 @@ class SeafileDataUpdateCoordinator(DataUpdateCoordinator[SeafileData]):
         """Fetch the libraries added as subentries."""
         library_ids = [
             subentry.data[CONF_LIBRARY_ID]
-            for subentry in self.config_entry.subentries.values()
+            for subentry in self.config_entry.get_subentries_of_type(
+                SUBENTRY_TYPE_LIBRARY
+            )
         ]
         try:
             libraries = {
