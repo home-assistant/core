@@ -774,7 +774,7 @@ class ESPHomeManager:
             try:
                 device_wizard = await cli.device_wizard()
             except InvalidWizardError as err:
-                _LOGGER.debug("%s: Ignoring the device wizard: %s", self.host, err)
+                _LOGGER.warning("%s: Ignoring the device wizard: %s", self.host, err)
         entry_data.device_wizard = device_wizard
         entry_data.async_on_connect(hass, device_info, api_version)
 

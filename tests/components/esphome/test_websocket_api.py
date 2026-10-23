@@ -12,6 +12,7 @@ from aioesphomeapi import (
     DeviceCapabilities,
     DeviceInfo,
     DeviceWizard,
+    EntityInfo,
     SendspinFeature,
     SwitchInfo,
     UnsupportedWizardVersionError,
@@ -139,7 +140,7 @@ async def test_get_device_capabilities(
 @pytest.mark.parametrize(
     "command", ["esphome/get_device_capabilities", "esphome/get_device_wizard"]
 )
-async def test_get_device_capabilities_device_not_found(
+async def test_device_commands_device_not_found(
     init_integration: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
     command: str,
@@ -157,6 +158,61 @@ async def test_get_device_capabilities_device_not_found(
     assert response["success"] is False
     assert response["error"]["code"] == "not_found"
     assert response["error"]["message"] == "Device not found"
+
+
+@pytest.mark.parametrize(
+    ("command", "expected"),
+    [
+        pytest.param(
+            "esphome/get_device_capabilities",
+            {
+                "bluetooth_proxy": {"supported": False},
+                "zwave_proxy": {
+                    "supported": False,
+                    "home_id": 0,
+                    "config_entry_id": None,
+                },
+                "serial_proxies": [],
+                "sendspin": {"supported": False},
+            },
+            id="capabilities",
+        ),
+        pytest.param("esphome/get_device_wizard", {"pages": []}, id="wizard"),
+    ],
+)
+async def test_device_commands_entry_not_loaded(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+    command: str,
+    expected: dict[str, Any],
+) -> None:
+    """Test the device commands report nothing while the entry is not loaded."""
+    mock_client.device_wizard = AsyncMock(return_value=DeviceWizard.from_dict(WIZARD))
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=WIZARD_SWITCHES,
+        device_capabilities={
+            "bluetooth_proxy": {"feature_flags": 1},
+            "wizard": {"configured": True},
+        },
+    )
+    await hass.config_entries.async_unload(device.entry.entry_id)
+    await hass.async_block_till_done()
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json_auto_id(
+        {
+            TYPE: command,
+            DEVICE_ID: _device_id_for_mac(device_registry, device.entry),
+        }
+    )
+
+    response = await websocket_client.receive_json()
+    assert response["success"] is True
+    assert response["result"] == expected
 
 
 async def test_get_device_capabilities_wrong_domain(
@@ -528,7 +584,7 @@ async def test_get_device_wizard(
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
     device_wizard: dict[str, Any],
-    entity_info: list[Any],
+    entity_info: list[EntityInfo],
     expected_pages: list[dict[str, Any]],
     stored: bool,
 ) -> None:
@@ -584,14 +640,16 @@ async def test_get_device_wizard_not_configured(
 
 
 @pytest.mark.parametrize(
-    ("device_capabilities", "device_wizard", "expected_pages"),
+    ("device_capabilities", "device_wizard", "expected_pages", "disconnects"),
     [
         # The device reports no wizard, for example after a firmware update
-        pytest.param({}, {}, [], id="no_wizard"),
+        pytest.param({}, {}, [], 0, id="no_wizard"),
+        # The connection error aborts the connect, so the restored wizard stays
         pytest.param(
             {"wizard": {"configured": True}},
             {"side_effect": APIConnectionError},
             WIZARD_PAGES,
+            1,
             id="fetch_failed",
         ),
     ],
@@ -605,8 +663,9 @@ async def test_get_device_wizard_restored(
     device_capabilities: dict[str, Any],
     device_wizard: dict[str, Any],
     expected_pages: list[dict[str, Any]],
+    disconnects: int,
 ) -> None:
-    """Test the wizard is restored from storage and updated on connect."""
+    """Test the restored wizard is kept until a completed connect replaces it."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Test",
@@ -664,3 +723,4 @@ async def test_get_device_wizard_restored(
     )
     response = await websocket_client.receive_json()
     assert response["result"] == {"pages": expected_pages}
+    assert mock_client.disconnect.await_count == disconnects
