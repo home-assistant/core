@@ -527,6 +527,56 @@ async def test_cleanup_drops_switch_port_coordinator(
     assert controller.get_switch_port_coordinator(switch) is not coordinator
 
 
+async def test_overlapping_registrations_register_device_once(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test overlapping device updates do not register a device twice."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    controller = hass.config_entries.async_get_entry(
+        mock_config_entry.entry_id
+    ).runtime_data
+    switch_mac = "54-AF-97-00-00-01"
+    site_client = mock_omada_client.get_site_client.return_value
+    registration_started = asyncio.Event()
+    registration_proceed = asyncio.Event()
+    calls = 0
+
+    async def _register(device: OmadaListDevice) -> None:
+        """Register a device and hold the first call open."""
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            registration_started.set()
+            await registration_proceed.wait()
+
+    registration = asyncio.create_task(
+        controller.async_register_device_entities(
+            lambda device: dr.format_mac(device.mac) == dr.format_mac(switch_mac),
+            _register,
+        )
+    )
+    await registration_started.wait()
+
+    # Another device-list update lands while the callback is still running
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    site_client.get_devices = AsyncMock(
+        return_value=[OmadaListDevice(d) for d in devices_data]
+    )
+    await _async_poll_devices(hass, freezer)
+
+    registration_proceed.set()
+    await registration
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert calls == 1
+
+
 async def test_empty_device_limit_scales_with_fast_polling() -> None:
     """Test the empty-list window stays one hour when polling speeds up."""
     coordinator = SimpleNamespace(

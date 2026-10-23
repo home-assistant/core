@@ -110,16 +110,22 @@ class OmadaSiteController:
 
             for device in devices_to_process:
                 mac = dr.format_mac(device.mac)
+                # The device list was built before this loop, so recheck: a
+                # concurrent task may have reserved the device in the meantime.
+                if mac in processed_devices:
+                    continue
+                # Reserve the device before awaiting so concurrent
+                # registrations do not process it twice.
+                processed_devices.add(mac)
                 try:
                     await entity_callback(device)
                 except Exception:
                     # Leave the device unprocessed so the next device-list
                     # update retries instead of skipping it forever.
+                    processed_devices.discard(mac)
                     _LOGGER.exception(
                         "Failed to register entities for Omada device %s", mac
                     )
-                    continue
-                processed_devices.add(mac)
 
         @callback
         def _handle_devices_update() -> None:
