@@ -9,6 +9,7 @@ import probatio
 
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
+    EFFECT_OFF,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
@@ -259,9 +260,12 @@ class LightGroup(GroupEntity, LightEntity):
             # Merge all effects from all effect_lists with a union merge.
             self._attr_effect_list = list(set().union(*all_effect_lists))
             self._attr_effect_list.sort()
-            if "None" in self._attr_effect_list:
-                self._attr_effect_list.remove("None")
-                self._attr_effect_list.insert(0, "None")
+            # Each insert lands at the front. Pin "None" first, then "off",
+            # so "off" is first and "None" is second when both are present.
+            for effect_name in ("None", EFFECT_OFF):
+                if effect_name in self._attr_effect_list:
+                    self._attr_effect_list.remove(effect_name)
+                    self._attr_effect_list.insert(0, effect_name)
 
         self._attr_effect = None
         all_effects = list(
