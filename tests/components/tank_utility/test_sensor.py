@@ -563,6 +563,56 @@ async def test_yaml_import_concurrent_mixed_credentials(
     }
 
 
+@pytest.mark.usefixtures("mock_get_data")
+async def test_yaml_import_sequential_mixed_credentials(
+    hass: HomeAssistant,
+    mock_get_token: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test sequential YAML imports preserve device selections after initial auth failure."""
+
+    def check_get_token(email: str, password: str, **kwargs: Any) -> str:
+        if password == "stale_password":
+            raise _mock_http_error(requests.codes.unauthorized)
+        return "mock_token"
+
+    mock_get_token.side_effect = check_get_token
+
+    result_1 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "import"},
+        data={
+            CONF_EMAIL: TEST_EMAIL,
+            CONF_PASSWORD: "stale_password",
+            "devices": [MOCK_DEVICE_ID],
+        },
+    )
+    assert result_1["type"] is FlowResultType.ABORT
+    assert result_1["reason"] == "invalid_auth"
+
+    result_2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "import"},
+        data={
+            CONF_EMAIL: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+            "devices": ["device_2"],
+        },
+    )
+    assert result_2["type"] is FlowResultType.CREATE_ENTRY
+    assert result_2["data"] == {
+        CONF_EMAIL: TEST_EMAIL,
+        CONF_PASSWORD: TEST_PASSWORD,
+        "devices": [MOCK_DEVICE_ID, "device_2"],
+    }
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_invalid_auth"
+        )
+        is None
+    )
+
+
 @pytest.mark.usefixtures("mock_get_token", "mock_get_data")
 async def test_yaml_import_already_configured(
     hass: HomeAssistant,

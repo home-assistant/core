@@ -86,6 +86,7 @@ async def async_setup_platform(
             )
             return
 
+    ir.async_delete_issue(hass, DOMAIN, "deprecated_yaml_import_issue_invalid_auth")
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,

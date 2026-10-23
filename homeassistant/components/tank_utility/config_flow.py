@@ -60,6 +60,7 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                self.hass.data.get(DOMAIN, {}).pop(email, None)
                 return self.async_create_entry(
                     title=email,
                     data={
@@ -199,7 +200,9 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
                 password = candidate_password
                 break
         finally:
-            popped = pending_imports.pop(email, {})
+            pending_entry["passwords"].clear()
+
+        popped = pending_imports.pop(email)
 
         entry_data: dict[str, Any] = {
             CONF_EMAIL: email,
