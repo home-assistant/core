@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 from functools import partial
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -25,9 +26,12 @@ from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.controller import OmadaSiteController
 from homeassistant.components.tplink_omada.coordinator import (
     EMPTY_DEVICE_LIMIT,
+    EMPTY_DEVICE_WINDOW,
     POLL_CLIENTS,
+    POLL_UPGRADE,
     OmadaCoordinator,
     async_cleanup_devices,
+    device_removal_is_confirmed,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -521,6 +525,20 @@ async def test_cleanup_drops_switch_port_coordinator(
         is None
     )
     assert controller.get_switch_port_coordinator(switch) is not coordinator
+
+
+async def test_empty_device_limit_scales_with_fast_polling() -> None:
+    """Test the empty-list window stays one hour when polling speeds up."""
+    coordinator = SimpleNamespace(
+        last_update_success=True,
+        data={},
+        consecutive_empty_updates=EMPTY_DEVICE_LIMIT,
+        update_interval=timedelta(seconds=POLL_UPGRADE),
+    )
+    assert not device_removal_is_confirmed(coordinator)  # type: ignore[arg-type]
+
+    coordinator.consecutive_empty_updates = EMPTY_DEVICE_WINDOW // POLL_UPGRADE
+    assert device_removal_is_confirmed(coordinator)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(

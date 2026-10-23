@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+import math
 from typing import TYPE_CHECKING, NamedTuple, override
 
 from tplink_omada_client import (
@@ -41,10 +42,12 @@ POLL_CONTROLLER = 300
 POLL_CONTROLLER_UPDATE = 3600
 POLL_UPGRADE = 60
 
-# Number of consecutive empty device-list updates required before removing
-# device entries, to tolerate transient empty responses from the controller.
-# Device polls run every five minutes, so this is about one hour of emptiness.
+# Minimum number of consecutive empty device-list updates required before
+# removing device entries, to tolerate transient empty responses from the
+# controller. The window is one hour, scaled up when polling speeds up during
+# a firmware download.
 EMPTY_DEVICE_LIMIT = 12
+EMPTY_DEVICE_WINDOW = 3600
 
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
@@ -342,8 +345,14 @@ def device_removal_is_confirmed(coordinator: OmadaDevicesCoordinator) -> bool:
 
     # A successful but empty response is likely a transient controller glitch,
     # and removal also deletes the device's entities from the registry, so only
-    # clean once the empty list is confirmed over consecutive updates.
-    return coordinator.consecutive_empty_updates >= EMPTY_DEVICE_LIMIT
+    # clean once the empty list is confirmed over a full window of updates.
+    # Polling runs faster during a firmware download, so scale the count.
+    interval = coordinator.update_interval or timedelta(seconds=POLL_DEVICES)
+    required = max(
+        EMPTY_DEVICE_LIMIT,
+        math.ceil(EMPTY_DEVICE_WINDOW / max(interval.total_seconds(), 1)),
+    )
+    return coordinator.consecutive_empty_updates >= required
 
 
 async def async_cleanup_devices(
