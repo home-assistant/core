@@ -406,7 +406,8 @@ class IndiAllSkyDynamicHardwareSensor(IndiAllSkyEntity, SensorEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_attributes()
+        if isinstance(self._get_sensor_item(), dict):
+            self._update_attributes()
         super()._handle_coordinator_update()
 
     def _get_sensor_item(self) -> Any:
