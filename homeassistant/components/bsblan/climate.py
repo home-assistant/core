@@ -124,6 +124,9 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         self._attr_native_temperature_unit = (
             data.fast_coordinator.client.get_temperature_unit
         )
+        # PPS accepts neither the temporary override nor permanent reduced mode
+        if data.device.is_pps_bus:
+            self._attr_supported_features &= ~ClimateEntityFeature.PRESET_MODE
 
     @property
     @override
