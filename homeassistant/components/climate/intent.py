@@ -11,14 +11,11 @@ from homeassistant.helpers import config_validation as cv, intent, translation
 from . import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
-    ATTR_TEMPERATURE,
     INTENT_SET_FAN_MODE,
     INTENT_SET_TEMPERATURE,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
 )
-from .const import DOMAIN
+from .const import DOMAIN, ClimateService, ClimateServiceArgument
 
 FAN_MODE_TRANSLATION_PREFIX = (
     f"component.{DOMAIN}.entity_component._.state_attributes.{ATTR_FAN_MODE}.state."
@@ -92,8 +89,8 @@ class SetTemperatureIntent(intent.IntentHandler):
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            service_data={ATTR_TEMPERATURE: temperature},
+            ClimateService.SET_TEMPERATURE,
+            service_data={ClimateServiceArgument.TEMPERATURE: temperature},
             target={ATTR_ENTITY_ID: climate_state.entity_id},
             blocking=True,
         )
@@ -182,8 +179,8 @@ class SetFanModeIntent(intent.IntentHandler):
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            service_data={ATTR_FAN_MODE: fan_mode},
+            ClimateService.SET_FAN_MODE,
+            service_data={ClimateServiceArgument.FAN_MODE: fan_mode},
             target={ATTR_ENTITY_ID: climate_state.entity_id},
             blocking=True,
             context=intent_obj.context,

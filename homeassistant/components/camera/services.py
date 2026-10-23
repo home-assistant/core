@@ -13,12 +13,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, OUTPUT_FORMATS
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_FILENAME,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -28,38 +23,36 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    ATTR_FILENAME,
-    ATTR_FORMAT,
-    ATTR_MEDIA_PLAYER,
     CAMERA_IMAGE_TIMEOUT,
-    CONF_DURATION,
-    CONF_LOOKBACK,
     DATA_COMPONENT,
     DOMAIN,
-    SERVICE_DISABLE_MOTION,
-    SERVICE_ENABLE_MOTION,
-    SERVICE_PLAY_STREAM,
-    SERVICE_RECORD,
-    SERVICE_SNAPSHOT,
+    CameraService,
+    CameraServiceArgument,
 )
 from .helper import async_get_stream_image, async_stream_endpoint_url
 
 if TYPE_CHECKING:
     from .entity import Camera
 
-CAMERA_SERVICE_SNAPSHOT: VolDictType = {probatio.Required(ATTR_FILENAME): cv.template}
+CAMERA_SERVICE_SNAPSHOT: VolDictType = {
+    probatio.Required(CameraServiceArgument.FILENAME): cv.template
+}
 
 
 CAMERA_SERVICE_PLAY_STREAM: VolDictType = {
-    probatio.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(MP_DOMAIN),
-    probatio.Optional(ATTR_FORMAT, default="hls"): probatio.In(OUTPUT_FORMATS),
+    probatio.Required(CameraServiceArgument.MEDIA_PLAYER): cv.entities_domain(
+        MP_DOMAIN
+    ),
+    probatio.Optional(CameraServiceArgument.FORMAT, default="hls"): probatio.In(
+        OUTPUT_FORMATS
+    ),
 }
 
 
 CAMERA_SERVICE_RECORD: VolDictType = {
-    probatio.Required(CONF_FILENAME): cv.template,
-    probatio.Optional(CONF_DURATION, default=30): probatio.Coerce(int),
-    probatio.Optional(CONF_LOOKBACK, default=0): probatio.Coerce(int),
+    probatio.Required(CameraServiceArgument.FILENAME): cv.template,
+    probatio.Optional(CameraServiceArgument.DURATION, default=30): probatio.Coerce(int),
+    probatio.Optional(CameraServiceArgument.LOOKBACK, default=0): probatio.Coerce(int),
 }
 
 
@@ -68,7 +61,7 @@ async def _async_handle_snapshot_service(
 ) -> None:
     """Handle snapshot services calls."""
     hass = camera.hass
-    filename: Template = service_call.data[ATTR_FILENAME]
+    filename: Template = service_call.data[CameraServiceArgument.FILENAME]
 
     snapshot_file = filename.async_render()
 
@@ -114,7 +107,7 @@ async def _async_handle_play_stream_service(
 ) -> None:
     """Handle play stream services calls."""
     hass = camera.hass
-    fmt = service_call.data[ATTR_FORMAT]
+    fmt = service_call.data[CameraServiceArgument.FORMAT]
     url = await async_stream_endpoint_url(camera.hass, camera, fmt)
     url = f"{get_url(hass)}{url}"
 
@@ -122,7 +115,7 @@ async def _async_handle_play_stream_service(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: service_call.data[ATTR_MEDIA_PLAYER],
+            ATTR_ENTITY_ID: service_call.data[CameraServiceArgument.MEDIA_PLAYER],
             ATTR_MEDIA_CONTENT_ID: url,
             ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
         },
@@ -144,13 +137,13 @@ async def _async_handle_record_service(
             translation_placeholders={"entity_id": camera.entity_id},
         )
 
-    filename = service_call.data[CONF_FILENAME]
+    filename = service_call.data[CameraServiceArgument.FILENAME]
     video_path = filename.async_render()
 
     await stream.async_record(
         video_path,
-        duration=service_call.data[CONF_DURATION],
-        lookback=service_call.data[CONF_LOOKBACK],
+        duration=service_call.data[CameraServiceArgument.DURATION],
+        lookback=service_call.data[CameraServiceArgument.LOOKBACK],
     )
 
 
@@ -160,21 +153,25 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        SERVICE_ENABLE_MOTION, None, "async_enable_motion_detection"
+        CameraService.ENABLE_MOTION_DETECTION, None, "async_enable_motion_detection"
     )
     component.async_register_entity_service(
-        SERVICE_DISABLE_MOTION, None, "async_disable_motion_detection"
-    )
-    component.async_register_entity_service(SERVICE_TURN_OFF, None, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
-    component.async_register_entity_service(
-        SERVICE_SNAPSHOT, CAMERA_SERVICE_SNAPSHOT, _async_handle_snapshot_service
+        CameraService.DISABLE_MOTION_DETECTION, None, "async_disable_motion_detection"
     )
     component.async_register_entity_service(
-        SERVICE_PLAY_STREAM,
+        CameraService.TURN_OFF, None, "async_turn_off"
+    )
+    component.async_register_entity_service(
+        CameraService.TURN_ON, None, "async_turn_on"
+    )
+    component.async_register_entity_service(
+        CameraService.SNAPSHOT, CAMERA_SERVICE_SNAPSHOT, _async_handle_snapshot_service
+    )
+    component.async_register_entity_service(
+        CameraService.PLAY_STREAM,
         CAMERA_SERVICE_PLAY_STREAM,
         _async_handle_play_stream_service,
     )
     component.async_register_entity_service(
-        SERVICE_RECORD, CAMERA_SERVICE_RECORD, _async_handle_record_service
+        CameraService.RECORD, CAMERA_SERVICE_RECORD, _async_handle_record_service
     )

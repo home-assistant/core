@@ -90,6 +90,16 @@ def setup_values() -> dict[str, Any]:
 
 
 @pytest.fixture
+def data_values() -> dict[str, Any]:
+    """The setup values."""
+    return DATA_VALUE
+
+
+def _data_value_lookup(key):
+    return DATA_VALUE.get(key)
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the my-PV mocked config entry for local devices."""
     return MockConfigEntry(
@@ -155,6 +165,8 @@ def mock_my_pv_client(
         client.get_command_configuration = Mock(side_effect=COMMAND_CONFIGURATION.get)
         client.send_command = AsyncMock(return_value=True)
         client.get_data_configurations = Mock(return_value=DATA_CONFIGURATION)
+        client.get_data_configuration = Mock(side_effect=DATA_CONFIGURATION.get)
+        client.get_data_value = Mock(side_effect=data_values.get)
         client.supports_data = Mock(side_effect=DATA_CONFIGURATION.__contains__)
         client.fetch_data = AsyncMock(return_value=True)
         client.get_data_value = Mock(side_effect=DATA_VALUE.get)

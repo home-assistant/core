@@ -2869,12 +2869,39 @@ async def test_extraction_functions_with_trigger_targets(
                                 "label_id": "combined-label",
                             },
                         },
+                        # Exclude block in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "area_id": "combined-area",
+                                "exclude": {
+                                    "entity_id": "scene.excluded_entity",
+                                    "device_id": "excluded-device",
+                                    "area_id": "excluded-area",
+                                    "floor_id": "excluded-floor",
+                                    "label_id": "excluded-label",
+                                },
+                            },
+                        },
                     ],
                     "conditions": [],
                     "actions": [
                         {
                             "action": "test.script",
                             "data": {"entity_id": "light.action_entity"},
+                        },
+                        {
+                            "action": "test.script",
+                            "target": {
+                                "area_id": "combined-area",
+                                "exclude": {
+                                    "entity_id": "light.action_excluded_entity",
+                                    "device_id": "action-excluded-device",
+                                    "area_id": "action-excluded-area",
+                                    "floor_id": "action-excluded-floor",
+                                    "label_id": "action-excluded-label",
+                                },
+                            },
                         },
                     ],
                 },
@@ -2888,7 +2915,9 @@ async def test_extraction_functions_with_trigger_targets(
         "scene.target_entity_list1",
         "scene.target_entity_list2",
         "scene.combined_entity",
+        "scene.excluded_entity",
         "light.action_entity",
+        "light.action_excluded_entity",
     }
 
     # Test device extraction from trigger targets
@@ -2897,6 +2926,8 @@ async def test_extraction_functions_with_trigger_targets(
         "target-device-1",
         "target-device-2",
         "combined-device",
+        "excluded-device",
+        "action-excluded-device",
     }
 
     # Test area extraction from trigger targets
@@ -2905,6 +2936,8 @@ async def test_extraction_functions_with_trigger_targets(
         "area-target-1",
         "area-target-2",
         "combined-area",
+        "excluded-area",
+        "action-excluded-area",
     }
 
     # Test floor extraction from trigger targets
@@ -2913,6 +2946,8 @@ async def test_extraction_functions_with_trigger_targets(
         "floor-target-1",
         "floor-target-2",
         "combined-floor",
+        "excluded-floor",
+        "action-excluded-floor",
     }
 
     # Test label extraction from trigger targets
@@ -2921,6 +2956,8 @@ async def test_extraction_functions_with_trigger_targets(
         "label-target-1",
         "label-target-2",
         "combined-label",
+        "excluded-label",
+        "action-excluded-label",
     }
 
     # Test automations_with_* functions
@@ -3058,6 +3095,21 @@ async def test_extraction_functions_with_condition_targets(
                             },
                             "options": {"behavior": "any"},
                         },
+                        # Exclude block in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "area_id": "combined-area",
+                                "exclude": {
+                                    "entity_id": "light.excluded_entity",
+                                    "device_id": "excluded-device",
+                                    "area_id": "excluded-area",
+                                    "floor_id": "excluded-floor",
+                                    "label_id": "excluded-label",
+                                },
+                            },
+                            "options": {"behavior": "any"},
+                        },
                     ],
                     "actions": [
                         {
@@ -3077,6 +3129,7 @@ async def test_extraction_functions_with_condition_targets(
         "light.condition_entity_list1",
         "light.condition_entity_list2",
         "light.combined_entity",
+        "light.excluded_entity",
         "light.action_entity",
     }
 
@@ -3086,6 +3139,7 @@ async def test_extraction_functions_with_condition_targets(
         "target-device-1",
         "target-device-2",
         "combined-device",
+        "excluded-device",
     }
 
     # Test area extraction from condition targets
@@ -3094,6 +3148,7 @@ async def test_extraction_functions_with_condition_targets(
         "area-condition-1",
         "area-condition-2",
         "combined-area",
+        "excluded-area",
     }
 
     # Test floor extraction from condition targets
@@ -3102,6 +3157,7 @@ async def test_extraction_functions_with_condition_targets(
         "floor-condition-1",
         "floor-condition-2",
         "combined-floor",
+        "excluded-floor",
     }
 
     # Test label extraction from condition targets
@@ -3110,6 +3166,7 @@ async def test_extraction_functions_with_condition_targets(
         "label-condition-1",
         "label-condition-2",
         "combined-label",
+        "excluded-label",
     }
 
     # Test automations_with_* functions
