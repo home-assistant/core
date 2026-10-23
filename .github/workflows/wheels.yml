@@ -26,7 +26,7 @@ jobs:
   init:
     name: Initialize wheels builder
     if: github.repository_owner == 'home-assistant'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -111,9 +111,9 @@ jobs:
         arch: ["amd64", "aarch64"]
         include:
           - arch: amd64
-            os: ubuntu-latest
+            os: ubuntu-26.04
           - arch: aarch64
-            os: ubuntu-24.04-arm
+            os: ubuntu-26.04-arm
     steps:
       - name: Checkout the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -137,7 +137,7 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: home-assistant/wheels@9e17ab1ed5c4c79d8b61e29fa63de25ca2710716 # 2026.07.0
+        uses: home-assistant/wheels@a100f6a076013273baaaf94c908d647d91327364 # 2026.10.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -162,9 +162,9 @@ jobs:
         arch: ["amd64", "aarch64"]
         include:
           - arch: amd64
-            os: ubuntu-latest
+            os: ubuntu-26.04
           - arch: aarch64
-            os: ubuntu-24.04-arm
+            os: ubuntu-26.04-arm
     steps:
       - name: Checkout the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -195,7 +195,7 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: home-assistant/wheels@9e17ab1ed5c4c79d8b61e29fa63de25ca2710716 # 2026.07.0
+        uses: home-assistant/wheels@a100f6a076013273baaaf94c908d647d91327364 # 2026.10.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2

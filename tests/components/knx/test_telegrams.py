@@ -580,17 +580,38 @@ async def test_telegram_to_dict_dpt_from_project(
     assert result["dpt_name"] is None
 
 
-async def test_load_history_needs_migration(
+@pytest.mark.parametrize(
+    "needs_migration",
+    [
+        pytest.param(True, id="needs_migration"),
+        pytest.param(False, id="no_migration"),
+    ],
+)
+async def test_load_history_holds_off_bootstrap_timeout(
     hass: HomeAssistant,
     knx: KNXTestKit,
+    needs_migration: bool,
 ) -> None:
-    """Test the schema-migration branch of store initialization."""
-    with patch(
-        "knx_telegram_store.BufferedSqliteStore.needs_migration",
-        return_value=True,
+    """Store initialization runs under a timeout freeze so bootstrap waits for it."""
+    original_initialize = BufferedSqliteStore.initialize
+    timeout_frozen: list[bool] = []
+
+    async def initialize(self: BufferedSqliteStore) -> None:
+        # The bootstrap stage timeout must wait for a migration to finish
+        timeout_frozen.append(DOMAIN in hass.timeout.zones)
+        await original_initialize(self)
+
+    with (
+        patch(
+            "knx_telegram_store.BufferedSqliteStore.needs_migration",
+            return_value=needs_migration,
+        ),
+        patch.object(BufferedSqliteStore, "initialize", initialize),
     ):
         await knx.setup_integration(real_telegram_store=True)
 
+    assert timeout_frozen == [True]
+    assert DOMAIN not in hass.timeout.zones
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is not None
 

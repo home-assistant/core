@@ -3,8 +3,6 @@
 from dataclasses import dataclass
 from typing import Any
 
-from packaging.version import parse as parse_version
-
 from .const import ProxmoxPermission
 
 
@@ -46,13 +44,6 @@ def is_proxmox_package(update: dict[str, Any]) -> bool:
     )
 
 
-def latest_version(versions: list[str]) -> str:
-    """Return the latest version from a list of version strings."""
-    # Fix proxmox -pve1 style suffixes
-    safe_versions = [v.split("-")[0] for v in versions]
-    return max(safe_versions, key=parse_version)
-
-
 def update_version(
     current_version: str,
     updates: list[dict[str, Any]],
@@ -61,14 +52,18 @@ def update_version(
 
     count = len(updates)
     pve_count = sum(is_proxmox_package(u) for u in updates)
-    other_count = len(updates) - pve_count
-    versions = [current_version] + [
-        u["Version"] for u in updates if is_proxmox_package(u)
-    ]
-
-    latest = latest_version(versions) if pve_count else current_version
+    other_count = count - pve_count
+    pve_manager_update = next(
+        (update for update in updates if update.get("Package") == "pve-manager"),
+        None,
+    )
+    latest = (
+        pve_manager_update["Version"].split("-")[0]
+        if pve_manager_update
+        else current_version
+    )
     return ProxmoxUpdateInfo(
-        latest_version=latest if count else current_version,
+        latest_version=latest,
         latest_version_id=f"{latest}-p{pve_count}-d{other_count}"
         if count
         else current_version,
