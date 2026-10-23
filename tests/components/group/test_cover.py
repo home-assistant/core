@@ -1016,7 +1016,8 @@ async def test_speeds(hass: HomeAssistant) -> None:
     hass.states.async_set(
         DEMO_COVER_POS, CoverState.OPEN, {ATTR_SUPPORTED_FEATURES: 11}
     )
-    # The speeds count even without the speed feature, as in core
+    # The speeds count even without the speed feature, like the cover entity,
+    # which checks the list, not the feature
     hass.states.async_set(
         DEMO_COVER,
         CoverState.OPEN,

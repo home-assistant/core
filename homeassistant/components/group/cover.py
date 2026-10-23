@@ -1,5 +1,6 @@
 """Platform allowing several cover to be grouped into one cover."""
 
+from itertools import chain
 from typing import Any, override
 
 import probatio
@@ -34,7 +35,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
-from .util import reduce_attribute
+from .util import find_state_attributes, reduce_attribute
 
 KEY_OPEN_CLOSE = "open_close"
 KEY_STOP = "stop"
@@ -167,14 +168,6 @@ class CoverGroup(GroupEntity, CoverEntity):
             self._tilts[KEY_POSITION].add(entity_id)
         else:
             self._tilts[KEY_POSITION].discard(entity_id)
-
-    def _member_speeds(self, entity_id: str) -> list[str]:
-        """Return the speeds a member supports."""
-        if not (state := self.hass.states.get(entity_id)):
-            return []
-        return (
-            state.attributes.get(CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS) or []
-        )
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -332,13 +325,16 @@ class CoverGroup(GroupEntity, CoverEntity):
             position_states, CoverEntityStateAttribute.CURRENT_POSITION
         )
 
-        # Member order keeps the speed order of each integration
-        speeds = dict.fromkeys(
-            speed
-            for entity_id in self._entity_ids
-            for speed in self._member_speeds(entity_id)
+        # Keep member order so each integration's speeds stay in their order
+        member_states = list(
+            filter(None, (self.hass.states.get(x) for x in self._entity_ids))
         )
-        self._attr_supported_speeds = list(speeds) or None
+        all_speeds = find_state_attributes(
+            member_states, CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS
+        )
+        self._attr_supported_speeds = (
+            list(dict.fromkeys(chain.from_iterable(all_speeds))) or None
+        )
 
         tilt_covers = self._tilts[KEY_POSITION]
         all_tilt_states = [self.hass.states.get(x) for x in tilt_covers]
