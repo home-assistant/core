@@ -41,7 +41,7 @@ from homeassistant.components.bmx_monitor.const import (
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers.selector import SelectSelector
 from homeassistant.helpers.translation import async_get_translations
 
@@ -416,6 +416,166 @@ async def test_bluetooth_custom_details(
     assert result["options"][CONF_CUSTOM_NUMPY_VOLTS] == [11.0, 11.5, 12.3, 12.8]
     assert result["options"][CONF_CUSTOM_NUMPY_PERCENT] == [0, 20, 50, 100]
     assert result["result"].unique_id == ADDRESS
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        CONF_CUSTOM_CRITICAL_VOLTAGE,
+        CONF_CUSTOM_LOW_VOLTAGE,
+        CONF_CUSTOM_FIFTY_PERCENT_VOLTAGE,
+        CONF_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
+        CONF_CUSTOM_FLOATING_VOLTAGE,
+        CONF_CUSTOM_CHARGING_VOLTAGE,
+    ],
+)
+@pytest.mark.parametrize("voltage", [5.99, 20.01])
+async def test_manual_custom_voltage_out_of_range(
+    hass: HomeAssistant,
+    service_info: MagicMock,
+    field: str,
+    voltage: float,
+) -> None:
+    """Manual setup rejects invalid voltages and accepts a corrected submission."""
+    manager = hass.config_entries.flow
+    result = await _manual_form(hass, service_info)
+    with patch.object(
+        config_flow.BMxConfigFlow,
+        "_async_validate_device",
+        return_value="valid_passive",
+    ):
+        result = await manager.async_configure(
+            result["flow_id"],
+            {CONF_ADDRESS: ADDRESS, CONF_BATTERY_TYPE: Battery.custom.value},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "custom_battery_details"
+    with patch.object(config_flow, "process_custom_battery_input") as process:
+        with pytest.raises(InvalidData) as exc_info:
+            await manager.async_configure(
+                result["flow_id"], {**CUSTOM_DETAILS, field: voltage}
+            )
+        process.assert_not_called()
+    assert field in exc_info.value.schema_errors
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    result = await manager.async_configure(result["flow_id"], CUSTOM_DETAILS.copy())
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"][CONF_BATTERY_TYPE] == Battery.custom.value
+    for key, value in CUSTOM_DETAILS.items():
+        assert result["options"][key] == value
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        CONF_CUSTOM_CRITICAL_VOLTAGE,
+        CONF_CUSTOM_LOW_VOLTAGE,
+        CONF_CUSTOM_FIFTY_PERCENT_VOLTAGE,
+        CONF_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
+        CONF_CUSTOM_FLOATING_VOLTAGE,
+        CONF_CUSTOM_CHARGING_VOLTAGE,
+    ],
+)
+@pytest.mark.parametrize("voltage", [5.99, 20.01])
+async def test_bluetooth_custom_voltage_out_of_range(
+    hass: HomeAssistant,
+    service_info: MagicMock,
+    field: str,
+    voltage: float,
+) -> None:
+    """Bluetooth setup rejects invalid voltages and accepts a correction."""
+    manager = hass.config_entries.flow
+    result = await _discovery_form(hass, service_info)
+    result = await manager.async_configure(
+        result["flow_id"], {CONF_BATTERY_TYPE: Battery.custom.value}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "custom_battery_details"
+    with patch.object(config_flow, "process_custom_battery_input") as process:
+        with pytest.raises(InvalidData) as exc_info:
+            await manager.async_configure(
+                result["flow_id"], {**CUSTOM_DETAILS, field: voltage}
+            )
+        process.assert_not_called()
+    assert field in exc_info.value.schema_errors
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    result = await manager.async_configure(result["flow_id"], CUSTOM_DETAILS.copy())
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"][CONF_BATTERY_TYPE] == Battery.custom.value
+    for key, value in CUSTOM_DETAILS.items():
+        assert result["options"][key] == value
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        CONF_CUSTOM_CRITICAL_VOLTAGE,
+        CONF_CUSTOM_LOW_VOLTAGE,
+        CONF_CUSTOM_FIFTY_PERCENT_VOLTAGE,
+        CONF_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
+        CONF_CUSTOM_FLOATING_VOLTAGE,
+        CONF_CUSTOM_CHARGING_VOLTAGE,
+    ],
+)
+@pytest.mark.parametrize("voltage", [5.99, 20.01])
+async def test_options_custom_voltage_out_of_range(
+    hass: HomeAssistant,
+    field: str,
+    voltage: float,
+) -> None:
+    """Invalid option voltages leave saved options intact and can be corrected."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ADDRESS,
+        options={CONF_BATTERY_TYPE: DEFAULT_BATTERY_TYPE},
+    )
+    entry.add_to_hass(hass)
+    manager = hass.config_entries.options
+    result = await manager.async_init(entry.entry_id)
+    result = await manager.async_configure(
+        result["flow_id"],
+        {
+            CONF_BATTERY_TYPE: Battery.custom.value,
+            CONF_RATE_LIMIT_MODE: DEFAULT_RATE_LIMIT_MODE,
+            CONF_RATE_LIMIT: DEFAULT_RATE_LIMIT,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "custom_battery_details"
+    with patch.object(config_flow, "process_custom_battery_input") as process:
+        with pytest.raises(InvalidData) as exc_info:
+            await manager.async_configure(
+                result["flow_id"], {**CUSTOM_DETAILS, field: voltage}
+            )
+        process.assert_not_called()
+    assert field in exc_info.value.schema_errors
+    assert entry.options == {CONF_BATTERY_TYPE: DEFAULT_BATTERY_TYPE}
+
+    result = await manager.async_configure(result["flow_id"], CUSTOM_DETAILS.copy())
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BATTERY_TYPE] == Battery.custom.value
+    for key, value in CUSTOM_DETAILS.items():
+        assert result["data"][key] == value
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        CONF_CUSTOM_CRITICAL_VOLTAGE,
+        CONF_CUSTOM_LOW_VOLTAGE,
+        CONF_CUSTOM_FIFTY_PERCENT_VOLTAGE,
+        CONF_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
+        CONF_CUSTOM_FLOATING_VOLTAGE,
+        CONF_CUSTOM_CHARGING_VOLTAGE,
+    ],
+)
+@pytest.mark.parametrize("voltage", [6.0, 20.0])
+def test_custom_voltage_schema_includes_boundaries(field: str, voltage: float) -> None:
+    """Both voltage limits are accepted without changing the submitted value."""
+    result = config_flow.custom_battery_schema({})({**CUSTOM_DETAILS, field: voltage})
+    assert result[field] == voltage
 
 
 async def test_custom_voltages_out_of_order(

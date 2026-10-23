@@ -108,42 +108,42 @@ def custom_battery_schema(
                     CONF_CUSTOM_CRITICAL_VOLTAGE,
                     DEFAULT_CUSTOM_CRITICAL_VOLTAGE,
                 ),
-            ): probatio.All(probatio.Coerce(float), probatio.Clamp(min=6.0, max=20.0)),
+            ): probatio.All(probatio.Coerce(float), probatio.Range(min=6.0, max=20.0)),
             probatio.Required(
                 CONF_CUSTOM_LOW_VOLTAGE,
                 default=options.get(
                     CONF_CUSTOM_LOW_VOLTAGE,
                     DEFAULT_CUSTOM_LOW_VOLTAGE,
                 ),
-            ): probatio.All(probatio.Coerce(float), probatio.Clamp(min=6.0, max=20.0)),
+            ): probatio.All(probatio.Coerce(float), probatio.Range(min=6.0, max=20.0)),
             probatio.Required(
                 CONF_CUSTOM_FIFTY_PERCENT_VOLTAGE,
                 default=options.get(
                     CONF_CUSTOM_FIFTY_PERCENT_VOLTAGE,
                     DEFAULT_CUSTOM_FIFTY_PERCENT_VOLTAGE,
                 ),
-            ): probatio.All(probatio.Coerce(float), probatio.Clamp(min=6.0, max=20.0)),
+            ): probatio.All(probatio.Coerce(float), probatio.Range(min=6.0, max=20.0)),
             probatio.Required(
                 CONF_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
                 default=options.get(
                     CONF_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
                     DEFAULT_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
                 ),
-            ): probatio.All(probatio.Coerce(float), probatio.Clamp(min=6.0, max=20.0)),
+            ): probatio.All(probatio.Coerce(float), probatio.Range(min=6.0, max=20.0)),
             probatio.Required(
                 CONF_CUSTOM_FLOATING_VOLTAGE,
                 default=options.get(
                     CONF_CUSTOM_FLOATING_VOLTAGE,
                     DEFAULT_CUSTOM_FLOATING_VOLTAGE,
                 ),
-            ): probatio.All(probatio.Coerce(float), probatio.Clamp(min=6.0, max=20.0)),
+            ): probatio.All(probatio.Coerce(float), probatio.Range(min=6.0, max=20.0)),
             probatio.Required(
                 CONF_CUSTOM_CHARGING_VOLTAGE,
                 default=options.get(
                     CONF_CUSTOM_CHARGING_VOLTAGE,
                     DEFAULT_CUSTOM_CHARGING_VOLTAGE,
                 ),
-            ): probatio.All(probatio.Coerce(float), probatio.Clamp(min=6.0, max=20.0)),
+            ): probatio.All(probatio.Coerce(float), probatio.Range(min=6.0, max=20.0)),
         }
     )
 
