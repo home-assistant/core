@@ -12,7 +12,7 @@ from meraki.aio import AsyncDashboardAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -122,7 +122,7 @@ class MerakiDataUpdateCoordinator(DataUpdateCoordinator[MerakiData]):
             return await request
         except APIError as err:
             if is_auth_error(err):
-                raise ConfigEntryAuthFailed(
+                raise ConfigEntryError(
                     translation_domain=DOMAIN, translation_key="invalid_auth"
                 ) from err
             raise UpdateFailed(

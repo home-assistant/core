@@ -115,38 +115,3 @@ async def test_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reauth(
-    hass: HomeAssistant,
-    mock_meraki_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test replacing an API key that stopped working."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    get_organizations = mock_meraki_client.organizations.getOrganizations
-    get_organizations.side_effect = api_error(401)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: "wrong"}
-    )
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    get_organizations.side_effect = None
-    get_organizations.return_value = [{"id": "999", "name": "Office"}]
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: "other-organization"}
-    )
-    assert result["errors"] == {"base": "organization_not_accessible"}
-
-    get_organizations.return_value = [{"id": ORGANIZATION_ID, "name": "Home Lab"}]
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: "new-key"}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_API_KEY] == "new-key"

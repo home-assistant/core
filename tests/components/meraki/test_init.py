@@ -8,7 +8,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
 
 from homeassistant.components.meraki.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
@@ -62,20 +62,6 @@ async def test_setup_errors(
     )
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is state
-
-
-async def test_invalid_auth_starts_reauth(
-    hass: HomeAssistant,
-    mock_meraki_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test an API key that stopped working asks for a new one."""
-    mock_meraki_client.organizations.getOrganizationNetworks.side_effect = api_error(
-        401
-    )
-    await setup_integration(hass, mock_config_entry)
-    flows = hass.config_entries.flow.async_progress()
-    assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
 
 
 async def test_all_requests_finish_before_failing(

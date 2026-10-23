@@ -1,6 +1,5 @@
 """Config flow for the Meraki integration."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -82,34 +81,6 @@ class MerakiConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 }
             ),
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle an API key that stopped working."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Ask for a new API key."""
-        errors: dict[str, str] = {}
-        entry = self._get_reauth_entry()
-        if user_input is not None:
-            errors = await self._async_fetch_organizations(user_input[CONF_API_KEY])
-            if not errors and entry.unique_id not in self._organizations:
-                errors["base"] = "organization_not_accessible"
-            if not errors:
-                return self.async_update_reload_and_abort(
-                    entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=API_KEY_SCHEMA,
-            description_placeholders={"organization": entry.title},
-            errors=errors,
         )
 
     async def _async_create_organization_entry(
