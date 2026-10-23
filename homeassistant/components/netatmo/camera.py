@@ -193,12 +193,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                         "Camera %s has received light mode event without sub_type",
                         data["camera_id"],
                     )
-            else:
-                _LOGGER.debug(
-                    "Camera %s has received unexpected event as type %s",
-                    data["camera_id"],
-                    event_type,
-                )
 
             self.async_write_ha_state()
             return
