@@ -142,3 +142,38 @@ async def test_poll_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("light.hall").state == "off"
+
+
+async def test_commands_preserve_polling_deadline(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Repeated commands do not postpone shared status updates."""
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_client.light_states.reset_mock()
+    freezer.tick(timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        "light", "turn_on", {ATTR_ENTITY_ID: "light.hall"}, blocking=True
+    )
+    assert hass.states.get("light.hall").state == "on"
+
+    freezer.tick(timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        "light", "turn_on", {ATTR_ENTITY_ID: "light.hall"}, blocking=True
+    )
+    assert mock_client.light_states.await_count == 0
+
+    mock_client.light_states.return_value = {"4_0": None, "2_0": 0}
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_client.light_states.await_count == 1
+    assert hass.states.get("light.hall").state == "off"
+    assert hass.states.get("light.kitchen").state == STATE_UNAVAILABLE

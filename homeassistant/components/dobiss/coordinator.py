@@ -50,7 +50,8 @@ class DobissCoordinator(DataUpdateCoordinator[dict[str, int | None]]):
                 value = self.data.get(light.key) or 100
             else:
                 value = 1
-            self.async_set_updated_data({**self.data, light.key: value})
+            self.data = {**self.data, light.key: value}
+            self.async_update_listeners()
 
     @override
     async def _async_setup(self) -> None:
