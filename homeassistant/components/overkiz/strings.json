@@ -224,7 +224,7 @@
       "message": "This device does not support setting position and tilt simultaneously."
     },
     "zone_control_side_unknown": {
-      "message": "The Zone Control isn't heating or cooling, so the program has no setpoint to change. Switch the zone to manual first."
+      "message": "The Zone Control isn't heating or cooling, so the program has no setpoint to change. Select heating or cooling on the Zone Control first."
     }
   },
   "issues": {
