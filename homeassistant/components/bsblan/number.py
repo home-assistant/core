@@ -64,7 +64,8 @@ async def async_setup_entry(
     data = entry.runtime_data
     entities: list[NumberEntity] = []
     for circuit in data.available_circuits:
-        if data.fast_coordinator.data.states[circuit].target_temperature is not None:
+        state = data.fast_coordinator.data.states[circuit]
+        if first_temperature(state.target_temperature) is not None:
             entities.append(
                 BSBLanCircuitSetpointNumber(data, circuit, COMFORT_TEMPERATURE)
             )
@@ -75,7 +76,7 @@ async def async_setup_entry(
                 BSBLanCircuitSetpointNumber(data, circuit, REDUCED_TEMPERATURE)
             )
     if (dhw := data.fast_coordinator.data.dhw) is not None and (
-        dhw.nominal_setpoint is not None
+        first_temperature(dhw.nominal_setpoint) is not None
     ):
         entities.extend(
             BSBLanHotWaterSetpointNumber(data, description)
