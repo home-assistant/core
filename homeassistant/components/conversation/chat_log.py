@@ -761,6 +761,22 @@ class ChatLog:
                 user_llm_hass_api, llm_context
             )
         else:
+            api_ids = (
+                [user_llm_hass_api]
+                if isinstance(user_llm_hass_api, str)
+                else user_llm_hass_api
+            )
+            registered = {api.id for api in llm.async_get_apis(self.hass)}
+            # Leave out an API that is not available, such as an MCP server that
+            # is down, so the agent keeps its other tools.
+            available = [api_id for api_id in api_ids if api_id in registered]
+            if available and len(available) < len(api_ids):
+                LOGGER.warning(
+                    "LLM API %s for %s is not available, continuing without it",
+                    [api_id for api_id in api_ids if api_id not in registered],
+                    llm_context.platform,
+                )
+                user_llm_hass_api = available
             try:
                 llm_api = await llm.async_get_api(
                     self.hass,

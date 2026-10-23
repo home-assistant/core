@@ -137,6 +137,27 @@ async def test_unknown_llm_api(
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
 
 
+async def test_unavailable_llm_api_is_skipped(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an unavailable LLM API is left out when another one is available."""
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api=["assist", "unknown-api"],
+            user_llm_prompt=None,
+        )
+
+    assert chat_log.llm_api
+    assert chat_log.llm_api.api.id == "assist"
+    assert "LLM API ['unknown-api'] for test is not available" in caplog.text
+
+
 @pytest.mark.parametrize(
     "user_id",
     [
