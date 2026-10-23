@@ -883,18 +883,20 @@ class SolarEdgeV2Coordinator(DataUpdateCoordinator[dict[str, Reading]]):
             next_poll=(now + HOUR * 2).timestamp(),
             failed=True,
         )
-        for key, hours in jobs:
-            due[key] = (now + HOUR * hours).timestamp()
+        # Until a job completes, persist only its retry deadline (the pre-I/O
+        # pause), so an abrupt stop can never skip an unrequested job for a cadence.
+        for key, _ in jobs:
+            due[key] = self.state["next_poll"]
         await self.store.async_save(self.state)
-        # Finished jobs keep their normal cadence above; only a failed or
-        # unattempted job is retried, so partial batches cannot starve later jobs.
+        # A job advances to its normal cadence only once it completes, and that
+        # completion is saved; failed or unattempted jobs keep a retry deadline.
         completed: set[str] = set()
 
         def unfinished() -> list[str]:
             return [key for key, _ in jobs if key not in completed]
 
         try:
-            for key, _ in jobs:
+            for key, hours in jobs:
                 try:
                     readings = await self._read_job(key, now)
                     self.state.setdefault("permissions", {}).pop(key, None)
@@ -919,9 +921,12 @@ class SolarEdgeV2Coordinator(DataUpdateCoordinator[dict[str, Reading]]):
                             )
                         ):
                             self.state["readings"][name]["value"] = None
+                    due[key] = (now + HOUR * hours).timestamp()
                     completed.add(key)
+                    await self.store.async_save(self.state)
                     continue
                 self._save_readings(readings, now)
+                due[key] = (now + HOUR * hours).timestamp()
                 completed.add(key)
                 await self.store.async_save(self.state)
         except AuthenticationError, OAuth2TokenRequestReauthError:

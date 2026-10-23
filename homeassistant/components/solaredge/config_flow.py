@@ -228,13 +228,16 @@ class SolarEdgeConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     )
 
                 if api_key_ok and web_login_ok:
-                    # A web-only V2 edit keeps the native OAuth context; only the
-                    # submitted web credentials replace (or clear) the previous ones.
+                    # A web-only V2 edit keeps the native OAuth context. Saved web
+                    # credentials change only when the web section is submitted:
+                    # blank fields clear them, a validated pair replaces them.
+                    web_submitted = CONF_SECTION_WEB_AUTH in user_input
                     data = (
                         {
                             key: value
                             for key, value in entry.data.items()
-                            if key not in (CONF_USERNAME, CONF_PASSWORD)
+                            if not web_submitted
+                            or key not in (CONF_USERNAME, CONF_PASSWORD)
                         }
                         if keep_oauth and entry
                         else {}

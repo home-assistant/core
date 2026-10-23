@@ -69,7 +69,9 @@ async def async_repair_authorization(
         for key in jobs:
             state["due"][key] = 0
         # The successful native flow just performed this budgeted site request.
-        # Reuse it rather than spending an eleventh rolling-minute reservation.
+        # Reuse it rather than spending an eleventh rolling-minute reservation;
+        # it is current evidence, so an earlier metadata denial no longer applies.
         state["metadata"] = metadata
+        state.get("permissions", {}).pop("metadata", None)
         state["due"]["metadata"] = (dt_util.utcnow() + HOUR * 168).timestamp()
         await store.async_save(state)
