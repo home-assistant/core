@@ -144,6 +144,11 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         return first_temperature(state.current_setpoint, state.target_temperature)
 
     @property
+    def _current_setpoint(self) -> float | None:
+        """Return the setpoint the controller applies right now."""
+        return first_temperature(self._circuit_state.current_setpoint)
+
+    @property
     def _hvac_mode_value(self) -> int | None:
         """Return the raw hvac_mode value from the coordinator."""
         if (hvac_mode := self._circuit_state.hvac_mode) is None:
@@ -178,7 +183,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
             return None
         if hvac_mode_value != BSBLAN_AUTOMATIC_MODE:
             return BSBLAN_HVAC_MODE_TO_PRESET.get(hvac_mode_value)
-        if (current := first_temperature(self._circuit_state.current_setpoint)) is None:
+        if (current := self._current_setpoint) is None:
             return None
         if current == self._comfort_setpoint:
             return PRESET_COMFORT
@@ -209,10 +214,18 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         temperature = kwargs[ATTR_TEMPERATURE]
         hvac_mode = kwargs.get(ATTR_HVAC_MODE)
         if (hvac_mode or self.hvac_mode) == HVACMode.AUTO:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="set_temperature_in_auto_mode",
-            )
+            # Scenes restore the target before the preset, rounded to the display unit
+            if not any(
+                setpoint is not None and abs(temperature - setpoint) < 0.3
+                for setpoint in (self._comfort_setpoint, self._reduced_setpoint)
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="set_temperature_in_auto_mode",
+                )
+            if hvac_mode is not None:
+                await self.async_set_hvac_mode(hvac_mode)
+            return
         # Switching to heat or off writes the comfort setpoint
         setpoint = (
             Setpoint.REDUCED
