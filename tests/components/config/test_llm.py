@@ -195,12 +195,6 @@ MOCK_EXCEPTION_TRANSLATIONS: dict[str, str] = {
                     "title": "Matter",
                     "state": "setup_in_progress",
                 },
-            ],
-            id="status_not_loaded",
-        ),
-        pytest.param(
-            {"status": "disabled"},
-            [
                 {
                     "entry_id": "entry_disabled",
                     "domain": "spotify",
@@ -216,7 +210,7 @@ MOCK_EXCEPTION_TRANSLATIONS: dict[str, str] = {
                     "source": "ignore",
                 },
             ],
-            id="status_disabled",
+            id="status_not_loaded",
         ),
         pytest.param(
             {"domain": [TEST_DOMAIN, "  ZWAVE_JS  "], "status": "error"},
