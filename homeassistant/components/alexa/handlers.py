@@ -12,10 +12,8 @@ from homeassistant.components import (
     camera,
     cover,
     fan,
-    input_button,
     input_number,
     media_player,
-    timer,
     vacuum,
     valve,
 )
@@ -52,8 +50,15 @@ from homeassistant.components.humidifier import (
     HumidifierService,
     HumidifierServiceArgument,
 )
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.input_button import (
+    DOMAIN as INPUT_BUTTON_DOMAIN,
+    InputButtonService,
+)
+from homeassistant.components.input_number import (
+    DOMAIN as INPUT_NUMBER_DOMAIN,
+    InputNumberService,
+    InputNumberServiceArgument,
+)
 from homeassistant.components.light import (
     LightEntityCapabilityAttribute,
     LightEntityStateAttribute,
@@ -79,7 +84,7 @@ from homeassistant.components.remote import (
     RemoteService,
     RemoteServiceArgument,
 )
-from homeassistant.components.timer import DOMAIN as TIMER_DOMAIN
+from homeassistant.components.timer import DOMAIN as TIMER_DOMAIN, TimerService
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     VacuumEntityCapabilityAttribute,
@@ -279,7 +284,7 @@ async def async_api_turn_on(
         ):
             service = VacuumService.START
     elif domain == TIMER_DOMAIN:
-        service = timer.SERVICE_START
+        service = TimerService.START
     elif domain == MEDIA_PLAYER_DOMAIN:
         supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         power_features = (
@@ -334,7 +339,7 @@ async def async_api_turn_off(
         ):
             service = VacuumService.RETURN_TO_BASE
     elif domain == TIMER_DOMAIN:
-        service = timer.SERVICE_CANCEL
+        service = TimerService.CANCEL
     elif domain == MEDIA_PLAYER_DOMAIN:
         supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         power_features = (
@@ -544,7 +549,7 @@ async def async_api_activate(
     if domain == BUTTON_DOMAIN:
         service = ButtonService.PRESS
     elif domain == INPUT_BUTTON_DOMAIN:
-        service = input_button.SERVICE_PRESS
+        service = InputButtonService.PRESS
 
     await _async_call_service(
         hass,
@@ -1676,12 +1681,14 @@ async def async_api_set_range(
         data[HumidifierServiceArgument.HUMIDITY] = range_value
 
     # Input Number Value
-    elif instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
+    elif instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
         range_value = float(range_value)
-        service = input_number.SERVICE_SET_VALUE
+        service = InputNumberService.SET_VALUE
         min_value = float(entity.attributes[input_number.ATTR_MIN])
         max_value = float(entity.attributes[input_number.ATTR_MAX])
-        data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
+        data[InputNumberServiceArgument.VALUE] = min(
+            max_value, max(min_value, range_value)
+        )
 
     # Input Number Value
     elif instance == f"{NUMBER_DOMAIN}.{NumberServiceArgument.VALUE}":
@@ -1833,13 +1840,13 @@ async def async_api_adjust_range(
             data[HumidifierServiceArgument.HUMIDITY] = percentage
 
     # Input Number Value
-    elif instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
+    elif instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
         range_delta = float(range_delta)
-        service = input_number.SERVICE_SET_VALUE
+        service = InputNumberService.SET_VALUE
         min_value = float(entity.attributes[input_number.ATTR_MIN])
         max_value = float(entity.attributes[input_number.ATTR_MAX])
         current = float(entity.state)
-        data[input_number.ATTR_VALUE] = response_value = min(
+        data[InputNumberServiceArgument.VALUE] = response_value = min(
             max_value, max(min_value, range_delta + current)
         )
 
@@ -2124,7 +2131,7 @@ async def async_api_hold(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == TIMER_DOMAIN:
-        service = timer.SERVICE_PAUSE
+        service: str = TimerService.PAUSE
 
     elif entity.domain == VACUUM_DOMAIN:
         service = VacuumService.PAUSE
@@ -2151,7 +2158,7 @@ async def async_api_resume(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == TIMER_DOMAIN:
-        service = timer.SERVICE_START
+        service: str = TimerService.START
 
     elif entity.domain == VACUUM_DOMAIN:
         service = VacuumService.START
