@@ -11,6 +11,7 @@ from bizkaibus import (
 )
 from probatio import to_field_list
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bizkaibus.const import (
     CONF_LINE_IDS,
@@ -20,13 +21,11 @@ from homeassistant.components.bizkaibus.const import (
     OLD_CONF_ROUTE_ID,
     OLD_CONF_STOP_ID,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from tests.common import MockConfigEntry
 
 
 def _mock_api(
@@ -95,9 +94,13 @@ async def test_user_flow_with_offline_stop(hass: HomeAssistant) -> None:
     """Test the user flow recovers when the stop comes back online."""
     stop_id = "9999"
 
-    with patch(
-        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
-    ) as mock_api_class:
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
+    ):
+        mock_setup.return_value = True
         _mock_api(
             mock_api_class,
             lines=[SimpleNamespace(id="A", route="Route A")],
@@ -122,13 +125,28 @@ async def test_user_flow_with_offline_stop(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "lines"
 
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_with_parse_error(hass: HomeAssistant) -> None:
     """Test the user flow handles a parse error from the API factory."""
-    with patch(
-        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
-    ) as mock_api_class:
-        mock_api_class.create = AsyncMock(side_effect=BizkaibusParseError())
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
+    ):
+        mock_setup.return_value = True
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            timetable=SimpleNamespace(id="stop_1234", name="Central Station"),
+        )
+        mock_api_class.create = AsyncMock(side_effect=[BizkaibusParseError(), mock_api])
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -137,8 +155,17 @@ async def test_user_flow_with_parse_error(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_STOP_ID: "1234"}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "api_parse_error"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "api_parse_error"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "1234"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -160,10 +187,19 @@ async def test_user_flow_with_api_factory_error(
     hass: HomeAssistant, exception: Exception, expected_errors: dict[str, str]
 ) -> None:
     """Test the user flow handles API factory errors."""
-    with patch(
-        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
-    ) as mock_api_class:
-        mock_api_class.create = AsyncMock(side_effect=exception)
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
+    ):
+        mock_setup.return_value = True
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            timetable=SimpleNamespace(id="stop_1234", name="Central Station"),
+        )
+        mock_api_class.create = AsyncMock(side_effect=[exception, mock_api])
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -172,22 +208,53 @@ async def test_user_flow_with_api_factory_error(
             result["flow_id"], {CONF_STOP_ID: "1234"}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == expected_errors
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == expected_errors
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "1234"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_with_invalid_stop_id(hass: HomeAssistant) -> None:
     """Test the user step rejects an invalid stop ID."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
+    ):
+        mock_setup.return_value = True
+        _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            timetable=SimpleNamespace(id="stop_1234", name="Central Station"),
+        )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_STOP_ID: "123"}
-    )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_STOP_ID: "invalid_stop_id"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "123"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {CONF_STOP_ID: "invalid_stop_id"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "1234"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_with_timetable_none(hass: HomeAssistant) -> None:
@@ -218,13 +285,18 @@ async def test_user_flow_with_timetable_none(hass: HomeAssistant) -> None:
 
 async def test_user_flow_with_title_connection_error(hass: HomeAssistant) -> None:
     """Test the user flow handles a title connection error."""
-    with patch(
-        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
-    ) as mock_api_class:
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
+    ):
+        mock_setup.return_value = True
         _mock_api(
             mock_api_class,
             lines=[SimpleNamespace(id="A", route="Route A")],
-            test_connection=[True, False],
+            timetable=SimpleNamespace(id="stop_5678", name="Central Station"),
+            test_connection=[True, False, True, True],
         )
 
         result = await hass.config_entries.flow.async_init(
@@ -234,8 +306,17 @@ async def test_user_flow_with_title_connection_error(hass: HomeAssistant) -> Non
             result["flow_id"], {CONF_STOP_ID: "5678"}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "5678"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_lines_flow_creates_entry(hass: HomeAssistant) -> None:
@@ -271,6 +352,7 @@ async def test_lines_flow_creates_entry(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == stop_id
         assert result["title"] == "1234 Central Station"
         assert result["data"] == {CONF_STOP_ID: stop_id}
         assert result["options"][CONF_LINE_IDS] == ["A", "B"]
@@ -309,6 +391,7 @@ async def test_lines_flow_with_single_line(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == stop_id
         assert result["data"] == {CONF_STOP_ID: stop_id}
         assert result["options"][CONF_LINE_IDS] == ["X"]
 
@@ -372,6 +455,7 @@ async def test_duplicate_stop_entry_is_blocked(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == stop_id
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -412,13 +496,7 @@ async def test_reconfigure_step(hass: HomeAssistant) -> None:
         )
         config_entry.runtime_data = SimpleNamespace(api=mock_api)
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_RECONFIGURE,
-                "entry_id": config_entry.entry_id,
-            },
-        )
+        result = await config_entry.start_reconfigure_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_STOP_ID: "0232"}
         )
@@ -457,13 +535,7 @@ async def test_reconfigure_form_schema_is_serializable(hass: HomeAssistant) -> N
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert to_field_list(result["data_schema"], custom_serializer=cv.custom_serializer)
@@ -489,13 +561,7 @@ async def test_reconfigure_step_without_changing_stop(hass: HomeAssistant) -> No
         )
         config_entry.runtime_data = SimpleNamespace(api=mock_api)
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_RECONFIGURE,
-                "entry_id": config_entry.entry_id,
-            },
-        )
+        result = await config_entry.start_reconfigure_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_STOP_ID: "0252"}
         )
@@ -513,19 +579,37 @@ async def test_reconfigure_step_with_invalid_stop_id(hass: HomeAssistant) -> Non
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_STOP_ID: "123"}
-    )
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload", return_value=True
+        ),
+    ):
+        _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            timetable=SimpleNamespace(id="stop_0252", name="Central Station"),
+        )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_STOP_ID: "invalid_stop_id"}
+        result = await config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "123"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {CONF_STOP_ID: "invalid_stop_id"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "0252"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_step_with_title_connection_error(
@@ -539,28 +623,38 @@ async def test_reconfigure_step_with_title_connection_error(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
-    ) as mock_api_class:
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload", return_value=True
+        ),
+    ):
         _mock_api(
             mock_api_class,
             lines=[SimpleNamespace(id="A", route="Route A")],
-            test_connection=[True, False],
+            timetable=SimpleNamespace(id="stop_9999", name="Central Station"),
+            test_connection=[True, False, True, True],
         )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_RECONFIGURE,
-                "entry_id": config_entry.entry_id,
-            },
-        )
+        result = await config_entry.start_reconfigure_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_STOP_ID: "9999"}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "9999"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_step_with_parse_error(hass: HomeAssistant) -> None:
@@ -572,24 +666,38 @@ async def test_reconfigure_step_with_parse_error(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
-    ) as mock_api_class:
-        mock_api_class.create = AsyncMock(side_effect=BizkaibusParseError())
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_RECONFIGURE,
-                "entry_id": config_entry.entry_id,
-            },
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload", return_value=True
+        ),
+    ):
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            timetable=SimpleNamespace(id="stop_9999", name="Central Station"),
         )
+        mock_api_class.create = AsyncMock(side_effect=[BizkaibusParseError(), mock_api])
+
+        result = await config_entry.start_reconfigure_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_STOP_ID: "9999"}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "api_parse_error"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "api_parse_error"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "9999"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
@@ -601,9 +709,14 @@ async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
-    ) as mock_api_class:
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload", return_value=True
+        ),
+    ):
         mock_api = _mock_api(
             mock_api_class,
             lines=[SimpleNamespace(id="A", route="Route A")],
@@ -611,13 +724,7 @@ async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
         )
         config_entry.runtime_data = SimpleNamespace(api=mock_api)
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_RECONFIGURE,
-                "entry_id": config_entry.entry_id,
-            },
-        )
+        result = await config_entry.start_reconfigure_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_STOP_ID: "9999"}
         )
@@ -631,6 +738,13 @@ async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "lines"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
@@ -790,6 +904,7 @@ async def test_import_flow_from_yaml(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1234"
     assert result["data"] == {CONF_STOP_ID: "1234"}
     assert result["options"] == {
         CONF_LINE_IDS: ["A"],
@@ -856,6 +971,7 @@ async def test_import_flow_ignores_unknown_lines(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1234"
     assert result["options"][CONF_LINE_IDS] == ["A"]
 
 

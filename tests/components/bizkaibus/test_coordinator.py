@@ -1,21 +1,23 @@
 """Tests for the Bizkaibus coordinator."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 from bizkaibus import BizkaibusParseError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.bizkaibus.const import CONF_STOP_ID, DOMAIN
+from homeassistant.components.bizkaibus.const import CONF_STOP_ID, DOMAIN, SCAN_INTERVAL
 from homeassistant.components.bizkaibus.coordinator import BizkaibusUpdateCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from tests.common import MockConfigEntry
 
-
-async def test_coordinator_updates_arrivals(hass: HomeAssistant) -> None:
+async def test_coordinator_updates_arrivals(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test converting API arrivals to coordinator data."""
     nearest_arrival = datetime(2026, 9, 3, 12, 0, tzinfo=UTC)
     next_arrival = datetime(2026, 9, 3, 12, 15, tzinfo=UTC)
@@ -34,7 +36,9 @@ async def test_coordinator_updates_arrivals(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     coordinator = BizkaibusUpdateCoordinator(hass, api, entry)
 
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert coordinator.last_update_success
     assert coordinator.friendly_name == "Central Station"
@@ -45,7 +49,7 @@ async def test_coordinator_updates_arrivals(hass: HomeAssistant) -> None:
 
 
 async def test_coordinator_returns_empty_data_without_timetable(
-    hass: HomeAssistant,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test a missing timetable produces no arrivals."""
     api = SimpleNamespace(get_timetable=AsyncMock(return_value=None))
@@ -53,7 +57,9 @@ async def test_coordinator_returns_empty_data_without_timetable(
     entry.add_to_hass(hass)
     coordinator = BizkaibusUpdateCoordinator(hass, api, entry)
 
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert coordinator.last_update_success
     assert coordinator.data == []
@@ -76,7 +82,7 @@ async def test_coordinator_raises_update_failed_on_parse_error(
 
 
 async def test_coordinator_skips_arrivals_without_nearest_arrival(
-    hass: HomeAssistant,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test arrivals without a nearest time are skipped."""
     nearest_arrival = datetime(2026, 9, 3, 12, 0, tzinfo=UTC)
@@ -100,7 +106,9 @@ async def test_coordinator_skips_arrivals_without_nearest_arrival(
     entry.add_to_hass(hass)
     coordinator = BizkaibusUpdateCoordinator(hass, api, entry)
 
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert coordinator.last_update_success
     assert len(coordinator.data) == 1
