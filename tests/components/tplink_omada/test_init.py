@@ -489,6 +489,36 @@ async def test_cleanup_devices_requires_confirmed_empty_list(
     assert (device_registry.async_get(orphan.id) is None) is orphan_removed
 
 
+async def test_cleanup_keeps_devices_after_failed_poll(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed device poll leaves the cached device list untouched."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    orphan = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "99:99:99:99:99:99")},
+        manufacturer="TP-Link",
+        model="Test",
+        name="Orphan",
+    )
+
+    # The cached device list is still populated from setup, but the poll fails
+    site_client = mock_omada_client.get_site_client.return_value
+    site_client.get_devices = AsyncMock(side_effect=OmadaClientException)
+    freezer.tick(timedelta(hours=1, seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get(orphan.id) is not None
+
+
 async def test_cleanup_devices_empty_count_resets_on_data(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,
