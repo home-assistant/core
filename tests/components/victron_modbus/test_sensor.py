@@ -199,10 +199,11 @@ async def test_only_reported_readings_get_a_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_unit,
 ) -> None:
-    """Readings the device reports as unavailable at setup get no sensor."""
+    """Readings unavailable at setup get a sensor once the device reports them."""
     set_readings(mock_unit)
     mock_unit.holding[0x3048] = 0x7FFF  # L2 voltage: not available
     mock_unit.holding[0x100B] = 0xFFFF  # hardware version: not reported
@@ -223,6 +224,17 @@ async def test_only_reported_readings_get_a_sensor(
         (DOMAIN, SERIAL), mock_config_entry.entry_id
     )
     assert device.hw_version is None
+
+    # The reading comes back without a reload.
+    mock_unit.holding[0x3048] = 2300  # L2 voltage: 23.00 V
+    await _next_poll(hass, freezer)
+    await _next_poll(hass, freezer)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SERIAL}_phase_2_voltage"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "23.0"
 
 
 async def test_failed_read_at_setup_keeps_sensors(

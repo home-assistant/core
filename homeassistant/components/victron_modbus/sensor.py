@@ -28,7 +28,7 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import VictronModbusConfigEntry
@@ -154,6 +154,9 @@ async def async_setup_entry(
     data = entry.runtime_data
     device = data.power.device
     entities: list[VictronModbusSensor] = []
+    # Readings the device reported as unavailable at setup, which it either lacks
+    # or can't give yet; each one gets its sensor once it reports a value.
+    pending: list[tuple[VictronModbusSensorDescription, str, str, int | None]] = []
 
     def add(
         description: VictronModbusSensorDescription,
@@ -164,17 +167,29 @@ async def async_setup_entry(
         library_component = getattr(device, component)
         if attribute not in library_component.declared_fields:
             return
-        # A reading the device reported as unavailable at setup is one it lacks.
         # A sub-system that failed to read says nothing, so keep its sensors.
         coordinator = data.coordinator_for(description.sub_system)
         if (
             description.sub_system in coordinator.data.updated
             and getattr(library_component, attribute) is None
         ):
+            pending.append((description, component, attribute, phase))
             return
         entities.append(
             VictronModbusSensor(data, description, component, attribute, phase)
         )
+
+    @callback
+    def add_recovered() -> None:
+        """Add the sensors of readings that have a value now."""
+        recovered = [
+            reading
+            for reading in pending
+            if getattr(getattr(device, reading[1]), reading[2]) is not None
+        ]
+        for reading in recovered:
+            pending.remove(reading)
+        async_add_entities(VictronModbusSensor(data, *reading) for reading in recovered)
 
     add(_TOTAL_POWER, "power", "total")
     for description in _METER:
@@ -191,6 +206,8 @@ async def async_setup_entry(
         for description in _PHASE:
             add(description, f"phase_{phase}", description.key, phase)
     async_add_entities(entities)
+    for coordinator in (data.power, data.readings):
+        entry.async_on_unload(coordinator.async_add_listener(add_recovered))
 
 
 class VictronModbusSensor(VictronModbusEntity, SensorEntity):
