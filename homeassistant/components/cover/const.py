@@ -22,9 +22,16 @@ ATTR_POSITION = "position"
 ATTR_SPEED = "speed"
 ATTR_TILT_POSITION = "tilt_position"
 
+# Move at the device's default speed
 SPEED_DEFAULT = "default"
+
+# Move faster than the default speed
 SPEED_FAST = "fast"
+
+# Move quietly, e.g. in a whisper mode
 SPEED_SILENT = "silent"
+
+# Move slower than the default speed
 SPEED_SLOW = "slow"
 
 
