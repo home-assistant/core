@@ -30,7 +30,7 @@ SubentryTypeToEntityType: dict[str, str] = {
 class SatelIntegraBaseEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
     CoordinatorEntity[_CoordinatorT]
 ):
-    """Defines a base Satel Integra entity."""
+    """Defines a Satel Integra base entity."""
 
     _attr_should_poll = False
     _attr_has_entity_name = True
@@ -42,7 +42,7 @@ class SatelIntegraBaseEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
         coordinator: _CoordinatorT,
         config_entry_id: str,
     ) -> None:
-        """Initialize the Satel Integra panel entity."""
+        """Initialize the Satel Integra base entity."""
         super().__init__(coordinator)
 
         self._controller = coordinator.client.controller
