@@ -45,3 +45,10 @@ def test_central_unit_address_has_no_state_class() -> None:
     descriptions = {description.key: description for description in SENSOR_DESCRIPTIONS}
 
     assert descriptions["heat_pump_central_unit_address"].state_class is None
+
+
+def test_summer_mode_has_no_state_class() -> None:
+    """The summer operating mode is categorical, not a measurement."""
+    descriptions = {description.key: description for description in SENSOR_DESCRIPTIONS}
+
+    assert descriptions["summer_mode"].state_class is None

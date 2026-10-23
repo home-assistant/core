@@ -440,7 +440,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         translation_key="summer_mode",
         component="summer_bypass",
         attribute="betriebsart_sommerautomatik",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
         key="supply_air_fan_actual_speed",
