@@ -84,7 +84,14 @@ async def test_sensor_housenet_state_snapshot(
 ) -> None:
     """Snapshot entity states for a house-net sensor after representative events."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await fire(
         {
             "event": "battery_level",
@@ -140,7 +147,14 @@ async def test_vhh_full_state_snapshot(
 ) -> None:
     """Snapshot VHH entity states after mains and solar sensors are active."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await fire(
         {
             "event": "average_power",
@@ -153,7 +167,14 @@ async def test_vhh_full_state_snapshot(
     )
 
     await fire({"event": "device_found", "mac": SOLAR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SOLAR_MAC, "role": ROLE_SOLAR})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SOLAR_MAC,
+            "role": ROLE_SOLAR,
+        }
+    )
     await fire(
         {
             "event": "average_power",
@@ -216,7 +237,14 @@ async def test_sensor_device_registry_renames_on_role(
     assert device_before is not None
     assert device_before == snapshot(name="before_role")
 
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await hass.async_block_till_done()
 
     device_after = device_registry.async_get_device_by_identifier(

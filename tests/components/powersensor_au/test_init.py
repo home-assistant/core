@@ -250,7 +250,12 @@ async def test_device_on_the_network_cannot_be_deleted(
         pytest.param(
             [
                 {"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"},
-                {"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET},
+                {
+                    "event": "now_relaying_for",
+                    "device_type": "sensor",
+                    "mac": SENSOR_MAC,
+                    "role": ROLE_HOUSENET,
+                },
             ],
             SENSOR_MAC,
             id="sensor",
@@ -307,8 +312,22 @@ async def test_returning_sensor_gets_entities_of_a_role_it_had_before(
 ) -> None:
     """Deleting a sensor forgets which of its entities exist, but keeps its role."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_APPLIANCE})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_WATER})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_APPLIANCE,
+        }
+    )
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_WATER,
+        }
+    )
     await hass.async_block_till_done()
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, SENSOR_MAC), config_entry.entry_id
@@ -322,7 +341,14 @@ async def test_returning_sensor_gets_entities_of_a_role_it_had_before(
 
     # It returns with its saved role, water, then reports appliance again.
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_APPLIANCE})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_APPLIANCE,
+        }
+    )
     await hass.async_block_till_done()
     assert entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, f"{SENSOR_MAC}_power"
@@ -341,7 +367,14 @@ async def test_household_view_cannot_be_deleted(
 ) -> None:
     """The household view belongs to the installation, not to one device."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await fire({"event": "device_lost", "mac": SENSOR_MAC})
     await hass.async_block_till_done()
     device = device_registry.async_get_device_by_identifier(

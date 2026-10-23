@@ -203,9 +203,23 @@ async def reconfigure_entry(
 ) -> MockConfigEntry:
     """A loaded entry with a house-net, a solar and an unassigned sensor discovered."""
     await fire({"event": "device_found", "mac": MAINS_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": MAINS_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": MAINS_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await fire({"event": "device_found", "mac": SOLAR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SOLAR_MAC, "role": ROLE_SOLAR})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SOLAR_MAC,
+            "role": ROLE_SOLAR,
+        }
+    )
     await fire({"event": "device_found", "mac": UNKNOWN_MAC, "device_type": "sensor"})
     await hass.async_block_till_done()
     return config_entry
@@ -272,9 +286,23 @@ async def test_reconfigure_uses_roles_saved_while_it_is_open(
 
     # While the first step is shown, the unassigned sensor reports a role and a
     # sensor the flow doesn't know about appears with one.
-    await fire({"event": "now_relaying_for", "mac": UNKNOWN_MAC, "role": ROLE_WATER})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": UNKNOWN_MAC,
+            "role": ROLE_WATER,
+        }
+    )
     await fire({"event": "device_found", "mac": LATE_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": LATE_MAC, "role": ROLE_APPLIANCE})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": LATE_MAC,
+            "role": ROLE_APPLIANCE,
+        }
+    )
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(
@@ -371,7 +399,12 @@ async def test_reconfigure_suggests_unknown_for_unrecognised_role(
     """A persisted role that is not a selector option is suggested as unknown."""
     await fire({"event": "device_found", "mac": UNKNOWN_MAC, "device_type": "sensor"})
     await fire(
-        {"event": "now_relaying_for", "mac": UNKNOWN_MAC, "role": UNRECOGNISED_ROLE}
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": UNKNOWN_MAC,
+            "role": UNRECOGNISED_ROLE,
+        }
     )
     await hass.async_block_till_done()
     assert config_entry.data[CFG_ROLES][UNKNOWN_MAC] == UNRECOGNISED_ROLE

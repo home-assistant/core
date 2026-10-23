@@ -225,6 +225,13 @@ class PowersensorMessageDispatcher:
         use the wire role to refine what device_found just seeded (which was
         the persisted role or None).
 
+        The library creates this event for the first message from each MAC
+        that a plug passes on, other than the plug's own.  A plug passes on
+        only its own readings and those of the sensors it relays: it cannot
+        relay another plug.  So the event always describes a sensor, and the
+        device_type check below only makes sure nothing else could ever be
+        listed among the sensors or have its role saved.
+
         The role is treated as best-effort:
           - Present on most devices → record it in self.sensors, save it, and
             send ROLE_UPDATE_SIGNAL to update role-gated entities.
@@ -237,7 +244,7 @@ class PowersensorMessageDispatcher:
         connected its listeners yet (see "Discovery lifecycle" above).
         """
         mac = event.get("mac")
-        if mac is None:
+        if mac is None or event.get("device_type") != "sensor":
             return
 
         wire_role = _filter_unknown(event.get("role"))

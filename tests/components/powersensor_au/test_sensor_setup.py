@@ -28,6 +28,7 @@ from homeassistant.components.powersensor_au.const import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
@@ -124,7 +125,12 @@ async def test_devices_found_before_platform_setup_are_seeded(
         await cb({"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"})
         await cb({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
         await cb(
-            {"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET}
+            {
+                "event": "now_relaying_for",
+                "device_type": "sensor",
+                "mac": SENSOR_MAC,
+                "role": ROLE_HOUSENET,
+            }
         )
 
     mock_devices.start = AsyncMock(side_effect=_start_and_discover)
@@ -241,7 +247,14 @@ async def test_now_relaying_for_triggers_role_update(
     await hass.async_block_till_done()
 
     # Now the library relays the now_relaying_for event with the role.
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await hass.async_block_till_done()
 
     entities = _registered(hass, config_entry)
@@ -263,7 +276,14 @@ async def test_now_relaying_for_without_role_is_a_noop(
 
     count_before = len(_registered(hass, config_entry))
 
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": "unknown"})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": "unknown",
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(_registered(hass, config_entry)) == count_before
@@ -396,7 +416,12 @@ async def test_energy_converted_from_joules(
         pytest.param(
             [
                 {"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"},
-                {"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET},
+                {
+                    "event": "now_relaying_for",
+                    "device_type": "sensor",
+                    "mac": SENSOR_MAC,
+                    "role": ROLE_HOUSENET,
+                },
             ],
             SENSOR_MAC,
             id="sensor",
@@ -468,7 +493,14 @@ async def test_water_sensor_creates_water_entities(
 ) -> None:
     """A sensor assigned ROLE_WATER gets flow-rate and volume entities."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_WATER})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_WATER,
+        }
+    )
     await hass.async_block_till_done()
 
     entities = _registered(hass, config_entry)
@@ -486,7 +518,14 @@ async def test_role_change_adds_entities_without_duplicates(
 ) -> None:
     """Changing role from house-net to water adds water entities; going back is a noop."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await hass.async_block_till_done()
     count_housenet = len(_registered(hass, config_entry))
     assert count_housenet == _HOUSENET_SENSOR_COUNT
@@ -528,7 +567,14 @@ async def test_vhh_mains_entities_created_when_housenet_sensor_found(
 ) -> None:
     """Mains VHH entities are added once a house-net sensor is discovered."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await hass.async_block_till_done()
 
     unique_ids = {e.unique_id for e in _registered(hass, config_entry)}
@@ -545,9 +591,23 @@ async def test_vhh_solar_entities_added_when_solar_sensor_found(
 ) -> None:
     """Solar VHH entities are added when a solar sensor joins alongside a mains sensor."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await fire({"event": "device_found", "mac": SOLAR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SOLAR_MAC, "role": ROLE_SOLAR})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SOLAR_MAC,
+            "role": ROLE_SOLAR,
+        }
+    )
     await hass.async_block_till_done()
 
     unique_ids = {e.unique_id for e in _registered(hass, config_entry)}
@@ -562,7 +622,14 @@ async def test_vhh_solar_not_created_without_mains(
 ) -> None:
     """Solar VHH entities are NOT created when there is no mains sensor."""
     await fire({"event": "device_found", "mac": SOLAR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SOLAR_MAC, "role": ROLE_SOLAR})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SOLAR_MAC,
+            "role": ROLE_SOLAR,
+        }
+    )
     await hass.async_block_till_done()
 
     unique_ids = {e.unique_id for e in _registered(hass, config_entry)}
@@ -577,12 +644,26 @@ async def test_vhh_mains_not_duplicated_on_repeated_signal(
 ) -> None:
     """VHH mains entities are added exactly once even if the role signal fires twice."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await hass.async_block_till_done()
     count_after_first = len(_registered(hass, config_entry))
 
     # Fire the role again — should not add duplicates.
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(_registered(hass, config_entry)) == count_after_first
@@ -710,7 +791,9 @@ async def test_now_relaying_for_with_no_mac_is_ignored(
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
     count_before = len(_registered(hass, config_entry))
 
-    await fire({"event": "now_relaying_for", "role": ROLE_HOUSENET})
+    await fire(
+        {"event": "now_relaying_for", "device_type": "sensor", "role": ROLE_HOUSENET}
+    )
     await hass.async_block_till_done()
 
     assert len(_registered(hass, config_entry)) == count_before
@@ -799,32 +882,61 @@ async def test_role_update_noop_when_role_unchanged(
 ) -> None:
     """A sensor reporting the role it already has gets no new entities."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await hass.async_block_till_done()
     count = len(_registered(hass, config_entry))
 
     # Fire the same role again — should change nothing.
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(_registered(hass, config_entry)) == count
 
 
-async def test_role_update_for_plug_mac_is_noop(
+async def test_now_relaying_for_other_than_a_sensor_is_ignored(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
-    """A role reported for a plug adds no entities: plugs never get role-gated ones."""
+    """A now_relaying_for for anything but a sensor is ignored.
+
+    A plug can't relay another plug, so the library only creates this event for
+    sensors.  This guards against anything else being treated as a sensor.
+    """
     await fire({"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"})
     await hass.async_block_till_done()
     count = len(_registered(hass, config_entry))
 
-    # Firing a role update for a plug MAC should be a no-op.
-    await fire({"event": "now_relaying_for", "mac": PLUG_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "plug",
+            "mac": PLUG_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await hass.async_block_till_done()
 
+    # Not counted as a mains sensor, so no household view entities either.
     assert len(_registered(hass, config_entry)) == count
+    assert PLUG_MAC not in config_entry.data[CFG_ROLES]
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_sensors_found"
 
 
 async def test_role_change_writes_device_registry_once(
@@ -839,7 +951,14 @@ async def test_role_change_writes_device_registry_once(
     role change, so the rename must not be done once per entity.
     """
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire(
+        {
+            "event": "now_relaying_for",
+            "device_type": "sensor",
+            "mac": SENSOR_MAC,
+            "role": ROLE_HOUSENET,
+        }
+    )
     await hass.async_block_till_done()
     assert len(_registered(hass, config_entry)) > 1
 
@@ -850,7 +969,14 @@ async def test_role_change_writes_device_registry_once(
         "async_get_or_create",
         wraps=device_registry.async_get_or_create,
     ) as mock_get_or_create:
-        await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_SOLAR})
+        await fire(
+            {
+                "event": "now_relaying_for",
+                "device_type": "sensor",
+                "mac": SENSOR_MAC,
+                "role": ROLE_SOLAR,
+            }
+        )
         await hass.async_block_till_done()
 
     assert mock_get_or_create.call_count == 1
