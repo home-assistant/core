@@ -90,7 +90,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.daikin_onecta.async_setup_entry", return_value=True
+        "homeassistant.components.daikin_onecta.async_setup_entry", return_value=None
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -171,7 +171,7 @@ async def test_zeroconf_flow_uses_oauth_discovery(
     assert result["url"].startswith(OAUTH2_AUTHORIZE)
 
     with patch(
-        "homeassistant.components.daikin_onecta.async_setup_entry", return_value=True
+        "homeassistant.components.daikin_onecta.async_setup_entry", return_value=None
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
