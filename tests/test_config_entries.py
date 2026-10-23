@@ -3398,7 +3398,14 @@ async def test_entry_setup_succeed(
 
 
 @pytest.mark.parametrize(
-    ("built_in", "setup_result", "state", "translation_key", "reported"),
+    (
+        "built_in",
+        "setup_result",
+        "state",
+        "translation_key",
+        "reported",
+        "unsupported_logs",
+    ),
     [
         pytest.param(
             True,
@@ -3406,6 +3413,7 @@ async def test_entry_setup_succeed(
             config_entries.ConfigEntryState.SETUP_ERROR,
             None,
             True,
+            [],
             id="core_true",
         ),
         pytest.param(
@@ -3414,6 +3422,7 @@ async def test_entry_setup_succeed(
             config_entries.ConfigEntryState.SETUP_ERROR,
             None,
             True,
+            [],
             id="core_false",
         ),
         pytest.param(
@@ -3422,6 +3431,7 @@ async def test_entry_setup_succeed(
             config_entries.ConfigEntryState.SETUP_ERROR,
             "async_setup_entry_failed",
             False,
+            ["comp.async_setup_entry returned 'foo', which is not supported"],
             id="core_not_bool",
         ),
         pytest.param(
@@ -3430,6 +3440,7 @@ async def test_entry_setup_succeed(
             config_entries.ConfigEntryState.LOADED,
             None,
             False,
+            [],
             id="custom_true",
         ),
         pytest.param(
@@ -3438,6 +3449,7 @@ async def test_entry_setup_succeed(
             config_entries.ConfigEntryState.SETUP_ERROR,
             "async_setup_entry_failed",
             False,
+            [],
             id="custom_false",
         ),
         pytest.param(
@@ -3446,6 +3458,7 @@ async def test_entry_setup_succeed(
             config_entries.ConfigEntryState.SETUP_ERROR,
             "async_setup_entry_failed",
             False,
+            ["comp.async_setup_entry returned 'foo', which is not supported"],
             id="custom_not_bool",
         ),
     ],
@@ -3459,6 +3472,7 @@ async def test_entry_setup_return_value(
     state: config_entries.ConfigEntryState,
     translation_key: str | None,
     reported: bool,
+    unsupported_logs: list[str],
 ) -> None:
     """Test how the return value of async_setup_entry is handled."""
     entry = MockConfigEntry(
@@ -3480,10 +3494,19 @@ async def test_entry_setup_return_value(
         "returns a boolean from async_setup_entry, which should return None"
         in caplog.text
     ) is reported
+    for message in unsupported_logs:
+        assert message in caplog.text
 
 
 @pytest.mark.parametrize(
-    ("built_in", "unload_result", "state", "translation_key", "reported"),
+    (
+        "built_in",
+        "unload_result",
+        "state",
+        "translation_key",
+        "reported",
+        "unsupported_logs",
+    ),
     [
         pytest.param(
             True,
@@ -3491,6 +3514,7 @@ async def test_entry_setup_return_value(
             config_entries.ConfigEntryState.FAILED_UNLOAD,
             None,
             True,
+            [],
             id="core_true",
         ),
         pytest.param(
@@ -3499,6 +3523,7 @@ async def test_entry_setup_return_value(
             config_entries.ConfigEntryState.FAILED_UNLOAD,
             None,
             True,
+            [],
             id="core_false",
         ),
         pytest.param(
@@ -3507,6 +3532,7 @@ async def test_entry_setup_return_value(
             config_entries.ConfigEntryState.FAILED_UNLOAD,
             "async_unload_entry_failed",
             False,
+            ["comp.async_unload_entry returned 'foo', which is not supported"],
             id="core_not_bool",
         ),
         pytest.param(
@@ -3515,6 +3541,7 @@ async def test_entry_setup_return_value(
             config_entries.ConfigEntryState.NOT_LOADED,
             None,
             False,
+            [],
             id="custom_true",
         ),
         pytest.param(
@@ -3523,6 +3550,7 @@ async def test_entry_setup_return_value(
             config_entries.ConfigEntryState.FAILED_UNLOAD,
             "async_unload_entry_failed",
             False,
+            [],
             id="custom_false",
         ),
         pytest.param(
@@ -3531,6 +3559,7 @@ async def test_entry_setup_return_value(
             config_entries.ConfigEntryState.FAILED_UNLOAD,
             "async_unload_entry_failed",
             False,
+            ["comp.async_unload_entry returned 'foo', which is not supported"],
             id="custom_not_bool",
         ),
     ],
@@ -3544,6 +3573,7 @@ async def test_entry_unload_return_value(
     state: config_entries.ConfigEntryState,
     translation_key: str | None,
     reported: bool,
+    unsupported_logs: list[str],
 ) -> None:
     """Test how the return value of async_unload_entry is handled."""
     entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
@@ -3556,7 +3586,9 @@ async def test_entry_unload_return_value(
         built_in=built_in,
     )
 
-    await manager.async_unload(entry.entry_id)
+    assert await manager.async_unload(entry.entry_id) is (
+        state is config_entries.ConfigEntryState.NOT_LOADED
+    )
     assert len(mock_unload_entry.mock_calls) == 1
     assert entry.state is state
     assert entry.error_reason_translation_key == translation_key
@@ -3564,10 +3596,19 @@ async def test_entry_unload_return_value(
         "returns a boolean from async_unload_entry, which should return None"
         in caplog.text
     ) is reported
+    for message in unsupported_logs:
+        assert message in caplog.text
 
 
 @pytest.mark.parametrize(
-    ("built_in", "migrate_result", "state", "translation_key", "reported"),
+    (
+        "built_in",
+        "migrate_result",
+        "state",
+        "translation_key",
+        "reported",
+        "unsupported_logs",
+    ),
     [
         pytest.param(
             True,
@@ -3575,6 +3616,7 @@ async def test_entry_unload_return_value(
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             None,
             True,
+            [],
             id="core_true",
         ),
         pytest.param(
@@ -3583,6 +3625,7 @@ async def test_entry_unload_return_value(
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             None,
             True,
+            [],
             id="core_false",
         ),
         pytest.param(
@@ -3591,6 +3634,7 @@ async def test_entry_unload_return_value(
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "async_migrate_entry_failed",
             False,
+            ["comp.async_migrate_entry returned 'foo', which is not supported"],
             id="core_not_bool",
         ),
         pytest.param(
@@ -3599,6 +3643,7 @@ async def test_entry_unload_return_value(
             config_entries.ConfigEntryState.LOADED,
             None,
             False,
+            [],
             id="custom_true",
         ),
         pytest.param(
@@ -3607,6 +3652,7 @@ async def test_entry_unload_return_value(
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "async_migrate_entry_failed",
             False,
+            [],
             id="custom_false",
         ),
         pytest.param(
@@ -3615,6 +3661,7 @@ async def test_entry_unload_return_value(
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "async_migrate_entry_failed",
             False,
+            ["comp.async_migrate_entry returned 'foo', which is not supported"],
             id="custom_not_bool",
         ),
     ],
@@ -3628,6 +3675,7 @@ async def test_entry_migrate_return_value(
     state: config_entries.ConfigEntryState,
     translation_key: str | None,
     reported: bool,
+    unsupported_logs: list[str],
 ) -> None:
     """Test how the return value of async_migrate_entry is handled."""
     entry = MockConfigEntry(domain="comp", version=1)
@@ -3659,6 +3707,8 @@ async def test_entry_migrate_return_value(
         "returns a boolean from async_migrate_entry, which should return None"
         in caplog.text
     ) is reported
+    for message in unsupported_logs:
+        assert message in caplog.text
 
 
 @pytest.mark.parametrize(
