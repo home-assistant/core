@@ -769,33 +769,43 @@ async def test_chime_volume_set_value(
     chime: Chime,
     doorbell: Camera,
 ) -> None:
-    """Test setting overall chime volume calls public ring-settings API."""
+    """Setting the overall chime volume sets every ring volume on the public chime."""
     _setup_chime_with_doorbell(chime, doorbell, volume=40)
+    setup_public_chime(ufp)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+    public = ufp.api.public_bootstrap.chimes[chime.id]
 
-    entity_id = "number.test_chime_volume"
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {ATTR_ENTITY_ID: "number.test_chime_volume", "value": 75.0},
+        blocking=True,
+    )
 
-    with patch_ufp_method(
-        chime, "set_ring_settings_public", new_callable=AsyncMock
-    ) as mock_method:
+    public.set_volume_for_all_cameras.assert_awaited_once_with(75)
+
+
+async def test_chime_volume_set_value_without_public_chime(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """The overall chime volume cannot be set while the public chime is missing."""
+    _setup_chime_with_doorbell(chime, doorbell)
+
+    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+    assert chime.id not in ufp.api.public_bootstrap.chimes
+
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             "number",
             "set_value",
-            {ATTR_ENTITY_ID: entity_id, "value": 75.0},
+            {ATTR_ENTITY_ID: "number.test_chime_volume", "value": 75.0},
             blocking=True,
         )
-
-        mock_method.assert_called_once_with(
-            [
-                {
-                    "cameraId": doorbell.id,
-                    "volume": 75,
-                    "repeatTimes": 1,
-                    "ringtoneId": "test-ringtone-id",
-                }
-            ]
-        )
+    assert exc_info.value.translation_key == "device_not_available"
 
 
 async def test_chime_ring_volume_multiple_cameras(

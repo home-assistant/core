@@ -67,11 +67,14 @@ def _get_chime_duration(obj: Camera) -> int:
 
 
 async def _set_chime_volume(obj: Chime, value: float) -> None:
-    """Set chime volume per paired camera via the public API."""
-    level = int(value)
-    ring_settings = [setting.to_api_dict(volume=level) for setting in obj.ring_settings]
-    if ring_settings:
-        await obj.set_ring_settings_public(ring_settings)
+    """Set the ring volume of every paired camera on the public chime."""
+    if (public := obj.api.public_bootstrap.chimes.get(obj.id)) is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_available",
+            translation_placeholders={"device_name": obj.display_name},
+        )
+    await public.set_volume_for_all_cameras(int(value))
 
 
 CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
