@@ -7,6 +7,7 @@ from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -26,8 +27,6 @@ from .common import (
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
-
-from tests.common import mock_restore_cache_with_extra_data
 
 THERMOSTAT_ENTITY_ID = "climate.longan_link_hvac"
 ROOM_AC_ENTITY_ID = "climate.room_airconditioner"
