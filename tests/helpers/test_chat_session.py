@@ -1,9 +1,12 @@
 """Test the chat session helper."""
 
+import asyncio
 from collections.abc import Generator
+import contextvars
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
@@ -93,6 +96,35 @@ async def test_cleanup(
     # It should be cleaned up now and we start a new conversation
     with chat_session.async_get_chat_session(hass, conversation_id) as session:
         assert session.conversation_id != conversation_id
+
+
+async def test_cleanup_session_in_use(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the cleanup keeps a session that a turn entered before it expired."""
+    with chat_session.async_get_chat_session(hass) as session:
+        conversation_id = session.conversation_id
+
+    freezer.tick(chat_session.CONVERSATION_TIMEOUT)
+    with chat_session.async_get_chat_session(hass, conversation_id) as session:
+        freezer.tick(timedelta(seconds=2))
+        async_fire_time_changed(hass)
+        assert hass.data[chat_session.DATA_CHAT_SESSION][conversation_id] is session
+
+
+async def test_new_session_shared(hass: HomeAssistant) -> None:
+    """Test parallel requests share a new session."""
+
+    async def get_session() -> chat_session.ChatSession:
+        with chat_session.async_get_chat_session(hass, "koala") as session:
+            return session
+
+    with chat_session.async_get_chat_session(hass, "koala") as session:
+        # A new context runs the request like a separate task would.
+        assert (
+            await asyncio.create_task(get_session(), context=contextvars.Context())
+            is session
+        )
 
 
 async def test_failed_nested_session(hass: HomeAssistant) -> None:

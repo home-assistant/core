@@ -21,6 +21,7 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid_now, ulid_to_bytes
 
 from .event import async_call_later
+from .typing import UNDEFINED, UndefinedType
 
 DATA_CHAT_SESSION: HassKey[dict[str, ChatSession]] = HassKey("chat_session")
 DATA_CHAT_SESSION_CLEANUP: HassKey[SessionCleanup] = HassKey("chat_session_cleanup")
@@ -39,6 +40,8 @@ class ChatSession:
 
     conversation_id: str
     last_updated: datetime = field(default_factory=dt_util.utcnow)
+    # The user of the first user input owns the conversation.
+    user_id: str | UndefinedType | None = UNDEFINED
     _cleanup_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
 
     @callback
@@ -138,6 +141,8 @@ def async_get_chat_session(
 
     elif conversation_id in all_sessions:
         session = all_sessions[conversation_id]
+        # Restart the timeout, so the cleanup does not remove it during a turn.
+        session.async_updated()
 
     else:
         # Conversation IDs are ULIDs. We generate a new one if not provided.
@@ -153,6 +158,8 @@ def async_get_chat_session(
     if session is None:
         LOGGER.debug("Creating new session %s", conversation_id)
         session = ChatSession(conversation_id)
+        # Store the session right away, so parallel requests share it.
+        all_sessions[conversation_id] = session
 
     token = current_session.set(session)
     try:

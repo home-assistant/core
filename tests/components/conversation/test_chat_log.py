@@ -24,7 +24,6 @@ from homeassistant.components.conversation import (
     async_get_chat_log,
 )
 from homeassistant.components.conversation.chat_log import (
-    DATA_CHAT_LOG_OWNERS,
     DATA_CHAT_LOGS,
     Attachment,
     ChatLog,
@@ -64,7 +63,6 @@ async def test_cleanup(
         )
 
     assert conversation_id in hass.data[DATA_CHAT_LOGS]
-    assert conversation_id in hass.data[DATA_CHAT_LOG_OWNERS]
 
     # Set the last updated to be older than the timeout
     hass.data[chat_session.DATA_CHAT_SESSION][conversation_id].last_updated = (
@@ -77,7 +75,6 @@ async def test_cleanup(
     )
 
     assert conversation_id not in hass.data[DATA_CHAT_LOGS]
-    assert conversation_id not in hass.data[DATA_CHAT_LOG_OWNERS]
 
 
 async def test_default_content(
