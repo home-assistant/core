@@ -662,6 +662,7 @@ async def test_a1_anion_services(
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == "off"
 
+
 async def test_a1_pump_not_created_without_capability(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
