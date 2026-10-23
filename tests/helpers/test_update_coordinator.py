@@ -29,6 +29,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
+    UnsupportedStorageVersionError,
 )
 from homeassistant.helpers import frame, restore_state, update_coordinator
 from homeassistant.util.dt import utcnow
@@ -1907,6 +1908,19 @@ async def test_load_error_not_fatal(
 
     assert "Error loading restore coordinator data" in caplog.text
     assert get_restore_crd(hass, config_entry=restore_entry).data is None
+
+
+async def test_load_unsupported_version_raises(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test a store written by a newer version is not discarded on load."""
+    hass_storage[restore_state.RESTORE_STORAGE_KEY] = {
+        "version": restore_state.RESTORE_STORAGE_VERSION + 1,
+        "data": make_store_data(),
+    }
+
+    with pytest.raises(UnsupportedStorageVersionError):
+        await restore_state.async_load(hass)
 
 
 async def test_coordinators_share_single_store(
