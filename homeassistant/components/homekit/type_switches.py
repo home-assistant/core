@@ -518,8 +518,8 @@ class Valve(ValveBase):
         super().__init__(
             config.get(CONF_TYPE, TYPE_VALVE),
             VALVE_OPEN_STATES,
-            ValveService.OPEN_VALVE,
-            ValveService.CLOSE_VALVE,
+            ValveService.OPEN,
+            ValveService.CLOSE,
             hass,
             driver,
             name,

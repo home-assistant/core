@@ -56,17 +56,17 @@ HASS_TO_HOMEKIT_TARGET = {
 }
 
 HASS_TO_HOMEKIT_SERVICES = {
-    AlarmControlPanelService.ALARM_ARM_HOME: HK_ALARM_STAY_ARMED,
-    AlarmControlPanelService.ALARM_ARM_AWAY: HK_ALARM_AWAY_ARMED,
-    AlarmControlPanelService.ALARM_ARM_NIGHT: HK_ALARM_NIGHT_ARMED,
-    AlarmControlPanelService.ALARM_DISARM: HK_ALARM_DISARMED,
+    AlarmControlPanelService.ARM_HOME: HK_ALARM_STAY_ARMED,
+    AlarmControlPanelService.ARM_AWAY: HK_ALARM_AWAY_ARMED,
+    AlarmControlPanelService.ARM_NIGHT: HK_ALARM_NIGHT_ARMED,
+    AlarmControlPanelService.DISARM: HK_ALARM_DISARMED,
 }
 
 HK_TO_SERVICE = {
-    HK_ALARM_AWAY_ARMED: AlarmControlPanelService.ALARM_ARM_AWAY,
-    HK_ALARM_STAY_ARMED: AlarmControlPanelService.ALARM_ARM_HOME,
-    HK_ALARM_NIGHT_ARMED: AlarmControlPanelService.ALARM_ARM_NIGHT,
-    HK_ALARM_DISARMED: AlarmControlPanelService.ALARM_DISARM,
+    HK_ALARM_AWAY_ARMED: AlarmControlPanelService.ARM_AWAY,
+    HK_ALARM_STAY_ARMED: AlarmControlPanelService.ARM_HOME,
+    HK_ALARM_NIGHT_ARMED: AlarmControlPanelService.ARM_NIGHT,
+    HK_ALARM_DISARMED: AlarmControlPanelService.DISARM,
 }
 
 
@@ -127,7 +127,7 @@ class SecuritySystem(HomeAccessory):
         )
         self.char_target_state = serv_alarm.configure_char(
             CHAR_TARGET_SECURITY_STATE,
-            value=HASS_TO_HOMEKIT_SERVICES[AlarmControlPanelService.ALARM_DISARM],
+            value=HASS_TO_HOMEKIT_SERVICES[AlarmControlPanelService.DISARM],
             valid_values={
                 key: val
                 for key, val in default_target_services.items()
