@@ -14,6 +14,7 @@ from .coordinator import (
     SmConfigEntry,
     SmDataUpdateCoordinator,
     SmFirmwareUpdateCoordinator,
+    SmFwData,
     SmlightData,
 )
 from .services import async_setup_services
@@ -45,7 +46,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> None:
     await data_coordinator.async_config_entry_first_refresh()
 
     info = data_coordinator.data.info
-    firmware_coordinator = SmFirmwareUpdateCoordinator(hass, entry, client, info)
+
+    # The firmware catalog comes from the cloud. Seed the coordinator with the
+    # local device info so a slow catalog does not block setup.
+    firmware_coordinator = SmFirmwareUpdateCoordinator(hass, entry, client)
+    firmware_coordinator.unique_id = data_coordinator.unique_id
+    firmware_coordinator.legacy_api = data_coordinator.legacy_api
+    firmware_coordinator.data = SmFwData(info=info, esp_firmware=None, zb_firmware=[])
 
     if info.legacy_api < 2:
         entry.async_create_background_task(

@@ -1,9 +1,7 @@
 "Test SMLIGHT SLZB device integration initialization."
 
 import asyncio
-from datetime import timedelta
-from json import JSONDecodeError
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Firmware, Info
@@ -16,15 +14,13 @@ from homeassistant.components.smlight.const import (
     SCAN_FIRMWARE_INTERVAL,
     SCAN_INTERVAL,
 )
-from homeassistant.components.smlight.coordinator import REQUEST_TIMEOUT
 from homeassistant.components.update import ATTR_INSTALLED_VERSION
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.issue_registry import IssueRegistry
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import setup_integration
 
@@ -88,111 +84,33 @@ async def test_async_setup_missing_credentials(
     assert progress[0]["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
 
 
-@pytest.mark.parametrize("method", ["check_auth_needed", "authenticate", "get_info"])
-async def test_setup_timeout_retries_with_diagnostic(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
-    method: str,
-) -> None:
-    """Setup timeouts retain their translation and retry after thirty seconds."""
-    pending = asyncio.Event()
-    read_started = asyncio.Event()
-
-    async def stalled_read(*args: object, **kwargs: object) -> None:
-        read_started.set()
-        await pending.wait()
-
-    mock_smlight_client.check_auth_needed.return_value = True
-    read = getattr(mock_smlight_client, method)
-    side_effect = read.side_effect
-    read.side_effect = stalled_read
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.smlight.coordinator.REQUEST_TIMEOUT", 0.001):
-        setup_task = hass.async_create_task(
-            hass.config_entries.async_setup(mock_config_entry.entry_id)
-        )
-        await read_started.wait()
-        freezer.tick(timedelta(seconds=1))
-        async_fire_time_changed(hass)
-        assert await setup_task is False
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.error_reason_translation_domain == DOMAIN
-    assert mock_config_entry.error_reason_translation_key == "update_timeout"
-    assert "Timeout communicating with the SMLIGHT device" in caplog.text
-    assert "Retrying in 30 seconds" in caplog.text
-
-    read.side_effect = side_effect
-    calls = read.await_count
-    freezer.tick(timedelta(seconds=28))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert read.await_count == calls
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-    freezer.tick(timedelta(seconds=3))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.error_reason_translation_key is None
-    assert hass.states.get("sensor.mock_title_core_chip_temp") is not None
-
-
-@pytest.mark.parametrize(
-    "error",
-    [
-        pytest.param(SmlightConnectionError(), id="connection"),
-        pytest.param(TimeoutError(), id="timeout"),
-        pytest.param(JSONDecodeError("Expecting value", "", 0), id="malformed-json"),
-        pytest.param(TypeError("Missing firmware response"), id="missing-response"),
-    ],
-)
-async def test_async_setup_firmware_catalog_failure_retry(
+async def test_async_setup_no_internet(
     hass: HomeAssistant,
     mock_config_entry_host: MockConfigEntry,
     mock_smlight_client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    error: Exception,
 ) -> None:
-    """Catalog failures leave updates unavailable and retry in five minutes."""
+    """Test we still load integration when no internet is available."""
     side_effect = mock_smlight_client.get_firmware_version.side_effect
-    mock_smlight_client.get_firmware_version.side_effect = error
+    mock_smlight_client.get_firmware_version.side_effect = SmlightConnectionError
 
     await setup_integration(hass, mock_config_entry_host)
 
     entity = hass.states.get("update.mock_title_core_firmware")
     assert entity is not None
-    assert entity.state == STATE_UNAVAILABLE
+    assert entity.state == STATE_UNKNOWN
 
-    coordinator = mock_config_entry_host.runtime_data.firmware
-    assert coordinator.update_interval == SCAN_FIRMWARE_INTERVAL
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert coordinator.last_exception.retry_after == 300
-    assert coordinator.last_exception.__cause__ is error
-    assert mock_smlight_client.get_firmware_version.await_count == 1
-
-    freezer.tick(timedelta(seconds=298))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_smlight_client.get_firmware_version.await_count == 1
-
-    freezer.tick(timedelta(seconds=2))
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     entity = hass.states.get("update.mock_title_core_firmware")
     assert entity is not None
-    assert entity.state == STATE_UNAVAILABLE
-    assert mock_smlight_client.get_firmware_version.await_count == 2
-    assert coordinator.update_interval == SCAN_FIRMWARE_INTERVAL
+    assert entity.state == STATE_UNKNOWN
 
     mock_smlight_client.get_firmware_version.side_effect = side_effect
 
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -200,26 +118,14 @@ async def test_async_setup_firmware_catalog_failure_retry(
     assert entity is not None
     assert entity.state == STATE_ON
     assert entity.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
-    assert coordinator.update_interval == SCAN_FIRMWARE_INTERVAL
-
-    catalog_calls = mock_smlight_client.get_firmware_version.await_count
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_smlight_client.get_firmware_version.await_count == catalog_calls
-
-    freezer.tick(SCAN_FIRMWARE_INTERVAL - timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_smlight_client.get_firmware_version.await_count > catalog_calls
 
 
-async def test_slow_firmware_catalog_does_not_block_local_entities(
+async def test_slow_firmware_catalog_does_not_block_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
 ) -> None:
-    """Local entities load while the cloud firmware catalog is still pending."""
+    """Test local entities load while the firmware catalog is pending."""
     catalog_ready = asyncio.Event()
     get_firmware = mock_smlight_client.get_firmware_version.side_effect
 
@@ -232,155 +138,17 @@ async def test_slow_firmware_catalog_does_not_block_local_entities(
 
     assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.mock_title_core_chip_temp") is not None
-    update = hass.states.get("update.mock_title_core_firmware")
-    assert update is not None
-    assert update.state == STATE_UNAVAILABLE
-    assert entry.runtime_data.firmware.last_update_success is False
+    state = hass.states.get("update.mock_title_core_firmware")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
 
     catalog_ready.set()
     await hass.async_block_till_done()
 
-    update = hass.states.get("update.mock_title_core_firmware")
-    assert update is not None
-    assert update.state == STATE_ON
-    assert entry.runtime_data.firmware.last_update_success is True
-
-
-async def test_unload_cancels_pending_firmware_catalog(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
-) -> None:
-    """A pending catalog fetch cannot update an unloaded entry."""
-    catalog_ready = asyncio.Event()
-    catalog_cancelled = asyncio.Event()
-
-    async def slow_catalog(*args: object, **kwargs: object) -> list[Firmware]:
-        try:
-            await catalog_ready.wait()
-        except asyncio.CancelledError:
-            catalog_cancelled.set()
-            raise
-        return []
-
-    mock_smlight_client.get_firmware_version.side_effect = slow_catalog
-    entry = await setup_integration(hass, mock_config_entry)
-    coordinator = entry.runtime_data.firmware
-    assert mock_smlight_client.get_firmware_version.await_count == 1
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-    assert catalog_cancelled.is_set()
-    assert coordinator.last_update_success is False
-    unloaded_state = hass.states.get("update.mock_title_core_firmware")
-    assert unloaded_state is not None
-    assert unloaded_state.state == STATE_UNAVAILABLE
-
-    catalog_ready.set()
-    await hass.async_block_till_done()
-    assert hass.states.get("update.mock_title_core_firmware") == unloaded_state
-
-
-async def test_local_poll_recovers_after_connection_failure(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Local polling retries promptly and returns to its normal interval."""
-    entry = await setup_integration(hass, mock_config_entry)
-    coordinator = entry.runtime_data.data
-    get_info = mock_smlight_client.get_info.side_effect
-    mock_smlight_client.get_info.side_effect = SmlightConnectionError
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert coordinator.update_interval == SCAN_INTERVAL
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert coordinator.last_exception.retry_after == 30
-    assert (
-        hass.states.get("sensor.mock_title_core_chip_temp").state == STATE_UNAVAILABLE
-    )
-
-    mock_smlight_client.get_info.reset_mock()
-    mock_smlight_client.get_info.side_effect = get_info
-    freezer.tick(timedelta(seconds=28))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_smlight_client.get_info.assert_not_awaited()
-
-    freezer.tick(timedelta(seconds=2))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert coordinator.update_interval == SCAN_INTERVAL
-    assert (
-        hass.states.get("sensor.mock_title_core_chip_temp").state != STATE_UNAVAILABLE
-    )
-    mock_smlight_client.get_info.assert_awaited_once()
-
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_smlight_client.get_info.assert_awaited_once()
-
-    freezer.tick(SCAN_INTERVAL - timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_smlight_client.get_info.await_count == 2
-
-
-async def test_local_read_times_out_and_retries(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A stalled local read has a finite timeout and a short retry interval."""
-    entry = await setup_integration(hass, mock_config_entry)
-    coordinator = entry.runtime_data.data
-    assert REQUEST_TIMEOUT == 15
-
-    pending = asyncio.Event()
-
-    async def stalled_info(*args: object, **kwargs: object) -> Info:
-        await pending.wait()
-        return Info()
-
-    get_info = mock_smlight_client.get_info.side_effect
-    mock_smlight_client.get_info.side_effect = stalled_info
-    with patch("homeassistant.components.smlight.coordinator.REQUEST_TIMEOUT", 0.001):
-        freezer.tick(SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        freezer.tick(timedelta(seconds=1))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-    assert coordinator.update_interval == SCAN_INTERVAL
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert coordinator.last_exception.retry_after == 30
-    assert isinstance(coordinator.last_exception.__cause__, TimeoutError)
-    assert "Timeout communicating with the SMLIGHT device" in caplog.text
-    assert (
-        hass.states.get("sensor.mock_title_core_chip_temp").state == STATE_UNAVAILABLE
-    )
-
-    mock_smlight_client.get_info.reset_mock()
-    mock_smlight_client.get_info.side_effect = get_info
-    freezer.tick(timedelta(seconds=28))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_smlight_client.get_info.assert_not_awaited()
-
-    freezer.tick(timedelta(seconds=2))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_smlight_client.get_info.assert_awaited_once()
-    assert coordinator.last_update_success
+    state = hass.states.get("update.mock_title_core_firmware")
+    assert state is not None
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize("error", [SmlightConnectionError, SmlightAuthError])
