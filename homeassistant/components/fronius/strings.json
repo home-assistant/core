@@ -267,13 +267,13 @@
         "name": "Meter mode"
       },
       "modbus_mppt_current_dc": {
-        "name": "Modbus DC current"
+        "name": "DC current (Modbus)"
       },
       "modbus_mppt_power_dc": {
         "name": "DC power"
       },
       "modbus_mppt_voltage_dc": {
-        "name": "Modbus DC voltage"
+        "name": "DC voltage (Modbus)"
       },
       "power_ac": {
         "name": "AC power"

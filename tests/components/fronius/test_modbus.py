@@ -97,8 +97,8 @@ async def test_gen24_storage_mppt(
         )
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert_state(hass, "sensor.gen24_storage_mppt_1_modbus_dc_current", 8.2)
-    assert_state(hass, "sensor.gen24_storage_mppt_1_modbus_dc_voltage", 402.1)
+    assert_state(hass, "sensor.gen24_storage_mppt_1_dc_current_modbus", 8.2)
+    assert_state(hass, "sensor.gen24_storage_mppt_1_dc_voltage_modbus", 402.1)
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_power", 3300)
     assert_state(hass, "sensor.gen24_storage_mppt_1_energy", 1000000)
     assert_state(hass, "sensor.gen24_storage_mppt_2_dc_power", 1650)
@@ -173,8 +173,8 @@ async def test_verto_plus_five_modules(
 
     assert_state(hass, "sensor.gen24_storage_mppt_3_dc_power", 800)
     assert_state(hass, "sensor.gen24_storage_mppt_4_dc_power", 0)
-    assert_state(hass, "sensor.gen24_storage_mppt_5_modbus_dc_current", 1.2)
-    assert_state(hass, "sensor.gen24_storage_mppt_5_modbus_dc_voltage", 399.0)
+    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_current_modbus", 1.2)
+    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_voltage_modbus", 399.0)
     assert_state(hass, "sensor.gen24_storage_mppt_5_dc_power", 480)
     assert_state(hass, "sensor.gen24_storage_mppt_5_energy", 5000)
     assert_state(hass, "sensor.gen24_storage_pv_energy_total", 6000)
