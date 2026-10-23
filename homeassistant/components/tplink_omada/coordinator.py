@@ -202,6 +202,10 @@ class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):
         super().__init__(hass, config_entry, omada_client, "Gateway", POLL_GATEWAY)
         self.mac = mac
 
+    def invalidate(self) -> None:
+        """Drop cached gateway data so a returning gateway is refetched."""
+        self.data = {}
+
     @override
     async def poll_update(self) -> dict[str, OmadaGateway]:
         """Poll a the gateway's current state."""
