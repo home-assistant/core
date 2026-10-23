@@ -21,6 +21,7 @@ from aioesphomeapi import (
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
+    InvalidWizardError,
     LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
@@ -768,6 +769,12 @@ class ESPHomeManager:
         entry_data.device_capabilities = await cli.device_capabilities_compat(
             device_info
         )
+        device_wizard = None
+        if entry_data.device_capabilities.wizard.configured:
+            try:
+                device_wizard = await cli.device_wizard()
+            except InvalidWizardError as err:
+                _LOGGER.warning("%s: Ignoring the device wizard: %s", self.host, err)
         entry_data.async_on_connect(hass, device_info, api_version)
 
         await self._handle_dynamic_encryption_key(device_info)
@@ -795,6 +802,8 @@ class ESPHomeManager:
         await entry_data.async_update_static_infos(
             hass, entry, entity_infos, device_info.mac_address
         )
+        # The wizard names entities by key, so publish it with their new infos
+        entry_data.device_wizard = device_wizard
         _setup_services(hass, entry_data, services)
 
         if device_info.bluetooth_proxy_feature_flags_compat(api_version):
