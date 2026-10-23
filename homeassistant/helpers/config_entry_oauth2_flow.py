@@ -69,6 +69,7 @@ __all__ = [
     "OAuth2AuthorizeCallbackView",
     "OAuth2Session",
     "async_add_implementation_provider",
+    "async_get_config_entry_device_flow_implementation",
     "async_get_config_entry_implementation",
     "async_get_implementations",
     "async_get_redirect_uri",
@@ -733,7 +734,7 @@ class AbstractOAuth2BaseFlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta
         # Force int for non-compliant oauth2 providers
         try:
             token["expires_in"] = int(token["expires_in"])
-        except ValueError as err:
+        except (TypeError, ValueError) as err:
             _LOGGER.warning("Error converting expires_in to int: %s", err)
             return self.async_abort(reason="oauth_error")
         token["expires_at"] = time.time() + token["expires_in"]
@@ -904,14 +905,14 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=A
     """
 
     flow_impl: DeviceFlowImplementation
-    device_authorization: DeviceAuthorization
+    _device_authorization: DeviceAuthorization
 
     def __init__(self) -> None:
         """Instantiate device flow handler."""
         super().__init__()
-        self.login_task: asyncio.Task[dict[str, Any]] | None = None
-        self.device_token: dict[str, Any] = {}
-        self.device_flow_error: BaseException | None = None
+        self._login_task: asyncio.Task[dict[str, Any]] | None = None
+        self._device_token: dict[str, Any] = {}
+        self._device_flow_error: BaseException | None = None
 
     @property
     def extra_authorize_data(self) -> dict:
@@ -929,17 +930,17 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=A
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Show the user code and wait for the user to authorize the device."""
-        if self.login_task and self.login_task.done():
-            if exc := self.login_task.exception():
-                self.device_flow_error = exc
+        if self._login_task and self._login_task.done():
+            if exc := self._login_task.exception():
+                self._device_flow_error = exc
                 return self.async_show_progress_done(next_step_id="device_flow_error")
-            self.device_token = self.login_task.result()
+            self._device_token = self._login_task.result()
             return self.async_show_progress_done(next_step_id="device_flow_complete")
 
-        if self.login_task is None:
+        if self._login_task is None:
             try:
                 async with asyncio.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
-                    self.device_authorization = (
+                    self._device_authorization = (
                         await self.flow_impl.async_register_device(
                             self.extra_authorize_data
                         )
@@ -957,36 +958,36 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=A
                 _LOGGER.error("Invalid device authorization response: %s", err)
                 return self.async_abort(reason="oauth_error")
 
-            self.login_task = self.hass.async_create_task(
-                self.flow_impl.async_check_device_activation(self.device_authorization)
+            self._login_task = self.hass.async_create_task(
+                self.flow_impl.async_check_device_activation(self._device_authorization)
             )
 
         return self.async_show_progress(
             step_id="device_flow",
             progress_action="wait_for_device",
             description_placeholders={
-                "url": self.device_authorization.verification_uri,
+                "url": self._device_authorization.verification_uri,
                 # Includes the code, for a link the user only has to open
                 "url_complete": (
-                    self.device_authorization.verification_uri_complete
-                    or self.device_authorization.verification_uri
+                    self._device_authorization.verification_uri_complete
+                    or self._device_authorization.verification_uri
                 ),
-                "code": self.device_authorization.user_code,
+                "code": self._device_authorization.user_code,
             },
-            progress_task=self.login_task,
+            progress_task=self._login_task,
         )
 
     async def async_step_device_flow_complete(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Create the entry once the user authorized the device."""
-        return await self._async_create_entry_from_token(self.device_token)
+        return await self._async_create_entry_from_token(self._device_token)
 
     async def async_step_device_flow_error(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Abort the flow when waiting for the authorization failed."""
-        match self.device_flow_error:
+        match self._device_flow_error:
             case DeviceFlowTimeout():
                 return self.async_abort(reason="oauth_timeout")
             case DeviceFlowUnauthorized():
@@ -995,11 +996,13 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=A
                     description_placeholders={"error": "access_denied"},
                 )
             case DeviceFlowError():
-                _LOGGER.error("Device authorization failed: %s", self.device_flow_error)
+                _LOGGER.error(
+                    "Device authorization failed: %s", self._device_flow_error
+                )
             case _:
                 _LOGGER.error(
                     "Unexpected error during device authorization",
-                    exc_info=self.device_flow_error,
+                    exc_info=self._device_flow_error,
                 )
         return self.async_abort(reason="oauth_error")
 
@@ -1044,19 +1047,17 @@ async def async_get_implementations(
     return registered
 
 
-async def async_get_config_entry_implementation(
+async def _async_get_config_entry_implementation(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> AbstractOAuth2Implementation:
-    """Return the implementation for this config entry."""
+) -> AbstractOAuth2BaseImplementation:
+    """Return the implementation for this config entry, of any grant type."""
     implementations, exceptions = await _async_get_implementations(
         hass, config_entry.domain
     )
     implementation = implementations.get(config_entry.data["auth_implementation"])
 
     if implementation is not None:
-        # Callers rely on the authorization code type; device flow entries get a
-        # DeviceFlowImplementation, which OAuth2Session accepts as well.
-        return cast(AbstractOAuth2Implementation, implementation)
+        return implementation
 
     if exceptions:
         # A provider is down, so the configured implementation may still come back.
@@ -1064,6 +1065,32 @@ async def async_get_config_entry_implementation(
         raise ImplementationUnavailableError(*exceptions)
 
     raise UnknownImplementationError
+
+
+async def async_get_config_entry_implementation(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> AbstractOAuth2Implementation:
+    """Return the authorization code implementation for this config entry."""
+    implementation = await _async_get_config_entry_implementation(hass, config_entry)
+    if not isinstance(implementation, AbstractAuthorizationCodeImplementation):
+        raise TypeError(
+            f"{config_entry.domain} has no authorization code implementation, "
+            f"it uses {type(implementation).__name__}"
+        )
+    return implementation
+
+
+async def async_get_config_entry_device_flow_implementation(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> DeviceFlowImplementation:
+    """Return the device flow implementation for this config entry."""
+    implementation = await _async_get_config_entry_implementation(hass, config_entry)
+    if not isinstance(implementation, DeviceFlowImplementation):
+        raise TypeError(
+            f"{config_entry.domain} has no device flow implementation, "
+            f"it uses {type(implementation).__name__}"
+        )
+    return implementation
 
 
 @callback

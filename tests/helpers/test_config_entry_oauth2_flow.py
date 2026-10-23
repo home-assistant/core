@@ -1,7 +1,7 @@
 """Tests for the Somfy config flow."""
 
 import asyncio
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 from http import HTTPStatus
 import logging
 import time
@@ -1231,6 +1231,12 @@ async def test_device_flow_registration_errors(
             "oauth_error",
             None,
             id="invalid_expires_in",
+        ),
+        pytest.param(
+            {"json": {**TOKEN_RESPONSE, "expires_in": ["soon"]}},
+            "oauth_error",
+            None,
+            id="expires_in_not_a_scalar",
         ),
         pytest.param(
             {"exc": RuntimeError("boom")},
@@ -2764,6 +2770,77 @@ async def test_token_error_integration_can_handle_it_itself(
     await hass.async_block_till_done()
 
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("implementation", "getter"),
+    [
+        pytest.param(
+            "local_impl",
+            config_entry_oauth2_flow.async_get_config_entry_implementation,
+            id="authorization_code",
+        ),
+        pytest.param(
+            "device_impl",
+            config_entry_oauth2_flow.async_get_config_entry_device_flow_implementation,
+            id="device_flow",
+        ),
+    ],
+)
+async def test_config_entry_implementation_per_grant(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    implementation: str,
+    getter: Callable[
+        [HomeAssistant, config_entries.ConfigEntry],
+        Awaitable[config_entry_oauth2_flow.AbstractOAuth2BaseImplementation],
+    ],
+) -> None:
+    """Test each grant type has a getter returning its implementation."""
+    impl = {"local_impl": local_impl, "device_impl": device_impl}[implementation]
+    config_entry_oauth2_flow.async_register_implementation(hass, TEST_DOMAIN, impl)
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN, data={"auth_implementation": TEST_DOMAIN, "token": {}}
+    )
+
+    assert await getter(hass, config_entry) is impl
+
+
+@pytest.mark.parametrize(
+    ("implementation", "getter"),
+    [
+        pytest.param(
+            "device_impl",
+            config_entry_oauth2_flow.async_get_config_entry_implementation,
+            id="authorization_code_getter",
+        ),
+        pytest.param(
+            "local_impl",
+            config_entry_oauth2_flow.async_get_config_entry_device_flow_implementation,
+            id="device_flow_getter",
+        ),
+    ],
+)
+async def test_config_entry_implementation_wrong_grant(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    implementation: str,
+    getter: Callable[
+        [HomeAssistant, config_entries.ConfigEntry],
+        Awaitable[config_entry_oauth2_flow.AbstractOAuth2BaseImplementation],
+    ],
+) -> None:
+    """Test a getter refuses an implementation of the other grant type."""
+    impl = {"local_impl": local_impl, "device_impl": device_impl}[implementation]
+    config_entry_oauth2_flow.async_register_implementation(hass, TEST_DOMAIN, impl)
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN, data={"auth_implementation": TEST_DOMAIN, "token": {}}
+    )
+
+    with pytest.raises(TypeError):
+        await getter(hass, config_entry)
 
 
 async def test_unknown_implementation_asks_for_reauth(hass: HomeAssistant) -> None:
