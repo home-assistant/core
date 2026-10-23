@@ -1,6 +1,5 @@
 """The tests for the nx584 sensor platform."""
 
-import socket
 from typing import Any
 from unittest import mock
 from unittest.mock import MagicMock
@@ -260,6 +259,27 @@ def test_nx584_watcher_run_retries_failures() -> None:
     mock_wait.assert_has_calls([mock.call(10), mock.call(10)])
 
 
+def test_nx584_watcher_stop_on_failure() -> None:
+    """Test a failure caused by the stop is not reported or retried."""
+    watcher = nx584.NX584Watcher(None, {})
+
+    def fake_run() -> None:
+        """Stop the watcher while a request is pending."""
+        watcher.stop()
+        raise requests.exceptions.ConnectionError
+
+    with (
+        mock.patch.object(watcher, "_run", side_effect=fake_run) as mock_inner,
+        mock.patch.object(watcher._stop_event, "wait") as mock_wait,
+        mock.patch.object(nx584, "_LOGGER") as mock_logger,
+    ):
+        watcher.run()
+
+    assert mock_inner.call_count == 1
+    assert not mock_wait.called
+    assert not mock_logger.error.called
+
+
 def test_nx584_watcher_stop() -> None:
     """Test the watcher leaves its loop once stopped."""
     client = mock.MagicMock()
@@ -275,28 +295,3 @@ def test_nx584_watcher_stop() -> None:
         watcher.run()
 
     assert not mock_process.called
-
-
-@pytest.mark.usefixtures("socket_enabled")
-def test_nx584_watcher_stop_during_stalled_request(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a real watcher thread ends while the server holds a request."""
-    with (
-        socket.create_server(("127.0.0.1", 0)) as server,
-        mock.patch.object(nx584, "EVENTS_REQUEST_TIMEOUT", 1),
-    ):
-        server.settimeout(5)
-        client = nx584.create_watcher_client("127.0.0.1", server.getsockname()[1])
-        watcher = nx584.NX584Watcher(client, {})
-        watcher.start()
-        # The server accepts the request and never answers it.
-        connection, _ = server.accept()
-        with connection:
-            watcher.stop()
-            watcher.join(timeout=5)
-            # Checked while the server still holds the request open.
-            assert not watcher.is_alive()
-
-    # The timeout caused by the stop is not reported as a server failure.
-    assert "Failed to reach NX584 server" not in caplog.text

@@ -4,7 +4,6 @@ import logging
 import threading
 from typing import Any, override
 
-from nx584 import client as nx584_client
 import probatio
 import requests
 
@@ -39,8 +38,6 @@ BYPASS_ZONE_FLAGS = {"Bypass", "Inhibit"}
 
 # How long the server holds an event request open when there is nothing new.
 EVENTS_POLL_TIMEOUT = 60
-# The watcher requests must outlast the long-poll of the server.
-EVENTS_REQUEST_TIMEOUT = EVENTS_POLL_TIMEOUT + 5
 
 ZONE_TYPES_SCHEMA = probatio.Schema(
     {cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA}
@@ -61,11 +58,6 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
 def _zone_flags_indicate_bypass(zone_flags: list[str]) -> bool:
     """Return if NX584 zone condition flags indicate bypass."""
     return not BYPASS_ZONE_FLAGS.isdisjoint(zone_flags)
-
-
-def create_watcher_client(host: str, port: int) -> nx584_client.Client:
-    """Create a client for the watcher thread that outlasts the long-poll."""
-    return create_client(host, port, EVENTS_REQUEST_TIMEOUT)
 
 
 async def async_setup_platform(
@@ -119,7 +111,7 @@ async def async_setup_entry(
     if zone_sensors:
         async_add_entities(zone_sensors.values())
         watcher = NX584Watcher(
-            create_watcher_client(entry.data[CONF_HOST], entry.data[CONF_PORT]),
+            create_client(entry.data[CONF_HOST], entry.data[CONF_PORT]),
             zone_sensors,
         )
         entry.async_on_unload(watcher.stop)

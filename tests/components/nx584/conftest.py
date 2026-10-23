@@ -1,7 +1,6 @@
 """Common fixtures for the NX584 tests."""
 
 from collections.abc import Generator
-import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from nx584 import client as nx584_client
@@ -44,16 +43,6 @@ def mock_watcher() -> Generator[MagicMock]:
         "homeassistant.components.nx584.binary_sensor.NX584Watcher"
     ) as watcher_class:
         yield watcher_class
-
-
-@pytest.fixture
-def stalled_server(socket_enabled: None) -> Generator[int]:
-    """Return the port of a local server that accepts requests and never answers."""
-    with (
-        socket.create_server(("127.0.0.1", 0)) as server,
-        patch("homeassistant.components.nx584.REQUEST_TIMEOUT", 0.1),
-    ):
-        yield server.getsockname()[1]
 
 
 @pytest.fixture

@@ -1,15 +1,12 @@
 """Support for NX584 alarm control panels."""
 
 import asyncio
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 import logging
-from typing import Any, override
+from typing import Any
 
 from nx584 import client as nx584_client
 import requests
-from requests import PreparedRequest, Response
-from requests.adapters import HTTPAdapter
 from yarl import URL
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -21,7 +18,7 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_PLATFORMS, DEFAULT_NAME, DOMAIN, REQUEST_TIMEOUT
+from .const import CONF_PLATFORMS, DEFAULT_NAME, DOMAIN
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,38 +46,9 @@ class NX584Data:
 type NX584ConfigEntry = ConfigEntry[NX584Data]
 
 
-class _TimeoutAdapter(HTTPAdapter):
-    """Transport adapter that bounds every request of a client."""
-
-    def __init__(self, timeout: float) -> None:
-        """Initialize the adapter with the timeout of every request."""
-        super().__init__()
-        self._timeout = timeout
-
-    @override
-    def send(
-        self,
-        request: PreparedRequest,
-        stream: bool = False,
-        timeout: Any = None,
-        verify: bool | str = True,
-        cert: Any = None,
-        proxies: Mapping[str, str] | None = None,
-    ) -> Response:
-        """Send the request with the timeout of the adapter."""
-        return super().send(request, stream, self._timeout, verify, cert, proxies)
-
-
-def create_client(
-    host: str, port: int, timeout: float | None = None
-) -> nx584_client.Client:
-    """Create a client for the NX584 server whose requests time out."""
-    client = nx584_client.Client(str(URL.build(scheme="http", host=host, port=port)))
-    # pynx584 sets no transport timeout, so a stalled server would block forever.
-    client._session.mount(  # noqa: SLF001
-        "http://", _TimeoutAdapter(timeout or REQUEST_TIMEOUT)
-    )
-    return client
+def create_client(host: str, port: int) -> nx584_client.Client:
+    """Create a client for the NX584 server."""
+    return nx584_client.Client(str(URL.build(scheme="http", host=host, port=port)))
 
 
 def _fetch_zones(client: nx584_client.Client) -> tuple[list[dict[str, Any]], str]:

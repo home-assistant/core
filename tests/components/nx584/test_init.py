@@ -10,7 +10,6 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
 )
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.nx584 import DATA_IMPORT_LOCK
 from homeassistant.components.nx584.const import (
     CONF_ENTITY_NAMESPACES,
     CONF_EXCLUDE_ZONES,
@@ -459,25 +458,4 @@ async def test_import_flow_in_progress(
     )
     assert not issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-
-
-@pytest.mark.usefixtures("mock_watcher")
-async def test_import_stalled_server(
-    hass: HomeAssistant, stalled_server: int, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test a server that never answers does not hold the import lock forever."""
-    yaml_config = {
-        domain: {**platform_config, CONF_HOST: "127.0.0.1", CONF_PORT: stalled_server}
-        for domain, platform_config in BOTH_YAML.items()
-    }
-    await _async_setup_yaml(
-        hass, yaml_config, ALARM_CONTROL_PANEL_DOMAIN, BINARY_SENSOR_DOMAIN
-    )
-
-    # The second platform could only import once the first released the lock.
-    assert not hass.data[DATA_IMPORT_LOCK].locked()
-    assert hass.config_entries.async_entries(DOMAIN) == []
-    assert issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )
