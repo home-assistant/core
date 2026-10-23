@@ -196,6 +196,13 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "system_trouble": {
+        "name": "System trouble"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"

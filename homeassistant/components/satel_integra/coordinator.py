@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from satel_integra import AlarmState, SatelPanelInfo
+from satel_integra import AlarmState, SatelPanelInfo, SatelRtcAndStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -30,6 +30,7 @@ class SatelIntegraData:
     coordinator_zones: SatelIntegraZonesCoordinator
     coordinator_outputs: SatelIntegraOutputsCoordinator
     coordinator_partitions: SatelIntegraPartitionsCoordinator
+    coordinator_system_status: SatelIntegraSystemStatusCoordinator
     coordinator_temperatures: SatelIntegraTemperaturesCoordinator
 
 
@@ -181,6 +182,35 @@ class SatelIntegraPartitionsCoordinator(
         _LOGGER.debug("Sending request to update panel state")
 
         self._debouncer.async_schedule_call()
+
+
+class SatelIntegraSystemStatusCoordinator(
+    SatelIntegraBaseCoordinator[SatelRtcAndStatus | None]
+):
+    """DataUpdateCoordinator to handle system status updates."""
+
+    def __init__(
+        self, hass: HomeAssistant, entry: SatelConfigEntry, client: SatelClient
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(hass, entry, client)
+
+        self.data = client.controller.state.system_status
+
+    @override
+    def setup(self) -> None:
+        """Set up client callbacks for this coordinator."""
+        super().setup()
+        self.config_entry.async_on_unload(
+            self.client.controller.add_system_status_callback(
+                self.system_status_update_callback
+            )
+        )
+
+    @callback
+    def system_status_update_callback(self) -> None:
+        """Update the system status as per notification from the alarm."""
+        self.async_set_updated_data(self.client.controller.state.system_status)
 
 
 class SatelIntegraTemperaturesCoordinator(

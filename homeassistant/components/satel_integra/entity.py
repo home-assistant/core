@@ -73,3 +73,31 @@ class SatelIntegraEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._controller.connected
+
+
+class SatelIntegraPanelEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
+    CoordinatorEntity[_CoordinatorT]
+):
+    """Defines a base Satel Integra panel entity."""
+
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: _CoordinatorT,
+        config_entry_id: str,
+    ) -> None:
+        """Initialize the Satel Integra panel entity."""
+        super().__init__(coordinator)
+
+        self._controller = coordinator.client.controller
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry_id)},
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._controller.connected

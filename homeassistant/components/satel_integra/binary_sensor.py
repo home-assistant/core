@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -17,8 +18,12 @@ from .const import (
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
 )
-from .coordinator import SatelConfigEntry, SatelIntegraBaseCoordinator
-from .entity import SatelIntegraEntity
+from .coordinator import (
+    SatelConfigEntry,
+    SatelIntegraBaseCoordinator,
+    SatelIntegraSystemStatusCoordinator,
+)
+from .entity import SatelIntegraEntity, SatelIntegraPanelEntity
 
 PARALLEL_UPDATES = 0
 
@@ -31,6 +36,15 @@ async def async_setup_entry(
     """Set up the Satel Integra binary sensor devices."""
 
     runtime_data = config_entry.runtime_data
+
+    async_add_entities(
+        [
+            SatelIntegraSystemTroubleBinarySensor(
+                runtime_data.coordinator_system_status,
+                config_entry.entry_id,
+            )
+        ]
+    )
 
     for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_ZONE):
         zone_num: int = subentry.data[CONF_ZONE_NUMBER]
@@ -104,3 +118,36 @@ class SatelIntegraBinarySensor[_CoordinatorT: SatelIntegraBaseCoordinator](
     def _get_state_from_coordinator(self) -> bool | None:
         """Method to get binary sensor state from coordinator data."""
         return self.coordinator.data.get(self._device_number)
+
+
+class SatelIntegraSystemTroubleBinarySensor(
+    SatelIntegraPanelEntity[SatelIntegraSystemStatusCoordinator], BinarySensorEntity
+):
+    """Representation of the overall Satel Integra system trouble status."""
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "system_trouble"
+
+    def __init__(
+        self,
+        coordinator: SatelIntegraSystemStatusCoordinator,
+        config_entry_id: str,
+    ) -> None:
+        """Initialize the system trouble sensor."""
+        super().__init__(coordinator, config_entry_id)
+        self._attr_unique_id = f"{config_entry_id}_system_trouble"
+        self._attr_is_on = self._get_state_from_coordinator()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated system status data."""
+        self._attr_is_on = self._get_state_from_coordinator()
+        self.async_write_ha_state()
+
+    def _get_state_from_coordinator(self) -> bool | None:
+        """Return whether the panel reports an active system trouble."""
+        if (system_status := self.coordinator.data) is None:
+            return None
+        return system_status.troubles
