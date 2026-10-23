@@ -9,13 +9,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    ATTR_BACKUP,
-    ATTR_VERSION,
     DATA_COMPONENT,
     DOMAIN,
-    SERVICE_INSTALL,
-    SERVICE_SKIP,
     UpdateEntityFeature,
+    UpdateService,
+    UpdateServiceArgument,
 )
 
 if TYPE_CHECKING:
@@ -25,7 +23,7 @@ if TYPE_CHECKING:
 async def _async_install(entity: UpdateEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to validate the call."""
     # If version is not specified, but no update is available.
-    if (version := service_call.data.get(ATTR_VERSION)) is None and (
+    if (version := service_call.data.get(UpdateServiceArgument.VERSION)) is None and (
         entity.installed_version == entity.latest_version
         or entity.latest_version is None
     ):
@@ -48,7 +46,7 @@ async def _async_install(entity: UpdateEntity, service_call: ServiceCall) -> Non
 
     # If backup is requested, but not supported by the entity.
     if (
-        backup := service_call.data[ATTR_BACKUP]
+        backup := service_call.data[UpdateServiceArgument.BACKUP]
     ) and UpdateEntityFeature.BACKUP not in entity.supported_features:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -95,10 +93,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        SERVICE_INSTALL,
+        UpdateService.INSTALL,
         {
-            probatio.Optional(ATTR_VERSION): cv.string,
-            probatio.Optional(ATTR_BACKUP, default=False): cv.boolean,
+            probatio.Optional(UpdateServiceArgument.VERSION): cv.string,
+            probatio.Optional(UpdateServiceArgument.BACKUP, default=False): cv.boolean,
         },
         _async_install,
         [UpdateEntityFeature.INSTALL],
@@ -106,13 +104,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     component.async_register_entity_service(
-        SERVICE_SKIP,
+        UpdateService.SKIP,
         None,
         _async_skip,
         admin_only=True,
     )
     component.async_register_entity_service(
-        "clear_skipped",
+        UpdateService.CLEAR_SKIPPED,
         None,
         _async_clear_skipped,
         admin_only=True,

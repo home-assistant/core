@@ -133,21 +133,19 @@ def mock_setup_integration(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.CALENDAR]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-    ) -> bool:
+    ) -> None:
         await hass.config_entries.async_unload_platforms(
             config_entry, [Platform.CALENDAR]
         )
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(

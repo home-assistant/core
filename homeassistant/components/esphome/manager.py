@@ -14,6 +14,7 @@ from aioesphomeapi import (
     APIClient,
     APIConnectionError,
     APIVersion,
+    DeviceCapabilities,
     DeviceInfo as EsphomeDeviceInfo,
     EncryptionPlaintextAPIError,
     ExecuteServiceResponse,
@@ -764,6 +765,9 @@ class ESPHomeManager:
 
         api_version = cli.api_version
         assert api_version is not None, "API version must be set"
+        entry_data.device_capabilities = await cli.device_capabilities_compat(
+            device_info
+        )
         entry_data.async_on_connect(hass, device_info, api_version)
 
         await self._handle_dynamic_encryption_key(device_info)
@@ -859,9 +863,12 @@ class ESPHomeManager:
         zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
         entry_data = self.entry_data
         assert entry_data.device_info is not None
-        # DeviceInfo is a snapshot from connect time; keep its home ID current.
-        entry_data.device_info = EsphomeDeviceInfo.from_dict(
-            {**entry_data.device_info.to_dict(), "zwave_home_id": zwave_home_id}
+        assert entry_data.device_capabilities is not None
+        # Capabilities are a snapshot from connect time; keep the home ID current.
+        device_capabilities = entry_data.device_capabilities.to_dict()
+        device_capabilities["zwave_proxy"]["home_id"] = zwave_home_id
+        entry_data.device_capabilities = DeviceCapabilities.from_dict(
+            device_capabilities
         )
         entry_data.async_save_to_store()
         entry_data.async_create_zwave_js_flow(
@@ -1388,17 +1395,15 @@ def _async_setup_device_registry(
         suggested_area = device_info.suggested_area
 
     # Create/update main device
-    device_entry = device_registry.async_get_or_create_device(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            configuration_url=configuration_url,
-            connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-            name=entry_data.friendly_name or entry_data.name,
-            manufacturer=manufacturer,
-            model=model,
-            sw_version=sw_version,
-            suggested_area=suggested_area,
-        ),
+        configuration_url=configuration_url,
+        connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
+        name=entry_data.friendly_name or entry_data.name,
+        manufacturer=manufacturer,
+        model=model,
+        sw_version=sw_version,
+        suggested_area=suggested_area,
     )
 
     # Handle sub devices
@@ -1414,18 +1419,14 @@ def _async_setup_device_registry(
         if sub_device.area_id is not None and sub_device.area_id in areas_by_id:
             sub_device_suggested_area = areas_by_id[sub_device.area_id].name
 
-        sub_device_entry = device_registry.async_get_or_create_device(
+        sub_device_entry = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={
-                    (DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")
-                },
-                name=sub_device.name or device_entry.name,
-                manufacturer=manufacturer,
-                model=model,
-                sw_version=sw_version,
-                suggested_area=sub_device_suggested_area,
-            ),
+            identifiers={(DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")},
+            name=sub_device.name or device_entry.name,
+            manufacturer=manufacturer,
+            model=model,
+            sw_version=sw_version,
+            suggested_area=sub_device_suggested_area,
         )
 
         # Update the sub device to set via_device_id

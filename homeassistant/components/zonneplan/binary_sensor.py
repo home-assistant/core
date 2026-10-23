@@ -5,12 +5,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
-from pyzonneplan import Battery
+from pyzonneplan import Battery, ChargePoint
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
@@ -18,7 +20,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import ZONNEPLAN_TIMEZONE
 from .coordinator import ZonneplanConfigEntry, ZonneplanCoordinator
-from .entity import ZonneplanBatteryEntity, ZonneplanEntity
+from .entity import ZonneplanBatteryEntity, ZonneplanChargePointEntity, ZonneplanEntity
 
 PARALLEL_UPDATES = 0
 
@@ -83,6 +85,38 @@ BATTERY_BINARY_SENSORS: tuple[ZonneplanBatteryBinarySensorEntityDescription, ...
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class ZonneplanChargePointBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Zonneplan charge point binary sensor."""
+
+    is_on_fn: Callable[[ChargePoint], bool | None]
+
+
+CHARGE_POINT_BINARY_SENSORS: tuple[
+    ZonneplanChargePointBinarySensorEntityDescription, ...
+] = (
+    ZonneplanChargePointBinarySensorEntityDescription(
+        key="connectivity",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda charge_point: charge_point.state.connectivity_state,
+    ),
+    ZonneplanChargePointBinarySensorEntityDescription(
+        key="overload_protection",
+        translation_key="overload_protection",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        is_on_fn=lambda charge_point: charge_point.state.overload_protection_active,
+    ),
+    ZonneplanChargePointBinarySensorEntityDescription(
+        key="automatic_charging_paused",
+        translation_key="automatic_charging_paused",
+        is_on_fn=lambda charge_point: (
+            charge_point.state.dynamic_charging_flex_suppressed
+        ),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ZonneplanConfigEntry,
@@ -91,6 +125,7 @@ async def async_setup_entry(
     """Set up Zonneplan binary sensor platform."""
     coordinator = entry.runtime_data.coordinator
     battery_coordinator = entry.runtime_data.battery_coordinator
+    charge_point_coordinator = entry.runtime_data.charge_point_coordinator
 
     async_add_entities(
         [
@@ -105,6 +140,13 @@ async def async_setup_entry(
                 )
                 for contract_uuid in battery_coordinator.data
                 for description in BATTERY_BINARY_SENSORS
+            ),
+            *(
+                ZonneplanChargePointBinarySensor(
+                    charge_point_coordinator, contract_uuid, description
+                )
+                for contract_uuid in charge_point_coordinator.data
+                for description in CHARGE_POINT_BINARY_SENSORS
             ),
         ]
     )
@@ -147,3 +189,15 @@ class ZonneplanBatteryBinarySensor(ZonneplanBatteryEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(self.battery)
+
+
+class ZonneplanChargePointBinarySensor(ZonneplanChargePointEntity, BinarySensorEntity):
+    """Representation of a Zonneplan charge point binary sensor."""
+
+    entity_description: ZonneplanChargePointBinarySensorEntityDescription
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return the state of the binary sensor."""
+        return self.entity_description.is_on_fn(self.charge_point)
