@@ -138,9 +138,6 @@
     "firmware_update_rejected": {
       "message": "Firmware update request rejected"
     },
-    "gateway_unavailable": {
-      "message": "Gateway data is unavailable; retrying on the next update."
-    },
     "no_controllers": {
       "message": "No active TP-Link Omada controllers found"
     },

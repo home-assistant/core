@@ -96,8 +96,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
     @callback
     def _schedule_cleanup(_now: datetime | None = None) -> None:
         nonlocal _cleanup_task
-        if _cleanup_task is not None and not _cleanup_task.done():
-            return
         _cleanup_task = entry.async_create_background_task(
             hass,
             _async_cleanup_task(),
