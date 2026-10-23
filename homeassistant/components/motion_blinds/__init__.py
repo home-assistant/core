@@ -134,7 +134,7 @@ async def async_setup_entry(
         blind.device_type not in DEVICE_TYPES_WIFI
         for blind in motion_gateway.device_list.values()
     ):
-        dr.async_get(hass).async_get_or_create_device(
+        dr.async_get(hass).async_get_or_create_from_info(
             config_entry_id=entry.entry_id,
             device_info=gateway_device_info(motion_gateway),
         )

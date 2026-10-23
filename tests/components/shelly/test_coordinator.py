@@ -994,6 +994,29 @@ async def test_rpc_polling_disconnected(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_rpc_polling_not_initialized(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC polling is skipped while the device is re-initializing."""
+    entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
+    await init_integration(hass, 2)
+
+    # The websocket is connected but initialization has not completed yet
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "-63"
+
+    await mock_polling_rpc_update(hass, freezer)
+
+    mock_rpc_device.poll.assert_not_called()
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_rpc_update_entry_fw_ver(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
