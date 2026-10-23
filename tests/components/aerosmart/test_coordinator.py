@@ -8,10 +8,11 @@ from modbus_connection.mock import MockModbusUnit
 from modbus_connection.model import UpdateReport
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.aerosmart.const import READINGS_SCAN_INTERVAL
+from homeassistant.components.aerosmart.const import DOMAIN, READINGS_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
@@ -38,6 +39,27 @@ async def test_all_failed_report_preserves_causes(
     assert isinstance(coordinator.last_exception, UpdateFailed)
     assert isinstance(coordinator.last_exception.__cause__, ExceptionGroup)
     assert coordinator.last_exception.__cause__.exceptions == (error,)
+
+
+async def test_device_info_includes_model_and_software_version(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit_ventilation: MockModbusUnit,
+) -> None:
+    """Device metadata is included when the controller provides it."""
+    mock_modbus_unit_ventilation.holding[5000] = [0, 3]
+    mock_modbus_unit_ventilation.holding[1156] = [0, 42]
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = dr.async_get(hass).async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    )
+    assert device is not None
+    assert device.model == "3"
+    assert device.sw_version == "42"
 
 
 async def test_update_failed_marks_entities_unavailable(

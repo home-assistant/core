@@ -115,6 +115,74 @@ async def test_same_unit_ids(
     mock_setup_entry.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("connection_type", "invalid_field", "data"),
+    [
+        pytest.param(
+            TYPE_TCP,
+            CONF_PORT,
+            {
+                CONF_HOST: "1.2.3.4",
+                CONF_PORT: 502.9,
+                CONF_UNIT_VENTILATION: 1,
+                CONF_UNIT_HEAT_PUMP: 2,
+            },
+            id="tcp-port",
+        ),
+        pytest.param(
+            TYPE_TCP,
+            CONF_UNIT_VENTILATION,
+            {
+                CONF_HOST: "1.2.3.4",
+                CONF_PORT: 502,
+                CONF_UNIT_VENTILATION: 1.9,
+                CONF_UNIT_HEAT_PUMP: 2,
+            },
+            id="ventilation-unit",
+        ),
+        pytest.param(
+            TYPE_TCP,
+            CONF_UNIT_HEAT_PUMP,
+            {
+                CONF_HOST: "1.2.3.4",
+                CONF_PORT: 502,
+                CONF_UNIT_VENTILATION: 1,
+                CONF_UNIT_HEAT_PUMP: 2.9,
+            },
+            id="heat-pump-unit",
+        ),
+        pytest.param(
+            TYPE_SERIAL,
+            CONF_BAUDRATE,
+            {
+                CONF_DEVICE: "/dev/ttyUSB0",
+                CONF_BAUDRATE: 19200.9,
+                CONF_UNIT_VENTILATION: 1,
+                CONF_UNIT_HEAT_PUMP: 2,
+            },
+            id="serial-baudrate",
+        ),
+    ],
+)
+async def test_fractional_connection_values_are_rejected(
+    hass: HomeAssistant,
+    connection_type: str,
+    invalid_field: str,
+    data: dict[str, object],
+    mock_modbus_api: MockModbusApi,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Fractional connection values are rejected instead of being truncated."""
+    flow_id = await _start_flow(hass, connection_type)
+
+    result = await hass.config_entries.flow.async_configure(flow_id, data)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {invalid_field: "invalid_integer"}
+    mock_modbus_api.temporary_unit.assert_not_called()
+    mock_setup_entry.assert_not_called()
+
+
 @pytest.mark.usefixtures("mock_modbus_unit_ventilation", "mock_modbus_unit_heat_pump")
 async def test_cannot_connect(
     hass: HomeAssistant,

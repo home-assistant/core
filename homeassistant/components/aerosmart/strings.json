@@ -5,6 +5,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect. Check the connection settings and both station addresses.",
+      "invalid_integer": "Enter a whole number.",
       "same_unit": "The ventilation and heat pump unit IDs must be different."
     },
     "step": {

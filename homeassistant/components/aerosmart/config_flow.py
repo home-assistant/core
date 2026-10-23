@@ -103,6 +103,16 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate the controller connection and create an entry."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            errors = self._validate_integer_inputs(connection_type, user_input)
+            if errors:
+                return self.async_show_form(
+                    step_id=connection_type,
+                    data_schema=(
+                        STEP_SERIAL if connection_type == TYPE_SERIAL else STEP_TCP
+                    ),
+                    errors=errors,
+                )
+
             user_input = self._normalize_input(connection_type, user_input)
             if user_input[CONF_UNIT_VENTILATION] == user_input[CONF_UNIT_HEAT_PUMP]:
                 errors["base"] = "same_unit"
@@ -122,6 +132,20 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_SERIAL if connection_type == TYPE_SERIAL else STEP_TCP,
             errors=errors,
         )
+
+    @staticmethod
+    def _validate_integer_inputs(
+        connection_type: str, data: dict[str, Any]
+    ) -> dict[str, str]:
+        """Ensure selector values will not lose precision when stored as integers."""
+        fields = [CONF_UNIT_VENTILATION, CONF_UNIT_HEAT_PUMP]
+        fields.append(CONF_BAUDRATE if connection_type == TYPE_SERIAL else CONF_PORT)
+        return {
+            field: "invalid_integer"
+            for field in fields
+            if not isinstance(data[field], int | float)
+            or not float(data[field]).is_integer()
+        }
 
     async def _async_can_connect(self, data: dict[str, Any]) -> bool:
         """Probe both units and always release the temporary connection."""
