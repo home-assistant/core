@@ -6590,6 +6590,36 @@ async def test_rtc_session_disconnected_cancels_expiry(
     mock_close.assert_called_once_with(RTC_SESSION_ID)
 
 
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_rtc_session_renegotiated_expiry(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test negotiating the same session again replaces its expiry."""
+    renegotiate_after = RTC_MAX_SESSION_DURATION / 2
+    with patch(
+        "homeassistant.components.camera.Camera.close_webrtc_session"
+    ) as mock_close:
+        await _async_negotiate_rtc_session(hass)
+        freezer.tick(renegotiate_after)
+        async_fire_time_changed(hass)
+        await _async_negotiate_rtc_session(hass)
+
+        # The expiry of the first negotiation must not close the new session.
+        freezer.tick(RTC_MAX_SESSION_DURATION - renegotiate_after)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        mock_close.assert_not_called()
+
+        freezer.tick(renegotiate_after)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_close.assert_called_once_with(RTC_SESSION_ID)
+
+
 async def test_alexa_config_migrate_entity_names(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],

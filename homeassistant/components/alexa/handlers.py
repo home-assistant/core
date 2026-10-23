@@ -2430,7 +2430,10 @@ async def async_api_initiate_session_with_offer(
         )
         camera_entity.close_webrtc_session(session_id)
 
-    hass.data.setdefault(DATA_RTC_SESSIONS, {})[session_id] = async_call_later(
+    sessions = hass.data.setdefault(DATA_RTC_SESSIONS, {})
+    if cancel_expiry := sessions.pop(session_id, None):
+        cancel_expiry()
+    sessions[session_id] = async_call_later(
         hass, RTC_MAX_SESSION_DURATION, async_expire_session
     )
 
