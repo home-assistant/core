@@ -14,6 +14,7 @@ from aioesphomeapi import (
     APIClient,
     APIConnectionError,
     APIVersion,
+    DeviceCapabilities,
     DeviceInfo as EsphomeDeviceInfo,
     EncryptionPlaintextAPIError,
     ExecuteServiceResponse,
@@ -764,6 +765,9 @@ class ESPHomeManager:
 
         api_version = cli.api_version
         assert api_version is not None, "API version must be set"
+        entry_data.device_capabilities = await cli.device_capabilities_compat(
+            device_info
+        )
         entry_data.async_on_connect(hass, device_info, api_version)
 
         await self._handle_dynamic_encryption_key(device_info)
@@ -859,9 +863,12 @@ class ESPHomeManager:
         zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
         entry_data = self.entry_data
         assert entry_data.device_info is not None
-        # DeviceInfo is a snapshot from connect time; keep its home ID current.
-        entry_data.device_info = EsphomeDeviceInfo.from_dict(
-            {**entry_data.device_info.to_dict(), "zwave_home_id": zwave_home_id}
+        assert entry_data.device_capabilities is not None
+        # Capabilities are a snapshot from connect time; keep the home ID current.
+        device_capabilities = entry_data.device_capabilities.to_dict()
+        device_capabilities["zwave_proxy"]["home_id"] = zwave_home_id
+        entry_data.device_capabilities = DeviceCapabilities.from_dict(
+            device_capabilities
         )
         entry_data.async_save_to_store()
         entry_data.async_create_zwave_js_flow(

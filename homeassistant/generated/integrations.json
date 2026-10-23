@@ -1304,6 +1304,15 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "bluetti_modbus": {
+      "name": "BLUETTI Modbus",
+      "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "bond": {
       "name": "Bond",
       "integration_type": "hub",
@@ -3430,7 +3439,7 @@
       "categories": [
         "water.pools_spas"
       ],
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_polling"
     },
     "flo": {
@@ -8271,7 +8280,7 @@
         },
         "ubus": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "categories": [
             "presence_location.network_presence",
@@ -10309,7 +10318,7 @@
       "integrations": {
         "sky_hub": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "categories": [
             "presence_location.network_presence",
