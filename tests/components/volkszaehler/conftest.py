@@ -47,14 +47,14 @@ def mock_client_api() -> Generator[Mock]:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Fixture for a config entry with one existing channel subentry."""
-    return _mock_config_entry()
+    """Fixture for a config entry with one existing channel subentry and middleware enabled."""
+    return _mock_config_entry(middleware=True)
 
 
 @pytest.fixture
 def mock_config_entry_without_middleware() -> MockConfigEntry:
     """Fixture for a Volkszaehler config entry without middleware."""
-    return _mock_config_entry(middleware=False)
+    return _mock_config_entry()
 
 
 def _mock_config_entry(*, middleware: bool | None = None) -> MockConfigEntry:
