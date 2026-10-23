@@ -31,11 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VRChatConfigEntry) -> No
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
     )
-    try:
-        await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-    except BaseException:
-        await entry.runtime_data.close()
-        raise
+    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: VRChatConfigEntry) -> None:
