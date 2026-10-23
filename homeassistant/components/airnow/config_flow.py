@@ -71,24 +71,26 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             # Set a unique id based on latitude/longitude
+            location: dict[str, Any] = user_input[CONF_LOCATION]
             await self.async_set_unique_id(
-                f"{user_input[CONF_LOCATION][CONF_LATITUDE]}-{user_input[CONF_LOCATION][CONF_LONGITUDE]}"
+                f"{location[CONF_LATITUDE]}-{location[CONF_LONGITUDE]}"
             )
             self._abort_if_unique_id_configured()
 
             if not (
-                errors := await self._async_validate_input(
-                    {**user_input, **user_input[CONF_LOCATION]}
-                )
+                errors := await self._async_validate_input({**user_input, **location})
             ):
                 # Create Entry
-                location: dict[str, Any] = user_input.pop(CONF_LOCATION)
                 return self.async_create_entry(
                     title=(
                         f"AirNow Sensor at {location[CONF_LATITUDE]},"
                         f" {location[CONF_LONGITUDE]}"
                     ),
-                    data={**user_input, **location},
+                    data={
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                        CONF_LATITUDE: location[CONF_LATITUDE],
+                        CONF_LONGITUDE: location[CONF_LONGITUDE],
+                    },
                 )
 
         return self.async_show_form(

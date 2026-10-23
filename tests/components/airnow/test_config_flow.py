@@ -19,17 +19,21 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import TEST_API_KEY, TEST_LATITUDE, TEST_LONGITUDE
+
 USER_INPUT = {
-    CONF_API_KEY: "abc123",
+    CONF_API_KEY: TEST_API_KEY,
     CONF_LOCATION: {
-        CONF_LATITUDE: 34.053718,
-        CONF_LONGITUDE: -118.244842,
+        CONF_LATITUDE: TEST_LATITUDE,
+        CONF_LONGITUDE: TEST_LONGITUDE,
     },
 }
 
 
 @pytest.mark.usefixtures("setup_airnow")
-async def test_form(hass: HomeAssistant, options: dict[str, Any]) -> None:
+async def test_form(
+    hass: HomeAssistant, config: dict[str, Any], options: dict[str, Any]
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -44,11 +48,7 @@ async def test_form(hass: HomeAssistant, options: dict[str, Any]) -> None:
         result["flow_id"], user_input=USER_INPUT
     )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
-        CONF_API_KEY: "abc123",
-        CONF_LATITUDE: 34.053718,
-        CONF_LONGITUDE: -118.244842,
-    }
+    assert result2["data"] == config
     assert result2["options"] == options
     assert result2["result"].unique_id == "34.053718--118.244842"
 
