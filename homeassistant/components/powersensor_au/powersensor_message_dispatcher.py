@@ -226,15 +226,15 @@ class PowersensorMessageDispatcher:
         the persisted role or None).
 
         The role is treated as best-effort:
-          - Present on most devices → record it in self.sensors and send
-            ROLE_UPDATE_SIGNAL to update role-gated entities and persist it.
+          - Present on most devices → record it in self.sensors, save it, and
+            send ROLE_UPDATE_SIGNAL to update role-gated entities.
           - Absent (None) on old hardware or occasionally on newer devices →
             leave whatever device_found already seeded; the first measurement
             event will correct it via the normal ROLE_UPDATE_SIGNAL path.
 
-        self.sensors is written here, not by the signal's receiver, so it is
-        correct even when the sensor platform has not connected its listeners
-        yet (see "Discovery lifecycle" above).
+        self.sensors and the saved role are written here, not by the signal's
+        receiver, so they are correct even when the sensor platform has not
+        connected its listeners yet (see "Discovery lifecycle" above).
         """
         mac = event.get("mac")
         if mac is None:
@@ -261,9 +261,23 @@ class PowersensorMessageDispatcher:
             wire_role,
         )
         self.sensors[mac] = wire_role
-        # ROLE_UPDATE_SIGNAL updates role-gated entities and persists the role
+        self._save_role(mac, wire_role)
+        # ROLE_UPDATE_SIGNAL updates role-gated entities and renames the device
         # via sensor.py's handle_role_update callback.
         async_dispatcher_send(self._hass, ROLE_UPDATE_SIGNAL, mac, wire_role)
+
+    def _save_role(self, mac: str, role: str) -> None:
+        """Save a role the device reported, as the fallback for its messages.
+
+        Saved here rather than by the platform, which only listens once it has
+        loaded: discovery starts before that, and a role learned in between
+        would otherwise never be saved.
+        """
+        roles = self._entry.data[CFG_ROLES]
+        _LOGGER.debug("Saving role for %s: %s → %s", mac, roles.get(mac), role)
+        self._hass.config_entries.async_update_entry(
+            self._entry, data={**self._entry.data, CFG_ROLES: {**roles, mac: role}}
+        )
 
     def _handle_device_lost(self, event: dict[str, Any]) -> None:
         """Handle a plug or sensor going offline.
@@ -298,10 +312,12 @@ class PowersensorMessageDispatcher:
         effective_role = persisted_role if role is None else role
 
         if role is not None and role != persisted_role:
-            # Plugs report a role too; it is persisted via the signal, but a
-            # plug must not end up listed among the sensors.
+            # Plugs report a role too, and saving it is deliberate: plug
+            # messages without a role fall back to it.  But a plug must not end
+            # up listed among the sensors.
             if mac in self.sensors:
                 self.sensors[mac] = role
+            self._save_role(mac, role)
             async_dispatcher_send(self._hass, ROLE_UPDATE_SIGNAL, mac, role)
 
         # Build the outbound message with the effective role injected.

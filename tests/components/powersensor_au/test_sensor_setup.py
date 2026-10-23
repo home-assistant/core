@@ -20,16 +20,15 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.powersensor_au.config_flow import PowersensorConfigFlow
 from homeassistant.components.powersensor_au.const import (
+    CFG_ROLES,
     DOMAIN,
     ROLE_HOUSENET,
     ROLE_SOLAR,
-    ROLE_UPDATE_SIGNAL,
     ROLE_WATER,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 PLUG_MAC = "aabbccddeeff"
@@ -104,11 +103,12 @@ async def test_devices_found_before_platform_setup_are_seeded(
     mock_devices: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Devices discovered before the sensor platform loads still get entities.
+    """Devices discovered before the sensor platform loads get entities and roles.
 
     Discovery starts before platforms are forwarded, so CREATE and ROLE_UPDATE
     signals fired in that window have no listener.  Delivering the events from
-    inside start() reproduces that window exactly.
+    inside start() reproduces that window exactly.  A role learned in it must
+    still be saved, as measurements without a role fall back to the saved one.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -144,6 +144,34 @@ async def test_devices_found_before_platform_setup_are_seeded(
     assert f"{SENSOR_MAC}_power" in unique_ids
     assert f"{SENSOR_MAC}_total_energy" in unique_ids
     assert "vhh_home_usage" in unique_ids
+    assert entry.data[CFG_ROLES] == {SENSOR_MAC: ROLE_HOUSENET}
+
+    fire = mock_devices.start.call_args[0][0]
+    await fire(
+        {
+            "event": "average_power",
+            "mac": SENSOR_MAC,
+            "watts": 500.0,
+            "starttime_utc": 1700000000,
+            "duration_s": 30,
+        }
+    )
+    await hass.async_block_till_done()
+    role_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{SENSOR_MAC}_device_role"
+    )
+    assert role_entity_id is not None
+    role_state = hass.states.get(role_entity_id)
+    assert role_state is not None
+    assert role_state.state == "house_net"
+    # The household view counts the sensor's power.
+    home_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, "vhh_home_usage"
+    )
+    assert home_entity_id is not None
+    home_state = hass.states.get(home_entity_id)
+    assert home_state is not None
+    assert home_state.state == "500"
 
 
 async def test_sensor_no_role_creates_universal_entities_only(
@@ -769,7 +797,7 @@ async def test_role_update_noop_when_role_unchanged(
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
-    """ROLE_UPDATE_SIGNAL with the already-persisted role is a no-op (no new entities)."""
+    """A sensor reporting the role it already has gets no new entities."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
     await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
     await hass.async_block_till_done()
@@ -787,37 +815,13 @@ async def test_role_update_for_plug_mac_is_noop(
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
-    """ROLE_UPDATE_SIGNAL for a plug MAC returns early — plugs never get role-gated entities."""
+    """A role reported for a plug adds no entities: plugs never get role-gated ones."""
     await fire({"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"})
     await hass.async_block_till_done()
     count = len(_registered(hass, config_entry))
 
     # Firing a role update for a plug MAC should be a no-op.
     await fire({"event": "now_relaying_for", "mac": PLUG_MAC, "role": ROLE_HOUSENET})
-    await hass.async_block_till_done()
-
-    assert len(_registered(hass, config_entry)) == count
-
-
-async def test_role_update_signal_noop_when_persisted_role_matches(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
-) -> None:
-    """handle_role_update (sensor.py closure) returns early when entry.data already has the same role.
-
-    The dispatcher deduplicates at its own level, so we send ROLE_UPDATE_SIGNAL
-    directly to reach the sensor.py closure with an already-persisted role.
-    """
-    await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
-    await hass.async_block_till_done()
-    count = len(_registered(hass, config_entry))
-
-    # entry.data now has ROLE_HOUSENET persisted for SENSOR_MAC.
-    # Sending the same role directly bypasses the dispatcher dedup and lands
-    # straight in the sensor.py closure — which should return early.
-    async_dispatcher_send(hass, ROLE_UPDATE_SIGNAL, SENSOR_MAC, ROLE_HOUSENET)
     await hass.async_block_till_done()
 
     assert len(_registered(hass, config_entry)) == count

@@ -45,7 +45,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CFG_ROLES,
     CREATE_PLUG_SIGNAL,
     CREATE_SENSOR_SIGNAL,
     DATA_UPDATE_SIGNAL_PREFIX,
@@ -293,8 +292,8 @@ PLUG_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     ),
     PowersensorSensorEntityDescription(
         # Plugs report ROLE_APPLIANCE.  A message without a role falls back to
-        # the saved one (see handle_role_update), so once a plug has reported
-        # its role this shows "appliance" rather than "unknown".
+        # the saved one (the dispatcher saves plug roles too), so once a plug
+        # has reported its role this shows "appliance" rather than "unknown".
         key="device_role",
         translation_key="device_role",
         device_class=SensorDeviceClass.ENUM,
@@ -468,7 +467,11 @@ async def async_setup_entry(
 
     @callback
     def handle_role_update(mac_address: str, new_role: str | None) -> None:
-        """Persist a role change and add whatever entities the new role enables.
+        """Add whatever entities a sensor's new role enables, and rename its device.
+
+        The dispatcher has already saved the role: it sends this signal only
+        for a role that changed, and saves it first so that saving does not
+        depend on this platform having loaded.
 
         Entities belonging to the previous role are deliberately left in place.
         Role changes are usually transient: a sensor that has forgotten its
@@ -478,22 +481,9 @@ async def async_setup_entry(
         recorded.  A sensor that has genuinely been re-purposed therefore needs
         its stale entities deleted by hand.
         """
-        existing_roles: dict[str, str | None] = dict(entry.data[CFG_ROLES])
-        old_role = existing_roles.get(mac_address)
-
-        if old_role == new_role:
-            return
-
-        _LOGGER.debug("Updating role for %s: %s → %s", mac_address, old_role, new_role)
-        hass.config_entries.async_update_entry(
-            entry,
-            data={**entry.data, CFG_ROLES: {**existing_roles, mac_address: new_role}},
-        )
-
         if mac_address in dispatcher.plugs:
             # A plug's role is always ROLE_APPLIANCE, so there are no role-gated
-            # entities to add and no device to rename.  Saving it above is still
-            # deliberate: plug messages without a role fall back to it.
+            # entities to add and no device to rename.
             return
 
         # The device is named after its role, but core only reads device_info
