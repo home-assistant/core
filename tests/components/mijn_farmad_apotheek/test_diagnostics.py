@@ -16,10 +16,10 @@ FIXED_MOCK_ENTRY_ID = "01JGFJJZ008DNE3BKJ7ZE14YFE"
 
 
 @pytest.mark.freeze_time("2025-01-01T00:00:00+00:00")
+@pytest.mark.usefixtures("mock_farmad_client")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_farmad_client: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for a loaded entry."""
