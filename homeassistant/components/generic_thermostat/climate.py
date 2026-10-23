@@ -96,6 +96,9 @@ CONF_PRECISION = "precision"
 CONF_TARGET_TEMP = "target_temp"
 CONF_TEMP_STEP = "target_temp_step"
 
+# Absorbs float rounding at the tolerance limits (21.7 + 0.3 != 22.0)
+TOLERANCE_EPSILON = 1e-6
+
 
 PRESETS_SCHEMA: VolDictType = {
     probatio.Optional(v): probatio.Coerce(float) for v in CONF_PRESETS.values()
@@ -597,8 +600,24 @@ class GenericThermostat(RestoreClimate):
                 return
 
             assert self._cur_temp is not None and self._target_temp is not None
-            too_cold = self._target_temp > self._cur_temp + self._cold_tolerance
-            too_hot = self._target_temp < self._cur_temp - self._hot_tolerance
+            if self._cold_tolerance + self._hot_tolerance > 0:
+                # A tolerance band already prevents rapid switching, so its
+                # limits are inclusive and the band is exactly the configured
+                # one whatever the sensor's resolution: target 22, cold 0.5,
+                # hot 0 turns on at 21.5 and off at 22.0.
+                too_cold = (
+                    self._cur_temp
+                    <= self._target_temp - self._cold_tolerance + TOLERANCE_EPSILON
+                )
+                too_hot = (
+                    self._cur_temp
+                    >= self._target_temp + self._hot_tolerance - TOLERANCE_EPSILON
+                )
+            else:
+                # No band: strict, so a reading equal to the target does not
+                # toggle the heater on every update (#79667).
+                too_cold = self._target_temp > self._cur_temp + self._cold_tolerance
+                too_hot = self._target_temp < self._cur_temp - self._hot_tolerance
             now = dt_util.utcnow()
 
             if self._is_device_active:
