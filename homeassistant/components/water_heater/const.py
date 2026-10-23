@@ -69,3 +69,21 @@ class WaterHeaterEntityFeature(IntFlag):
     OPERATION_MODE = 2
     AWAY_MODE = 4
     ON_OFF = 8
+
+
+class WaterHeaterService(StrEnum):
+    """Store keys for water heater services."""
+
+    SET_AWAY_MODE = "set_away_mode"
+    SET_OPERATION_MODE = "set_operation_mode"
+    SET_TEMPERATURE = "set_temperature"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class WaterHeaterServiceArgument(StrEnum):
+    """Store keys for water heater service arguments."""
+
+    AWAY_MODE = "away_mode"
+    OPERATION_MODE = "operation_mode"
+    TEMPERATURE = "temperature"

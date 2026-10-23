@@ -6975,6 +6975,57 @@
     'state': '57.0',
   })
 # ---
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_last_setpoint_change-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.floor_heating_thermostat_last_setpoint_change',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last setpoint change',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last setpoint change',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_change_timestamp',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-ThermostatSetpointChangeSourceTimestamp-513-50',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_last_setpoint_change-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Last setpoint change',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_last_setpoint_change',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-10-11T22:28:52+00:00',
+  })
+# ---
 # name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_power_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -7087,6 +7138,126 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_setpoint_change_amount-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.floor_heating_thermostat_setpoint_change_amount',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Setpoint change amount',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Setpoint change amount',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_change_amount',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-ThermostatSetpointChangeAmount-513-49',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_setpoint_change_amount-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Setpoint change amount',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_setpoint_change_amount',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-0.5',
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_setpoint_change_source-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'manual',
+        'schedule',
+        'external',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.floor_heating_thermostat_setpoint_change_source',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Setpoint change source',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Setpoint change source',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_change_source',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-ThermostatSetpointChangeSource-513-48',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_setpoint_change_source-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Setpoint change source',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'manual',
+        'schedule',
+        'external',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_setpoint_change_source',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'manual',
   })
 # ---
 # name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_temperature_2-entry]
@@ -31068,6 +31239,57 @@
     'state': '25',
   })
 # ---
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_setpoint_change-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_thermostat_last_setpoint_change',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last setpoint change',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last setpoint change',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_change_timestamp',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-ThermostatSetpointChangeSourceTimestamp-513-50',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_setpoint_change-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Last setpoint change',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_thermostat_last_setpoint_change',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T00:00:00+00:00',
+  })
+# ---
 # name: test_sensors[mock_thermostat][sensor.mock_thermostat_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -31177,6 +31399,126 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
+  })
+# ---
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_setpoint_change_amount-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_thermostat_setpoint_change_amount',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Setpoint change amount',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Setpoint change amount',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_change_amount',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-ThermostatSetpointChangeAmount-513-49',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_setpoint_change_amount-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Setpoint change amount',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_thermostat_setpoint_change_amount',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.5',
+  })
+# ---
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_setpoint_change_source-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'manual',
+        'schedule',
+        'external',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_thermostat_setpoint_change_source',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Setpoint change source',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Setpoint change source',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_change_source',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-ThermostatSetpointChangeSource-513-48',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_setpoint_change_source-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Setpoint change source',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'manual',
+        'schedule',
+        'external',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_thermostat_setpoint_change_source',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'manual',
   })
 # ---
 # name: test_sensors[mock_thermostat][sensor.mock_thermostat_temperature-entry]
