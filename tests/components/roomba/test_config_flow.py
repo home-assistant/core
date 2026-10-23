@@ -190,7 +190,7 @@ async def test_form_user_discovery_and_password_fetch(hass: HomeAssistant) -> No
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -313,7 +313,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -479,7 +479,7 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -550,7 +550,7 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -622,7 +622,7 @@ async def test_form_user_no_devices_password_fetch_fails_cannot_connect(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -643,7 +643,7 @@ async def test_form_user_no_devices_password_fetch_fails_cannot_connect(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result5 = await hass.config_entries.flow.async_configure(
@@ -694,7 +694,7 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -770,7 +770,7 @@ async def test_dhcp_discovery_falls_back_to_manual(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -838,7 +838,7 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(

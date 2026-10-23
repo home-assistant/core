@@ -22,7 +22,7 @@ def no_setup():
     """Disable setting up the whole integration in config_flow tests."""
     with patch(
         "homeassistant.components.fronius.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

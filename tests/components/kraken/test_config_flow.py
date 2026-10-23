@@ -19,7 +19,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
     with patch(
         "homeassistant.components.kraken.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}

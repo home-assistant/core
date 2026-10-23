@@ -24,6 +24,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
@@ -241,6 +242,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     ),
     RenaultSensorEntityDescription[KamereonVehicleBatteryStatusData](
         key="battery_last_activity",
+        entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="battery",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -287,6 +289,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     ),
     RenaultSensorEntityDescription[KamereonVehicleHvacStatusData](
         key="hvac_soc_threshold",
+        entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="hvac_status",
         native_unit_of_measurement=PERCENTAGE,
         translation_key="hvac_soc_threshold",
@@ -294,6 +297,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     ),
     RenaultSensorEntityDescription[KamereonVehicleHvacStatusData](
         key="hvac_last_activity",
+        entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="hvac_status",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -302,6 +306,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     ),
     RenaultSensorEntityDescription[KamereonVehicleLocationData](
         key="location_last_activity",
+        entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="location",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -316,6 +321,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     ),
     RenaultSensorEntityDescription[KamereonVehicleResStateData](
         key="res_state_code",
+        entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="res_state",
         entity_registry_enabled_default=False,
         translation_key="res_state_code",
@@ -323,6 +329,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     ),
     RenaultSensorEntityDescription[KamereonVehicleChargingSettingsData](
         key="charging_settings_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="charging_settings",
         translation_key="charging_settings_mode",
         device_class=SensorDeviceClass.ENUM,

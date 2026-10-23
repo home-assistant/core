@@ -117,7 +117,7 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
     with (
         patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=Mock())),
-        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
+        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: USER_PROVIDED_PATH}
@@ -163,7 +163,7 @@ async def test_manual_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
     with (
         patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=Mock())),
-        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
+        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: USER_PROVIDED_PATH}
@@ -241,7 +241,7 @@ async def test_usb_discovery(
             GATEWAY_CLASS,
             return_value=Mock(start=AsyncMock(), stop=Mock()),
         ),
-        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
+        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
         patch(
             "homeassistant.components.usb.get_serial_by_id",
             side_effect=lambda x: x,

@@ -1,7 +1,9 @@
 """Tests for the GTFS sensor."""
 
+import gc
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pygtfs
@@ -9,6 +11,7 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.gtfs import sensor as gtfs_sensor
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -173,6 +176,18 @@ async def test_next_departure(
     assert {key: sensor.attributes[key] for key in attributes} == attributes
 
 
+@pytest.mark.freeze_time("2026-10-19 09:00:00-04:00")
+@pytest.mark.usefixtures("feed_file")
+async def test_next_departure_in_feed_time_zone(hass: HomeAssistant) -> None:
+    """Test departures are chosen in the feed's time zone, not Home Assistant's."""
+    # 06:00 in Los Angeles is 09:00 at the agency, after the 08:00 departure.
+    await hass.config.async_set_time_zone("America/Los_Angeles")
+    await setup_yaml_sensor(hass, **DAY_ROUTE)
+
+    assert (sensor := hass.states.get(DAY_ENTITY_ID)) is not None
+    assert sensor.state == "2026-10-19T21:00:00+00:00"
+
+
 @pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
 @pytest.mark.usefixtures("feed_file")
 async def test_update(
@@ -198,6 +213,37 @@ async def test_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(DAY_ENTITY_ID) == snapshot(name="next_day")
+
+
+@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
+@pytest.mark.usefixtures("feed_file")
+async def test_update_releases_connections(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test polling does not accumulate checked-out database connections."""
+    # Without a collection pass, an unclosed connection stays checked out.
+    gc.disable()
+    try:
+        with patch.object(
+            gtfs_sensor, "get_next_departure", wraps=gtfs_sensor.get_next_departure
+        ) as get_next_departure:
+            await setup_yaml_sensor(hass, **DAY_ROUTE)
+            # The YAML sensor's schedule is only reachable through the query call.
+            pool = get_next_departure.call_args.args[0].engine.pool
+            checked_out = pool.checkedout()
+            for now in (
+                "2026-10-19 09:00:00-04:00",
+                "2026-10-19 18:00:00-04:00",
+                "2026-10-20 00:15:00-04:00",
+            ):
+                freezer.move_to(now)
+                async_fire_time_changed(hass)
+                await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert get_next_departure.call_count == 4
+        assert pool.checkedout() == checked_out
+    finally:
+        gc.enable()
 
 
 async def test_missing_data_file(

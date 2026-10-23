@@ -26,7 +26,7 @@ USER_ID = "a76c25e5-49aa-4c14-cd0c-48a6931e2081"
 def mock_setup_entry() -> Generator[Mock]:
     """Patch setup entry."""
     with patch(
-        "homeassistant.components.august.async_setup_entry", return_value=True
+        "homeassistant.components.august.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
