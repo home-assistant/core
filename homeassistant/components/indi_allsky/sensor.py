@@ -45,11 +45,18 @@ def _parse_timestamp(data: IndiAllSkyData) -> datetime | None:
     return None
 
 
+def _get_sensor_temp_unit(data: IndiAllSkyData) -> str:
+    if data.sensor and data.sensor.temp_unit:
+        return data.sensor.temp_unit
+    return UnitOfTemperature.CELSIUS
+
+
 @dataclass(frozen=True, kw_only=True)
 class IndiAllSkySensorEntityDescription(SensorEntityDescription):
     """Class describing INDI Allsky hardware sensor entities."""
 
     value_fn: Callable[[IndiAllSkyData], StateType | datetime]
+    unit_fn: Callable[[IndiAllSkyData], str | None] | None = None
 
 
 PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = (
@@ -131,6 +138,7 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.sensor.dew_point if data.sensor else None,
+        unit_fn=_get_sensor_temp_unit,
     ),
     IndiAllSkySensorEntityDescription(
         key="frost_point",
@@ -139,6 +147,7 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.sensor.frost_point if data.sensor else None,
+        unit_fn=_get_sensor_temp_unit,
     ),
     IndiAllSkySensorEntityDescription(
         key="fan_duty_cycle",
@@ -154,6 +163,7 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.sensor.heat_index if data.sensor else None,
+        unit_fn=_get_sensor_temp_unit,
     ),
     IndiAllSkySensorEntityDescription(
         key="wind_direction",
@@ -189,6 +199,7 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.sensor.cpu_temperature if data.sensor else None,
+        unit_fn=_get_sensor_temp_unit,
     ),
 )
 
@@ -366,6 +377,14 @@ class IndiAllSkySensor(IndiAllSkyEntity, SensorEntity):
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor."""
+        if self.entity_description.unit_fn is not None:
+            return self.entity_description.unit_fn(self.coordinator.data)
+        return super().native_unit_of_measurement
+
 
 class IndiAllSkyDynamicHardwareSensor(IndiAllSkyEntity, SensorEntity):
     """Representation of a dynamic hardware sensor exposed by INDI Allsky."""
@@ -382,6 +401,13 @@ class IndiAllSkyDynamicHardwareSensor(IndiAllSkyEntity, SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_{sensor_key}"
 
         self._update_attributes()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attributes()
+        super()._handle_coordinator_update()
 
     def _get_sensor_item(self) -> Any:
         if self.coordinator.data.sensor and isinstance(
