@@ -110,6 +110,34 @@ async def test_failed_sub_system_is_unavailable(
     assert state("phase_1_voltage") == "230.1"
 
 
+async def test_timeout_of_one_sub_system_spares_the_others(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_unit,
+) -> None:
+    """A sub-system that keeps timing out doesn't stop the ones read after it."""
+    mock_unit.holding[0x3040] = 23010  # phase_1 voltage: 230.10 V
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    def state(key: str) -> str:
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{SERIAL}_{key}"
+        )
+        return hass.states.get(entity_id).state
+
+    mock_unit.holding[0x3040] = 23120  # 231.20 V
+    mock_unit.fail_read(0x3034, ModbusTimeoutError())
+    await _next_poll(hass, freezer)
+
+    assert state("total_forward_energy") == STATE_UNAVAILABLE
+    assert state("phase_1_voltage") == "231.2"
+
+
 async def test_device_info(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

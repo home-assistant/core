@@ -54,12 +54,19 @@ class VictronModbusCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     @override
     async def _async_update_data(self) -> UpdateReport:
-        try:
-            report = await self.device.async_update(self._sub_systems)
-        except ModbusError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="modbus_error"
-            ) from err
+        # One sub-system at a time: a poll that times out before anything answered
+        # raises, and would then never get to the sub-systems after the first.
+        updated: set[str] = set()
+        failed: dict[str, ModbusError] = {}
+        for name in self._sub_systems:
+            try:
+                partial = await self.device.async_update((name,))
+            except ModbusError as err:
+                failed[name] = err
+                continue
+            updated |= partial.updated
+            failed |= partial.failed
+        report = UpdateReport(updated=updated, failed=failed)
         if not report.updated:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="no_readings"

@@ -64,9 +64,6 @@
     "device_mismatch": {
       "message": "The device at this address is not the device that was set up here. Remove the integration and add the right device."
     },
-    "modbus_error": {
-      "message": "Error communicating with the device."
-    },
     "no_readings": {
       "message": "The device answered, but none of its readings could be read."
     }
