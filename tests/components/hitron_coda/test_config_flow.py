@@ -50,7 +50,10 @@ async def test_user_error_and_recovery(
     """Show errors without storing credentials, and allow a retry."""
     mock_client.get_devices.side_effect = error
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
@@ -71,7 +74,10 @@ async def test_duplicate(
     """Do not connect or create a second entry for the same router."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

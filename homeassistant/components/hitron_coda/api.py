@@ -61,6 +61,7 @@ class HitronCodaClient:
 
     def _get_devices(self) -> DeviceData:
         """Fetch a device list using the current session."""
+        assert self._user_id is not None
         try:
             response = requests.get(
                 self._url, cookies={"userid": self._user_id}, timeout=10

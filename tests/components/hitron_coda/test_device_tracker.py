@@ -12,12 +12,14 @@ from homeassistant.components.hitron_coda.api import CannotConnect, InvalidAuth
 from homeassistant.components.hitron_coda.const import DOMAIN
 from homeassistant.components.hitron_coda.device_tracker import async_get_scanner
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import (
-    EntityRegistry,
-    async_entries_for_config_entry,
+from homeassistant.const import (
+    CONF_SCAN_INTERVAL,
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueRegistry
 
 from .const import CONFIG, DEVICES, MAC, NEW_MAC
@@ -34,17 +36,29 @@ def consider_home() -> int:
 
 
 @pytest.fixture
+def scan_interval() -> int:
+    """Use the default polling interval."""
+    return 12
+
+
+@pytest.fixture
 async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    entity_registry: EntityRegistry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
     consider_home: int,
+    scan_interval: int,
 ) -> MockConfigEntry:
     """Set up a router with a client the user has enabled."""
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry,
-        data={**mock_config_entry.data, CONF_CONSIDER_HOME: consider_home},
+        data={
+            **mock_config_entry.data,
+            CONF_CONSIDER_HOME: consider_home,
+            CONF_SCAN_INTERVAL: scan_interval,
+        },
     )
     entity_registry.async_get_or_create(
         "device_tracker",
@@ -64,7 +78,8 @@ async def test_presence_and_names(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
     mock_client: MagicMock,
-    entity_registry: EntityRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Update presence and names without replacing the entity's stable identity."""
     state = hass.states.get(ENTITY_ID)
@@ -76,12 +91,16 @@ async def test_presence_and_names(
     assert coordinator.update_interval == timedelta(seconds=12)
 
     mock_client.get_devices.return_value = {}
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_NOT_HOME
     assert hass.states.get(ENTITY_ID).attributes["host_name"] == "phone"
 
     mock_client.get_devices.return_value = {MAC: "renamed-phone"}
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_HOME
     assert state.attributes["host_name"] == "renamed-phone"
@@ -96,49 +115,58 @@ async def test_presence_and_names(
     "consider_home",
     [pytest.param(30, id="custom"), pytest.param(180, id="legacy-default")],
 )
+@pytest.mark.parametrize("scan_interval", [1])
+@pytest.mark.usefixtures("setup_integration")
 async def test_consider_home(
     hass: HomeAssistant,
-    setup_integration: MockConfigEntry,
     mock_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     consider_home: int,
 ) -> None:
     """Keep clients home until the grace period since their last sighting expires."""
-    coordinator = setup_integration.runtime_data
     mock_client.get_devices.return_value = {}
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_HOME
 
-    freezer.tick(timedelta(seconds=consider_home - 1))
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=consider_home - 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_HOME
 
     freezer.tick(timedelta(seconds=1))
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_NOT_HOME
 
 
+@pytest.mark.parametrize("scan_interval", [1])
+@pytest.mark.usefixtures("setup_integration")
 async def test_reconnection_resets_consider_home(
     hass: HomeAssistant,
-    setup_integration: MockConfigEntry,
     mock_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Measure the grace period from the most recent successful sighting."""
-    coordinator = setup_integration.runtime_data
     mock_client.get_devices.return_value = {}
-    await coordinator.async_refresh()
-    freezer.tick(timedelta(seconds=100))
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(timedelta(seconds=99))
     mock_client.get_devices.return_value = DEVICES.copy()
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_client.get_devices.return_value = {}
     freezer.tick(timedelta(seconds=100))
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_HOME
 
     freezer.tick(timedelta(seconds=80))
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_NOT_HOME
 
 
@@ -146,26 +174,30 @@ async def test_new_devices(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
     mock_client: MagicMock,
-    entity_registry: EntityRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Discover clients on later polls and register each MAC only once."""
     mock_client.get_devices.return_value = {**DEVICES, NEW_MAC: "laptop"}
-    await setup_integration.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     new_entity_id = entity_registry.async_get_entity_id(
         "device_tracker", DOMAIN, NEW_MAC.lower()
     )
     assert new_entity_id == "device_tracker.laptop"
     assert entity_registry.async_get(new_entity_id).disabled_by is not None
 
-    await setup_integration.runtime_data.async_refresh()
-    await hass.async_block_till_done()
-    entries = async_entries_for_config_entry(
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    entries = er.async_entries_for_config_entry(
         entity_registry, setup_integration.entry_id
     )
     assert len(entries) == 2
 
 
+@pytest.mark.parametrize("scan_interval", [1])
 async def test_connection_failure_and_recovery(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
@@ -176,14 +208,16 @@ async def test_connection_failure_and_recovery(
     coordinator = setup_integration.runtime_data
     freezer.tick(timedelta(seconds=179))
     mock_client.get_devices.side_effect = CannotConnect("Router unreachable")
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     assert coordinator.data == DEVICES
 
     freezer.tick(timedelta(seconds=1))
     mock_client.get_devices.side_effect = None
     mock_client.get_devices.return_value = {}
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_NOT_HOME
 
 
@@ -191,11 +225,13 @@ async def test_auth_failure_starts_reauth(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
     mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Request new credentials when the router rejects a poll."""
     mock_client.get_devices.side_effect = InvalidAuth
-    await setup_integration.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -248,7 +284,8 @@ async def test_registered_client_absent_at_startup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
-    entity_registry: EntityRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Restore an enabled tracker even when its client is away on startup or reload."""
     mock_config_entry.add_to_hass(hass)
@@ -268,11 +305,16 @@ async def test_registered_client_absent_at_startup(
     assert hass.states.get(ENTITY_ID).attributes["host_name"] == "phone"
 
     mock_client.get_devices.return_value = DEVICES.copy()
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_HOME
     assert (
-        len(async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id))
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
         == 1
     )
 
