@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import SynoApi
+from .common import SynoApi
 from .const import CONF_VOLUMES, ENTITY_UNIT_LOAD
 from .coordinator import SynologyDSMCentralUpdateCoordinator, SynologyDSMConfigEntry
 from .entity import (

@@ -6,6 +6,12 @@
     "language_not_supported": {
       "message": "Language {language} is not supported."
     },
+    "no_tts_audio": {
+      "message": "No text-to-speech audio from {engine} for \"{message}\"."
+    },
+    "provider_not_found": {
+      "message": "Provider {engine} not found."
+    },
     "unsupported_options": {
       "message": "Unsupported options: {options}."
     }

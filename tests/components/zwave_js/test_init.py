@@ -10,6 +10,13 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions, PartialBackupOptions
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_call_logger_set_level,
+    async_fire_time_changed,
+    async_get_persistent_notifications,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from zwave_js_server.client import Client
 from zwave_js_server.const import SecurityClass
 from zwave_js_server.event import Event
@@ -48,14 +55,6 @@ from .common import (
     EATON_RF9640_ENTITY,
     TEST_SENSITIVE_NETWORK_KEY,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    async_call_logger_set_level,
-    async_fire_time_changed,
-    async_get_persistent_notifications,
-)
-from tests.typing import WebSocketGenerator
 
 CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 
@@ -1399,10 +1398,14 @@ async def test_issue_registry(
 
 @pytest.mark.usefixtures("addon_running", "client")
 @pytest.mark.parametrize(
-    ("stop_addon_side_effect", "entry_state"),
+    ("stop_addon_side_effect", "entry_state", "entry_reason"),
     [
-        (None, ConfigEntryState.NOT_LOADED),
-        (SupervisorError("Boom"), ConfigEntryState.FAILED_UNLOAD),
+        (None, ConfigEntryState.NOT_LOADED, None),
+        (
+            SupervisorError("Boom"),
+            ConfigEntryState.FAILED_UNLOAD,
+            "Failed to stop the Z-Wave JS app",
+        ),
     ],
 )
 async def test_stop_addon(
@@ -1411,6 +1414,7 @@ async def test_stop_addon(
     stop_addon: AsyncMock,
     stop_addon_side_effect: Exception | None,
     entry_state: ConfigEntryState,
+    entry_reason: str | None,
 ) -> None:
     """Test stop the Z-Wave JS add-on on entry unload if entry is disabled."""
     stop_addon.side_effect = stop_addon_side_effect
@@ -1441,6 +1445,7 @@ async def test_stop_addon(
     await hass.async_block_till_done()
 
     assert entry.state is entry_state
+    assert entry.reason == entry_reason
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_zwave_js")
 

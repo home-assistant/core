@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from python_picnic_api2.models import Eta
 
 from homeassistant.components.picnic.const import (
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .conftest import SetupDeliveryFixture
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_timeout_failed_with_retry(

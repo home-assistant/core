@@ -14,6 +14,11 @@ from duco_connectivity import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import SCAN_INTERVAL
@@ -34,8 +39,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import async_fire_coordinator_update, setup_platform_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 _IDENTIFY_ENTITY = "switch.living_identify"
 

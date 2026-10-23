@@ -88,7 +88,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RainMachineConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RainMachineConfigEntry) -> None:
     """Set up RainMachine as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
@@ -196,19 +196,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainMachineConfigEntry) 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: RainMachineConfigEntry
-) -> bool:
+) -> None:
     """Unload an RainMachine config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: RainMachineConfigEntry
-) -> bool:
+) -> None:
     """Migrate an old config entry."""
     version = entry.version
 
@@ -236,8 +235,6 @@ async def async_migrate_entry(
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
 
     LOGGER.debug("Migration to version %s successful", version)
-
-    return True
 
 
 async def async_reload_entry(

@@ -5,6 +5,12 @@ import sys
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_test_home_assistant
+from pytest_homeassistant.components.recorder.common import (
+    async_wait_recording_done,
+    get_patched_live_version,
+)
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
@@ -19,11 +25,6 @@ from homeassistant.components.recorder.statistics import async_add_external_stat
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from ...common import async_wait_recording_done, get_patched_live_version
-
-from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture
@@ -115,7 +116,7 @@ def _create_engine_28(*args, **kwargs):
 
     This simulates an existing db with the old schema.
     """
-    module = "tests.components.recorder.db_schema_28"
+    module = "pytest_homeassistant.components.recorder.db_schema_28"
     importlib.import_module(module)
     old_db_schema = sys.modules[module]
     engine = create_engine(*args, **kwargs)
@@ -140,7 +141,7 @@ async def test_delete_metadata_duplicates(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of duplicated statistics."""
-    module = "tests.components.recorder.db_schema_28"
+    module = "pytest_homeassistant.components.recorder.db_schema_28"
     importlib.import_module(module)
     old_db_schema = sys.modules[module]
 
@@ -257,7 +258,7 @@ async def test_delete_metadata_duplicates_many(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of duplicated statistics."""
-    module = "tests.components.recorder.db_schema_28"
+    module = "pytest_homeassistant.components.recorder.db_schema_28"
     importlib.import_module(module)
     old_db_schema = sys.modules[module]
 

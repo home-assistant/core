@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
@@ -18,8 +19,6 @@ from homeassistant.exceptions import ServiceValidationError
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import mock_restore_cache_with_extra_data
 
 
 async def test_number_set_value(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -231,7 +230,7 @@ async def test_number_yaml_attribute_validation(
                 "device_class": "temperature",  # from DPT
                 "unit_of_measurement": "°C",
                 "min": -273.0,
-                "max": 670760.0,
+                "max": 670433.28,
                 "step": 0.01,
             },
         ),

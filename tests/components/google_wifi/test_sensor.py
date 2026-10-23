@@ -4,6 +4,8 @@ from datetime import timedelta
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.google_wifi import const
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -12,9 +14,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .const import RESOURCE_URL, UPDATED_RESPONSE
-
-from tests.common import assert_setup_component, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 MONITORED_CONDITIONS = [
     const.ATTR_CURRENT_VERSION,

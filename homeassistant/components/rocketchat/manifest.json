@@ -1,6 +1,7 @@
 {
   "domain": "rocketchat",
   "name": "Rocket.Chat",
+  "categories": ["messaging_notifications.chat_apps"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/rocketchat",
   "iot_class": "cloud_push",

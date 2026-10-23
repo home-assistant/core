@@ -6,14 +6,13 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant.components import media_source
 from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE, DOMAIN
 from homeassistant.components.ai_task.media_source import async_get_media_source
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-
-from tests.common import MockUser
 
 
 async def test_local_media_source(hass: HomeAssistant, init_components: None) -> None:

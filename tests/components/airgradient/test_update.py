@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, patch
 from airgradient import AirGradientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
@@ -13,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_entities(
@@ -41,7 +44,6 @@ async def test_v1_update_uses_model(
         await setup_integration(hass, mock_config_entry)
 
     mock_v1_airgradient_client.get_latest_firmware_version.assert_awaited_once_with(
-        "84fce612f5b8",
         model="P-1PSG",
     )
 
@@ -60,7 +62,6 @@ async def test_update_mechanism(
     assert state.attributes["installed_version"] == "3.1.1"
     assert state.attributes["latest_version"] == "3.1.4"
     mock_airgradient_client.get_latest_firmware_version.assert_awaited_once_with(
-        "84fce612f5b8",
         model="I-9PSL",
     )
     mock_airgradient_client.get_latest_firmware_version.reset_mock()
@@ -83,7 +84,6 @@ async def test_update_mechanism(
     await hass.async_block_till_done()
 
     mock_airgradient_client.get_latest_firmware_version.assert_awaited_once_with(
-        "84fce612f5b8",
         model="I-9PSL",
     )
     state = hass.states.get("update.airgradient_firmware")

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from pylast import WSError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lastfm.const import (
     CONF_MAIN_USER,
@@ -26,8 +27,6 @@ from . import (
     patch_setup_entry,
 )
 from .conftest import ComponentSetup
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow(hass: HomeAssistant, default_user: MockUser) -> None:

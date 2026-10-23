@@ -1,6 +1,7 @@
 {
   "domain": "nyt_games",
   "name": "NYT Games",
+  "categories": ["media_entertainment.gaming"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nyt_games",

@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from pygeosphere_warnings import GeoSphereConnectionError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.geosphere_austria_warnings.const import DOMAIN
@@ -17,8 +22,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("mock_client")
 

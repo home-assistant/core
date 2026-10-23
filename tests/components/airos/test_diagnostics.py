@@ -2,16 +2,15 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import Any, ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.airos.coordinator import AirOS8Data
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import Any, ClientSessionGenerator
 
 
 async def test_diagnostics(

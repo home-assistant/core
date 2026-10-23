@@ -12,9 +12,8 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
-    UnitOfTemperature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 

@@ -1,6 +1,7 @@
 {
   "domain": "flexit",
   "name": "Flexit",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@troelde"],
   "config_flow": true,
   "dependencies": ["modbus", "usb"],

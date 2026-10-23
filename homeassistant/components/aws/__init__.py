@@ -120,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Load a config entry.
 
     Validate and save sessions per aws credential.
@@ -177,10 +177,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="credential_validation_failed",
         )
 
-    return True
 
-
-async def _validate_aws_credentials(hass, credential):
+async def _validate_aws_credentials(
+    hass: HomeAssistant, credential: dict[str, Any]
+) -> AioSession:
     """Validate AWS credential config."""
     aws_config = credential.copy()
     del aws_config[CONF_NAME]

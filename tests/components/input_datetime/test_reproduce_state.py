@@ -1,12 +1,11 @@
 """Test reproduce state for Input datetime."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.input_datetime import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 
 async def test_reproducing_states(

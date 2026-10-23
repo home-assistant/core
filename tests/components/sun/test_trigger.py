@@ -9,6 +9,8 @@ from astral.sun import elevation as astral_elevation
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, mock_component
+from pytest_homeassistant.components.common import assert_trigger_options_supported
 
 from homeassistant.components import automation, sun
 from homeassistant.components.sun.trigger import _next_polar_transition
@@ -29,9 +31,6 @@ from homeassistant.helpers.sun import (
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed, mock_component
-from tests.components.common import assert_trigger_options_supported
 
 _TEST_DATETIME = datetime(2015, 9, 15, 1, tzinfo=dt_util.UTC)
 _SUN_ENTITY_ID = "sun.sun"

@@ -9,6 +9,8 @@ import aiohttp
 from PIL import UnidentifiedImageError
 from probatio.error import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import async_load_fixture, load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.color_extractor.services import (
     ATTR_PATH,
@@ -29,9 +31,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import color as color_util
-
-from tests.common import async_load_fixture, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 LIGHT_ENTITY = "light.kitchen_lights"
 CLOSE_THRESHOLD = 10
@@ -269,7 +268,7 @@ async def test_url_error(
     # The body of a non-OK response must not be downloaded at all
     with (
         patch(
-            "tests.test_util.aiohttp.AiohttpClientMockResponse.read",
+            "pytest_homeassistant.test_util.aiohttp.AiohttpClientMockResponse.read",
             side_effect=AssertionError("body read for a non-OK response"),
         ),
         pytest.raises(HomeAssistantError) as exc_info,

@@ -123,5 +123,13 @@
         "name": "Total cloud coverage"
       }
     }
+  },
+  "exceptions": {
+    "fire_forecast_update_failed": {
+      "message": "Failed to retrieve the fire forecast from the SMHI API"
+    },
+    "forecast_update_failed": {
+      "message": "Failed to retrieve the forecast from the SMHI API"
+    }
   }
 }

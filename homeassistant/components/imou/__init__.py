@@ -18,7 +18,7 @@ from .const import (
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None:
     """Set up Imou integration from a config entry."""
     imou_client = ImouOpenApiClient(
         entry.data[CONF_APP_ID],
@@ -42,12 +42,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool
 
     entry.async_on_unload(imou_coordinator.async_add_listener(_async_keep_polling))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None:
     """Handle removal of an entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

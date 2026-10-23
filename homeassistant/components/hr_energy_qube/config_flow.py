@@ -6,7 +6,7 @@ import probatio
 from python_qube_heatpump import QubeClient, async_get_device_info, parse_device_info
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -56,8 +56,11 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                 # The controller's mDNS record carries a stable uuid; without
                 # mDNS (e.g. across VLANs) the entry is created without one
                 aiozc = await zeroconf.async_get_async_instance(self.hass)
-                if device := await async_get_device_info(
+                device = await async_get_device_info(
                     host, aiozc, timeout=MDNS_LOOKUP_TIMEOUT
+                )
+                if device and not await self._async_uuid_of_other_qube(
+                    device.uuid, host
                 ):
                     await self.async_set_unique_id(device.uuid)
                     self._abort_if_unique_id_configured(updates={CONF_HOST: host})
@@ -77,6 +80,8 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         host = discovery_info.host
         await self.async_set_unique_id(device.uuid)
+        if await self._async_uuid_of_other_qube(device.uuid, host):
+            return self.async_abort(reason="already_configured")
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # Entries created without mDNS have no unique id yet; adopt the one
@@ -147,6 +152,27 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(HOST_SCHEMA, entry.data),
             errors=errors,
         )
+
+    async def _async_uuid_of_other_qube(self, uuid: str, host: str) -> bool:
+        """Return True when the entry keyed on ``uuid`` is another Qube.
+
+        Every Qube announces the same mDNS name and two can report the same
+        uuid. A uuid seen at a new address only means the heat pump moved when
+        no other entry uses that address and the old one no longer answers.
+        """
+        entry = self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, uuid)
+        if (
+            entry is None
+            or entry.source == SOURCE_IGNORE
+            or entry.data[CONF_HOST] == host
+        ):
+            return False
+        if any(
+            other.data[CONF_HOST] == host
+            for other in self._async_current_entries(include_ignore=False)
+        ):
+            return True
+        return await _async_validate_device(entry.data[CONF_HOST]) is None
 
     def _async_create_qube_entry(self, host: str) -> ConfigFlowResult:
         """Create the config entry for a verified Qube."""
