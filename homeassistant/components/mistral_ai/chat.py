@@ -234,17 +234,18 @@ async def handle_chat_log(entity, chat_log: conversation.ChatLog) -> None:
     for _iteration in range(MAX_TOOL_ITERATIONS):
         try:
             stream = await client.chat.stream_async(**model_args)
-            messages.extend(
-                convert_content_to_messages(
-                    [
-                        content
-                        async for content in chat_log.async_add_delta_content_stream(
-                            entity.entity_id,
-                            transform_stream(stream),
-                        )
-                    ]
+            async with stream:
+                messages.extend(
+                    convert_content_to_messages(
+                        [
+                            content
+                            async for content in chat_log.async_add_delta_content_stream(
+                                entity.entity_id,
+                                transform_stream(stream),
+                            )
+                        ]
+                    )
                 )
-            )
         except errors.MistralError as err:
             if err.status_code in (401, 403):
                 # Trigger the reauthentication flow for a revoked/expired key.

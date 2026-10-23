@@ -1,5 +1,7 @@
 """Tests for the Mistral AI conversation platform."""
 
+from types import TracebackType
+from typing import Self
 from unittest.mock import AsyncMock, patch
 
 from httpx import Request, Response
@@ -40,13 +42,14 @@ def _event(role=None, content=None, tool_calls=None, finish=None) -> CompletionE
 
 
 class _Stream:
-    """Async iterator over pre-built completion events."""
+    """Async context manager over pre-built completion events."""
 
-    def __init__(self, events) -> None:
+    def __init__(self, events: list[CompletionEvent]) -> None:
         """Initialize with the events to yield."""
         self._events = list(events)
+        self.closed = False
 
-    def __aiter__(self):
+    def __aiter__(self) -> Self:
         """Return self as the async iterator."""
         return self
 
@@ -55,6 +58,19 @@ class _Stream:
         if not self._events:
             raise StopAsyncIteration
         return self._events.pop(0)
+
+    async def __aenter__(self) -> Self:
+        """Return self as the async context manager."""
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        """Mark the stream as closed."""
+        self.closed = True
 
 
 @pytest.mark.usefixtures("mock_client", "mock_init_component")
@@ -173,7 +189,7 @@ async def test_malformed_tool_arguments_abort(
     mock_client,
 ) -> None:
     """Malformed tool JSON aborts the response instead of altering arguments."""
-    mock_client.chat.stream_async.return_value = _Stream(
+    stream = _Stream(
         [
             _event(
                 role="assistant",
@@ -188,12 +204,14 @@ async def test_malformed_tool_arguments_abort(
             _event(finish="tool_calls"),
         ]
     )
+    mock_client.chat.stream_async.return_value = stream
 
     result = await conversation.async_converse(
         hass, "call the tool", None, Context(), agent_id=ENTITY_ID
     )
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert stream.closed
 
 
 @pytest.mark.usefixtures("mock_init_component")

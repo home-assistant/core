@@ -1,7 +1,9 @@
 """Tests for the chat conversation helpers."""
 
 import json
-from types import SimpleNamespace
+from types import SimpleNamespace, TracebackType
+from typing import Self
+from unittest.mock import AsyncMock
 
 from mistralai.client.models import (
     CompletionChunk,
@@ -22,6 +24,7 @@ from homeassistant.components.mistral_ai.chat import (
     handle_chat_log,
     transform_stream,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
@@ -126,16 +129,35 @@ def _event(role=None, content=None, tool_calls=None, finish=None):
 
 
 class _Stream:
-    def __init__(self, events) -> None:
-        self._events = events
+    """Async context manager over pre-built completion events."""
 
-    def __aiter__(self):
+    def __init__(self, events: list[CompletionEvent]) -> None:
+        """Initialize with the events to yield."""
+        self._events = list(events)
+        self.closed = False
+
+    def __aiter__(self) -> Self:
+        """Return self as the async iterator."""
         return self
 
-    async def __anext__(self):
+    async def __anext__(self) -> CompletionEvent:
+        """Return the next event or stop."""
         if not self._events:
             raise StopAsyncIteration
         return self._events.pop(0)
+
+    async def __aenter__(self) -> Self:
+        """Return self as the async context manager."""
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        """Mark the stream as closed."""
+        self.closed = True
 
 
 async def _collect(stream):
@@ -234,6 +256,41 @@ async def test_handle_chat_log_requires_system_message() -> None:
 
     with pytest.raises(TypeError, match="must be a system message"):
         await handle_chat_log(entity, chat_log)
+
+
+async def test_handle_chat_log_closes_stream_on_transform_error(
+    hass: HomeAssistant,
+) -> None:
+    """A failure while consuming the stream closes it."""
+    stream = _Stream(
+        [
+            _event(
+                role="assistant",
+                tool_calls=[
+                    ToolCall(
+                        id="tc1",
+                        index=0,
+                        function=FunctionCall(name="HassTurnOn", arguments="{not json"),
+                    )
+                ],
+            ),
+            _event(finish="tool_calls"),
+        ]
+    )
+    client = AsyncMock()
+    client.chat.stream_async.return_value = stream
+    entity = SimpleNamespace(
+        subentry=SimpleNamespace(data={}),
+        entry=SimpleNamespace(runtime_data=client),
+        entity_id="conversation.test",
+        hass=hass,
+    )
+    chat_log = conversation.ChatLog(hass, "conversation.test")
+
+    with pytest.raises(HomeAssistantError, match="Unexpected tool argument response"):
+        await handle_chat_log(entity, chat_log)
+
+    assert stream.closed
 
 
 async def test_transform_stream_malformed_tool_arguments() -> None:
