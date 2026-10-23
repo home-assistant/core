@@ -37,7 +37,7 @@ lru-dict==1.4.1
 mutagen==1.48.1
 orjson==3.13.0
 packaging>=23.1
-Pillow==12.3.0
+Pillow==13.0.0
 probatio==0.13.0
 propcache==0.5.4
 psutil-home-assistant==0.0.1
