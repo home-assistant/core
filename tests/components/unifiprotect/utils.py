@@ -245,9 +245,6 @@ def add_device(
         return
 
     device._api = bootstrap.api
-    if isinstance(device, Camera) and device.model is ModelType.CAMERA:
-        for channel in device.channels:
-            channel._api = bootstrap.api
 
     if regenerate_ids:
         regenerate_device_ids(device)
@@ -286,7 +283,7 @@ _ACTIVE_RTSPS_QUALITIES = "test_active_rtsps_qualities"
 
 def set_active_rtsps_qualities(camera: Camera, *qualities: ChannelQuality) -> None:
     """Set the RTSPS qualities the console reports active for a test camera."""
-    # Stored outside the model fields so model_copy carries it along.
+    # pydantic rejects unknown attributes on the model.
     object.__setattr__(camera, _ACTIVE_RTSPS_QUALITIES, qualities)
 
 

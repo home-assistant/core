@@ -373,7 +373,8 @@ async def test_sensor_battery_refreshes_on_public_ws_reconnect(
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    # Value changes while the socket is down; the bootstrap holds the new value.
+    # Value changes while the socket is down; the fake rebuilds on lookup, so
+    # re-seed it with the new value.
     setup_public_sensor(ufp, percentage=55)
     ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
