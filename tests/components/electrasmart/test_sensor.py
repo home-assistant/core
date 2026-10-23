@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -82,3 +82,24 @@ async def test_unreadable_measurement_is_unknown(
     await async_advance_to_next_poll(hass, freezer)
 
     assert hass.states.get(WIFI_SIGNAL_ENTITY_ID).state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_disconnected_ac_makes_the_sensors_unavailable(
+    hass: HomeAssistant,
+    mock_device: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An AC that stopped reporting does not expose its cached measurements."""
+    mock_device.is_disconnected = Mock(return_value=True)
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert hass.states.get(WIFI_SIGNAL_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(INDOOR_COIL_TEMPERATURE_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_device.is_disconnected = Mock(return_value=False)
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert hass.states.get(WIFI_SIGNAL_ENTITY_ID).state == "-53"

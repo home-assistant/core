@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import PRESET_NONE, PRESET_SHABAT, UNAVAILABLE_THRESH_SEC
+from .const import PRESET_NONE, PRESET_SHABAT
 from .coordinator import ElectraSmartConfigEntry, ElectraSmartCoordinator
 from .entity import ElectraEntity
 
@@ -135,15 +135,6 @@ class ElectraClimateEntity(ElectraEntity, ClimateEntity):
         self._was_available = True
 
         _LOGGER.debug("Added %s Electra AC device", device.name)
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if the AC is available."""
-        return (
-            not self._device.is_disconnected(UNAVAILABLE_THRESH_SEC)
-            and super().available
-        )
 
     @override
     async def async_added_to_hass(self) -> None:

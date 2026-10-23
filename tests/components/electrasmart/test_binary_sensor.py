@@ -7,7 +7,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -91,3 +91,24 @@ async def test_missing_sensor_fault_flag_is_not_a_fault(
     await async_advance_to_next_poll(hass, freezer)
 
     assert hass.states.get(INDOOR_COIL_FAULT_ENTITY_ID).state == "off"
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_disconnected_ac_makes_the_binary_sensors_unavailable(
+    hass: HomeAssistant,
+    mock_device: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An AC that stopped reporting does not expose its cached flags."""
+    mock_device.is_disconnected = Mock(return_value=True)
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert hass.states.get(FILTER_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(INDOOR_COIL_FAULT_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_device.is_disconnected = Mock(return_value=False)
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert hass.states.get(FILTER_ENTITY_ID).state == "off"
