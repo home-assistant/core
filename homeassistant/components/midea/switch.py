@@ -149,7 +149,7 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
     MideaSwitchEntityDescription(
         key="power",
         translation_key="power",
-        models=[DeviceType.DA, DeviceType.DB, DeviceType.DC],
+        models=[DeviceType.DA, DeviceType.DB, DeviceType.DC, DeviceType.FC],
         device_class=SwitchDeviceClass.SWITCH,
     ),
     MideaSwitchEntityDescription(
