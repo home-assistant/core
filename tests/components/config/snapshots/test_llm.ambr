@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_parameters_openapi
+  dict({
+    'config__get_config_entries': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'domain': dict({
+          'anyOf': list([
+            dict({
+              'type': 'string',
+            }),
+            dict({
+              'items': dict({
+                'type': 'string',
+              }),
+              'type': 'array',
+            }),
+          ]),
+          'description': "Filter by integration domain (e.g. 'hue', 'zwave_js'). Accepts a single domain or a list of domains.",
+        }),
+        'status': dict({
+          'description': "Filter by status: 'loaded' (working normally), 'error' (failed setup, retrying, migration error, or failed unload), or 'not_loaded'.",
+          'enum': list([
+            'loaded',
+            'error',
+            'not_loaded',
+          ]),
+          'format': 'lower',
+          'type': 'string',
+        }),
+      }),
+      'type': 'object',
+    }),
+  })
+# ---
