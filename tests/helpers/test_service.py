@@ -61,6 +61,7 @@ from homeassistant.helpers import (
     service,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.group import GenericGroup
 from homeassistant.loader import (
     Integration,
     async_get_integration,
@@ -1846,6 +1847,106 @@ async def test_async_extract_entities_all_exclude_group(
     )
     extracted = await service.async_extract_entities(
         mock_entities.values(), call, expand_group=expand_group
+    )
+    assert {entity.entity_id for entity in extracted} == expected_entity_ids
+
+
+@pytest.fixture
+async def mock_group_entity(hass: HomeAssistant) -> MockEntity:
+    """Return a group entity expanded to light.kitchen and light.bedroom."""
+    group_entity = MockEntity(
+        entity_id="light.group", unique_id="group", available=True
+    )
+    group_entity.group = GenericGroup(group_entity, ["light.kitchen", "light.bedroom"])
+    await MockEntityPlatform(
+        hass, domain="light", platform_name="test"
+    ).async_add_entities([group_entity])
+    await hass.async_block_till_done()
+    return group_entity
+
+
+async def test_entity_service_call_all_skips_group_entities(
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    mock_entities_method: AsyncMock,
+    mock_group_entity: MockEntity,
+) -> None:
+    """Test targeting all entities skips group entities expanded to members."""
+    await service.entity_service_call(
+        hass,
+        {**mock_entities, mock_group_entity.entity_id: mock_group_entity},
+        "test_method",
+        ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
+    )
+
+    assert {call.args[0].entity_id for call in mock_entities_method.mock_calls} == {
+        "light.kitchen",
+        "light.living_room",
+        "light.bedroom",
+        "light.bathroom",
+    }
+
+
+@pytest.mark.parametrize(
+    ("expand_group", "expected_entity_ids"),
+    [
+        (
+            True,
+            {"light.kitchen", "light.living_room", "light.bedroom", "light.bathroom"},
+        ),
+        (
+            False,
+            {
+                "light.kitchen",
+                "light.living_room",
+                "light.bedroom",
+                "light.bathroom",
+                "light.group",
+            },
+        ),
+    ],
+)
+async def test_async_extract_entities_all_group_entities(
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    mock_group_entity: MockEntity,
+    expand_group: bool,
+    expected_entity_ids: set[str],
+) -> None:
+    """Test targeting all entities skips group entities only when expanding."""
+    call = ServiceCall(hass, "light", "turn_on", {"entity_id": "all"})
+    extracted = await service.async_extract_entities(
+        [*mock_entities.values(), mock_group_entity], call, expand_group=expand_group
+    )
+    assert {entity.entity_id for entity in extracted} == expected_entity_ids
+
+
+@pytest.mark.parametrize(
+    ("expand_group", "expected_entity_ids"),
+    [
+        (True, {"light.living_room", "light.bathroom"}),
+        (
+            False,
+            {"light.kitchen", "light.living_room", "light.bedroom", "light.bathroom"},
+        ),
+    ],
+)
+async def test_async_extract_entities_all_exclude_group_entity(
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    mock_group_entity: MockEntity,
+    expand_group: bool,
+    expected_entity_ids: set[str],
+) -> None:
+    """Test excluding a group entity when targeting all entities."""
+    call = ServiceCall(
+        hass,
+        "light",
+        "turn_on",
+        {"entity_id": "all", "exclude": {"entity_id": "light.group"}},
+    )
+    extracted = await service.async_extract_entities(
+        [*mock_entities.values(), mock_group_entity], call, expand_group=expand_group
     )
     assert {entity.entity_id for entity in extracted} == expected_entity_ids
 

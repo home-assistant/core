@@ -60,6 +60,7 @@ from . import (
     target as target_helpers,
     template,
 )
+from .group import GenericGroup
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
@@ -402,7 +403,9 @@ async def async_extract_entities[_EntityT: Entity](
         return [
             entity
             for entity in entities
-            if entity.available and entity.entity_id not in excluded
+            if entity.available
+            and entity.entity_id not in excluded
+            and not (expand_group and _is_expandable_group(entity))
         ]
 
     referenced = target_helpers.async_extract_referenced_entity_ids(
@@ -660,6 +663,11 @@ def async_set_service_schema(
     descriptions_cache[(domain, service)] = description
 
 
+def _is_expandable_group(entity: Entity) -> bool:
+    """Return True if the entity is a group which is expanded to its members."""
+    return isinstance(entity.group, GenericGroup)
+
+
 def _get_permissible_entity_candidates(
     call: ServiceCall,
     entities: Mapping[str, Entity],
@@ -755,6 +763,12 @@ async def _resolve_entity_service_call_entities(
     )
 
     entity_candidates = [e for e in entity_candidates if e.available]
+
+    if target_all_entities:
+        # Expanded group entities rely on their members being targeted instead
+        entity_candidates = [
+            e for e in entity_candidates if not _is_expandable_group(e)
+        ]
 
     if target_all_entities and (
         excluded := target_helpers.async_extract_excluded_entity_ids(

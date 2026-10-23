@@ -1,5 +1,6 @@
 """The tests for the Group Lock platform."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -15,7 +16,12 @@ from homeassistant.components.lock import (
     SERVICE_UNLOCK,
     LockState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_EXCLUDE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -444,3 +450,54 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert hass.states.get("lock.kitchen_door").state == LockState.LOCKED
     assert hass.states.get("lock.some_group").state == LockState.LOCKED
     assert hass.states.get("lock.nested_group").state == LockState.LOCKED
+
+
+@pytest.mark.parametrize(
+    ("target", "expected_state"),
+    [
+        ({ATTR_ENTITY_ID: "all"}, LockState.LOCKED),
+        (
+            {
+                ATTR_ENTITY_ID: "all",
+                CONF_EXCLUDE: {ATTR_ENTITY_ID: "lock.nested_group"},
+            },
+            LockState.UNLOCKED,
+        ),
+    ],
+)
+@patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)
+async def test_service_call_all(
+    hass: HomeAssistant, target: dict[str, Any], expected_state: LockState
+) -> None:
+    """Test targeting all locks acts on the members instead of the groups."""
+    await async_setup_component(
+        hass,
+        LOCK_DOMAIN,
+        {
+            LOCK_DOMAIN: [
+                {"platform": "demo"},
+                {
+                    "platform": DOMAIN,
+                    "entities": ["lock.some_group"],
+                    "name": "Nested Group",
+                },
+                {
+                    "platform": DOMAIN,
+                    "entities": ["lock.front_door", "lock.kitchen_door"],
+                    "name": "Some Group",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_LOCK,
+        target,
+        blocking=True,
+    )
+    assert hass.states.get("lock.openable_lock").state == LockState.LOCKED
+    assert hass.states.get("lock.kitchen_door").state == expected_state
+    assert hass.states.get("lock.some_group").state == expected_state
+    assert hass.states.get("lock.nested_group").state == expected_state
