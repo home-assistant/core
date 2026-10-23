@@ -44,6 +44,12 @@ class SatelIntegraSystemStatusBinarySensorEntityDescription(
 
 SYSTEM_STATUS_BINARY_SENSORS = (
     SatelIntegraSystemStatusBinarySensorEntityDescription(
+        key="service_mode",
+        translation_key="service_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda status: status.service_mode if status is not None else None,
+    ),
+    SatelIntegraSystemStatusBinarySensorEntityDescription(
         key="system_trouble",
         translation_key="system_trouble",
         device_class=BinarySensorDeviceClass.PROBLEM,

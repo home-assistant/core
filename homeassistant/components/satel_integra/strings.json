@@ -198,6 +198,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "service_mode": {
+        "name": "Service mode"
+      },
       "system_trouble": {
         "name": "System trouble"
       }
