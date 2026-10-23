@@ -1,6 +1,7 @@
 {
   "domain": "plugwise",
   "name": "Plugwise",
+  "categories": ["climate.thermostats_heating", "energy.meters_monitoring"],
   "codeowners": ["@CoMPaTech", "@bouwew"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/plugwise",

@@ -62,6 +62,10 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the demo environment."""

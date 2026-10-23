@@ -1,14 +1,13 @@
 """Test the buienradar2 config flow."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.buienradar.const import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_LATITUDE = 51.5288504
 TEST_LONGITUDE = 5.4002156

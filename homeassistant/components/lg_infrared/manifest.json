@@ -1,6 +1,10 @@
 {
   "domain": "lg_infrared",
   "name": "LG Infrared",
+  "categories": [
+    "media_entertainment.tv_streaming",
+    "climate.heat_pumps_air_conditioning"
+  ],
   "codeowners": ["@abmantis"],
   "config_flow": true,
   "dependencies": ["infrared"],

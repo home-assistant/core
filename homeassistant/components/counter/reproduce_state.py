@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import DOMAIN, SERVICE_SET_VALUE, VALUE
+from .const import DOMAIN, SERVICE_SET_VALUE, VALUE
 
 _LOGGER = logging.getLogger(__name__)
 

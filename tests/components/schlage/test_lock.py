@@ -8,6 +8,7 @@ import probatio
 from pyschlage.code import AccessCode
 from pyschlage.exceptions import Error as SchlageError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
@@ -30,8 +31,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import MockSchlageConfigEntry
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 async def test_lock_attributes(

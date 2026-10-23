@@ -11,6 +11,8 @@ import wave
 from google.genai import types
 from google.genai.errors import APIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import tts
 from homeassistant.components.google_generative_ai_conversation.const import (
@@ -30,9 +32,7 @@ from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_mock_service
 from tests.components.tts.common import retrieve_media
-from tests.typing import ClientSessionGenerator
 
 API_ERROR_500 = APIError("test", response_json={})
 TEST_CHAT_MODEL = "models/some-tts-model"

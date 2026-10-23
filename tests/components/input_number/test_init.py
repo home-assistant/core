@@ -6,6 +6,12 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockUser,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.input_number import (
     ATTR_VALUE,
@@ -28,13 +34,6 @@ from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from tests.common import (
-    MockUser,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture

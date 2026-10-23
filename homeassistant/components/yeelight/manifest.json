@@ -2,6 +2,7 @@
   "domain": "yeelight",
   "name": "Yeelight",
   "after_dependencies": ["ssdp"],
+  "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@zewelor", "@shenxn", "@starkillerOG", "@alexyao2015"],
   "config_flow": true,
   "dependencies": ["network"],

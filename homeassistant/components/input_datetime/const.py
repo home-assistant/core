@@ -1,6 +1,6 @@
 """Constants for the input_datetime component."""
 
-import datetime as py_datetime
+import datetime as dt
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
@@ -20,7 +20,7 @@ CONF_HAS_DATE = "has_date"
 CONF_HAS_TIME = "has_time"
 CONF_INITIAL = "initial"
 
-DEFAULT_TIME = py_datetime.time(0, 0, 0)
+DEFAULT_TIME = dt.time(0, 0, 0)
 
 
 FMT_DATE = "%Y-%m-%d"

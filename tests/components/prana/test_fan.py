@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -22,8 +23,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.percentage import percentage_to_ranged_value
 
 from . import async_init_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FAN_TEST_CASES = [
     ("supply", False, "supply"),

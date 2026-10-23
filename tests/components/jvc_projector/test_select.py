@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from jvcprojector import JvcProjectorTimeoutError, command as cmd
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.jvc_projector.coordinator import (
     INTERVAL_FAST,
@@ -24,8 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 INPUT_ENTITY_ID = "select.jvc_projector_input"
 HDR_PROCESSING_ENTITY_ID = "select.jvc_projector_hdr_processing"

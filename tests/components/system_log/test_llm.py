@@ -4,6 +4,7 @@ import logging
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import system_log
@@ -15,8 +16,6 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
-
-from tests.common import MockUser
 
 _LOGGER = logging.getLogger("test_system_log_llm")
 _OTHER_LOGGER = logging.getLogger("custom_integration")

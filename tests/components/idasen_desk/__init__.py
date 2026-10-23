@@ -1,12 +1,15 @@
 """Tests for the IKEA Idasen Desk integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
+
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.idasen_desk.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 IDASEN_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="Desk 1234",

@@ -7,6 +7,11 @@ from zoneinfo import ZoneInfo
 from energyzero import EnergyZeroConnectionError, Interval, PriceType
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 from homeassistant.components.energyzero.const import (
     CONF_ELECTRICITY_PRICE_INTERVAL,
@@ -16,12 +21,6 @@ from homeassistant.components.energyzero.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
 
 
 @pytest.mark.parametrize(

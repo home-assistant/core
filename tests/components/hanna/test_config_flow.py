@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from hanna_cloud import AuthenticationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import ConnectionError as RequestsConnectionError, Timeout
 
 from homeassistant.components.hanna.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

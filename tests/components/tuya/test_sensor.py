@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
@@ -21,8 +22,6 @@ from homeassistant.util.unit_system import (
 )
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

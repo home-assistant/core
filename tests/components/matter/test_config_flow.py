@@ -9,6 +9,7 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import Discovery
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.matter.const import ADDON_SLUG, DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 ADDON_DISCOVERY_INFO = {
     "addon": "Matter Server",
@@ -61,7 +60,7 @@ ZEROCONF_INFO_UDP = ZeroconfServiceInfo(
 def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
-        "homeassistant.components.matter.async_setup_entry", return_value=True
+        "homeassistant.components.matter.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -70,7 +69,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
 def unload_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry unload."""
     with patch(
-        "homeassistant.components.matter.async_unload_entry", return_value=True
+        "homeassistant.components.matter.async_unload_entry", return_value=None
     ) as mock_unload_entry:
         yield mock_unload_entry
 
