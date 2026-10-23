@@ -25,17 +25,30 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity, TuyaEntityDescription, get_child_device_info
 
-_KG_SWITCH_CHANNELS = 22
 
-
-def _has_multiple_switch_channels(device: CustomerDevice) -> bool:
+def _has_multiple_switch_channels(device: CustomerDevice, channels: int) -> bool:
     """Return if the device reports more than one indexed switch channel."""
     return (
         sum(
-            f"switch_{index}" in device.status_range
-            for index in range(1, _KG_SWITCH_CHANNELS + 1)
+            f"switch_{index}" in device.status_range for index in range(1, channels + 1)
         )
         > 1
+    )
+
+
+def _channel_switches(channels: int) -> tuple[TuyaSwitchEntityDescription, ...]:
+    """Build switch descriptions for indexed channels."""
+    return tuple(
+        TuyaSwitchEntityDescription(
+            key=f"switch_{index}",
+            translation_key="switch",
+            device_class=SwitchDeviceClass.OUTLET,
+            channel_index=index,
+            channel_condition=lambda device: _has_multiple_switch_channels(
+                device, channels
+            ),
+        )
+        for index in range(1, channels + 1)
     )
 
 
@@ -388,16 +401,7 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        *(
-            TuyaSwitchEntityDescription(
-                key=f"switch_{index}",
-                translation_key="switch",
-                device_class=SwitchDeviceClass.OUTLET,
-                channel_index=index,
-                channel_condition=_has_multiple_switch_channels,
-            )
-            for index in range(1, _KG_SWITCH_CHANNELS + 1)
-        ),
+        *_channel_switches(22),
         TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
             translation_key="indexed_usb",
