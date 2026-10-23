@@ -72,6 +72,8 @@ LOCATION = {
     "floorLevel": 2,
     "positionType": "GPS",
     "timeStamp": LOCATION_TIMESTAMP_MS,
+    "isOld": False,
+    "isInaccurate": False,
 }
 
 DEVICE = {
@@ -86,6 +88,11 @@ DEVICE = {
     "prsId": None,
     "features": FEATURES,
     "lostModeCapable": True,
+    "activationLocked": False,
+    "isLocating": False,
+    "locationEnabled": True,
+    "wipeInProgress": False,
+    "remoteLock": None,
     "lowPowerMode": False,
     "lockedTimestamp": None,
     "lostTimestamp": "",
