@@ -63,6 +63,7 @@ class DobissConfigFlow(ConfigFlow, domain=DOMAIN):
                 except DobissError:
                     errors["base"] = "cannot_connect"
                 else:
+                    self._async_abort_entries_match({CONF_HOST: host})
                     return self.async_create_entry(
                         title=f"Dobiss ({host})", data=user_input | {CONF_HOST: host}
                     )

@@ -1,5 +1,6 @@
 """Verify Dobiss setup validation and duplicate handling."""
 
+from asyncio import Event
 from unittest.mock import AsyncMock
 
 from dobiss_nxt import (
@@ -130,3 +131,38 @@ async def test_empty_secret(hass: HomeAssistant, mock_client: AsyncMock) -> None
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_concurrent_duplicate(hass: HomeAssistant, mock_client: AsyncMock) -> None:
+    """Recheck the host when another flow finishes during API validation."""
+    first = await hass.config_entries.flow.async_init(
+        "dobiss", context={"source": SOURCE_USER}
+    )
+    second = await hass.config_entries.flow.async_init(
+        "dobiss", context={"source": SOURCE_USER}
+    )
+    validation_started = Event()
+    release_validation = Event()
+
+    async def delayed_status(*args: object, **kwargs: object) -> dict[str, int]:
+        validation_started.set()
+        await release_validation.wait()
+        return {"4_0": 50, "2_0": 0}
+
+    mock_client.light_states.side_effect = delayed_status
+    pending = hass.async_create_background_task(
+        hass.config_entries.flow.async_configure(first["flow_id"], USER_INPUT),
+        "Dobiss delayed setup validation",
+    )
+    await validation_started.wait()
+    mock_client.light_states.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        second["flow_id"], USER_INPUT | {"host": "DOBISS.local"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    release_validation.set()
+    result = await pending
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries("dobiss")) == 1
+    await hass.async_block_till_done()
