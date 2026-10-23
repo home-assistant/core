@@ -6,13 +6,16 @@ Reauthentication when issue with credentials are reported.
 Configuration of options through options flow.
 """
 
+import asyncio
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+import json
 import operator
 import socket
 from types import MappingProxyType
 from typing import Any, override
 
+import aiounifi
 from aiounifi.interfaces.sites import Sites
 import probatio
 
@@ -55,14 +58,16 @@ from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DPI_RESTRICTIONS,
     DOMAIN,
+    LOGGER,
 )
-from .errors import AuthenticationRequired, CannotConnect
+from .errors import AuthenticationRequired, CannotConnect, MfaRequired
 from .hub import UnifiHub, get_unifi_api
 
 DEFAULT_HOST = "unifi"
 DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
+SITE_REQUEST_TIMEOUT = 10
 
 
 class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -277,7 +282,34 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _async_update_sites(self, data: Mapping[str, Any]) -> Sites:
         """Get updated sites through UniFi API."""
         hub = await get_unifi_api(self.hass, MappingProxyType(data))
-        await hub.sites.update()
+        try:
+            async with asyncio.timeout(SITE_REQUEST_TIMEOUT):
+                await hub.sites.update()
+        except (
+            aiounifi.Forbidden,
+            aiounifi.LoginRequired,
+            aiounifi.NoPermission,
+            aiounifi.Unauthorized,
+        ) as err:
+            LOGGER.warning(
+                "UniFi Network at %s rejected the site request: %s",
+                data[CONF_HOST],
+                type(err).__name__,
+            )
+            raise AuthenticationRequired from err
+        # aiounifi 97 does not wrap JSON decode errors, newer releases do
+        except (TimeoutError, json.JSONDecodeError, aiounifi.AiounifiException) as err:
+            LOGGER.warning(
+                "Error fetching sites from UniFi Network at %s: %r",
+                data[CONF_HOST],
+                err,
+            )
+            raise CannotConnect from err
+        if not hub.sites.values():
+            # aiounifi 97 returns no sites when the console answers with HTML,
+            # as it does while the Network application is missing or starting
+            LOGGER.warning("No sites found on UniFi Network at %s", data[CONF_HOST])
+            raise CannotConnect
         return hub.sites
 
     @callback
@@ -454,6 +486,8 @@ def _catch_unifi_api_flow_errors(errors: dict[str, str]) -> Iterator[None]:
     """Map UniFi API exceptions to config flow form errors."""
     try:
         yield
+    except MfaRequired:
+        errors["base"] = "mfa_required"
     except AuthenticationRequired:
         errors["base"] = "faulty_credentials"
     except CannotConnect:

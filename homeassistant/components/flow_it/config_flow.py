@@ -1,4 +1,4 @@
-"""Config flow for Flow-it integration."""
+"""Config flow for AriaQ integration."""
 
 from collections.abc import Mapping
 import logging
@@ -43,8 +43,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     }
 
 
-class FlowItConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Flow-it."""
+class AriaQConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for AriaQ."""
 
     def __init__(self) -> None:
         """Initialize the config flow."""

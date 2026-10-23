@@ -33,15 +33,10 @@ from homeassistant.helpers import (
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
-from homeassistant.util.async_iterator import AsyncIteratorReader
+from homeassistant.util.async_iterator import AsyncIteratorReader, async_close_iterator
 
 from . import util as backup_util
-from .agent import (
-    BackupAgent,
-    BackupAgentError,
-    BackupAgentPlatformProtocol,
-    LocalBackupAgent,
-)
+from .agent import BackupAgent, BackupAgentPlatformProtocol, LocalBackupAgent
 from .config import (
     BackupConfig,
     CreateBackupParametersDict,
@@ -60,6 +55,7 @@ from .const import (
 from .models import (
     AddonInfo,
     AgentBackup,
+    BackupAgentError,
     BackupError,
     BackupManagerError,
     BackupNotFound,
@@ -596,6 +592,16 @@ class BackupManager:
                 )
             agent = self.backup_agents[agent_id]
 
+            # Agents may open the stream multiple times, e.g. when retrying, and
+            # may not consume or close it if the upload fails
+            opened_streams: list[AsyncIterator[bytes]] = []
+
+            async def open_stream_and_track() -> AsyncIterator[bytes]:
+                """Open a stream and keep track of it."""
+                stream = await open_stream_func()
+                opened_streams.append(stream)
+                return stream
+
             latest_uploaded_bytes = 0
 
             @callback
@@ -629,12 +635,16 @@ class BackupManager:
             _emit_upload_progress()
             try:
                 await agent.async_upload_backup(
-                    open_stream=open_stream_func,
+                    open_stream=open_stream_and_track,
                     backup=_backup,
                     on_progress=on_upload_progress,
                 )
             finally:
                 upload_progress_debouncer.async_cancel()
+                for stream in opened_streams:
+                    await async_close_iterator(stream)
+                if streamer:
+                    await streamer.wait()
             self.async_on_backup_event(
                 UploadBackupEvent(
                     manager_state=self.state,
@@ -643,8 +653,6 @@ class BackupManager:
                     total_bytes=_backup.size,
                 )
             )
-            if streamer:
-                await streamer.wait()
 
         sync_backup_results = await asyncio.gather(
             *(upload_backup_to_agent(agent_id) for agent_id in agent_ids),
@@ -1617,7 +1625,10 @@ class BackupManager:
         except backup_util.DecryptError as err:
             raise BackupManagerError(str(err)) from err
         finally:
-            reader.close()
+            if isinstance(reader, AsyncIteratorReader):
+                await reader.aclose()
+            else:
+                reader.close()
 
 
 class KnownBackups:
@@ -2090,12 +2101,15 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         else:
             async_add_executor_job = self._hass.async_add_executor_job
             path = self.temp_backup_dir / f"{backup_id}.tar"
-            stream = await open_stream()
             await async_add_executor_job(make_backup_dir, self.temp_backup_dir)
             f = await async_add_executor_job(path.open, "wb")
             try:
-                async for chunk in stream:
-                    await async_add_executor_job(f.write, chunk)
+                stream = await open_stream()
+                try:
+                    async for chunk in stream:
+                        await async_add_executor_job(f.write, chunk)
+                finally:
+                    await async_close_iterator(stream)
             finally:
                 await async_add_executor_job(f.close)
 

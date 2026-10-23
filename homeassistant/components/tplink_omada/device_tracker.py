@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
-from .controller import OmadaClientsCoordinator
+from .coordinator import OmadaClientsCoordinator
 
 PARALLEL_UPDATES = 0
 
