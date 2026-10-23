@@ -2031,11 +2031,18 @@ _SCRIPT_CHOOSE_SCHEMA = probatio.Schema(
 
 
 def _validate_wait_for_trigger_branches(value: dict[str, Any]) -> dict[str, Any]:
-    """Only allow on_complete/on_timeout when the wait can time out."""
+    """Only allow on_complete/on_timeout when the wait can time out and continue."""
     for key in (CONF_ON_COMPLETE, CONF_ON_TIMEOUT):
-        if key in value and CONF_TIMEOUT not in value:
+        if key not in value:
+            continue
+        if CONF_TIMEOUT not in value:
             raise probatio.Invalid(
                 f"{key} requires {CONF_TIMEOUT} to be set", path=[key]
+            )
+        if not value.get(CONF_CONTINUE_ON_TIMEOUT, True):
+            raise probatio.Invalid(
+                f"{key} cannot be used when {CONF_CONTINUE_ON_TIMEOUT} is false",
+                path=[key],
             )
     return value
 

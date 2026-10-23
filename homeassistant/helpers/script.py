@@ -1251,34 +1251,27 @@ class _ScriptRun:
     def _async_handle_timeout(self) -> None:
         """Handle timeout."""
         self._variables["wait"]["remaining"] = 0.0
-
-    def _async_abort_unless_continue_on_timeout(self, wait: dict[str, Any]) -> None:
-        """Abort the script if it should not continue after a timeout."""
         if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
             self._log(_TIMEOUT_MSG)
-            trace_set_result(wait=wait, timeout=True)
+            trace_set_result(wait=self._variables["wait"], timeout=True)
             raise _AbortScript from TimeoutError()
 
     async def _async_wait_with_optional_timeout(
         self,
         futures: list[asyncio.Future[None]],
-        done: asyncio.Future[None],
         timeout_handle: asyncio.TimerHandle | None,
         timeout_future: asyncio.Future[None] | None,
         unsub: Callable[[], None],
-    ) -> bool:
-        """Wait for the futures, return True if the wait timed out."""
+    ) -> None:
         try:
             await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
+            if timeout_future and timeout_future.done():
+                self._async_handle_timeout()
         finally:
             if timeout_future and not timeout_future.done() and timeout_handle:
                 timeout_handle.cancel()
 
             unsub()
-        if timeout_future and timeout_future.done() and not done.done():
-            self._async_handle_timeout()
-            return True
-        return False
 
     def _async_set_remaining_time_var(
         self, timeout_handle: asyncio.TimerHandle | None
@@ -1305,15 +1298,12 @@ class _ScriptRun:
                 "trigger": None,
             },
         )
-        # Nested waits in the branches rebind the wait variable.
-        wait_var = self._variables["wait"]
-        trace_set_result(wait=wait_var)
+        trace_set_result(wait=self._variables["wait"])
 
         if timeout == 0:
             self._changed()
             self._async_handle_timeout()
             await self._async_run_wait_for_trigger_branch(CONF_ON_TIMEOUT)
-            self._async_abort_unless_continue_on_timeout(wait_var)
             return
 
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
@@ -1325,9 +1315,6 @@ class _ScriptRun:
         async def async_done(
             variables: dict[str, Any], context: Context | None = None
         ) -> None:
-            # The timeout already won, possibly before the waiter resumed.
-            if timeout_future and timeout_future.done():
-                return
             self._async_set_remaining_time_var(timeout_handle)
             self._variables["wait"]["completed"] = True
             self._variables["wait"]["trigger"] = variables["trigger"]
@@ -1348,16 +1335,16 @@ class _ScriptRun:
         if not remove_triggers:
             return
         self._changed()
-        timed_out = await self._async_wait_with_optional_timeout(
-            futures, done, timeout_handle, timeout_future, remove_triggers
+        await self._async_wait_with_optional_timeout(
+            futures, timeout_handle, timeout_future, remove_triggers
         )
         if self._stop.done():
             return
-        if not timed_out:
-            await self._async_run_wait_for_trigger_branch(CONF_ON_COMPLETE)
-            return
-        await self._async_run_wait_for_trigger_branch(CONF_ON_TIMEOUT)
-        self._async_abort_unless_continue_on_timeout(wait_var)
+        await self._async_run_wait_for_trigger_branch(
+            CONF_ON_COMPLETE
+            if self._variables["wait"]["completed"]
+            else CONF_ON_TIMEOUT
+        )
 
     async def _async_run_wait_for_trigger_branch(
         self, branch: Literal["on_complete", "on_timeout"]
@@ -1394,7 +1381,6 @@ class _ScriptRun:
         if timeout == 0:
             self._changed()
             self._async_handle_timeout()
-            self._async_abort_unless_continue_on_timeout(self._variables["wait"])
             return
 
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
@@ -1408,9 +1394,6 @@ class _ScriptRun:
             entity_id: str, from_s: State | None, to_s: State | None
         ) -> None:
             """Handle script after template condition is true."""
-            # The timeout already won, possibly before the waiter resumed.
-            if timeout_future and timeout_future.done():
-                return
             self._async_set_remaining_time_var(timeout_handle)
             self._variables["wait"]["completed"] = True
             _set_result_unless_done(done)
@@ -1419,10 +1402,9 @@ class _ScriptRun:
             self._hass, wait_template, async_script_wait, self._variables
         )
         self._changed()
-        if await self._async_wait_with_optional_timeout(
-            futures, done, timeout_handle, timeout_future, unsub
-        ):
-            self._async_abort_unless_continue_on_timeout(self._variables["wait"])
+        await self._async_wait_with_optional_timeout(
+            futures, timeout_handle, timeout_future, unsub
+        )
 
     ## Conversation actions ##
 
