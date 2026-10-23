@@ -8,7 +8,9 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency: done
+  dependency-transparency:
+    status: todo
+    comment: The dependency is published to PyPI but it is not built and published from a public CI pipeline.
   docs-actions:
     status: exempt
     comment: This integration does not provide any actions.
@@ -17,7 +19,9 @@ rules:
     comment: This integration does not provide any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-removal-instructions:
+    status: todo
+    comment: Add instructions for removing the legacy YAML configuration.
   docs-triggers:
     status: exempt
     comment: This integration does not provide any triggers.

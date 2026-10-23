@@ -11,6 +11,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pyskyqhub"],
-  "quality_scale": "bronze",
   "requirements": ["pyskyqhub==0.1.4"]
 }

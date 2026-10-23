@@ -1720,6 +1720,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "simulated",
     "sinch",
     "sisyphus",
+    "sky_hub",
     "sky_remote",
     "skybeacon",
     "skybell",
