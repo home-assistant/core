@@ -21,6 +21,7 @@ from aioesphomeapi import (
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
+    InvalidWizardError,
     LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
@@ -768,6 +769,13 @@ class ESPHomeManager:
         entry_data.device_capabilities = await cli.device_capabilities_compat(
             device_info
         )
+        device_wizard = None
+        if entry_data.device_capabilities.wizard.configured:
+            try:
+                device_wizard = await cli.device_wizard()
+            except InvalidWizardError as err:
+                _LOGGER.debug("%s: Ignoring the device wizard: %s", self.host, err)
+        entry_data.device_wizard = device_wizard
         entry_data.async_on_connect(hass, device_info, api_version)
 
         await self._handle_dynamic_encryption_key(device_info)

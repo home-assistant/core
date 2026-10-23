@@ -2,13 +2,19 @@
 
 import asyncio
 from typing import Any
+from unittest.mock import AsyncMock
 
 from aioesphomeapi import (
     APIClient,
+    APIConnectionError,
     APIVersion,
+    BinarySensorInfo,
     DeviceCapabilities,
     DeviceInfo,
+    DeviceWizard,
     SendspinFeature,
+    SwitchInfo,
+    UnsupportedWizardVersionError,
 )
 from aioesphomeapi.model import SerialProxyPortType, SubDeviceInfo
 import pytest
@@ -130,15 +136,19 @@ async def test_get_device_capabilities(
     }
 
 
+@pytest.mark.parametrize(
+    "command", ["esphome/get_device_capabilities", "esphome/get_device_wizard"]
+)
 async def test_get_device_capabilities_device_not_found(
     init_integration: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
+    command: str,
 ) -> None:
-    """Test get_device_capabilities when the device registry id is unknown."""
+    """Test the device commands when the device registry id is unknown."""
     websocket_client = await hass_ws_client()
     await websocket_client.send_json_auto_id(
         {
-            TYPE: "esphome/get_device_capabilities",
+            TYPE: command,
             DEVICE_ID: "not-a-device",
         }
     )
@@ -425,3 +435,232 @@ async def test_get_device_capabilities_zwave_js_config_entry(
         "home_id": home_id,
         "config_entry_id": config_entry_id,
     }
+
+
+WIZARD = {
+    "pages": [
+        {
+            "title": "Bluetooth",
+            "description": "Choose whether this device offers Bluetooth.",
+            "entities": [{"key": 3, "description": "Proxies Bluetooth devices."}],
+        },
+        {
+            "title": "Sendspin",
+            "description": "Choose how this device works with Sendspin.",
+            "entities": [
+                {"key": 2, "description": "Lets Sendspin servers play audio."},
+                {"key": 99, "description": "Not exposed by the device."},
+            ],
+        },
+    ]
+}
+WIZARD_SWITCHES = [
+    SwitchInfo(object_id="sendspin", key=2, name="Sendspin"),
+    SwitchInfo(object_id="bluetooth", key=3, name="Bluetooth"),
+]
+WIZARD_PAGES = [
+    {
+        "title": "Bluetooth",
+        "description": "Choose whether this device offers Bluetooth.",
+        "entities": [
+            {
+                "entity_id": "switch.test_bluetooth",
+                "description": "Proxies Bluetooth devices.",
+            }
+        ],
+    },
+    {
+        "title": "Sendspin",
+        "description": "Choose how this device works with Sendspin.",
+        "entities": [
+            {
+                "entity_id": "switch.test_sendspin",
+                "description": "Lets Sendspin servers play audio.",
+            },
+            {"entity_id": None, "description": "Not exposed by the device."},
+        ],
+    },
+]
+
+
+@pytest.mark.parametrize(
+    ("device_wizard", "entity_info", "expected_pages", "stored"),
+    [
+        pytest.param(
+            {"return_value": DeviceWizard.from_dict(WIZARD)},
+            WIZARD_SWITCHES,
+            WIZARD_PAGES,
+            True,
+            id="wizard",
+        ),
+        pytest.param(
+            {"return_value": DeviceWizard.from_dict(WIZARD)},
+            [
+                *WIZARD_SWITCHES,
+                BinarySensorInfo(object_id="bluetooth", key=3, name="Bluetooth"),
+            ],
+            [
+                {
+                    **WIZARD_PAGES[0],
+                    "entities": [
+                        {"entity_id": None, "description": "Proxies Bluetooth devices."}
+                    ],
+                },
+                WIZARD_PAGES[1],
+            ],
+            True,
+            id="key_on_two_platforms",
+        ),
+        pytest.param(
+            {"side_effect": UnsupportedWizardVersionError(2)},
+            WIZARD_SWITCHES,
+            [],
+            False,
+            id="newer_wizard_format",
+        ),
+    ],
+)
+async def test_get_device_wizard(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    device_wizard: dict[str, Any],
+    entity_info: list[Any],
+    expected_pages: list[dict[str, Any]],
+    stored: bool,
+) -> None:
+    """Test the wizard pages list the entity ids of the entities they name."""
+    mock_client.device_wizard = AsyncMock(**device_wizard)
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        device_capabilities={"wizard": {"configured": True}},
+    )
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json_auto_id(
+        {
+            TYPE: "esphome/get_device_wizard",
+            DEVICE_ID: _device_id_for_mac(device_registry, device.entry),
+        }
+    )
+
+    response = await websocket_client.receive_json()
+    assert response["success"] is True
+    assert response["result"] == {"pages": expected_pages}
+
+    await hass.config_entries.async_unload(device.entry.entry_id)
+    await hass.async_block_till_done()
+    data = hass_storage[f"{DOMAIN}.{device.entry.entry_id}"]["data"]
+    assert ("device_wizard" in data) is stored
+
+
+async def test_get_device_wizard_not_configured(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a device without a wizard is not asked for one."""
+    mock_client.device_wizard = AsyncMock()
+    device = await mock_esphome_device(mock_client=mock_client)
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json_auto_id(
+        {
+            TYPE: "esphome/get_device_wizard",
+            DEVICE_ID: _device_id_for_mac(device_registry, device.entry),
+        }
+    )
+
+    response = await websocket_client.receive_json()
+    assert response["success"] is True
+    assert response["result"] == {"pages": []}
+    mock_client.device_wizard.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("device_capabilities", "device_wizard", "expected_pages"),
+    [
+        # The device reports no wizard, for example after a firmware update
+        pytest.param({}, {}, [], id="no_wizard"),
+        pytest.param(
+            {"wizard": {"configured": True}},
+            {"side_effect": APIConnectionError},
+            WIZARD_PAGES,
+            id="fetch_failed",
+        ),
+    ],
+)
+async def test_get_device_wizard_restored(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+    device_capabilities: dict[str, Any],
+    device_wizard: dict[str, Any],
+    expected_pages: list[dict[str, Any]],
+) -> None:
+    """Test the wizard is restored from storage and updated on connect."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test",
+        unique_id="11:22:33:44:55:aa",
+        data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+    )
+    entry.add_to_hass(hass)
+    device_info = DeviceInfo(
+        name="test", friendly_name="Test", mac_address="11:22:33:44:55:AA"
+    )
+    storage_key = f"{DOMAIN}.{entry.entry_id}"
+    hass_storage[storage_key] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": storage_key,
+        "data": {
+            "device_info": device_info.to_dict(),
+            "api_version": APIVersion(1, 19).to_dict(),
+            "device_wizard": DeviceWizard.from_dict(WIZARD).to_dict(),
+            "switch": [info.to_dict() for info in WIZARD_SWITCHES],
+        },
+    }
+    connect_event = asyncio.Event()
+
+    async def _blocked_connect() -> tuple[DeviceInfo, list[Any], list[Any]]:
+        await connect_event.wait()
+        return (device_info, WIZARD_SWITCHES, [])
+
+    mock_client.device_info_and_list_entities = _blocked_connect
+    mock_client.device_capabilities_compat = AsyncMock(
+        return_value=DeviceCapabilities.from_dict(device_capabilities)
+    )
+    mock_client.device_wizard = AsyncMock(**device_wizard)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json_auto_id(
+        {
+            TYPE: "esphome/get_device_wizard",
+            DEVICE_ID: _device_id_for_mac(device_registry, entry),
+        }
+    )
+
+    response = await websocket_client.receive_json()
+    assert response["success"] is True
+    assert response["result"] == {"pages": WIZARD_PAGES}
+
+    connect_event.set()
+    await hass.async_block_till_done()
+    await websocket_client.send_json_auto_id(
+        {
+            TYPE: "esphome/get_device_wizard",
+            DEVICE_ID: _device_id_for_mac(device_registry, entry),
+        }
+    )
+    response = await websocket_client.receive_json()
+    assert response["result"] == {"pages": expected_pages}
