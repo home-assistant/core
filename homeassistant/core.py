@@ -2205,9 +2205,14 @@ class State:
         since it can never be garbage collected as each event would
         reference the previous one.
         """
-        self.context = Context(
-            self.context.user_id, self.context.parent_id, self.context.id
-        )
+        context = self.context
+        # The event that created this state is the origin of its context.
+        # Unlink it so the Event <-> Context cycle is freed without the gc.
+        if (origin_event := context.origin_event) is not None and origin_event.data.get(
+            "new_state"
+        ) is self:
+            context.origin_event = None
+        self.context = Context(context.user_id, context.parent_id, context.id)
 
     @override
     def __repr__(self) -> str:
