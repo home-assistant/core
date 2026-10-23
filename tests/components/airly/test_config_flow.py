@@ -12,7 +12,12 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airly.const import CONF_USE_NEAREST, DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -20,6 +25,14 @@ CONFIG = {
     CONF_API_KEY: "foo",
     CONF_LATITUDE: 12.3,
     CONF_LONGITUDE: 45.6,
+}
+
+USER_INPUT = {
+    CONF_API_KEY: "foo",
+    CONF_LOCATION: {
+        CONF_LATITUDE: 12.3,
+        CONF_LONGITUDE: 45.6,
+    },
 }
 
 UPDATE_API_KEY_FLOWS = [
@@ -57,7 +70,7 @@ async def test_invalid_api_key(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["errors"] == {"base": "invalid_api_key"}
@@ -65,7 +78,7 @@ async def test_invalid_api_key(
     point_measurements.update.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -99,7 +112,7 @@ async def test_invalid_location(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["errors"] == {"base": "wrong_location"}
@@ -109,7 +122,7 @@ async def test_invalid_location(
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -142,7 +155,7 @@ async def test_invalid_location_for_point_and_nearest(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -164,7 +177,7 @@ async def test_duplicate_error(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -184,7 +197,7 @@ async def test_create_entry(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -214,7 +227,7 @@ async def test_create_entry_with_nearest_method(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -253,7 +266,7 @@ async def test_cannot_connect(
     point_measurements.update.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["errors"] == {"base": error}
@@ -263,7 +276,7 @@ async def test_cannot_connect(
     point_measurements.update.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -300,7 +313,7 @@ async def test_unknown_error(
     point_measurements.update.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["errors"] == {"base": error}
@@ -310,7 +323,7 @@ async def test_unknown_error(
     point_measurements.update.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
