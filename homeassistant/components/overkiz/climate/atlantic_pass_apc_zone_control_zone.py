@@ -862,7 +862,19 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             self.device.states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
             == OverkizCommandParam.ON
         ):
-            await self.async_execute_and_refresh_modes(commands, ())
+            # A derogation over the program shows the applied setpoint, which
+            # only changes once it is refreshed. A manual zone shows the one
+            # that has just been written.
+            await self.async_execute_and_refresh_modes(
+                commands,
+                (
+                    (OverkizCommand.REFRESH_TARGET_TEMPERATURE,)
+                    if (program_setpoints := self.active_program_setpoints) is not None
+                    and self.device.states.get_value(program_setpoints.mode_state)
+                    == OverkizCommandParam.INTERNAL_SCHEDULING
+                    else ()
+                ),
+            )
             return
 
         commands.append(
