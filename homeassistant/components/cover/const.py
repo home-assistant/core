@@ -81,3 +81,26 @@ class CoverDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(CoverDeviceClass))
+
+
+class CoverService(StrEnum):
+    """Store keys for cover services."""
+
+    CLOSE = "close_cover"
+    CLOSE_TILT = "close_cover_tilt"
+    OPEN = "open_cover"
+    OPEN_TILT = "open_cover_tilt"
+    SET_POSITION = "set_cover_position"
+    SET_TILT_POSITION = "set_cover_tilt_position"
+    STOP = "stop_cover"
+    STOP_TILT = "stop_cover_tilt"
+    TOGGLE = "toggle"
+    TOGGLE_TILT = "toggle_cover_tilt"
+
+
+class CoverServiceArgument(StrEnum):
+    """Store keys for cover service arguments."""
+
+    POSITION = "position"
+    SPEED = "speed"
+    TILT_POSITION = "tilt_position"

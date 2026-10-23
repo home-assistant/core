@@ -654,16 +654,16 @@ async def test_device_script_getcode_error(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_device_ledstrip_effects_error(
+@pytest.mark.parametrize("method", ["ledstrip_list_effects", "ledstrip_list_palettes"])
+async def test_device_ledstrip_list_error(
     hass: HomeAssistant,
     mock_ledstrip_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    method: str,
 ) -> None:
-    """Test device LED strip effects list error."""
+    """Test device LED strip list error."""
     monkeypatch.setattr(
-        mock_ledstrip_rpc_device,
-        "ledstrip_list_effects",
-        AsyncMock(side_effect=RpcCallError(0)),
+        mock_ledstrip_rpc_device, method, AsyncMock(side_effect=RpcCallError(0))
     )
 
     entry = await init_integration(hass, 2)
@@ -970,6 +970,39 @@ async def test_rpc_ble_scanner_startup_wait_times_out(
     assert entry.state is ConfigEntryState.LOADED
     connect_event.set()
     await hass.async_block_till_done()
+
+
+async def test_rpc_setup_device_reconnecting_before_platforms(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test setup uses last known data if the device reconnects before platforms."""
+    entity_id = "sensor.test_name_voltmeter"
+
+    async def _device_reconnecting(*args: Any, **kwargs: Any) -> Mock:
+        # The device disconnected and is re-initializing, keeping last known data
+        monkeypatch.setattr(mock_rpc_device, "initialized", False)
+        return Mock()
+
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_connect_scanner",
+        _device_reconnecting,
+    ):
+        entry = await init_integration(
+            hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+        )
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "4.321"
 
 
 async def test_rpc_disabled_ble_scanner_does_not_wait_at_startup(
