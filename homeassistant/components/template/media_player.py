@@ -344,7 +344,14 @@ class AbstractTemplateMediaPlayer(
         )
 
         for option, attr in STRING_TEMPLATES:
-            self.setup_template(option, attr, tcv.string(self, option))
+            self.setup_template(
+                option,
+                attr,
+                tcv.string(self, option),
+                self._update_media_content_id
+                if option == CONF_MEDIA_CONTENT_ID
+                else None,
+            )
 
         self.setup_template(
             CONF_VOLUME_LEVEL,
@@ -462,6 +469,21 @@ class AbstractTemplateMediaPlayer(
                 self._attr_media_position = position
             self._attr_media_position_updated_at = now
         self._attr_state = state
+
+    @callback
+    def _update_media_content_id(self, content_id: str | None) -> None:
+        """Update the media item and restart the position clock for a new item."""
+        # An unchanged position sample does not update the timestamp, so a new
+        # item would otherwise inherit the elapsed time of the previous one.
+        if (
+            content_id != self._attr_media_content_id
+            and self._attr_media_position is not None
+        ):
+            self._attr_media_position = self._rendered_media_position
+            self._attr_media_position_updated_at = (
+                None if self._rendered_media_position is None else dt_util.utcnow()
+            )
+        self._attr_media_content_id = content_id
 
     @callback
     def _update_media_position(self, position: int | None) -> None:

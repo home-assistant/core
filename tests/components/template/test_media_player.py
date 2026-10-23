@@ -335,6 +335,52 @@ async def test_media_position_updated_at_state_change(
     )
 
 
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_media_position_reset_on_media_change(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a new media item at an unchanged position restarts the position clock."""
+    await setup_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        style,
+        1,
+        {
+            "media_content_id": _attribute_template("media_content_id"),
+            "media_position": _attribute_template("media_position"),
+        },
+        STATE_TEMPLATE,
+    )
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
+        "playing",
+        {"media_content_id": "track_1", "media_position": 0},
+    )
+
+    freezer.tick(120)
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
+        "playing",
+        {"media_content_id": "track_2", "media_position": 0},
+    )
+    assert_state_and_attributes(
+        hass,
+        TEST_MEDIA_PLAYER,
+        "playing",
+        {
+            "media_content_id": "track_2",
+            "media_position": 0,
+            "media_position_updated_at": dt_util.utcnow(),
+        },
+    )
+
+
 @pytest.mark.usefixtures("calls")
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
