@@ -11,6 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import notify
 from homeassistant.components.prowl.const import DOMAIN
+from homeassistant.components.prowl.services import ProwlService, ProwlServiceArgument
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -284,7 +285,7 @@ async def test_prowl_send_message_action(
 
     await hass.services.async_call(
         DOMAIN,
-        notify.SERVICE_SEND_MESSAGE,
+        ProwlService.SEND_MESSAGE,
         {"entity_id": ENTITY_ID, **service_data},
         blocking=True,
     )
@@ -311,10 +312,10 @@ async def test_prowl_send_message_action_invalid(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            notify.SERVICE_SEND_MESSAGE,
+            ProwlService.SEND_MESSAGE,
             {
                 "entity_id": ENTITY_ID,
-                notify.ATTR_MESSAGE: "Test Notification",
+                ProwlServiceArgument.MESSAGE: "Test Notification",
                 **service_data,
             },
             blocking=True,
@@ -334,8 +335,8 @@ async def test_prowl_send_message_action_error(
     with pytest.raises(HomeAssistantError, match="Timeout accessing the Prowl API"):
         await hass.services.async_call(
             DOMAIN,
-            notify.SERVICE_SEND_MESSAGE,
-            {"entity_id": ENTITY_ID, notify.ATTR_MESSAGE: "Test Notification"},
+            ProwlService.SEND_MESSAGE,
+            {"entity_id": ENTITY_ID, ProwlServiceArgument.MESSAGE: "Test Notification"},
             blocking=True,
         )
 

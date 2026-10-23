@@ -13,9 +13,6 @@ DATA_LEGACY_SETUPS: HassKey[dict[str, object]] = HassKey(f"{DOMAIN}_legacy_setup
 CONF_LEGACY_SERVICE_NAME = "legacy_service_name"
 CONF_NAMES = "names"
 
-ATTR_PRIORITY = "priority"
-ATTR_URL = "url"
-
 PRIORITY_MAP: dict[str, int] = {
     "very_low": -2,
     "moderate": -1,
