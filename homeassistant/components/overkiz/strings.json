@@ -219,6 +219,14 @@
       }
     }
   },
+  "exceptions": {
+    "unsupported_set_position_and_tilt": {
+      "message": "This device does not support setting position and tilt simultaneously."
+    },
+    "zone_control_side_unknown": {
+      "message": "The Zone Control isn't heating or cooling, so the program has no setpoint to change. Switch the zone to manual first."
+    }
+  },
   "issues": {
     "deprecated_low_speed_cover": {
       "description": "The low speed cover `{entity_id}` is deprecated and will be removed. Use the `speed: low` option of the open, close and set position actions on `{replacement_entity_id}` instead.\n\nUpdate your dashboards, templates, automations and scripts to use the main cover entity, then disable `{entity_id}` and restart Home Assistant to have it removed.",
@@ -229,16 +237,8 @@
       "title": "[%key:component::overkiz::issues::deprecated_low_speed_cover::title%]"
     },
     "execution_failed": {
-      "title": "A command was not applied",
-      "description": "The command was not applied to {device} (error {error}). Check that your Overkiz box is online and reachable, then try again."
-    }
-  },
-  "exceptions": {
-    "unsupported_set_position_and_tilt": {
-      "message": "This device does not support setting position and tilt simultaneously."
-    },
-    "zone_control_side_unknown": {
-      "message": "The Zone Control isn't heating or cooling, so the program has no setpoint to change. Switch the zone to manual first."
+      "description": "The command was not applied to {device} (error {error}). Check that your Overkiz box is online and reachable, then try again.",
+      "title": "A command was not applied"
     }
   },
   "services": {
