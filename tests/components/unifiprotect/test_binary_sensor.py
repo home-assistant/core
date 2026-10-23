@@ -63,6 +63,8 @@ from .utils import (
     setup_public_sensor,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
+
 LIGHT_SENSOR_WRITE = LIGHT_SENSORS[:2]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:3]
 BATTERY_LOW = next(d for d in SENSE_SENSORS if d.key == "battery_low")
@@ -289,7 +291,13 @@ async def test_binary_sensor_setup_sensor_leak(
     """Test binary_sensor entity setup for sensor with most leak mounting type."""
 
     sensor.mount_type = MountType.LEAK
-    setup_public_sensor(ufp)
+    setup_public_sensor(
+        ufp,
+        motion_enabled=False,
+        temperature_enabled=False,
+        humidity_enabled=False,
+        light_enabled=False,
+    )
     await init_entry(hass, ufp, [sensor])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 

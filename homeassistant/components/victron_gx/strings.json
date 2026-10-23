@@ -1117,7 +1117,7 @@
         }
       },
       "dcgenset_error_id_index": {
-        "name": "Id"
+        "name": "ID"
       },
       "dcgenset_frequency": {
         "name": "[%key:component::victron_gx::common::frequency%]"
@@ -1129,7 +1129,7 @@
         "name": "Total energy produced"
       },
       "dcgenset_module_id": {
-        "name": "Module id"
+        "name": "Module ID"
       },
       "dcgenset_power": {
         "name": "[%key:component::victron_gx::common::power%]"
