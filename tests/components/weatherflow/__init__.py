@@ -1,10 +1,9 @@
 """Tests for the WeatherFlow integration."""
 
+from pytest_homeassistant.common import MockConfigEntry, load_fixture_bytes
 from pyweatherflowudp.aioudp import LocalEndpoint
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture_bytes
 
 HUB_ADDRESS = ("192.0.2.1", 50222)
 

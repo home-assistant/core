@@ -8,6 +8,7 @@ from fressnapftracker import (
     FressnapfTrackerInvalidTrackerResponseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fressnapf_tracker.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import MOCK_SERIAL_NUMBER
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

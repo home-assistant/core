@@ -14,6 +14,7 @@ from aionanoleaf2 import (
     Unavailable,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.nanoleaf.const import DOMAIN
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import get_reauth_flows, setup_integration
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "button.nanoleaf_identify"
 

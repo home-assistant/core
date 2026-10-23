@@ -1,6 +1,7 @@
 """Sensors for National Weather Service (NWS)."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nws.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.nws.sensor import SENSOR_TYPES
@@ -19,8 +20,6 @@ from .const import (
     SENSOR_EXPECTED_OBSERVATION_IMPERIAL,
     SENSOR_EXPECTED_OBSERVATION_METRIC,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

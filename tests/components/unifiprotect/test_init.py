@@ -5,6 +5,8 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from uiprotect import NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
@@ -47,9 +49,6 @@ from homeassistant.setup import async_setup_component
 from . import _patch_discovery
 from .conftest import PUBLIC_ONLY_ALARM_ENTITY_ID, UNIFI_MAC
 from .utils import MockUFPFixture, init_entry, make_public_light, time_changed
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 def _reauth_flow_started(hass: HomeAssistant) -> bool:

@@ -4,6 +4,7 @@ from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from togrill_bluetooth.client import Client
 from togrill_bluetooth.packets import Packet, PacketA0Notify, PacketNotify
 
@@ -15,8 +16,6 @@ from homeassistant.components.togrill.const import (
 from homeassistant.const import CONF_ADDRESS, CONF_MODEL
 
 from . import TOGRILL_SERVICE_INFO
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

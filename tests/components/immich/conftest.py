@@ -25,6 +25,7 @@ from aioimmich.server.models import (
 from aioimmich.tags.models import ImmichTag
 from aioimmich.users.models import ImmichUserObject
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.immich.const import DOMAIN
 from homeassistant.components.media_source import PlayMedia
@@ -47,8 +48,6 @@ from .const import (
     MOCK_SEARCH_ASSETS,
     MOCK_TAGS_ASSETS,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -27,6 +27,7 @@ from pyenphase.models.home import EnvoyInterfaceInformation
 from pyenphase.models.meters import EnvoyMeterData
 from pyenphase.models.tariff import EnvoyStorageSettings, EnvoyTariff
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import CONF_MANUAL_TOKEN
@@ -40,8 +41,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import envoy_token
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

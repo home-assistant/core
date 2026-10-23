@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.squeezebox import async_remove_config_entry_device
@@ -16,8 +17,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from .conftest import TEST_MAC
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

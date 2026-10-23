@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock, patch
 
 from nrgkick_api import ConnectorType, GridPhases
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

@@ -5,6 +5,12 @@ from unittest.mock import MagicMock, patch
 from bluetooth_data_tools import human_readable_name
 from pycasperglow import CasperGlowError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info,
+)
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.casper_glow.const import DOMAIN
@@ -18,13 +24,6 @@ from . import (
     CASPER_GLOW_DISCOVERY_INFO,
     NOT_CASPER_GLOW_DISCOVERY_INFO,
     SAMSUNG_EARBUDS_DISCOVERY_INFO,
-)
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_bluetooth_service_info,
 )
 
 

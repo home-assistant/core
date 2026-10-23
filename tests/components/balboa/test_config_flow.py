@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pybalboa.exceptions import SpaConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.balboa.const import CONF_SYNC_TIME, DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.1.1.1"
 TEST_DATA = {CONF_HOST: TEST_HOST}

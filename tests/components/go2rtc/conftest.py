@@ -14,6 +14,14 @@ from go2rtc_client.rest import (
 )
 from go2rtc_client.ws import Go2RtcWsClient
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.go2rtc.const import DOMAIN, RECOMMENDED_VERSION
@@ -24,15 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MockCamera
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
-)
 
 GO2RTC_PATH = "homeassistant.components.go2rtc"
 

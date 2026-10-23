@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from nyt_games.models import ConnectionsStats, WordleStats
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.nyt_games.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture

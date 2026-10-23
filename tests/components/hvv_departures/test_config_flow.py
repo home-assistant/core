@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from aiohttp import ClientConnectorError
 from pygti.exceptions import GTIUnauthorizedError
 from pygti.models import CNResponse, DLResponse, StationInformationResponse
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.hvv_departures.const import (
     CONF_FILTER,
@@ -16,8 +17,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 FIXTURE_INIT = load_json_object_fixture("hvv_departures/init.json")
 FIXTURE_CHECK_NAME = load_json_object_fixture("hvv_departures/check_name.json")

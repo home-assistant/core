@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from azure.storage.blob import BlobProperties
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.azure_storage.const import DOMAIN
 
 from .const import BACKUP_METADATA, USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

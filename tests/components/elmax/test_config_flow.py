@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.elmax.const import (
@@ -43,8 +44,6 @@ from . import (
     MOCK_WRONG_PANEL_PIN,
 )
 from .conftest import MOCK_DIRECT_BASE_URI_V6
-
-from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=IPv4Address(address=MOCK_DIRECT_HOST),

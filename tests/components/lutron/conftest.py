@@ -5,10 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pylutron import OccupancyGroup
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lutron.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

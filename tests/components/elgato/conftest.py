@@ -13,12 +13,12 @@ from elgato import (
     State,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path, load_fixture
 
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, get_fixture_path, load_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 

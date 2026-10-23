@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from nettigo_air_monitor import ApiError, AuthFailedError, CannotGetMacError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nam.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -13,8 +14,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("10.10.2.3"),

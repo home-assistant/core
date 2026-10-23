@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from awesomeversion import AwesomeVersion
 import pytest
+from pytest_homeassistant.common import MockModule, mock_integration
 
 from homeassistant import loader
 from homeassistant.components import hue
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.generated.zeroconf import ZEROCONF
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
-
-from .common import MockModule, mock_integration
 
 
 async def test_circular_component_dependencies(hass: HomeAssistant) -> None:

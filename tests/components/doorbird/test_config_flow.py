@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiohttp
 from doorbirdpy import DoorBird
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.doorbird.const import (
@@ -25,8 +26,6 @@ from . import (
     mock_not_found_exception,
     mock_unauthorized_exception,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_form(hass: HomeAssistant, doorbird_api: DoorBird) -> None:

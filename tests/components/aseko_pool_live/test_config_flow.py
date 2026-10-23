@@ -5,14 +5,13 @@ from unittest.mock import patch
 
 from aioaseko import AsekoAPIError, AsekoInvalidCredentials, User
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.aseko_pool_live.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_user_form(hass: HomeAssistant) -> None:

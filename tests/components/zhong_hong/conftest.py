@@ -5,6 +5,7 @@ import threading
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zhong_hong_hvac.protocol import (
     AcAddr,
     AcStatus,
@@ -21,8 +22,6 @@ from homeassistant.components.zhong_hong.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 HOST = "1.2.3.4"
 DEVICE_ADDRESS = (1, 1)

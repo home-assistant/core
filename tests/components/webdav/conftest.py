@@ -5,13 +5,12 @@ from json import dumps
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.webdav.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
 from .const import BACKUP_METADATA, MOCK_LIST_FILES
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

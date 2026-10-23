@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from caldav.lib.error import AuthorizationError, DAVError
 from caldav.lib.http_sync import requests as caldav_requests
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.caldav.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_URL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

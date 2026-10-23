@@ -1,4 +1,4 @@
-"""Set up some common test helper things."""
+"""Home Assistant pytest fixtures and hooks."""
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Sequence
@@ -902,7 +902,7 @@ async def hass_access_token(
 def hass_owner_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
-    """Return a Home Assistant admin user."""
+    """Return a Home Assistant owner user."""
     return MockUser(is_owner=True).add_to_hass(hass)
 
 
@@ -930,7 +930,7 @@ async def hass_read_only_access_token(
     hass_read_only_user: MockUser,
     local_auth: homeassistant.HassAuthProvider,
 ) -> str:
-    """Return a Home Assistant read only user."""
+    """Return an access token for a read-only user."""
     credential = Credentials(
         id="mock-readonly-credential-id",
         auth_provider_type="homeassistant",

@@ -9,13 +9,12 @@ from unittest.mock import AsyncMock, patch
 from aiohttp import ClientSession
 from linkplay.bridge import LinkPlayBridge, LinkPlayDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
+from pytest_homeassistant.plugins import AiohttpClientMocker
 
 from homeassistant.components.linkplay.const import DOMAIN
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
-from tests.conftest import AiohttpClientMocker
 
 HOST = "10.0.0.150"
 HOST_REENTRY = "10.0.0.66"

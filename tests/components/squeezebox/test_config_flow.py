@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -20,8 +21,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import SERVER_UUIDS
-
-from tests.common import MockConfigEntry
 
 # Use the same UUIDs defined in the conftest
 TEST_UUID = SERVER_UUIDS[0]

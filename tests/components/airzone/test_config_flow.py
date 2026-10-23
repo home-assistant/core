@@ -10,6 +10,7 @@ from aioairzone.exceptions import (
     InvalidSystem,
     SystemOutOfRange,
 )
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.airzone.config_flow import short_mac
@@ -30,8 +31,6 @@ from .util import (
     HVAC_WEBSERVER_MOCK,
     USER_INPUT,
 )
-
-from tests.common import MockConfigEntry
 
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="airzone",

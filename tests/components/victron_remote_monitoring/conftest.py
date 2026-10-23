@@ -5,6 +5,7 @@ import datetime as dt
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_vrm.models.aggregations import ForecastAggregations
 
 from homeassistant.components.victron_remote_monitoring.const import (
@@ -13,8 +14,6 @@ from homeassistant.components.victron_remote_monitoring.const import (
 )
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 CONST_1_HOUR = 3600000
 CONST_12_HOURS = 43200000

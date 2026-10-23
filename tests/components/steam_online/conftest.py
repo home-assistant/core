@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture, patch
 
 from homeassistant.components.steam_online.const import DOMAIN, SUBENTRY_TYPE_FRIEND
 from homeassistant.config_entries import ConfigSubentryData
 
 from . import ACCOUNT_1, ACCOUNT_2, ACCOUNT_NAME_2, CONF_DATA
-
-from tests.common import MockConfigEntry, load_json_object_fixture, patch
 
 
 @pytest.fixture(name="config_entry")

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 from tesla_wall_connector.exceptions import WallConnectorConnectionError
 
 from homeassistant import config_entries
@@ -23,8 +24,6 @@ from .conftest import (
     get_vitals_mock,
     get_wifi_status_mock,
 )
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 async def test_form(mock_wall_connector_version, hass: HomeAssistant) -> None:

@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from pysyncthru import SyncthruState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.syncthru.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_URL
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

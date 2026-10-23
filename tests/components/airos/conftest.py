@@ -8,14 +8,13 @@ from airos.airos6 import AirOS6Data
 from airos.airos8 import AirOS8Data
 from airos.helpers import DetectDeviceData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.airos.const import DEFAULT_USERNAME, DOMAIN
 from homeassistant.components.airos.coordinator import AirOSUpdateData
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from . import AirOSData
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

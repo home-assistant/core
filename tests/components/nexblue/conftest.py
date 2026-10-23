@@ -5,12 +5,11 @@ from unittest.mock import MagicMock, patch
 
 from nexblue_api import Charger, ChargerStatus, TokenBundle
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.nexblue.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 CHARGER = Charger.from_api(load_json_object_fixture("charger.json", DOMAIN))
 CHARGER_STATUS = ChargerStatus.from_api(

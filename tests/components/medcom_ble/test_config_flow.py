@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from bleak import BleakError
 from medcom_ble import MedcomBleDevice
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.medcom_ble.const import DOMAIN
@@ -20,8 +21,6 @@ from . import (
     patch_async_setup_entry,
     patch_medcom_ble,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_bluetooth_discovery(hass: HomeAssistant) -> None:

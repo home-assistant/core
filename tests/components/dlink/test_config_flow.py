@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.dlink.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
@@ -17,8 +19,6 @@ from .conftest import (
     DHCP_FORMATTED_MAC,
     patch_config_flow,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _patch_setup_entry():

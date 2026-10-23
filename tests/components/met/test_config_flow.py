@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.met.const import (
@@ -19,8 +20,6 @@ from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="met_setup", autouse=True)

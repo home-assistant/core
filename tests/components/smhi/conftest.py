@@ -9,6 +9,8 @@ from freezegun import freeze_time
 from pysmhi.smhi_fire_forecast import SMHIFireForecast, SMHIFirePointForecast
 from pysmhi.smhi_forecast import SMHIForecast, SMHIPointForecast
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.smhi import PLATFORMS
 from homeassistant.components.smhi.const import DOMAIN
@@ -16,9 +18,6 @@ from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, Pl
 from homeassistant.core import HomeAssistant
 
 from . import TEST_CONFIG
-
-from tests.common import MockConfigEntry, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture

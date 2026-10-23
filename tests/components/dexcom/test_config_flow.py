@@ -7,6 +7,7 @@ from unittest.mock import patch
 from pydexcom import Region
 from pydexcom.errors import AccountError, SessionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.dexcom.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import CONFIG
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager

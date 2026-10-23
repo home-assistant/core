@@ -24,6 +24,7 @@ from anthropic.types import (
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from anthropic.types.raw_message_delta_event import Delta
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.anthropic.const import (
     DEFAULT_AI_TASK_NAME,
@@ -37,8 +38,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import model_list
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

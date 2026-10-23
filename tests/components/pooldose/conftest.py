@@ -6,16 +6,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pooldose.request_status import RequestStatus
 import pytest
-
-from homeassistant.components.pooldose.const import DOMAIN
-from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     async_load_json_object_fixture,
     load_json_object_fixture,
 )
+
+from homeassistant.components.pooldose.const import DOMAIN
+from homeassistant.const import CONF_HOST, Platform
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture

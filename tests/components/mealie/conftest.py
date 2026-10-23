@@ -7,6 +7,7 @@ from aiomealie import (
     About,
     Mealplan,
     MealplanResponse,
+    ParsedIngredient,
     Recipe,
     RecipesResponse,
     ShoppingItemsResponse,
@@ -16,11 +17,10 @@ from aiomealie import (
 )
 from mashumaro.codecs.orjson import ORJSONDecoder
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.mealie.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST
-
-from tests.common import MockConfigEntry, load_fixture
 
 SHOPPING_LIST_ID = "list-id-1"
 SHOPPING_ITEM_NOTE = "Shopping Item 1"
@@ -73,7 +73,9 @@ def mock_mealie_client() -> Generator[AsyncMock]:
         client.get_shopping_items.return_value = ShoppingItemsResponse.from_json(
             load_fixture("get_shopping_items.json", DOMAIN)
         )
-        client.parse_ingredient.return_value = None
+        client.parse_ingredient.return_value = ParsedIngredient.from_json(
+            load_fixture("parse_ingredient.json", DOMAIN)
+        )
         client.get_statistics.return_value = Statistics.from_json(
             load_fixture("statistics.json", DOMAIN)
         )

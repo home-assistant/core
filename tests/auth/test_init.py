@@ -12,6 +12,14 @@ from freezegun import freeze_time
 import jwt
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    CLIENT_ID,
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+    ensure_auth_manager_loaded,
+    flush_store,
+)
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
@@ -25,15 +33,6 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, MFA_SESSION_EXPIRATION
 from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    CLIENT_ID,
-    MockUser,
-    async_capture_events,
-    async_fire_time_changed,
-    ensure_auth_manager_loaded,
-    flush_store,
-)
 
 INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
 

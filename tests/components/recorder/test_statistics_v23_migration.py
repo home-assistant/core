@@ -13,6 +13,7 @@ import threading
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_test_home_assistant
 from pytest_homeassistant.components.recorder.common import (
     CREATE_ENGINE_TARGET,
     async_wait_recording_done,
@@ -20,14 +21,12 @@ from pytest_homeassistant.components.recorder.common import (
     get_patched_live_version,
     get_schema_module_path,
 )
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceContextManager
 
 SCHEMA_VERSION_POSTFIX = "23_with_newer_columns"
 SCHEMA_MODULE = get_schema_module_path(SCHEMA_VERSION_POSTFIX)

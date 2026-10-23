@@ -1,4 +1,4 @@
-"""Tests for the repairs integration."""
+"""Repair helpers."""
 
 from http import HTTPStatus
 from typing import Any
@@ -51,7 +51,7 @@ async def start_repair_fix_flow(
 async def process_repair_fix_flow(
     client: TestClient, flow_id: str, json: dict[str, Any] | None = None
 ) -> dict[str, Any]:
-    """Return the repairs list of issues."""
+    """Submit user input to a repair flow."""
     url = RepairsFlowResourceView.url.format(flow_id=flow_id)
     resp = await client.post(url, json=json)
     assert resp.status == HTTPStatus.OK, f"Error: {resp.status}, {await resp.text()}"

@@ -4,6 +4,7 @@ import json
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.slack.const import DOMAIN
@@ -20,8 +21,6 @@ from . import (
     create_entry,
     mock_connection,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_flow_user(

@@ -7,6 +7,14 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    assert_setup_component,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant import config_entries, loader, setup
 from homeassistant.config_entries import ConfigEntry
@@ -25,15 +33,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.helpers.typing import ConfigType
-
-from .common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    assert_setup_component,
-    mock_integration,
-    mock_platform,
-)
 
 
 @pytest.fixture

@@ -7,6 +7,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from pyatv import exceptions
 from pyatv.const import PairingRequirement, Protocol
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.apple_tv import CONF_ADDRESS, config_flow
@@ -21,8 +22,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .common import airplay_service, create_conf, mrp_service, raop_service
-
-from tests.common import MockConfigEntry
 
 DMAP_SERVICE = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),

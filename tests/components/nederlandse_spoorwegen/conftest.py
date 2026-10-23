@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from ns_api import Station, Trip
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.nederlandse_spoorwegen.const import (
     CONF_FROM,
@@ -19,8 +20,6 @@ from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 
 from .const import API_KEY, SUBENTRY_ID_1, SUBENTRY_ID_2
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

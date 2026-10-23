@@ -3,18 +3,17 @@
 from collections.abc import Generator
 
 import pytest
-
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     MockModule,
     mock_config_flow,
     mock_integration,
     mock_platform,
 )
+
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 
 
 class MockFlow(ConfigFlow):

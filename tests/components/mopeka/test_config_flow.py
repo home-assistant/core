@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import probatio
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.mopeka.const import CONF_MEDIUM_TYPE, DOMAIN, MediumType
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import NOT_MOPEKA_SERVICE_INFO, PRO_SERVICE_INFO
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:

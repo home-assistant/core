@@ -7,14 +7,13 @@ from freezegun.api import FrozenDateTimeFactory
 from pyanglianwater.api import API
 from pyanglianwater.meter import SmartMeter
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.anglian_water.const import CONF_ACCOUNT_NUMBER, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import ACCESS_TOKEN, ACCOUNT_NUMBER, PASSWORD, USERNAME
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture

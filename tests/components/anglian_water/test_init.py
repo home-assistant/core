@@ -11,6 +11,7 @@ from pyanglianwater.exceptions import (
     SmartMeterUnavailableError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.anglian_water.const import DOMAIN
 from homeassistant.components.recorder import Recorder
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from .const import CONSENT_REQUIRED_ISSUE_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_unload_entry(

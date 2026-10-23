@@ -7,12 +7,11 @@ from unittest.mock import AsyncMock, Mock
 import weakref
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import debounce
 from homeassistant.util.dt import utcnow
-
-from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 

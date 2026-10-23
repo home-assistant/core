@@ -10,6 +10,7 @@ from pynintendoparental.exceptions import (
     InvalidDeviceStateError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nintendo_parental_controls.const import (
@@ -35,8 +36,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import PLAYER_ENTITY_ID
-
-from tests.common import MockConfigEntry, MockUser
 
 
 async def test_add_bonus_time(

@@ -7,13 +7,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from google.cloud.texttospeech_v1.types import cloud_tts
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_cloud.const import (
     CONF_SERVICE_ACCOUNT_INFO,
     DOMAIN,
 )
-
-from tests.common import MockConfigEntry
 
 VALID_SERVICE_ACCOUNT_INFO = {
     "type": "service_account",

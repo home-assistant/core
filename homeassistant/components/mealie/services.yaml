@@ -78,6 +78,18 @@ import_recipe:
       selector:
         boolean:
 
+parse_ingredient:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mealie
+    ingredient:
+      required: true
+      selector:
+        text:
+
 set_random_mealplan:
   fields:
     config_entry_id:

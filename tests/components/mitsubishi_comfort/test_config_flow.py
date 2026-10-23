@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from mitsubishi_comfort import DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.mitsubishi_comfort.const import (
@@ -20,8 +21,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import MOCK_MAC, MOCK_PASSWORD, MOCK_SERIAL, MOCK_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

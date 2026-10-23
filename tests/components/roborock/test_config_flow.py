@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roborock import RoborockTooFrequentCodeRequests
 from roborock.exceptions import (
     RoborockAccountDoesNotExist,
@@ -33,8 +34,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .mock_data import MOCK_CONFIG, NETWORK_INFO, ROBOROCK_RRUID, USER_DATA, USER_EMAIL
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

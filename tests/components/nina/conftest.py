@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, patch
 
 from pynina import Warning
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.nina.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -15,12 +20,6 @@ from .const import (
     DUMMY_CONFIG_ENTRY_AREA_FILTERS,
     DUMMY_CONFIG_ENTRY_DEFAULT_FILTERS,
     DUMMY_CONFIG_ENTRY_MULTIPLE_REGIONS,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
 )
 
 

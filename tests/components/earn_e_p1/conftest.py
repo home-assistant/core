@@ -6,13 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from earn_e_p1 import EarnEP1Device, PacketType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.earn_e_p1.const import CONF_SERIAL, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.1.100"
 MOCK_HOST_2 = "192.168.1.101"

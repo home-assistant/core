@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries, setup
 from homeassistant.components.kitchen_sink import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 ENTITY_IR_EMITTER = "infrared.ir_blaster_infrared_emitter"
 ENTITY_IR_RECEIVER = "infrared.ir_blaster_infrared_receiver"

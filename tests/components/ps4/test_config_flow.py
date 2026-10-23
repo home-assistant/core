@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from pyps4_2ndscreen.errors import CredentialTimeout
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components import ps4
@@ -25,8 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util import location as location_util
-
-from tests.common import MockConfigEntry
 
 MOCK_TITLE = "PlayStation 4"
 MOCK_CODE = 12345678

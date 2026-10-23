@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
 from aussiebb.asyncio import AuthenticationException
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.aussie_broadband.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .common import FAKE_DATA, FAKE_SERVICES
-
-from tests.common import MockConfigEntry
 
 TEST_USERNAME = FAKE_DATA[CONF_USERNAME]
 TEST_PASSWORD = FAKE_DATA[CONF_PASSWORD]

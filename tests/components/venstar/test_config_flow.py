@@ -3,6 +3,8 @@
 import logging
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.venstar.const import DOMAIN
 from homeassistant.const import (
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import VenstarColorTouchMock
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

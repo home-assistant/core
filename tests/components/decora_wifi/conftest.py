@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.decora_wifi.const import DOMAIN
 
 from .const import TEST_USER_ID, TEST_USERNAME, USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 def _build_mock_switch(

@@ -5,13 +5,12 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.my_pv.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 from . import ELWA2_SERIAL_NUMBER
-
-from tests.common import MockConfigEntry
 
 SETUP_CONFIGURATION = {
     "bstmode": {

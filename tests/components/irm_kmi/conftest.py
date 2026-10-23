@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.irm_kmi.const import DOMAIN
 from homeassistant.const import (
@@ -14,8 +15,6 @@ from homeassistant.const import (
 )
 
 from .const import CURRENT_WEATHER
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

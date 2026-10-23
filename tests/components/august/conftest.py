@@ -4,6 +4,7 @@ import base64
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from yalexs.manager.ratelimit import _RateLimitChecker
 
 from homeassistant.components.application_credentials import (
@@ -14,8 +15,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.august.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_fixture
 
 USER_ID = "a76c25e5-49aa-4c14-cd0c-48a6931e2081"
 CLIENT_ID = "1"

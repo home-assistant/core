@@ -5,6 +5,7 @@ from socket import AddressFamily  # pylint: disable=no-name-in-module
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from wiim.consts import AudioOutputHwMode, InputMode, LoopMode, PlayingStatus
 from wiim.controller import WiimController
 from wiim.models import (
@@ -19,8 +20,6 @@ from wiim.models import (
 
 from homeassistant.components.wiim import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

@@ -1,10 +1,10 @@
 """Tests for rpi_power integration."""
 
+from pytest_homeassistant.common import MockConfigEntry, patch
+
 from homeassistant.components.rpi_power.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, patch
 
 
 async def test_entry_setup_unload(hass: HomeAssistant) -> None:

@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.azure_data_explorer.const import (
     CONF_FILTER,
@@ -25,8 +26,6 @@ from .const import (
     BASE_CONFIG_FULL,
     BASIC_OPTIONS,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 

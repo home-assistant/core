@@ -4,6 +4,8 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.ws66i.const import (
     CONF_SOURCE_1,
@@ -21,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .test_media_player import AttrDict
-
-from tests.common import MockConfigEntry
 
 CONFIG = {CONF_IP_ADDRESS: "1.1.1.1"}
 

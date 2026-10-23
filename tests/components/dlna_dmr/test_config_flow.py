@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 from async_upnp_client.client import UpnpDevice
 from async_upnp_client.exceptions import UpnpError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.dlna_dmr.const import (
@@ -39,8 +40,6 @@ from .conftest import (
     MOCK_MAC_ADDRESS,
     NEW_DEVICE_LOCATION,
 )
-
-from tests.common import MockConfigEntry
 
 # Auto-use the domain_data_mock and dmr_device_mock fixtures for every test
 pytestmark = [

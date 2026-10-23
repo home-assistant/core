@@ -5,6 +5,15 @@ from unittest.mock import MagicMock
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
 
 from homeassistant.components import notify
 from homeassistant.components.notify import (
@@ -18,16 +27,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
 
 TEST_KWARGS = {notify.ATTR_MESSAGE: "Test message"}
 TEST_KWARGS_TITLE = {notify.ATTR_MESSAGE: "Test message", notify.ATTR_TITLE: "My title"}

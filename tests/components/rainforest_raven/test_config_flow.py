@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from aioraven.device import RAVEnConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.rainforest_raven.const import DOMAIN
 from homeassistant.components.usb import USBDevice
@@ -15,8 +16,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import create_mock_device
 from .const import DEVICE_NAME, DISCOVERY_INFO, METER_INFO, METER_LIST
-
-from tests.common import MockConfigEntry
 
 UNIQUE_ID = "04B4:0003_1234_Rainforest Automation, Inc._RFA-Z105-2 HW2.7.3 EMU-2"
 

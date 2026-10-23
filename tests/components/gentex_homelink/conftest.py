@@ -8,13 +8,12 @@ from unittest.mock import AsyncMock, patch
 from homelink.model.button import Button
 import homelink.model.device
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.plugins import AiohttpClientMocker
 
 from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN_URL
 
 from . import TEST_UNIQUE_ID
-
-from tests.common import MockConfigEntry
-from tests.conftest import AiohttpClientMocker
 
 
 @pytest.fixture

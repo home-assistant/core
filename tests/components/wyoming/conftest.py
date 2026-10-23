@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import stt
 from homeassistant.components.wyoming import DOMAIN
@@ -22,8 +23,6 @@ from . import (
     TTS_STREAMING_INFO,
     WAKE_WORD_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

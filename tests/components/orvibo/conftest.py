@@ -9,11 +9,10 @@ with patch("socket.socket.bind"):
     import orvibo.s20  # noqa: F401
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.orvibo.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

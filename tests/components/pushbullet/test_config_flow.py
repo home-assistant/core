@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pushbullet import InvalidKeyError, PushbulletError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.pushbullet.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_API_KEY: "MYAPIKEY"}
 

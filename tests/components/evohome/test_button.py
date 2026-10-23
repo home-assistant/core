@@ -4,9 +4,9 @@ All evohome systems have a controller and at least one zone.
 """
 
 from collections.abc import Callable
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from evohomeasync2 import ControlSystem, EvohomeClient, HotWater, Zone
+from evohomeasync2 import ControlSystem, HotWater, Zone
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -19,22 +19,18 @@ from .const import TEST_INSTALLS
 
 @pytest.fixture
 def system_button_id(
-    evohome: MagicMock, entity_id: Callable[[Platform, str], str]
+    tcs: ControlSystem, entity_id: Callable[[Platform, str], str]
 ) -> str:
     """Return the entity_id of the system reset button."""
-
-    evo: EvohomeClient = evohome.return_value
-    tcs: ControlSystem = evo.tcs
 
     return entity_id(Platform.BUTTON, f"{tcs.id}_reset")
 
 
 @pytest.fixture
-def dhw_button_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str:
+def dhw_button_id(tcs: ControlSystem, entity_id: Callable[[Platform, str], str]) -> str:
     """Return the entity_id of the DHW reset button."""
 
-    evo: EvohomeClient = evohome.return_value
-    dhw: HotWater | None = evo.tcs.hotwater
+    dhw: HotWater | None = tcs.hotwater
 
     assert dhw is not None, "Fixture has no DHW zone"
 
@@ -43,14 +39,11 @@ def dhw_button_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str])
 
 @pytest.fixture
 def zone_button_id(
-    evohome: MagicMock, entity_id: Callable[[Platform, str], str]
+    tcs: ControlSystem, entity_id: Callable[[Platform, str], str]
 ) -> str:
     """Return the entity_id of the first zone's reset button."""
 
-    evo: EvohomeClient = evohome.return_value
-    tcs: ControlSystem = evo.tcs
-
-    zone: Zone = evo.tcs.zones[0]
+    zone: Zone = tcs.zones[0]
 
     return entity_id(
         Platform.BUTTON,

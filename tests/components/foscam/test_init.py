@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.foscam.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -9,8 +11,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_mock_foscam_camera
 from .const import ENTRY_ID, VALID_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def test_unique_id_new_entry(

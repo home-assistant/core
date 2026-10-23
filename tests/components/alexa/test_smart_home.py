@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
@@ -35,9 +37,6 @@ from .test_common import (
     get_new_request,
     reported_properties,
 )
-
-from tests.common import async_capture_events, async_mock_service
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture

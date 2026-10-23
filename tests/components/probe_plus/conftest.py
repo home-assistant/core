@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 from pyprobeplus.parsers.base import ProbePlusData, ProbeReading
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.probe_plus.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

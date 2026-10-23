@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import httpx
 from openai import AuthenticationError, OpenAIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_open_router import (
     OpenRouterAuthenticationError,
     OpenRouterConnectionError,
@@ -22,8 +23,6 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_migrate_entry_from_v1_1_to_v1_4(

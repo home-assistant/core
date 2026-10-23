@@ -3,6 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
+from pytest_homeassistant.common import ANY, AsyncMock, MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from watergate_local_api import WatergateApiException
 
 from homeassistant.components.valve import ValveState
@@ -12,9 +14,6 @@ from homeassistant.core import HomeAssistant
 
 from . import init_integration
 from .const import MOCK_WEBHOOK_ID
-
-from tests.common import ANY, AsyncMock, MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_async_setup_entry(

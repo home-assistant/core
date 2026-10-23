@@ -11,11 +11,6 @@ from uiprotect.data import Bootstrap
 from uiprotect.data.public_devices import PublicDeviceModel, PublicNVR
 from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 
-# Import the test_util.anonymize module from the uiprotect package
-# in __init__ to ensure it gets imported in the executor since the
-# diagnostics module will not be imported in the executor.
-from uiprotect.test_util.anonymize import anonymize_data  # noqa: F401
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant

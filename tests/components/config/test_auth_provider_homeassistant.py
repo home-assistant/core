@@ -3,13 +3,12 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import CLIENT_ID, MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.auth.providers import homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 from homeassistant.core import HomeAssistant
-
-from tests.common import CLIENT_ID, MockUser
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

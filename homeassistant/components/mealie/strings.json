@@ -123,6 +123,9 @@
     "could_not_import_recipe": {
       "message": "Mealie could not import the recipe from the URL."
     },
+    "could_not_parse_ingredient": {
+      "message": "Mealie could not parse the ingredient."
+    },
     "delete_item_error": {
       "message": "An error occurred deleting an item in {shopping_list_name}."
     },
@@ -288,6 +291,20 @@
         }
       },
       "name": "Import recipe"
+    },
+    "parse_ingredient": {
+      "description": "Parses an ingredient from Mealie using the recognition method set within options, attempting to find matches in your food items and identify quantities and units.",
+      "fields": {
+        "config_entry_id": {
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]",
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]"
+        },
+        "ingredient": {
+          "description": "The ingredient to find matches for in your food items and identify quantities and units.",
+          "name": "Ingredient"
+        }
+      },
+      "name": "Parse ingredient"
     },
     "set_mealplan": {
       "description": "Sets a mealplan for a specific date",

@@ -11,6 +11,7 @@ from deebot_client.device import Device
 from deebot_client.exceptions import ApiError
 from deebot_client.models import AccountCredentials, Credentials
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from sucks import EventEmitter
 
 from homeassistant.components.ecovacs import PLATFORMS
@@ -20,8 +21,6 @@ from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CLOUD_DEVICE_ID, STORED_ENTRY_DATA_CLOUD
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

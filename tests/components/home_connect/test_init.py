@@ -13,6 +13,8 @@ from aiohomeconnect.model.error import (
 )
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.home_connect.const import DOMAIN
@@ -37,9 +39,6 @@ from .conftest import (
     FAKE_REFRESH_TOKEN,
     SERVER_ACCESS_TOKEN,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_entry_setup(

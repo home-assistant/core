@@ -7,6 +7,14 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    async_get_device_automations,
+)
+from pytest_homeassistant.components.mqtt.common import help_test_unload_config_entry
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant.components import automation, mqtt
@@ -25,16 +33,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from .common import help_test_unload_config_entry
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-    async_get_device_automations,
-)
-from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
 
 
 @pytest.mark.parametrize(

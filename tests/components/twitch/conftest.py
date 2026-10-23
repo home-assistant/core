@@ -5,6 +5,8 @@ import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from twitchAPI.object.api import FollowedChannel, Stream, TwitchUser, UserSubscription
 
 from homeassistant.components.application_credentials import (
@@ -17,9 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import TwitchIterObject, get_generator
-
-from tests.common import MockConfigEntry, load_json_object_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"

@@ -9,6 +9,7 @@ from unittest.mock import call, patch
 from broadlink_async.exceptions import BroadlinkException, NetworkTimeoutError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.remote import CODE_SAVE_DELAY, FLAG_SAVE_DELAY
@@ -33,8 +34,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import BroadlinkDevice, MockSetup, get_device
-
-from tests.common import async_fire_time_changed
 
 REMOTE_DEVICES = ["Entrance", "Living Room", "Office", "Garage", "Study"]
 

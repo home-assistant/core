@@ -13,12 +13,15 @@ from homewizard_energy.models import (
     Token,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    get_fixture_path,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, get_fixture_path, load_json_object_fixture
 
 
 @pytest.fixture

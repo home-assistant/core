@@ -4,11 +4,10 @@ from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.androidtv_remote.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

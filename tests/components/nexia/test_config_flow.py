@@ -8,14 +8,13 @@ import aiohttp
 from nexia.const import BRAND_ASAIR, BRAND_NEXIA
 from nexia.home import NexiaHome
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nexia.const import CONF_BRAND, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_BRAND: BRAND_NEXIA,

@@ -11,6 +11,7 @@ from pypaperless.exceptions import (
     PaperlessInvalidTokenError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, patch
 
 from homeassistant import config_entries
 from homeassistant.components.paperless_ngx.const import DOMAIN
@@ -20,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import USER_INPUT_ONE, USER_INPUT_REAUTH, USER_INPUT_TWO
-
-from tests.common import MockConfigEntry, patch
 
 
 @pytest.fixture(autouse=True)

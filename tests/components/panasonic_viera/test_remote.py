@@ -3,6 +3,7 @@
 from unittest.mock import Mock, call
 
 from panasonic_viera import Keys, SOAPError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.panasonic_viera.const import ATTR_UDN, DOMAIN
 from homeassistant.components.remote import (
@@ -14,8 +15,6 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_CONFIG_DATA, MOCK_DEVICE_INFO, MOCK_ENCRYPTION_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def setup_panasonic_viera(hass: HomeAssistant) -> None:

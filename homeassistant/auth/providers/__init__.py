@@ -107,7 +107,10 @@ class AuthProvider:
 
     @callback
     def async_can_start_login(self, context: AuthFlowContext) -> bool:
-        """Return if the login screen may offer this provider for the context."""
+        """Return if a login flow may be started with this provider for the context.
+
+        The login screen only offers the providers for which this returns True.
+        """
         return True
 
     async def async_get_or_create_credentials(

@@ -3,6 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 from telegram import User
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
@@ -28,9 +30,6 @@ from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, pytest
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture

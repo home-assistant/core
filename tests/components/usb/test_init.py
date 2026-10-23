@@ -7,6 +7,15 @@ import os
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    MockUser,
+    async_fire_time_changed,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from serialx import SerialPortInfo, create_serial_connection, serial_for_url
 
 from homeassistant import config_entries
@@ -22,16 +31,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import patch_scanned_serial_ports
-
-from tests.common import (
-    MockModule,
-    MockUser,
-    async_fire_time_changed,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import WebSocketGenerator
 
 conbee_device = USBDevice(
     device="/dev/cu.usbmodemDE24338801",

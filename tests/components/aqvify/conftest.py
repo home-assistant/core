@@ -11,15 +11,14 @@ from pyaqvify import (
     AqvifyHourAggregatedValueList,
 )
 import pytest
-
-from homeassistant.components.aqvify.const import DOMAIN
-from homeassistant.core import HomeAssistant
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     async_load_json_array_fixture,
     async_load_json_object_fixture,
 )
+
+from homeassistant.components.aqvify.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture

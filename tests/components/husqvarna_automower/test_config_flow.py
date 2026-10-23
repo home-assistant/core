@@ -5,6 +5,9 @@ from unittest.mock import AsyncMock, patch
 from aioautomower.const import API_BASE_URL
 from aioautomower.session import AutomowerEndpoint
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.husqvarna_automower.const import (
@@ -19,10 +22,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_integration
 from .const import CLIENT_ID, USER_ID
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(

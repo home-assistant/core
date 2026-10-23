@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock
 from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_unload_entry(

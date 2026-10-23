@@ -14,6 +14,7 @@ from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
 from probatio import InInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from zwave_js_server.exceptions import ConnectionFailed, FailedCommand
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
@@ -50,8 +51,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .common import TEST_SENSITIVE_NETWORK_KEY
-
-from tests.common import MockConfigEntry, async_capture_events
 
 ADDON_DISCOVERY_INFO = {
     "addon": "Z-Wave JS",

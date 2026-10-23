@@ -4,6 +4,7 @@ from collections.abc import Iterator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tesla_fleet_api.exceptions import InvalidToken, MissingToken, TeslaFleetError
 
 from homeassistant import config_entries
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .common import ERROR_CONNECTION, TEST_CONFIG, TEST_STATE_OF_ALL_VEHICLES
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

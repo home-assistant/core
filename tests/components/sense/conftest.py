@@ -5,6 +5,7 @@ import datetime as dt
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sense_energy import Scale
 
 from homeassistant.components.sense.binary_sensor import SenseDevice
@@ -22,8 +23,6 @@ from .const import (
     MOCK_CONFIG,
     MONITOR_ID,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

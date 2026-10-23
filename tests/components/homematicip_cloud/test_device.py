@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 from homematicip.base.enums import EventType
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
-
-from tests.common import MockConfigEntry
 
 
 async def test_hmip_load_all_supported_devices(

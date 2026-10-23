@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.splunk.const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 from homeassistant.const import (
@@ -13,8 +14,6 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_VERIFY_SSL,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

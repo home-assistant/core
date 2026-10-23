@@ -9,14 +9,13 @@ from actron_neo_api.models.settings import ActronAirUserAirconSettings
 from actron_neo_api.models.status import ActronAirStatus
 from actron_neo_api.models.system import ActronAirACSystem, ActronAirSystemInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.actron_air.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

@@ -10,6 +10,16 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohasupervisor import SupervisorBadRequestError
 import pytest
+from pytest_homeassistant.common import (
+    CLIENT_ID,
+    CLIENT_REDIRECT_URI,
+    MockModule,
+    MockUser,
+    mock_integration,
+    mock_platform,
+    register_auth_provider,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import bootstrap
 from homeassistant.components import hassio, onboarding, person
@@ -27,17 +37,6 @@ from homeassistant.setup import (
 )
 
 from . import mock_storage
-
-from tests.common import (
-    CLIENT_ID,
-    CLIENT_REDIRECT_URI,
-    MockModule,
-    MockUser,
-    mock_integration,
-    mock_platform,
-    register_auth_provider,
-)
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)

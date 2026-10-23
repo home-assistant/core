@@ -20,6 +20,7 @@ from aioesphomeapi import (
 )
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.esphome import config_flow, dashboard
@@ -55,8 +56,6 @@ from .conftest import (
     MockESPHomeDeviceType,
     MockGenericDeviceEntryType,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_retrieve_encryption_key_from_storage_with_device_mac(

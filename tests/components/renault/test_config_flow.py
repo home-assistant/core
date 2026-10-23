@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_fixture,
+    get_schema_suggested_value,
+)
 from renault_api.gigya.exceptions import (
     GigyaException,
     InvalidCredentialsException,
@@ -25,8 +30,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import aiohttp_client
 
 from .const import MOCK_ACCOUNT_ID, MOCK_CONFIG, MOCK_DEVICE_IDS, MOCK_LOGIN_TOKEN
-
-from tests.common import MockConfigEntry, async_load_fixture, get_schema_suggested_value
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

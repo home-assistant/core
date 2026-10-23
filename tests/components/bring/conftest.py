@@ -13,11 +13,10 @@ from bring_api import (
     BringUsersResponse,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import MockConfigEntry, load_fixture
 
 EMAIL = "test-email"
 PASSWORD = "test-password"

@@ -10,6 +10,7 @@ from pyiskra.exceptions import (
     NotAuthorised,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.iskra import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -34,8 +35,6 @@ from .const import (
     SG_MODEL,
     USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

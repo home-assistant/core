@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.wallbox.const import (
     CHARGER_ADDED_ENERGY_KEY,
@@ -23,8 +25,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import http_403_error, http_404_error, setup_integration
 from .const import WALLBOX_AUTHORISATION_RESPONSE_UNAUTHORISED
-
-from tests.common import MockConfigEntry
 
 test_response = {
     CHARGER_CHARGING_POWER_KEY: 0,

@@ -12,6 +12,12 @@ from unittest.mock import Mock, patch
 from b2sdk._internal.raw_simulator import BucketSimulator
 from b2sdk.v2.exception import B2Error
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.backblaze_b2.backup import (
     _parse_metadata,
@@ -27,9 +33,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import BACKUP_METADATA, TEST_BACKUP
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

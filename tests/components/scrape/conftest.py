@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.rest.data import DEFAULT_TIMEOUT  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.rest.schema import DEFAULT_METHOD, DEFAULT_VERIFY_SSL  # pylint: disable=home-assistant-component-root-import
@@ -25,8 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import MockRestData
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

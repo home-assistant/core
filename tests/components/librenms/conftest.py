@@ -6,12 +6,11 @@ from unittest.mock import AsyncMock, patch
 from aiolibrenms.devices import LibrenmsDevices
 from aiolibrenms.system import LibrenmsSystem
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.librenms.const import DOMAIN
 
 from .const import MOCK_CONFIG_ENTRY_DATA, MOCK_DEVICES_DATA, MOCK_SYSTEM_DATA
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

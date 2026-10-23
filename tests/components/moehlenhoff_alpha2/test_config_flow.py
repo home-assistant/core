@@ -3,14 +3,14 @@
 from functools import partialmethod
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.moehlenhoff_alpha2.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_BASE_HOST, mock_update_data
-
-from tests.common import MockConfigEntry
 
 
 async def _assert_recovers(hass: HomeAssistant, flow_id: str) -> None:

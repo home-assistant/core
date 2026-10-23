@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.influxdb import (
@@ -42,8 +43,6 @@ from . import (
     _get_write_api_mock_v1,
     _get_write_api_mock_v2,
 )
-
-from tests.common import MockConfigEntry
 
 PATH_FIXTURE = Path("/influxdb.crt")
 FIXTURE_UPLOAD_UUID = "0123456789abcdef0123456789abcdef"

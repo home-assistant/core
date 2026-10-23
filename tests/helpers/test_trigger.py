@@ -12,6 +12,14 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -99,15 +107,6 @@ from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.yaml.loader import parse_yaml
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    async_fire_time_changed,
-    mock_integration,
-    mock_platform,
-)
 
 
 def _reported_reasons(

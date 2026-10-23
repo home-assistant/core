@@ -5,6 +5,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from satel_integra import SatelFirmwareVersion, SatelPanelInfo, SatelPanelModel
 
 from homeassistant.components.satel_integra.config_flow import SatelConfigFlow
@@ -21,8 +22,6 @@ from . import (
     MOCK_ZONE_TEMPERATURE_SUBENTRY,
     get_monitor_callbacks,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

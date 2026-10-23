@@ -12,6 +12,8 @@ from caldav.calendarobjectresource import Event
 from caldav.lib.url import URL
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.caldav.api import async_get_calendars
 from homeassistant.components.calendar import CalendarEntityFeature
@@ -19,9 +21,6 @@ from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 EVENTS = [
     """BEGIN:VCALENDAR

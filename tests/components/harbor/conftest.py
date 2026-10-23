@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.harbor.const import (
     CONF_CERT_PEM,
@@ -15,8 +16,6 @@ from homeassistant.components.harbor.const import (
 )
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 SERIAL = "1234567890"
 CERT_PEM = "-----BEGIN CERTIFICATE-----\nMIIBdummy\n-----END CERTIFICATE-----"

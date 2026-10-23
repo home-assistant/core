@@ -24,6 +24,8 @@ from aiohasupervisor.models import (
     UnsupportedReason,
 )
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.hassio.const import DOMAIN, HASSIO_ISSUES_UPDATE_INTERVAL
 from homeassistant.components.hassio.coordinator import (
@@ -38,9 +40,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .test_init import MOCK_ENVIRON
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

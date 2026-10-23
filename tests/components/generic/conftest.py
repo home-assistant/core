@@ -6,14 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from PIL import Image
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import respx
 
 from homeassistant import config_entries
 from homeassistant.components.generic.const import DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(scope="package")

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from google_air_quality_api.model import AirQualityCurrentConditionsData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.google_air_quality import CONF_REFERRER
 from homeassistant.components.google_air_quality.const import (
@@ -22,8 +23,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 USER_IDENTIFIER = "user-identifier-1"
 CONFIG_ENTRY_ID = "api-key-1234"

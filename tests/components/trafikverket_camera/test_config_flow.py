@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytrafikverket import (
     CameraInfoModel,
     InvalidAuthentication,
@@ -15,8 +16,6 @@ from homeassistant.components.trafikverket_camera.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_LOCATION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, get_camera: CameraInfoModel) -> None:

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pythonkuma import (
     UptimeKumaAuthenticationException,
     UptimeKumaConnectionException,
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import ADDON_SERVICE_INFO
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_pythonkuma")

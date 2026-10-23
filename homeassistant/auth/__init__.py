@@ -18,7 +18,12 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.data_entry_flow import FlowHandler, FlowManager, FlowResultType
+from homeassistant.data_entry_flow import (
+    FlowHandler,
+    FlowManager,
+    FlowResultType,
+    UnknownHandler,
+)
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -128,8 +133,12 @@ class AuthManagerFlowManager(
     ) -> LoginFlow[Any]:
         """Create a login flow."""
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
-        if not auth_provider:
-            raise KeyError(f"Unknown auth provider {handler_key}")
+        # Not offered on the login screen is answered like not configured, so
+        # it doesn't reveal which providers are set up.
+        if not auth_provider or not auth_provider.async_can_start_login(
+            context or AuthFlowContext()
+        ):
+            raise UnknownHandler
         return await auth_provider.async_login_flow(context)
 
     @override

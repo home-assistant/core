@@ -18,6 +18,7 @@ from aioshelly.const import MODEL_1, MODEL_25, MODEL_PLUS_2PM
 from aioshelly.exceptions import NotInitialized
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
@@ -26,8 +27,6 @@ from homeassistant.components.shelly.const import (
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_MAC
-
-from tests.common import async_capture_events
 
 MOCK_SETTINGS = {
     "name": "Test name",

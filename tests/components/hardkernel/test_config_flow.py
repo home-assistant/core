@@ -2,11 +2,11 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
+
 from homeassistant.components.hardkernel.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
 async def test_config_flow(hass: HomeAssistant) -> None:

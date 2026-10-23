@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant import config_entries
 from homeassistant.components.private_ble_device import const
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 def assert_form_error(result: FlowResult, key: str, value: str) -> None:

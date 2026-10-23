@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from chess_com_api import Player, PlayerStats
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.chess_com.const import DOMAIN
 from homeassistant.const import CONF_USERNAME
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

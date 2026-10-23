@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from vizaio import (
     AppConfig,
     ChargingStatus,
@@ -38,8 +39,6 @@ from .const import (
     audio_setting,
     state_extended,
 )
-
-from tests.common import MockConfigEntry
 
 
 def get_mock_inputs(input_list: list[str]) -> list[InputInfo]:

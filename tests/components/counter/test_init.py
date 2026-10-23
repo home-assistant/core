@@ -4,6 +4,8 @@ import logging
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockUser, mock_restore_cache
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.counter import (
     ATTR_INITIAL,
@@ -35,9 +37,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import async_decrement, async_increment, async_reset
-
-from tests.common import MockUser, mock_restore_cache
-from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 

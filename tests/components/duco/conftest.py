@@ -30,14 +30,13 @@ from duco_connectivity import (
     VentilationTemperatureInfo,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.duco.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, load_json_array_fixture
 
 TEST_HOST = "192.168.1.100"
 TEST_MAC = "aa:bb:cc:dd:ee:ff"

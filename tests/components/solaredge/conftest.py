@@ -5,13 +5,12 @@ from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from solaredge_web import EnergyData
 
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 SITE_ID = "1a2b3c4d5e6f7g8h"
 API_KEY = "a1b2c3d4e5f6g7h8"

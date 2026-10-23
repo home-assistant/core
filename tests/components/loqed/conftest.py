@@ -7,17 +7,16 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from loqedAPI import loqed
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
+)
 
 from homeassistant.components.loqed.const import CONF_CLOUDHOOK_URL, DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_array_fixture,
-    async_load_json_object_fixture,
-)
 
 type PatchLockCreationFlow = Callable[[dict[str, Any], loqed.Lock, str], Any]
 

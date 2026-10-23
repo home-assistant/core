@@ -2,7 +2,10 @@
 
 from unittest.mock import patch
 
-from tests.common import load_json_array_fixture, load_json_object_fixture
+from pytest_homeassistant.common import (
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 SETUP_ENTRY_PATCHER = patch(
     "homeassistant.components.starlink.async_setup_entry", return_value=True

@@ -16,11 +16,14 @@ from aiostreammagic.models import (
     Update,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_fixture,
+    load_json_array_fixture,
+)
 
 from homeassistant.components.cambridge_audio.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry, load_fixture, load_json_array_fixture
 
 
 @pytest.fixture

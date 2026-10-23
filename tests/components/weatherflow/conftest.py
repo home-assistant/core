@@ -5,13 +5,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from pyweatherflowudp.aioudp import LocalEndpoint
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED
 from pyweatherflowudp.device import WeatherFlowDevice
 
 from homeassistant.components.weatherflow.const import DOMAIN
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

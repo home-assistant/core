@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from bleak import BleakError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.ld2410_ble.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import LD2410_BLE_DISCOVERY_INFO, NOT_LD2410_BLE_DISCOVERY_INFO
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_step_success(hass: HomeAssistant) -> None:

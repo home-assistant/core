@@ -4,13 +4,12 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pycfdns
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-
-from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
     CONF_API_TOKEN: "mock-api-token",

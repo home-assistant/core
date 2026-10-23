@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from aiowaqi import WAQIAuthenticationError, WAQIError
 import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.waqi import DOMAIN
 from homeassistant.components.waqi.const import CONF_STATION_NUMBER
@@ -21,8 +22,6 @@ from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_failed(

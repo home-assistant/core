@@ -24,6 +24,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode
 from tesla_fleet_api.exceptions import (
@@ -140,8 +141,6 @@ from .const import (
     VEHICLE_DATA_ASLEEP,
     VIN,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 LIVE_STATUS_ENTITY_ID = "sensor.energy_site_battery_power"
 

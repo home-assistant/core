@@ -17,6 +17,7 @@ from fressnapftracker import (
     UserToken,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fressnapf_tracker.const import (
     CONF_PHONE_NUMBER,
@@ -25,8 +26,6 @@ from homeassistant.components.fressnapf_tracker.const import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_PHONE_NUMBER = "+491234567890"
 MOCK_USER_ID = 12345

@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, patch
 
 from jaraco.abode.helpers import urls as URL
 import pytest
+from pytest_homeassistant.common import load_fixture
 from requests_mock import Mocker
 
-from tests.common import load_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 

@@ -19,13 +19,12 @@ from asyncsleepiq import (
     SleepIQSleeper,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sleepiq import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 BED_ID = "123456"
 BED_NAME = "Test Bed"

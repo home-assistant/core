@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.volkszaehler.const import DOMAIN, SUBENTRY_TYPE_CHANNEL
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_UUID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

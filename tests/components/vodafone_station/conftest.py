@@ -5,6 +5,13 @@ from datetime import UTC, datetime
 from aiovodafone.api import VodafoneStationDevice
 from aiovodafone.const import WIFI_DATA
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    Generator,
+    MockConfigEntry,
+    load_json_object_fixture,
+    patch,
+)
 from yarl import URL
 
 from homeassistant.components.vodafone_station.const import (
@@ -25,14 +32,6 @@ from .const import (
     TEST_URL,
     TEST_USERNAME,
     TEST_WIFI_DATA,
-)
-
-from tests.common import (
-    AsyncMock,
-    Generator,
-    MockConfigEntry,
-    load_json_object_fixture,
-    patch,
 )
 
 

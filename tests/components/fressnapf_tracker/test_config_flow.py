@@ -9,6 +9,7 @@ from fressnapftracker import (
     SmsCodeResponse,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.fressnapf_tracker.const import (
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_ACCESS_TOKEN, MOCK_PHONE_NUMBER, MOCK_USER_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_auth_client")

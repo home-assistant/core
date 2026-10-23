@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 import zoneinfo
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.device import Device
@@ -46,8 +47,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .test_light import LIGHT_ON_OFF
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 DATA_RADIO_TYPE = "ezsp"
 DATA_PORT_PATH = "/dev/serial/by-id/FTDI_USB__-__Serial_Cable_12345678-if00-port0"

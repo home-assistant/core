@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.envertech_evt800.const import DOMAIN
 
 from . import MOCK_DEVICE, MOCK_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

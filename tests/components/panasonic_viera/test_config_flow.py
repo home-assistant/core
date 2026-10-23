@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from panasonic_viera import SOAPError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
@@ -25,8 +26,6 @@ from .conftest import (
     MOCK_ENCRYPTION_DATA,
     get_mock_remote,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from simplefin4py import FinancialData
 from simplefin4py.exceptions import SimpleFinInvalidClaimTokenError
 
 from homeassistant.components.simplefin import CONF_ACCESS_URL
 from homeassistant.components.simplefin.const import DOMAIN
-
-from tests.common import MockConfigEntry, load_fixture
 
 MOCK_ACCESS_URL = "https://i:am@yomama.house.com"
 

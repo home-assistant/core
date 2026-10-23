@@ -22,15 +22,14 @@ from pyportainer.models.portainer import (
 from pyportainer.models.stacks import Stack
 from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
-
-from homeassistant.components.portainer.const import DOMAIN
-from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_array_fixture,
     load_json_value_fixture,
 )
+
+from homeassistant.components.portainer.const import DOMAIN
+from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
 MOCK_TEST_CONFIG = {
     CONF_URL: "https://127.0.0.1:9000/",

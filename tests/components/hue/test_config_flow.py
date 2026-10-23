@@ -7,6 +7,8 @@ from aiohue.discovery import URL_NUPNP
 from aiohue.errors import AiohueException, LinkButtonNotPressed
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker, ClientError
 
 from homeassistant import config_entries
 from homeassistant.components.hue import DOMAIN, config_flow, const
@@ -18,9 +20,6 @@ from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, ClientError
 
 
 @pytest.fixture(name="hue_setup", autouse=True)

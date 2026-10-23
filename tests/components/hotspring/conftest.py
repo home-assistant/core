@@ -30,12 +30,11 @@ from hotspring import (
 )
 from hotspring.models import SpaTestData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hotspring.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

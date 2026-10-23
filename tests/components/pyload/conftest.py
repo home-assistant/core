@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyloadapi.types import StatusServerResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pyload.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import (
@@ -18,8 +19,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_URL: "https://pyload.local:8000/prefix",

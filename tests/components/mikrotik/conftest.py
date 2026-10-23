@@ -4,10 +4,9 @@ from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from . import create_mock_config_entry
-
-from tests.common import MockConfigEntry
 
 type MockConfigEntryFactory = Callable[..., MockConfigEntry]
 

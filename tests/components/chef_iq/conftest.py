@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.chef_iq.const import DOMAIN
 
 from . import ADDRESS
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

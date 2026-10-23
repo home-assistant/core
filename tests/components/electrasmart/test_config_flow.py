@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from json import loads
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+
 from homeassistant import config_entries
 from homeassistant.components.electrasmart.config_flow import ElectraApiError
 from homeassistant.components.electrasmart.const import (
@@ -15,8 +17,6 @@ from homeassistant.components.electrasmart.const import (
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 
 @asynccontextmanager

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from goodwe import InverterError
 from goodwe.const import GOODWE_UDP_PORT
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.goodwe.const import (
     CONF_MODEL_FAMILY,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_SERIAL
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_PORT = GOODWE_UDP_PORT

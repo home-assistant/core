@@ -4,6 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
@@ -26,8 +27,6 @@ from . import (
     FIXTURE_ZEROCONF_INPUT,
     mock_data_listener,
 )
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager

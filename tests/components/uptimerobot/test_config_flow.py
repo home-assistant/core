@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pyuptimerobot import (
     UptimeRobotAuthenticationException,
     UptimeRobotConnectionException,
@@ -26,8 +27,6 @@ from .common import (
     MOCK_UPTIMEROBOT_EMAIL,
     mock_uptimerobot_api_response,
 )
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager

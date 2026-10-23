@@ -11,6 +11,7 @@ from aio_wattwaechter.models import (
     _parse_system_info,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.wattwaechter.const import CONF_FW_VERSION, DOMAIN
 from homeassistant.const import (
@@ -21,8 +22,6 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 MOCK_HOST = "192.168.1.100"
 MOCK_TOKEN = "test-token-123"

@@ -6,15 +6,14 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aioambient import OpenAPI
 import pytest
-
-from homeassistant.components.ambient_network.const import DOMAIN
-from homeassistant.core import HomeAssistant
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_array_fixture,
     load_json_object_fixture,
 )
+
+from homeassistant.components.ambient_network.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture

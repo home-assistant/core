@@ -1,9 +1,9 @@
 """Constants for the teslemetry tests."""
 
+from pytest_homeassistant.common import load_json_object_fixture
+
 from homeassistant.components.teslemetry.const import DOMAIN, TeslemetryState
 from homeassistant.const import CONF_ACCESS_TOKEN
-
-from tests.common import load_json_object_fixture
 
 UNIQUE_ID = "abc-123"
 CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}

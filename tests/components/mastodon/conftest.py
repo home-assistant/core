@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from mastodon.Mastodon import Account, InstanceV2, MediaAttachment, Status
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.mastodon.const import CONF_BASE_URL, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture

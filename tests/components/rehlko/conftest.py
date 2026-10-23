@@ -5,12 +5,11 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_value_fixture
 
 from homeassistant.components.rehlko import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_value_fixture
 
 TEST_EMAIL = "MyEmail@email.com"
 TEST_PASSWORD = "password"

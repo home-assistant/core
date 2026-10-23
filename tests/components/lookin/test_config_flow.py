@@ -5,6 +5,7 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 from aiolookin import NoUsableService
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.lookin.const import DOMAIN
@@ -21,8 +22,6 @@ from . import (
     ZEROCONF_DATA,
     _patch_get_info,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_manual_setup(hass: HomeAssistant) -> None:

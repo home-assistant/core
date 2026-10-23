@@ -14,13 +14,12 @@ from kaco_modbus.testing import BLUEPLANET_86TL3
 from modbus_connection import ModbusTcpParams
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.kaco_modbus.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_MODEL, MOCK_SERIAL, MOCK_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

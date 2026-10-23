@@ -2,6 +2,7 @@
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.search import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType, JsonValueType
-
-from tests.common import MockConfigEntry, MockUser
 
 
 @pytest.fixture

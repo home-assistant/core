@@ -7,12 +7,11 @@ from unittest.mock import AsyncMock, patch
 from pysuez import AggregatedData, PriceResult
 from pysuez.const import ATTRIBUTION
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.plugins import RecorderInstanceContextManager
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.suez_water.const import CONF_COUNTER_ID, DOMAIN
-
-from tests.common import MockConfigEntry
-from tests.conftest import RecorderInstanceContextManager
 
 MOCK_DATA = {
     "username": "test-username",

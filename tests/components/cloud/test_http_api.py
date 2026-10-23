@@ -28,6 +28,13 @@ from hass_nabucasa.const import STATE_CONNECTED
 from hass_nabucasa.payments_api import PaymentsApiError
 from hass_nabucasa.remote import CertificateStatus
 import pytest
+from pytest_homeassistant.common import mock_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceServer
 
@@ -54,14 +61,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.location import LocationInfo
 
-from tests.common import mock_platform
 from tests.components.google_assistant import MockConfig
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
 
 PIPELINE_DATA_LEGACY = {
     "items": [

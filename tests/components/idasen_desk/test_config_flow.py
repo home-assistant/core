@@ -5,6 +5,7 @@ from unittest.mock import ANY, MagicMock, patch
 from bleak.exc import BleakError
 from idasen_ha.errors import AuthFailedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.idasen_desk.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import IDASEN_DISCOVERY_INFO, NOT_IDASEN_DISCOVERY_INFO
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_step_success(hass: HomeAssistant, mock_desk_api: MagicMock) -> None:

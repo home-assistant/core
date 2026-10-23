@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from bleak import BleakError
 from led_ble import CharacteristicMissingError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.led_ble.const import DOMAIN
@@ -17,8 +18,6 @@ from . import (
     NOT_LED_BLE_DISCOVERY_INFO,
     UNSUPPORTED_LED_BLE_DISCOVERY_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_step_success(hass: HomeAssistant) -> None:

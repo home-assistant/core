@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.homekit.accessories import HomeDriver
@@ -22,8 +23,6 @@ from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component
 
 from .util import PATH_HOMEKIT, async_init_entry
-
-from tests.common import MockConfigEntry
 
 
 def _mock_config_entry_with_options_populated():

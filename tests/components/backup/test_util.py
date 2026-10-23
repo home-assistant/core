@@ -11,6 +11,7 @@ from unittest.mock import Mock, patch
 
 import nacl.bindings.crypto_secretstream as nss
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 import securetar
 
 from homeassistant.components.backup import DOMAIN, AddonInfo, AgentBackup, Folder
@@ -24,8 +25,6 @@ from homeassistant.components.backup.util import (
     validate_password,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import get_fixture_path
 
 
 def _deterministic_init_push(

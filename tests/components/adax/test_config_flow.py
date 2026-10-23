@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import adax_local
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.adax.const import (
@@ -17,8 +18,6 @@ from homeassistant.components.adax.const import (
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_DATA = {
     ACCOUNT_ID: 12345,

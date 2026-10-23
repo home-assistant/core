@@ -18,6 +18,7 @@ from anthropic.pagination import AsyncPage
 from anthropic.types import ModelInfo
 from httpx2 import URL, Request, Response
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
@@ -53,8 +54,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from . import model_list
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(

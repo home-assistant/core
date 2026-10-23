@@ -6,13 +6,12 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.freedompro.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .const import DEVICES, DEVICES_STATE
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

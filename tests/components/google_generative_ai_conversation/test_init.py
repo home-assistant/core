@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import Timeout
 from syrupy.assertion import SnapshotAssertion
 
@@ -32,8 +33,6 @@ from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 
 from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

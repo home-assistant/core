@@ -4,14 +4,13 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from steamloop import FanMode, HoldType, ThermostatState, Zone, ZoneMode
 
 from homeassistant.components.trane import PLATFORMS
 from homeassistant.components.trane.const import CONF_SECRET_KEY, DOMAIN
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.1.100"
 MOCK_SECRET_KEY = "test_secret_key"

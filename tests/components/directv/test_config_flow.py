@@ -4,6 +4,7 @@ import dataclasses
 from unittest.mock import patch
 
 from aiohttp import ClientError as HTTPClientError
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -21,8 +22,6 @@ from . import (
     mock_connection,
     setup_integration,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:

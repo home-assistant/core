@@ -13,6 +13,7 @@ from boschshcpy.exceptions import (
 )
 from boschshcpy.information import SHCInformation
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.bosch_shc.config_flow import write_tls_asset
@@ -20,8 +21,6 @@ from homeassistant.components.bosch_shc.const import CONF_SHC_CERT, CONF_SHC_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 MOCK_SETTINGS = {
     "name": "Test name",

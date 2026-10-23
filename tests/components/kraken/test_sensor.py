@@ -6,6 +6,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from pykrakenapi.pykrakenapi import KrakenAPIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.kraken.const import (
     CONF_TRACKED_ASSET_PAIRS,
@@ -23,8 +24,6 @@ from .const import (
     TICKER_INFORMATION_RESPONSE,
     TRADEABLE_ASSET_PAIR_RESPONSE,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

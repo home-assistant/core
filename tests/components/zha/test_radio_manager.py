@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zha.application.const import RadioType
 from zigpy.backups import BackupManager
 import zigpy.config
@@ -17,8 +18,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
-
-from tests.common import MockConfigEntry
 
 PROBE_FUNCTION_PATH = "zigbee.application.ControllerApplication.probe"
 

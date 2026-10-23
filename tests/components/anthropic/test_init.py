@@ -18,6 +18,7 @@ import attr
 import httpx2
 from httpx2 import URL, Request, Response
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.anthropic.config_flow import AnthropicConfigFlow
 from homeassistant.components.anthropic.const import (
@@ -43,8 +44,6 @@ from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
 
 from . import model_list
-
-from tests.common import MockConfigEntry
 
 MINOR_VERSION = AnthropicConfigFlow.MINOR_VERSION
 

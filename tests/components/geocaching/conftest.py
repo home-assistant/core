@@ -5,10 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from geocachingapi import GeocachingStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.geocaching.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

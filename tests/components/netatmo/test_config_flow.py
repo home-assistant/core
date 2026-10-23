@@ -5,6 +5,9 @@ from unittest.mock import patch
 
 from pyatmo.const import ALL_SCOPES
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, start_reauth_flow
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.netatmo.const import (
@@ -24,10 +27,6 @@ from homeassistant.helpers.service_info.zeroconf import (
 )
 
 from .conftest import CLIENT_ID
-
-from tests.common import MockConfigEntry, start_reauth_flow
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 VALID_CONFIG = {}
 

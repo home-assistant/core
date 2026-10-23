@@ -9,6 +9,7 @@ import tempfile
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant.components import shell_command
 from homeassistant.components.shell_command import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser
 
 
 def mock_process_creator(error: bool = False):

@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from pyhelty import FanMode, HeltyData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.helty.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry
 
 DEVICE_NAME = "VMC Soggiorno"
 HOST = "192.168.20.232"

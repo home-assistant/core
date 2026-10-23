@@ -4,6 +4,9 @@ from unittest.mock import patch
 
 from pysenz import AUTHORIZATION_ENDPOINT, TOKEN_ENDPOINT
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
@@ -17,10 +20,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from .const import CLIENT_ID, CLIENT_SECRET, ENTRY_UNIQUE_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 REDIRECT_PATH = "/auth/external/callback"
 REDIRECT_URL = "https://example.com" + REDIRECT_PATH

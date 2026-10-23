@@ -3,12 +3,11 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import mock_component
 
 from homeassistant.components import ios
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import mock_component
 
 
 @pytest.fixture(autouse=True)

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sharkiq import AylaApi, SharkIqAuthError, SharkIqError
 
 from homeassistant import config_entries
@@ -20,8 +21,6 @@ from .const import (
     TEST_USERNAME,
     UNIQUE_ID,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_success_no_region(hass: HomeAssistant) -> None:

@@ -4,6 +4,7 @@ from unittest.mock import PropertyMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.risco.config_flow import (
@@ -18,8 +19,6 @@ from homeassistant.components.risco.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_SITE_NAME = "test-site-name"
 TEST_CLOUD_DATA = {

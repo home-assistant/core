@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from google.genai._api_client import HttpRequest, HttpResponse
 from google.genai.types import HttpOptionsOrDict
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_USE_GOOGLE_SEARCH_TOOL,
@@ -25,8 +26,6 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

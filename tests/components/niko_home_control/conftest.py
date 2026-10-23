@@ -8,11 +8,10 @@ from nhc.light import NHCLight
 from nhc.scene import NHCScene
 from nhc.thermostat import NHCThermostat
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.niko_home_control.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

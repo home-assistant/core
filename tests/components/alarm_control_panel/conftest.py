@@ -4,6 +4,14 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
@@ -18,15 +26,6 @@ from homeassistant.helpers import entity_registry as er, frame
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import MockAlarm
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 TEST_DOMAIN = "test"
 

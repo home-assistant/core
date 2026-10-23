@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from neopool_modbus.exceptions import NeoPoolModbusError, NeoPoolTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.neopool.const import (
     CONF_USE_LIGHT,
@@ -18,8 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 from .conftest import MOCK_HOST, MOCK_PORT, MOCK_SERIAL
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_HOST: MOCK_HOST,

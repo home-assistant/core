@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from aioflo.api import SSO_TOKEN_URL
 from aioflo.errors import RequestError
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.flo import async_get_flo_api
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .common import TEST_PASSWORD, TEST_USER_ID
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")

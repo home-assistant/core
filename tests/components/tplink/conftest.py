@@ -6,6 +6,7 @@ from unittest.mock import DEFAULT, AsyncMock, patch
 
 from kasa import DeviceConfig, Module
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tplink import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -28,8 +29,6 @@ from .const import (
     MAC_ADDRESS3,
     MODEL_CAMERA,
 )
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager

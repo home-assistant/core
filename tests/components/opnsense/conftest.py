@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opnsense.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .const import ARP, CONFIG_DATA, INTERFACES
-
-from tests.common import MockConfigEntry
 
 CONF_OPNSENSE_CLIENT = "opnsense_client"
 

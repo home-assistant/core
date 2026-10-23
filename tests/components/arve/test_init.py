@@ -2,11 +2,11 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.arve.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_migrate_entry_minor_version_1_2(hass: HomeAssistant) -> None:

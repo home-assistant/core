@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.discogs.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_TOKEN, MOCK_USER_ID, MOCK_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

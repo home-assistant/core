@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from xiaomi_ble import (
     XiaomiBluetoothDeviceData as DeviceData,
     XiaomiCloudBLEDevice,
@@ -24,8 +25,6 @@ from . import (
     YLKG07YL_SERVICE_INFO,
     make_advertisement,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:

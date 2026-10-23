@@ -4,13 +4,12 @@ from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.remember_the_milk.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .const import CREATE_ENTRY_DATA, PROFILE, TOKEN_RESPONSE
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

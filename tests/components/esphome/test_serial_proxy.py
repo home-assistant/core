@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, call, patch
 from aioesphomeapi import APIClient
 from aioesphomeapi.model import SerialProxyInfo, SerialProxyPortType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from serialx.platforms.serial_esphome import InvalidSettingsError
 from yarl import URL
 
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDeviceType
-
-from tests.common import MockConfigEntry
 
 
 def test_build_url_basic() -> None:

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.sensirion_ble.const import DOMAIN
@@ -15,8 +16,6 @@ from .fixtures import (
     NOT_SENSIRION_SERVICE_INFO,
     SENSIRION_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

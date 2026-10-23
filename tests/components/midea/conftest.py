@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from midealocal.const import DeviceType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.midea.const import CONF_KEY, CONF_SN, CONF_SUBTYPE, DOMAIN
 from homeassistant.components.midea.device_catalog import MIDEA_DEVICE_NAMES
@@ -23,8 +24,6 @@ from .const import (
     TEST_SUBTYPE,
     TEST_TOKEN,
 )
-
-from tests.common import MockConfigEntry
 
 type SetDeviceAttribute = Callable[[DummyDevice, str, Any], Coroutine[Any, Any, None]]
 

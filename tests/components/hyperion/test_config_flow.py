@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
@@ -43,8 +44,6 @@ from . import (
     add_test_config_entry,
     create_mock_client,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_IP_ADDRESS = "192.168.0.1"
 TEST_HOST_PORT: dict[str, Any] = {

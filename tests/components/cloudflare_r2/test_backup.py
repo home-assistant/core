@@ -8,6 +8,12 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from botocore.exceptions import BotoCoreError, ConnectTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.backup import (
     DATA_MANAGER,
@@ -31,9 +37,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import USER_INPUT
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

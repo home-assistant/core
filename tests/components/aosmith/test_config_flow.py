@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from py_aosmith import AOSmithInvalidCredentialsException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.aosmith.const import (
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import FIXTURE_USER_INPUT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:

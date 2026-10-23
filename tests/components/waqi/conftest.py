@@ -5,13 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 from aiowaqi import WAQIAirQuality
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.waqi.const import CONF_STATION_NUMBER, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture

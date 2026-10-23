@@ -6,6 +6,7 @@ import logging
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from simplipy.errors import InvalidCredentialsError, SimplipyError
 
 from homeassistant.components.simplisafe import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .common import USER_ID
-
-from tests.common import MockConfigEntry
 
 VALID_AUTH_CODE = "code12345123451234512345123451234512345123451"
 

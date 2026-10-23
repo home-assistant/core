@@ -21,15 +21,17 @@ from iottycloud.verbs import (
     STATUS_STATIONATRY,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    mock_aiohttp_client,
+)
 
 from homeassistant import setup
 from homeassistant.components.iotty.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, mock_aiohttp_client
 
 CLIENT_ID = "client_id"
 CLIENT_SECRET = "client_secret"

@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.aranet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
@@ -15,8 +17,6 @@ from . import (
     VALID_DATA_SERVICE_INFO,
     VALID_DATA_SERVICE_INFO_WITH_NO_NAME,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:

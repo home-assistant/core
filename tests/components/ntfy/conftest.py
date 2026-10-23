@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from aiontfy import Account, AccountTokenResponse, Event, Notification, Version
 from aiontfy.update import LatestRelease
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.ntfy.const import (
     CONF_TOPIC,
@@ -17,8 +18,6 @@ from homeassistant.components.ntfy.const import (
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture

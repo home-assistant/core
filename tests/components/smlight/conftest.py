@@ -9,17 +9,16 @@ from pysmlight.models import BleFeatures
 from pysmlight.sse import sseClient
 from pysmlight.web import ActionWrapper, CmdWrapper, Firmware, Info, Sensors
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.smlight import PLATFORMS
 from homeassistant.components.smlight.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
 
 MOCK_DEVICE_NAME = "slzb-06"
 MOCK_HOST = "192.168.1.161"

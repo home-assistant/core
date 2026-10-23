@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hikvision import PLATFORMS
 from homeassistant.components.hikvision.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "192.168.1.100"
 TEST_PORT = 80

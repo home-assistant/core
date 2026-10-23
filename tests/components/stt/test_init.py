@@ -7,6 +7,15 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.stt import (
     DOMAIN,
@@ -39,16 +48,6 @@ from .common import (
     mock_stt_entity_platform,
     mock_stt_platform,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 _TEST_METADATA = SpeechMetadata(
     language="en",

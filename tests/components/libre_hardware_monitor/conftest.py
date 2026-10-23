@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from librehardwaremonitor_api.parser import LibreHardwareMonitorParser
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.libre_hardware_monitor.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 VALID_CONFIG = {CONF_HOST: "192.168.0.20", CONF_PORT: 8085}
 

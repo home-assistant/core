@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquacell import AquacellApi, Softener
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.aquacell.const import (
     CONF_REFRESH_TOKEN_CREATION_TIME,
@@ -14,8 +15,6 @@ from homeassistant.components.aquacell.const import (
 from homeassistant.const import CONF_EMAIL
 
 from . import TEST_CONFIG_ENTRY, TEST_CONFIG_ENTRY_WITHOUT_BRAND
-
-from tests.common import MockConfigEntry, load_json_array_fixture
 
 
 @pytest.fixture

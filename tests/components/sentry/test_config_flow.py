@@ -3,6 +3,7 @@
 import logging
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from sentry_sdk.utils import BadDsn
 
 from homeassistant.components.sentry.const import (
@@ -19,8 +20,6 @@ from homeassistant.components.sentry.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:

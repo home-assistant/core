@@ -4,6 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from unittest.mock import NonCallableMagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 
 from homeassistant import config_entries
@@ -11,8 +12,6 @@ from homeassistant.components.surepetcare.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 INPUT_DATA = {
     "username": "test-username",

@@ -8,11 +8,10 @@ from google.maps.routing_v2 import ComputeRoutesResponse, Route
 from google.protobuf import duration_pb2
 from google.type import localized_text_pb2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_travel_time.const import DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_config")

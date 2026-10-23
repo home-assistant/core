@@ -4,6 +4,8 @@ import copy
 import dataclasses
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.songpal.const import CONF_ENDPOINT, DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
@@ -29,8 +31,6 @@ from . import (
     _create_mocked_device,
     _patch_config_flow_device,
 )
-
-from tests.common import MockConfigEntry
 
 UDN = "uuid:1234"
 

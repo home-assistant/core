@@ -5,6 +5,7 @@ from typing import NamedTuple
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.luci.const import DOMAIN
 from homeassistant.const import (
@@ -14,8 +15,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-
-from tests.common import MockConfigEntry
 
 
 class MockDevice(NamedTuple):

@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.yeelight.config_flow import (
@@ -51,8 +52,6 @@ from . import (
     _patch_discovery_interval,
     _patch_discovery_timeout,
 )
-
-from tests.common import MockConfigEntry
 
 DEFAULT_CONFIG = {
     CONF_MODEL: "",

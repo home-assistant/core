@@ -4,14 +4,13 @@ import logging
 
 import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_component
 
 from homeassistant.components import automation
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, script, trigger
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, mock_component
 
 
 @pytest.fixture

@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, call, create_autospec, patch
 import uuid
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zha.application.const import RadioType
 from zigpy.application import ControllerApplication
 from zigpy.backups import BackupManager
@@ -54,8 +55,6 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 type RadioPicker = Callable[[RadioType], Coroutine[Any, Any, ConfigFlowResult]]
 PROBE_FUNCTION_PATH = "zigbee.application.ControllerApplication.probe"

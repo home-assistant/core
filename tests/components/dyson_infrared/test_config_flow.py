@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.dyson_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_EMITTER_ENTITY_ID,
@@ -10,8 +12,6 @@ from homeassistant.components.dyson_infrared.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_and_create_entry(hass: HomeAssistant) -> None:

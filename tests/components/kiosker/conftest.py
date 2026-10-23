@@ -5,11 +5,10 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.kiosker.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

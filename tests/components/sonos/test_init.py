@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, Mock, PropertyMock, patch
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from requests import Response
 from requests.exceptions import HTTPError
 
@@ -35,8 +36,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SoCoMockFactory, SonosMockEvent
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_creating_entry_sets_up_media_player(

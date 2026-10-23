@@ -6,6 +6,7 @@ from time import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.abstractions.heat_pump import HeatPump
 
@@ -26,8 +27,6 @@ from .const import (
     TEST_SN,
     USER_UUID_1,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

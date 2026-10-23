@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant import config_entries
@@ -18,9 +20,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     selector,
 )
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
-from tests.typing import WebSocketGenerator
 
 SWITCH_BEFORE_OPTIONS = {
     "name": "test_template_switch",

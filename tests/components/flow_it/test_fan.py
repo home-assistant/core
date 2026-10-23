@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from flow_it_api.const import Speed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -16,8 +17,6 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "fan.001122334455"
 

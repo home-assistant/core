@@ -3,6 +3,7 @@
 from copy import deepcopy
 
 import pytest
+from pytest_homeassistant.common import AsyncMock, Generator, MockConfigEntry, patch
 
 from homeassistant.components.comelit.const import BRIDGE, DOMAIN, VEDO
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
@@ -17,8 +18,6 @@ from .const import (
     VEDO_PIN,
     VEDO_PORT,
 )
-
-from tests.common import AsyncMock, Generator, MockConfigEntry, patch
 
 
 @pytest.fixture

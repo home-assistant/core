@@ -12,6 +12,7 @@ from aioruckus.const import (
     ERROR_LOGIN_INCORRECT,
 )
 from aioruckus.exceptions import AuthenticationError
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.ruckus_unleashed.const import (
@@ -37,8 +38,6 @@ from . import (
     init_integration,
     mock_config_entry,
 )
-
-from tests.common import async_fire_time_changed
 
 
 @contextmanager

@@ -5,6 +5,12 @@ from datetime import timedelta
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache,
+    snapshot_platform,
+)
 import roborock
 from roborock import RoborockCommand, RoborockException
 from roborock.data import RoborockDockTypeCode, RoborockStateCode
@@ -20,13 +26,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache,
-    snapshot_platform,
-)
 
 
 @pytest.fixture

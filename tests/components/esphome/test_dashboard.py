@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from aioesphomeapi import APIClient, DeviceInfo, InvalidEncryptionKeyAPIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
 from homeassistant.components.hassio import HassioNotReadyError
@@ -16,8 +17,6 @@ from homeassistant.setup import async_setup_component
 from . import VALID_NOISE_PSK
 from .common import MockDashboardRefresh
 from .conftest import MockESPHomeDeviceType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_dashboard")

@@ -8,6 +8,7 @@ from jellyfin_apiclient_python.api import API
 from jellyfin_apiclient_python.configuration import Config
 from jellyfin_apiclient_python.connection_manager import ConnectionManager
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 
 from . import load_json_fixture
 from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

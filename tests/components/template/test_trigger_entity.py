@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component
 
 from homeassistant.components.template import DOMAIN, trigger_entity
 from homeassistant.components.template.coordinator import TriggerUpdateCoordinator
@@ -25,8 +26,6 @@ from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
 
 from .conftest import async_trigger
-
-from tests.common import assert_setup_component
 
 _ICON_TEMPLATE = 'mdi:o{{ "n" if value=="on" else "ff" }}'
 _PICTURE_TEMPLATE = '/local/picture_o{{ "n" if value=="on" else "ff" }}'

@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.silla_prism.const import CONF_BASE_TOPIC, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .const import BASE_TOPIC
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airq.const import DOMAIN
 
 from .common import TEST_BRIGHTNESS, TEST_DEVICE_DATA, TEST_DEVICE_INFO, TEST_USER_DATA
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

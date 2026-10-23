@@ -8,6 +8,7 @@ from unittest.mock import ANY, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockPlatform, MockUser, mock_platform
 from pytest_homeassistant.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
     async_record_states,
@@ -16,6 +17,10 @@ from pytest_homeassistant.components.recorder.common import (
     do_adhoc_statistics,
     get_start_time,
     statistics_during_period,
+)
+from pytest_homeassistant.typing import (
+    RecorderInstanceContextManager,
+    WebSocketGenerator,
 )
 from sqlalchemy import select
 
@@ -62,9 +67,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
-
-from tests.common import MockPlatform, MockUser, mock_platform
-from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
 
 POWER_SENSOR_KW_ATTRIBUTES = {
     "device_class": "power",

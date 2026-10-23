@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from aioskybell import exceptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.skybell.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import CONF_DATA, PASSWORD, USER_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

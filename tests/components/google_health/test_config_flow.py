@@ -10,6 +10,9 @@ from google_health_api.exceptions import (
 )
 from google_health_api.model import Identity
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.google_health.const import (
     DOMAIN,
@@ -23,10 +26,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import HEALTH_USER_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 API_BASE_URL = "https://health.googleapis.com/v4/users/me"
 IDENTITY_URL = f"{API_BASE_URL}/identity"

@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from arcam.fmj.errors import ConnectionFailed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.arcam_fmj.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -32,9 +34,6 @@ from .conftest import (
     MOCK_UDN,
     MOCK_UUID,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_UPNP_DEVICE = f"""
 <root xmlns="urn:schemas-upnp-org:device-1-0">

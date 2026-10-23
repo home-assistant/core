@@ -4,10 +4,9 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.moon.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

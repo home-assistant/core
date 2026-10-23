@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.slide_local.const import CONF_INVERT_POSITION, DOMAIN
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_MAC
 
 from . import get_data
 from .const import HOST
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

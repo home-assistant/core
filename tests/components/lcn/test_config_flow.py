@@ -9,6 +9,7 @@ from pypck.connection import (
     PchkLicenseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.lcn.config_flow import LcnFlowHandler, validate_connection
@@ -29,8 +30,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 CONFIG_DATA = {
     CONF_IP_ADDRESS: "127.0.0.1",

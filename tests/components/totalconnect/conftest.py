@@ -5,6 +5,11 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 from total_connect_client import ArmingState, TotalConnectClient
 from total_connect_client.device import TotalConnectDevice
 from total_connect_client.location import TotalConnectLocation
@@ -21,12 +26,6 @@ from homeassistant.components.totalconnect.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import CODE, LOCATION_ID, PASSWORD, USERCODES, USERNAME
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
 
 
 def create_mock_zone(

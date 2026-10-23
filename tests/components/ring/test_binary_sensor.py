@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from ring_doorbell import Ring
 from syrupy.assertion import SnapshotAssertion
 
@@ -30,8 +31,6 @@ from .device_mocks import (
     INGRESS_DEVICE_ID,
     INTERNAL_DEVICE_ID,
 )
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture

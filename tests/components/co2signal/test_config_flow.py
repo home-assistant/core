@@ -9,6 +9,7 @@ from aioelectricitymaps import (
     ElectricityMapsNoDataError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.co2signal import config_flow
@@ -16,8 +17,6 @@ from homeassistant.components.co2signal.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("electricity_maps")

@@ -4,6 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.proxmoxve.const import (
     CONF_AUTH_METHOD,
@@ -27,12 +32,6 @@ from homeassistant.const import (
 )
 
 from . import MERGED_PERMISSIONS
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
 
 MOCK_TEST_CONFIG_BASE = {
     CONF_AUTH_METHOD: "pam",

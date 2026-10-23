@@ -11,6 +11,11 @@ from aiomelcloudhome.exceptions import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 from homeassistant.components.melcloud_home.const import DOMAIN
 from homeassistant.components.melcloud_home.coordinator import (
@@ -24,12 +29,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_USER_INPUT
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
 
 
 @pytest.mark.usefixtures("mock_melcloud_client")

@@ -9,6 +9,7 @@ from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import ExecutionState, OverkizCommandParam, OverkizState
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
@@ -47,8 +48,6 @@ from .helpers import (
     device_unavailable_event,
     execution_state_changed_event,
 )
-
-from tests.common import snapshot_platform
 
 AWNING = FixtureDevice(
     "setup/local_somfy_connexoon_europe.json",

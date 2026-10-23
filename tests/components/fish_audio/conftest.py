@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from fishaudio.resources import AsyncAccountClient, AsyncTTSClient, AsyncVoicesClient
 import pytest
+from pytest_homeassistant.common import AsyncGenerator, MockConfigEntry
 
 from homeassistant.components.fish_audio.const import (
     CONF_BACKEND,
@@ -17,8 +18,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CREDITS, MOCK_VOICES
-
-from tests.common import AsyncGenerator, MockConfigEntry
 
 
 @pytest.fixture

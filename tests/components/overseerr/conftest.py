@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from python_overseerr import IssueCount, MovieDetails, RequestCount, RequestResponse
 from python_overseerr.models import TVDetails, WebhookNotificationConfig
 
@@ -18,8 +19,6 @@ from homeassistant.const import (
 )
 
 from .const import WEBHOOK_ID
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
