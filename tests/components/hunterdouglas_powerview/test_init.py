@@ -15,9 +15,6 @@ from homeassistant.setup import async_setup_component
 
 from .const import MOCK_MAC, MOCK_SERIAL
 
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
-
 
 def _get_hub_device(
     device_registry: dr.DeviceRegistry, entry: MockConfigEntry
