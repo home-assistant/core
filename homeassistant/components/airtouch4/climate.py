@@ -20,8 +20,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirTouch4ConfigEntry
 from .const import DOMAIN
+from .coordinator import AirTouch4ConfigEntry
 
 AT_TO_HA_STATE = {
     "Heat": HVACMode.HEAT,

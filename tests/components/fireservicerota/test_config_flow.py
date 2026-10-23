@@ -95,7 +95,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
         ) as mock_fsr,
         patch(
             "homeassistant.components.fireservicerota.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         mock_fsr.return_value.request_tokens.return_value = MOCK_TOKEN_INFO
@@ -117,7 +117,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
         ) as mock_fsr,
         patch(
             "homeassistant.components.fireservicerota.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         mock_fireservicerota = mock_fsr.return_value
@@ -171,7 +171,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         ) as mock_fsr,
         patch(
             "homeassistant.components.fireservicerota.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         mock_fireservicerota = mock_fsr.return_value

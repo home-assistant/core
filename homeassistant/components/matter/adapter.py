@@ -268,7 +268,7 @@ class MatterAdapter:
         else:
             model_id = str(product_id) if (product_id := basic_info.productID) else None
 
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             device_info=dr.DeviceInfo(
                 name=name,
@@ -292,7 +292,9 @@ class MatterAdapter:
         device_id = get_device_id(server_info, endpoint)
         legacy_device_id = get_legacy_device_id(server_info, endpoint)
         # run platform discovery from device type instances
-        for entity_info in async_discover_entities(endpoint):
+        for entity_info in async_discover_entities(
+            endpoint, server_info.schema_version
+        ):
             discovery_key = get_discovery_key(endpoint, entity_info)
             if discovery_key in self.discovered_entities:
                 continue

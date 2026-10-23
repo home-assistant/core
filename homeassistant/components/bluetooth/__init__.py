@@ -338,16 +338,14 @@ async def async_update_device(
                     device.id, new_connections=connections
                 )
                 break
-    device_entry = device_registry.async_get_or_create_device(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            name=adapter_human_name(adapter, address),
-            connections=connections,
-            manufacturer=details[ADAPTER_MANUFACTURER],
-            model=adapter_model(details),
-            sw_version=details.get(ADAPTER_SW_VERSION),
-            hw_version=details.get(ADAPTER_HW_VERSION),
-        ),
+        name=adapter_human_name(adapter, address),
+        connections=connections,
+        manufacturer=details[ADAPTER_MANUFACTURER],
+        model=adapter_model(details),
+        sw_version=details.get(ADAPTER_SW_VERSION),
+        hw_version=details.get(ADAPTER_HW_VERSION),
     )
     if via_device_id and (
         split_devices := device_registry.async_get_devices_for_composite_device_id(

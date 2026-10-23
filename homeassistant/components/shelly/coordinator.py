@@ -100,6 +100,7 @@ class ShellyEntryData:
     rpc_blu_trv_update: ShellyBluTrvUpdateCoordinator | None = None
     rpc_script_events: dict[int, list[str]] | None = None
     rpc_ledstrip_effects: dict[str, ShellyLedStripEffect] | None = None
+    rpc_ledstrip_palettes: dict[str, str] | None = None
     rpc_supports_scripts: bool | None = None
     rpc_zigbee_firmware: bool | None = None
 
@@ -189,19 +190,17 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         """Set up the coordinator."""
         self._pending_platforms = pending_platforms
         dev_reg = dr.async_get(self.hass)
-        device_entry = dev_reg.async_get_or_create_device(
+        device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                name=self.name,
-                connections={(CONNECTION_NETWORK_MAC, self.mac)},
-                identifiers={(DOMAIN, self.mac)},
-                manufacturer="Shelly",
-                model=self.model_name,
-                model_id=self.model,
-                sw_version=self.sw_version,
-                hw_version=f"gen{get_device_entry_gen(self.config_entry)}",
-                configuration_url=self.configuration_url,
-            ),
+            name=self.name,
+            connections={(CONNECTION_NETWORK_MAC, self.mac)},
+            identifiers={(DOMAIN, self.mac)},
+            manufacturer="Shelly",
+            model=self.model_name,
+            model_id=self.model,
+            sw_version=self.sw_version,
+            hw_version=f"gen{get_device_entry_gen(self.config_entry)}",
+            configuration_url=self.configuration_url,
         )
         # We want to use the main device area as the suggested area for sub-devices.
         if (area_id := device_entry.area_id) is not None:
@@ -903,7 +902,8 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
     @override
     async def _async_update_data(self) -> None:
         """Fetch data."""
-        if not self.device.connected:
+        # The websocket is connected before initialization completes on reconnect
+        if not self.device.connected or not self.device.initialized:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error_device_disconnected",
