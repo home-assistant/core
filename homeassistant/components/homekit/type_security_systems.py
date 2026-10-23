@@ -98,6 +98,13 @@ class SecuritySystem(HomeAccessory):
         default_current_states = current_char.properties.get("ValidValues")
         default_target_services = target_char.properties.get("ValidValues")
 
+        # Both characteristics start at 0 (stay armed). Panels without
+        # ARM_HOME drop 0 from the valid values below, and HAP-python logs an
+        # error when the current value is outside the new set. Disarmed is
+        # always valid, so start from it.
+        current_char.set_value(HK_ALARM_DISARMED, should_notify=False)
+        target_char.set_value(HK_ALARM_DISARMED, should_notify=False)
+
         current_supported_states = [HK_ALARM_DISARMED, HK_ALARM_TRIGGERED]
         target_supported_services = [HK_ALARM_DISARMED]
 
