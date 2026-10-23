@@ -165,10 +165,12 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
                         for k, v in existing_entry.data.items()
                         if k != CONF_DEVICES
                     }
-                self.hass.config_entries.async_update_entry(
+                if self.hass.config_entries.async_update_entry(
                     existing_entry, data=new_data
-                )
-                self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
+                ):
+                    self.hass.config_entries.async_schedule_reload(
+                        existing_entry.entry_id
+                    )
             self._abort_if_unique_id_configured()
         if self._async_in_progress(
             include_uninitialized=True, match_context={"unique_id": email}

@@ -354,6 +354,12 @@ async def test_yaml_import_multiple_blocks_merge_devices(
                 "platform": "tank_utility",
                 "email": TEST_EMAIL,
                 "password": TEST_PASSWORD,
+                "devices": [MOCK_DEVICE_ID],
+            },
+            {
+                "platform": "tank_utility",
+                "email": TEST_EMAIL,
+                "password": TEST_PASSWORD,
                 "devices": ["device_2"],
             },
         ]
