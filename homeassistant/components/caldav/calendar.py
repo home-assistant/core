@@ -24,10 +24,11 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -37,8 +38,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CalDavConfigEntry
-from .api import async_get_calendars
-from .const import TIMEOUT
+from .api import async_get_calendar_color, async_get_calendars
+from .const import DOMAIN, TIMEOUT
 from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -166,25 +167,37 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CalDav calendar platform for a config entry."""
-    calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
-    entities = [
-        WebDavCalendarEntity(
-            calendar_name,
-            async_generate_entity_id(ENTITY_ID_FORMAT, calendar_name, hass=hass),
-            CalDavUpdateCoordinator(
-                hass,
-                entry,
-                calendar=calendar,
-                calendar_name=calendar_name,
-                days=CONFIG_ENTRY_DEFAULT_DAYS,
-                include_all_day=True,
-                search=None,
-            ),
-            unique_id=f"{entry.entry_id}-{calendar.id}",
+    entity_registry = er.async_get(hass)
+    entities = []
+    for calendar, calendar_name in await async_get_calendars(
+        hass, entry.runtime_data, SUPPORTED_COMPONENT
+    ):
+        if not calendar_name:
+            continue
+        unique_id = f"{entry.entry_id}-{calendar.id}"
+        initial_color = None
+        # The color only applies when an entity is first registered
+        if not entity_registry.async_get_entity_id(
+            Platform.CALENDAR, DOMAIN, unique_id
+        ):
+            initial_color = await async_get_calendar_color(hass, calendar)
+        entities.append(
+            WebDavCalendarEntity(
+                calendar_name,
+                async_generate_entity_id(ENTITY_ID_FORMAT, calendar_name, hass=hass),
+                CalDavUpdateCoordinator(
+                    hass,
+                    entry,
+                    calendar=calendar,
+                    calendar_name=calendar_name,
+                    days=CONFIG_ENTRY_DEFAULT_DAYS,
+                    include_all_day=True,
+                    search=None,
+                ),
+                unique_id=unique_id,
+                initial_color=initial_color,
+            )
         )
-        for calendar, calendar_name in calendars
-        if calendar_name
-    ]
     async_add_entities(entities, True)
 
 
@@ -200,6 +213,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         coordinator: CalDavUpdateCoordinator,
         unique_id: str | None = None,
         supports_offset: bool = False,
+        initial_color: str | None = None,
     ) -> None:
         """Create the WebDav Calendar Event Device."""
         super().__init__(coordinator)
@@ -209,6 +223,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         if unique_id is not None:
             self._attr_unique_id = unique_id
         self._supports_offset = supports_offset
+        self._attr_initial_color = initial_color
 
     @property
     @override
