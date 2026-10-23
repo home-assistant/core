@@ -1,5 +1,6 @@
 """Tests for the aerosmart config flow."""
 
+import asyncio
 from typing import cast
 from unittest.mock import AsyncMock, patch
 
@@ -229,6 +230,43 @@ async def test_duplicate_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_modbus_unit_ventilation", "mock_modbus_unit_heat_pump")
+async def test_concurrent_flows_create_one_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """A second matching flow aborts after both probes complete."""
+    flow_id_one = await _start_flow(hass, TYPE_TCP)
+    flow_id_two = await _start_flow(hass, TYPE_TCP)
+    probe_barrier = asyncio.Barrier(2)
+    data = {
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: 502,
+        CONF_UNIT_VENTILATION: 1,
+        CONF_UNIT_HEAT_PUMP: 2,
+    }
+
+    async def _simultaneous_probe(_: dict[str, object]) -> bool:
+        await probe_barrier.wait()
+        return True
+
+    with patch(
+        "homeassistant.components.aerosmart.config_flow."
+        "AerosmartConfigFlow._async_can_connect",
+        side_effect=_simultaneous_probe,
+    ):
+        result_one, result_two = await asyncio.gather(
+            hass.config_entries.flow.async_configure(flow_id_one, data),
+            hass.config_entries.flow.async_configure(flow_id_two, data),
+        )
+
+    assert sorted((result_one["type"], result_two["type"]), key=str) == [
+        FlowResultType.ABORT,
+        FlowResultType.CREATE_ENTRY,
+    ]
+    mock_setup_entry.assert_called_once()
 
 
 @pytest.mark.usefixtures("mock_modbus_unit_ventilation", "mock_modbus_unit_heat_pump")
