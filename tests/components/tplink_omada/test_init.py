@@ -351,11 +351,16 @@ async def test_empty_device_limit_scales_with_fast_polling() -> None:
         data={},
         consecutive_empty_updates=EMPTY_DEVICE_LIMIT,
         update_interval=timedelta(seconds=POLL_UPGRADE),
+        empty_since=dt_util.utcnow() - timedelta(hours=1, seconds=1),
     )
     assert not device_removal_is_confirmed(coordinator)  # type: ignore[arg-type]
 
     coordinator.consecutive_empty_updates = EMPTY_DEVICE_WINDOW // POLL_UPGRADE
     assert device_removal_is_confirmed(coordinator)  # type: ignore[arg-type]
+
+    # Rapid refreshes cannot shorten the window, however many responses arrive.
+    coordinator.empty_since = dt_util.utcnow() - timedelta(minutes=5)
+    assert not device_removal_is_confirmed(coordinator)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
@@ -363,7 +368,9 @@ async def test_empty_device_limit_scales_with_fast_polling() -> None:
     [
         (1, False),
         (EMPTY_DEVICE_LIMIT - 1, False),
-        (EMPTY_DEVICE_LIMIT, True),
+        # The minimum count alone is not enough, an hour has to pass
+        (EMPTY_DEVICE_LIMIT, False),
+        (EMPTY_DEVICE_LIMIT + 1, True),
     ],
 )
 async def test_cleanup_devices_requires_confirmed_empty_list(

@@ -1,7 +1,7 @@
 """Generic Omada API coordinator."""
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import math
 from typing import TYPE_CHECKING, NamedTuple, override
@@ -25,6 +25,7 @@ from tplink_omada_client.exceptions import OmadaClientException
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -220,6 +221,7 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "DeviceList", POLL_CLIENTS)
         self.consecutive_empty_updates = 0
+        self.empty_since: datetime | None = None
 
     @override
     async def _async_update_data(self) -> dict[str, OmadaListDevice]:
@@ -230,10 +232,14 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
             # Any failed poll says nothing about the devices, so the empty
             # counter must not accumulate across it.
             self.consecutive_empty_updates = 0
+            self.empty_since = None
             raise
         if devices:
             self.consecutive_empty_updates = 0
+            self.empty_since = None
         else:
+            if self.empty_since is None:
+                self.empty_since = dt_util.utcnow()
             self.consecutive_empty_updates += 1
         return devices
 
@@ -340,15 +346,23 @@ def device_removal_is_confirmed(coordinator: OmadaDevicesCoordinator) -> bool:
         return True
 
     # A successful but empty response is likely a transient controller glitch,
-    # and removal also deletes the device's entities from the registry, so only
-    # clean once the empty list is confirmed over a full window of updates.
-    # Polling runs faster during a firmware download, so scale the count.
+    # and removal also deletes the device's entities from the registry. Require
+    # both a minimum count and a full window of elapsed time: manual refreshes
+    # and the sweep's own refresh can add empty responses faster than the poll
+    # interval, so a count alone would not prove an hour has passed.
+    if coordinator.empty_since is None:
+        return False
+
     interval = coordinator.update_interval or timedelta(seconds=POLL_DEVICES)
     required = max(
         EMPTY_DEVICE_LIMIT,
         math.ceil(EMPTY_DEVICE_WINDOW / max(interval.total_seconds(), 1)),
     )
-    return coordinator.consecutive_empty_updates >= required
+    return (
+        coordinator.consecutive_empty_updates >= required
+        and dt_util.utcnow() - coordinator.empty_since
+        >= timedelta(seconds=EMPTY_DEVICE_WINDOW)
+    )
 
 
 async def async_cleanup_devices(
