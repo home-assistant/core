@@ -198,6 +198,12 @@
   },
   "entity": {
     "binary_sensor": {
+      "panel_ac_trouble": {
+        "name": "Panel AC trouble"
+      },
+      "panel_battery_trouble": {
+        "name": "Panel battery trouble"
+      },
       "service_mode": {
         "name": "Service mode"
       },

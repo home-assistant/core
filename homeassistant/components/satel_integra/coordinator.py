@@ -5,7 +5,12 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from satel_integra import AlarmState, SatelPanelInfo, SatelRtcAndStatus
+from satel_integra import (
+    AlarmState,
+    SatelPanelInfo,
+    SatelRtcAndStatus,
+    SatelSystemTroubles,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -184,8 +189,16 @@ class SatelIntegraPartitionsCoordinator(
         self._debouncer.async_schedule_call()
 
 
+@dataclass(frozen=True)
+class SatelIntegraSystemStatusData:
+    """System status and trouble data reported by the panel."""
+
+    status: SatelRtcAndStatus | None
+    troubles: SatelSystemTroubles | None
+
+
 class SatelIntegraSystemStatusCoordinator(
-    SatelIntegraBaseCoordinator[SatelRtcAndStatus | None]
+    SatelIntegraBaseCoordinator[SatelIntegraSystemStatusData]
 ):
     """DataUpdateCoordinator to handle system status updates."""
 
@@ -195,7 +208,7 @@ class SatelIntegraSystemStatusCoordinator(
         """Initialize the coordinator."""
         super().__init__(hass, entry, client)
 
-        self.data = client.controller.state.system_status
+        self.data = self._get_data()
 
     @override
     def setup(self) -> None:
@@ -210,7 +223,15 @@ class SatelIntegraSystemStatusCoordinator(
     @callback
     def system_status_update_callback(self) -> None:
         """Update the system status as per notification from the alarm."""
-        self.async_set_updated_data(self.client.controller.state.system_status)
+        self.async_set_updated_data(self._get_data())
+
+    def _get_data(self) -> SatelIntegraSystemStatusData:
+        """Return an immutable snapshot of the current system data."""
+        state = self.client.controller.state
+        return SatelIntegraSystemStatusData(
+            status=state.system_status,
+            troubles=state.system_troubles,
+        )
 
 
 class SatelIntegraTemperaturesCoordinator(

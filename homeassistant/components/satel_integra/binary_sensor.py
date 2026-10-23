@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from satel_integra import SatelRtcAndStatus
+from satel_integra import SatelSystemTroubles, SatelTroubleType
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -27,6 +27,7 @@ from .coordinator import (
     SatelConfigEntry,
     SatelIntegraBaseCoordinator,
     SatelIntegraSystemStatusCoordinator,
+    SatelIntegraSystemStatusData,
 )
 from .entity import SatelIntegraEntity, SatelIntegraPanelEntity
 
@@ -39,7 +40,16 @@ class SatelIntegraSystemStatusBinarySensorEntityDescription(
 ):
     """Describes a Satel Integra system status binary sensor."""
 
-    is_on_fn: Callable[[SatelRtcAndStatus | None], bool | None]
+    is_on_fn: Callable[[SatelIntegraSystemStatusData], bool | None]
+
+
+def _has_system_trouble(
+    troubles: SatelSystemTroubles | None, trouble_type: SatelTroubleType
+) -> bool | None:
+    """Return whether a specific system trouble is active."""
+    if troubles is None:
+        return None
+    return any(trouble.trouble_type is trouble_type for trouble in troubles.troubles)
 
 
 SYSTEM_STATUS_BINARY_SENSORS = (
@@ -47,14 +57,34 @@ SYSTEM_STATUS_BINARY_SENSORS = (
         key="service_mode",
         translation_key="service_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda status: status.service_mode if status is not None else None,
+        is_on_fn=lambda data: (
+            data.status.service_mode if data.status is not None else None
+        ),
+    ),
+    SatelIntegraSystemStatusBinarySensorEntityDescription(
+        key="panel_ac_trouble",
+        translation_key="panel_ac_trouble",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda data: _has_system_trouble(
+            data.troubles, SatelTroubleType.PANEL_AC
+        ),
+    ),
+    SatelIntegraSystemStatusBinarySensorEntityDescription(
+        key="panel_battery_trouble",
+        translation_key="panel_battery_trouble",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda data: _has_system_trouble(
+            data.troubles, SatelTroubleType.PANEL_BATTERY
+        ),
     ),
     SatelIntegraSystemStatusBinarySensorEntityDescription(
         key="system_trouble",
         translation_key="system_trouble",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda status: status.troubles if status is not None else None,
+        is_on_fn=lambda data: data.status.troubles if data.status is not None else None,
     ),
 )
 
