@@ -243,7 +243,13 @@ async def test_sensor_setup_sensor_none(
 ) -> None:
     """Test sensor entity setup for sensor devices with no sensors enabled."""
 
-    setup_public_sensor(ufp)
+    setup_public_sensor(
+        ufp,
+        motion_enabled=False,
+        temperature_enabled=False,
+        humidity_enabled=False,
+        light_enabled=False,
+    )
     await init_entry(hass, ufp, [sensor])
     assert_entity_counts(hass, Platform.SENSOR, 23, 14)
 
@@ -367,8 +373,9 @@ async def test_sensor_battery_refreshes_on_public_ws_reconnect(
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    # Value changes while the socket is down; the bootstrap holds the new value.
-    sensor_all.battery_status.percentage = 55
+    # Value changes while the socket is down; the fake rebuilds on lookup, so
+    # re-seed it with the new value.
+    setup_public_sensor(ufp, percentage=55)
     ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
 

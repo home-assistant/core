@@ -1072,8 +1072,6 @@ async def test_select_ptz_camera_adopt(
     assert_entity_counts(hass, Platform.SELECT, 0, 0)
 
     ptz_camera._api = ufp.api
-    for channel in ptz_camera.channels:
-        channel._api = ufp.api
 
     ptz_camera.get_ptz_patrols.return_value = _make_patrols(ptz_camera.id)
 
