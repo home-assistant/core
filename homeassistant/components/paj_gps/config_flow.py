@@ -4,10 +4,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from aiohttp import ClientError
 from pajgps_api import PajGpsApi
 from pajgps_api.models.auth import AuthResponse
-from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
+from pajgps_api.pajgps_api_error import (
+    AuthenticationError,
+    RequestError,
+    TokenRefreshError,
+)
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -68,7 +71,7 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
             auth = await api.login()
         except AuthenticationError, TokenRefreshError:
             return "invalid_auth", None
-        except ClientError:
+        except RequestError:
             return "cannot_connect", None
         except Exception:
             _LOGGER.exception("Unexpected error validating PAJ GPS credentials")

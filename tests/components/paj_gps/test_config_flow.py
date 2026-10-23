@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
-from aiohttp import ClientError
 from pajgps_api.models.auth import AuthResponse
-from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
+from pajgps_api.pajgps_api_error import (
+    AuthenticationError,
+    RequestError,
+    TokenRefreshError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -77,7 +80,7 @@ async def test_duplicate_email_aborts(
     [
         (AuthenticationError("bad creds"), "invalid_auth"),
         (TokenRefreshError("refresh failed"), "invalid_auth"),
-        (ClientError(), "cannot_connect"),
+        (RequestError("Service unavailable"), "cannot_connect"),
         (ConnectionError("timeout"), "unknown"),
     ],
 )
@@ -142,7 +145,9 @@ async def test_reauth_flow(
         pytest.param(
             TokenRefreshError("refresh failed"), "invalid_auth", id="token_refresh"
         ),
-        pytest.param(ClientError(), "cannot_connect", id="cannot_connect"),
+        pytest.param(
+            RequestError("Service unavailable"), "cannot_connect", id="cannot_connect"
+        ),
         pytest.param(ConnectionError("timeout"), "unknown", id="unknown"),
     ],
 )

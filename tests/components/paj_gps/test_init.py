@@ -25,6 +25,43 @@ from . import setup_integration
 
 
 @pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(AuthenticationError("Login failed"), id="auth"),
+        pytest.param(TokenRefreshError("Refresh failed"), id="token_refresh"),
+    ],
+)
+async def test_auth_error_during_setup_starts_reauth(
+    hass: HomeAssistant,
+    mock_paj_gps_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test that an auth error on the initial login starts a reauth flow."""
+    mock_paj_gps_api.login.side_effect = exception
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_request_error_during_setup_retries(
+    hass: HomeAssistant,
+    mock_paj_gps_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a transient error on the initial login retries setup."""
+    mock_paj_gps_api.login.side_effect = RequestError("Service unavailable")
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.parametrize(
     ("method", "exception"),
     [
         pytest.param("get_devices", AuthenticationError("Unauthorized"), id="devices"),
