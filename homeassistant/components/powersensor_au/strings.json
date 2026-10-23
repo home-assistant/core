@@ -18,9 +18,9 @@
           "role": "Role"
         },
         "data_description": {
-          "role": "The role determines which measurements this sensor contributes to the household totals."
+          "role": "Decides which entities the sensor has, and whether the household view uses it."
         },
-        "description": "Select what {sensor} is measuring. To change an existing role, use the Powersensor App — sensor hardware roles set here will be overridden by the device. [Learn more]({docs_url})",
+        "description": "Select what {sensor} measures. If the sensor reports a role itself, that role replaces the one you set here. To change a role the sensor reports, use the Powersensor app. [Learn more]({docs_url})",
         "title": "Set sensor role"
       }
     }

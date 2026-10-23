@@ -29,9 +29,7 @@ from .models import PowersensorConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ROLE = "role"
-DOCS_URL = (
-    "https://dius.github.io/homeassistant-powersensor/data.html#virtual-household"
-)
+DOCS_URL = "https://www.home-assistant.io/integrations/powersensor_au/#reconfiguration"
 
 ROLE_OPTIONS = [ROLE_HOUSENET, ROLE_SOLAR, ROLE_WATER, ROLE_APPLIANCE, ROLE_UNKNOWN]
 
