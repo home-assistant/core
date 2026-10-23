@@ -14,7 +14,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import MOCK_MAC
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")
