@@ -71,6 +71,8 @@
       "export_tariff_2": { "name": "Feed-in tariff 2" },
       "export_total": { "name": "Total feed-in" },
       "frequency": { "name": "Grid frequency" },
+      "gas_consumption": { "name": "Gas consumption" },
+      "gas_flow_rate": { "name": "Gas flow rate" },
       "import_tariff_1": { "name": "Consumption tariff 1" },
       "import_tariff_2": { "name": "Consumption tariff 2" },
       "import_total": { "name": "Total consumption" },
@@ -85,7 +87,9 @@
       "reactive_power_export": { "name": "Reactive power feed-in" },
       "reactive_power_import": { "name": "Reactive power consumption" },
       "ssid": { "name": "SSID" },
-      "voltage_phase": { "name": "Voltage {phase}" }
+      "voltage_phase": { "name": "Voltage {phase}" },
+      "water_consumption": { "name": "Water consumption" },
+      "water_flow_rate": { "name": "Water flow rate" }
     }
   },
   "exceptions": {
