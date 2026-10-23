@@ -5,8 +5,12 @@ from contextlib import suppress
 import hashlib
 import re
 import shlex
-from typing import Literal, overload
+from typing import Any, Literal, overload
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import issue_registry as ir
@@ -27,7 +31,10 @@ _EXEC_FAILED_CODE = 127
 # brace expansion (dash/ash do not). "~" and "#" are kept because they are
 # position-dependent (tilde expands at a word start, "#" starts a comment) and a
 # flat membership test cannot check position, so we over-warn to stay safe.
+# Quoted or backslash-escaped characters are literal and do not count.
 _SHELL_FEATURE_CHARS = frozenset("|&;<>()$`*?[]{}~#\n")
+# Inside double quotes the shell still expands these.
+_DOUBLE_QUOTED_SHELL_FEATURE_CHARS = frozenset("$`")
 _DEPRECATION_ISSUE_BREAKS_IN = "2027.4.0"
 _LEARN_MORE_URL = "https://www.home-assistant.io/integrations/command_line/"
 _ISSUE_ID_PREFIX = "shell_command_template_"
@@ -37,8 +44,35 @@ _ASSIGNMENT_PREFIX = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 
 
 def _has_shell_features(command: str) -> bool:
-    """Return True if command contains shell metacharacters."""
-    return any(c in _SHELL_FEATURE_CHARS for c in command)
+    """Return True if command contains shell metacharacters outside quotes.
+
+    Also returns True for escapes that /bin/sh and shlex.split unquote
+    differently, so the exec path never sees different arguments than the shell.
+    """
+    quote: str | None = None
+    chars = iter(command)
+    for c in chars:
+        if quote == "'":
+            if c == "'":
+                quote = None
+        elif c == "\\":
+            escaped = next(chars, "")
+            # shlex keeps an escaped newline (sh drops it) and, inside double
+            # quotes, keeps the backslash before "$" and "`" (sh drops it).
+            if escaped == "\n" or (
+                quote == '"' and escaped in _DOUBLE_QUOTED_SHELL_FEATURE_CHARS
+            ):
+                return True
+        elif quote == '"':
+            if c == '"':
+                quote = None
+            elif c in _DOUBLE_QUOTED_SHELL_FEATURE_CHARS:
+                return True
+        elif c in "'\"":
+            quote = c
+        elif c in _SHELL_FEATURE_CHARS:
+            return True
+    return False
 
 
 @callback
@@ -87,25 +121,34 @@ def build_shell_template_issue_id(platform: str, name: str) -> str:
 
 
 @callback
-def async_prune_shell_template_issues(
-    hass: HomeAssistant, valid_issue_ids: set[str]
-) -> None:
-    """Delete deprecation issues for entities that no longer exist.
+def async_begin_shell_template_issues_refresh(hass: HomeAssistant) -> ir.IssuesRefresh:
+    """Begin a refresh of the deprecation issues, which deletes orphaned ones."""
+    return ir.async_begin_issues_refresh(
+        hass, DOMAIN, issue_id_pattern=_ISSUE_ID_PREFIX
+    )
 
-    Called on reload to remove issues left behind by removed or renamed
-    entities. Issues for still-configured entities are kept so a user's decision
-    to ignore an issue survives the reload; each entity refreshes or clears its
-    own issue on its next update. Deleting and later recreating an issue would
-    reset the ignore state, so we never delete an issue we cannot prove is stale.
+
+def notify_name(notify_config: dict[str, Any]) -> str:
+    """Return the name of a notify service, the integration domain if not set."""
+    return notify_config.get(CONF_NAME) or DOMAIN
+
+
+@callback
+def async_keep_shell_template_issue(
+    hass: HomeAssistant, platform: str, platform_config: dict[str, Any]
+) -> None:
+    """Keep the deprecation issue of an entity which is being set up.
+
+    Whether the issue is still valid is only known when the entity next runs its
+    command, which then creates or deletes it.
     """
-    registry = ir.async_get(hass)
-    for domain, issue_id in list(registry.issues):
-        if (
-            domain == DOMAIN
-            and issue_id.startswith(_ISSUE_ID_PREFIX)
-            and issue_id not in valid_issue_ids
-        ):
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
+    if platform == NOTIFY_DOMAIN:
+        name = notify_name(platform_config)
+    elif platform in (SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN):
+        name = platform_config[CONF_NAME]
+    else:
+        return
+    ir.async_keep_issue(hass, DOMAIN, build_shell_template_issue_id(platform, name))
 
 
 @overload
@@ -243,6 +286,13 @@ def render_template_args(
 
     prog, args = command.split(" ", 1)
     args_compiled = Template(args, hass)
+    if args_compiled.is_static:
+        # Rendering would still strip a trailing newline (from a YAML block
+        # scalar), making a plain command look like a substituted template.
+        issue_id = build_shell_template_issue_id(platform, name)
+        _update_issue(hass, issue_id, prog, platform, name, create=False)
+        LOGGER.debug("Running command: %s", command)
+        return command
 
     try:
         # parse_result=False keeps the output a string; the args are executed as a

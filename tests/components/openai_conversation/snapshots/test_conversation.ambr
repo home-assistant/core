@@ -355,6 +355,102 @@
     }),
   ])
 # ---
+# name: test_function_call_with_silent_response[empty-delta]
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Please call the test function silently',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': False,
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value1',
+        'error': False,
+      }),
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': '',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_function_call_with_silent_response[no-text-deltas]
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Please call the test function silently',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': False,
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value1',
+        'error': False,
+      }),
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': '',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
 # name: test_function_call_without_reasoning
   list([
     dict({

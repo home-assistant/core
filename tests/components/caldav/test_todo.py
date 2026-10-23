@@ -8,6 +8,8 @@ from caldav.calendarobjectresource import Todo
 from caldav.lib.error import DAVError, NotFoundError
 from caldav.lib.url import URL
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
@@ -22,9 +24,6 @@ from homeassistant.components.todo import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"
@@ -66,6 +65,18 @@ UID:3
 DTSTAMP:20231125T000000Z
 SUMMARY:Wine
 STATUS:COMPLETED
+END:VTODO
+END:VCALENDAR"""
+
+TODO_COMPLETED_AT = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VTODO
+UID:3
+DTSTAMP:20231125T000000Z
+SUMMARY:Wine
+STATUS:COMPLETED
+COMPLETED:20231125T120000Z
 END:VTODO
 END:VCALENDAR"""
 
@@ -211,6 +222,48 @@ async def test_todo_list_state(
         "friendly_name": ENTITY_NAME,
         "supported_features": SUPPORTED_FEATURES,
     }
+
+
+@pytest.mark.parametrize(
+    ("todos", "expected_item"),
+    [
+        (
+            [TODO_COMPLETED_AT],
+            {
+                "uid": "0",
+                "summary": "Wine",
+                "status": "completed",
+                "completed": "2023-11-25T06:00:00-06:00",
+            },
+        ),
+        (
+            [TODO_COMPLETED],
+            {"uid": "0", "summary": "Wine", "status": "completed"},
+        ),
+        (
+            [TODO_COMPLETED_AT.replace("STATUS:COMPLETED", "STATUS:NEEDS-ACTION")],
+            {"uid": "0", "summary": "Wine", "status": "needs_action"},
+        ),
+    ],
+    ids=["completed_at", "no_completed", "reopened"],
+)
+async def test_completed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    expected_item: dict[str, Any],
+) -> None:
+    """Test the time a to-do item was completed is read from the server."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {TEST_ENTITY: {"items": [expected_item]}}
 
 
 @pytest.mark.parametrize(

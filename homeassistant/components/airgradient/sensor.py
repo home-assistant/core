@@ -31,9 +31,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import AirGradientConfigEntry
 from .const import PM_STANDARD, PM_STANDARD_REVERSE, supports_config
-from .coordinator import AirGradientCoordinator
+from .coordinator import AirGradientConfigEntry, AirGradientCoordinator
 from .entity import AirGradientEntity
 
 PARALLEL_UPDATES = 0
@@ -236,7 +235,7 @@ CONFIG_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...] = (
         key="nox_learning_offset",
         translation_key="nox_learning_offset",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.DAYS,
+        native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
         config_key="nox_learning_offset",
         value_fn=lambda config: config.nox_learning_offset,
@@ -245,7 +244,7 @@ CONFIG_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...] = (
         key="tvoc_learning_offset",
         translation_key="tvoc_learning_offset",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.DAYS,
+        native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
         config_key="tvoc_learning_offset",
         value_fn=lambda config: config.tvoc_learning_offset,

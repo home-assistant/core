@@ -1,6 +1,12 @@
 {
   "entity": {
     "binary_sensor": {
+      "automatic_charging_paused": {
+        "default": "mdi:ev-station",
+        "state": {
+          "on": "mdi:pause-circle-outline"
+        }
+      },
       "backup_power_active": {
         "default": "mdi:battery-alert-variant-outline",
         "state": {
@@ -30,7 +36,29 @@
         }
       }
     },
+    "select": {
+      "control_mode": {
+        "default": "mdi:tune-variant",
+        "state": {
+          "day_ahead_arbitrage": "mdi:cash-sync",
+          "dynamic_charging": "mdi:chart-line",
+          "home_optimization": "mdi:home-lightning-bolt",
+          "self_consumption": "mdi:solar-power"
+        }
+      }
+    },
     "sensor": {
+      "battery_state": {
+        "default": "mdi:battery",
+        "state": {
+          "backup_power_active": "mdi:home-battery",
+          "charging": "mdi:battery-charging",
+          "discharging": "mdi:battery-arrow-down",
+          "fault": "mdi:battery-alert",
+          "off": "mdi:battery-off-outline",
+          "permanent_fault": "mdi:battery-alert"
+        }
+      },
       "current_electricity_price": {
         "default": "mdi:cash-multiple"
       },
@@ -43,6 +71,12 @@
       },
       "current_sustainability_score": {
         "default": "mdi:leaf"
+      },
+      "cycle_count": {
+        "default": "mdi:battery-sync"
+      },
+      "earned_today": {
+        "default": "mdi:cash"
       },
       "electricity_cost_this_month": {
         "default": "mdi:cash"
@@ -72,6 +106,12 @@
       "electricity_produced_this_month": {
         "default": "mdi:transmission-tower-export"
       },
+      "energy_charged_today": {
+        "default": "mdi:battery-plus-variant"
+      },
+      "energy_discharged_today": {
+        "default": "mdi:battery-minus-variant"
+      },
       "gas_cost_this_month": {
         "default": "mdi:cash"
       },
@@ -87,6 +127,9 @@
       "highest_electricity_price_tomorrow": {
         "default": "mdi:cash-multiple"
       },
+      "inverter_state": {
+        "default": "mdi:current-ac"
+      },
       "lowest_electricity_price_today": {
         "default": "mdi:cash-multiple"
       },
@@ -95,6 +138,9 @@
       },
       "next_hour_electricity_price": {
         "default": "mdi:cash-multiple"
+      },
+      "total_earned": {
+        "default": "mdi:cash"
       }
     }
   }

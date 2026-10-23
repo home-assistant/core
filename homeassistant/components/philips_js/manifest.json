@@ -1,12 +1,13 @@
 {
   "domain": "philips_js",
   "name": "Philips TV",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@elupus"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/philips_js",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["haphilipsjs"],
-  "requirements": ["ha-philipsjs==3.2.5"],
+  "requirements": ["ha-philipsjs==3.3.0"],
   "zeroconf": ["_philipstv_s_rpc._tcp.local.", "_philipstv_rpc._tcp.local."]
 }

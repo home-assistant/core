@@ -8,6 +8,7 @@ from my_pv.exceptions import (
     MyPVTooManyRequestsError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
@@ -29,8 +30,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_my_pv_client")
@@ -56,7 +55,7 @@ async def test_water_heater_no_temp_sensor(
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
 ) -> None:
-    """Test if a water_heater is not created when there is no temperature sensor connected."""
+    """Test if a water_heater is not created when there is no temperature sensor installed."""
     mock_config_entry.add_to_hass(hass)
 
     mock_my_pv_client.current_temperature = None

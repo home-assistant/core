@@ -1,6 +1,9 @@
 """Test constants."""
 
-from tests.common import load_json_array_fixture, load_json_object_fixture
+from pytest_homeassistant.common import (
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 MOCK_HOST = "myrouter.freeboxos.fr"
 MOCK_PORT = 1234

@@ -1,6 +1,6 @@
 """Common fixtures for the portainer tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyportainer import PortainerEventListener
@@ -13,6 +13,7 @@ from pyportainer.models.docker import (
     PortainerImageUpdateStatus,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
+from pyportainer.models.image_pull import DockerImagePullEvent
 from pyportainer.models.portainer import (
     Endpoint,
     PortainerSystemStatus,
@@ -21,15 +22,14 @@ from pyportainer.models.portainer import (
 from pyportainer.models.stacks import Stack
 from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
-
-from homeassistant.components.portainer.const import DOMAIN
-from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_array_fixture,
     load_json_value_fixture,
 )
+
+from homeassistant.components.portainer.const import DOMAIN
+from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
 MOCK_TEST_CONFIG = {
     CONF_URL: "https://127.0.0.1:9000/",
@@ -47,7 +47,7 @@ TEST_CONTAINER_ID = "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.portainer.async_setup_entry", return_value=True
+        "homeassistant.components.portainer.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -120,6 +120,18 @@ def mock_portainer_client(mock_portainer_watcher: MagicMock) -> Generator[AsyncM
         client.restart_container = AsyncMock(return_value=None)
         client.images_prune = AsyncMock(return_value=None)
         client.container_recreate = AsyncMock(return_value=None)
+        pull_events = [
+            DockerImagePullEvent.from_dict(event)
+            for event in load_json_array_fixture("image_pull.json", DOMAIN)
+        ]
+
+        async def _image_pull(
+            endpoint_id: int, image: str
+        ) -> AsyncGenerator[DockerImagePullEvent]:
+            for event in pull_events:
+                yield event
+
+        client.image_pull = MagicMock(side_effect=_image_pull)
         client.get_stacks.return_value = [
             Stack.from_dict(stack)
             for stack in load_json_array_fixture("stacks.json", DOMAIN)

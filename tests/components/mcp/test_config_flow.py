@@ -4,8 +4,11 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
-import httpx
+import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 
 from homeassistant import config_entries
@@ -32,10 +35,6 @@ from .conftest import (
     TEST_API_NAME,
 )
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
-
 MCP_SERVER_BASE_URL = "http://1.1.1.1:8080"
 OAUTH_DISCOVERY_ENDPOINT = (
     f"{MCP_SERVER_BASE_URL}/.well-known/oauth-authorization-server/mcp"
@@ -45,7 +44,7 @@ OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT = (
     f"{AUTHORIZATION_SERVER}/.well-known/oauth-authorization-server"
 )
 SCOPES_SUPPORTED = ["profile", "email", "phone"]
-OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE = httpx.Response(
+OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE = httpx2.Response(
     status_code=200,
     json={
         "resource": MCP_SERVER_URL,
@@ -56,7 +55,7 @@ OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE = httpx.Response(
         "bearer_methods_supported": ["header"],
     },
 )
-OAUTH_SERVER_METADATA_RESPONSE = httpx.Response(
+OAUTH_SERVER_METADATA_RESPONSE = httpx2.Response(
     status_code=200,
     text=json.dumps(
         {
@@ -108,7 +107,7 @@ async def test_form(
     assert result["errors"] == {}
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -134,12 +133,12 @@ async def test_form(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (httpx.TimeoutException("Some timeout"), "timeout_connect"),
+        (httpx2.TimeoutException("Some timeout"), "timeout_connect"),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
             "cannot_connect",
         ),
-        (httpx.HTTPError("Some HTTP error"), "cannot_connect"),
+        (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -168,7 +167,7 @@ async def test_form_mcp_client_error(
     # Reset the error and make sure the config flow can resume successfully.
     mock_mcp_client.side_effect = None
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -212,7 +211,7 @@ async def test_input_form_validation_error(
 
     # Reset the error and make sure the config flow can resume successfully.
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -247,7 +246,7 @@ async def test_unique_url(hass: HomeAssistant, mock_mcp_client: Mock) -> None:
     assert result["errors"] == {}
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -270,7 +269,7 @@ async def test_server_missing_capbilities(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     response.capabilities.tools = None
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -295,8 +294,8 @@ async def test_oauth_discovery_flow_without_credentials(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # MCP Server returns 401 indicating the client needs to authenticate
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     # Prepare the OAuth Server metadata
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
@@ -370,7 +369,7 @@ async def perform_oauth_flow(
     [
         (OAUTH_SERVER_METADATA_RESPONSE, OAUTH_AUTHORIZE_URL, OAUTH_TOKEN_URL, SCOPES),
         (
-            httpx.Response(
+            httpx2.Response(
                 status_code=200,
                 text=json.dumps(
                     {
@@ -384,7 +383,7 @@ async def perform_oauth_flow(
             None,
         ),
         (
-            httpx.Response(status_code=404),
+            httpx2.Response(status_code=404),
             f"{MCP_SERVER_BASE_URL}/authorize",
             f"{MCP_SERVER_BASE_URL}/token",
             None,
@@ -405,7 +404,7 @@ async def test_authentication_flow(
     credential: None,
     aioclient_mock: AiohttpClientMocker,
     hass_client_no_auth: ClientSessionGenerator,
-    oauth_server_metadata_response: httpx.Response,
+    oauth_server_metadata_response: httpx2.Response,
     expected_authorize_url: str,
     expected_token_url: str,
     scopes: list[str] | None,
@@ -416,8 +415,8 @@ async def test_authentication_flow(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # MCP Server returns 401 indicating the client needs to authenticate
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     # Prepare the OAuth Server metadata
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
@@ -453,12 +452,13 @@ async def test_authentication_flow(
     # Client now accepts credentials
     mock_mcp_client.side_effect = None
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
+    assert result["result"].unique_id is None
     data = result["data"]
     token = data.pop(CONF_TOKEN)
     assert data == {
@@ -523,10 +523,10 @@ async def test_authentication_discovery_via_header(
     # MCP Server returns 401 when first trying to connect via config
     # flow validate_input. The response value has a WWW-Authenticate
     # header with a full URL for the resource metadata.
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
         "Authentication required",
         request=None,
-        response=httpx.Response(
+        response=httpx2.Response(
             401,
             headers={
                 "WWW-Authenticate": authenticate_header,
@@ -573,7 +573,7 @@ async def test_authentication_discovery_via_header(
     # Client now accepts credentials
     mock_mcp_client.side_effect = None
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -644,10 +644,10 @@ async def test_invalid_protected_resource_metadata(
     # flow validate_input. The response value has a WWW-Authenticate
     # header with a full URL for the resource metadata.
     resource_metadata_url = "https://example.com/custom-discovery"
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
         "Authentication required",
         request=None,
-        response=httpx.Response(
+        response=httpx2.Response(
             401,
             headers={
                 "WWW-Authenticate": (
@@ -660,7 +660,7 @@ async def test_invalid_protected_resource_metadata(
 
     # Discovery process starts. It hits the custom discovery URL directly.
     respx.get(resource_metadata_url).mock(
-        return_value=httpx.Response(
+        return_value=httpx2.Response(
             status_code=200,
             json=resource_metadata,
         )
@@ -683,12 +683,12 @@ async def test_invalid_protected_resource_metadata(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (httpx.TimeoutException("Some timeout"), "timeout_connect"),
+        (httpx2.TimeoutException("Some timeout"), "timeout_connect"),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
             "cannot_connect",
         ),
-        (httpx.HTTPError("Some HTTP error"), "cannot_connect"),
+        (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -709,8 +709,8 @@ async def test_oauth_discovery_failure(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # MCP Server returns 401 indicating the client needs to authenticate
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     # Prepare the OAuth Server metadata
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(side_effect=side_effect)
@@ -728,12 +728,12 @@ async def test_oauth_discovery_failure(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (httpx.TimeoutException("Some timeout"), "timeout_connect"),
+        (httpx2.TimeoutException("Some timeout"), "timeout_connect"),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
             "cannot_connect",
         ),
-        (httpx.HTTPError("Some HTTP error"), "cannot_connect"),
+        (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -754,8 +754,8 @@ async def test_authentication_flow_server_failure_abort(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # MCP Server returns 401 indicating the client needs to authenticate
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     # Prepare the OAuth Server metadata
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
@@ -809,8 +809,8 @@ async def test_authentication_flow_server_missing_tool_capabilities(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # MCP Server returns 401 indicating the client needs to authenticate
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     # Prepare the OAuth Server metadata
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
@@ -845,7 +845,7 @@ async def test_authentication_flow_server_missing_tool_capabilities(
     mock_mcp_client.side_effect = None
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     response.capabilities.tools = None
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -882,7 +882,7 @@ async def test_reauth_flow(
 
     # Verify we can connect to the server
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -973,7 +973,7 @@ async def test_reauth_flow_upgrade_to_oauth(
 
     # Verify we can connect to the server now with the token
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     # Return success for validation in async_oauth_create_entry
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -1096,7 +1096,7 @@ async def test_reauth_flow_missing_implementation(
     )
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -1121,9 +1121,11 @@ async def test_hassio_discovery_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
     assert result["description_placeholders"] == {"addon": ADDON_NAME}
+    flows = hass.config_entries.flow.async_progress()
+    assert flows[0]["context"]["title_placeholders"] == {"name": ADDON_NAME}
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -1222,12 +1224,12 @@ async def test_hassio_discovery_already_configured(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("side_effect", "expected_reason"),
     [
-        (httpx.TimeoutException("Some timeout"), "timeout_connect"),
+        (httpx2.TimeoutException("Some timeout"), "timeout_connect"),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
             "cannot_connect",
         ),
-        (httpx.HTTPError("Some HTTP error"), "cannot_connect"),
+        (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -1263,7 +1265,7 @@ async def test_hassio_discovery_missing_capabilities(
         data=ADDON_DISCOVERY_INFO,
     )
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     response.capabilities.tools = None
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -1284,8 +1286,8 @@ async def test_hassio_discovery_requires_authentication(
         context={"source": config_entries.SOURCE_HASSIO},
         data=ADDON_DISCOVERY_INFO,
     )
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
         return_value=OAUTH_SERVER_METADATA_RESPONSE
@@ -1314,8 +1316,8 @@ async def test_hassio_discovery_authentication_flow(
         context={"source": config_entries.SOURCE_HASSIO},
         data=ADDON_DISCOVERY_INFO,
     )
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
     respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
         return_value=OAUTH_SERVER_METADATA_RESPONSE
@@ -1340,7 +1342,7 @@ async def test_hassio_discovery_authentication_flow(
 
     mock_mcp_client.side_effect = None
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])

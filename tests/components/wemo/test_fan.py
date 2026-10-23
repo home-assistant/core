@@ -14,7 +14,11 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.wemo import fan
-from homeassistant.components.wemo.const import DOMAIN
+from homeassistant.components.wemo.const import (
+    DOMAIN,
+    SERVICE_RESET_FILTER_LIFE,
+    SERVICE_SET_HUMIDITY,
+)
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -109,7 +113,7 @@ async def test_fan_reset_filter_service(
     """Verify that SERVICE_RESET_FILTER_LIFE is registered and works."""
     await hass.services.async_call(
         DOMAIN,
-        fan.SERVICE_RESET_FILTER_LIFE,
+        SERVICE_RESET_FILTER_LIFE,
         {ATTR_ENTITY_ID: wemo_entity.entity_id},
         blocking=True,
     )
@@ -133,7 +137,7 @@ async def test_fan_set_humidity_service(
     """Verify that SERVICE_SET_HUMIDITY is registered and works."""
     await hass.services.async_call(
         DOMAIN,
-        fan.SERVICE_SET_HUMIDITY,
+        SERVICE_SET_HUMIDITY,
         {
             ATTR_ENTITY_ID: wemo_entity.entity_id,
             fan.ATTR_TARGET_HUMIDITY: test_input,

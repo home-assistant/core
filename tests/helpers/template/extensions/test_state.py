@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import group
 from homeassistant.const import (
@@ -28,7 +29,6 @@ from homeassistant.helpers.template.render_info import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import UnitSystem
 
-from tests.common import MockConfigEntry
 from tests.helpers.template.helpers import assert_result_info, render, render_to_info
 
 

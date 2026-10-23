@@ -1,20 +1,22 @@
 """Constants for the Portainer integration."""
 
+from pyportainer import DockerContainerState
+
 DOMAIN = "portainer"
 DEFAULT_NAME = "Portainer"
 
 API_MAX_RETRIES = 3
 
-CONTAINER_STATE_ACTIONS = {
-    "start",
-    "stop",
-    "die",
-    "kill",
-    "pause",
-    "unpause",
-    "restart",
-    "oom",
-    "update",
+CONTAINER_STATE_ACTIONS: dict[str, DockerContainerState | None] = {
+    "start": DockerContainerState.RUNNING,
+    "stop": DockerContainerState.EXITED,
+    "die": DockerContainerState.EXITED,
+    "kill": None,
+    "pause": DockerContainerState.PAUSED,
+    "unpause": DockerContainerState.RUNNING,
+    "restart": DockerContainerState.RUNNING,
+    "oom": None,
+    "update": None,
 }
 
 HEALTH_STATUS_VALUES = ("healthy", "unhealthy", "starting")

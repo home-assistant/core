@@ -6,12 +6,11 @@ import time
 
 from aiohttp import web
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 import urllib3
 
 from homeassistant.components.http.security_filter import FILTERS, setup_security_filter
 from homeassistant.components.http.server import MAX_LINE_SIZE
-
-from tests.typing import ClientSessionGenerator
 
 
 async def mock_handler(request):

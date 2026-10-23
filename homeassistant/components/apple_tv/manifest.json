@@ -1,6 +1,7 @@
 {
   "domain": "apple_tv",
   "name": "Apple TV",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@postlund"],
   "config_flow": true,
   "dependencies": ["zeroconf"],

@@ -124,7 +124,9 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
                 )
             ) is not None:
                 self._attr_max_temp = max_temp
-        self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
+        self._attr_native_temperature_unit = (
+            data.fast_coordinator.client.get_temperature_unit
+        )
 
     @property
     def _circuit_state(self) -> State:
@@ -133,7 +135,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (current_temp := self._circuit_state.current_temperature) is None:
             return None
@@ -141,7 +143,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (target_temp := self._circuit_state.target_temperature) is None:
             return None
@@ -168,8 +170,11 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         """Return the current running hvac action."""
         if (action := self._circuit_state.hvac_action) is None or action.value is None:
             return None
-        category = get_hvac_action_category(action.value)
-        return HVACAction(category.name.lower())
+        hvac_action = HVACAction(get_hvac_action_category(action.value).name.lower())
+        # In protection mode the circuit is off unless frost protection heats
+        if hvac_action is HVACAction.IDLE and self.hvac_mode is HVACMode.OFF:
+            return HVACAction.OFF
+        return hvac_action
 
     @property
     @override
@@ -216,4 +221,4 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="set_data_error",
             ) from err
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_circuit(self._circuit)

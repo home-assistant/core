@@ -4,13 +4,12 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
 from homeassistant.components.braviatv.coordinator import BraviaTVCoordinator
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

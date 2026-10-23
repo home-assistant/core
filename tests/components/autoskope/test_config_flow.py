@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from autoskope_client.models import CannotConnect, InvalidAuth
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.autoskope.const import (
     DEFAULT_HOST,
@@ -14,8 +15,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_USERNAME: "test_user",

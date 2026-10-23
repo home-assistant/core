@@ -2,11 +2,11 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import load_json_object_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.vesync.const import DOMAIN
 from homeassistant.util.json import JsonObjectType
-
-from tests.common import load_json_object_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 ENTITY_HUMIDIFIER = "humidifier.humidifier_200s"
 ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"

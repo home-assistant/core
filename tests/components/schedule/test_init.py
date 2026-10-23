@@ -6,6 +6,12 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.schedule.const import (
@@ -22,8 +28,8 @@ from homeassistant.components.schedule.const import (
     CONF_TUESDAY,
     CONF_WEDNESDAY,
     DOMAIN,
-    SERVICE_GET,
 )
+from homeassistant.components.schedule.services import ScheduleService
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_FRIENDLY_NAME,
@@ -40,9 +46,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize("invalid_config", [None, {"name with space": None}])
@@ -405,6 +408,58 @@ async def test_to_midnight(
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-11T00:00:00-07:00"
 
 
+@pytest.mark.parametrize(
+    ("now", "expected_state", "expected_next_event"),
+    [
+        pytest.param(
+            "2022-11-06 01:30:00-07:00",
+            STATE_ON,
+            "2022-11-06T01:45:00-07:00",
+            id="first_occurrence",
+        ),
+        pytest.param(
+            "2022-11-06 01:30:00-08:00",
+            STATE_ON,
+            "2022-11-06T01:45:00-08:00",
+            id="repeated_occurrence",
+        ),
+        pytest.param(
+            "2022-11-06 01:50:00-08:00",
+            STATE_OFF,
+            "2022-11-13T01:00:00-08:00",
+            id="repeated_occurrence_after_range",
+        ),
+    ],
+)
+async def test_dst_fall_back_next_event(
+    hass: HomeAssistant,
+    schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
+    freezer: FrozenDateTimeFactory,
+    now: str,
+    expected_state: str,
+    expected_next_event: str,
+) -> None:
+    """Test the next event is in the future during the repeated DST hour."""
+    freezer.move_to(now)
+
+    assert await schedule_setup(
+        config={
+            DOMAIN: {
+                "from_yaml": {
+                    CONF_NAME: "from yaml",
+                    CONF_SUNDAY: [{CONF_FROM: "01:00:00", CONF_TO: "01:45:00"}],
+                }
+            }
+        },
+        items=[],
+    )
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert state
+    assert state.state == expected_state
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == expected_next_event
+
+
 async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test component setup with no config."""
     count_start = len(hass.states.async_entity_ids())
@@ -699,7 +754,7 @@ async def test_service_get(
     # Test retrieving a single schedule via service call
     service_result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET,
+        ScheduleService.GET,
         {
             CONF_ENTITY_ID: entity_id,
         },
@@ -735,7 +790,7 @@ async def test_service_get(
     # Test retrieving the schedule via service call after WS update
     service_result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET,
+        ScheduleService.GET,
         {
             CONF_ENTITY_ID: entity_id,
         },

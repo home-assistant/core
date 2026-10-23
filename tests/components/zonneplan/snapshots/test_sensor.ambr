@@ -8,11 +8,25 @@
 # ---
 # name: test_entities_not_created_for_missing_market_segment[missing_gas]
   list([
+    'binary_sensor.laadpaal_automatic_charging_paused',
+    'binary_sensor.laadpaal_connectivity',
+    'binary_sensor.laadpaal_overload_protection',
     'binary_sensor.thuisbatterij_backup_power_active',
     'binary_sensor.thuisbatterij_grid_congestion',
     'binary_sensor.thuisbatterij_home_optimization_active',
     'binary_sensor.thuisbatterij_load_balancing_overload',
     'binary_sensor.zonneplan_electricity_price_low',
+    'select.thuisbatterij_control_mode',
+    'sensor.thuisbatterij_backup_power_capacity',
+    'sensor.thuisbatterij_battery',
+    'sensor.thuisbatterij_battery_state',
+    'sensor.thuisbatterij_charge_cycles',
+    'sensor.thuisbatterij_earned_today',
+    'sensor.thuisbatterij_energy_charged_today',
+    'sensor.thuisbatterij_energy_discharged_today',
+    'sensor.thuisbatterij_inverter_state',
+    'sensor.thuisbatterij_power',
+    'sensor.thuisbatterij_total_earned',
     'sensor.zonneplan_current_electricity_price',
     'sensor.zonneplan_current_electricity_tariff_group',
     'sensor.zonneplan_current_sustainability_score',
@@ -35,6 +49,636 @@
   list([
   ])
 # ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_backup_power_capacity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.thuisbatterij_backup_power_capacity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Backup power capacity',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
+    'original_icon': None,
+    'original_name': 'Backup power capacity',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'backup_power_capacity',
+    'unique_id': '00000000-0000-4000-8000-000000000201_backup_power_capacity',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_backup_power_capacity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy_storage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Backup power capacity',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_backup_power_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4000',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000-0000-4000-8000-000000000201_state_of_charge',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Battery',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65.5',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_battery_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown_state',
+        'off',
+        'sleeping',
+        'starting',
+        'operative',
+        'throttled',
+        'shutting_down',
+        'fault',
+        'standby',
+        'updating',
+        'cooling',
+        'preheat',
+        'charging',
+        'discharging',
+        'permanent_fault',
+        'backup_power_active',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_battery_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Battery state',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_state',
+    'unique_id': '00000000-0000-4000-8000-000000000201_battery_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_battery_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Battery state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown_state',
+        'off',
+        'sleeping',
+        'starting',
+        'operative',
+        'throttled',
+        'shutting_down',
+        'fault',
+        'standby',
+        'updating',
+        'cooling',
+        'preheat',
+        'charging',
+        'discharging',
+        'permanent_fault',
+        'backup_power_active',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_battery_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'discharging',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_charge_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_charge_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charge cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge cycles',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cycle_count',
+    'unique_id': '00000000-0000-4000-8000-000000000201_cycle_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_charge_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Charge cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_charge_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_earned_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_earned_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Earned today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Earned today',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'earned_today',
+    'unique_id': '00000000-0000-4000-8000-000000000201_earned_today',
+    'unit_of_measurement': '€',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_earned_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Earned today',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-09-28T22:00:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_earned_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.5000000',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_energy_charged_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_energy_charged_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy charged today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy charged today',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_charged_today',
+    'unique_id': '00000000-0000-4000-8000-000000000201_energy_charged_today',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_energy_charged_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Energy charged today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_energy_charged_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.000',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_energy_discharged_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_energy_discharged_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy discharged today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy discharged today',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_discharged_today',
+    'unique_id': '00000000-0000-4000-8000-000000000201_energy_discharged_today',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_energy_discharged_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Energy discharged today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_energy_discharged_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.500',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_inverter_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown_state',
+        'off',
+        'sleeping',
+        'starting',
+        'operative',
+        'throttled',
+        'shutting_down',
+        'fault',
+        'standby',
+        'updating',
+        'cooling',
+        'preheat',
+        'charging',
+        'discharging',
+        'permanent_fault',
+        'backup_power_active',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_inverter_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Inverter state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Inverter state',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'inverter_state',
+    'unique_id': '00000000-0000-4000-8000-000000000201_inverter_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_inverter_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Inverter state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown_state',
+        'off',
+        'sleeping',
+        'starting',
+        'operative',
+        'throttled',
+        'shutting_down',
+        'fault',
+        'standby',
+        'updating',
+        'cooling',
+        'preheat',
+        'charging',
+        'discharging',
+        'permanent_fault',
+        'backup_power_active',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_inverter_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'discharging',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000-0000-4000-8000-000000000201_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '800',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_total_earned-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_total_earned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total earned',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Total earned',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_earned',
+    'unique_id': '00000000-0000-4000-8000-000000000201_total_earned',
+    'unit_of_measurement': '€',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.thuisbatterij_total_earned-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Total earned',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_total_earned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0000000',
+  })
+# ---
 # name: test_sensor[prices_incoming][sensor.zonneplan_current_electricity_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -47,7 +691,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -108,7 +752,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -166,7 +810,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -223,7 +867,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -280,7 +924,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -331,7 +975,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -382,7 +1026,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -433,7 +1077,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -489,7 +1133,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -546,7 +1190,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -605,7 +1249,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -664,7 +1308,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -723,7 +1367,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -780,7 +1424,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -839,7 +1483,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -896,7 +1540,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -953,7 +1597,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1010,7 +1654,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1067,7 +1711,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1112,6 +1756,636 @@
     'state': '0.2233858',
   })
 # ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_backup_power_capacity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.thuisbatterij_backup_power_capacity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Backup power capacity',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
+    'original_icon': None,
+    'original_name': 'Backup power capacity',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'backup_power_capacity',
+    'unique_id': '00000000-0000-4000-8000-000000000201_backup_power_capacity',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_backup_power_capacity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy_storage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Backup power capacity',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_backup_power_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4000',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000-0000-4000-8000-000000000201_state_of_charge',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Battery',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65.5',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_battery_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown_state',
+        'off',
+        'sleeping',
+        'starting',
+        'operative',
+        'throttled',
+        'shutting_down',
+        'fault',
+        'standby',
+        'updating',
+        'cooling',
+        'preheat',
+        'charging',
+        'discharging',
+        'permanent_fault',
+        'backup_power_active',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_battery_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Battery state',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_state',
+    'unique_id': '00000000-0000-4000-8000-000000000201_battery_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_battery_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Battery state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown_state',
+        'off',
+        'sleeping',
+        'starting',
+        'operative',
+        'throttled',
+        'shutting_down',
+        'fault',
+        'standby',
+        'updating',
+        'cooling',
+        'preheat',
+        'charging',
+        'discharging',
+        'permanent_fault',
+        'backup_power_active',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_battery_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'discharging',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_charge_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_charge_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charge cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge cycles',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cycle_count',
+    'unique_id': '00000000-0000-4000-8000-000000000201_cycle_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_charge_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Charge cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_charge_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_earned_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_earned_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Earned today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Earned today',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'earned_today',
+    'unique_id': '00000000-0000-4000-8000-000000000201_earned_today',
+    'unit_of_measurement': '€',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_earned_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Earned today',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-09-28T22:00:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_earned_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.5000000',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_energy_charged_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_energy_charged_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy charged today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy charged today',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_charged_today',
+    'unique_id': '00000000-0000-4000-8000-000000000201_energy_charged_today',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_energy_charged_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Energy charged today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_energy_charged_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.000',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_energy_discharged_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_energy_discharged_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy discharged today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy discharged today',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_discharged_today',
+    'unique_id': '00000000-0000-4000-8000-000000000201_energy_discharged_today',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_energy_discharged_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Energy discharged today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_energy_discharged_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.500',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_inverter_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown_state',
+        'off',
+        'sleeping',
+        'starting',
+        'operative',
+        'throttled',
+        'shutting_down',
+        'fault',
+        'standby',
+        'updating',
+        'cooling',
+        'preheat',
+        'charging',
+        'discharging',
+        'permanent_fault',
+        'backup_power_active',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_inverter_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Inverter state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Inverter state',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'inverter_state',
+    'unique_id': '00000000-0000-4000-8000-000000000201_inverter_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_inverter_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Inverter state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown_state',
+        'off',
+        'sleeping',
+        'starting',
+        'operative',
+        'throttled',
+        'shutting_down',
+        'fault',
+        'standby',
+        'updating',
+        'cooling',
+        'preheat',
+        'charging',
+        'discharging',
+        'permanent_fault',
+        'backup_power_active',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_inverter_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'discharging',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000-0000-4000-8000-000000000201_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '800',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_total_earned-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thuisbatterij_total_earned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total earned',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Total earned',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_earned',
+    'unique_id': '00000000-0000-4000-8000-000000000201_total_earned',
+    'unit_of_measurement': '€',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.thuisbatterij_total_earned-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thuisbatterij Total earned',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thuisbatterij_total_earned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0000000',
+  })
+# ---
 # name: test_sensor[prices_published][sensor.zonneplan_current_electricity_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1124,7 +2398,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1185,7 +2459,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1243,7 +2517,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1300,7 +2574,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1357,7 +2631,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1408,7 +2682,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1459,7 +2733,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1510,7 +2784,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1566,7 +2840,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1623,7 +2897,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1682,7 +2956,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1741,7 +3015,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1800,7 +3074,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1857,7 +3131,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1916,7 +3190,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1973,7 +3247,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -2030,7 +3304,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -2087,7 +3361,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -2144,7 +3418,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '01JXZKYZ00XZKYZ00XZKYZ00XZ')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,

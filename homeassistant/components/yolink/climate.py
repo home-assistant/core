@@ -69,7 +69,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         super().__init__(config_entry, coordinator)
         # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{coordinator.device.device_id}_climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_fan_modes = [FAN_ON, FAN_AUTO]
         self._attr_min_temp = -10
         self._attr_max_temp = 50
@@ -95,10 +95,10 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         """Update HA Entity State."""
         normal_state = state.get("state")
         if normal_state is not None:
-            self._attr_current_temperature = normal_state.get("temperature")
+            self._attr_native_current_temperature = normal_state.get("temperature")
             self._attr_current_humidity = normal_state.get("humidity")
-            self._attr_target_temperature_low = normal_state.get("lowTemp")
-            self._attr_target_temperature_high = normal_state.get("highTemp")
+            self._attr_native_target_temperature_low = normal_state.get("lowTemp")
+            self._attr_native_target_temperature_high = normal_state.get("highTemp")
             self._attr_fan_mode = normal_state.get("fan")
             self._attr_hvac_mode = YOLINK_MODEL_2_HA.get(normal_state.get("mode"))
             self._attr_hvac_action = YOLINK_ACTION_2_HA.get(normal_state.get("running"))
@@ -141,14 +141,14 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
                     ThermostatState(lowTemp=target_temp_low)
                 )
             )
-            self._attr_target_temperature_low = target_temp_low
+            self._attr_native_target_temperature_low = target_temp_low
         if target_temp_high is not None:
             await self.call_device(
                 ThermostatRequestBuilder.set_state_request(
                     ThermostatState(highTemp=target_temp_high)
                 )
             )
-            self._attr_target_temperature_high = target_temp_high
+            self._attr_native_target_temperature_high = target_temp_high
         await self.coordinator.async_refresh()
 
     @override

@@ -15,8 +15,8 @@ from homeassistant.const import ATTR_BATTERY_LEVEL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .const import KNOWN_DEVICES
 from .entity import HomeKitEntity
 
 CURRENT_STATE_MAP = {
