@@ -43,11 +43,32 @@
     "cannot_connect": {
       "message": "Could not reach the ecosmart API"
     },
+    "forecast_rate_limited": {
+      "message": "The ecosmart API key is out of requests; try again in {retry_after} seconds"
+    },
+    "icp_not_on_key": {
+      "message": "The ecosmart API key no longer covers connection point {icp}"
+    },
     "invalid_auth": {
       "message": "The ecosmart API key was rejected. Creating a new key in the ecosmart app disables the previous one."
     },
+    "invalid_device": {
+      "message": "Device {device_id} is not an ecosmart connection point"
+    },
     "rate_limited": {
       "message": "The ecosmart API key is out of requests; waiting at least {retry_after} seconds before trying again"
+    }
+  },
+  "services": {
+    "get_forecasts": {
+      "description": "Retrieves the wholesale price forecast for a connection point.",
+      "fields": {
+        "device_id": {
+          "description": "The connection point (ICP) to get the price forecast for.",
+          "name": "Connection point"
+        }
+      },
+      "name": "Get price forecast"
     }
   }
 }
