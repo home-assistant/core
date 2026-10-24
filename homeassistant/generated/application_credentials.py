@@ -40,6 +40,7 @@ APPLICATION_CREDENTIALS = [
     "point",
     "senz",
     "smartthings",
+    "solaredge",
     "spotify",
     "tesla_fleet",
     "teslemetry",

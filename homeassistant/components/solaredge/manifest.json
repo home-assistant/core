@@ -4,7 +4,7 @@
   "categories": ["energy.solar_batteries"],
   "codeowners": ["@bdraco", "@tronikos"],
   "config_flow": true,
-  "dependencies": ["recorder"],
+  "dependencies": ["application_credentials", "http", "recorder"],
   "dhcp": [
     {
       "hostname": "target",
