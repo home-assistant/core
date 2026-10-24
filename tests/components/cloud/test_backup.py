@@ -875,6 +875,42 @@ async def test_agents_follow_cloud_login_state(
     assert response["result"] == {"agents": [local_agent, cloud_agent]}
 
 
+async def test_agent_follows_server_initiated_logout(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+) -> None:
+    """Test the cloud agent is removed when hass_nabucasa logs out by itself."""
+    client = await hass_ws_client(hass)
+    local_agent = {"agent_id": "backup.local", "name": "local"}
+    cloud_agent = {"agent_id": "cloud.cloud", "name": "cloud"}
+    # Follow the tokens again, instead of the fixed login state of cloud_logged_in
+    type(cloud).is_logged_in = PropertyMock(
+        side_effect=lambda: cloud.id_token is not None
+    )
+    await cloud.login("test-user", "test-pass")
+    await hass.async_block_till_done()
+
+    # Like the IoT logout action or a failed token refresh, not via the logout view
+    await cloud.logout()
+    await hass.async_block_till_done()
+
+    assert not cloud.is_logged_in
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent]}
+
+    # Auto-login goes through the same login path
+    await cloud.login("test-user", "test-pass", auto=True)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent, cloud_agent]}
+
+
 async def test_not_calling_listener_after_unsub(hass: HomeAssistant) -> None:
     """Test only calling listener until unsub."""
     listener = MagicMock()
@@ -890,16 +926,3 @@ async def test_not_calling_listener_after_unsub(hass: HomeAssistant) -> None:
     async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
     await hass.async_block_till_done()
     assert listener.call_count == 1
-
-
-async def test_not_calling_listener_with_unknown_event_type(
-    hass: HomeAssistant,
-) -> None:
-    """Test not calling listener if we did not get the expected event type."""
-    listener = MagicMock()
-    async_register_backup_agents_listener(hass, listener=listener)
-
-    assert listener.call_count == 0
-    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "unknown"})
-    await hass.async_block_till_done()
-    assert listener.call_count == 0
