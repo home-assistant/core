@@ -424,7 +424,6 @@ async def test_reload_config_entry_success(
             "result": {
                 "entry_id": f"{TEST_DOMAIN}:1001",
                 "state": "loaded",
-                "require_restart": False,
             }
         }
     )
@@ -455,7 +454,6 @@ async def test_reload_config_entry_setup_failure_reason(
             "result": {
                 "entry_id": "zwave_js:1004",
                 "state": "setup_error",
-                "require_restart": False,
                 "reason": "Failed to connect to Z-Wave stick",
             }
         }

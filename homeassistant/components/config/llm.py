@@ -1,5 +1,6 @@
 """LLM tools for the config integration."""
 
+from collections import defaultdict
 from typing import override
 
 import probatio
@@ -40,27 +41,46 @@ _NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
 _MIN_SHORT_ID_LEN = 4
 
 
-def _format_short_entry_id(hass: HomeAssistant, entry: ConfigEntry) -> str:
-    """Return a short domain-scoped entry_id (e.g. 'hue:8k2m').
+def _format_domain_short_entry_ids(hass: HomeAssistant, domain: str) -> dict[str, str]:
+    """Return a mapping of full entry_id to short '<domain>:<suffix>' ID for a domain.
 
     Short IDs reduce token usage and LLM transcription errors across tool calls.
     The trailing suffix starts at 4 characters and expands if another entry in the
     same domain shares that suffix.
     """
-    full_id = entry.entry_id.lower()
-    others = [
-        other.entry_id.lower()
-        for other in hass.config_entries.async_entries(
-            entry.domain, include_ignore=True, include_disabled=True
-        )
-        if other.entry_id != entry.entry_id
-    ]
-    length = min(_MIN_SHORT_ID_LEN, len(full_id))
-    while length < len(full_id) and any(
-        other.endswith(full_id[-length:]) for other in others
-    ):
-        length += 1
-    return f"{entry.domain}:{full_id[-length:]}"
+    domain_entries = hass.config_entries.async_entries(
+        domain, include_ignore=True, include_disabled=True
+    )
+    if len(domain_entries) == 1:
+        entry_id = domain_entries[0].entry_id
+        return {entry_id: f"{domain}:{entry_id[-_MIN_SHORT_ID_LEN:].lower()}"}
+
+    by_suffix: defaultdict[str, list[tuple[str, str]]] = defaultdict(list)
+    for entry in domain_entries:
+        full_lower = entry.entry_id.lower()
+        by_suffix[full_lower[-_MIN_SHORT_ID_LEN:]].append((entry.entry_id, full_lower))
+
+    result: dict[str, str] = {}
+    for suffix, group in by_suffix.items():
+        if len(group) == 1:
+            entry_id, _ = group[0]
+            result[entry_id] = f"{domain}:{suffix}"
+            continue
+        for entry_id, full_lower in group:
+            length = min(_MIN_SHORT_ID_LEN + 1, len(full_lower))
+            while length < len(full_lower) and any(
+                other_lower.endswith(full_lower[-length:])
+                for other_id, other_lower in group
+                if other_id != entry_id
+            ):
+                length += 1
+            result[entry_id] = f"{domain}:{full_lower[-length:]}"
+    return result
+
+
+def _format_short_entry_id(hass: HomeAssistant, entry: ConfigEntry) -> str:
+    """Return a short domain-scoped entry_id (e.g. 'hue:8k2m')."""
+    return _format_domain_short_entry_ids(hass, entry.domain)[entry.entry_id]
 
 
 def _resolve_short_entry_id(
@@ -95,8 +115,9 @@ def _resolve_short_entry_id(
     if not matches:
         return None, f"Config entry '{entry_id}' not found."
 
+    short_ids = _format_domain_short_entry_ids(hass, domain)
     options = ", ".join(
-        f"{_format_short_entry_id(hass, candidate)} ({candidate.title!r})"
+        f"{short_ids[candidate.entry_id]} ({candidate.title!r})"
         for candidate in matches
     )
     return (
@@ -119,10 +140,10 @@ def _resolve_entry_reason(entry: ConfigEntry) -> str | None:
     return entry.reason
 
 
-def _format_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> JsonObjectType:
+def _format_config_entry(entry: ConfigEntry, short_id: str) -> JsonObjectType:
     """Format a ConfigEntry into a compact dictionary for LLM consumption."""
     result: JsonObjectType = {
-        "entry_id": _format_short_entry_id(hass, entry),
+        "entry_id": short_id,
         "domain": entry.domain,
         "title": entry.title,
         "state": entry.state.value,
@@ -201,10 +222,15 @@ class GetConfigEntriesTool(Tool):
             allowed_states = _STATUS_STATES[status_filter]
             entries = [entry for entry in entries if entry.state in allowed_states]
 
+        short_ids: dict[str, str] = {}
+        for domain in {entry.domain for entry in entries}:
+            short_ids.update(_format_domain_short_entry_ids(hass, domain))
+
         return ToolResult(
             data={
                 "result": list[JsonValueType](
-                    _format_config_entry(hass, entry) for entry in entries
+                    _format_config_entry(entry, short_ids[entry.entry_id])
+                    for entry in entries
                 )
             }
         )
@@ -292,7 +318,6 @@ class ReloadConfigEntryTool(Tool):
         result: JsonObjectType = {
             "entry_id": short_id,
             "state": entry.state.value,
-            "require_restart": not entry.state.recoverable,
         }
         if (reason := _resolve_entry_reason(entry)) is not None:
             result["reason"] = reason
