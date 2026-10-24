@@ -8,10 +8,16 @@
               "auto": "mdi:thermostat-auto",
               "comfort-1": "mdi:thermometer",
               "comfort-2": "mdi:thermometer-low",
+              "derogation": "mdi:calendar-edit",
+              "derogation_comfort": "mdi:calendar-edit",
+              "derogation_eco": "mdi:calendar-edit",
               "drying": "mdi:hair-dryer",
               "external": "mdi:remote",
               "frost_protection": "mdi:snowflake",
-              "prog": "mdi:clock-outline"
+              "prog": "mdi:clock-outline",
+              "schedule": "mdi:calendar-clock",
+              "schedule_comfort": "mdi:calendar-clock",
+              "schedule_eco": "mdi:calendar-clock"
             }
           }
         }

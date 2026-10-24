@@ -1,10 +1,11 @@
 """Support for Atlantic Pass APC Heating Control."""
 
-from asyncio import sleep
+from dataclasses import dataclass
 from typing import Any, cast, override
 
 from propcache.api import cached_property
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
+from pyoverkiz.models import Command, States
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -15,13 +16,35 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES
+from homeassistant.exceptions import ServiceValidationError
 
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..executor import OverkizExecutor
 from .atlantic_pass_apc_heating_zone import AtlanticPassAPCHeatingZone
 
 PRESET_SCHEDULE = "schedule"
 PRESET_MANUAL = "manual"
+PRESET_SCHEDULE_COMFORT = "schedule_comfort"
+PRESET_SCHEDULE_ECO = "schedule_eco"
+PRESET_DEROGATION = "derogation"
+PRESET_DEROGATION_COMFORT = "derogation_comfort"
+PRESET_DEROGATION_ECO = "derogation_eco"
+
+# Presets only showing the profile the zone applies. Selecting a schedule one
+# resumes the time program, a derogation starts when a temperature is set.
+SCHEDULE_PROFILE_PRESETS = (PRESET_SCHEDULE_COMFORT, PRESET_SCHEDULE_ECO)
+DEROGATION_PRESETS = (
+    PRESET_DEROGATION,
+    PRESET_DEROGATION_COMFORT,
+    PRESET_DEROGATION_ECO,
+)
+
+# (schedule preset, derogation preset) of each profile
+OVERKIZ_PROFILE_TO_PRESETS: dict[str, tuple[str, str]] = {
+    OverkizCommandParam.COMFORT: (PRESET_SCHEDULE_COMFORT, PRESET_DEROGATION_COMFORT),
+    OverkizCommandParam.ECO: (PRESET_SCHEDULE_ECO, PRESET_DEROGATION_ECO),
+}
 
 OVERKIZ_MODE_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.MANU: PRESET_MANUAL,
@@ -29,6 +52,14 @@ OVERKIZ_MODE_TO_PRESET_MODES: dict[str, str] = {
 }
 
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_MODE_TO_PRESET_MODES.items()}
+
+REFRESH_MODES_COMMANDS: tuple[OverkizCommand, ...] = (
+    OverkizCommand.REFRESH_PASS_APC_HEATING_MODE,
+    OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE,
+    OverkizCommand.REFRESH_PASS_APC_COOLING_MODE,
+    OverkizCommand.REFRESH_PASS_APC_COOLING_PROFILE,
+    OverkizCommand.REFRESH_TARGET_TEMPERATURE,
+)
 
 # Maps the HVAC current ZoneControl system operating mode.
 OVERKIZ_TO_HVAC_ACTION: dict[str, HVACAction] = {
@@ -47,6 +78,120 @@ HVAC_ACTION_TO_OVERKIZ_PROFILE_STATE: dict[HVACAction, OverkizState] = {
 HVAC_ACTION_TO_OVERKIZ_MODE_STATE: dict[HVACAction, OverkizState] = {
     HVACAction.COOLING: OverkizState.IO_PASS_APC_COOLING_MODE,
     HVACAction.HEATING: OverkizState.IO_PASS_APC_HEATING_MODE,
+}
+
+# Setpoints applied by internal scheduling for each active program profile.
+HEATING_PROFILE_TO_TARGET_TEMPERATURE_STATE: dict[str, OverkizState] = {
+    OverkizCommandParam.COMFORT: OverkizState.CORE_COMFORT_HEATING_TARGET_TEMPERATURE,
+    OverkizCommandParam.ECO: OverkizState.CORE_ECO_HEATING_TARGET_TEMPERATURE,
+}
+
+COOLING_PROFILE_TO_TARGET_TEMPERATURE_STATE: dict[str, OverkizState] = {
+    OverkizCommandParam.COMFORT: OverkizState.CORE_COMFORT_COOLING_TARGET_TEMPERATURE,
+    OverkizCommandParam.ECO: OverkizState.CORE_ECO_COOLING_TARGET_TEMPERATURE,
+}
+
+
+def effective_profile(
+    states: States,
+    profile_state: OverkizState,
+    comfort_state: OverkizState,
+    eco_state: OverkizState,
+) -> tuple[str | None, bool]:
+    """Return the profile a zone applies on one side and its derogation.
+
+    The profile state is only refreshed on request and a derogation does not
+    change it, while the applied setpoint is always up to date: it tells eco
+    from comfort when both setpoints differ.
+    """
+
+    profile = cast(str | None, states.get_value(profile_state))
+    derogation = (
+        states.get_value(OverkizState.CORE_DEROGATION_ON_OFF) == OverkizCommandParam.ON
+    )
+
+    # Stopped, away or driven by an external setpoint: nothing to resolve. A
+    # manual or derogation profile contradicts the schedule, so it is stale.
+    if profile not in (
+        OverkizCommandParam.COMFORT,
+        OverkizCommandParam.ECO,
+        OverkizCommandParam.MANU,
+        OverkizCommandParam.DEROGATION,
+    ):
+        return profile, derogation
+
+    applied = states.get_value(OverkizState.CORE_TARGET_TEMPERATURE)
+    comfort = states.get_value(comfort_state)
+    eco = states.get_value(eco_state)
+
+    if applied is not None and comfort != eco:
+        if applied == eco:
+            return OverkizCommandParam.ECO, derogation
+        if applied == comfort:
+            return OverkizCommandParam.COMFORT, derogation
+
+    if derogation:
+        return OverkizCommandParam.DEROGATION, True
+
+    return profile, False
+
+
+PROGRAM_SETPOINT_REFRESH_COMMANDS: dict[str, OverkizCommand] = {
+    OverkizCommand.SET_ECO_HEATING_TARGET_TEMPERATURE: (
+        OverkizCommand.REFRESH_ECO_HEATING_TARGET_TEMPERATURE
+    ),
+    OverkizCommand.SET_COMFORT_HEATING_TARGET_TEMPERATURE: (
+        OverkizCommand.REFRESH_COMFORT_HEATING_TARGET_TEMPERATURE
+    ),
+    OverkizCommand.SET_ECO_COOLING_TARGET_TEMPERATURE: (
+        OverkizCommand.REFRESH_ECO_COOLING_TARGET_TEMPERATURE
+    ),
+    OverkizCommand.SET_COMFORT_COOLING_TARGET_TEMPERATURE: (
+        OverkizCommand.REFRESH_COMFORT_COOLING_TARGET_TEMPERATURE
+    ),
+}
+
+
+def _program_refresh_commands(
+    commands: list[Command],
+) -> tuple[OverkizCommand, ...]:
+    """Return the refreshes of the program setpoints written, and the applied one."""
+
+    return (
+        *(PROGRAM_SETPOINT_REFRESH_COMMANDS[command.name] for command in commands),
+        OverkizCommand.REFRESH_TARGET_TEMPERATURE,
+    )
+
+
+@dataclass(frozen=True, kw_only=True)
+class ProgramSetpoints:
+    """Eco and comfort setpoints of the time program of one side."""
+
+    mode_state: OverkizState
+    low_state: OverkizState
+    low_command: OverkizCommand
+    high_state: OverkizState
+    high_command: OverkizCommand
+
+
+# While the zone follows its time program, the range shows the eco and comfort
+# setpoints of the side running: eco is the lower one when heating, comfort
+# the lower one when cooling.
+HVAC_MODE_TO_PROGRAM_SETPOINTS: dict[HVACMode, ProgramSetpoints] = {
+    HVACMode.HEAT: ProgramSetpoints(
+        mode_state=OverkizState.IO_PASS_APC_HEATING_MODE,
+        low_state=OverkizState.CORE_ECO_HEATING_TARGET_TEMPERATURE,
+        low_command=OverkizCommand.SET_ECO_HEATING_TARGET_TEMPERATURE,
+        high_state=OverkizState.CORE_COMFORT_HEATING_TARGET_TEMPERATURE,
+        high_command=OverkizCommand.SET_COMFORT_HEATING_TARGET_TEMPERATURE,
+    ),
+    HVACMode.COOL: ProgramSetpoints(
+        mode_state=OverkizState.IO_PASS_APC_COOLING_MODE,
+        low_state=OverkizState.CORE_COMFORT_COOLING_TARGET_TEMPERATURE,
+        low_command=OverkizCommand.SET_COMFORT_COOLING_TARGET_TEMPERATURE,
+        high_state=OverkizState.CORE_ECO_COOLING_TARGET_TEMPERATURE,
+        high_command=OverkizCommand.SET_ECO_COOLING_TARGET_TEMPERATURE,
+    ),
 }
 
 TEMPERATURE_ZONECONTROL_DEVICE_INDEX = 1
@@ -72,6 +217,13 @@ OVERKIZ_THERMAL_CONFIGURATION_TO_HVAC_MODE: dict[
         HVACMode.HEAT_COOL,
         SUPPORTED_FEATURES | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
     ),
+}
+
+# Heating and cooling zones only expose the setpoints of the side the
+# ZoneControl system is running, or ran last while it is stopped or drying.
+OVERKIZ_OPERATING_MODE_TO_ACTIVE_HVAC_MODE: dict[str, HVACMode] = {
+    OverkizCommandParam.COOLING: HVACMode.COOL,
+    OverkizCommandParam.HEATING: HVACMode.HEAT,
 }
 
 
@@ -105,7 +257,11 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             self._attr_supported_features = climate_entity_feature
 
         # Those are available and tested presets on Shogun.
-        self._attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
+        self._attr_preset_modes = [
+            *PRESET_MODES_TO_OVERKIZ,
+            *SCHEDULE_PROFILE_PRESETS,
+            *DEROGATION_PRESETS,
+        ]
 
         # Those APC Heating and Cooling probes depends on the
         # zone control device (main probe). Only the base device
@@ -183,6 +339,97 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         return HVACAction.OFF
 
     @property
+    def active_hvac_mode(self) -> HVACMode | None:
+        """Return the device mode, narrowed to the side currently running.
+
+        While the ZoneControl system is stopped or drying, this is the side it
+        ran last.
+        """
+
+        device_hvac_mode = self.device_hvac_mode
+
+        if (
+            device_hvac_mode != HVACMode.HEAT_COOL
+            or self.is_using_derogated_temperature_fallback
+            or self.zone_control_executor is None
+        ):
+            return device_hvac_mode
+
+        states = self.zone_control_executor.device.states
+
+        for operating_mode_state in (
+            OverkizState.IO_PASS_APC_OPERATING_MODE,
+            OverkizState.IO_LAST_PASS_APC_OPERATING_MODE,
+        ):
+            if (
+                active_hvac_mode := OVERKIZ_OPERATING_MODE_TO_ACTIVE_HVAC_MODE.get(
+                    cast(str, states.get_value(operating_mode_state))
+                )
+            ) is not None:
+                return active_hvac_mode
+
+        return device_hvac_mode
+
+    @property
+    def active_program_setpoints(self) -> ProgramSetpoints | None:
+        """Return the program setpoints of the side the zone control runs."""
+
+        if self.is_using_derogated_temperature_fallback:
+            return None
+
+        return HVAC_MODE_TO_PROGRAM_SETPOINTS.get(cast(HVACMode, self.active_hvac_mode))
+
+    @property
+    def program_setpoints(self) -> ProgramSetpoints | None:
+        """Return the program setpoints the zone applies, if it follows its program.
+
+        A derogation overrides the program: the zone then applies the single
+        derogation setpoint, like in manual mode.
+        """
+
+        if (program_setpoints := self.active_program_setpoints) is None:
+            return None
+
+        states = self.device.states
+
+        if (
+            states.get_value(program_setpoints.mode_state)
+            != OverkizCommandParam.INTERNAL_SCHEDULING
+            or states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
+            == OverkizCommandParam.ON
+        ):
+            return None
+
+        return program_setpoints
+
+    @property
+    @override
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the supported features, following the setpoints exposed."""
+
+        supported_features = self._attr_supported_features
+
+        if self.is_using_derogated_temperature_fallback:
+            return supported_features
+
+        # The range is the program and the single setpoint the manual one. Both
+        # are accepted whatever the mode of the zone is: restoring a scene sets
+        # the temperatures before the preset. A single setpoint needs a side to
+        # write it to, so it is not offered while neither side is known.
+        if self.device_hvac_mode is None:
+            return supported_features
+
+        supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+
+        if (
+            self.device_hvac_mode != HVACMode.HEAT_COOL
+            or self.active_hvac_mode != HVACMode.HEAT_COOL
+        ):
+            supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+
+        return supported_features
+
+    @property
     @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
@@ -254,16 +501,18 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             else OverkizCommandParam.ON
         )
 
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_COOLING_ON_OFF,
-            on_off_target_command_param,
+        await self.async_execute_and_refresh_modes(
+            [
+                Command(
+                    name=OverkizCommand.SET_COOLING_ON_OFF,
+                    parameters=[on_off_target_command_param],
+                ),
+                Command(
+                    name=OverkizCommand.SET_HEATING_ON_OFF,
+                    parameters=[on_off_target_command_param],
+                ),
+            ]
         )
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_HEATING_ON_OFF,
-            on_off_target_command_param,
-        )
-
-        await self.async_refresh_modes()
 
     @property
     @override
@@ -289,9 +538,32 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 is not None
             )
         ):
+            if mode == PRESET_SCHEDULE:
+                return self._schedule_preset_mode(self.zone_control_hvac_action)
+
             return mode
 
         return PRESET_NONE
+
+    def _schedule_preset_mode(self, hvac_action: HVACAction) -> str:
+        """Return the preset showing the profile the zone applies in schedule."""
+
+        profile_to_target_temperature_state = (
+            COOLING_PROFILE_TO_TARGET_TEMPERATURE_STATE
+            if hvac_action == HVACAction.COOLING
+            else HEATING_PROFILE_TO_TARGET_TEMPERATURE_STATE
+        )
+        profile, derogation = effective_profile(
+            self.device.states,
+            HVAC_ACTION_TO_OVERKIZ_PROFILE_STATE[hvac_action],
+            profile_to_target_temperature_state[OverkizCommandParam.COMFORT],
+            profile_to_target_temperature_state[OverkizCommandParam.ECO],
+        )
+
+        if (presets := OVERKIZ_PROFILE_TO_PRESETS.get(cast(str, profile))) is not None:
+            return presets[derogation]
+
+        return PRESET_DEROGATION if derogation else PRESET_SCHEDULE
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -301,17 +573,40 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             await super().async_set_preset_mode(preset_mode)
             return
 
+        if preset_mode in DEROGATION_PRESETS:
+            # Restoring a scene replays the preset the zone is already in.
+            if preset_mode == self.preset_mode:
+                return
+
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="derogation_preset_not_selectable",
+            )
+
+        if preset_mode in SCHEDULE_PROFILE_PRESETS:
+            preset_mode = PRESET_SCHEDULE
+
         mode = PRESET_MODES_TO_OVERKIZ[preset_mode]
 
         # For consistency, it is better both are synced like on the Thermostat.
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_PASS_APC_HEATING_MODE, mode
-        )
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_PASS_APC_COOLING_MODE, mode
-        )
+        commands = [
+            Command(name=OverkizCommand.SET_PASS_APC_HEATING_MODE, parameters=[mode]),
+            Command(name=OverkizCommand.SET_PASS_APC_COOLING_MODE, parameters=[mode]),
+        ]
 
-        await self.async_refresh_modes()
+        # The zone keeps applying a derogation until it is turned off, even
+        # once both modes follow the time program again. The state of the
+        # derogation may not show one that has just been started, so it is
+        # always turned off.
+        if preset_mode == PRESET_SCHEDULE:
+            commands.append(
+                Command(
+                    name=OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
+                    parameters=[OverkizCommandParam.OFF],
+                )
+            )
+
+        await self.async_execute_and_refresh_modes(commands)
 
     @property
     @override
@@ -321,26 +616,35 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         if self.is_using_derogated_temperature_fallback:
             return super().native_target_temperature
 
-        device_hvac_mode = self.device_hvac_mode
+        device_hvac_mode = self.active_hvac_mode
 
-        if device_hvac_mode == HVACMode.HEAT_COOL:
+        if device_hvac_mode == HVACMode.HEAT_COOL or self.program_setpoints is not None:
             return None
 
-        if device_hvac_mode == HVACMode.COOL:
-            return cast(
-                float,
-                self.device.states.get_value(
-                    OverkizState.CORE_COOLING_TARGET_TEMPERATURE
-                ),
+        # A derogation over the program, started from a remote or the app, can
+        # apply the setpoint of the other profile, which only the applied
+        # setpoint reports. In manual mode the manual setpoint applies, and it
+        # is up to date right after it is set, unlike the applied one.
+        if (
+            (program_setpoints := self.active_program_setpoints) is not None
+            and self.device.states.get_value(program_setpoints.mode_state)
+            == OverkizCommandParam.INTERNAL_SCHEDULING
+            and self.device.states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
+            == OverkizCommandParam.ON
+            and (
+                applied_target_temperature := self.device.states.get_value(
+                    OverkizState.CORE_TARGET_TEMPERATURE
+                )
             )
+            is not None
+        ):
+            return cast(float, applied_target_temperature)
+
+        if device_hvac_mode == HVACMode.COOL:
+            return self.cooling_target_temperature
 
         if device_hvac_mode == HVACMode.HEAT:
-            return cast(
-                float,
-                self.device.states.get_value(
-                    OverkizState.CORE_HEATING_TARGET_TEMPERATURE
-                ),
-            )
+            return self.heating_target_temperature
 
         return cast(
             float, self.device.states.get_value(OverkizState.CORE_TARGET_TEMPERATURE)
@@ -351,26 +655,79 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach (cooling)."""
 
+        if (program_setpoints := self.active_program_setpoints) is not None:
+            return cast(
+                float, self.device.states.get_value(program_setpoints.high_state)
+            )
+
         if self.device_hvac_mode != HVACMode.HEAT_COOL:
             return None
 
-        return cast(
-            float,
-            self.device.states.get_value(OverkizState.CORE_COOLING_TARGET_TEMPERATURE),
-        )
+        return self.cooling_target_temperature
 
     @property
     @override
     def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach (heating)."""
 
+        if (program_setpoints := self.active_program_setpoints) is not None:
+            return cast(
+                float, self.device.states.get_value(program_setpoints.low_state)
+            )
+
         if self.device_hvac_mode != HVACMode.HEAT_COOL:
             return None
 
-        return cast(
-            float,
-            self.device.states.get_value(OverkizState.CORE_HEATING_TARGET_TEMPERATURE),
+        return self.heating_target_temperature
+
+    @property
+    def heating_target_temperature(self) -> float | None:
+        """Return the heating setpoint currently applied by the zone."""
+
+        return self._active_target_temperature(
+            OverkizState.IO_PASS_APC_HEATING_MODE,
+            OverkizState.IO_PASS_APC_HEATING_PROFILE,
+            HEATING_PROFILE_TO_TARGET_TEMPERATURE_STATE,
+            OverkizState.CORE_HEATING_TARGET_TEMPERATURE,
         )
+
+    @property
+    def cooling_target_temperature(self) -> float | None:
+        """Return the cooling setpoint currently applied by the zone."""
+
+        return self._active_target_temperature(
+            OverkizState.IO_PASS_APC_COOLING_MODE,
+            OverkizState.IO_PASS_APC_COOLING_PROFILE,
+            COOLING_PROFILE_TO_TARGET_TEMPERATURE_STATE,
+            OverkizState.CORE_COOLING_TARGET_TEMPERATURE,
+        )
+
+    def _active_target_temperature(
+        self,
+        mode_state: OverkizState,
+        profile_state: OverkizState,
+        profile_to_target_temperature_state: dict[str, OverkizState],
+        manual_target_temperature_state: OverkizState,
+    ) -> float | None:
+        """Return the program setpoint of the active profile when scheduled."""
+
+        states = self.device.states
+
+        # The manual setpoint applies outside the program and during a derogation.
+        if (
+            states.get_value(mode_state) == OverkizCommandParam.INTERNAL_SCHEDULING
+            and states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
+            != OverkizCommandParam.ON
+            and (
+                target_temperature_state := profile_to_target_temperature_state.get(
+                    cast(str, states.get_value(profile_state))
+                )
+            )
+            is not None
+        ):
+            return cast(float, states.get_value(target_temperature_state))
+
+        return cast(float, states.get_value(manual_target_temperature_state))
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -380,68 +737,151 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             await super().async_set_temperature(**kwargs)
             return
 
+        # The range is the eco and comfort setpoints of the program of the side
+        # running. It never starts a derogation, whatever the mode of the zone.
+        if (program_setpoints := self.active_program_setpoints) is not None:
+            if program_commands := [
+                Command(name=command, parameters=[target_temp])
+                for command, target_temp in (
+                    (program_setpoints.low_command, kwargs.get(ATTR_TARGET_TEMP_LOW)),
+                    (
+                        program_setpoints.high_command,
+                        kwargs.get(ATTR_TARGET_TEMP_HIGH),
+                    ),
+                )
+                if target_temp is not None
+            ]:
+                await self.async_execute_and_refresh_modes(
+                    program_commands, _program_refresh_commands(program_commands)
+                )
+
+                # A saved state holds the range and the manual setpoint together.
+                kwargs.pop(ATTR_TARGET_TEMP_LOW, None)
+                kwargs.pop(ATTR_TARGET_TEMP_HIGH, None)
+                if ATTR_TEMPERATURE not in kwargs:
+                    return
+
+            # While following the program, a single setpoint is only kept as the
+            # manual one, which applies once the zone is switched to manual.
+            if self.program_setpoints is not None:
+                if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
+                    await self.async_execute_and_refresh_modes(
+                        [
+                            Command(
+                                name=(
+                                    OverkizCommand.SET_HEATING_TARGET_TEMPERATURE
+                                    if self.active_hvac_mode == HVACMode.HEAT
+                                    else OverkizCommand.SET_COOLING_TARGET_TEMPERATURE
+                                ),
+                                parameters=[target_temperature],
+                            )
+                        ],
+                        (),
+                    )
+                return
+
+        # With no side running, the program has no setpoint to change, in any
+        # mode: writing the manual setpoints instead would start a derogation.
+        if self.active_hvac_mode not in (HVACMode.HEAT, HVACMode.COOL):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="zone_control_side_unknown",
+            )
+
+        # A single setpoint applies to the side currently running.
+        if self.device_hvac_mode == HVACMode.HEAT_COOL and ATTR_TEMPERATURE in kwargs:
+            active_target_temp = (
+                ATTR_TARGET_TEMP_LOW
+                if self.active_hvac_mode == HVACMode.HEAT
+                else ATTR_TARGET_TEMP_HIGH
+            )
+            kwargs[active_target_temp] = kwargs.pop(ATTR_TEMPERATURE)
+
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        hvac_mode = self.hvac_mode
+
+        # The setpoints are written even when the zone is off.
+        hvac_mode = self.device_hvac_mode
+        commands: list[Command] = []
 
         if hvac_mode == HVACMode.HEAT_COOL:
             if target_temp_low is not None:
-                await self.executor.async_execute_command(
-                    OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
-                    target_temp_low,
+                commands.append(
+                    Command(
+                        name=OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
+                        parameters=[target_temp_low],
+                    )
                 )
 
             if target_temp_high is not None:
-                await self.executor.async_execute_command(
-                    OverkizCommand.SET_COOLING_TARGET_TEMPERATURE,
-                    target_temp_high,
+                commands.append(
+                    Command(
+                        name=OverkizCommand.SET_COOLING_TARGET_TEMPERATURE,
+                        parameters=[target_temp_high],
+                    )
                 )
 
         elif target_temperature is not None:
             if hvac_mode == HVACMode.HEAT:
-                await self.executor.async_execute_command(
-                    OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
-                    target_temperature,
+                commands.append(
+                    Command(
+                        name=OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
+                        parameters=[target_temperature],
+                    )
                 )
 
             elif hvac_mode == HVACMode.COOL:
-                await self.executor.async_execute_command(
-                    OverkizCommand.SET_COOLING_TARGET_TEMPERATURE,
-                    target_temperature,
+                commands.append(
+                    Command(
+                        name=OverkizCommand.SET_COOLING_TARGET_TEMPERATURE,
+                        parameters=[target_temperature],
+                    )
                 )
 
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
-            OverkizCommandParam.ON,
+        # The derogation only has to be started once: sending it again with
+        # every step of the slider and refreshing the modes makes each step
+        # slower, and a long queue of steps loses commands.
+        if (
+            self.device.states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
+            == OverkizCommandParam.ON
+        ):
+            # A derogation over the program shows the applied setpoint, which
+            # only changes once it is refreshed. A manual zone shows the one
+            # that has just been written.
+            await self.async_execute_and_refresh_modes(
+                commands,
+                (
+                    (OverkizCommand.REFRESH_TARGET_TEMPERATURE,)
+                    if (program_setpoints := self.active_program_setpoints) is not None
+                    and self.device.states.get_value(program_setpoints.mode_state)
+                    == OverkizCommandParam.INTERNAL_SCHEDULING
+                    else ()
+                ),
+            )
+            return
+
+        commands.append(
+            Command(
+                name=OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
+                parameters=[OverkizCommandParam.ON],
+            )
         )
 
-        await self.async_refresh_modes()
+        await self.async_execute_and_refresh_modes(commands)
 
-    async def async_refresh_modes(self) -> None:
-        """Refresh the device modes to have new states."""
+    async def async_execute_and_refresh_modes(
+        self,
+        commands: list[Command],
+        refresh: tuple[OverkizCommand, ...] = REFRESH_MODES_COMMANDS,
+    ) -> None:
+        """Execute commands, then refresh the states they change."""
 
-        # The device needs a bit of time to update everything before a refresh.
-        await sleep(2)
-
-        await self.executor.async_execute_command(
-            OverkizCommand.REFRESH_PASS_APC_HEATING_MODE
-        )
-
-        await self.executor.async_execute_command(
-            OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE
-        )
-
-        await self.executor.async_execute_command(
-            OverkizCommand.REFRESH_PASS_APC_COOLING_MODE
-        )
-
-        await self.executor.async_execute_command(
-            OverkizCommand.REFRESH_PASS_APC_COOLING_PROFILE
-        )
-
-        await self.executor.async_execute_command(
-            OverkizCommand.REFRESH_TARGET_TEMPERATURE
+        # Commands of one execution run in order, so the refreshes only start
+        # once the device has applied the previous commands. Each command takes
+        # seconds on the device, and a long queue makes it drop commands.
+        await self.executor.async_execute_commands(
+            [*commands, *(Command(name=name) for name in refresh)]
         )
 
     @property
@@ -449,7 +889,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     def min_temp(self) -> float:
         """Return Minimum Temperature for AC of this group."""
 
-        device_hvac_mode = self.device_hvac_mode
+        device_hvac_mode = self.active_hvac_mode
 
         if device_hvac_mode in (HVACMode.HEAT, HVACMode.HEAT_COOL):
             return cast(
@@ -474,7 +914,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     def max_temp(self) -> float:
         """Return Max Temperature for AC of this group."""
 
-        device_hvac_mode = self.device_hvac_mode
+        device_hvac_mode = self.active_hvac_mode
 
         if device_hvac_mode == HVACMode.HEAT:
             return cast(

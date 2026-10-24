@@ -96,13 +96,19 @@
               "auto": "[%key:common::state::auto%]",
               "comfort-1": "Comfort -1°C",
               "comfort-2": "Comfort -2°C",
+              "derogation": "Manual override",
+              "derogation_comfort": "Override: comfort",
+              "derogation_eco": "Override: eco",
               "drying": "Drying",
               "external": "External",
               "freeze": "Freeze",
               "frost_protection": "Frost protection",
               "manual": "[%key:common::state::manual%]",
               "night": "Night",
-              "prog": "Prog"
+              "prog": "Prog",
+              "schedule": "Schedule",
+              "schedule_comfort": "Schedule: comfort",
+              "schedule_eco": "Schedule: eco"
             }
           }
         }
@@ -219,8 +225,14 @@
     }
   },
   "exceptions": {
+    "derogation_preset_not_selectable": {
+      "message": "This preset only shows the current state and cannot be selected. To start an override, switch the zone to manual and set a temperature, or use the remote or the app."
+    },
     "unsupported_set_position_and_tilt": {
       "message": "This device does not support setting position and tilt simultaneously."
+    },
+    "zone_control_side_unknown": {
+      "message": "The Zone Control isn't heating or cooling, so the program has no setpoint to change. Select heating or cooling on the Zone Control first."
     }
   },
   "issues": {
