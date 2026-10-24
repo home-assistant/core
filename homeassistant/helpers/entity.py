@@ -1714,38 +1714,66 @@ class Entity(
     ) -> None:
         """Handle entity registry update."""
         action = event.data["action"]
-        is_remove = action == "remove"
+        registry_entry: er.RegistryEntry | None = None
+        if action == "update":
+            if self.registry_entry is None:
+                # Already being removed from the entity registry
+                return
+            # Events fired while another event is dispatched are queued, the entry
+            # may have been changed or removed after this event was fired
+            registry_entry = er.async_get(self.hass).async_get(self.registry_entry.id)
+            is_remove = registry_entry is None
+        else:
+            is_remove = action == "remove"
+        if is_remove and self._removed_from_registry:
+            # Already handled when a queued update found the entry removed
+            return
         self._removed_from_registry = is_remove
         if action == "update" or is_remove:
             self.hass.async_create_task_internal(
-                self._async_process_registry_update_or_remove(event), eager_start=True
+                self._async_process_registry_update_or_remove(event, registry_entry),
+                eager_start=True,
             )
 
     async def _async_process_registry_update_or_remove(
-        self, event: Event[er.EventEntityRegistryUpdatedData]
+        self,
+        event: Event[er.EventEntityRegistryUpdatedData],
+        registry_entry: er.RegistryEntry | None,
     ) -> None:
-        """Handle entity registry update or remove."""
-        data = event.data
-        if data["action"] == "remove":
+        """Handle entity registry update or remove.
+
+        registry_entry is the current entry, or None if it has been removed.
+        """
+        if registry_entry is None:
             await self.async_removed_from_registry()
             self.registry_entry = None
             await self.async_remove()
-
-        if data["action"] != "update":
             return
 
-        # Invalidate friendly name cache if relevant fields changed
-        changes = data["changes"]
-        if "name" in changes or "has_entity_name" in changes or "device_id" in changes:
-            self._cached_friendly_name = None
-
-        ent_reg = er.async_get(self.hass)
         old = self.registry_entry
-        registry_entry = ent_reg.async_get(data["entity_id"])
-        assert registry_entry is not None
+        assert old is not None
         self.registry_entry = registry_entry
 
-        if "device_id" in changes:
+        # Compare entries since the entry may have been changed again by events
+        # which will not reach this entity, and check the event's changes since
+        # writing capabilities may have already replaced self.registry_entry
+        data = event.data
+        if TYPE_CHECKING:
+            assert data["action"] == "update"
+        changes = data["changes"]
+        device_changed = (
+            "device_id" in changes or registry_entry.device_id != old.device_id
+        )
+        if (
+            device_changed
+            or "name" in changes
+            or "has_entity_name" in changes
+            or registry_entry.name != old.name
+            or registry_entry.has_entity_name != old.has_entity_name
+        ):
+            self._cached_friendly_name = None
+
+        if device_changed:
             self._async_subscribe_device_updates()
 
         if device_id := registry_entry.device_id:
@@ -1757,7 +1785,6 @@ class Entity(
             await self.async_remove()
             return
 
-        assert old is not None
         if registry_entry.entity_id == old.entity_id:
             self.async_registry_entry_updated()
             self.async_write_ha_state()
