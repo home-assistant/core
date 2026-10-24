@@ -25,8 +25,14 @@ from .const import (
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TTS_MODEL,
 )
-from .entity import GoogleGenerativeAILLMBaseEntity, supports_custom_sampling
+from .entity import (
+    GoogleGenerativeAILLMBaseEntity,
+    supports_custom_sampling,
+    supports_speech_metadata,
+)
 from .helpers import convert_to_wav
+
+ATTR_STYLE = "style"
 
 
 async def async_setup_entry(
@@ -50,7 +56,6 @@ class GoogleGenerativeAITextToSpeechEntity(
 ):
     """Google Generative AI text-to-speech entity."""
 
-    _attr_supported_options = [ATTR_VOICE]
     # See https://ai.google.dev/gemini-api/docs/speech-generation#languages
     # Note the documentation might not be up to date, e.g. el-GR is not listed
     # there but is supported. The docs only name the languages, so regions are
@@ -245,6 +250,15 @@ class GoogleGenerativeAITextToSpeechEntity(
         """Initialize the TTS entity."""
         super().__init__(config_entry, subentry, RECOMMENDED_TTS_MODEL)
 
+    @cached_property
+    @override
+    def supported_options(self) -> list[str]:
+        """Return the options supported by the configured model."""
+        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL)
+        if supports_speech_metadata(model):
+            return [ATTR_VOICE, ATTR_STYLE]
+        return [ATTR_VOICE]
+
     @callback
     @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
@@ -279,6 +293,13 @@ class GoogleGenerativeAITextToSpeechEntity(
             )
         )
 
+        contents: str | types.Part = message
+        if style := options.get(ATTR_STYLE):
+            contents = types.Part(
+                text=message,
+                speech_metadata=types.SpeechMetadata(style=style),
+            )
+
         def _extract_audio_parts(
             response: types.GenerateContentResponse,
         ) -> tuple[bytes, str]:
@@ -307,7 +328,7 @@ class GoogleGenerativeAITextToSpeechEntity(
         try:
             response = await self._genai_client.aio.models.generate_content(
                 model=model,
-                contents=message,
+                contents=contents,
                 config=config,
             )
 
