@@ -376,6 +376,8 @@ class MathExtension(BaseTemplateExtension):
                 value = math.floor(float(value) * multiplier) / multiplier
             elif method == "half":
                 value = round(float(value) * 2) / 2
+                # Keep the .5; only whole results become an int at precision 0.
+                return int(value) if precision == 0 and value.is_integer() else value
             else:
                 # if method is common or something else, use common rounding
                 value = round(float(value), precision)

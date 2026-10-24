@@ -626,6 +626,25 @@ def test_rounding_value(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("template", "expected"),
+    [
+        pytest.param('{{ 21.3 | round(0, "half") }}', 21.5, id="rounds_up"),
+        pytest.param('{{ 21.7 | round(0, "half") }}', 21.5, id="rounds_down"),
+        pytest.param('{{ 2.7 | round(method="half") }}', 2.5, id="default_precision"),
+        pytest.param('{{ 21.8 | round(0, "half") }}', 22, id="whole_result_is_int"),
+        pytest.param('{{ 21.3 | round(1, "half") }}', 21.5, id="precision_one"),
+    ],
+)
+def test_rounding_half_precision_zero(
+    hass: HomeAssistant, template: str, expected: float
+) -> None:
+    """Test the half method keeps the .5 at the default precision of 0."""
+    result = render(hass, template)
+    assert result == expected
+    assert type(result) is type(expected)
+
+
 def test_rounding_value_on_error(hass: HomeAssistant) -> None:
     """Test rounding value handling of error."""
     # Test handling of invalid input
