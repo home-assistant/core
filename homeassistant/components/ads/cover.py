@@ -99,14 +99,6 @@ class AdsCover(AdsEntity, CoverEntity):
     ) -> None:
         """Initialize AdsCover entity."""
         super().__init__(ads_hub, name, ads_var_is_closed)
-        if self._attr_unique_id is None:
-            if ads_var_position is not None:
-                self._attr_unique_id = ads_var_position
-            elif ads_var_pos_set is not None:
-                self._attr_unique_id = ads_var_pos_set
-            elif ads_var_open is not None:
-                self._attr_unique_id = ads_var_open
-
         self._state_dict[STATE_KEY_POSITION] = None
         self._ads_var_position = ads_var_position
         self._ads_var_pos_set = ads_var_pos_set
@@ -125,8 +117,7 @@ class AdsCover(AdsEntity, CoverEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
-        if self._ads_var is not None:
-            await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
+        await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
         if self._ads_var_position is not None:
             await self.async_initialize_device(
@@ -137,11 +128,7 @@ class AdsCover(AdsEntity, CoverEntity):
     @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if self._ads_var is not None:
-            return self._state_dict[STATE_KEY_STATE]
-        if self._ads_var_position is not None:
-            return self._state_dict[STATE_KEY_POSITION] == 0
-        return None
+        return self._state_dict[STATE_KEY_STATE]
 
     @property
     @override
@@ -184,9 +171,7 @@ class AdsCover(AdsEntity, CoverEntity):
     @override
     def available(self) -> bool:
         """Return False if state has not been updated yet."""
-        if self._ads_var is not None or self._ads_var_position is not None:
-            return (
-                self._state_dict[STATE_KEY_STATE] is not None
-                or self._state_dict[STATE_KEY_POSITION] is not None
-            )
-        return True
+        return (
+            self._state_dict[STATE_KEY_STATE] is not None
+            or self._state_dict[STATE_KEY_POSITION] is not None
+        )
