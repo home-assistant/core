@@ -9,7 +9,12 @@ import probatio
 
 from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
-from homeassistant.helpers import entity_registry as er, singleton, storage
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    singleton,
+    storage,
+)
 
 from .const import DOMAIN
 
@@ -250,6 +255,9 @@ class DeviceConsumption(TypedDict):
     # An optional statistic_id identifying a device
     # that includes this device's consumption in its total
     included_in_stat: NotRequired[str]
+
+    # An optional RGB color for the device
+    color: NotRequired[list[int]]
 
 
 class EnergyPreferences(TypedDict):
@@ -641,6 +649,10 @@ DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(
         probatio.Optional("stat_rate"): str,
         probatio.Optional("name"): str,
         probatio.Optional("included_in_stat"): str,
+        probatio.Optional("color"): probatio.All(
+            list,
+            probatio.ExactSequence((cv.byte,) * 3),
+        ),
     }
 )
 
