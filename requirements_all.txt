@@ -2082,6 +2082,9 @@ pyElectra==1.2.8
 # homeassistant.components.emby
 pyEmby==1.10
 
+# homeassistant.components.wws
+pyEnergieDock==0.1.0
+
 # homeassistant.components.hikvision
 pyHik==0.4.8
 

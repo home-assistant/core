@@ -2209,6 +2209,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/ws66i/ @ssaenger
 /homeassistant/components/wsdot/ @ucodery
 /tests/components/wsdot/ @ucodery
+/homeassistant/components/wws/ @ed-julian @dennis-schoen
+/tests/components/wws/ @ed-julian @dennis-schoen
 /homeassistant/components/wyoming/ @synesthesiam
 /tests/components/wyoming/ @synesthesiam
 /homeassistant/components/xbox/ @tr4nt0r
