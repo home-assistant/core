@@ -1,7 +1,7 @@
 """iCloud account."""
 
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 import operator
 from typing import TYPE_CHECKING, Any
@@ -31,7 +31,7 @@ from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import as_utc, parse_datetime, utcnow
 from homeassistant.util.location import distance
 
 from .const import (
@@ -46,12 +46,20 @@ from .const import (
     DEVICE_BATTERY_STATUS,
     DEVICE_CLASS,
     DEVICE_DISPLAY_NAME,
+    DEVICE_FEATURE_LOCK,
+    DEVICE_FEATURES,
     DEVICE_ID,
     DEVICE_LOCATION,
+    DEVICE_LOCATION_ALTITUDE,
+    DEVICE_LOCATION_FLOOR_LEVEL,
     DEVICE_LOCATION_HORIZONTAL_ACCURACY,
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
+    DEVICE_LOCATION_POSITION_TYPE,
+    DEVICE_LOCATION_TIMESTAMP,
+    DEVICE_LOCKED_TIMESTAMP,
     DEVICE_LOST_MODE_CAPABLE,
+    DEVICE_LOST_TIMESTAMP,
     DEVICE_LOW_POWER_MODE,
     DEVICE_NAME,
     DEVICE_PERSON_ID,
@@ -59,6 +67,7 @@ from .const import (
     DEVICE_STATUS,
     DEVICE_STATUS_CODES,
     DEVICE_STATUS_SET,
+    DEVICE_WIPED_TIMESTAMP,
     DOMAIN,
 )
 
@@ -138,6 +147,31 @@ def code_can_be_delivered(api: PyiCloudService | None) -> bool:
 
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
+
+
+def _parse_timestamp(value: Any) -> datetime | None:
+    """Parse an iCloud timestamp.
+
+    iCloud reports timestamps either as epoch milliseconds or as a string,
+    and uses ``None`` or an empty string when the event never happened.
+    """
+    if isinstance(value, bool) or value is None:
+        return None
+
+    if isinstance(value, (int, float)):
+        if value <= 0:
+            return None
+        try:
+            return datetime.fromtimestamp(value / 1000, tz=UTC)
+        except OSError, OverflowError, ValueError:
+            return None
+
+    if isinstance(value, str):
+        if (parsed := parse_datetime(value)) is None:
+            return None
+        return as_utc(parsed)
+
+    return None
 
 
 def _cannot_connect(err: PyiCloudConnectionException) -> ConfigEntryNotReady:
@@ -794,7 +828,7 @@ class IcloudAccount:
         return self._fetch_interval
 
     @property
-    def devices(self) -> dict[str, Any]:
+    def devices(self) -> dict[str, IcloudDevice]:
         """Return the account devices."""
         return self._devices
 
@@ -954,6 +988,87 @@ class IcloudDevice:
     def location(self) -> dict[str, Any] | None:
         """Return the Apple device location."""
         return self._location
+
+    @property
+    def location_timestamp(self) -> datetime | None:
+        """Return when the last location fix was recorded."""
+        if self._location is None:
+            return None
+        return _parse_timestamp(self._location.get(DEVICE_LOCATION_TIMESTAMP))
+
+    @property
+    def location_type(self) -> str | None:
+        """Return the type of the last location fix, for example GPS or Wifi."""
+        if self._location is None:
+            return None
+        return self._location.get(DEVICE_LOCATION_POSITION_TYPE)
+
+    @property
+    def location_accuracy(self) -> float | None:
+        """Return the horizontal accuracy of the last location fix in meters."""
+        if self._location is None:
+            return None
+        return self._location.get(DEVICE_LOCATION_HORIZONTAL_ACCURACY)
+
+    @property
+    def location_altitude(self) -> float | None:
+        """Return the altitude of the last location fix in meters."""
+        if self._location is None:
+            return None
+        return self._location.get(DEVICE_LOCATION_ALTITUDE)
+
+    @property
+    def location_floor_level(self) -> int | None:
+        """Return the floor level of the last location fix."""
+        if self._location is None:
+            return None
+        return self._location.get(DEVICE_LOCATION_FLOOR_LEVEL)
+
+    @property
+    def device_status(self) -> str:
+        """Return the device online status."""
+        return DEVICE_STATUS_CODES.get(self._status[DEVICE_STATUS], "error")
+
+    @property
+    def last_locked(self) -> datetime | None:
+        """Return when the device was last locked."""
+        return _parse_timestamp(self._status.get(DEVICE_LOCKED_TIMESTAMP))
+
+    @property
+    def last_lost(self) -> datetime | None:
+        """Return when the device was last put in lost mode."""
+        return _parse_timestamp(self._status.get(DEVICE_LOST_TIMESTAMP))
+
+    @property
+    def last_wiped(self) -> datetime | None:
+        """Return when the device was last wiped."""
+        return _parse_timestamp(self._status.get(DEVICE_WIPED_TIMESTAMP))
+
+    @property
+    def owner_name(self) -> str | None:
+        """Return the full name of the device owner."""
+        return self._attrs.get(ATTR_OWNER_NAME)
+
+    @property
+    def erase_available(self) -> bool:
+        """Return whether the device can be remotely erased."""
+        return self._device.erase_available
+
+    @property
+    def lock_available(self) -> bool:
+        """Return whether the device can be remotely locked."""
+        features = self._status.get(DEVICE_FEATURES) or {}
+        return bool(features.get(DEVICE_FEATURE_LOCK, False))
+
+    @property
+    def location_available(self) -> bool:
+        """Return whether the device reports a location."""
+        return self._device.location_available
+
+    @property
+    def lost_mode_available(self) -> bool:
+        """Return whether the device supports lost mode."""
+        return self._device.lost_mode_available
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

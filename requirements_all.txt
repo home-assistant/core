@@ -41,7 +41,7 @@ PSNAWP==3.0.3
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
-Pillow==12.3.0
+Pillow==13.0.0
 
 # homeassistant.components.plex
 PlexAPI==4.18.2
@@ -400,7 +400,7 @@ aiopegelonline==0.1.1
 aiopnsense==1.0.10
 
 # homeassistant.components.teslemetry
-aiopowerwall==0.6.0
+aiopowerwall==0.7.0
 
 # homeassistant.components.ptdevices
 aioptdevices==2026.03.2
@@ -451,7 +451,7 @@ aioshelly==14.0.1
 aioskybell==23.12.0
 
 # homeassistant.components.slimproto
-aioslimproto==3.0.0
+aioslimproto==3.3.0
 
 # homeassistant.components.smtp
 aiosmtplib==5.1.3
@@ -1201,9 +1201,6 @@ google-genai==2.25.0
 # homeassistant.components.google_health
 google-health-api==0.9.0
 
-# homeassistant.components.google_travel_time
-google-maps-routing==0.11.0
-
 # homeassistant.components.nest
 google-nest-sdm==9.2.1
 
@@ -1628,7 +1625,7 @@ matrix-nio==0.26.0
 matter-ble-proxy==0.7.1
 
 # homeassistant.components.matter
-matter-python-client==1.5.2
+matter-python-client==1.5.4
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -1902,7 +1899,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.3
 
 # homeassistant.components.opower
-opower==0.22.3
+opower==0.22.4
 
 # homeassistant.components.oralb
 oralb-ble==1.1.3
@@ -2788,8 +2785,11 @@ python-gitlab==1.6.0
 # homeassistant.components.google_drive
 python-google-drive-api==0.2.0
 
+# homeassistant.components.google_travel_time
+python-google-maps-routing-api==0.0.2
+
 # homeassistant.components.google_weather
-python-google-weather-api==0.0.8
+python-google-weather-api==0.0.9
 
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.9.0
