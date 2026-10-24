@@ -35,7 +35,7 @@ class LaMarzoccoSwitchEntityDescription(
     """Description of a La Marzocco Switch."""
 
     control_fn: Callable[[LaMarzoccoMachine, bool], Coroutine[Any, Any, bool]]
-    is_on_fn: Callable[[LaMarzoccoMachine], bool]
+    is_on_fn: Callable[[LaMarzoccoMachine], bool | None]
 
 
 ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
@@ -49,6 +49,8 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
                     SteamBoilerLevel,
                     machine.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL],
                 ).enabled
+                if WidgetType.CM_STEAM_BOILER_LEVEL in machine.dashboard.config
+                else None
             )
         ),
         supported_fn=(
@@ -178,7 +180,7 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self.entity_description.is_on_fn(self.coordinator.device)
 

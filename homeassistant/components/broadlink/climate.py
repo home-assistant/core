@@ -15,7 +15,7 @@ from homeassistant.const import PRECISION_HALVES, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, DOMAINS_AND_TYPES
+from .const import BROADLINK_DATA, DOMAINS_AND_TYPES
 from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
 
@@ -34,9 +34,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink climate entities."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    device = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
 
     if device.api.type in DOMAINS_AND_TYPES[Platform.CLIMATE]:
         async_add_entities([BroadlinkThermostat(device)])

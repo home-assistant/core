@@ -64,14 +64,13 @@ ScheduleEntry = TypedDict(
 def _validate_half_precision(value: float) -> float:
     """Return True if the value is a half precision float."""
 
-    try:
-        r = value % 0.5
-        if r != 0:
-            raise ServiceValidationError(
-                f"value {value} is not a half precision float, remainder is {r}"
-            )
-    except TypeError as err:
-        raise ServiceValidationError(f"value {value} is not a float") from err
+    r = value % 0.5
+    if r != 0:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_half_precision",
+            translation_placeholders={"value": str(value), "remainder": str(r)},
+        )
     return value
 
 
@@ -97,18 +96,32 @@ def _validate_cometblue_schedule(
         end = entry.get(ATTR_TO)
 
         if start is None or end is None:
-            raise ServiceValidationError("Missing from/to in entry")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_schedule_times",
+            )
 
         # Check if the start time of the current event is before the end time of the current event
         if start >= end:
             raise ServiceValidationError(
-                f"Invalid time range {i}, {start} is after {end}"
+                translation_domain=DOMAIN,
+                translation_key="invalid_schedule_time_range",
+                translation_placeholders={
+                    "index": str(i),
+                    "start": str(start),
+                    "end": str(end),
+                },
             )
 
         # Check if the from time of the event is after the to time of the previous event
         if previous_to is not None and previous_to > start:
             raise ServiceValidationError(
-                f"Overlapping times found in schedule, {start} is earlier than previous entry {previous_to} ends"
+                translation_domain=DOMAIN,
+                translation_key="overlapping_schedule_times",
+                translation_placeholders={
+                    "start": str(start),
+                    "previous_end": str(previous_to),
+                },
             )
 
         normalized_schedule[f"{ATTR_START}{i}"] = start
@@ -181,7 +194,7 @@ async def set_schedule(
     LOGGER.info(
         "Setting schedule for %s (%s) on days: %s",
         entity.entity_id,
-        entity.coordinator.device.device.address,
+        entity.coordinator.address,
         ", ".join(
             day for day in ATTR_ALL_DAYS if service_call.data.get(day) is not None
         ),
@@ -214,13 +227,14 @@ async def set_holiday(
 
     if away_start < dt_util.naive_now():
         raise ServiceValidationError(
-            "Start date (ceiled to next hour) must be in the future"
+            translation_domain=DOMAIN,
+            translation_key="holiday_start_not_future",
         )
 
     LOGGER.info(
         "Setting holiday for %s (%s) until %s with temperature %s",
         entity.entity_id,
-        entity.coordinator.device.device.address,
+        entity.coordinator.address,
         service_call.data[ATTR_TO],
         service_call.data[ATTR_TEMPERATURE],
     )

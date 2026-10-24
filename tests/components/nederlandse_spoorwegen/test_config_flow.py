@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests import ConnectionError as RequestsConnectionError, HTTPError, Timeout
 
 from homeassistant.components.nederlandse_spoorwegen.const import (
@@ -12,14 +13,12 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
     CONF_VIA,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import API_KEY
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(
@@ -167,10 +166,7 @@ async def test_reconfigure_success(
     mock_config_entry.add_to_hass(hass)
 
     # Start reconfigure flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -207,10 +203,7 @@ async def test_reconfigure_errors(
     mock_config_entry.add_to_hass(hass)
 
     # First present the form
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -253,10 +246,7 @@ async def test_reconfigure_already_configured(
     second_entry.add_to_hass(hass)
 
     # Start reconfigure flow for the first entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"

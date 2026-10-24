@@ -4,6 +4,8 @@ import time
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.plugins import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNKNOWN
@@ -11,9 +13,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration, update_callback
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.conftest import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")

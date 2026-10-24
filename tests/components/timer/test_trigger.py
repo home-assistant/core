@@ -7,11 +7,26 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.common import (
+    TargetSupport,
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 from homeassistant.components.timer import (
     ATTR_FINISHES_AT,
     ATTR_LAST_TRANSITION,
     DOMAIN,
+)
+from homeassistant.components.timer.const import (
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
@@ -32,20 +47,6 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
-from tests.components.common import (
-    TargetSupport,
-    TriggerStateDescription,
-    assert_trigger_behavior_all,
-    assert_trigger_behavior_each,
-    assert_trigger_behavior_first,
-    assert_trigger_options_supported,
-    assert_triggers_target_support,
-    parametrize_target_entities,
-    parametrize_trigger_states,
-    target_entities,
-)
 
 
 @pytest.fixture

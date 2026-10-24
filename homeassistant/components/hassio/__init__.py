@@ -53,10 +53,12 @@ from . import (  # noqa: F401
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState
 from .addon_panel import async_setup_addon_panel, async_setup_addon_panel_coordinator
 from .auth import async_setup_auth_view
+from .auto_update import AutoUpdateManager
 from .config import HassioConfigStore, StoredHassioConfig
 from .config_entry import async_get_hassio_entry
 from .const import (
     ADDONS_COORDINATOR,
+    DATA_AUTO_UPDATE,
     DATA_COMPONENT,
     DATA_HASSIO_HOST,
     DATA_KEY_SUPERVISOR_ISSUES,
@@ -104,6 +106,7 @@ from .websocket_api import async_load_websocket_api
 # All references to addons will eventually be refactored and deprecated
 get_apps_list = get_addons_list
 __all__ = [
+    "DOMAIN",
     "AddonError",
     "AddonInfo",
     "AddonManager",
@@ -370,7 +373,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
     # Deprecated in 2026.8: remove this legacy store migration path after the
     # deprecation window for .storage/hassio has elapsed.
@@ -455,6 +458,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     issues_coordinator = SupervisorIssuesCoordinator(hass, entry)
     hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues_coordinator
+
+    auto_update = AutoUpdateManager(hass, entry, coordinator)
+    await auto_update.async_setup()
+    hass.data[DATA_AUTO_UPDATE] = auto_update
 
     @callback
     def _refresh_main_coordinator_on_mount_issue(_: IssueSubscriptionEvent) -> None:
@@ -572,18 +579,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if remove_legacy_store:
         await legacy_store.async_remove()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    # Pop coordinators and entry-level data
-    hass.data.pop(MAIN_COORDINATOR, None)
-    hass.data.pop(ADDONS_COORDINATOR, None)
-    hass.data.pop(STATS_COORDINATOR, None)
-    hass.data.pop(JOBS_COORDINATOR, None)
-    hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
-
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        # Pop coordinators and entry-level data
+        hass.data.pop(MAIN_COORDINATOR, None)
+        hass.data.pop(ADDONS_COORDINATOR, None)
+        hass.data.pop(STATS_COORDINATOR, None)
+        hass.data.pop(JOBS_COORDINATOR, None)
+        hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
+        hass.data.pop(DATA_AUTO_UPDATE, None)

@@ -35,6 +35,9 @@
     "permission_denied": {
       "message": "[%key:component::google_travel_time::config::error::permission_denied%]"
     },
+    "timeout": {
+      "message": "Timed out getting travel times from the Google Routes API"
+    },
     "traffic_model_not_allowed": {
       "message": "[%key:component::google_travel_time::options::error::traffic_model_not_allowed%]"
     }

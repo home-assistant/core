@@ -35,7 +35,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) -> None:
     """Set up PrusaLink from a config entry."""
     if entry.version == 1 and entry.minor_version < 2:
         raise ConfigEntryError("Please upgrade your printer's firmware.")
@@ -61,10 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     new_data = dict(config_entry.data)
     if config_entry.version == 1:
@@ -102,9 +100,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 # There is a check in the async_setup_entry to
                 # prevent the setup if minor_version < 2
                 # Currently we can't reload the config entry
-                # if the migration returns False.
-                # Return True here to workaround that.
-                return True
+                # if the migration fails.
+                # Return here to workaround that.
+                return
 
             new_data[CONF_USERNAME] = username
             new_data[CONF_PASSWORD] = password
@@ -114,9 +112,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry, data=new_data, minor_version=2
         )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

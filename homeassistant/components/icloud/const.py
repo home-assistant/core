@@ -9,10 +9,12 @@ ATTRIBUTION = "Data provided by Apple iCloud"
 CONF_WITH_FAMILY = "with_family"
 CONF_MAX_INTERVAL = "max_interval"
 CONF_GPS_ACCURACY_THRESHOLD = "gps_accuracy_threshold"
+CONF_INCLUDE_COMPLETED = "include_completed"
 
 DEFAULT_WITH_FAMILY = False
 DEFAULT_MAX_INTERVAL = 30  # min
 DEFAULT_GPS_ACCURACY_THRESHOLD = 500  # meters
+DEFAULT_INCLUDE_COMPLETED = False
 
 # to store the cookie
 STORAGE_KEY = DOMAIN
@@ -21,6 +23,15 @@ STORAGE_VERSION = 2
 PLATFORMS = [Platform.CALENDAR, Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.TODO]
 
 # pyicloud.AppleDevice status
+DEVICE_FEATURES = "features"
+DEVICE_FEATURE_LOCK = "LCK"
+DEVICE_LOCATION_ALTITUDE = "altitude"
+DEVICE_LOCATION_FLOOR_LEVEL = "floorLevel"
+DEVICE_LOCATION_POSITION_TYPE = "positionType"
+DEVICE_LOCATION_TIMESTAMP = "timeStamp"
+DEVICE_LOCKED_TIMESTAMP = "lockedTimestamp"
+DEVICE_LOST_TIMESTAMP = "lostTimestamp"
+DEVICE_WIPED_TIMESTAMP = "wipedTimestamp"
 DEVICE_BATTERY_LEVEL = "batteryLevel"
 DEVICE_BATTERY_STATUS = "batteryStatus"
 DEVICE_CLASS = "deviceClass"

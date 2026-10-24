@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 from psutil._ntuples import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockProcess
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.freeze_time("2024-02-24 15:00:00", tz_offset=0)

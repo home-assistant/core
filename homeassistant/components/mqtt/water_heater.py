@@ -43,7 +43,7 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, VolSchemaType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .climate import MqttTemperatureControlEntity
-from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
+from .config import MQTT_BASE_SCHEMA
 from .const import (
     CONF_CURRENT_TEMP_TEMPLATE,
     CONF_CURRENT_TEMP_TOPIC,
@@ -64,6 +64,7 @@ from .const import (
     CONF_TEMP_STATE_TEMPLATE,
     CONF_TEMP_STATE_TOPIC,
     DEFAULT_OPTIMISTIC,
+    DEFAULT_RETAIN,
     PAYLOAD_NONE,
 )
 from .entity import async_setup_entity_entry_helper

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.collection_image.const import DOMAIN
 from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
@@ -23,8 +24,6 @@ from .const import (
     TEST_IMAGE,
 )
 from .helpers import directory, image
-
-from tests.common import MockConfigEntry
 
 
 @dataclass

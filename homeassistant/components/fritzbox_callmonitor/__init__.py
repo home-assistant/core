@@ -20,7 +20,7 @@ type FritzBoxCallMonitorConfigEntry = ConfigEntry[FritzBoxPhonebook]
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: FritzBoxCallMonitorConfigEntry
-) -> bool:
+) -> None:
     """Set up the fritzbox_callmonitor platforms."""
     fritzbox_phonebook = FritzBoxPhonebook(
         host=config_entry.data[CONF_HOST],
@@ -49,11 +49,9 @@ async def async_setup_entry(
     config_entry.runtime_data = fritzbox_phonebook
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: FritzBoxCallMonitorConfigEntry
-) -> bool:
+) -> None:
     """Unloading the fritzbox_callmonitor platforms."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

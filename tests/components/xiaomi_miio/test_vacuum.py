@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 from miio import DeviceException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -63,8 +64,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import TEST_MAC
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 # calls made when device status is requested
 STATUS_CALLS = [

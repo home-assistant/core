@@ -12,6 +12,9 @@
       "bat_config_capacity": {
         "default": "mdi:battery-check-outline"
       },
+      "bat_config_charge_cutoff_soc": {
+        "default": "mdi:battery-arrow-up-outline"
+      },
       "bat_config_depth_of_discharge": {
         "default": "mdi:battery-check-outline"
       },
@@ -26,6 +29,15 @@
       },
       "battery_state_of_health_total": {
         "default": "mdi:battery-heart"
+      },
+      "off_grid_discharge_cutoff_soc": {
+        "default": "mdi:battery-arrow-down-outline"
+      },
+      "off_grid_recovery_soc": {
+        "default": "mdi:battery-sync-outline"
+      },
+      "on_grid_discharge_cutoff_soc": {
+        "default": "mdi:battery-arrow-down-outline"
       },
       "state_of_health": {
         "default": "mdi:battery-heart"
