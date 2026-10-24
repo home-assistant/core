@@ -332,6 +332,7 @@ FLOWS = {
         "haven_iaq",
         "hdfury",
         "hegel",
+        "heiman_home",
         "helty",
         "helty_cloud",
         "heos",
