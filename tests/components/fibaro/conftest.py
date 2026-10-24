@@ -310,6 +310,7 @@ def mock_thermostat_parent() -> Mock:
     climate.base_type = "com.fibaro.device"
     climate.properties = {"manufacturer": ""}
     climate.actions = []
+    climate.battery_level = 80
     return climate
 
 
@@ -341,6 +342,7 @@ def mock_thermostat_with_operating_mode() -> Mock:
     climate.has_heating_thermostat_setpoint = False
     climate.has_heating_thermostat_setpoint_future = False
     climate.target_level = 23
+    climate.battery_level = 80
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.float_value.return_value = 20
