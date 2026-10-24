@@ -8617,6 +8617,15 @@
           ],
           "name": "Philips Hue BLE"
         },
+        "philips_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "categories": [
+            "media_entertainment.tv_streaming"
+          ],
+          "name": "Philips Infrared"
+        },
         "philips_js": {
           "integration_type": "device",
           "config_flow": true,
