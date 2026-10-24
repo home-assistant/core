@@ -61,7 +61,6 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         ),
         SensorEntityDescription(
             key="loudness",
-            translation_key="loudness",
             device_class=SensorDeviceClass.SOUND_PRESSURE,
             native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
             state_class=SensorStateClass.MEASUREMENT,
@@ -82,7 +81,6 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         ),
         SensorEntityDescription(
             key="co2",
-            translation_key="co2",
             device_class=SensorDeviceClass.CO2,
             native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
             state_class=SensorStateClass.MEASUREMENT,
@@ -131,6 +129,4 @@ class AmpioSensor(AmpioEntity, SensorEntity):
     @override
     def native_value(self) -> float | None:
         """The current reading, or None when missing or non-numeric."""
-        if (obj := self._object) is None:
-            return None
-        return obj.numeric_value
+        return self._object.numeric_value

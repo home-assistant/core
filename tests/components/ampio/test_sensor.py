@@ -38,7 +38,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 TEMPERATURE_ENTITY_ID = "sensor.m_sens_salon_temperatura"
 HUMIDITY_ENTITY_ID = "sensor.m_sens_salon_wilgotnosc"
 # An unnamed object's device reads "Object <id>", after its module's name.
-CO2_ENTITY_ID = "sensor.m_sens_salon_object_43_co2"
+CO2_ENTITY_ID = "sensor.m_sens_salon_object_43_carbon_dioxide"
 
 
 async def _push_value(

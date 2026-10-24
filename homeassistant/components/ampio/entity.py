@@ -132,12 +132,13 @@ class AmpioEntity(Entity):
         self.async_write_ha_state()
 
     @property
-    def _object(self) -> AmpioObject | None:
-        """The backing object, or None once the catalogue dropped it."""
-        return self._data.client.objects.get(self._object_id)
+    def _object(self) -> AmpioObject:
+        """The backing object, present while the entity is available."""
+        return self._data.client.objects[self._object_id]
 
     @property
     @override
     def available(self) -> bool:
         """Available while the broker is connected and the object exists."""
-        return self._data.client.available and self._object is not None
+        client = self._data.client
+        return client.available and self._object_id in client.objects
