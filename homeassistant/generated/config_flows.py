@@ -624,6 +624,7 @@ FLOWS = {
         "palazzetti",
         "panasonic_viera",
         "paperless_ngx",
+        "papouch",
         "peblar",
         "peco",
         "pegel_online",
