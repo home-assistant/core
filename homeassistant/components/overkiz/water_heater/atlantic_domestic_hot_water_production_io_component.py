@@ -147,10 +147,9 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
         """Set new operation mode."""
         if operation_mode == STATE_PERFORMANCE:
             if self.is_away_mode_on:
-                await self.async_turn_away_mode_off(refresh_afterwards=False)
+                await self.async_turn_away_mode_off()
 
             await self._async_turn_boost_mode_on()
-            await self.coordinator.async_refresh()
             return
 
         previous_operation = self.current_operation
@@ -159,7 +158,7 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
             await self._async_turn_boost_mode_off()
 
         if self.is_away_mode_on:
-            await self.async_turn_away_mode_off(refresh_afterwards=False)
+            await self.async_turn_away_mode_off()
 
         commands = [
             Command(
@@ -174,7 +173,7 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
         await self.executor.async_execute_commands(commands)
 
     @override
-    async def async_turn_away_mode_on(self, refresh_afterwards: bool = True) -> None:
+    async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self.executor.async_execute_commands(
             [
@@ -189,11 +188,10 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
                 ),
                 Command(name=OverkizCommand.REFRESH_AWAY_MODE_DURATION),
             ],
-            refresh_afterwards=refresh_afterwards,
         )
 
     @override
-    async def async_turn_away_mode_off(self, refresh_afterwards: bool = True) -> None:
+    async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         await self.executor.async_execute_commands(
             [
@@ -208,7 +206,6 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
                 ),
                 Command(name=OverkizCommand.REFRESH_AWAY_MODE_DURATION),
             ],
-            refresh_afterwards=refresh_afterwards,
         )
 
     async def _async_turn_boost_mode_on(self) -> None:
@@ -230,7 +227,6 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
                 ),
                 Command(name=OverkizCommand.REFRESH_BOOST_MODE_DURATION),
             ],
-            refresh_afterwards=False,
         )
 
     async def _async_turn_boost_mode_off(self) -> None:
@@ -248,5 +244,4 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
                 ),
                 Command(name=OverkizCommand.REFRESH_BOOST_MODE_DURATION),
             ],
-            refresh_afterwards=False,
         )
