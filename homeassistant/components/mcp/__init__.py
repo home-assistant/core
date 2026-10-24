@@ -4,12 +4,21 @@ from dataclasses import dataclass
 from typing import cast, override
 
 from homeassistant.components.application_credentials import AuthorizationServer
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, llm
 
-from .application_credentials import authorization_server_context
-from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
+from .application_credentials import (
+    McpClientMetadataImplementation,
+    authorization_server_context,
+)
+from .const import (
+    CIMD_AUTH_IMPLEMENTATION,
+    CONF_AUTHORIZATION_URL,
+    CONF_SLUG,
+    CONF_TOKEN_URL,
+    DOMAIN,
+)
 from .coordinator import ModelContextProtocolCoordinator, TokenManager
 from .types import ModelContextProtocolConfigEntry
 
@@ -26,6 +35,13 @@ async def async_get_config_entry_implementation(
     """OAuth implementation for the config entry."""
     if "auth_implementation" not in entry.data:
         return None
+    if entry.data["auth_implementation"] == CIMD_AUTH_IMPLEMENTATION:
+        return McpClientMetadataImplementation(
+            hass,
+            entry.data[CONF_AUTHORIZATION_URL],
+            entry.data[CONF_TOKEN_URL],
+            entry.data[CONF_URL],
+        )
     with authorization_server_context(
         AuthorizationServer(
             authorize_url=entry.data[CONF_AUTHORIZATION_URL],
