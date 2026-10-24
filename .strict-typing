@@ -564,6 +564,7 @@ homeassistant.components.sftp_storage.*
 homeassistant.components.shell_command.*
 homeassistant.components.shelly.*
 homeassistant.components.shopping_list.*
+homeassistant.components.silvercrest_infrared.*
 homeassistant.components.simplepush.*
 homeassistant.components.simplisafe.*
 homeassistant.components.siren.*

@@ -1753,6 +1753,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/signal_messenger/ @bbernhard
 /homeassistant/components/silla_prism/ @ebaschiera
 /tests/components/silla_prism/ @ebaschiera
+/homeassistant/components/silvercrest_infrared/ @tr4nt0r
+/tests/components/silvercrest_infrared/ @tr4nt0r
 /homeassistant/components/simplefin/ @scottg489 @jeeftor
 /tests/components/simplefin/ @scottg489 @jeeftor
 /homeassistant/components/simplepush/ @engrbm87

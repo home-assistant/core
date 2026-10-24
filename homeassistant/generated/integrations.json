@@ -10233,6 +10233,15 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "silvercrest_infrared": {
+      "name": "SilverCrest Infrared",
+      "integration_type": "device",
+      "categories": [
+        "climate.fans_ventilation"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "simplefin": {
       "name": "SimpleFin",
       "integration_type": "service",
