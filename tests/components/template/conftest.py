@@ -20,7 +20,7 @@ from pytest_homeassistant.plugins import WebSocketGenerator
 from homeassistant.components import template
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import HomeAssistant, ServiceCall, State
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
@@ -185,6 +185,7 @@ async def async_setup_modern_state_format(
     count: int,
     config: ConfigType | list[ConfigType],
     extra_section_config: ConfigType | None = None,
+    start_hass: bool = True,
 ) -> None:
     """Do setup of template integration via modern format."""
     with assert_setup_component(count, template.DOMAIN):
@@ -195,8 +196,9 @@ async def async_setup_modern_state_format(
         )
 
     await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
+    if start_hass:
+        await hass.async_start()
+        await hass.async_block_till_done()
 
 
 async def async_setup_modern_trigger_format(
@@ -206,6 +208,7 @@ async def async_setup_modern_trigger_format(
     count: int,
     config: ConfigType | list[ConfigType],
     extra_section_config: ConfigType | None = None,
+    start_hass: bool = True,
 ) -> None:
     """Do setup of template integration via trigger format."""
     config = {"template": {domain: config, **trigger, **(extra_section_config or {})}}
@@ -218,8 +221,9 @@ async def async_setup_modern_trigger_format(
         )
 
     await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
+    if start_hass:
+        await hass.async_start()
+        await hass.async_block_till_done()
 
 
 @dataclass(frozen=True)
@@ -246,6 +250,7 @@ async def setup_entity(
     extra_config: ConfigType | None = None,
     attributes: ConfigType | None = None,
     extra_section_config: ConfigType | None = None,
+    start_hass: bool = True,
 ) -> None:
     """Do setup of a template entity based on the configuration style."""
     entity_config = {
@@ -257,7 +262,12 @@ async def setup_entity(
     }
     if style is ConfigurationStyle.MODERN:
         await async_setup_modern_state_format(
-            hass, platform_setup.domain, count, entity_config, extra_section_config
+            hass,
+            platform_setup.domain,
+            count,
+            entity_config,
+            extra_section_config,
+            start_hass,
         )
     elif style is ConfigurationStyle.TRIGGER:
         await async_setup_modern_trigger_format(
@@ -267,6 +277,7 @@ async def setup_entity(
             count,
             entity_config,
             extra_section_config,
+            start_hass,
         )
 
 
@@ -553,9 +564,13 @@ async def setup_restore_template_entity(
     config: ConfigType,
     jinja_test: str = "is_state('sensor.test_restore', 'on')",
 ) -> None:
-    """Test that state and attributes are restored from the last state."""
+    """Set up an entity while Home Assistant is starting, without starting it.
+
+    Mirrors a restart where state is restored before templates render on start.
+    """
     default_entity_id = platform_setup.entity_id
 
+    hass.set_state(CoreState.not_running)
     await setup_entity(
         hass,
         platform_setup,
@@ -566,6 +581,7 @@ async def setup_restore_template_entity(
             **make_restore_state_built_in_attribute_templates(jinja_test),
             **config,
         },
+        start_hass=False,
     )
 
 

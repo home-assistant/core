@@ -1535,6 +1535,43 @@ async def test_max_mireds_template(
     assert state.attributes.get("min_color_temp_kelvin") == expected_min_kelvin
 
 
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "extra_config",
+    [
+        pytest.param({}, id="separate_templates"),
+        # Equal templates are rendered together with the first one set up
+        pytest.param({**SET_LEVEL_ACTION, "level": "{{ 120 }}"}, id="shared_template"),
+        pytest.param({"max_mireds": "{{ 120 }}"}, id="shared_with_bound"),
+    ],
+)
+async def test_temperature_validated_against_mireds_templates(
+    hass: HomeAssistant, style: ConfigurationStyle, extra_config: ConfigType
+) -> None:
+    """Test the temperature is validated against the rendered min/max mireds."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        1,
+        {
+            **ON_OFF_COLOR_TEMP_ACTIONS,
+            # 120 mireds is outside the default range, but inside the configured one
+            "temperature": "{{ 120 }}",
+            "min_mireds": "{{ 100 }}",
+            **extra_config,
+        },
+        "{{ true }}",
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["max_color_temp_kelvin"] == 10000
+    assert state.attributes["color_temp_kelvin"] == 8333
+
+
 @pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_COLOR_TEMP_ACTIONS)])
 @pytest.mark.parametrize(
     ("style", "attribute"),
@@ -1953,7 +1990,15 @@ async def test_flow_preview(
                 "rgb_color": None,
                 "rgbw_color": None,
                 "rgbww_color": None,
-                "supported_color_modes": [ColorMode.COLOR_TEMP],
+                # Supported color modes come from the configuration
+                "supported_color_modes": [
+                    ColorMode.COLOR_TEMP,
+                    ColorMode.HS,
+                    ColorMode.RGB,
+                    ColorMode.RGBW,
+                    ColorMode.RGBWW,
+                    ColorMode.XY,
+                ],
                 "xy_color": None,
             },
         ),
@@ -2166,6 +2211,9 @@ async def test_restore_state(
         initial_state,
         initial_attributes,
     )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     await async_trigger(
         hass,

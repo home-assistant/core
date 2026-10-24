@@ -993,6 +993,9 @@ async def test_modern_restore_state_attributes(
     )
     assert "plus_two" not in state.attributes
 
+    await hass.async_start()
+    await hass.async_block_till_done()
+
     next_state = STATE_ON if expected_state == STATE_OFF else STATE_OFF
     await async_trigger(hass, TEST_STATE_ENTITY_ID, next_state)
     await async_trigger(hass, TEST_ATTRIBUTE_ENTITY_ID, 2)
@@ -1030,6 +1033,7 @@ async def test_modern_restore_state(
     fake_state = State(TEST_BINARY_SENSOR.entity_id, restored_state, {})
     mock_restore_cache(hass, (fake_state,))
 
+    hass.set_state(CoreState.not_running)
     await setup_entity(
         hass,
         TEST_BINARY_SENSOR,
@@ -1037,10 +1041,18 @@ async def test_modern_restore_state(
         1,
         extra_config,
         "{{ None }}",
+        start_hass=False,
     )
 
     state = hass.states.get(TEST_BINARY_SENSOR.entity_id)
     assert state.state == expected_state
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # The rendered template replaces the restored state
+    state = hass.states.get(TEST_BINARY_SENSOR.entity_id)
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("restored_state", [STATE_ON, STATE_OFF])

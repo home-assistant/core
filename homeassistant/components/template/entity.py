@@ -312,6 +312,18 @@ class AbstractTemplateEntity(Entity):
     def restore_extra_data(self, extra_data: Any) -> None:
         """Restore extra data from the last state."""
 
+    def option_restorable(self, option: str, action: str | None = None) -> bool:
+        """Return if a restored value for an option is updated after restoring.
+
+        Without a template or an optimistic action, the restored value would be
+        reported indefinitely. Pass the action when it always updates the value.
+        """
+        return (
+            option in self._config
+            or option in self._assumed_attributes
+            or (action is not None and action in self._config)
+        )
+
     async def async_restore_last_state(self) -> None:
         """Restore the state from the last state."""
         if not hasattr(self, "async_get_last_state"):
@@ -364,7 +376,12 @@ class AbstractTemplateEntity(Entity):
             (CONF_NAME, EntityStateAttribute.FRIENDLY_NAME, "_attr_name"),
             (CONF_PICTURE, EntityStateAttribute.ENTITY_PICTURE, "_attr_entity_picture"),
         ):
-            if conf_key not in self._config or attr not in last_state.attributes:
+            # Static values come from the current configuration
+            if (
+                (template := self._config.get(conf_key)) is None
+                or template.is_static
+                or attr not in last_state.attributes
+            ):
                 continue
             value = last_state.attributes[attr]
             self.restore_attribute(conf_key, _attr, value)

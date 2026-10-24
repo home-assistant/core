@@ -151,6 +151,7 @@ class TemplateEntity(AbstractTemplateEntity):
         """Template Entity."""
         AbstractTemplateEntity.__init__(self, hass, config)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
+        self._template_attr_order: dict[_TemplateAttribute, int] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._self_ref_update_count = 0
         self._attr_unique_id = unique_id
@@ -406,6 +407,7 @@ class TemplateEntity(AbstractTemplateEntity):
         )
         self._template_attrs.setdefault(template, [])
         self._template_attrs[template].append(template_attribute)
+        self._template_attr_order[template_attribute] = len(self._template_attr_order)
 
     @callback
     def _handle_results(
@@ -437,13 +439,21 @@ class TemplateEntity(AbstractTemplateEntity):
             return
 
         errors = []
-        for update in updates:
-            for template_attr in self._template_attrs[update.template]:
-                template_attr.handle_result(
-                    event, update.template, update.last_result, update.result
-                )
-                if isinstance(update.result, TemplateError):
-                    errors.append(update.result)
+        # Apply in setup order, equal templates share a result but may depend on
+        # attributes set up between them
+        for result, template_attr in sorted(
+            (
+                (update, template_attr)
+                for update in updates
+                for template_attr in self._template_attrs[update.template]
+            ),
+            key=lambda item: self._template_attr_order[item[1]],
+        ):
+            template_attr.handle_result(
+                event, result.template, result.last_result, result.result
+            )
+            if isinstance(result.result, TemplateError):
+                errors.append(result.result)
 
         if not self._preview_callback:
             self.async_write_ha_state()
@@ -611,10 +621,18 @@ class TemplateEntity(AbstractTemplateEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
 
+        # Restore first so the rendered templates win
+        await self.async_restore_last_state()
+
         self._async_setup_templates()
 
-        async_at_start(self.hass, self._async_template_startup)
-        await self.async_restore_last_state()
+        if not self.hass.is_running:
+            async_at_start(self.hass, self._async_template_startup)
+            return
+
+        # Render after the restored state is written so `this` sees it, as on startup
+        handle = self.hass.loop.call_soon(self._async_template_startup, None)
+        self.async_on_remove(handle.cancel)
 
     @callback
     @override
