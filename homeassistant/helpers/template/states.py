@@ -367,10 +367,24 @@ class TemplateStateBase(State):
 
     @property
     @override
+    def last_changed_timestamp(self) -> float:
+        """Wrap State.last_changed_timestamp."""
+        self._collect_state()
+        return self._state.last_changed_timestamp
+
+    @property
+    @override
     def last_reported(self) -> datetime:  # type: ignore[override]
         """Wrap State.last_reported."""
         self._collect_state()
         return self._state.last_reported
+
+    @property
+    @override
+    def last_reported_timestamp(self) -> float:
+        """Wrap State.last_reported_timestamp."""
+        self._collect_state()
+        return self._state.last_reported_timestamp
 
     @property
     @override
