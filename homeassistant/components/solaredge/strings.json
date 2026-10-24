@@ -1,38 +1,32 @@
 {
+  "application_credentials": {
+    "description": "Create a **Site Access** application in the [SolarEdge Developer Console]({developer_console_url}). Enable the `SITE_DATA` and `DEVICE_DATA` scopes and register this exact redirect URI: `{redirect_url}`. The URI must use an externally reachable Home Assistant URL. Copy the client ID and client secret into Home Assistant."
+  },
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "site_not_active": "The selected SolarEdge site is not active.",
+      "wrong_account": "The authenticated account does not provide access to this SolarEdge site."
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "auth_missing": "You must provide either an API key or a username and password.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "site_not_active": "The site is not active for the provided API key",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "reconfigure": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "api_key": "[%key:component::solaredge::config::step::user::data_description::api_key%]",
           "password": "[%key:component::solaredge::config::step::user::data_description::password%]",
           "username": "[%key:component::solaredge::config::step::user::data_description::username%]"
         },
-        "description": "Update your API key or web account credentials for site {site_id}.",
+        "description": "Update the optional module-level web account credentials for site {site_id}.",
         "sections": {
-          "api_auth": {
-            "data": {
-              "api_key": "[%key:common::config_flow::data::api_key%]"
-            },
-            "description": "[%key:component::solaredge::config::step::user::sections::api_auth::description%]",
-            "name": "[%key:component::solaredge::config::step::user::sections::api_auth::name%]"
-          },
           "web_auth": {
             "data": {
               "password": "[%key:common::config_flow::data::password%]",
@@ -46,36 +40,34 @@
       },
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "name": "The name of this installation",
           "password": "[%key:common::config_flow::data::password%]",
           "site_id": "The SolarEdge site ID",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "api_key": "Optional, used for general site sensors",
           "password": "Required if username is provided",
-          "username": "Optional, used for detailed module-level production statistics"
+          "site_id": "The numeric site ID shown in the SolarEdge monitoring portal",
+          "username": "Optional, used only for module-level production statistics"
         },
-        "description": "Provide your site ID and at least one method of authentication",
+        "description": "Enter the site ID. You will authorize Home Assistant through SolarEdge in the next step.",
         "sections": {
-          "api_auth": {
-            "data": {
-              "api_key": "[%key:common::config_flow::data::api_key%]"
-            },
-            "description": "Optionally provide your SolarEdge API key. Used for real-time detailed site sensors",
-            "name": "API key authentication"
-          },
           "web_auth": {
             "data": {
               "password": "[%key:common::config_flow::data::password%]",
               "username": "[%key:common::config_flow::data::username%]"
             },
-            "description": "Optionally provide your SolarEdge web portal credentials. Used for non real-time module-level production statistics",
-            "name": "Web account authentication"
+            "description": "Optional legacy web portal credentials for non-real-time module-level production statistics",
+            "name": "Module statistics"
           }
         },
         "title": "Set up your SolarEdge integration"
+      },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "SolarEdge retired site API keys. Reconnect site {site_id} with a Site Access OAuth application.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
   },
@@ -179,11 +171,20 @@
     "cannot_retrieve_details": {
       "message": "Could not retrieve details from SolarEdge API"
     },
+    "monthly_credit_limit": {
+      "message": "The SolarEdge Developer Platform monthly API credit limit has been reached."
+    },
     "missing_details": {
       "message": "Missing details data in SolarEdge response"
     },
     "site_not_active": {
       "message": "The SolarEdge site is not active"
+    },
+    "oauth_migration_required": {
+      "message": "Reconnect SolarEdge to migrate this site from the retired API key to OAuth."
+    },
+    "rate_limit": {
+      "message": "The SolarEdge Developer Platform per-minute API limit has been reached."
     }
   }
 }
