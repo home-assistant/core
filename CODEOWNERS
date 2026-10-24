@@ -292,6 +292,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/bthome/ @Ernst79 @thecode
 /homeassistant/components/buienradar/ @mjj4791 @ties @Robbie1221
 /tests/components/buienradar/ @mjj4791 @ties @Robbie1221
+/homeassistant/components/busy/ @truetug @gornekich
+/tests/components/busy/ @truetug @gornekich
 /homeassistant/components/button/ @home-assistant/core
 /tests/components/button/ @home-assistant/core
 /homeassistant/components/calendar/ @home-assistant/core

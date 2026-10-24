@@ -1524,6 +1524,15 @@
       ],
       "supported_by": "opower"
     },
+    "busy": {
+      "name": "BUSY Bar",
+      "integration_type": "device",
+      "categories": [
+        "sensors"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "bwt": {
       "name": "BWT",
       "integration_type": "virtual",

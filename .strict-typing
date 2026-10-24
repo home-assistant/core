@@ -137,6 +137,7 @@ homeassistant.components.browser.*
 homeassistant.components.bryant_evolution.*
 homeassistant.components.bsblan.*
 homeassistant.components.bthome.*
+homeassistant.components.busy.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*
 homeassistant.components.cambridge_audio.*
