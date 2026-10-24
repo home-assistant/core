@@ -3146,7 +3146,7 @@ solax==3.2.4
 # homeassistant.components.sonos
 sonos-websocket==0.2.0
 
-# homeassistant.components.spacexai
+# homeassistant.components.spacexsi
 spacexai-subscription-client==0.1.1
 
 # homeassistant.components.marytts

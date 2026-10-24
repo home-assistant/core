@@ -1,4 +1,4 @@
-"""Fixtures for SpaceXAI tests."""
+"""Fixtures for SpaceXSI tests."""
 
 from collections.abc import Generator
 import time
@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from spacexai_subscription_client import SpaceXAISubscriptionClient
 
-from homeassistant.components.spacexai.const import DOMAIN
+from homeassistant.components.spacexsi.const import AUTH_IMPLEMENTATION, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_LLM_HASS_API, CONF_MODEL, CONF_PROMPT
 from homeassistant.core import HomeAssistant
@@ -27,7 +27,7 @@ def enable_assist() -> bool:
 
 
 def _mock_config_entry(enable_assist: bool) -> MockConfigEntry:
-    """Return a configured SpaceXAI entry."""
+    """Return a configured SpaceXSI entry."""
     data = {
         CONF_MODEL: "grok-4.6",
         CONF_PROMPT: "Be helpful.",
@@ -39,7 +39,7 @@ def _mock_config_entry(enable_assist: bool) -> MockConfigEntry:
         title="Home User",
         unique_id="account-123",
         data={
-            "auth_implementation": DOMAIN,
+            "auth_implementation": AUTH_IMPLEMENTATION,
             "token": {
                 "access_token": ACCESS_TOKEN,
                 "refresh_token": REFRESH_TOKEN,
@@ -62,24 +62,24 @@ def _mock_config_entry(enable_assist: bool) -> MockConfigEntry:
 
 @pytest.fixture
 def mock_config_entry(enable_assist: bool) -> MockConfigEntry:
-    """Return a configured SpaceXAI entry."""
+    """Return a configured SpaceXSI entry."""
     return _mock_config_entry(enable_assist)
 
 
 @pytest.fixture
 def mock_config_entry_with_assist() -> MockConfigEntry:
-    """Return a configured SpaceXAI entry with Assist tools enabled."""
+    """Return a configured SpaceXSI entry with Assist tools enabled."""
     return _mock_config_entry(True)
 
 
 @pytest.fixture
 def mock_spacexai_subscription_client() -> Generator[MagicMock]:
-    """Return a mocked SpaceXAI client."""
+    """Return a mocked SpaceXSI client."""
     client = MagicMock(spec=SpaceXAISubscriptionClient)
     client.async_list_models = AsyncMock(return_value=("grok-4.6",))
     client.async_create_response = AsyncMock()
     with patch(
-        "homeassistant.components.spacexai.SpaceXAISubscriptionClient",
+        "homeassistant.components.spacexsi.SpaceXAISubscriptionClient",
         return_value=client,
     ):
         yield client
@@ -89,7 +89,7 @@ def mock_spacexai_subscription_client() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent config flows from setting up created entries."""
     with patch(
-        "homeassistant.components.spacexai.async_setup_entry",
+        "homeassistant.components.spacexsi.async_setup_entry",
         new_callable=AsyncMock,
         return_value=True,
     ) as mock:

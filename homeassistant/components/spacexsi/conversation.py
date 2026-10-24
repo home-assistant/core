@@ -1,4 +1,4 @@
-"""Conversation support for SpaceXAI."""
+"""Conversation support for SpaceXSI."""
 
 from collections.abc import AsyncGenerator, Callable, Iterable
 from typing import Any, Literal, override
@@ -30,7 +30,7 @@ from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 
-from . import SpaceXAIConfigEntry
+from . import SpaceXSIConfigEntry
 from .const import DOMAIN, LOGGER, MAX_TOOL_ITERATIONS
 
 PARALLEL_UPDATES = 0
@@ -109,29 +109,29 @@ async def _transform_response(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: SpaceXAIConfigEntry,
+    config_entry: SpaceXSIConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up SpaceXAI conversation entities."""
+    """Set up SpaceXSI conversation entities."""
     for subentry in config_entry.subentries.values():
         if subentry.subentry_type != "conversation":
             continue
         async_add_entities(
-            [SpaceXAIConversationEntity(config_entry, subentry)],
+            [SpaceXSIConversationEntity(config_entry, subentry)],
             config_subentry_id=subentry.subentry_id,
         )
 
 
-class SpaceXAIConversationEntity(
+class SpaceXSIConversationEntity(
     conversation.ConversationEntity,
     conversation.AbstractConversationAgent,
 ):
-    """SpaceXAI conversation agent."""
+    """SpaceXSI conversation agent."""
 
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, entry: SpaceXAIConfigEntry, subentry: ConfigSubentry) -> None:
+    def __init__(self, entry: SpaceXSIConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the conversation agent."""
         self.entry = entry
         self.subentry = subentry
@@ -139,7 +139,7 @@ class SpaceXAIConversationEntity(
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
-            manufacturer="SpaceXAI",
+            manufacturer="SpaceXSI",
             model=subentry.data[CONF_MODEL],
             entry_type=dr.DeviceEntryType.SERVICE,
         )
@@ -175,7 +175,7 @@ class SpaceXAIConversationEntity(
         return conversation.async_get_result_from_chat_log(user_input, chat_log)
 
     async def _async_handle_chat_log(self, chat_log: conversation.ChatLog) -> None:
-        """Send the chat log to SpaceXAI and execute Home Assistant tools."""
+        """Send the chat log to SpaceXSI and execute Home Assistant tools."""
         tools = []
         if chat_log.llm_api:
             tools = [
@@ -193,6 +193,7 @@ class SpaceXAIConversationEntity(
                     tools=tools,
                 )
             except (AuthenticationError, OAuth2TokenRequestReauthError) as err:
+                self.entry.async_start_reauth(self.hass)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="invalid_auth",
@@ -213,7 +214,7 @@ class SpaceXAIConversationEntity(
                 TimeoutError,
             ) as err:
                 LOGGER.error(
-                    "Error communicating with SpaceXAI: %s", type(err).__name__
+                    "Error communicating with SpaceXSI: %s", type(err).__name__
                 )
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,

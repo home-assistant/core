@@ -1,6 +1,7 @@
-"""Config flow for SpaceXAI."""
+"""Config flow for SpaceXSI."""
 
 import asyncio
+from collections.abc import Mapping
 from typing import Any, override
 
 from spacexai_subscription_client import (
@@ -18,7 +19,7 @@ from spacexai_subscription_client import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LLM_HASS_API, CONF_MODEL, CONF_PROMPT
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
@@ -30,11 +31,16 @@ from homeassistant.helpers.selector import (
 )
 
 from . import create_client
-from .const import DEFAULT_CONVERSATION_NAME, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
+from .const import (
+    AUTH_IMPLEMENTATION,
+    DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
+    RECOMMENDED_CONVERSATION_OPTIONS,
+)
 
 
-class SpaceXAIConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle SpaceXAI configuration."""
+class SpaceXSIConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle SpaceXSI configuration."""
 
     VERSION = 1
 
@@ -44,20 +50,14 @@ class SpaceXAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device: DeviceAuthorization | None = None
         self._login_task: asyncio.Task[OAuthToken] | None = None
         self._token: dict[str, Any] | None = None
-        self._account_name = "SpaceXAI"
+        self._account_name = "SpaceXSI"
         self._models: list[str] = []
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Start device authorization."""
-        return await self.async_step_device()
-
-    async def async_step_device(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Authorize with SpaceXAI using a device code."""
+        """Authorize with SpaceXSI using a device code."""
         if self._device is None:
             try:
                 self._client = create_client(self.hass)
@@ -73,7 +73,7 @@ class SpaceXAIConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._client is not None
             self._login_task = self.hass.async_create_background_task(
                 self._client.async_poll_device_token(self._device),
-                "SpaceXAI device authorization",
+                "SpaceXSI device authorization",
             )
 
         if self._login_task.done():
@@ -109,7 +109,7 @@ class SpaceXAIConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_progress_done(next_step_id="device_finish")
 
         return self.async_show_progress(
-            step_id="device",
+            step_id="user",
             progress_action="wait_for_device",
             description_placeholders={
                 "user_code": self._device.user_code,
@@ -117,6 +117,20 @@ class SpaceXAIConfigFlow(ConfigFlow, domain=DOMAIN):
             },
             progress_task=self._login_task,
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Start sign-in again after authorization fails."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm that the user wants to sign in again."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
 
     async def async_step_device_finish(
         self, user_input: dict[str, Any] | None = None
@@ -132,6 +146,10 @@ class SpaceXAIConfigFlow(ConfigFlow, domain=DOMAIN):
         except SpaceXAISubscriptionError:
             return await self.async_step_device_validation_error()
 
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data_updates={"token": self._token}
+            )
         return await self.async_step_conversation()
 
     async def async_step_conversation(
@@ -144,7 +162,7 @@ class SpaceXAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input.pop(CONF_LLM_HASS_API, None)
             return self.async_create_entry(
                 title=self._account_name,
-                data={"auth_implementation": DOMAIN, "token": self._token},
+                data={"auth_implementation": AUTH_IMPLEMENTATION, "token": self._token},
                 subentries=[
                     {
                         "subentry_type": "conversation",
@@ -194,7 +212,7 @@ class SpaceXAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Retry after the device code expires."""
         if user_input is None:
             return self.async_show_form(step_id="device_timeout")
-        return await self.async_step_device()
+        return await self.async_step_user()
 
     async def async_step_device_denied(
         self, user_input: dict[str, Any] | None = None
@@ -202,7 +220,7 @@ class SpaceXAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Retry after device authorization is denied."""
         if user_input is None:
             return self.async_show_form(step_id="device_denied")
-        return await self.async_step_device()
+        return await self.async_step_user()
 
     async def async_step_device_invalid_auth(
         self, user_input: dict[str, Any] | None = None
@@ -222,7 +240,7 @@ class SpaceXAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Retry after a device authorization connection error."""
         if user_input is None:
             return self.async_show_form(step_id="device_connection_error")
-        return await self.async_step_device()
+        return await self.async_step_user()
 
     async def async_step_device_validation_error(
         self, user_input: dict[str, Any] | None = None
@@ -239,8 +257,11 @@ class SpaceXAIConfigFlow(ConfigFlow, domain=DOMAIN):
         access_token = self._token["access_token"]
         account = await self._client.async_get_account(access_token)
         await self.async_set_unique_id(account.subject)
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return
         self._abort_if_unique_id_configured()
-        self._account_name = account.display_name
+        self._account_name = account.name or account.email or "SpaceXSI"
         self._models = list(await self._client.async_list_models(access_token))
         if not self._models:
             raise SpaceXAISubscriptionError

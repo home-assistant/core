@@ -1,6 +1,8 @@
-"""Tests for the SpaceXAI config flow."""
+"""Tests for the SpaceXSI config flow."""
 
 import asyncio
+from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -18,15 +20,16 @@ from spacexai_subscription_client import (
     SpaceXAISubscriptionError,
 )
 
-from homeassistant.components.spacexai.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
+from homeassistant.components.spacexsi.const import AUTH_IMPLEMENTATION, DOMAIN
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, ConfigFlowResult
 from homeassistant.const import CONF_LLM_HASS_API, CONF_MODEL, CONF_PROMPT
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import llm
+from homeassistant.helpers import entity_registry as er, llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.httpx_client import get_async_client
 
+from . import setup_integration
 from .conftest import ACCESS_TOKEN, REFRESH_TOKEN
 
 from tests.common import MockConfigEntry
@@ -52,7 +55,7 @@ DEVICE_AUTHORIZATION = DeviceAuthorization(
 
 
 async def _start_flow(hass: HomeAssistant) -> ConfigFlowResult:
-    """Start a SpaceXAI user flow."""
+    """Start a SpaceXSI user flow."""
     return await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -63,6 +66,7 @@ async def _finish_device_progress(
 ) -> ConfigFlowResult:
     """Advance a device flow after its polling task completes."""
     assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
     assert result["description_placeholders"] == {
         "user_code": "ABCD-1234",
         "verification_uri": "https://accounts.x.ai/oauth2/device?user_code=ABCD-1234",
@@ -76,6 +80,7 @@ async def _finish_conversation(
     hass: HomeAssistant,
     result: ConfigFlowResult,
     model: str = "grok-4.6",
+    title: str = "Home User",
 ) -> None:
     """Create an entry and verify the saved account and conversation settings."""
     assert result["type"] is FlowResultType.FORM
@@ -91,10 +96,10 @@ async def _finish_conversation(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home User"
+    assert result["title"] == title
     assert result["result"].unique_id == "account-123"
     assert result["data"] == {
-        "auth_implementation": DOMAIN,
+        "auth_implementation": AUTH_IMPLEMENTATION,
         "token": TOKEN_DATA,
     }
     assert result["subentries"] == [
@@ -110,13 +115,15 @@ async def _finish_conversation(
     ]
 
 
-def _set_successful_poll(mock_flow_client: MagicMock) -> None:
+def _set_successful_poll(
+    mock_flow_client: MagicMock, token_data: dict[str, Any] | None = None
+) -> None:
     """Make token polling wait until the progress form has been asserted."""
     mock_flow_client.poll_event = asyncio.Event()
 
     async def _async_poll(*_args: object) -> OAuthToken:
         await mock_flow_client.poll_event.wait()
-        return OAuthToken(TOKEN_DATA)
+        return OAuthToken(TOKEN_DATA if token_data is None else token_data)
 
     mock_flow_client.async_poll_device_token.side_effect = _async_poll
 
@@ -150,14 +157,29 @@ def mock_flow_client(mock_spacexai_subscription_client: MagicMock) -> MagicMock:
     return client
 
 
+@pytest.mark.parametrize(
+    ("account", "title"),
+    [
+        pytest.param(
+            Account("account-123", "Home User", "home@test"), "Home User", id="name"
+        ),
+        pytest.param(
+            Account("account-123", None, "home@test"), "home@test", id="email"
+        ),
+        pytest.param(Account("account-123", None, None), "SpaceXSI", id="brand"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_oauth_flow(
     hass: HomeAssistant,
     mock_flow_client: MagicMock,
+    account: Account,
+    title: str,
 ) -> None:
     """Complete device login and create one Conversation subentry."""
+    mock_flow_client.async_get_account.return_value = account
     with patch(
-        "homeassistant.components.spacexai.SpaceXAISubscriptionClient",
+        "homeassistant.components.spacexsi.SpaceXAISubscriptionClient",
         return_value=mock_flow_client,
     ) as client_class:
         result = await _start_flow(hass)
@@ -174,7 +196,7 @@ async def test_full_oauth_flow(
         "grok-4.6",
     ]
 
-    await _finish_conversation(hass, result)
+    await _finish_conversation(hass, result, title=title)
     mock_flow_client.async_poll_device_token.assert_awaited_once_with(
         DEVICE_AUTHORIZATION
     )
@@ -546,3 +568,176 @@ async def test_duplicate_account(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     mock_flow_client.async_list_models.assert_not_awaited()
+
+
+async def test_reauth_preserves_agent(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_flow_client: MagicMock,
+) -> None:
+    """Sign into the same account without changing its agent or entity identity."""
+    mock_config_entry = mock_config_entry_with_assist
+    await setup_integration(hass, mock_config_entry)
+    original_subentries = dict(mock_config_entry.subentries)
+    original_settings = deepcopy(
+        {key: dict(subentry.data) for key, subentry in original_subentries.items()}
+    )
+    original_options = dict(mock_config_entry.options)
+    original_entity = entity_registry.async_get("conversation.grok")
+    assert original_entity is not None
+    new_token = {
+        **mock_config_entry.data["token"],
+        "access_token": "reauth-access-token",
+        "refresh_token": "reauth-refresh-token",
+    }
+    _set_successful_poll(mock_flow_client, new_token)
+    mock_flow_client.async_list_models.reset_mock()
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    mock_flow_client.async_request_device_authorization.assert_not_awaited()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await _finish_device_progress(hass, mock_flow_client, result)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+    assert mock_config_entry.unique_id == "account-123"
+    assert mock_config_entry.title == "Home User"
+    assert mock_config_entry.data == {
+        "auth_implementation": AUTH_IMPLEMENTATION,
+        "token": new_token,
+    }
+    assert mock_config_entry.subentries == original_subentries
+    assert {
+        key: dict(subentry.data)
+        for key, subentry in mock_config_entry.subentries.items()
+    } == original_settings
+    assert mock_config_entry.options == original_options
+    assert entity_registry.async_get("conversation.grok").id == original_entity.id
+    assert hass.states.get("conversation.grok") is not None
+    mock_flow_client.async_list_models.assert_awaited_once_with("reauth-access-token")
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_does_not_require_model_catalog(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_flow_client: MagicMock,
+) -> None:
+    """Restore an unloaded account's authorization independently of its models."""
+    mock_config_entry.add_to_hass(hass)
+    mock_flow_client.async_list_models.side_effect = SpaceXAISubscriptionError
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await _finish_device_progress(hass, mock_flow_client, result)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data["token"] == TOKEN_DATA
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+    mock_flow_client.async_list_models.assert_not_awaited()
+
+
+@pytest.mark.parametrize("subject", ["different-account", "configured-account"])
+async def test_reauth_rejects_different_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_flow_client: MagicMock,
+    subject: str,
+) -> None:
+    """A different account must not overwrite either entry's token or settings."""
+    mock_config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="configured-account", data=dict(mock_config_entry.data)
+    )
+    other_entry.add_to_hass(hass)
+    original_data = deepcopy(dict(mock_config_entry.data))
+    original_subentries = dict(mock_config_entry.subentries)
+    mock_flow_client.async_get_account.return_value = Account(subject, "Other", None)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await _finish_device_progress(hass, mock_flow_client, result)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+    assert mock_config_entry.data == original_data
+    assert other_entry.data == original_data
+    assert mock_config_entry.subentries == original_subentries
+    assert mock_config_entry.unique_id == "account-123"
+    mock_flow_client.async_list_models.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("error", "step_id", "authorization_requests"),
+    [
+        pytest.param(AuthorizationDeniedError, "device_denied", 2, id="denied"),
+        pytest.param(
+            DeviceAuthorizationExpiredError, "device_timeout", 2, id="expired"
+        ),
+        pytest.param(
+            ConnectionFailureError, "device_connection_error", 1, id="connection"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_retry_preserves_existing_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_flow_client: MagicMock,
+    error: type[SpaceXAISubscriptionError],
+    step_id: str,
+    authorization_requests: int,
+) -> None:
+    """Keep the original credentials during a failed reauth and allow a retry."""
+    mock_config_entry.add_to_hass(hass)
+    original_data = deepcopy(dict(mock_config_entry.data))
+    _set_poll_error(mock_flow_client, error)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await _finish_device_progress(hass, mock_flow_client, result)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+    assert mock_config_entry.data == original_data
+
+    _set_successful_poll(mock_flow_client)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await _finish_device_progress(hass, mock_flow_client, result)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+    assert (
+        mock_flow_client.async_request_device_authorization.await_count
+        == authorization_requests
+    )
+
+
+async def test_cancel_reauth_preserves_existing_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_flow_client: MagicMock,
+) -> None:
+    """Closing device sign-in does not modify the original account."""
+    mock_config_entry.add_to_hass(hass)
+    original_data = deepcopy(dict(mock_config_entry.data))
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.data == original_data
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    mock_flow_client.async_get_account.assert_not_awaited()

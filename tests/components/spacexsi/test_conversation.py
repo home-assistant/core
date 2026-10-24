@@ -1,4 +1,4 @@
-"""Tests for SpaceXAI conversation."""
+"""Tests for SpaceXSI conversation."""
 
 import asyncio
 import json
@@ -20,7 +20,7 @@ from spacexai_subscription_client.const import TOKEN_URL
 
 from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.components.spacexai.const import MAX_TOOL_ITERATIONS
+from homeassistant.components.spacexsi.const import DOMAIN, MAX_TOOL_ITERATIONS
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import Context, HomeAssistant
@@ -248,7 +248,7 @@ async def test_token_refresh_timeout_and_retry(
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.speech["plain"]["speech"] == (
-        "SpaceXAI returned an error while generating a response"
+        "SpaceXSI returned an error while generating a response"
     )
     assert mock_config_entry.data["token"] == expired_token
     mock_spacexai_subscription_client.async_create_response.assert_not_awaited()
@@ -332,7 +332,7 @@ async def test_authentication_error(
     mock_spacexai_subscription_client: MagicMock,
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
-    """Return an intent error when the OAuth access token is rejected."""
+    """Start reauthentication when the OAuth access token is rejected."""
     mock_spacexai_subscription_client.async_create_response.side_effect = (
         AuthenticationError
     )
@@ -346,6 +346,10 @@ async def test_authentication_error(
         agent_id="conversation.grok",
     )
     assert result.response.response_type is intent.IntentResponseType.ERROR
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 async def test_permission_denied_error(
@@ -474,6 +478,6 @@ async def test_attachments_not_supported(
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.speech["plain"]["speech"] == (
-        "Attachments are not supported by this version of the SpaceXAI integration"
+        "Attachments are not supported by this version of the SpaceXSI integration"
     )
     mock_spacexai_subscription_client.async_create_response.assert_not_awaited()

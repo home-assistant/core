@@ -1,4 +1,4 @@
-"""Tests for SpaceXAI setup."""
+"""Tests for SpaceXSI setup."""
 
 from copy import deepcopy
 from http import HTTPStatus
@@ -12,7 +12,7 @@ from spacexai_subscription_client import (
 )
 from spacexai_subscription_client.const import GROK_CLI_OAUTH_CLIENT_ID, TOKEN_URL
 
-from homeassistant.components.spacexai.const import DOMAIN
+from homeassistant.components.spacexsi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -52,7 +52,7 @@ async def test_setup_and_unload(
         (DOMAIN, "conversation-subentry"), mock_config_entry.entry_id
     )
     assert device is not None
-    assert device.manufacturer == "SpaceXAI"
+    assert device.manufacturer == "SpaceXSI"
     assert device.model == "grok-4.6"
     assert device.entry_type is dr.DeviceEntryType.SERVICE
 
@@ -156,7 +156,7 @@ async def test_setup_uses_shared_sessions(
 ) -> None:
     """Inject Home Assistant's shared HTTP sessions into the client."""
     with patch(
-        "homeassistant.components.spacexai.SpaceXAISubscriptionClient",
+        "homeassistant.components.spacexsi.SpaceXAISubscriptionClient",
         return_value=mock_spacexai_subscription_client,
     ) as client_class:
         await setup_integration(hass, mock_config_entry)
@@ -213,26 +213,30 @@ async def test_setup_refreshes_expired_token_and_persists_rotation(
 
 
 @pytest.mark.parametrize(
-    ("status", "expected_state"),
+    ("status", "expected_state", "reauth_flows"),
     [
         pytest.param(
             HTTPStatus.BAD_REQUEST,
             ConfigEntryState.SETUP_ERROR,
+            1,
             id="invalid_refresh_grant",
         ),
         pytest.param(
             HTTPStatus.UNAUTHORIZED,
             ConfigEntryState.SETUP_ERROR,
+            1,
             id="revoked_refresh_token",
         ),
         pytest.param(
             HTTPStatus.TOO_MANY_REQUESTS,
             ConfigEntryState.SETUP_RETRY,
+            0,
             id="rate_limited",
         ),
         pytest.param(
             HTTPStatus.INTERNAL_SERVER_ERROR,
             ConfigEntryState.SETUP_RETRY,
+            0,
             id="provider_failure",
         ),
     ],
@@ -242,6 +246,7 @@ async def test_setup_expired_token_refresh_error(
     expected_state: ConfigEntryState,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    reauth_flows: int,
     status: HTTPStatus,
 ) -> None:
     """Classify permanent and transient failures refreshing an expired token."""
@@ -253,6 +258,9 @@ async def test_setup_expired_token_refresh_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
+    assert (
+        len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == reauth_flows
+    )
 
 
 async def test_setup_token_refresh_timeout_and_retry(
