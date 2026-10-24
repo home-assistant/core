@@ -13,6 +13,7 @@ from modbus_connection.model import UpdateReport
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -83,7 +84,26 @@ class AerosmartCoordinator(DataUpdateCoordinator[UpdateReport]):
         for name in sorted(report.updated & self._failed):
             _LOGGER.info("%s is available again", name)
         self._failed = frozenset(report.failed)
+        self._async_update_device_info(report)
         return report
+
+    def _async_update_device_info(self, report: UpdateReport) -> None:
+        """Update device metadata after a successful general subsystem poll."""
+        if "general" not in report.updated:
+            return
+
+        registry = dr.async_get(self.hass)
+        device = registry.async_get_device(
+            identifiers={(DOMAIN, self.config_entry.entry_id)}
+        )
+        if device is None:
+            return
+
+        general = self.device.general
+        if (device_type := general.device_type) is not None:
+            registry.async_update_device(device.id, model=str(device_type))
+        if (software_version := general.software_version) is not None:
+            registry.async_update_device(device.id, sw_version=str(software_version))
 
 
 @dataclass

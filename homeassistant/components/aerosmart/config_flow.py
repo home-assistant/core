@@ -117,14 +117,26 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
             if user_input[CONF_UNIT_VENTILATION] == user_input[CONF_UNIT_HEAT_PUMP]:
                 errors["base"] = "same_unit"
             else:
-                self._async_abort_entries_match(user_input)
+                self._async_abort_entries_match(
+                    {
+                        key: value
+                        for key, value in user_input.items()
+                        if key != CONF_BAUDRATE
+                    }
+                )
 
                 if not await self._async_can_connect(user_input):
                     errors["base"] = "cannot_connect"
                 else:
                     # Another flow can create a matching entry while this one
                     # awaits the connection probe above.
-                    self._async_abort_entries_match(user_input)
+                    self._async_abort_entries_match(
+                        {
+                            key: value
+                            for key, value in user_input.items()
+                            if key != CONF_BAUDRATE
+                        }
+                    )
                     return self.async_create_entry(title="aerosmart", data=user_input)
 
         return self.async_show_form(

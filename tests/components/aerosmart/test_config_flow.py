@@ -320,6 +320,37 @@ async def test_duplicate_entry(
 
 
 @pytest.mark.usefixtures("mock_modbus_unit_ventilation", "mock_modbus_unit_heat_pump")
+async def test_duplicate_serial_entry_ignores_baudrate(
+    hass: HomeAssistant,
+) -> None:
+    """The serial bus identity does not include its configurable baud rate."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_TYPE: TYPE_SERIAL,
+            CONF_DEVICE: "/dev/ttyUSB0",
+            CONF_BAUDRATE: 9600,
+            CONF_UNIT_VENTILATION: 1,
+            CONF_UNIT_HEAT_PUMP: 2,
+        },
+    ).add_to_hass(hass)
+
+    flow_id = await _start_flow(hass, TYPE_SERIAL)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        {
+            CONF_DEVICE: "/dev/ttyUSB0",
+            CONF_BAUDRATE: 19200,
+            CONF_UNIT_VENTILATION: 1,
+            CONF_UNIT_HEAT_PUMP: 2,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_modbus_unit_ventilation", "mock_modbus_unit_heat_pump")
 async def test_concurrent_flows_create_one_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,

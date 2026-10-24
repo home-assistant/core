@@ -3,7 +3,11 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import IllegalDataAddressError, ModbusConnectionError
+from modbus_connection import (
+    IllegalDataAddressError,
+    ModbusConnectionError,
+    ModbusTimeoutError,
+)
 from modbus_connection.mock import MockModbusUnit
 from modbus_connection.model import UpdateReport
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -58,6 +62,41 @@ async def test_device_info_includes_model_and_software_version(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
+    assert device is not None
+    assert device.model == "3"
+    assert device.sw_version == "42"
+
+
+async def test_device_info_recovers_after_initial_general_failure(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit_ventilation: MockModbusUnit,
+) -> None:
+    """Device metadata is updated when the general subsystem recovers."""
+    mock_modbus_unit_ventilation.fail_read(
+        5000, ModbusTimeoutError("simulated general subsystem timeout")
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.model is None
+    assert device.sw_version is None
+
+    mock_modbus_unit_ventilation.fail_read(5000, None)
+    mock_modbus_unit_ventilation.holding[5000] = [0, 3]
+    mock_modbus_unit_ventilation.holding[1156] = [0, 42]
+    freezer.tick(READINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(device.id)
     assert device is not None
     assert device.model == "3"
     assert device.sw_version == "42"
