@@ -6,8 +6,12 @@ from typing import Any, override
 from aiohue import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.lights import LightsController
-from aiohue.v2.models.feature import EffectStatus, TimedEffectStatus
-from aiohue.v2.models.light import Light
+from aiohue.v2.models.feature import (
+    EffectStatus,
+    SignalingFeaturePut,
+    TimedEffectStatus,
+)
+from aiohue.v2.models.light import Light, LightPut
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -344,4 +348,12 @@ class HueLight(HueBaseEntity, LightEntity):
             self.controller.set_flash,
             id=self.resource.id,
             short=flash == FLASH_SHORT,
+        )
+
+    async def async_set_signal(self, signaling: SignalingFeaturePut) -> None:
+        """Send signal command to light."""
+        await self.bridge.async_request_call(
+            self.controller.update,
+            self.resource.id,
+            LightPut(signaling=signaling),
         )

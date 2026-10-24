@@ -1,9 +1,12 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
 
+from typing import Any
 from unittest.mock import Mock
 
+import probatio
 import pytest
 
+from homeassistant.components.hue.const import DOMAIN, SERVICE_FLASH, SERVICE_STOP_FLASH
 from homeassistant.components.light import (
     ATTR_EFFECT,
     DOMAIN as LIGHT_DOMAIN,
@@ -11,12 +14,44 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util import color as color_util
 from homeassistant.util.json import JsonArrayType
 
-from .conftest import setup_platform
+from .conftest import replace_resources, setup_platform
 from .const import FAKE_DEVICE, FAKE_LIGHT, FAKE_ZIGBEE_CONNECTIVITY
+
+COLOR_LIGHT_ID = "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1"
+COLOR_LIGHT_ENTITY_ID = "light.hue_light_with_color_and_color_temperature_1"
+WHITE_LIGHT_ID = "3a6710fa-4474-4eba-b533-5e6e72968feb"
+WHITE_LIGHT_ENTITY_ID = "light.test_room_hue_light_with_color_temperature_only"
+# A light which does not report the signaling feature
+NO_SIGNALING_LIGHT_ENTITY_ID = "light.hue_light_with_color_only"
+ZONE_GROUPED_LIGHT_ID = "f2416154-9607-43ab-a684-4453108a200e"
+ZONE_ENTITY_ID = "light.test_zone"
+
+ALL_SIGNALS = ["no_signal", "on_off", "on_off_color", "alternating"]
+SIGNAL_VALUES = {
+    COLOR_LIGHT_ID: ALL_SIGNALS,
+    WHITE_LIGHT_ID: ["no_signal", "on_off"],
+    ZONE_GROUPED_LIGHT_ID: ALL_SIGNALS,
+}
+
+
+@pytest.fixture
+def v2_resources_with_signaling(
+    v2_resources_test_data: JsonArrayType,
+) -> JsonArrayType:
+    """Return the V2 resources mock data with the signaling feature added."""
+    return replace_resources(
+        v2_resources_test_data,
+        [
+            {**resource, "signaling": {"signal_values": SIGNAL_VALUES[resource["id"]]}}
+            for resource in v2_resources_test_data
+            if resource["id"] in SIGNAL_VALUES
+        ],
+    )
 
 
 async def test_lights(
@@ -1048,6 +1083,256 @@ async def test_light_turn_on_service_deprecation(
         blocking=True,
     )
     assert mock_bridge_v2.mock_requests[0]["json"]["effects"]["effect"] == "no_effect"
+
+
+TARGETS = pytest.mark.parametrize(
+    ("entity_id", "path"),
+    [
+        pytest.param(
+            COLOR_LIGHT_ENTITY_ID,
+            f"clip/v2/resource/light/{COLOR_LIGHT_ID}",
+            id="light",
+        ),
+        pytest.param(
+            ZONE_ENTITY_ID,
+            f"clip/v2/resource/grouped_light/{ZONE_GROUPED_LIGHT_ID}",
+            id="grouped_light",
+        ),
+    ],
+)
+
+
+@TARGETS
+@pytest.mark.parametrize(
+    ("service_data", "signaling"),
+    [
+        pytest.param(
+            {"duration": 1},
+            {"signal": "on_off", "duration": 1000},
+            id="min_duration",
+        ),
+        pytest.param(
+            {"duration": 65534},
+            {"signal": "on_off", "duration": 65534000},
+            id="max_duration",
+        ),
+        pytest.param(
+            {"duration": {"minutes": 1, "seconds": 30}},
+            {"signal": "on_off", "duration": 90000},
+            id="duration_from_selector",
+        ),
+        pytest.param(
+            {"duration": 5, "rgb_color": [255, 0, 0]},
+            {
+                "signal": "on_off_color",
+                "duration": 5000,
+                "colors": [{"xy": {"x": 0.701, "y": 0.299}}],
+            },
+            id="color",
+        ),
+        pytest.param(
+            {
+                "duration": 5,
+                "rgb_color": [255, 0, 0],
+                "second_rgb_color": [0, 0, 255],
+            },
+            {
+                "signal": "alternating",
+                "duration": 5000,
+                "colors": [
+                    {"xy": {"x": 0.701, "y": 0.299}},
+                    {"xy": {"x": 0.136, "y": 0.04}},
+                ],
+            },
+            id="two_colors",
+        ),
+    ],
+)
+async def test_flash(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_with_signaling: JsonArrayType,
+    entity_id: str,
+    path: str,
+    service_data: dict[str, Any],
+    signaling: dict[str, Any],
+) -> None:
+    """Test flashing a light and a grouped light."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_with_signaling)
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_FLASH,
+        {ATTR_ENTITY_ID: entity_id, **service_data},
+        blocking=True,
+    )
+
+    assert mock_bridge_v2.mock_requests == [
+        {"method": "put", "path": path, "json": {"signaling": signaling}}
+    ]
+
+
+@TARGETS
+async def test_stop_flash(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_with_signaling: JsonArrayType,
+    entity_id: str,
+    path: str,
+) -> None:
+    """Test stopping the flash of a light and a grouped light."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_with_signaling)
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_STOP_FLASH, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert mock_bridge_v2.mock_requests == [
+        {
+            "method": "put",
+            "path": path,
+            "json": {"signaling": {"signal": "no_signal", "duration": 0}},
+        }
+    ]
+
+
+async def test_flash_multiple_targets(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_with_signaling: JsonArrayType,
+) -> None:
+    """Test only the targets which support flashing in a color are flashed."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_with_signaling)
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_FLASH,
+        {
+            ATTR_ENTITY_ID: [
+                COLOR_LIGHT_ENTITY_ID,
+                NO_SIGNALING_LIGHT_ENTITY_ID,
+                WHITE_LIGHT_ENTITY_ID,
+                ZONE_ENTITY_ID,
+            ],
+            "duration": 5,
+            "rgb_color": [255, 0, 0],
+        },
+        blocking=True,
+    )
+
+    assert {request["path"] for request in mock_bridge_v2.mock_requests} == {
+        f"clip/v2/resource/light/{COLOR_LIGHT_ID}",
+        f"clip/v2/resource/grouped_light/{ZONE_GROUPED_LIGHT_ID}",
+    }
+    assert len(mock_bridge_v2.mock_requests) == 2
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            SERVICE_FLASH,
+            {ATTR_ENTITY_ID: NO_SIGNALING_LIGHT_ENTITY_ID, "duration": 5},
+            "flash_not_supported",
+            {"entities": NO_SIGNALING_LIGHT_ENTITY_ID},
+            id="no_signaling_feature",
+        ),
+        pytest.param(
+            SERVICE_FLASH,
+            {
+                ATTR_ENTITY_ID: WHITE_LIGHT_ENTITY_ID,
+                "duration": 5,
+                "rgb_color": [255, 0, 0],
+            },
+            "flash_color_not_supported",
+            {"entities": WHITE_LIGHT_ENTITY_ID},
+            id="color_not_supported",
+        ),
+        pytest.param(
+            SERVICE_FLASH,
+            {
+                ATTR_ENTITY_ID: [WHITE_LIGHT_ENTITY_ID, NO_SIGNALING_LIGHT_ENTITY_ID],
+                "duration": 5,
+                "rgb_color": [255, 0, 0],
+                "second_rgb_color": [0, 0, 255],
+            },
+            "flash_two_colors_not_supported",
+            {"entities": f"{NO_SIGNALING_LIGHT_ENTITY_ID}, {WHITE_LIGHT_ENTITY_ID}"},
+            id="two_colors_not_supported_by_any_target",
+        ),
+        pytest.param(
+            SERVICE_FLASH,
+            {
+                ATTR_ENTITY_ID: COLOR_LIGHT_ENTITY_ID,
+                "duration": 5,
+                "second_rgb_color": [0, 0, 255],
+            },
+            "second_color_without_color",
+            None,
+            id="second_color_without_color",
+        ),
+        pytest.param(
+            SERVICE_STOP_FLASH,
+            {ATTR_ENTITY_ID: NO_SIGNALING_LIGHT_ENTITY_ID},
+            "stop_flash_not_supported",
+            {"entities": NO_SIGNALING_LIGHT_ENTITY_ID},
+            id="stop_not_supported",
+        ),
+    ],
+)
+async def test_flash_validation(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_with_signaling: JsonArrayType,
+    service: str,
+    service_data: dict[str, Any],
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
+) -> None:
+    """Test nothing is sent if none of the targets support the request."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_with_signaling)
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(DOMAIN, service, service_data, blocking=True)
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
+    assert len(mock_bridge_v2.mock_requests) == 0
+
+
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        pytest.param({}, id="missing_duration"),
+        pytest.param({"duration": 0}, id="duration_too_short"),
+        pytest.param({"duration": 65535}, id="duration_too_long"),
+        pytest.param({"duration": 5, "rgb_color": [255, 0]}, id="invalid_color"),
+    ],
+)
+async def test_flash_invalid_schema(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_with_signaling: JsonArrayType,
+    service_data: dict[str, Any],
+) -> None:
+    """Test action data which does not match the schema is rejected."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_with_signaling)
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    with pytest.raises(probatio.MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_FLASH,
+            {ATTR_ENTITY_ID: COLOR_LIGHT_ENTITY_ID, **service_data},
+            blocking=True,
+        )
+
+    assert len(mock_bridge_v2.mock_requests) == 0
 
 
 @pytest.mark.parametrize(
