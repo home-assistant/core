@@ -96,7 +96,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> Non
         session=session,
         callback=lambda: _async_update_entry_data(hass, entry, blink),
     )
-    blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     coordinator = BlinkUpdateCoordinator(hass, entry, blink)
 
     await coordinator.async_config_entry_first_refresh()
