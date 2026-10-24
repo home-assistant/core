@@ -331,7 +331,7 @@ aioimmich==0.18.0
 aioindiallsky==0.1.7
 
 # homeassistant.components.ipp
-aioipp==0.20.0
+aioipp==0.21.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
