@@ -188,15 +188,23 @@ async def test_options_flow(
     assert mock_reload_after_entry_update.call_count == 1
 
 
-@pytest.mark.parametrize("code", ["123", "12345678901234567"])
+@pytest.mark.parametrize(
+    ("code", "expected_error"),
+    [
+        ("123", "invalid_code_length"),
+        ("12345678901234567", "invalid_code_length"),
+        ("12a4", "invalid_code_format"),
+    ],
+)
 async def test_options_flow_rejects_invalid_code(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_reload_after_entry_update: MagicMock,
     mock_config_entry: MockConfigEntry,
     code: str,
+    expected_error: str,
 ) -> None:
-    """Test options reject a user code with an unsupported length."""
+    """Test options reject an invalid user code."""
     await setup_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -205,7 +213,7 @@ async def test_options_flow_rejects_invalid_code(
             result["flow_id"], {CONF_CODE: code}
         )
 
-    assert err.value.schema_errors == {CONF_CODE: "invalid_code_length"}
+    assert err.value.schema_errors == {CONF_CODE: expected_error}
     assert mock_config_entry.options == MOCK_CONFIG_OPTIONS
     assert mock_reload_after_entry_update.call_count == 0
 
