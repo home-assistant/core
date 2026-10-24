@@ -20,15 +20,12 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     ConfigSubentryFlow,
     FlowType,
+    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaFlowFormStep,
-    SchemaOptionsFlowHandler,
-)
 
 from .const import (
     CONF_ARM_HOME_MODE,
@@ -69,8 +66,6 @@ OPTIONS_SCHEMA = probatio.Schema(
         ),
     }
 )
-
-OPTIONS_FLOW = {"init": SchemaFlowFormStep(OPTIONS_SCHEMA)}
 
 ARM_HOME_MODE_OPTIONS = ["1", "2", "3"]
 
@@ -151,9 +146,9 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_get_options_flow(
         config_entry: SatelConfigEntry,
-    ) -> SchemaOptionsFlowHandler:
+    ) -> SatelOptionsFlow:
         """Create the options flow."""
-        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
+        return SatelOptionsFlow()
 
     @classmethod
     @callback
@@ -286,6 +281,24 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             await controller.close()
 
         return errors
+
+
+class SatelOptionsFlow(OptionsFlow):
+    """Handle Satel options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the options flow."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+        )
 
 
 class PartitionSubentryFlowHandler(ConfigSubentryFlow):
