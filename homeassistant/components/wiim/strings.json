@@ -32,6 +32,13 @@
       }
     }
   },
+  "entity": {
+    "select": {
+      "audio_output": {
+        "name": "Audio output"
+      }
+    }
+  },
   "exceptions": {
     "callback_host_unavailable": {
       "message": "Failed to determine a local address for WiiM device events"
