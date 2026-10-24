@@ -1,19 +1,28 @@
 """Test Simplepush notifications."""
 
-from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from simplepush import ApiError
 from simplepush.legacy import BadRequest, UnknownError
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.notify import (
+    ATTR_MESSAGE,
+    ATTR_TITLE,
+    DOMAIN as NOTIFY_DOMAIN,
+    SERVICE_SEND_MESSAGE,
+)
 from homeassistant.components.simplepush.const import CONF_DEVICE_KEY, CONF_SALT, DOMAIN
-from homeassistant.const import CONF_NAME, CONF_PASSWORD
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+
+from . import setup_integration
 
 MOCK_CONFIG = {
     CONF_DEVICE_KEY: "abc",
@@ -21,13 +30,6 @@ MOCK_CONFIG = {
 }
 
 SERVICE_NAME = "simplepush"
-
-
-@pytest.fixture
-def mock_send() -> Generator[MagicMock]:
-    """Mock the simplepush send call."""
-    with patch("homeassistant.components.simplepush.notify.send") as mock:
-        yield mock
 
 
 async def setup_config_entry(hass: HomeAssistant, data: dict[str, str]) -> None:
@@ -76,7 +78,7 @@ async def setup_config_entry(hass: HomeAssistant, data: dict[str, str]) -> None:
 )
 async def test_send_message(
     hass: HomeAssistant,
-    mock_send: MagicMock,
+    mock_legacy_send: MagicMock,
     service_data: dict[str, Any],
     expected_attachments: list[Any] | None,
     expected_event: str | None,
@@ -91,7 +93,7 @@ async def test_send_message(
         blocking=True,
     )
 
-    mock_send.assert_called_once_with(
+    mock_legacy_send.assert_called_once_with(
         key="abc",
         title="Home Assistant",
         message="Hello",
@@ -101,7 +103,7 @@ async def test_send_message(
 
 
 async def test_send_message_with_password(
-    hass: HomeAssistant, mock_send: MagicMock
+    hass: HomeAssistant, mock_legacy_send: MagicMock
 ) -> None:
     """Test sending a message with an encryption password."""
     await setup_config_entry(
@@ -115,7 +117,7 @@ async def test_send_message_with_password(
         blocking=True,
     )
 
-    mock_send.assert_called_once_with(
+    mock_legacy_send.assert_called_once_with(
         key="abc",
         password="password",
         salt="salt",
@@ -127,7 +129,7 @@ async def test_send_message_with_password(
 
 
 async def test_send_message_with_invalid_attachment(
-    hass: HomeAssistant, mock_send: MagicMock, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, mock_legacy_send: MagicMock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that an invalid attachment format sends nothing."""
     await setup_config_entry(hass, MOCK_CONFIG)
@@ -140,7 +142,7 @@ async def test_send_message_with_invalid_attachment(
     )
 
     assert "Attachment format is incorrect" in caplog.text
-    mock_send.assert_not_called()
+    mock_legacy_send.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -162,14 +164,14 @@ async def test_send_message_with_invalid_attachment(
 )
 async def test_send_message_error(
     hass: HomeAssistant,
-    mock_send: MagicMock,
+    mock_legacy_send: MagicMock,
     side_effect: type[Exception],
     expected_exception: type[HomeAssistantError],
     translation_key: str,
 ) -> None:
     """Test that a failing send raises the correct exception."""
     await setup_config_entry(hass, MOCK_CONFIG)
-    mock_send.side_effect = side_effect
+    mock_legacy_send.side_effect = side_effect
 
     with pytest.raises(expected_exception) as exc_info:
         await hass.services.async_call(
@@ -196,3 +198,78 @@ async def test_no_discovery_info(
 
     assert f"Failed to initialize notification service {DOMAIN}" in caplog.text
     assert not hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
+
+
+ENTITY_ID = "notify.simplepush"
+
+
+async def send_entity_message(hass: HomeAssistant, data: dict[str, str]) -> None:
+    """Send a message through the notify entity."""
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_ENTITY_ID: ENTITY_ID, **data},
+        blocking=True,
+    )
+
+
+@pytest.mark.usefixtures("mock_client")
+async def test_notify_platform(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the notify entity of the current app."""
+    await setup_integration(hass, config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+async def test_entity_send_message(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test sending a message through the notify entity of the current app."""
+    await setup_integration(hass, config_entry)
+    entity = entity_registry.async_get(ENTITY_ID)
+    assert entity is not None
+    assert entity.unique_id == config_entry.entry_id
+    assert not hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
+
+    await send_entity_message(hass, {ATTR_MESSAGE: "Hello", ATTR_TITLE: "Title"})
+    await send_entity_message(hass, {ATTR_MESSAGE: "Hello"})
+
+    mock_client.assert_called_once_with(api_token="token")
+    assert mock_client.return_value.send_task.call_args_list == [
+        call(title="Title", content="Hello"),
+        call(title=None, content="Hello"),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        pytest.param(ApiError(401, ""), "invalid_api_token", id="invalid_token"),
+        pytest.param(ApiError(500, ""), "send_message_failed", id="server_error"),
+        pytest.param(OSError, "send_message_failed", id="network_error"),
+    ],
+)
+async def test_entity_send_message_error(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    config_entry: MockConfigEntry,
+    side_effect: Exception | type[Exception],
+    translation_key: str,
+) -> None:
+    """Test that a failing send through the current app raises."""
+    await setup_integration(hass, config_entry)
+    mock_client.return_value.send_task.side_effect = side_effect
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await send_entity_message(hass, {ATTR_MESSAGE: "Hello"})
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
