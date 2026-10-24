@@ -1,6 +1,5 @@
 """UniFi Network sensor platform tests."""
 
-from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime, timedelta
 from types import MappingProxyType
@@ -16,7 +15,6 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import (
@@ -1278,10 +1276,8 @@ async def test_ups_battery_pool_readings(
 )
 async def test_ups_battery_pool_late_field(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     config_entry_factory: ConfigEntryFactoryType,
     entity_registry: er.EntityRegistry,
-    mock_requests: Callable[[], None],
     mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
     device_name: str,
@@ -1289,29 +1285,22 @@ async def test_ups_battery_pool_late_field(
     sensor: str,
     initial_readings: tuple[None, ...],
 ) -> None:
-    """Test unsupported initial fields need a reload for later discovery."""
+    """Test fields reported later get their sensor."""
     original_device = deepcopy(device_payload[0])
     device_payload[0] = deepcopy(original_device)
     pool = device_payload[0]["vbms_table"]["battpool"]
     pool.pop(field)
     for value in initial_readings:
         pool[field] = value
-    config_entry = await config_entry_factory()
+    await config_entry_factory()
+    # Restore the shared parametrized payload
+    device_payload[0] = original_device
 
     entity_id = f"sensor.{device_name}_{sensor}"
     assert hass.states.get(entity_id) is None
     assert entity_registry.async_get(entity_id) is None
 
     mock_websocket_message(message=MessageKey.DEVICE, data=original_device)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id) is None
-    assert entity_registry.async_get(entity_id) is None
-
-    device_payload[0] = original_device
-    aioclient_mock.clear_requests()
-    mock_requests()
-    await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == str(
@@ -1446,6 +1435,64 @@ async def test_device_system_stats(
 
     assert hass.states.get("sensor.device_cpu_utilization").state == "7.7"
     assert hass.states.get("sensor.device_memory_utilization").state == "33.3"
+
+    # A restarting device reports empty stats, then none for a while
+    device["system-stats"] = {"cpu": "", "mem": "", "uptime": ""}
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+
+    assert hass.states.get("sensor.device_cpu_utilization").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("sensor.device_memory_utilization").state == STATE_UNAVAILABLE
+    )
+
+    del device["system-stats"]
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+
+    assert hass.states.get("sensor.device_cpu_utilization").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("sensor.device_memory_utilization").state == STATE_UNAVAILABLE
+    )
+
+    device["system-stats"] = {"cpu": 8.8, "mem": 34.4, "uptime": 10}
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+
+    assert hass.states.get("sensor.device_cpu_utilization").state == "8.8"
+    assert hass.states.get("sensor.device_memory_utilization").state == "34.4"
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "device_id": "mock-id",
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "state": 1,
+                "version": "4.0.42.10433",
+                "system-stats": {"cpu": "", "mem": "", "uptime": ""},
+            }
+        ]
+    ],
+)
+async def test_no_entity_created_after_unload(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify a late reported stat does not create an entity after unload."""
+    assert hass.states.get("sensor.device_cpu_utilization") is None
+
+    api = config_entry_setup.runtime_data.api
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
+
+    device = deepcopy(device_payload[0])
+    device["system-stats"] = {"cpu": 5.8, "mem": 31.1, "uptime": 7316}
+    api.devices.process_raw([device])
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.device_cpu_utilization") is None
 
 
 @pytest.mark.parametrize(
@@ -1707,6 +1754,33 @@ async def test_port_link_speed_sensors(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.mock_name_port_1_link_speed").state == "100"
+
+    # The sensor stays while the link is down
+    device_1["port_table"][0]["speed"] = 0
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.mock_name_port_1_link_speed").state == STATE_UNAVAILABLE
+    )
+    assert (
+        entity_registry.async_get("sensor.mock_name_port_1_link_speed").disabled_by
+        is None
+    )
+
+    device_1["port_table"][0]["speed"] = 1000
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.mock_name_port_1_link_speed").state == "1000"
+
+    # A port that links up later gets its sensor
+    device_1["port_table"][2]["speed"] = 1000
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+
+    p3_reg_entry = entity_registry.async_get("sensor.mock_name_port_3_link_speed")
+    assert p3_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.parametrize(
