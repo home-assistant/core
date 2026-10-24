@@ -11,6 +11,7 @@ from boschshcpy import (
     SHCSmartPlug,
     SHCSmartPlugCompact,
     SHCThermostat,
+    SHCThermostatGen2,
     SHCWallThermostat,
 )
 from boschshcpy.device import SHCDevice
@@ -22,6 +23,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import (
+    PERCENTAGE,
     EntityCategory,
     UnitOfPower,
     UnitOfTemperature,
@@ -81,6 +83,19 @@ type _TemperatureOffsetDevice = SHCThermostat | SHCWallThermostat | SHCRoomTherm
 
 def _offset_set_value_fn(device: _TemperatureOffsetDevice, value: float) -> None:
     device.offset = value
+
+
+type _DisplayConfigDevice = SHCThermostatGen2 | SHCRoomThermostat2
+
+
+def _display_brightness_set_value_fn(
+    device: _DisplayConfigDevice, value: float
+) -> None:
+    device.display_brightness = round(value)
+
+
+def _display_on_time_set_value_fn(device: _DisplayConfigDevice, value: float) -> None:
+    device.display_on_time = round(value)
 
 
 IMPULSE_LENGTH = "impulse_length"
@@ -152,6 +167,31 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         min_value_fn=lambda device: float(device.min_offset),
         max_value_fn=lambda device: float(device.max_offset),
         step_fn=lambda device: step if (step := device.step_size) > 0 else 0.5,
+    ),
+    "display_brightness": SHCNumberEntityDescription[_DisplayConfigDevice](
+        key="display_brightness",
+        translation_key="display_brightness",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        native_min_value=0.0,
+        native_max_value=100.0,
+        native_step=1.0,
+        mode=NumberMode.SLIDER,
+        value_fn=lambda device: device.display_brightness,
+        set_value_fn=_display_brightness_set_value_fn,
+    ),
+    "display_on_time": SHCNumberEntityDescription[_DisplayConfigDevice](
+        key="display_on_time",
+        translation_key="display_on_time",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=0.0,
+        native_max_value=3600.0,
+        native_step=1.0,
+        mode=NumberMode.BOX,
+        value_fn=lambda device: device.display_on_time,
+        set_value_fn=_display_on_time_set_value_fn,
     ),
 }
 
@@ -262,6 +302,29 @@ async def async_setup_entry(
         if isinstance(device, SHCThermostat | SHCWallThermostat | SHCRoomThermostat2)
         and device.supports_temperature_offset
     )
+
+    for display_device in (
+        *session.device_helper.thermostats,
+        *session.device_helper.roomthermostats,
+    ):
+        if not isinstance(display_device, SHCThermostatGen2 | SHCRoomThermostat2):
+            continue
+        if not display_device.supports_display_configuration:
+            continue
+        entities.extend(
+            SHCNumber(
+                hass=hass,
+                device=display_device,
+                parent_id=shc_info.unique_id,
+                entry_id=config_entry.entry_id,
+                description=NUMBER_TYPES[key],
+            )
+            for key, value in (
+                ("display_brightness", display_device.display_brightness),
+                ("display_on_time", display_device.display_on_time),
+            )
+            if value is not None
+        )
 
     async_add_entities(entities)
 
