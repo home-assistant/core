@@ -2262,3 +2262,58 @@ async def test_zone_control_zone_value_waiting_for_a_failed_write_is_sent(
         [("setHeatingTargetTemperature", [19.0])],
         [("setHeatingTargetTemperature", [20.0])],
     ]
+
+
+async def test_zone_control_zone_running_execution_is_kept(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test an execution that is not over yet keeps the next value waiting."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_set_zone_setpoint(hass, 21.0)
+    await _async_end_execution(
+        hass, freezer, mock_client, "exec-1", ExecutionState.IN_PROGRESS
+    )
+
+    assert _sent_commands(mock_client) == [[("setHeatingTargetTemperature", [19.0])]]
+
+
+async def test_zone_control_zone_superseded_replay_is_dropped(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a lost command is not replayed once a newer value has been sent."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+    coordinator = _zone_coordinator(hass)
+
+    await _async_set_zone_setpoint(hass, 19.0)
+
+    # A newer value of the setpoint is sent while the replay waits its turn.
+    async with coordinator._write_lock:
+        await on_execution_state_changed(
+            coordinator,
+            execution_state_changed_event(
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+                failed_commands=[{"rank": 0}],
+            ),
+        )
+        coordinator.command_sequences[
+            (ZONE_CONTROL_ZONE.device_url, "setHeatingTargetTemperature")
+        ] += 1
+
+    await hass.async_block_till_done()
+
+    assert _sent_commands(mock_client) == [[("setHeatingTargetTemperature", [19.0])]]
