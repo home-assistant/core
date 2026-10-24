@@ -8,7 +8,7 @@ from pytest_homeassistant.components.diagnostics import get_diagnostics_for_conf
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.cert_expiry.const import DOMAIN
+from homeassistant.components.cert_expiry.const import CONF_CA_CERTIFICATES, DOMAIN
 from homeassistant.components.cert_expiry.errors import ValidationFailure
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
@@ -18,16 +18,26 @@ from .helpers import future_timestamp, static_datetime
 
 
 @pytest.mark.freeze_time(static_datetime())
+@pytest.mark.parametrize(
+    "case",
+    [pytest.param("default", id="default"), pytest.param("custom-ca", id="custom-ca")],
+)
 async def test_config_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
+    certificate_pem: str,
+    case: str,
 ) -> None:
     """Test config entry diagnostics."""
     # Create fake config entry: simulate "host = example.com, port = 443".
+    ca_options = {
+        "default": {},
+        "custom-ca": {CONF_CA_CERTIFICATES: certificate_pem},
+    }
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        data={CONF_HOST: HOST, CONF_PORT: PORT, **ca_options[case]},
         entry_id="test-entry",
         title=HOST,
         unique_id=f"{HOST}:{PORT}",
