@@ -36,7 +36,8 @@ from homeassistant.components.engie_be.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
@@ -249,6 +250,29 @@ def build_epex_payload_with_partial_tomorrow(
     return build_epex_payload(start, end, granularity)
 
 
+def build_epex_payload_with_negative_current(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Build a payload whose slot covering the frozen afternoon is negative."""
+    payload = build_epex_payload(start, end, granularity)
+    afternoon = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
+    return EpexPayload(
+        slots=tuple(
+            EpexSlot(
+                start=slot.start,
+                end=slot.end,
+                value_eur_per_kwh=-0.05
+                if slot.start <= afternoon < slot.end
+                else slot.value_eur_per_kwh,
+            )
+            for slot in payload.slots
+        ),
+        slot_duration=payload.slot_duration,
+    )
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
@@ -329,3 +353,17 @@ async def setup_dynamic_entry(
         build_contracts(dynamic=True)
     )
     await setup_entry(hass, mock_config_entry)
+
+
+def automation_calls(service_calls: list[ServiceCall]) -> list[ServiceCall]:
+    """Return the recorded calls of the test automation action."""
+    return [call for call in service_calls if call.domain == "test"]
+
+
+def engie_entity_id(
+    entity_registry: er.EntityRegistry, domain: str, unique_id: str
+) -> str:
+    """Return the entity id of an ENGIE entity."""
+    entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
+    assert entity_id is not None
+    return entity_id

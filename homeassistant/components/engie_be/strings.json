@@ -1,4 +1,72 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "condition_threshold_description": "Price threshold in EUR/kWh.",
+    "condition_threshold_name": "Threshold",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least",
+    "trigger_threshold_description": "Price threshold in EUR/kWh.",
+    "trigger_threshold_name": "Threshold"
+  },
+  "conditions": {
+    "epex_hour_price_is_negative": {
+      "description": "True when the current EPEX hour day-ahead price is negative (you are paid to consume).",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::condition_for_name%]"
+        }
+      },
+      "name": "EPEX hour price is negative"
+    },
+    "epex_hour_price_meets_threshold": {
+      "description": "True when the current EPEX hour day-ahead price meets the configured threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::condition_for_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::engie_be::common::condition_threshold_description%]",
+          "name": "[%key:component::engie_be::common::condition_threshold_name%]"
+        }
+      },
+      "name": "EPEX hour price meets threshold"
+    },
+    "epex_quarter_hour_price_is_negative": {
+      "description": "True when the current quarter-hourly EPEX day-ahead price is negative (you are paid to consume).",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::condition_for_name%]"
+        }
+      },
+      "name": "EPEX quarter-hourly price is negative"
+    },
+    "epex_quarter_hour_price_meets_threshold": {
+      "description": "True when the current quarter-hourly EPEX day-ahead price meets the configured threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::condition_for_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::engie_be::common::condition_threshold_description%]",
+          "name": "[%key:component::engie_be::common::condition_threshold_name%]"
+        }
+      },
+      "name": "EPEX quarter-hourly price meets threshold"
+    }
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
@@ -47,6 +115,12 @@
   },
   "entity": {
     "binary_sensor": {
+      "epex_negative": {
+        "name": "EPEX current hour price is negative"
+      },
+      "epex_negative_quarter_hour": {
+        "name": "EPEX current quarter-hourly price is negative"
+      },
       "epex_tomorrow_available": {
         "name": "EPEX tomorrow prices available"
       }
@@ -392,6 +466,148 @@
         "email": "Email",
         "sms": "SMS"
       }
+    }
+  },
+  "triggers": {
+    "epex_current_hour_crossed_threshold": {
+      "description": "Fires when the current hourly EPEX price crosses the configured threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::trigger_for_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::engie_be::common::trigger_threshold_description%]",
+          "name": "[%key:component::engie_be::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "EPEX current hour price crossed threshold"
+    },
+    "epex_current_quarter_hour_crossed_threshold": {
+      "description": "Fires when the current quarter-hourly EPEX price crosses the configured threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::trigger_for_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::engie_be::common::trigger_threshold_description%]",
+          "name": "[%key:component::engie_be::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "EPEX current quarter-hourly price crossed threshold"
+    },
+    "epex_high_today_hour_updated": {
+      "description": "Fires when the highest hourly EPEX price of today changes.",
+      "name": "EPEX highest hour price today updated"
+    },
+    "epex_high_today_quarter_hour_updated": {
+      "description": "Fires when the highest quarter-hourly EPEX price of today changes.",
+      "name": "EPEX highest quarter-hourly price today updated"
+    },
+    "epex_hour_became_negative": {
+      "description": "Fires when the hourly EPEX day-ahead price turns negative (you are paid to consume).",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::trigger_for_name%]"
+        }
+      },
+      "name": "EPEX hour price became negative"
+    },
+    "epex_hour_no_longer_negative": {
+      "description": "Fires when the hourly EPEX day-ahead price returns to zero or above.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::trigger_for_name%]"
+        }
+      },
+      "name": "EPEX hour price no longer negative"
+    },
+    "epex_low_today_hour_updated": {
+      "description": "Fires when the lowest hourly EPEX price of today changes.",
+      "name": "EPEX lowest hour price today updated"
+    },
+    "epex_low_today_quarter_hour_updated": {
+      "description": "Fires when the lowest quarter-hourly EPEX price of today changes.",
+      "name": "EPEX lowest quarter-hourly price today updated"
+    },
+    "epex_next_hour_crossed_threshold": {
+      "description": "Fires when the next hourly EPEX price crosses the configured threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::trigger_for_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::engie_be::common::trigger_threshold_description%]",
+          "name": "[%key:component::engie_be::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "EPEX next hour price crossed threshold"
+    },
+    "epex_next_quarter_hour_crossed_threshold": {
+      "description": "Fires when the next quarter-hourly EPEX price crosses the configured threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::trigger_for_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::engie_be::common::trigger_threshold_description%]",
+          "name": "[%key:component::engie_be::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "EPEX next quarter-hourly price crossed threshold"
+    },
+    "epex_quarter_hour_became_negative": {
+      "description": "Fires when the quarter-hourly EPEX day-ahead price turns negative (you are paid to consume).",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::trigger_for_name%]"
+        }
+      },
+      "name": "EPEX quarter-hourly price became negative"
+    },
+    "epex_quarter_hour_no_longer_negative": {
+      "description": "Fires when the quarter-hourly EPEX day-ahead price returns to zero or above.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::trigger_for_name%]"
+        }
+      },
+      "name": "EPEX quarter-hourly price no longer negative"
+    },
+    "epex_tomorrow_prices_published": {
+      "description": "Fires when the EPEX day-ahead prices for tomorrow become available.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::trigger_for_name%]"
+        }
+      },
+      "name": "Tomorrow's EPEX prices published"
     }
   }
 }

@@ -1,0 +1,70 @@
+.condition_behavior: &condition_behavior
+  required: true
+  default: any
+  selector:
+    automation_behavior:
+      mode: condition
+
+.condition_for: &condition_for
+  required: true
+  default: 00:00:00
+  selector:
+    duration:
+
+.target_engie_binary_sensor: &target_engie_binary_sensor
+  entity:
+    - integration: engie_be
+      domain: binary_sensor
+
+.target_engie_sensor: &target_engie_sensor
+  entity:
+    - integration: engie_be
+      domain: sensor
+
+.epex_threshold_entity: &epex_threshold_entity
+  - integration: engie_be
+    domain: sensor
+
+.epex_threshold_number: &epex_threshold_number
+  min: -1
+  max: 5
+  mode: box
+  unit_of_measurement: EUR/kWh
+
+epex_hour_price_is_negative:
+  target: *target_engie_binary_sensor
+  fields:
+    behavior: *condition_behavior
+    for: *condition_for
+
+epex_quarter_hour_price_is_negative:
+  target: *target_engie_binary_sensor
+  fields:
+    behavior: *condition_behavior
+    for: *condition_for
+
+epex_hour_price_meets_threshold:
+  target: *target_engie_sensor
+  fields:
+    behavior: *condition_behavior
+    for: *condition_for
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *epex_threshold_entity
+          mode: is
+          number: *epex_threshold_number
+
+epex_quarter_hour_price_meets_threshold:
+  target: *target_engie_sensor
+  fields:
+    behavior: *condition_behavior
+    for: *condition_for
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *epex_threshold_entity
+          mode: is
+          number: *epex_threshold_number
