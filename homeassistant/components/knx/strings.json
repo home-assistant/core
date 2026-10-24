@@ -594,7 +594,7 @@
               "label": "Invert"
             },
             "reset_after": {
-              "description": "Reset back to “off” state after specified seconds.",
+              "description": "Reset back to “off” state after the specified duration.",
               "label": "Reset after"
             },
             "section_advanced_options": {

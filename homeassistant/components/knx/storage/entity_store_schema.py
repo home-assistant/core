@@ -49,6 +49,7 @@ from .const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
 from .knx_selector import (
     AllSerializeFirst,
     GroupAddressConfig,
+    KnxDurationSelector,
     KnxPayload,
     KnxPayloadSelector,
     KNXSectionFlat,
@@ -134,9 +135,9 @@ class BinarySensorKnxConfig:
     reset_after: Annotated[
         float | None,
         probatio.Maybe(
-            selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0, max=600, step=0.1, unit_of_measurement="s"
+            KnxDurationSelector(
+                selector.DurationSelectorConfig(
+                    enable_day=True, enable_millisecond=True
                 )
             )
         ),
