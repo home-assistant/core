@@ -57,6 +57,7 @@ from boschshcpy.services_impl import (
     PowerSwitchConfigurationService,
     PresenceSimulationConfigurationService,
     SmokeSensitivityService,
+    SwitchConfiguration,
     ValveTappetService,
     VibrationSensorService,
     WallThermostatConfiguration,
@@ -590,6 +591,7 @@ def micromodule_relay_device(
     swap_outputs: bool = False,
     impulse_length: float | None = None,
     impulse_length_raises_key_error: bool = False,
+    switch_type: SwitchConfiguration.SwitchType | None = None,
 ) -> SHCMicromoduleRelay:
     """Build a minimal device double for the micromodule_relays bucket."""
     device = create_autospec(SHCMicromoduleRelay, instance=True, spec_set=True)
@@ -607,6 +609,7 @@ def micromodule_relay_device(
     device.supports_switch_configuration = supports_switch_configuration
     device.swap_inputs = swap_inputs
     device.swap_outputs = swap_outputs
+    device.switch_type = switch_type
     if impulse_length_raises_key_error:
         type(device).impulse_length = PropertyMock(
             side_effect=KeyError("impulseLength")
