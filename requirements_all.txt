@@ -3200,6 +3200,9 @@ solarman-opendata==0.0.3
 # homeassistant.components.solax
 solax==3.2.4
 
+# homeassistant.components.solyx_energy_cloud
+solyx-energy-api-client==0.2.0
+
 # homeassistant.components.sonos
 sonos-websocket==0.2.0
 

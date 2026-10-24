@@ -10646,6 +10646,16 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "solyx_energy_cloud": {
+      "name": "Solyx Energy Cloud",
+      "integration_type": "hub",
+      "categories": [
+        "energy.meters_monitoring",
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "soma": {
       "name": "Soma Connect",
       "integration_type": "hub",
