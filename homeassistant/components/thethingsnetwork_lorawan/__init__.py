@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from lorawan_connection import ConnectionUnavailable, Unsubscribe
 from lorawan_connection.backend.tts import AuthenticationError, TTSConnection
+from yarl import URL
 
 from homeassistant.components import lorawan
 from homeassistant.config_entries import ConfigEntry
@@ -43,7 +44,13 @@ async def async_setup_entry(
     try:
         await connection.async_connect()
         unregister = await lorawan.async_register_connection(
-            hass, entry, connection=connection
+            hass,
+            entry,
+            connection=connection,
+            # The console is served over HTTPS without the gRPC port.
+            configuration_url=str(
+                URL(entry.data[CONF_ENDPOINT]).with_port(None).with_path("/console/")
+            ),
         )
     except AuthenticationError as error:
         await connection.close()
