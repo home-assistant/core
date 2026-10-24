@@ -121,6 +121,7 @@ __all__ = [
     "UrlManager",
     "add_extra_js_url",
     "add_manifest_json_key",
+    "async_get_theme_names",
     "async_panel_exists",
     "async_register_built_in_panel",
     "async_remove_panel",
@@ -298,6 +299,12 @@ def async_remove_panel(
 def async_panel_exists(hass: HomeAssistant, frontend_url_path: str) -> bool:
     """Return if a panel is registered for the given frontend URL path."""
     return frontend_url_path in hass.data.get(DATA_PANELS, {})
+
+
+@callback
+def async_get_theme_names(hass: HomeAssistant) -> list[str]:
+    """Return the sorted names of the user-defined themes."""
+    return sorted(hass.data.get(DATA_THEMES, {}).keys())
 
 
 def add_extra_js_url(hass: HomeAssistant, url: str, es5: bool = False) -> None:
@@ -714,7 +721,14 @@ class ManifestJSONView(HomeAssistantView):
     {
         "type": "frontend/get_icons",
         probatio.Required("category"): probatio.In(
-            {"conditions", "entity", "entity_component", "services", "triggers"}
+            {
+                "conditions",
+                "entity",
+                "entity_component",
+                "integration_category",
+                "services",
+                "triggers",
+            }
         ),
         probatio.Optional("integration"): probatio.All(probatio.EnsureList(), [str]),
     }

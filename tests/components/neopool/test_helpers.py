@@ -3,8 +3,13 @@
 from modbus_connection import ModbusSerialParams, ModbusTcpParams
 import pytest
 
+from homeassistant.components.neopool.const import (
+    CONF_BAUDRATE,
+    DEFAULT_BAUDRATE,
+    TYPE_SERIAL,
+)
 from homeassistant.components.neopool.helpers import build_modbus_params
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 
 
 @pytest.mark.parametrize(
@@ -31,6 +36,16 @@ from homeassistant.const import CONF_HOST, CONF_PORT
             ModbusSerialParams(
                 device="socket://gateway.local:502", framer="rtu", baudrate=115200
             ),
+        ),
+        (
+            {CONF_TYPE: TYPE_SERIAL, CONF_DEVICE: "/dev/ttyUSB0"},
+            ModbusSerialParams(
+                device="/dev/ttyUSB0", framer="rtu", baudrate=DEFAULT_BAUDRATE
+            ),
+        ),
+        (
+            {CONF_TYPE: TYPE_SERIAL, CONF_DEVICE: "/dev/ttyUSB1", CONF_BAUDRATE: 9600},
+            ModbusSerialParams(device="/dev/ttyUSB1", framer="rtu", baudrate=9600),
         ),
     ],
 )

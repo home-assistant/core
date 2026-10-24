@@ -359,7 +359,7 @@ async def test_flow_with_zeroconf(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
-    with patch("homeassistant.components.blebox.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.blebox.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -528,7 +528,7 @@ async def test_flow_with_dhcp(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
-    with patch("homeassistant.components.blebox.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.blebox.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 

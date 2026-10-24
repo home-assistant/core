@@ -29,7 +29,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EcosmartConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EcosmartConfigEntry) -> None:
     """Set up ecosmart from a config entry."""
     client = EcosmartClient(entry.data[CONF_API_KEY], async_get_clientsession(hass))
 
@@ -64,9 +64,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcosmartConfigEntry) -> 
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EcosmartConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EcosmartConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

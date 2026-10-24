@@ -35,7 +35,7 @@ def load_forecast(filename: str = "forecast.json") -> Forecast:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.ecosmart.async_setup_entry", return_value=True
+        "homeassistant.components.ecosmart.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

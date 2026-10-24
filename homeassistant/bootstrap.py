@@ -65,7 +65,6 @@ from .components import (
 from .components.sensor import recorder as sensor_recorder  # noqa: F401
 from .const import (
     BASE_PLATFORMS,
-    FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
     KEY_DATA_LOGGING_DISABLED_REASON as DATA_LOGGING_DISABLED_REASON,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -108,7 +107,11 @@ from .setup import (
 )
 from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
-from .util.logging import async_activate_log_queue_handler
+from .util.logging import (
+    LOG_FORMAT,
+    HomeAssistantLogFormatter,
+    async_activate_log_queue_handler,
+)
 from .util.package import is_docker_env
 from .util.system_info import is_official_image
 
@@ -590,39 +593,33 @@ async def async_enable_logging(
 
     This method must be run in the event loop.
     """
-    fmt = (
-        "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
-    )
-
+    formatter: logging.Formatter = HomeAssistantLogFormatter(LOG_FORMAT)
     if not log_no_color:
         try:
             from colorlog import ColoredFormatter  # noqa: PLC0415
-
-            # basicConfig must be called after importing colorlog in order to
-            # ensure that the handlers it sets up wraps the correct streams.
-            logging.basicConfig(level=logging.INFO)
-
-            colorfmt = f"%(log_color)s{fmt}%(reset)s"
-            logging.getLogger().handlers[0].setFormatter(
-                ColoredFormatter(
-                    colorfmt,
-                    datefmt=FORMAT_DATETIME,
-                    reset=True,
-                    log_colors={
-                        "DEBUG": "cyan",
-                        "INFO": "green",
-                        "WARNING": "yellow",
-                        "ERROR": "red",
-                        "CRITICAL": "red",
-                    },
-                )
-            )
         except ImportError:
             pass
+        else:
 
-    # If the above initialization failed for any reason, setup the default
-    # formatting.  If the above succeeds, this will result in a no-op.
-    logging.basicConfig(format=fmt, datefmt=FORMAT_DATETIME, level=logging.INFO)
+            class _ColoredFormatter(HomeAssistantLogFormatter, ColoredFormatter):
+                """Colored formatter using the Home Assistant timestamp format."""
+
+            formatter = _ColoredFormatter(
+                f"%(log_color)s{LOG_FORMAT}%(reset)s",
+                reset=True,
+                log_colors={
+                    "DEBUG": "cyan",
+                    "INFO": "green",
+                    "WARNING": "yellow",
+                    "ERROR": "red",
+                    "CRITICAL": "red",
+                },
+            )
+
+    # basicConfig must be called after importing colorlog in order to
+    # ensure that the handlers it sets up wraps the correct streams.
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger().handlers[0].setFormatter(formatter)
 
     # Capture warnings.warn(...) and friends messages in logs.
     # The standard destination for them is stderr, which may end up unnoticed.
@@ -676,7 +673,7 @@ async def async_enable_logging(
             _create_log_file, err_log_path, log_rotate_days
         )
 
-        err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
+        err_handler.setFormatter(HomeAssistantLogFormatter(LOG_FORMAT))
         logger.addHandler(err_handler)
 
         # Save the log file location for access by other components.
