@@ -262,6 +262,9 @@ aioecowitt==2026.6.0
 # homeassistant.components.co2signal
 aioelectricitymaps==1.1.1
 
+# homeassistant.components.elecway
+aioelecway==0.1.1
+
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 

@@ -1,0 +1,17 @@
+{
+  "domain": "elecway",
+  "name": "Elecway",
+  "codeowners": ["@Elecway001"],
+  "config_flow": true,
+  "dependencies": ["zeroconf"],
+  "documentation": "https://www.home-assistant.io/integrations/elecway",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "requirements": ["aioelecway==0.1.1"],
+  "zeroconf": [
+    {
+      "name": "ewayenergystorage-*",
+      "type": "_http._tcp.local."
+    }
+  ]
+}

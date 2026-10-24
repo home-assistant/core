@@ -2735,6 +2735,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "elecway": {
+      "name": "Elecway",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "elevenlabs": {
       "name": "ElevenLabs",
       "integration_type": "service",

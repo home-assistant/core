@@ -200,6 +200,7 @@ homeassistant.components.efergy.*
 homeassistant.components.eheimdigital.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
+homeassistant.components.elecway.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*

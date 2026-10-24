@@ -496,6 +496,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/electrasmart/ @jafar-atili @noamokman
 /homeassistant/components/electric_kiwi/ @mikey0000
 /tests/components/electric_kiwi/ @mikey0000
+/homeassistant/components/elecway/ @Elecway001
+/tests/components/elecway/ @Elecway001
 /homeassistant/components/elevenlabs/ @sorgfresser
 /tests/components/elevenlabs/ @sorgfresser
 /homeassistant/components/elgato/ @frenck

@@ -1,0 +1,48 @@
+rules:
+  action-setup:
+    status: exempt
+    comment: The integration does not register additional actions.
+  appropriate-polling:
+    status: exempt
+    comment: Measurements are pushed over a local WebSocket.
+  brands:
+    status: todo
+    comment: >-
+      Brand assets are submitted in https://github.com/home-assistant/brands/pull/11281;
+      official validation and merge are pending.
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency:
+    status: done
+    comment: >-
+      aioelecway 0.1.1 is published on PyPI under Apache-2.0.
+      The public v0.1.1 tag and publish.yml workflow are available at
+      https://github.com/Elecway001/aioelecway-ha.
+  docs-actions:
+    status: exempt
+    comment: The integration does not register additional actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide custom conditions.
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide custom triggers.
+  docs-high-level-description:
+    status: done
+    comment: >-
+      The companion page describes local storage monitoring:
+      https://github.com/home-assistant/home-assistant.io/pull/49120.
+  docs-installation-instructions:
+    status: done
+    comment: The companion page includes prerequisites and the config flow instructions.
+  docs-removal-instructions:
+    status: done
+    comment: The companion page includes the standard integration removal instructions.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
