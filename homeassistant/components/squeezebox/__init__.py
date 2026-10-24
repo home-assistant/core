@@ -183,7 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         device_info.connections = {(CONNECTION_NETWORK_MAC, status[STATUS_QUERY_MAC])}
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_or_create_device(
+    device = device_registry.async_get_or_create_from_info(
         config_entry_id=entry.entry_id, device_info=device_info
     )
     _LOGGER.debug("LMS Device %s", device)

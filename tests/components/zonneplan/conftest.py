@@ -10,6 +10,7 @@ from pyzonneplan import (
     Account,
     BatteryControlMode,
     BatteryInstallation,
+    ChargePointInstallation,
     ConsumerPrices,
     ElectricityChart,
     GasChart,
@@ -80,6 +81,9 @@ def mock_zonneplan_client() -> Generator[AsyncMock]:
     )
     client.async_get_battery_control_mode.return_value = BatteryControlMode.from_dict(
         load_json_object_fixture("get_battery_control_mode.json", DOMAIN)
+    )
+    client.async_get_charge_point.return_value = ChargePointInstallation.from_dict(
+        load_json_object_fixture("get_charge_point.json", DOMAIN)
     )
 
     with (

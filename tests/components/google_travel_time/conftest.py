@@ -1,12 +1,10 @@
-"""Fixtures for Google Time Travel tests."""
+"""Fixtures for Google Maps Travel Time tests."""
 
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from google.maps.routing_v2 import ComputeRoutesResponse, Route
-from google.protobuf import duration_pb2
-from google.type import localized_text_pb2
+from google_maps_routing_api import ComputeRoutesResponse
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -45,43 +43,23 @@ def mock_setup_entry() -> Generator[None]:
 @pytest.fixture
 def routes_mock() -> Generator[AsyncMock]:
     """Return valid API result."""
-    with (
-        patch(
-            "homeassistant.components.google_travel_time.helpers.RoutesAsyncClient",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.google_travel_time.sensor.RoutesAsyncClient",
-            new=mock_client,
-        ),
-        patch(
-            "homeassistant.components.google_travel_time.services.RoutesAsyncClient",
-            new=mock_client,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.google_travel_time.helpers.GoogleMapsRoutingApi",
+        autospec=True,
+    ) as mock_client:
         client_mock = mock_client.return_value
-        client_mock.compute_routes.return_value = ComputeRoutesResponse(
-            mapping={
+        client_mock.async_compute_routes.return_value = ComputeRoutesResponse.from_dict(
+            {
                 "routes": [
-                    Route(
-                        mapping={
-                            "localized_values": Route.RouteLocalizedValues(
-                                mapping={
-                                    "distance": localized_text_pb2.LocalizedText(
-                                        text="21.3 km"
-                                    ),
-                                    "duration": localized_text_pb2.LocalizedText(
-                                        text="27 mins"
-                                    ),
-                                    "static_duration": localized_text_pb2.LocalizedText(
-                                        text="26 mins"
-                                    ),
-                                }
-                            ),
-                            "duration": duration_pb2.Duration(seconds=1620),
-                            "distance_meters": 21300,
-                        }
-                    )
+                    {
+                        "distanceMeters": 21300,
+                        "duration": "1620s",
+                        "localizedValues": {
+                            "distance": {"text": "21.3 km"},
+                            "duration": {"text": "27 mins"},
+                            "staticDuration": {"text": "26 mins"},
+                        },
+                    }
                 ]
             }
         )
