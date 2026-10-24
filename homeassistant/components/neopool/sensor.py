@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, override
 
 from neopool_modbus.capabilities import (
@@ -47,11 +47,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.dt import utcnow
+from homeassistant.util.variance import ignore_variance
 
+from .const import DEFAULT_SCAN_INTERVAL
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
 
 PARALLEL_UPDATES = 0
+
+# Pin the countdown end time against per-second drift and poll jitter. One poll
+# cycle plus a margin absorbs a late poll without swallowing a short backwash.
+_REMAINING_VARIANCE = timedelta(seconds=DEFAULT_SCAN_INTERVAL + 10)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -67,6 +74,9 @@ class NeoPoolSensorEntityDescription(SensorEntityDescription):
     # coordinator context so the coordinator reads those blocks only while the
     # sensor is enabled.
     context: tuple[str, ...] | None = None
+    # Seconds remaining, rendered as an end timestamp so it stays correct
+    # between polls. Returns None (unavailable) when nothing is counting down.
+    remaining_fn: Callable[[dict[str, Any]], int | None] | None = None
 
 
 SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
@@ -219,12 +229,10 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
     "FILTRATION_REMAINING": NeoPoolSensorEntityDescription(
         key="FILTRATION_REMAINING",
         translation_key="filtration_remaining",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
         context=("filtration1", "filtration2", "filtration3"),
+        remaining_fn=lambda data: data.get("FILTRATION_REMAINING"),
     ),
     "CELL_RUNTIME_TOTAL": NeoPoolSensorEntityDescription(
         key="CELL_RUNTIME_TOTAL",
@@ -338,6 +346,11 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         self._attr_unique_id = (
             f"{self.coordinator.config_entry.unique_id}_{key.lower()}"
         )
+        # Per-entity so each remembers its own end time across polls.
+        self._remaining_end = ignore_variance(
+            lambda seconds: utcnow() + timedelta(seconds=seconds),
+            _REMAINING_VARIANCE,
+        )
 
     @property
     @override
@@ -379,6 +392,11 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
             return None
         if self._is_production_suppressed():
             return 0
+        if (remaining_fn := self.entity_description.remaining_fn) is not None:
+            remaining = remaining_fn(self.coordinator.data)
+            if remaining is None or remaining <= 0:
+                return None
+            return self._remaining_end(remaining)
         if (value_fn := self.entity_description.value_fn) is not None:
             value: float | int | str | datetime | None = value_fn(self.coordinator.data)
             return value
