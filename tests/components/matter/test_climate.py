@@ -1,8 +1,9 @@
 """Test Matter locks."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import AsyncMock, MagicMock, call
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import NullValue
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
@@ -11,12 +12,20 @@ from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_PRESET_MODE,
     PRESET_NONE,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import Platform
+from homeassistant.components.matter.const import (
+    ATTR_COOLING_SETPOINT,
+    ATTR_HEATING_SETPOINT,
+    ATTR_PRESET_NAME,
+    ATTR_PRESET_SCENARIO,
+    DOMAIN,
+)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -30,6 +39,112 @@ from .common import (
 
 THERMOSTAT_ENTITY_ID = "climate.longan_link_hvac"
 ROOM_AC_ENTITY_ID = "climate.room_airconditioner"
+EVE_THERMO_ENTITY_ID = "climate.eve_thermo_20ecd1701"
+PRESETS_ATTRIBUTE_PATH = "1/513/80"
+
+
+def _eve_thermo_presets() -> list[clusters.Thermostat.Structs.PresetStruct]:
+    """Return the eve_thermo_v5 fixture's Presets attribute, decoded."""
+    return [
+        clusters.Thermostat.Structs.PresetStruct(
+            presetHandle=b"\x01",
+            presetScenario=1,
+            name="Home",
+            coolingSetpoint=None,
+            heatingSetpoint=2200,
+            builtIn=True,
+        ),
+        clusters.Thermostat.Structs.PresetStruct(
+            presetHandle=b"\x02",
+            presetScenario=2,
+            name="Away",
+            coolingSetpoint=None,
+            heatingSetpoint=1800,
+            builtIn=True,
+        ),
+        clusters.Thermostat.Structs.PresetStruct(
+            presetHandle=b"\x03",
+            presetScenario=3,
+            name="Sleep",
+            coolingSetpoint=None,
+            heatingSetpoint=2000,
+            builtIn=False,
+        ),
+        clusters.Thermostat.Structs.PresetStruct(
+            presetHandle=b"\x04",
+            presetScenario=4,
+            name="Wake",
+            coolingSetpoint=None,
+            heatingSetpoint=2300,
+            builtIn=False,
+        ),
+        clusters.Thermostat.Structs.PresetStruct(
+            presetHandle=b"\x05",
+            presetScenario=5,
+            name="Vacation",
+            coolingSetpoint=None,
+            heatingSetpoint=1600,
+            builtIn=False,
+        ),
+        clusters.Thermostat.Structs.PresetStruct(
+            presetHandle=b"\x06",
+            presetScenario=6,
+            name="GoingToSleep",
+            coolingSetpoint=None,
+            heatingSetpoint=2100,
+            builtIn=False,
+        ),
+        clusters.Thermostat.Structs.PresetStruct(
+            presetHandle=b"\xfe",
+            presetScenario=254,
+            name="Eco",
+            coolingSetpoint=None,
+            heatingSetpoint=1600,
+            builtIn=False,
+        ),
+    ]
+
+
+def _atomic_response(
+    status: int = 0,
+    attribute_status: list[tuple[int, int]] | None = None,
+    timeout: int | None = None,
+) -> clusters.Thermostat.Commands.AtomicResponse:
+    """Build a Thermostat AtomicResponse for mocking send_device_command."""
+    return clusters.Thermostat.Commands.AtomicResponse(
+        statusCode=status,
+        attributeStatus=[
+            clusters.Globals.Structs.AtomicAttributeStatusStruct(
+                attributeID=attribute_id, statusCode=code
+            )
+            for attribute_id, code in (attribute_status or [])
+        ],
+        timeout=timeout,
+    )
+
+
+def _mock_preset_write(
+    matter_client: MagicMock,
+    current_presets: list[clusters.Thermostat.Structs.PresetStruct] | None = None,
+    begin_timeout: int | None = 5000,
+) -> None:
+    """Mock a successful BeginWrite/read/write/CommitWrite round trip."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            _atomic_response(timeout=begin_timeout),
+            _atomic_response(),
+        ]
+    )
+    matter_client.read_attribute = AsyncMock(
+        return_value={
+            PRESETS_ATTRIBUTE_PATH: (
+                current_presets
+                if current_presets is not None
+                else _eve_thermo_presets()
+            )
+        }
+    )
+    matter_client.write_attribute = AsyncMock(return_value=None)
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -1228,4 +1343,415 @@ async def test_failed_power_on_does_not_write_mode(
         await hass.services.async_call(
             "climate", "turn_on", {"entity_id": ROOM_AC_ENTITY_ID}, blocking=True
         )
+    matter_client.write_attribute.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_set_thermostat_preset_edit(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Editing a preset reads the live list, writes it timed, then commits."""
+    _mock_preset_write(matter_client)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_thermostat_preset",
+        {
+            ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+            ATTR_PRESET_MODE: "home",
+            ATTR_HEATING_SETPOINT: 23.5,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_args_list == [
+        call(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            command=clusters.Thermostat.Commands.AtomicRequest(
+                requestType=clusters.Globals.Enums.AtomicRequestTypeEnum.kBeginWrite,
+                attributeRequests=[clusters.Thermostat.Attributes.Presets.attribute_id],
+                timeout=5000,
+            ),
+        ),
+        call(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            command=clusters.Thermostat.Commands.AtomicRequest(
+                requestType=clusters.Globals.Enums.AtomicRequestTypeEnum.kCommitWrite,
+                attributeRequests=[clusters.Thermostat.Attributes.Presets.attribute_id],
+                timeout=None,
+            ),
+        ),
+    ]
+    matter_client.read_attribute.assert_awaited_once_with(
+        matter_node.node_id, PRESETS_ATTRIBUTE_PATH
+    )
+    written = matter_client.write_attribute.call_args
+    assert written.kwargs["node_id"] == matter_node.node_id
+    assert written.kwargs["attribute_path"] == PRESETS_ATTRIBUTE_PATH
+    assert written.kwargs["timed_request_timeout_ms"] == 3000
+    new_presets = written.kwargs["value"]
+    assert len(new_presets) == 7
+    edited = next(p for p in new_presets if p.presetHandle == b"\x01")
+    assert edited.heatingSetpoint == 2350
+    assert edited.name == "Home"
+    assert edited.builtIn is True
+    # untouched presets keep their original values
+    sleep = next(p for p in new_presets if p.presetHandle == b"\x03")
+    assert sleep.heatingSetpoint == 2000
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "1/513/72": [
+                {"0": 1, "1": 2, "2": 2},
+                {"0": 2, "1": 1, "2": 2},
+                {"0": 3, "1": 1, "2": 2},
+                {"0": 4, "1": 1, "2": 2},
+                {"0": 5, "1": 1, "2": 2},
+                {"0": 6, "1": 1, "2": 2},
+                {"0": 254, "1": 1, "2": 2},
+            ]
+        }
+    ],
+)
+async def test_set_thermostat_preset_add(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Adding a preset appends a new entry with a null handle."""
+    _mock_preset_write(matter_client)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_thermostat_preset",
+        {
+            ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+            ATTR_PRESET_SCENARIO: "occupied",
+            ATTR_PRESET_NAME: "Home 2",
+            ATTR_HEATING_SETPOINT: 21.0,
+        },
+        blocking=True,
+    )
+
+    new_presets = matter_client.write_attribute.call_args.kwargs["value"]
+    assert len(new_presets) == 8
+    added = new_presets[-1]
+    assert added.presetHandle is NullValue
+    assert added.presetScenario == 1
+    assert added.name == "Home 2"
+    assert added.heatingSetpoint == 2100
+    assert added.builtIn is False
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_clear_thermostat_preset(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Removing a preset writes the list without it."""
+    _mock_preset_write(matter_client)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "clear_thermostat_preset",
+        {ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID, ATTR_PRESET_MODE: "sleep"},
+        blocking=True,
+    )
+
+    new_presets = matter_client.write_attribute.call_args.kwargs["value"]
+    assert len(new_presets) == 6
+    assert all(p.presetHandle != b"\x03" for p in new_presets)
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_clear_thermostat_preset_builtin_blocked(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A built-in preset cannot be removed."""
+    with pytest.raises(ServiceValidationError, match="Built-in"):
+        await hass.services.async_call(
+            DOMAIN,
+            "clear_thermostat_preset",
+            {ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID, ATTR_PRESET_MODE: "home"},
+            blocking=True,
+        )
+    matter_client.send_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_clear_thermostat_preset_active_blocked(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """The active preset cannot be removed."""
+    # make "sleep" (handle 0x03) the active preset instead of the built-in "home"
+    set_node_attribute(matter_node, 1, 513, 78, b"\x03")
+
+    with pytest.raises(ServiceValidationError, match="active preset"):
+        await hass.services.async_call(
+            DOMAIN,
+            "clear_thermostat_preset",
+            {ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID, ATTR_PRESET_MODE: "sleep"},
+            blocking=True,
+        )
+    matter_client.send_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_clear_thermostat_preset_unknown_preset_mode(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """An unknown preset_mode raises a validation error."""
+    with pytest.raises(ServiceValidationError, match="Unknown preset_mode"):
+        await hass.services.async_call(
+            DOMAIN,
+            "clear_thermostat_preset",
+            {ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID, ATTR_PRESET_MODE: "does_not_exist"},
+            blocking=True,
+        )
+    matter_client.send_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_clear_thermostat_preset_none_not_removable(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """The PRESET_NONE sentinel is not a removable preset."""
+    with pytest.raises(ServiceValidationError, match="not a removable preset"):
+        await hass.services.async_call(
+            DOMAIN,
+            "clear_thermostat_preset",
+            {ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID, ATTR_PRESET_MODE: PRESET_NONE},
+            blocking=True,
+        )
+    matter_client.send_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_clear_thermostat_preset_matter_error(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A low-level MatterError while removing a preset is wrapped."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=MatterError("Unreachable")
+    )
+
+    with pytest.raises(HomeAssistantError, match="Unreachable"):
+        await hass.services.async_call(
+            DOMAIN,
+            "clear_thermostat_preset",
+            {ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID, ATTR_PRESET_MODE: "sleep"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_set_thermostat_preset_none_not_editable(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """The PRESET_NONE sentinel is not an editable preset."""
+    with pytest.raises(ServiceValidationError, match="not an editable preset"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_thermostat_preset",
+            {
+                ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+                ATTR_PRESET_MODE: PRESET_NONE,
+                ATTR_HEATING_SETPOINT: 20.0,
+            },
+            blocking=True,
+        )
+    matter_client.send_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "1/513/72": [
+                {"0": 1, "1": 2, "2": 2},
+                {"0": 2, "1": 1, "2": 2},
+                {"0": 3, "1": 1, "2": 2},
+                {"0": 4, "1": 1, "2": 2},
+                {"0": 5, "1": 1, "2": 2},
+                {"0": 6, "1": 1, "2": 2},
+                {"0": 254, "1": 1, "2": 2},
+            ]
+        }
+    ],
+)
+async def test_set_thermostat_preset_name_conflict(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Adding a preset named like another one of the same scenario is rejected."""
+    _mock_preset_write(matter_client)
+
+    with pytest.raises(ServiceValidationError, match='already named "Home"'):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_thermostat_preset",
+            {
+                ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+                ATTR_PRESET_SCENARIO: "occupied",
+                ATTR_PRESET_NAME: "Home",
+            },
+            blocking=True,
+        )
+    matter_client.write_attribute.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_set_thermostat_preset_unknown_preset_mode(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """An unknown preset_mode raises a validation error."""
+    with pytest.raises(ServiceValidationError, match="Unknown preset_mode"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_thermostat_preset",
+            {
+                ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+                ATTR_PRESET_MODE: "does_not_exist",
+                ATTR_HEATING_SETPOINT: 20.0,
+            },
+            blocking=True,
+        )
+    matter_client.send_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_set_thermostat_preset_requires_scenario_when_adding(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Adding a preset without a scenario raises a validation error."""
+    _mock_preset_write(matter_client)
+    with pytest.raises(ServiceValidationError, match="preset_scenario is required"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_thermostat_preset",
+            {ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID, ATTR_PRESET_NAME: "New preset"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_set_thermostat_preset_scenario_not_editable(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """preset_scenario cannot be combined with an existing preset_mode."""
+    with pytest.raises(ServiceValidationError, match="cannot be changed"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_thermostat_preset",
+            {
+                ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+                ATTR_PRESET_MODE: "home",
+                ATTR_PRESET_SCENARIO: "sleep",
+            },
+            blocking=True,
+        )
+    matter_client.send_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_set_thermostat_preset_rolls_back_on_write_failure(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A failed Presets write is followed by a RollbackWrite."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            _atomic_response(timeout=5000),  # BeginWrite
+            _atomic_response(),  # RollbackWrite
+        ]
+    )
+    matter_client.read_attribute = AsyncMock(
+        return_value={PRESETS_ATTRIBUTE_PATH: _eve_thermo_presets()}
+    )
+    matter_client.write_attribute = AsyncMock(
+        side_effect=MatterError("ConstraintError")
+    )
+
+    with pytest.raises(HomeAssistantError, match="ConstraintError"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_thermostat_preset",
+            {
+                ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+                ATTR_PRESET_MODE: "home",
+                ATTR_COOLING_SETPOINT: 26.0,
+            },
+            blocking=True,
+        )
+
+    assert matter_client.send_device_command.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.Thermostat.Commands.AtomicRequest(
+            requestType=clusters.Globals.Enums.AtomicRequestTypeEnum.kRollbackWrite,
+            attributeRequests=[clusters.Thermostat.Attributes.Presets.attribute_id],
+            timeout=None,
+        ),
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_set_thermostat_preset_window_too_short(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A BeginWrite window shorter than the minimum is rolled back unused."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            _atomic_response(timeout=1999),  # BeginWrite: too short
+            _atomic_response(),  # RollbackWrite
+        ]
+    )
+    matter_client.read_attribute = AsyncMock()
+    matter_client.write_attribute = AsyncMock()
+
+    with pytest.raises(HomeAssistantError, match="too short"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_thermostat_preset",
+            {
+                ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+                ATTR_PRESET_MODE: "home",
+                ATTR_HEATING_SETPOINT: 20.0,
+            },
+            blocking=True,
+        )
+
+    matter_client.read_attribute.assert_not_called()
     matter_client.write_attribute.assert_not_called()

@@ -126,3 +126,32 @@ SERVICE_CREDENTIAL_TYPES = [
 ]
 
 CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"
+
+# --- Thermostat domain constants ---
+
+ATTR_COOLING_SETPOINT = "cooling_setpoint"
+ATTR_HEATING_SETPOINT = "heating_setpoint"
+ATTR_PRESET_NAME = "name"
+ATTR_PRESET_SCENARIO = "preset_scenario"
+
+# The Presets attribute requires a Timed Write inside an atomic-write
+# transaction (Matter spec §4.3.11.50, §7.15). We request more than the
+# 2-second minimum a device must grant (§7.15.1) to leave headroom for the
+# read-modify-write that happens inside the window.
+THERMOSTAT_PRESET_ATOMIC_WRITE_TIMEOUT_MS = 5000
+THERMOSTAT_PRESET_MIN_ATOMIC_WRITE_TIMEOUT_MS = 2000
+
+# PresetScenario mapping (Matter Thermostat PresetScenarioEnum)
+_PresetScenario = clusters.Thermostat.Enums.PresetScenarioEnum
+PRESET_SCENARIO_MAP: dict[int, str] = {
+    _PresetScenario.kOccupied: "occupied",
+    _PresetScenario.kUnoccupied: "unoccupied",
+    _PresetScenario.kSleep: "sleep",
+    _PresetScenario.kWake: "wake",
+    _PresetScenario.kVacation: "vacation",
+    _PresetScenario.kGoingToSleep: "going_to_sleep",
+    _PresetScenario.kUserDefined: "user_defined",
+}
+PRESET_SCENARIO_REVERSE_MAP: dict[str, int] = {
+    v: k for k, v in PRESET_SCENARIO_MAP.items()
+}

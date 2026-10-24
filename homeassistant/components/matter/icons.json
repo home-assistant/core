@@ -192,6 +192,9 @@
     "clear_lock_user": {
       "service": "mdi:account-remove"
     },
+    "clear_thermostat_preset": {
+      "service": "mdi:thermometer-minus"
+    },
     "get_lock_credential_status": {
       "service": "mdi:key-chain"
     },
@@ -206,6 +209,9 @@
     },
     "set_lock_user": {
       "service": "mdi:account-lock"
+    },
+    "set_thermostat_preset": {
+      "service": "mdi:thermometer-plus"
     },
     "water_heater_boost": {
       "service": "mdi:water-boiler"
