@@ -4370,11 +4370,11 @@
     },
     "gtfs": {
       "name": "General Transit Feed Specification (GTFS)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "vehicles_transport.public_transport"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "guardian": {
