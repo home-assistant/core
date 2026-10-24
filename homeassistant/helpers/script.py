@@ -46,6 +46,8 @@ from homeassistant.const import (
     CONF_FOR_EACH,
     CONF_IF,
     CONF_MODE,
+    CONF_ON_COMPLETE,
+    CONF_ON_TIMEOUT,
     CONF_PARALLEL,
     CONF_REPEAT,
     CONF_RESPONSE_VARIABLE,
@@ -364,6 +366,9 @@ async def async_validate_action_config(
         ] = await trigger_helper.async_validate_trigger_config(
             hass, config[CONF_WAIT_FOR_TRIGGER]
         )
+        for key in (CONF_ON_COMPLETE, CONF_ON_TIMEOUT):
+            if key in config:
+                config[key] = await async_validate_actions_config(hass, config[key])
 
     elif action_type == cv.SCRIPT_ACTION_REPEAT:
         if CONF_UNTIL in config[CONF_REPEAT]:
@@ -1298,6 +1303,7 @@ class _ScriptRun:
         if timeout == 0:
             self._changed()
             self._async_handle_timeout()
+            await self._async_run_wait_for_trigger_branch(CONF_ON_TIMEOUT)
             return
 
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
@@ -1332,6 +1338,25 @@ class _ScriptRun:
         await self._async_wait_with_optional_timeout(
             futures, timeout_handle, timeout_future, remove_triggers
         )
+        if self._stop.done():
+            return
+        await self._async_run_wait_for_trigger_branch(
+            CONF_ON_COMPLETE
+            if self._variables["wait"]["completed"]
+            else CONF_ON_TIMEOUT
+        )
+
+    async def _async_run_wait_for_trigger_branch(
+        self, branch: Literal["on_complete", "on_timeout"]
+    ) -> None:
+        """Run the on_complete or on_timeout actions of a wait_for_trigger."""
+        wait_data = await self._script._async_get_wait_for_trigger_data(  # noqa: SLF001
+            self._step
+        )
+        if (script := wait_data[branch]) is None:
+            return
+        with trace_path(branch):
+            await self._async_run_script(script)
 
     async def _async_step_wait_template(self) -> None:
         """Handle a wait template."""
@@ -1507,6 +1532,11 @@ class _IfData(TypedDict):
     if_else: Script | None
 
 
+class _WaitForTriggerData(TypedDict):
+    on_complete: Script | None
+    on_timeout: Script | None
+
+
 @dataclass
 class ScriptRunResult:
     """Container with the result of a script run."""
@@ -1584,6 +1614,7 @@ class Script:
         self._repeat_script: dict[int, Script] = {}
         self._choose_data: dict[int, _ChooseData] = {}
         self._if_data: dict[int, _IfData] = {}
+        self._wait_for_trigger_data: dict[int, _WaitForTriggerData] = {}
         self._parallel_scripts: dict[int, list[Script]] = {}
         self._sequence_scripts: dict[int, Script] = {}
         self._unloaded = False
@@ -1636,6 +1667,11 @@ class Script:
             if_data["if_then"].update_logger(self._logger)
             if if_data["if_else"] is not None:
                 if_data["if_else"].update_logger(self._logger)
+        for wait_data in self._wait_for_trigger_data.values():
+            if wait_data["on_complete"] is not None:
+                wait_data["on_complete"].update_logger(self._logger)
+            if wait_data["on_timeout"] is not None:
+                wait_data["on_timeout"].update_logger(self._logger)
 
     def _changed(self) -> None:
         if self._change_listener_job:
@@ -1709,6 +1745,14 @@ class Script:
                     referenced |= set(
                         trigger_helper.async_extract_targets(trigger, target)
                     )
+                Script._find_referenced_target(
+                    target,
+                    referenced,
+                    [
+                        *step.get(CONF_ON_COMPLETE, []),
+                        *step.get(CONF_ON_TIMEOUT, []),
+                    ],
+                )
 
             elif action == cv.SCRIPT_ACTION_CHOOSE:
                 for choice in step[CONF_CHOOSE]:
@@ -1775,6 +1819,13 @@ class Script:
             elif action == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
                 for trigger in step[CONF_WAIT_FOR_TRIGGER]:
                     referenced |= set(trigger_helper.async_extract_devices(trigger))
+                Script._find_referenced_devices(
+                    referenced,
+                    [
+                        *step.get(CONF_ON_COMPLETE, []),
+                        *step.get(CONF_ON_TIMEOUT, []),
+                    ],
+                )
 
             elif action == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
                 referenced.add(step[CONF_DEVICE_ID])
@@ -1845,6 +1896,13 @@ class Script:
             elif action == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
                 for trigger in step[CONF_WAIT_FOR_TRIGGER]:
                     referenced |= set(trigger_helper.async_extract_entities(trigger))
+                Script._find_referenced_entities(
+                    referenced,
+                    [
+                        *step.get(CONF_ON_COMPLETE, []),
+                        *step.get(CONF_ON_TIMEOUT, []),
+                    ],
+                )
 
             elif action == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
                 # Only extract the entity if it has been resolved to an entity
@@ -2092,6 +2150,13 @@ class Script:
                 if_data["if_else"]._async_unload()  # noqa: SLF001
         self._if_data.clear()
 
+        for wait_data in self._wait_for_trigger_data.values():
+            if wait_data["on_complete"] is not None:
+                wait_data["on_complete"]._async_unload()  # noqa: SLF001
+            if wait_data["on_timeout"] is not None:
+                wait_data["on_timeout"]._async_unload()  # noqa: SLF001
+        self._wait_for_trigger_data.clear()
+
         for scripts in self._parallel_scripts.values():
             for sub_script in scripts:
                 sub_script._async_unload()  # noqa: SLF001
@@ -2235,6 +2300,41 @@ class Script:
             if_data = await self._async_prep_if_data(step)
             self._if_data[step] = if_data
         return if_data
+
+    async def _async_prep_wait_for_trigger_data(self, step: int) -> _WaitForTriggerData:
+        """Prepare the on_complete and on_timeout scripts of a wait_for_trigger."""
+        action = self.sequence[step]
+        step_name = action.get(CONF_ALIAS, f"Wait for trigger at step {step + 1}")
+
+        def prep_branch(branch: str) -> Script | None:
+            if branch not in action:
+                return None
+            sub_script = Script(
+                self._hass,
+                action[branch],
+                f"{self.name}: {step_name}: {branch}",
+                self.domain,
+                running_description=self.running_description,
+                script_mode=SCRIPT_MODE_PARALLEL,
+                max_runs=self.max_runs,
+                logger=self._logger,
+                top_level=False,
+            )
+            sub_script.change_listener = partial(
+                self._chain_change_listener, sub_script
+            )
+            return sub_script
+
+        return _WaitForTriggerData(
+            on_complete=prep_branch(CONF_ON_COMPLETE),
+            on_timeout=prep_branch(CONF_ON_TIMEOUT),
+        )
+
+    async def _async_get_wait_for_trigger_data(self, step: int) -> _WaitForTriggerData:
+        if not (wait_data := self._wait_for_trigger_data.get(step)):
+            wait_data = await self._async_prep_wait_for_trigger_data(step)
+            self._wait_for_trigger_data[step] = wait_data
+        return wait_data
 
     async def _async_prep_parallel_scripts(self, step: int) -> list[Script]:
         action = self.sequence[step]
