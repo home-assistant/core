@@ -1,0 +1,69 @@
+# serializer version: 1
+# name: test_climate_entities[altherma_firmwareupdate][altherma_firmwareupdate]
+  dict({
+    'climate.test_climate_control_leaving_water_temperature': dict({
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': dict({
+          <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+            <HVACMode.HEAT: 'heat'>,
+          ]),
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 75,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 20,
+          <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+        }),
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
+        'device_class': None,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000106')]>,
+        'disabled_by': None,
+        'domain': 'climate',
+        'entity_category': None,
+        'entity_id': 'climate.test_climate_control_leaving_water_temperature',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': 'Leaving water temperature',
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': 'Leaving water temperature',
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 0,
+        'translation_key': 'leaving_water_temperature',
+        'unique_id': '00000000-0000-4000-8000-000000000106_climateControlMainZone_leavingWaterTemperature',
+        'unit_of_measurement': None,
+      }),
+      'state': StateSnapshot({
+        'attributes': ReadOnlyDict({
+          <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.9,
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test climate control Leaving water temperature',
+          <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+            <HVACMode.HEAT: 'heat'>,
+          ]),
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 75,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 20,
+          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 0>,
+          <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+          <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+        }),
+        'context': <ANY>,
+        'entity_id': 'climate.test_climate_control_leaving_water_temperature',
+        'last_changed': <ANY>,
+        'last_reported': <ANY>,
+        'last_updated': <ANY>,
+        'state': 'off',
+      }),
+    }),
+  })
+# ---

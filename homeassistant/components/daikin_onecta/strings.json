@@ -1,0 +1,133 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cannot_connect": "Unable to connect to the Daikin API.",
+      "invalid_auth": "The Daikin API rejected the authentication token.",
+      "invalid_token": "Invalid or expired token; please reconfigure the integration.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "Failed due to an unexpected error.",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "oauth_discovery": {
+        "description": "Home Assistant has found a Daikin device on your network. Press **Submit** to continue setting up Daikin Onecta."
+      },
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "calculated_leaving_water_temperature": {
+        "name": "Calculated leaving water temperature"
+      },
+      "leaving_water_offset": {
+        "name": "Leaving water offset"
+      },
+      "leaving_water_temperature": {
+        "name": "Leaving water temperature"
+      },
+      "room_temperature": {
+        "name": "Room temperature",
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "floorheatingairflow": "Floor heating airflow",
+              "windnice": "Comfort airflow"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Daikin API returned HTTP {status}"
+    },
+    "authentication_failed": {
+      "message": "Daikin API authentication failed"
+    },
+    "climate_hvac_mode_unavailable": {
+      "message": "The requested HVAC mode is unavailable for {device}"
+    },
+    "climate_operation_mode_unavailable": {
+      "message": "Cannot set the temperature for {device} because its operation mode is unavailable"
+    },
+    "climate_power_unavailable": {
+      "message": "The power control is unavailable for {device}"
+    },
+    "climate_temperature_unavailable": {
+      "message": "The temperature control is unavailable for {device}"
+    },
+    "connection_failed": {
+      "message": "Unable to connect to the Daikin API"
+    },
+    "fan_control_unavailable": {
+      "message": "Cannot set the fan mode for {device} because fan-control data is unavailable"
+    },
+    "fan_mode_unavailable": {
+      "message": "The requested fan mode is unavailable for {device}"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "oauth2_token_request_failed": {
+      "message": "Unable to obtain Daikin OAuth token: {error}"
+    },
+    "preset_mode_unavailable": {
+      "message": "The requested preset mode is unavailable for {device}"
+    },
+    "rate_limit_exceeded": {
+      "message": "Daikin API rate limit exceeded"
+    },
+    "set_fan_mode_failed": {
+      "message": "Failed to set the fan mode for {device}"
+    },
+    "set_hvac_mode_failed": {
+      "message": "Failed to set the HVAC mode for {device}"
+    },
+    "set_preset_mode_failed": {
+      "message": "Failed to set the preset mode for {device}"
+    },
+    "set_swing_mode_failed": {
+      "message": "Failed to set the swing mode for {device}"
+    },
+    "set_temperature_failed": {
+      "message": "Failed to set the temperature for {device}"
+    },
+    "swing_control_unavailable": {
+      "message": "Swing control is unavailable for {device}"
+    },
+    "turn_off_failed": {
+      "message": "Failed to turn off {device}"
+    },
+    "turn_on_failed": {
+      "message": "Failed to turn on {device}"
+    }
+  }
+}

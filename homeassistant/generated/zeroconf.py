@@ -465,6 +465,16 @@ ZEROCONF = {
             "domain": "forked_daapd",
         },
     ],
+    "_daikin._tcp.local.": [
+        {
+            "domain": "daikin_onecta",
+            "name": "altherma._daikin._tcp.local.",
+        },
+        {
+            "domain": "daikin_onecta",
+            "name": "ndj._daikin._tcp.local.",
+        },
+    ],
     "_deako._tcp.local.": [
         {
             "domain": "deako",
@@ -722,6 +732,14 @@ ZEROCONF = {
         },
     ],
     "_https._tcp.local.": [
+        {
+            "domain": "daikin_onecta",
+            "name": "altherma4-*._https._tcp.local.",
+        },
+        {
+            "domain": "daikin_onecta",
+            "name": "homehub._https._tcp.local.",
+        },
         {
             "domain": "grandstream_home",
             "name": "gds_*",
