@@ -8,6 +8,15 @@
       ],
       "supported_by": "motion_blinds"
     },
+    "abetterrouteplanner": {
+      "name": "A Better Routeplanner",
+      "integration_type": "hub",
+      "categories": [
+        "vehicles_transport.cars_evs"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "abode": {
       "name": "Abode",
       "integration_type": "hub",
