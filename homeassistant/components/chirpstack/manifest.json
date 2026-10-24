@@ -11,6 +11,6 @@
   "quality_scale": "bronze",
   "requirements": [
     "chirpstack-api==4.19.0",
-    "lorawan-connection[chirpstack]==1.2.0"
+    "lorawan-connection[chirpstack]==1.3.0"
   ]
 }

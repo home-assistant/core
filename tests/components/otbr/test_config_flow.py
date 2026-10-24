@@ -1,4 +1,4 @@
-"""Test the Open Thread Border Router config flow."""
+"""Test the OpenThread Border Router config flow."""
 
 import asyncio
 from http import HTTPStatus
@@ -132,7 +132,7 @@ async def test_user_flow_additional_entry(
         data={"url": url2},
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=TEST_BORDER_AGENT_ID_2.hex(),
     )
     config_entry.add_to_hass(hass)
@@ -168,7 +168,7 @@ async def test_user_flow_additional_entry_fail_get_address(
         data={"url": url2},
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=TEST_BORDER_AGENT_ID_2.hex(),
     )
     config_entry.add_to_hass(hass)
@@ -208,7 +208,7 @@ async def _finish_user_flow(
             },
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Open Thread Border Router"
+    assert result["title"] == "OpenThread Border Router"
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -216,7 +216,7 @@ async def _finish_user_flow(
     config_entry = result["result"]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
-    assert config_entry.title == "Open Thread Border Router"
+    assert config_entry.title == "OpenThread Border Router"
     assert config_entry.unique_id == TEST_BORDER_AGENT_ID.hex()
 
 
@@ -238,7 +238,7 @@ async def test_user_flow_additional_entry_same_address(
         data={"url": "http://custom_url:1234"},
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=TEST_BORDER_AGENT_ID.hex(),
     )
     config_entry.add_to_hass(hass)
@@ -333,7 +333,7 @@ async def test_user_flow_router_not_setup(
     }
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Open Thread Border Router"
+    assert result["title"] == "OpenThread Border Router"
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -341,7 +341,7 @@ async def test_user_flow_router_not_setup(
     config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
-    assert config_entry.title == "Open Thread Border Router"
+    assert config_entry.title == "OpenThread Border Router"
     assert config_entry.unique_id == TEST_BORDER_AGENT_ID.hex()
 
 
@@ -987,7 +987,7 @@ async def test_hassio_discovery_flow_updates_entry(
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=entry_unique_id,
     )
     config_entry.add_to_hass(hass)
@@ -1030,7 +1030,7 @@ async def test_hassio_discovery_flow_entry_without_unique_id_kept(
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=None,
     )
     legacy_entry.add_to_hass(hass)
@@ -1039,7 +1039,7 @@ async def test_hassio_discovery_flow_entry_without_unique_id_kept(
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=HASSIO_DATA.uuid,
     )
     config_entry.add_to_hass(hass)
@@ -1075,7 +1075,7 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
     )
     config_entry.add_to_hass(hass)
 
@@ -1127,7 +1127,7 @@ async def test_hassio_discovery_flow_addon_restarted_entry_not_loaded(
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=HASSIO_DATA.uuid,
     )
     config_entry.add_to_hass(hass)
@@ -1173,7 +1173,7 @@ async def test_config_flow_additional_entry(
         data={},
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
     )
     config_entry.add_to_hass(hass)
 
