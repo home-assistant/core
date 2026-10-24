@@ -1,6 +1,7 @@
 """Test ESPHome voice assistant server."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from dataclasses import replace
 from http import HTTPStatus
 import io
@@ -11,6 +12,7 @@ import wave
 
 from aioesphomeapi import (
     APIClient,
+    APIConnectionError,
     MediaPlayerFormatPurpose,
     MediaPlayerInfo,
     MediaPlayerSupportedFormat,
@@ -40,7 +42,10 @@ from homeassistant.components.assist_satellite import (
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
-from homeassistant.components.esphome.assist_satellite import VoiceAssistantUDPServer
+from homeassistant.components.esphome.assist_satellite import (
+    EsphomeAssistSatellite,
+    VoiceAssistantUDPServer,
+)
 from homeassistant.components.esphome.const import NO_WAKE_WORD
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -372,7 +377,7 @@ async def test_pipeline_api_audio(
         satellite._audio_queue.put_nowait(b"leftover-data")
 
         # Should be cancelled at pipeline start
-        mock_tts_streaming_task = Mock()
+        mock_tts_streaming_task = asyncio.create_task(asyncio.Event().wait())
         satellite._tts_streaming_task = mock_tts_streaming_task
 
         async with asyncio.timeout(1):
@@ -382,7 +387,7 @@ async def test_pipeline_api_audio(
                 audio_settings=VoiceAssistantAudioSettings(),
                 wake_word_phrase="",
             )
-            mock_tts_streaming_task.cancel.assert_called_once()
+            assert mock_tts_streaming_task.cancelled()
             await satellite.handle_audio(b"test-mic")
             await satellite.handle_pipeline_stop(abort=False)
             await pipeline_finished.wait()
@@ -1667,6 +1672,140 @@ async def test_satellite_unloaded_on_disconnect(
     state = hass.states.get(satellite.entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.fixture
+async def streaming_satellite(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> AsyncGenerator[
+    tuple[EsphomeAssistSatellite, asyncio.Task[None], asyncio.Event, asyncio.Event]
+]:
+    """Stream audio from a source with asynchronous cancellation cleanup."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+            | VoiceAssistantFeature.API_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    source_waiting = asyncio.Event()
+    cleanup_started = asyncio.Event()
+    cleanup_release = asyncio.Event()
+
+    async def audio_source() -> AsyncGenerator[bytes]:
+        try:
+            yield _make_wav_header(data_chunk_size=65536) + b"\x00" * 4096
+            source_waiting.set()
+            await asyncio.Event().wait()
+        finally:
+            cleanup_started.set()
+            await cleanup_release.wait()
+
+    stream = MockResultStream(hass, "wav", b"")
+    stream.async_stream_result = audio_source
+    task = satellite.config_entry.async_create_background_task(
+        hass, satellite._stream_tts_audio(stream, samples_per_chunk=1024), "test_tts"
+    )
+    satellite._tts_streaming_task = task
+    await source_waiting.wait()
+    try:
+        yield satellite, task, cleanup_started, cleanup_release
+    finally:
+        cleanup_release.set()
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+
+
+async def test_new_pipeline_waits_for_tts_cleanup(
+    streaming_satellite: tuple[
+        EsphomeAssistSatellite, asyncio.Task[None], asyncio.Event, asyncio.Event
+    ],
+    mock_client: APIClient,
+) -> None:
+    """Do not start a new pipeline before the previous stream sends END."""
+    satellite, audio_task, cleanup_started, cleanup_release = streaming_satellite
+    with patch.object(satellite, "async_accept_pipeline_from_satellite") as accept:
+        start_task = asyncio.create_task(
+            satellite.handle_pipeline_start("", 0, VoiceAssistantAudioSettings(), None)
+        )
+        async with asyncio.timeout(1):
+            await cleanup_started.wait()
+            assert not start_task.done()
+            accept.assert_not_called()
+            cleanup_release.set()
+            await start_task
+
+        assert audio_task.done()
+        assert satellite._tts_streaming_task is None
+        accept.assert_awaited_once()
+        assert mock_client.send_voice_assistant_event.call_args.args == (
+            VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END,
+            {},
+        )
+
+
+async def test_abort_waits_for_tts_cleanup(
+    streaming_satellite: tuple[
+        EsphomeAssistSatellite, asyncio.Task[None], asyncio.Event, asyncio.Event
+    ],
+) -> None:
+    """Abort waits for the independent audio task, not only the pipeline."""
+    satellite, audio_task, cleanup_started, cleanup_release = streaming_satellite
+    stop_task = asyncio.create_task(satellite.handle_pipeline_stop(abort=True))
+    async with asyncio.timeout(1):
+        await cleanup_started.wait()
+        assert not stop_task.done()
+        cleanup_release.set()
+        await stop_task
+    assert audio_task.done()
+    assert satellite._tts_streaming_task is None
+
+
+@pytest.mark.parametrize(
+    "send_error",
+    [
+        pytest.param(None, id="connected"),
+        pytest.param(APIConnectionError("Disconnected"), id="disconnected"),
+    ],
+)
+async def test_removal_waits_for_tts_cleanup(
+    streaming_satellite: tuple[
+        EsphomeAssistSatellite, asyncio.Task[None], asyncio.Event, asyncio.Event
+    ],
+    mock_client: APIClient,
+    send_error: APIConnectionError | None,
+) -> None:
+    """Removal retires audio even if sending END fails on a closed connection."""
+    satellite, audio_task, cleanup_started, cleanup_release = streaming_satellite
+    mock_client.send_voice_assistant_event.side_effect = send_error
+    remove_task = asyncio.create_task(satellite.async_remove(force_remove=True))
+    async with asyncio.timeout(1):
+        await cleanup_started.wait()
+        assert not remove_task.done()
+        cleanup_release.set()
+        await remove_task
+    assert audio_task.done()
+    assert satellite._tts_streaming_task is None
+
+
+async def test_normal_stop_keeps_tts_stream(
+    streaming_satellite: tuple[
+        EsphomeAssistSatellite, asyncio.Task[None], asyncio.Event, asyncio.Event
+    ],
+) -> None:
+    """Stopping microphone input must not interrupt the response."""
+    satellite, audio_task, cleanup_started, _ = streaming_satellite
+    await satellite.handle_pipeline_stop(abort=False)
+    assert not audio_task.done()
+    assert audio_task.cancelling() == 0
+    assert not cleanup_started.is_set()
 
 
 async def test_pipeline_abort(
