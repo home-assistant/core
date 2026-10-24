@@ -1,5 +1,6 @@
 """Test the Model Context Protocol config flow."""
 
+import asyncio
 import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock
@@ -10,6 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.components.mcp.auth import AuthenticateHeader
@@ -665,6 +667,16 @@ async def test_invalid_protected_resource_metadata(
             json=resource_metadata,
         )
     )
+    parsed_server = URL(MCP_SERVER_URL)
+    for fallback_url in (
+        str(
+            parsed_server.with_path(
+                f"/.well-known/oauth-protected-resource{parsed_server.path}"
+            )
+        ),
+        str(parsed_server.with_path("/.well-known/oauth-protected-resource")),
+    ):
+        respx.get(fallback_url).mock(return_value=httpx2.Response(status_code=404))
     respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
         return_value=OAUTH_SERVER_METADATA_RESPONSE
     )
@@ -1351,3 +1363,215 @@ async def test_hassio_discovery_authentication_flow(
     assert result["result"]
     assert result["result"].unique_id == ADDON_DISCOVERY_INFO.uuid
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+def _resource_metadata_fallbacks() -> tuple[str, str]:
+    """Return the path-inserted and root protected-resource URLs."""
+    parsed_server = URL(MCP_SERVER_URL)
+    return (
+        str(
+            parsed_server.with_path(
+                f"/.well-known/oauth-protected-resource{parsed_server.path}"
+            )
+        ),
+        str(parsed_server.with_path("/.well-known/oauth-protected-resource")),
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@respx.mock
+async def test_header_resource_metadata_beats_a_mismatched_root_document(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """The header document is used when the root document describes another path."""
+    path_url = "http://1.1.1.1:8080/mcp/babybuddy"
+    header_url = (
+        "http://1.1.1.1:8080/.well-known/oauth-protected-resource/mcp/babybuddy"
+    )
+    root_url = "http://1.1.1.1:8080/.well-known/oauth-protected-resource"
+    auth_server = "https://babybuddy-auth.example"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx2.Response(
+            401,
+            headers={"WWW-Authenticate": f'Bearer resource_metadata="{header_url}"'},
+        ),
+    )
+    respx.get(header_url).mock(
+        return_value=httpx2.Response(
+            200,
+            json={
+                "resource": path_url,
+                "authorization_servers": [auth_server],
+            },
+        )
+    )
+    respx.get(root_url).mock(
+        return_value=httpx2.Response(
+            200,
+            json={
+                "resource": MCP_SERVER_URL,
+                "authorization_servers": ["https://root-auth.example"],
+            },
+        )
+    )
+    respx.get(f"{auth_server}/.well-known/oauth-authorization-server").mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: path_url},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_credentials"
+    fetched = [str(call.request.url) for call in respx.calls]
+    assert header_url in fetched
+    assert f"{auth_server}/.well-known/oauth-authorization-server" in fetched
+    assert not any(call.startswith("https://root-auth.example") for call in fetched)
+
+
+@pytest.mark.parametrize(
+    "header_document",
+    [
+        pytest.param(httpx2.Response(200, text="not-json"), id="not_json"),
+        pytest.param(
+            httpx2.Response(
+                200,
+                json={
+                    "resource": "http://1.1.1.1:8080/other",
+                    "authorization_servers": ["https://other.example"],
+                },
+            ),
+            id="mismatched_resource",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+@respx.mock
+async def test_resource_metadata_falls_back_after_an_unusable_header_document(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    header_document: httpx2.Response,
+) -> None:
+    """An unusable header document is skipped in favor of the path document."""
+    header_url = "https://example.com/custom-discovery"
+    path_url, root_url = _resource_metadata_fallbacks()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx2.Response(
+            401,
+            headers={"WWW-Authenticate": f'Bearer resource_metadata="{header_url}"'},
+        ),
+    )
+    respx.get(header_url).mock(return_value=header_document)
+    respx.get(path_url).mock(return_value=OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE)
+    respx.get(root_url).mock(return_value=httpx2.Response(status_code=404))
+    respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_credentials"
+    fetched = [str(call.request.url) for call in respx.calls]
+    assert header_url in fetched
+    assert path_url in fetched
+
+
+@pytest.mark.parametrize(
+    ("transport_error", "reason"),
+    [
+        (httpx2.TimeoutException("slow"), "timeout_connect"),
+        (httpx2.ConnectError("down"), "cannot_connect"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+@respx.mock
+async def test_resource_metadata_keeps_a_transport_error(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    transport_error: Exception,
+    reason: str,
+) -> None:
+    """A transport error is reported when no metadata document was invalid."""
+    header_url = "https://example.com/custom-discovery"
+    path_url, root_url = _resource_metadata_fallbacks()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx2.Response(
+            401,
+            headers={"WWW-Authenticate": f'Bearer resource_metadata="{header_url}"'},
+        ),
+    )
+    respx.get(header_url).mock(side_effect=transport_error)
+    respx.get(path_url).mock(return_value=httpx2.Response(status_code=404))
+    respx.get(root_url).mock(return_value=httpx2.Response(status_code=404))
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@respx.mock
+async def test_resource_metadata_unexpected_fetch_result(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A fetch result that is not a response or an error is logged."""
+    header_url = "https://example.com/custom-discovery"
+    path_url, root_url = _resource_metadata_fallbacks()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx2.Response(
+            401,
+            headers={"WWW-Authenticate": f'Bearer resource_metadata="{header_url}"'},
+        ),
+    )
+
+    def cancel(request: httpx2.Request) -> httpx2.Response:
+        raise asyncio.CancelledError
+
+    for url in (header_url, path_url, root_url):
+        respx.get(url).mock(side_effect=cancel)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert "Unexpected fetch result: CancelledError" in caplog.text
