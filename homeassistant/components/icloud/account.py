@@ -3,7 +3,6 @@
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 import logging
-import operator
 from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
@@ -697,10 +696,7 @@ class IcloudAccount:
 
             intervals[device.name] = interval
 
-        return max(
-            int(min(intervals.items(), key=operator.itemgetter(1))[1]),
-            self._max_interval,
-        )
+        return min(intervals.values())
 
     def cancel_fetch(self) -> None:
         """Cancel the scheduled fetch timer."""

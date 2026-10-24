@@ -43,6 +43,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
+from homeassistant.setup import async_setup_component
 
 from .const import (
     DEVICE,
@@ -1607,3 +1608,53 @@ async def test_device_without_a_status_keeps_the_account_polling(
         await hass.async_block_till_done()
 
         assert service_instance.authenticate.called
+
+
+@pytest.mark.parametrize(
+    ("latitude", "battery_level", "expected_interval"),
+    [
+        pytest.param(32.87336, None, DEFAULT_MAX_INTERVAL, id="in_zone"),
+        pytest.param(33.32336, None, 25, id="50km_from_zone"),
+        pytest.param(33.32336, 20, DEFAULT_MAX_INTERVAL, id="low_battery_capped"),
+        pytest.param(32.92336, None, 3, id="5km_from_zone"),
+    ],
+)
+async def test_interval_follows_distance_to_nearest_zone(
+    hass: HomeAssistant,
+    mock_store: Mock,
+    latitude: float,
+    battery_level: int | None,
+    expected_interval: int,
+) -> None:
+    """Test the fetch interval shrinks as a device gets closer to a zone."""
+    assert await async_setup_component(hass, "zone", {})
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    account = IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        DEFAULT_MAX_INTERVAL,
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+    device = Mock(
+        location={
+            "latitude": latitude,
+            "longitude": -117.22743,
+            "horizontalAccuracy": 10,
+        },
+        battery_level=battery_level,
+    )
+    device.name = "iPhone"
+    account._devices = {"device1": device}
+
+    assert (
+        await hass.async_add_executor_job(account._determine_interval)
+        == expected_interval
+    )
