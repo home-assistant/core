@@ -1081,7 +1081,7 @@ async def test_subscribe_sendspin_clients_refresh_survives_capabilities_update(
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A cache update in the same connection, like a Z-Wave home id, does not stop the refresh."""
+    """A cache update in the same connection, like a Z-Wave home id, is kept by the refresh."""
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_capabilities=_sendspin_capabilities(client_id=""),
@@ -1101,14 +1101,17 @@ async def test_subscribe_sendspin_clients_refresh_survives_capabilities_update(
     async_fire_time_changed(hass)
     await fetch_started.wait()
 
+    # The device reports a new Z-Wave home id while the request is out
     entry_data = device.entry.runtime_data
-    entry_data.device_capabilities = DeviceCapabilities.from_dict(
-        entry_data.device_capabilities.to_dict()
-    )
+    updated = entry_data.device_capabilities.to_dict()
+    updated["zwave_proxy"]["home_id"] = 3551671779
+    entry_data.device_capabilities = DeviceCapabilities.from_dict(updated)
     release_fetch.set()
     await hass.async_block_till_done()
     assert await _receive_sendspin_clients(websocket_client) == [SENDSPIN_CLIENT_ID]
-    assert entry_data.device_capabilities.sendspin.client_id == SENDSPIN_CLIENT_ID
+    capabilities = entry_data.device_capabilities
+    assert capabilities.sendspin.client_id == SENDSPIN_CLIENT_ID
+    assert capabilities.zwave_proxy.home_id == 3551671779
 
 
 async def test_subscribe_sendspin_clients_refresh_after_reconnect(

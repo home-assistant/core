@@ -11,7 +11,7 @@ from functools import partial
 import logging
 from typing import cast
 
-from aioesphomeapi import APIConnectionError
+from aioesphomeapi import APIConnectionError, DeviceCapabilities
 from aioesphomeapi.model import SendspinFeature
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -115,12 +115,9 @@ def _async_schedule_client_id_refresh(
         # identifies the connection this refresh was scheduled for
         session = entry_data.disconnect_callbacks
         session.discard(cancel)
-        assert entry_data.device_info is not None
         next_delay = min(delay * 2, CLIENT_ID_RETRY_MAX_DELAY)
         try:
-            capabilities = await entry_data.client.device_capabilities_compat(
-                entry_data.device_info
-            )
+            capabilities = await entry_data.client.device_capabilities()
         except APIConnectionError as err:
             if entry_data.disconnect_callbacks is session:
                 # still connected: the device did not answer in time, ask again later
@@ -130,7 +127,12 @@ def _async_schedule_client_id_refresh(
         if entry_data.disconnect_callbacks is not session:
             # the device dropped off meanwhile; the next connect starts over
             return
-        entry_data.device_capabilities = capabilities
+        # Only the Sendspin part is taken: the cache may have been patched with
+        # newer data, like a Z-Wave home id change, while the request was out
+        assert entry_data.device_capabilities is not None
+        merged = entry_data.device_capabilities.to_dict()
+        merged["sendspin"] = capabilities.sendspin.to_dict()
+        entry_data.device_capabilities = DeviceCapabilities.from_dict(merged)
         entry_data.async_save_to_store()
         if client_id := capabilities.sendspin.client_id:
             _async_set_client_id(hass, entry_data, client_id)
