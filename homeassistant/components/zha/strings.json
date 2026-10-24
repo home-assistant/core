@@ -2013,6 +2013,15 @@
       },
       "work_mode": {
         "name": "Work mode"
+      },
+      "x_axis": {
+        "name": "X axis"
+      },
+      "y_axis": {
+        "name": "Y axis"
+      },
+      "z_axis": {
+        "name": "Z axis"
       }
     },
     "switch": {

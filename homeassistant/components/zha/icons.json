@@ -200,6 +200,15 @@
       },
       "weight_dispensed_today": {
         "default": "mdi:weight-gram"
+      },
+      "x_axis": {
+        "default": "mdi:axis-x-arrow"
+      },
+      "y_axis": {
+        "default": "mdi:axis-y-arrow"
+      },
+      "z_axis": {
+        "default": "mdi:axis-z-arrow"
       }
     },
     "switch": {
