@@ -107,6 +107,7 @@ FLOWS = {
         "besen",
         "bitcoin",
         "bitvis",
+        "blanco",
         "blebox",
         "blink",
         "blue_current",
