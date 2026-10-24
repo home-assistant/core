@@ -2747,3 +2747,62 @@ async def test_zone_control_zone_failed_preset_is_not_remembered(
     await _async_set_zone_setpoint(hass, 21.0)
 
     assert ("setDerogationOnOffState", ["on"]) in _sent_commands(mock_client)[-1]
+
+
+async def test_zone_control_zone_failed_refresh_keeps_the_mode_written(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a refresh failing after a preset leaves the preset applied."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {ATTR_ENTITY_ID: ZONE_CONTROL_ZONE.entity_id, ATTR_PRESET_MODE: "schedule"},
+        blocking=True,
+    )
+    # The modes and the derogation are applied, the first refresh fails.
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        [{"rank": 3}],
+    )
+    await _async_set_zone_setpoint(hass, 21.0)
+
+    assert _sent_commands(mock_client)[-1] == [("setHeatingTargetTemperature", [21.0])]
+
+
+async def test_zone_control_zone_failed_refresh_keeps_the_derogation_written(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a refresh failing after a derogation leaves the derogation applied."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    # The setpoint and the derogation are applied, the first refresh fails.
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        [{"rank": 2}],
+    )
+    await _async_set_zone_setpoint(hass, 20.0)
+
+    assert _sent_commands(mock_client)[-1] == [("setHeatingTargetTemperature", [20.0])]

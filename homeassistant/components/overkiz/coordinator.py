@@ -426,7 +426,7 @@ async def on_execution_state_changed(
     if records is None:
         return
 
-    _track_derogation_writes(coordinator, records, event.new_state)
+    _track_derogation_writes(coordinator, records, event)
 
     # A setting that went through ends the failure reported for the device.
     if event.new_state == ExecutionState.COMPLETED:
@@ -457,30 +457,69 @@ def _written_commands(record: dict[str, Any]) -> list[Command]:
     ]
 
 
+def _applied_commands(
+    records: list[dict[str, Any]], event: ExecutionStateChangedEvent
+) -> list[list[Command]] | None:
+    """Return the commands of each record that the device applied.
+
+    The commands of an execution run in order and stop at the first that fails:
+    those before it are applied. None when a failure doesn't tell which one.
+    """
+    if event.new_state == ExecutionState.COMPLETED:
+        return [record.get("commands") or [] for record in records]
+
+    ranks = [
+        command["rank"]
+        for command in event.failed_commands or ()
+        if isinstance(command, dict) and isinstance(command.get("rank"), int)
+    ]
+    if len(records) != 1 or not ranks:
+        return None
+
+    return [(records[0].get("commands") or [])[: min(ranks)]]
+
+
 def _track_derogation_writes(
     coordinator: OverkizDataUpdateCoordinator,
     records: list[dict[str, Any]],
-    new_state: ExecutionState,
+    event: ExecutionStateChangedEvent,
 ) -> None:
     """Remember the derogation a finished write left on its device."""
-    for record in records:
-        # A mode that was not written is not the one the device will report.
-        if new_state == ExecutionState.FAILED and any(
+    applied = _applied_commands(records, event)
+
+    for index, record in enumerate(records):
+        device_url = record["device_url"]
+        applied_names = (
+            None
+            if applied is None
+            else {str(command.name) for command in applied[index]}
+        )
+
+        # A mode that was not applied is not the one the device will report. A
+        # refresh that fails after it leaves it applied.
+        if any(
             command.name == OverkizCommand.SET_PASS_APC_HEATING_MODE
             for command in _written_commands(record)
+        ) and (
+            applied_names is None
+            or OverkizCommand.SET_PASS_APC_HEATING_MODE not in applied_names
         ):
-            coordinator.mode_writes.pop(record["device_url"], None)
+            coordinator.mode_writes.pop(device_url, None)
 
         for command in _written_commands(record):
             if command.name != OverkizCommand.SET_DEROGATION_ON_OFF_STATE:
                 continue
-            if new_state == ExecutionState.COMPLETED and command.parameters:
-                coordinator.derogation_writes[record["device_url"]] = (
+            if (
+                applied_names is not None
+                and OverkizCommand.SET_DEROGATION_ON_OFF_STATE in applied_names
+                and command.parameters
+            ):
+                coordinator.derogation_writes[device_url] = (
                     str(command.parameters[0]),
                     monotonic(),
                 )
             else:
-                coordinator.derogation_writes.pop(record["device_url"], None)
+                coordinator.derogation_writes.pop(device_url, None)
 
 
 def _create_failure_issue(
