@@ -1,0 +1,102 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "too_many_devices_registered": "There are too many devices registered for this airco. Please delete a device (in the app) or do a factory reset of the module.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "discovery_confirm": {
+        "data": {
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "port": "The port to reach the module on. It is normally 51443 - correct it here if the announced value above looks different."
+        },
+        "description": "The airco with id: {id}, IP: {host} and port: {port} was discovered. The port is normally 51443 — correct it below if it looks different.",
+        "title": "Discovered WF-RAC airco"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The local IP address of the airco's wireless module. A changed address is picked up when the module announces itself again; give the module a fixed address in your router, or correct it here if it does not.",
+          "port": "The port the module's local API listens on. Leave this at 51443 unless your module announces a different one."
+        },
+        "description": "Enter the connection details of the airco you want to add.",
+        "title": "WF-RAC AC connection info"
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "mitsubishi_wf_rac": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "center_center": "Center-Center",
+              "center_right": "Center-Right",
+              "left_center": "Left-Center",
+              "left_left": "Left-Left",
+              "left_right": "Left-Right",
+              "left_right_auto": "Left/Right Auto",
+              "right_left": "Right-Left",
+              "right_right": "Right-Right"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "3d_auto": "3D Auto",
+              "highest": "Highest",
+              "lowest": "Lowest",
+              "middle": "Middle",
+              "normal": "Normal",
+              "up_down_auto": "Up/Down Auto"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "command_cancelled": {
+      "message": "The command to the airco at {device} was cancelled because the integration is shutting down."
+    },
+    "command_failed": {
+      "message": "Sending the command to the airco at {device} failed: {error}"
+    },
+    "command_unencodable": {
+      "message": "The airco at {device} reported a setting that Home Assistant cannot send back, so nothing was sent. Set the fan mode first, then try again."
+    },
+    "preset_away_needs_cool_or_heat": {
+      "message": "Home Leave mode is only available while cooling or heating, not in {hvac_mode}. Switch the unit to cool or heat first, so the direction it should hold is unambiguous."
+    },
+    "temperature_above_maximum": {
+      "message": "{temperature} °C is above the {max_temp} °C maximum for hvac_mode {hvac_mode}. Include hvac_mode in the same action call to check against the mode you are switching to instead."
+    },
+    "temperature_below_minimum": {
+      "message": "{temperature} °C is below the {min_temp} °C minimum for hvac_mode {hvac_mode}. Include hvac_mode in the same action call to check against the mode you are switching to instead."
+    },
+    "update_failed": {
+      "message": "Polling the airco at {device} failed: {error}"
+    }
+  },
+  "issues": {
+    "too_many_devices": {
+      "description": "{device_name} has room for four registered accounts and all four are taken, so Home Assistant cannot register itself. Registrations never expire, and the module never replaces one.\n\nTo free a slot:\n\n1. Open the Smart M-Air app on a phone that no longer needs this unit.\n2. Remove the unit from that app. Each account can only remove itself, and phones sharing one Smart M-Air account take up a single slot between them.\n3. Send any command to the climate entity. Home Assistant registers again with it and this message clears.\n\nIf no slot can be freed, the module has to be set up again from scratch.",
+      "short_title": "Too many accounts registered",
+      "title": "Too many accounts registered on {device_name}"
+    }
+  }
+}
