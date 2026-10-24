@@ -2111,6 +2111,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/victron_remote_monitoring/ @AndyTempel
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
+/homeassistant/components/visonic/ @davesmeghead
+/tests/components/visonic/ @davesmeghead
 /homeassistant/components/vistapool/ @fdebrus
 /tests/components/vistapool/ @fdebrus
 /homeassistant/components/vitesy/ @chemelli74

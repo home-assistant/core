@@ -1,0 +1,364 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Alarm Connection Already Configured",
+      "already_in_progress": "Panel configuration already in progress",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "device_error": "Connection must be either Ethernet, Cloud or Serial",
+      "email_invalid": "The email address is invalid",
+      "settings_invalid": "There are invalid settings",
+      "settings_missing": "Essential settings are missing",
+      "unknown": "Unexpected or unknown error"
+    },
+    "error": {
+      "already_in_progress": "[%key:component::visonic::config::abort::already_in_progress%]",
+      "cannot_connect_refused": "Connection refused",
+      "cannot_connect_timeout": "Connection timed out. Ensure the device is online.",
+      "cloud_error": "The cloud server rejected the request. Check the Home Assistant logs for the error type.",
+      "email_invalid": "[%key:component::visonic::config::abort::email_invalid%]",
+      "invalid_auth": "Cloud login credentials or panel user code are invalid",
+      "no_panels": "No panels are registered to this cloud account",
+      "panel_mismatch": "Select the panel already configured for this integration. To use a different panel, add a new integration entry.",
+      "panel_not_registered": "The configured panel is no longer registered to this account. Check the account's access to this panel. To use a different panel, add a new integration entry.",
+      "panel_number_in_use": "This panel number is already in use. Choose another number.",
+      "settings_invalid": "[%key:component::visonic::config::abort::settings_invalid%]",
+      "settings_missing": "[%key:component::visonic::config::abort::settings_missing%]"
+    },
+    "step": {
+      "device": {
+        "data": {
+          "panel_number": "Unique Panel number",
+          "type": "Ethernet, Cloud or Serial"
+        },
+        "data_description": {
+          "panel_number": "Unique number for each panel to identify the entity; use 0 for a single panel.",
+          "type": "Select the connection type for your configuration and available hardware"
+        },
+        "description": "Connection type and unique panel number"
+      },
+      "device_no_panel": {
+        "data": {
+          "type": "Ethernet, Cloud or Serial"
+        },
+        "data_description": {
+          "type": "Select the connection type"
+        },
+        "description": "Select the connection type"
+      },
+      "form_cloud": {
+        "data": {
+          "email": "Login Email",
+          "external_url": "Server URL",
+          "password": "Login Password"
+        },
+        "data_description": {
+          "email": "Login Email Address to the cloud server",
+          "external_url": "External cloud server URL (e.g. visonic.tycomonitor.com)",
+          "password": "Login Password to the cloud server"
+        },
+        "description": "Enter Visonic Cloud Server Settings"
+      },
+      "form_ethernet": {
+        "data": {
+          "esphome_entity_select": "ESPHome Baud Entity",
+          "host": "Host Address",
+          "port": "Port"
+        },
+        "data_description": {
+          "esphome_entity_select": "ESPHome Entity used to change baud (PowerMaster only)",
+          "host": "The Local Network IP or Address",
+          "port": "The Port on the device"
+        },
+        "description": "Enter Ethernet Settings"
+      },
+      "form_powerlink": {
+        "data": {
+          "download_code": "EPROM Download Code",
+          "user_code_slot": "Panel User Code for Commands"
+        },
+        "data_description": {
+          "download_code": "EPROM Download Code to use to obtain EPROM (leave blank if not sure)",
+          "user_code_slot": "Which user code to use for arm/disarm operations"
+        },
+        "description": "Powerlink settings."
+      },
+      "form_serial": {
+        "data": {
+          "device": "Serial Path"
+        },
+        "data_description": {
+          "device": "The Local Serial Device (or ESPHome Serial-Proxy)"
+        },
+        "description": "Enter Serial Settings"
+      },
+      "select_panel": {
+        "data": {
+          "code": "Panel User Code",
+          "panel_serial": "Panel",
+          "scan_interval": "Polling Interval (seconds)"
+        },
+        "data_description": {
+          "code": "The Panel's User Code to the cloud server",
+          "panel_serial": "Choose the panel to connect to Home Assistant",
+          "scan_interval": "The period of time between polling the cloud server (seconds)"
+        },
+        "description": "Select a registered cloud panel and enter its user code and polling interval"
+      }
+    }
+  },
+  "entity": {
+    "alarm_control_panel": {
+      "alarm_panel_key": {
+        "state_attributes": {
+          "alarm": {
+            "name": "Alarm",
+            "state": {
+              "emergency": "Emergency",
+              "fire": "Fire",
+              "flood": "Flood",
+              "gas": "Gas",
+              "intruder": "Intruder",
+              "none": "No Alarm",
+              "panic": "Panic",
+              "tamper": "Tamper"
+            }
+          },
+          "battery_level": {
+            "name": "Battery level"
+          },
+          "bypass": {
+            "name": "Panel bypass",
+            "state": {
+              "false": "No",
+              "true": "Yes"
+            }
+          },
+          "code_arm_required": {
+            "name": "Code for arming",
+            "state": {
+              "false": "Not required",
+              "true": "Required"
+            }
+          },
+          "code_format": {
+            "name": "Code format",
+            "state": {
+              "number": "Number",
+              "text": "Text"
+            }
+          },
+          "emulationmode": {
+            "name": "Emulation mode",
+            "state": {
+              "cloud": "Cloud",
+              "download": "Download EPROM",
+              "minimal_only": "Minimal Panel Connection",
+              "powerlink": "Powerlink",
+              "powerlink_bridged": "Powerlink (Bridged)",
+              "problem": "Problem",
+              "standard": "Standard",
+              "standard_plus": "Standard Plus",
+              "starting": "Starting",
+              "stopped": "Integration Stopped",
+              "unknown": "Unknown"
+            }
+          },
+          "memory": {
+            "name": "Panel alert in memory",
+            "state": {
+              "false": "No",
+              "true": "Yes"
+            }
+          },
+          "ready": {
+            "name": "Panel ready",
+            "state": {
+              "false": "No",
+              "true": "Yes"
+            }
+          },
+          "state": {
+            "name": "Panel state",
+            "state": {
+              "armed_away": "Armed Away",
+              "armed_away_bypass": "Armed Away (Bypass)",
+              "armed_away_instant": "Armed Away (Instant)",
+              "armed_home": "Armed Home",
+              "armed_home_bypass": "Armed Home (Bypass)",
+              "armed_home_instant": "Armed Home (Instant)",
+              "arming_away": "Arming Away",
+              "arming_home": "Arming Home",
+              "disarmed": "Disarmed",
+              "downloading": "Downloading EPROM",
+              "entry_delay": "Entry Delay",
+              "entry_delay_instant": "Entry Delay (Instant)",
+              "installer": "Installer",
+              "triggered": "Triggered",
+              "unknown": "Unknown",
+              "user_test": "User Test"
+            }
+          },
+          "tamper": {
+            "name": "Panel tamper alarm",
+            "state": {
+              "false": "No",
+              "true": "Yes"
+            }
+          },
+          "trouble": {
+            "name": "Trouble",
+            "state": {
+              "battery": "Battery",
+              "communication": "Communication Loss",
+              "general": "General",
+              "jamming": "Jamming",
+              "none": "No Trouble",
+              "power": "Power",
+              "telephone": "Telephone Line Failure"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "config_entry_not_found": {
+      "message": "Visonic service {service}, config Entry not found for entity {entity_id}"
+    },
+    "device_not_linked_to_configuration": {
+      "message": "Visonic service {service}, device not linked to a config entity: {entity_id}"
+    },
+    "entity_not_attached_to_device": {
+      "message": "Visonic service {service}, entity is not attached to a device {entity_id}"
+    },
+    "entity_not_in_registry": {
+      "message": "Visonic service {service}, entity not found in registry {entity_id}"
+    },
+    "fail_abstract_class_not_implemented": {
+      "message": "Visonic Panel {panel_id} Failed to Send Command To Panel, report error to integration author and send a log file"
+    },
+    "fail_download_in_progress": {
+      "message": "Visonic Panel {panel_id} Failed to Send Command To Panel, not supported when downloading EPROM"
+    },
+    "fail_entity_incorrect": {
+      "message": "Visonic Panel {panel_id} Failed to Send Command To Panel, entity not supported"
+    },
+    "fail_invalid_code": {
+      "message": "Visonic Panel {panel_id} Failed to Send Command To Panel, not allowed without valid pin"
+    },
+    "fail_invalid_process_token": {
+      "message": "Visonic Panel {panel_id} Failed to Send Command To Panel, invalid process token from cloud server"
+    },
+    "fail_invalid_return": {
+      "message": "Visonic Panel {panel_id} Failed to Send Command To Panel, invalid state returned"
+    },
+    "fail_invalid_state": {
+      "message": "Visonic Panel {panel_id} Failed to Send Command To Panel, invalid state requested"
+    },
+    "fail_panel_config_prevented": {
+      "message": "Visonic Panel {panel_id} Failed to Send Command To Panel, disabled by panel settings"
+    },
+    "fail_panel_no_connection": {
+      "message": "Visonic Panel {panel_id} Failed to Send Command To Panel, no connection to panel"
+    },
+    "fail_recovery_in_progress": {
+      "message": "Visonic Panel {panel_id} Panel communication is temporarily silent for recovery; commands are unavailable until recovery finishes"
+    },
+    "fail_switch_problem": {
+      "message": "Visonic Panel {panel_id} Failed to Send Command To Panel, general Switch Problem"
+    },
+    "fail_user_config_prevented": {
+      "message": "Visonic Panel {panel_id} Failed to Send Command To Panel, disabled by user settings"
+    },
+    "invalid_arm_state": {
+      "message": "Invalid: Can't set the armed state to {option}. Allowed states are: {options}"
+    },
+    "invalid_arm_state_no_option": {
+      "message": "Armed state not defined. Allowed states are: {options}"
+    },
+    "invalid_device_for_entity": {
+      "message": "Visonic service {service}, invalid device for entity {entity_id}"
+    },
+    "invalid_disarm_state_code": {
+      "message": "Disarm Commanded without a valid user code: {entity}"
+    },
+    "invalid_panel_configuration": {
+      "message": "Panel connection settings are incomplete or invalid."
+    },
+    "no_entity_specified_in_service": {
+      "message": "Visonic service {service}, entity is invalid."
+    },
+    "no_panel_connection": {
+      "message": "Visonic Integration for {myname} is not connected to the panel."
+    },
+    "no_unique_number_in_config": {
+      "message": "Visonic configuration does not include a {ident} number, cannot continue as it is invalid."
+    },
+    "number_in_config_not_unique": {
+      "message": "Visonic configuration has a {ident} number {ref} that is not unique, cannot continue as it is invalid."
+    },
+    "panel_already_configured": {
+      "message": "This panel connection is already configured."
+    },
+    "panel_authorisation_failure": {
+      "message": "Cloud authorization failed for panel {panel_id}."
+    },
+    "panel_connection_deferred": {
+      "message": "Waiting for Home Assistant startup before connecting to the panel."
+    },
+    "panel_coordinator_missing": {
+      "message": "The Visonic panel coordinator is unavailable."
+    },
+    "panel_initial_connection_failure": {
+      "message": "Initial connection failed for panel {panel_id}."
+    },
+    "service_operation_failed": {
+      "message": "Visonic service {service} failed, {reason}"
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:component::visonic::config::abort::already_configured%]",
+      "device_error": "[%key:component::visonic::config::abort::device_error%]",
+      "settings_missing": "[%key:component::visonic::config::abort::settings_missing%]",
+      "unknown": "[%key:component::visonic::config::abort::unknown%]"
+    },
+    "error": {
+      "email_invalid": "[%key:component::visonic::config::abort::email_invalid%]",
+      "settings_invalid": "[%key:component::visonic::config::abort::settings_invalid%]",
+      "settings_missing": "[%key:component::visonic::config::abort::settings_missing%]"
+    },
+    "step": {
+      "parameters_connection": {
+        "data": {
+          "retry_connection_count": "Try this number of times to attempt a reload",
+          "retry_connection_delay": "Time delay (seconds) between reload attempts"
+        },
+        "data_description": {
+          "retry_connection_count": "If disconnections occur, then try this number of times to attempt a reload",
+          "retry_connection_delay": "If disconnections occur, then wait this delay time (seconds) between reload attempts"
+        },
+        "description": ""
+      },
+      "parameters_panel_arming": {
+        "data": {
+          "allow_remote_arm": "Enable Panel Arm",
+          "allow_remote_disarm": "Enable Panel DisArm",
+          "arm_away_instant": "Arm Away performs an Arm Away Instant",
+          "arm_home_enabled": "Arm Home Enabled",
+          "arm_home_instant": "Arm Home performs an Arm Home Instant",
+          "arm_without_usercode": "Arm Normal Alarm without User Code"
+        },
+        "data_description": {
+          "allow_remote_arm": "Allow Panel Arm from Home Assistant",
+          "allow_remote_disarm": "Allow Panel DisArm from Home Assistant",
+          "arm_away_instant": "Arm Away performs an Arm Away Instant",
+          "arm_home_enabled": "Arm Home Enabled in addition to Arm Away",
+          "arm_home_instant": "Arm Home performs an Arm Home Instant",
+          "arm_without_usercode": "Arm 'Normal' Alarm without User Code (not supported by all panels)"
+        },
+        "description": ""
+      }
+    }
+  }
+}

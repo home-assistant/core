@@ -669,6 +669,7 @@ homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.velux.*
 homeassistant.components.victron_gx.*
+homeassistant.components.visonic.*
 homeassistant.components.vistapool.*
 homeassistant.components.vitesy.*
 homeassistant.components.vivotek.*

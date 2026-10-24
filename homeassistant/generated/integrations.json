@@ -12368,6 +12368,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "visonic": {
+      "name": "Visonic Security System",
+      "integration_type": "hub",
+      "categories": [
+        "security_safety.alarm_systems"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "vistapool": {
       "name": "Vistapool",
       "integration_type": "hub",

@@ -1,0 +1,18 @@
+{
+  "domain": "visonic",
+  "name": "Visonic Security System",
+  "categories": ["security_safety.alarm_systems"],
+  "codeowners": ["@davesmeghead"],
+  "config_flow": true,
+  "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/visonic",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["pyvisonic", "pyvisonicalarm"],
+  "quality_scale": "bronze",
+  "requirements": [
+    "serialx==1.15.0",
+    "pyvisonic==4.1.0",
+    "pyvisonicalarm==0.3.0a1"
+  ]
+}

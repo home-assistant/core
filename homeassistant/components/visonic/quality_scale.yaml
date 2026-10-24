@@ -1,0 +1,213 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No custom actions are defined.
+  appropriate-polling:
+    status: done
+    comment: >
+      Cloud polling defaults to 20 seconds (minimum 5). Local updates are
+      pushed, with snapshots refreshed at least every 60 seconds.
+  brands:
+    status: done
+    comment: >
+      Assets submitted in https://github.com/home-assistant/brands/pull/11323,
+      awaiting merge.
+  common-modules:
+    status: done
+    comment: Coordinator, backend and shared entity logic use separate modules.
+  config-flow-test-coverage:
+    status: done
+    comment: Config flows have 100 percent statement and 98.75 percent branch coverage.
+  config-flow:
+    status: done
+    comment: UI setup and options support Ethernet, serial and cloud.
+  dependency-transparency:
+    status: done
+    comment: >
+      All dependencies are published on PyPI with public source,
+      OSI-approved licenses and release workflows.
+  docs-actions:
+    status: exempt
+    comment: No actions are defined.
+  docs-triggers:
+    status: exempt
+    comment: No triggers are defined.
+  docs-conditions:
+    status: exempt
+    comment: No conditions are defined.
+  docs-high-level-description:
+    status: done
+    comment: Documents panels, connection methods and alarm entities.
+  docs-installation-instructions:
+    status: done
+    comment: Documents prerequisites, hardware setup and UI installation steps.
+  docs-removal-instructions:
+    status: done
+    comment: Documents UI removal and its effect on the connection and panel.
+  entity-event-setup:
+    status: done
+    comment: >
+      CoordinatorEntity manages listeners; dispatchers unload with the entry.
+  entity-unique-id:
+    status: done
+    comment: AlarmBaseLogic assigns a stable ID to the whole-panel alarm.
+  has-entity-name:
+    status: done
+    comment: The primary alarm uses has_entity_name with name set to None.
+  runtime-data:
+    status: done
+    comment: Typed runtime_data stores the coordinator in VisonicPanelData.
+  test-before-configure:
+    status: done
+    comment: >
+      Direct probes await decoded state for up to 60 seconds and clean up.
+      Cloud setup validates account and selected-panel credentials.
+  test-before-setup:
+    status: done
+    comment: >
+      Panel connections wait until Home Assistant is running. Direct startup
+      allows 180 seconds for panel state. Both backends require a successful
+      first refresh.
+  unique-config-entry:
+    status: done
+    comment: >
+      Local entries match TCP endpoints or serial paths; cloud entries match
+      panel serials. Panel numbers are unique across entries and flows. Direct
+      matching cannot detect all host aliases or transport duplicates.
+
+  # Silver
+  action-exceptions:
+    status: done
+    comment: >
+      Alarm actions raise ServiceValidationError for invalid requests and
+      HomeAssistantError for execution failures; authentication stays separate.
+  config-entry-unloading:
+    status: done
+    comment: >
+      Successful platform unloading stops the backend and coordinator. Cleanup
+      removes timers and listeners, including on cancelled setup.
+  docs-configuration-parameters:
+    status: done
+    comment: >
+      Documents arming options and local retries, including defaults, ranges
+      and connection-specific availability.
+  docs-installation-parameters:
+    status: done
+    comment: >
+      Documents all setup fields, defaults, required values and code formats.
+  entity-unavailable:
+    status: done
+    comment: >
+      Availability requires a connected panel and successful coordinator
+      update.
+  integration-owner:
+    status: done
+    comment: The manifest and CODEOWNERS identify @davesmeghead.
+  log-when-unavailable:
+    status: done
+    comment: >
+      Polled and pushed failures share coordinator state, logging once per
+      outage and recovery. Retry and cached-data messages use debug logging.
+  parallel-updates:
+    status: done
+    comment: alarm_control_panel.py sets PARALLEL_UPDATES = 1.
+  reauthentication-flow:
+    status: done
+    comment: >
+      Cloud authentication errors trigger reauthentication, preserving the
+      selected panel while validating credentials and its user code.
+  test-coverage:
+    status: done
+    comment: >
+      All 461 tests pass with 98.07 percent combined statement and branch
+      coverage. Config-flow statement coverage is 100 percent and branch
+      coverage is 98.75 percent.
+
+  # Gold
+  devices:
+    status: done
+    comment: Alarm entities share the registered panel device.
+  diagnostics:
+    status: todo
+    comment: Add diagnostics with sensitive panel and account data redacted.
+  discovery-update-info:
+    status: exempt
+    comment: No discovery flow is implemented.
+  discovery:
+    status: exempt
+    comment: No discovery flow is implemented.
+  docs-data-update:
+    status: todo
+    comment: Document local push updates and cloud polling intervals.
+  docs-examples:
+    status: todo
+    comment: Add examples of using the alarm entity in automations.
+  docs-known-limitations:
+    status: done
+    comment: >
+      Documents alarm-only support, combined partitions, unsupported panels,
+      transport security and model-dependent user-code slots.
+  docs-supported-devices:
+    status: done
+    comment: Lists supported and untested models, and the unsupported PowerMax.
+  docs-supported-functions:
+    status: done
+    comment: >
+      Documents whole-panel state, arm/disarm and home/instant arming options.
+  docs-troubleshooting:
+    status: done
+    comment: Covers connection, cloud credentials and command troubleshooting.
+  docs-use-cases:
+    status: todo
+    comment: Add concrete use cases for the whole-panel alarm.
+  dynamic-devices:
+    status: exempt
+    comment: Each entry represents one panel device and one alarm entity.
+  entity-category:
+    status: exempt
+    comment: Only operational alarm entities are exposed.
+  entity-device-class:
+    status: exempt
+    comment: AlarmControlPanelEntity does not support device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The sole alarm entity provides the primary integration function.
+  entity-translations:
+    status: exempt
+    comment: >
+      The primary alarm uses the device name without a suffix. State attributes
+      have translations.
+  exception-translations:
+    status: todo
+    comment: >
+      Translate command failures, runtime authentication/update errors and
+      VisonicException messages.
+  icon-translations:
+    status: exempt
+    comment: Alarm entities use standard platform icons.
+  reconfiguration-flow:
+    status: done
+    comment: >
+      Validates changed connections, rejects duplicates and preserves
+      identities. Cloud selection must match the saved panel serial.
+  repair-issues:
+    status: todo
+    comment: Assess repair cases such as exhausted direct retries.
+  stale-devices:
+    status: exempt
+    comment: The sole panel device shares the config entry lifecycle.
+
+  # Platinum
+  async-dependency:
+    status: done
+    comment: All dependencies provide asynchronous I/O.
+  inject-websession:
+    status: done
+    comment: >
+      Cloud uses async_get_clientsession(hass); direct connections use no HTTP.
+  strict-typing:
+    status: todo
+    comment: >
+      Strict mypy checks pass. pyvisonicalarm 0.3.0a1 needs a PEP 561 marker or
+      stubs; pyvisonic and serialx provide py.typed.
