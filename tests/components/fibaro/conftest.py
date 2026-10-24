@@ -310,6 +310,7 @@ def mock_thermostat_parent() -> Mock:
     climate.base_type = "com.fibaro.device"
     climate.properties = {"manufacturer": ""}
     climate.actions = []
+    climate.has_battery_level = True
     climate.battery_level = 80
     return climate
 
@@ -342,6 +343,7 @@ def mock_thermostat_with_operating_mode() -> Mock:
     climate.has_heating_thermostat_setpoint = False
     climate.has_heating_thermostat_setpoint_future = False
     climate.target_level = 23
+    climate.has_battery_level = True
     climate.battery_level = 80
     value_mock = Mock()
     value_mock.has_value = True
@@ -450,6 +452,7 @@ def mock_button_device() -> Mock:
     climate.central_scene_event = [SceneEvent(1, "Pressed")]
     climate.actions = {}
     climate.interfaces = ["zwaveCentralScene"]
+    climate.has_battery_level = True
     climate.battery_level = 100
     climate.armed = False
     return climate
