@@ -242,7 +242,7 @@ def create_customized_registry_records(
         labels={label.label_id},
         name=f"Custom entity {serial_number}",
         new_entity_id=(
-            "climate.master_bath_floor"
+            "climate.synthetic_customized_heater"
             if serial_number == "ABC123"
             else f"climate.custom_{serial_number.lower()}"
         ),
@@ -445,7 +445,7 @@ async def test_provisional_oauth_subject_migration_preserves_registry_identity(
     assert after["devices"] == before["devices"]
     entity = entity_registry.async_get(automation_reference)
     assert entity is not None
-    assert entity.entity_id == "climate.master_bath_floor"
+    assert entity.entity_id == "climate.synthetic_customized_heater"
     assert entity.unique_id == "ABC123"
     assert device_registry.async_get(records[0][1].id).id == records[0][1].id
 
@@ -576,7 +576,7 @@ async def test_customized_entity_and_device_survive_initialization(
     assert len(entities) == 1
     migrated_entity = entities[0]
     assert migrated_entity.id == original_entity.id
-    assert migrated_entity.entity_id == "climate.master_bath_floor"
+    assert migrated_entity.entity_id == "climate.synthetic_customized_heater"
     assert migrated_entity.name == "Custom entity ABC123"
     assert migrated_entity.icon == "mdi:radiator"
     assert migrated_entity.area_id == entity_area.id

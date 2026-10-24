@@ -1,5 +1,6 @@
 """Support for NuHeat thermostats."""
 
+from asyncio import timeout
 from dataclasses import dataclass
 from typing import Any
 
@@ -99,7 +100,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> No
         return oauth_session.token["access_token"]
 
     try:
-        await oauth_session.async_ensure_token_valid()
+        async with timeout(30):
+            await oauth_session.async_ensure_token_valid()
+    except TimeoutError as err:
+        raise ConfigEntryNotReady("NuHeat token validation timed out") from err
     except OAuth2TokenRequestReauthError as err:
         raise ConfigEntryAuthFailed("NuHeat authorization expired") from err
     except (OAuth2TokenRequestTransientError, OAuth2TokenRequestError) as err:
@@ -109,7 +113,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> No
         async_get_clientsession(hass), async_access_token, include_schedule_details=True
     )
     coordinator = NuHeatCoordinator(hass, entry, api)
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        await coordinator.async_shutdown()
+        raise
 
     entry.runtime_data = NuHeatRuntimeData(api, coordinator, oauth_session)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

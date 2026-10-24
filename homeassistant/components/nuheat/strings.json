@@ -13,6 +13,8 @@
       "migration_successful": "NuHeat was reconnected successfully and matching legacy thermostats were consolidated.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_oauth_credentials": "OAuth application credentials are required for this development build. A future official Home Assistant integration should use centrally managed credentials.",
+      "permission_denied": "NuHeat denied application permission. Verify the application has access; keep the existing entry and credentials.",
+      "rate_limited": "NuHeat is temporarily rate-limited. Wait for the cooldown and retry linking the existing entry.",
       "reauth_account_mismatch": "The linked NuHeat account does not match the existing account."
     },
     "step": {
@@ -66,11 +68,23 @@
     "oauth_subject_migration_failed": {
       "message": "The stored NuHeat authorization has no valid account subject. Reauthenticate the entry before retrying migration."
     },
+    "permission_denied": {
+      "message": "NuHeat denied application permission. Verify application access; relinking the same application may not resolve it."
+    },
+    "rate_limited": {
+      "message": "NuHeat is rate-limited. Retry after {seconds} seconds; this command was not queued."
+    },
+    "request_timeout": {
+      "message": "NuHeat did not finish within the request deadline. The command outcome may be uncertain. Check the app before repeating it."
+    },
     "unsupported_preset": {
       "message": "The preset {preset} is not supported by NuHeat."
     },
     "unsupported_state": {
       "message": "NuHeat reported thermostat state {state}, which cannot be controlled safely. Refresh before retrying."
+    },
+    "write_unconfirmed": {
+      "message": "NuHeat accepted the command, but readback failed. Confirmation is pending; check the app before repeating it."
     }
   },
   "issues": {

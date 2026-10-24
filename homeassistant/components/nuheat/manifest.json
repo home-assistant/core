@@ -15,5 +15,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["chemelex_nuheat"],
-  "requirements": ["chemelex-nuheat==0.1.2"]
+  "requirements": ["chemelex-nuheat==0.1.3"]
 }

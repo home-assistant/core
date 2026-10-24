@@ -159,6 +159,7 @@ async def coordinator_with(
     entry.add_to_hass(hass)
     entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
     api = AsyncMock()
+    api.cooldown_remaining = 0.0
     api.list_thermostats.return_value = list(thermostats)
     coordinator = NuHeatCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
@@ -634,6 +635,7 @@ async def test_coordinator_auth_failure_triggers_reauthentication(
     entry.add_to_hass(hass)
     entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
     api = AsyncMock()
+    api.cooldown_remaining = 0.0
     api.list_thermostats.side_effect = NuHeatAuthError("rejected")
     coordinator = NuHeatCoordinator(hass, entry, api)
     with pytest.raises(ConfigEntryAuthFailed):
