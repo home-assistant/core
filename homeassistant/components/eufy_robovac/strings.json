@@ -1,0 +1,53 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Eufy RoboVac is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "no_devices": "No supported Eufy RoboVac devices were found"
+    },
+    "step": {
+      "device": {
+        "data": {
+          "host": "Host",
+          "protocol_version": "Protocol version"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the RoboVac",
+          "protocol_version": "Local Tuya protocol version used by the RoboVac"
+        },
+        "description": "Confirm the local connection details for your RoboVac."
+      },
+      "select_device": {
+        "data": {
+          "device_id": "RoboVac"
+        },
+        "data_description": {
+          "device_id": "RoboVac discovered from your Eufy account"
+        },
+        "description": "Select the RoboVac to add."
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "data_description": {
+          "password": "Password for your Eufy account",
+          "username": "Email address for your Eufy account"
+        },
+        "description": "Enter your Eufy account credentials to discover your RoboVac. Credentials are used only during setup and are not stored."
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Failed to communicate with the Eufy RoboVac"
+    },
+    "update_failed": {
+      "message": "Failed to update the Eufy RoboVac: {error}"
+    }
+  }
+}
