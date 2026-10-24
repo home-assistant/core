@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -23,6 +24,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.spin_ble.const import (
     CHARGING_INTERVAL,
     COMMAND_SETTLE_TIME,
+    IDLE_INTERVAL,
 )
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -151,6 +153,40 @@ async def test_commands_reach_the_charger(
 
     mock_charger.async_get_status.assert_awaited_once()
     assert hass.states.get(CHARGING_SWITCH).state == expected
+
+
+async def test_a_poll_right_after_a_command_waits_for_the_charger(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A poll due just after a command reads only once the charger has settled."""
+    mock_charger.async_get_status.return_value = IDLE_STATUS
+    await setup_integration(hass, mock_config_entry)
+    freezer.tick(IDLE_INTERVAL - timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: CHARGING_SWITCH}, blocking=True
+    )
+    mock_charger.async_get_status.reset_mock()
+
+    # The poll falls due inside the settle time and cancels the pending refresh.
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_charger.async_get_status.assert_not_awaited()
+
+    mock_charger.async_get_status.return_value = replace(
+        IDLE_STATUS, state=ChargerState.STARTING
+    )
+    freezer.tick(COMMAND_SETTLE_TIME)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_charger.async_get_status.assert_awaited_once()
+    assert hass.states.get(CHARGING_SWITCH).state == STATE_ON
 
 
 async def test_a_persistent_link_is_held_through_a_command(
@@ -326,7 +362,9 @@ async def test_a_poll_waits_for_a_command_holding_the_link(
     finally:
         finish.set()
     await command
-    await hass.async_block_till_done()
+    freezer.tick(COMMAND_SETTLE_TIME)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_charger.async_get_status.assert_awaited()
 

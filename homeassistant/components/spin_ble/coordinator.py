@@ -81,6 +81,9 @@ class SpinEvCoordinator(DataUpdateCoordinator[ChargerStatus]):
         # A command and a poll must not share the one link at the same time,
         # or one releases it from under the other.
         self._link = asyncio.Lock()
+        # Loop time before which a read still sees the state from before the
+        # last command.
+        self._settled_at = 0.0
 
     @override
     async def _async_setup(self) -> None:
@@ -91,6 +94,10 @@ class SpinEvCoordinator(DataUpdateCoordinator[ChargerStatus]):
     async def _async_update_data(self) -> ChargerStatus:
         """Read a full status snapshot."""
         async with self._link:
+            # Covers a scheduled poll as well as the post-command refresh, since
+            # a poll cancels that refresh when it runs first.
+            if (settling := self._settled_at - self.hass.loop.time()) > 0:
+                await asyncio.sleep(settling)
             charger = await self._async_charger()
             try:
                 await charger.async_connect()
@@ -148,6 +155,10 @@ class SpinEvCoordinator(DataUpdateCoordinator[ChargerStatus]):
                     translation_key="cannot_send",
                     translation_placeholders={"error": str(err)},
                 ) from err
+            else:
+                self._settled_at = (
+                    self.hass.loop.time() + COMMAND_SETTLE_TIME.total_seconds()
+                )
             finally:
                 if not self._keep_connected:
                     await self.async_release()
