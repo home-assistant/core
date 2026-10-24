@@ -10,7 +10,7 @@ from homeassistant.components.remote import (
     DEFAULT_DELAY_SECS,
     RemoteEntity,
 )
-from homeassistant.const import ATTR_MANUFACTURER, CONF_MAC, CONF_NAME, STATE_ON
+from homeassistant.const import CONF_MAC, CONF_NAME, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -77,7 +77,7 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_info[ATTR_UDN])},
             connections={(CONNECTION_NETWORK_MAC, self._mac)} if self._mac else set(),
-            manufacturer=self._device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
+            manufacturer=self._device_info.get("manufacturer", DEFAULT_MANUFACTURER),
             model=self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
             name=self._name,
         )
