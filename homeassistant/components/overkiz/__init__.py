@@ -158,6 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         LOGGER,
         client=client,
         devices=setup.devices,
+        gateways=setup.gateways,
         places=setup.root_place,
     )
 

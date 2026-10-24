@@ -43,6 +43,11 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
+        # An unreachable gateway keeps serving its devices' last known states,
+        # so device.available stays True for as long as the outage lasts.
+        if self.device.identifier.gateway_id in self.coordinator.unreachable_gateways:
+            return False
+
         if self.device.available:
             return super().available
 
