@@ -34,3 +34,6 @@ CHARGING_INTERVAL: Final = timedelta(seconds=60)
 #: Poll interval while idle. Kept long so the charger's single Bluetooth slot
 #: is left free for the phone app for long stretches.
 IDLE_INTERVAL: Final = timedelta(seconds=300)
+#: Wait before re-reading after a command. The charger acknowledges at once but
+#: takes about a second to report the new state.
+COMMAND_SETTLE_TIME: Final = timedelta(seconds=2)

@@ -22,10 +22,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CHARGING_INTERVAL,
+    COMMAND_SETTLE_TIME,
     CONF_CONNECTION_MODE,
     DEFAULT_CONNECTION_MODE,
     DOMAIN,
@@ -63,6 +65,12 @@ class SpinEvCoordinator(DataUpdateCoordinator[ChargerStatus]):
             config_entry=entry,
             name=DOMAIN,
             update_interval=CHARGING_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass,
+                _LOGGER,
+                cooldown=COMMAND_SETTLE_TIME.total_seconds(),
+                immediate=False,
+            ),
         )
         self.address: str = entry.data[CONF_ADDRESS]
         self._keep_connected = (

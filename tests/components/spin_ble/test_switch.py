@@ -20,7 +20,10 @@ from spinev_ble import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.spin_ble.const import CHARGING_INTERVAL
+from homeassistant.components.spin_ble.const import (
+    CHARGING_INTERVAL,
+    COMMAND_SETTLE_TIME,
+)
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -95,24 +98,39 @@ async def test_the_switch_follows_the_session(
 
 
 @pytest.mark.parametrize(
-    ("service", "status", "command"),
+    ("service", "before", "after", "command", "expected"),
     [
         pytest.param(
-            SERVICE_TURN_ON, IDLE_STATUS, "async_start_charging", id="turn_on"
+            SERVICE_TURN_ON,
+            IDLE_STATUS,
+            replace(IDLE_STATUS, state=ChargerState.STARTING),
+            "async_start_charging",
+            STATE_ON,
+            id="turn_on",
         ),
-        pytest.param(SERVICE_TURN_OFF, STATUS, "async_stop_charging", id="turn_off"),
+        pytest.param(
+            SERVICE_TURN_OFF,
+            STATUS,
+            IDLE_STATUS,
+            "async_stop_charging",
+            STATE_OFF,
+            id="turn_off",
+        ),
     ],
 )
 async def test_commands_reach_the_charger(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_charger: AsyncMock,
+    freezer: FrozenDateTimeFactory,
     service: str,
-    status: ChargerStatus,
+    before: ChargerStatus,
+    after: ChargerStatus,
     command: str,
+    expected: str,
 ) -> None:
     """A command is sent, the link handed back, and the charger re-read."""
-    mock_charger.async_get_status.return_value = status
+    mock_charger.async_get_status.return_value = before
     await setup_integration(hass, mock_config_entry)
     mock_charger.async_get_status.reset_mock()
     mock_charger.async_disconnect.reset_mock()
@@ -123,7 +141,16 @@ async def test_commands_reach_the_charger(
 
     getattr(mock_charger, command).assert_awaited_once()
     mock_charger.async_disconnect.assert_awaited()
+    # The charger reports the old state for a moment after acknowledging.
+    mock_charger.async_get_status.assert_not_awaited()
+
+    mock_charger.async_get_status.return_value = after
+    freezer.tick(COMMAND_SETTLE_TIME)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     mock_charger.async_get_status.assert_awaited_once()
+    assert hass.states.get(CHARGING_SWITCH).state == expected
 
 
 async def test_a_persistent_link_is_held_through_a_command(
