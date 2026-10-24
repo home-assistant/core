@@ -9,14 +9,12 @@ from verisure import Error as VerisureError
 from homeassistant.components.camera import Camera
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_GIID, DOMAIN, LOGGER, SERVICE_CAPTURE_SMARTCAM
+from .const import CONF_GIID, DOMAIN, LOGGER
 from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
 
 
@@ -27,13 +25,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Verisure sensors based on a config entry."""
     coordinator = entry.runtime_data
-
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_CAPTURE_SMARTCAM,
-        None,
-        VerisureSmartcam.capture_smartcam.__name__,
-    )
 
     async_add_entities(
         VerisureSmartcam(coordinator, serial_number, hass.config.config_dir)
@@ -63,18 +54,17 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
         self._directory_path = directory_path
         self._image: str | None = None
         self._image_id: str | None = None
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        area = self.coordinator.data["cameras"][self.serial_number]["device"]["area"]
-        return DeviceInfo(
+        area = coordinator.data["cameras"][serial_number]["device"]["area"]
+        self._attr_device_info = DeviceInfo(
             name=area,
             manufacturer="Verisure",
             model="SmartCam",
-            identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
+            identifiers={(DOMAIN, serial_number)},
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.data[CONF_GIID]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             configuration_url="https://mypages.verisure.com",
         )
 

@@ -2,13 +2,17 @@
 
 from collections.abc import Generator
 from http import HTTPStatus
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
+import wave
 
 from google.genai import types
 from google.genai.errors import APIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import tts
 from homeassistant.components.google_generative_ai_conversation.const import (
@@ -16,6 +20,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     DOMAIN,
     RECOMMENDED_TEMPERATURE,
 )
+from homeassistant.components.google_generative_ai_conversation.tts import ATTR_STYLE
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as MP_DOMAIN,
@@ -25,11 +30,10 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_mock_service
 from tests.components.tts.common import retrieve_media
-from tests.typing import ClientSessionGenerator
 
 API_ERROR_500 = APIError("test", response_json={})
 TEST_CHAT_MODEL = "models/some-tts-model"
@@ -230,3 +234,260 @@ async def test_tts_service_speak_error(
             temperature=RECOMMENDED_TEMPERATURE,
         ),
     )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_tts_supported_languages(hass: HomeAssistant) -> None:
+    """Test the supported languages are unique and cover regional variants."""
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+    languages = entity.supported_languages
+
+    assert len(languages) == len(set(languages))
+    assert {"en-US", "en-GB", "es-419", "kk-KZ", "yue-HK", "zh-CN", "zh-TW"} <= set(
+        languages
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("model", "sampling"),
+    [
+        ("gemini-2.5-flash-preview-tts", True),
+        ("gemini-3.1-flash-tts-preview", True),
+        ("gemini-3.8-flash-tts", False),
+        ("models/gemini-3.8-flash-lite-tts", False),
+        ("gemini-4-flash-tts-preview", False),
+    ],
+)
+async def test_tts_wire_parameters(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_transport: AsyncMock,
+    model: str,
+    sampling: bool,
+) -> None:
+    """TTS independently omits temperature, without adding thinking or changing voices."""
+    subentry = mock_config_entry.subentries["ulid-tts"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data={**subentry.data, CONF_CHAT_MODEL: model}
+    )
+    await hass.async_block_till_done()
+    mock_genai_transport.return_value = [
+        {
+            "candidates": [
+                {
+                    "content": {
+                        "role": "model",
+                        "parts": [
+                            {
+                                "inlineData": {
+                                    "data": "YXVkaW8=",
+                                    "mimeType": "audio/L16;rate=24000",
+                                }
+                            }
+                        ],
+                    }
+                }
+            ]
+        }
+    ]
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.tts.convert_to_wav",
+        return_value=b"wav",
+    ):
+        assert await entity.async_get_tts_audio(
+            "Hello", "en-US", {tts.ATTR_VOICE: "zephyr"}
+        ) == ("wav", b"wav")
+    config = mock_genai_transport.call_args.kwargs["http_request"].data[
+        "generationConfig"
+    ]
+    assert ("temperature" in config) is sampling
+    assert not {"thinkingConfig", "topP", "topK"}.intersection(config)
+    assert config["responseModalities"] == ["AUDIO"]
+    assert (
+        config["speechConfig"]["voice_config"]["prebuilt_voice_config"]["voice_name"]
+        == "zephyr"
+    )
+
+
+def _audio_response(mime_type: str) -> dict[str, Any]:
+    """Build a raw generateContent response with audio."""
+    return {
+        "candidates": [
+            {
+                "content": {
+                    "role": "model",
+                    "parts": [
+                        {"inlineData": {"data": "YXVkaW8=", "mimeType": mime_type}}
+                    ],
+                }
+            }
+        ]
+    }
+
+
+@pytest.fixture
+def wav_audio() -> bytes:
+    """Create a complete WAV with known PCM samples."""
+    output = BytesIO()
+    with wave.open(output, "wb") as audio:
+        audio.setnchannels(1)
+        audio.setsampwidth(2)
+        audio.setframerate(24000)
+        audio.writeframes(b"\x00\x00\x01\x00\xff\x7f\x00\x80")
+    return output.getvalue()
+
+
+@pytest.mark.usefixtures("setup")
+@pytest.mark.parametrize(
+    ("mime_type", "header_size"),
+    [("audio/wav", 0), ("audio/L16;rate=24000", 44)],
+)
+async def test_tts_audio_formats(
+    hass: HomeAssistant,
+    wav_audio: bytes,
+    mime_type: str,
+    header_size: int,
+) -> None:
+    """Preserve complete WAV output and wrap legacy PCM exactly once."""
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+    response = entity._genai_client.aio.models.generate_content.return_value
+    response.candidates[0].content.parts[0].inline_data = types.Blob(
+        data=wav_audio[header_size:], mime_type=mime_type
+    )
+
+    audio_format, audio_data = await entity.async_get_tts_audio(
+        "Hello", "en-US", dict(entity.default_options)
+    )
+
+    assert audio_format == "wav"
+    assert audio_data == wav_audio
+    with wave.open(BytesIO(audio_data), "rb") as audio:
+        assert audio.getnchannels() == 1
+        assert audio.getsampwidth() == 2
+        assert audio.getframerate() == 24000
+        assert audio.getnframes() == 4
+        assert audio.readframes(4) == b"\x00\x00\x01\x00\xff\x7f\x00\x80"
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("model", "expected_options"),
+    [
+        pytest.param(
+            "gemini-3.8-flash-tts", [tts.ATTR_VOICE, ATTR_STYLE], id="flash_3_8"
+        ),
+        pytest.param(
+            "models/gemini-3.8-flash-lite-tts",
+            [tts.ATTR_VOICE, ATTR_STYLE],
+            id="flash_lite_3_8",
+        ),
+        pytest.param(
+            "gemini-3.1-flash-tts-preview", [tts.ATTR_VOICE], id="flash_3_1_preview"
+        ),
+        pytest.param(
+            "gemini-2.5-flash-preview-tts", [tts.ATTR_VOICE], id="flash_2_5_preview"
+        ),
+    ],
+)
+async def test_tts_supported_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    expected_options: list[str],
+) -> None:
+    """Test the style option is only offered for models with speech metadata."""
+    subentry = mock_config_entry.subentries["ulid-tts"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data={**subentry.data, CONF_CHAT_MODEL: model}
+    )
+    await hass.async_block_till_done()
+
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+    assert entity.supported_options == expected_options
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_tts_style_wire_parameters(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_transport: AsyncMock,
+) -> None:
+    """Test the style is sent as speech metadata instead of being part of the text."""
+    subentry = mock_config_entry.subentries["ulid-tts"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_CHAT_MODEL: "gemini-3.8-flash-tts"},
+    )
+    await hass.async_block_till_done()
+    mock_genai_transport.return_value = [_audio_response("audio/wav")]
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+
+    await entity.async_get_tts_audio(
+        "Hello", "en-US", {tts.ATTR_VOICE: "zephyr", ATTR_STYLE: "cheerful"}
+    )
+
+    body = mock_genai_transport.call_args.kwargs["http_request"].data
+    assert body["contents"][0]["parts"] == [
+        {"text": "Hello", "speechMetadata": {"style": "cheerful"}}
+    ]
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_tts_style_not_supported_by_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the style option is rejected for models without speech metadata."""
+    subentry = mock_config_entry.subentries["ulid-tts"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_CHAT_MODEL: "gemini-3.1-flash-tts-preview"},
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError, match="style"):
+        await hass.services.async_call(
+            tts.DOMAIN,
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.google_ai_tts",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "Hello",
+                tts.ATTR_OPTIONS: {ATTR_STYLE: "cheerful"},
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("setup")
+async def test_tts_unsupported_audio_format(hass: HomeAssistant) -> None:
+    """Keep unsupported audio formats as visible failures."""
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+    response = entity._genai_client.aio.models.generate_content.return_value
+    response.candidates[0].content.parts[0].inline_data = types.Blob(
+        data=b"unsupported-audio", mime_type="audio/mpeg"
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="Unsupported audio MIME type: audio/mpeg"
+    ):
+        await entity.async_get_tts_audio("Hello", "en-US", dict(entity.default_options))
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_tts_default_model(
+    hass: HomeAssistant,
+    mock_genai_transport: AsyncMock,
+) -> None:
+    """Test the recommended model is used when the subentry sets none."""
+    mock_genai_transport.return_value = [_audio_response("audio/wav")]
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+
+    await entity.async_get_tts_audio("Hello", "en-US", dict(entity.default_options))
+
+    request = mock_genai_transport.call_args.kwargs["http_request"]
+    assert request.url.endswith("/models/gemini-3.8-flash-tts:generateContent")

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aio_ownet.exceptions import OWServerConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.onewire.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,14 +14,12 @@ from homeassistant.core import HomeAssistant
 
 from .const import MOCK_OWPROXY_DEVICES
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.onewire.async_setup_entry", return_value=True
+        "homeassistant.components.onewire.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

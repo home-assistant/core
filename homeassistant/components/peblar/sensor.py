@@ -47,7 +47,11 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         key="cp_state",
         translation_key="cp_state",
         device_class=SensorDeviceClass.ENUM,
-        options=list(PEBLAR_CP_STATE_TO_HOME_ASSISTANT.values()),
+        options=[
+            state
+            for state in PEBLAR_CP_STATE_TO_HOME_ASSISTANT.values()
+            if state is not None
+        ],
         value_fn=lambda x: PEBLAR_CP_STATE_TO_HOME_ASSISTANT[x.ev.cp_state],
     ),
     PeblarSensorDescription(

@@ -1,20 +1,24 @@
 """Tests for the Edifier Infrared button platform."""
 
-from infrared_protocols.codes.edifier.r1700bt import EdifierR1700BTCode
+from infrared_protocols.codes.edifier.models import EdifierCommandSet
+from infrared_protocols.codes.edifier.r1700bts import EdifierR1700BTsCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.edifier_infrared.button import COMMAND_SET_BUTTONS
+from homeassistant.components.edifier_infrared.const import SUPPORTED_COMMAND_SETS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredEmitterEntity
-
-BLUETOOTH_BUTTON_ENTITY_ID = "button.edifier_r1700bt_bluetooth"
+BLUETOOTH_BUTTON_ENTITY_ID = "button.edifier_r1700bts_bluetooth"
 
 
 @pytest.fixture
@@ -37,11 +41,11 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("entity_id", "expected_code"),
     [
-        ("button.edifier_r1700bt_bluetooth", EdifierR1700BTCode.BLUETOOTH),
-        ("button.edifier_r1700bt_line_1", EdifierR1700BTCode.LINE_1),
-        ("button.edifier_r1700bt_line_2", EdifierR1700BTCode.LINE_2),
-        ("button.edifier_r1700bt_fx_on", EdifierR1700BTCode.FX_ON),
-        ("button.edifier_r1700bt_fx_off", EdifierR1700BTCode.FX_OFF),
+        ("button.edifier_r1700bts_bluetooth", EdifierR1700BTsCode.BLUETOOTH),
+        ("button.edifier_r1700bts_line_1", EdifierR1700BTsCode.LINE_1),
+        ("button.edifier_r1700bts_line_2", EdifierR1700BTsCode.LINE_2),
+        ("button.edifier_r1700bts_fx_on", EdifierR1700BTsCode.FX_ON),
+        ("button.edifier_r1700bts_fx_off", EdifierR1700BTsCode.FX_OFF),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -49,7 +53,7 @@ async def test_button_press_sends_correct_code(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     entity_id: str,
-    expected_code: EdifierR1700BTCode,
+    expected_code: EdifierR1700BTsCode,
 ) -> None:
     """Test each button press sends the correct IR code."""
     await hass.services.async_call(
@@ -69,5 +73,13 @@ async def test_button_availability_follows_ir_entity(
 ) -> None:
     """Test button becomes unavailable when IR entity is unavailable."""
     await assert_availability_follows_source_entity(
-        hass, BLUETOOTH_BUTTON_ENTITY_ID, EMITTER_ENTITY_ID
+        hass, BLUETOOTH_BUTTON_ENTITY_ID, [EMITTER_ENTITY_ID]
     )
+
+
+def test_command_sets_match_supported_command_sets() -> None:
+    """Test that the button platform implements every supported command set."""
+    # R1280T only has volume and mute codes, which are covered by the media player
+    assert set(COMMAND_SET_BUTTONS) == set(SUPPORTED_COMMAND_SETS) - {
+        EdifierCommandSet.R1280T
+    }

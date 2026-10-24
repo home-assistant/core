@@ -4,6 +4,8 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, PropertyMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from zha.application.platforms.update import (
     FirmwareUpdateEntity as ZhaFirmwareUpdateEntity,
 )
@@ -55,9 +57,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import find_entity_id, update_attribute_cache
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -628,7 +627,7 @@ async def test_firmware_update_raises(
 
     with (
         patch(
-            "zigpy.device.Device.update_firmware",
+            "zigpy.device.ZigbeeDevice.update_firmware",
             AsyncMock(side_effect=DeliveryError("failed to deliver")),
         ),
         pytest.raises(HomeAssistantError),
@@ -715,13 +714,15 @@ async def test_update_version_sync_device_registry(
     zha_device, _, _, _ = await setup_test_data(hass, zigpy_device_mock)
 
     zha_device.device.async_update_firmware_version("0x12345678")
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
     assert reg_device.sw_version == "0x12345678"
 
     zha_device.device.async_update_firmware_version("0xabcd1234")
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
     assert reg_device.sw_version == "0xabcd1234"

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pyotgw.vars as gw_vars
 from pyotgw.vars import OTGW, OTGW_ABOUT
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opentherm_gw.const import (
     DOMAIN,
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import MOCK_GATEWAY_ID, VERSION_TEST
-
-from tests.common import MockConfigEntry
 
 VERSION_NEW = "4.2.8.1"
 MINIMAL_STATUS_UPD = {OTGW: {OTGW_ABOUT: f"OpenTherm Gateway {VERSION_NEW}"}}
@@ -32,8 +31,9 @@ async def test_device_registry_insert(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    gw_dev = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.GATEWAY}")}
+    gw_dev = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.GATEWAY}"),
+        mock_config_entry.entry_id,
     )
     assert gw_dev is not None
     assert gw_dev.sw_version == VERSION_TEST
@@ -64,8 +64,9 @@ async def test_device_registry_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    gw_dev = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.GATEWAY}")}
+    gw_dev = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.GATEWAY}"),
+        mock_config_entry.entry_id,
     )
     assert gw_dev is not None
     assert gw_dev.sw_version == VERSION_NEW
@@ -105,8 +106,9 @@ async def test_device_registry_report_numeric_fields(
     )
     await hass.async_block_till_done()
 
-    boiler_dev = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.BOILER}")}
+    boiler_dev = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.BOILER}"),
+        mock_config_entry.entry_id,
     )
     assert boiler_dev is not None
     assert boiler_dev.manufacturer == "42"
@@ -114,10 +116,9 @@ async def test_device_registry_report_numeric_fields(
     assert boiler_dev.hw_version == "7"
     assert boiler_dev.sw_version == "2.5"
 
-    thermostat_dev = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.THERMOSTAT}")
-        }
+    thermostat_dev = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.THERMOSTAT}"),
+        mock_config_entry.entry_id,
     )
     assert thermostat_dev is not None
     assert thermostat_dev.manufacturer == "10"

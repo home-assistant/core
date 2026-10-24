@@ -8,9 +8,9 @@ import string
 from typing import Any, cast
 
 from aiohttp import web
+import probatio
 import prometheus_client
 from prometheus_client.metrics import MetricWrapperBase
-import voluptuous as vol
 
 from homeassistant import core as hacore
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
@@ -39,8 +39,6 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
@@ -55,7 +53,13 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfTemperature,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -103,39 +107,41 @@ CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
 CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
 CONF_DEFAULT_METRIC = "default_metric"
 CONF_OVERRIDE_METRIC = "override_metric"
-COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema(
-    {vol.Optional(CONF_OVERRIDE_METRIC): cv.string}
+COMPONENT_CONFIG_SCHEMA_ENTRY = probatio.Schema(
+    {probatio.Optional(CONF_OVERRIDE_METRIC): cv.string}
 )
 ALLOWED_METRIC_CHARS = set(string.ascii_letters + string.digits + "_:")
 
 DEFAULT_NAMESPACE = "homeassistant"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             {
-                vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
-                vol.Optional(CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE): cv.string,
-                vol.Optional(CONF_REQUIRES_AUTH, default=True): cv.boolean,
-                vol.Optional(CONF_DEFAULT_METRIC): cv.string,
-                vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
-                vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
+                probatio.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
+                probatio.Optional(
+                    CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE
+                ): cv.string,
+                probatio.Optional(CONF_REQUIRES_AUTH, default=True): cv.boolean,
+                probatio.Optional(CONF_DEFAULT_METRIC): cv.string,
+                probatio.Optional(CONF_OVERRIDE_METRIC): cv.string,
+                probatio.Optional(CONF_COMPONENT_CONFIG, default={}): probatio.Schema(
                     {cv.entity_id: COMPONENT_CONFIG_SCHEMA_ENTRY}
                 ),
-                vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}): vol.Schema(
-                    {cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}
-                ),
-                vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): vol.Schema(
-                    {cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}
-                ),
+                probatio.Optional(
+                    CONF_COMPONENT_CONFIG_GLOB, default={}
+                ): probatio.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
+                probatio.Optional(
+                    CONF_COMPONENT_CONFIG_DOMAIN, default={}
+                ): probatio.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Prometheus component."""
     hass.http.register_view(PrometheusView(config[DOMAIN][CONF_REQUIRES_AUTH]))
 
@@ -169,17 +175,21 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         floor_registry,
     )
 
-    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
-    hass.bus.listen(
+    hass.bus.async_listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
+    hass.bus.async_listen(
         EVENT_ENTITY_REGISTRY_UPDATED,
         metrics.handle_entity_registry_updated,
     )
-    hass.bus.listen(
+    hass.bus.async_listen(
         EVENT_DEVICE_REGISTRY_UPDATED,
         metrics.handle_device_registry_updated,
     )
-    hass.bus.listen(EVENT_AREA_REGISTRY_UPDATED, metrics.handle_area_registry_updated)
-    hass.bus.listen(EVENT_FLOOR_REGISTRY_UPDATED, metrics.handle_floor_registry_updated)
+    hass.bus.async_listen(
+        EVENT_AREA_REGISTRY_UPDATED, metrics.handle_area_registry_updated
+    )
+    hass.bus.async_listen(
+        EVENT_FLOOR_REGISTRY_UPDATED, metrics.handle_floor_registry_updated
+    )
 
     for floor in floor_registry.async_list_floors():
         metrics.handle_floor(floor)
@@ -187,7 +197,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for area in area_registry.async_list_areas():
         metrics.handle_area(area)
 
-    for state in hass.states.all():
+    for state in hass.states.async_all():
         if entity_filter(state.entity_id):
             metrics.handle_state(state)
 
@@ -260,6 +270,7 @@ class PrometheusMetrics:
         self.entity_registry = entity_registry
         self.floor_registry = floor_registry
 
+    @callback
     def handle_state_changed_event(self, event: Event[EventStateChangedData]) -> None:
         """Handle new messages from the bus."""
         if (state := event.data.get("new_state")) is None:
@@ -327,6 +338,7 @@ class PrometheusMetrics:
             if hasattr(self, handler) and state.state:
                 getattr(self, handler)(state)
 
+    @callback
     def handle_entity_registry_updated(
         self, event: Event[EventEntityRegistryUpdatedData]
     ) -> None:
@@ -361,6 +373,7 @@ class PrometheusMetrics:
         if metrics_entity_id:
             self._remove_labelsets(metrics_entity_id)
 
+    @callback
     def handle_device_registry_updated(
         self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
@@ -371,11 +384,23 @@ class PrometheusMetrics:
         device_id = event.data["device_id"]
         _LOGGER.debug("Handling device update for %s", device_id)
 
+        self._refresh_device_entities_area(device_id)
+
+        # Child devices without an area of their own inherit the parent's area,
+        # so a parent area change must refresh their entities too.
+        for child in dr.async_entries_for_parent_device(
+            self.device_registry, device_id
+        ):
+            if child.area_id is None:
+                self._refresh_device_entities_area(child.id)
+
+    def _refresh_device_entities_area(self, device_id: str) -> None:
+        """Recompute the area label of a device's area-inheriting entities."""
         device = self.device_registry.async_get(device_id)
         if device is None:
             return
 
-        area_id = device.area_id
+        area_id = dr.async_get_effective_area_id(self.device_registry.hass, device)
 
         for entity_id in (
             entity.entity_id
@@ -386,6 +411,7 @@ class PrometheusMetrics:
             if area_id is not None:
                 self._add_entity_info(entity_id, area_id)
 
+    @callback
     def handle_area_registry_updated(
         self, event: Event[EventAreaRegistryUpdatedData]
     ) -> None:
@@ -428,6 +454,7 @@ class PrometheusMetrics:
             labels,
         ).set(1.0)
 
+    @callback
     def handle_floor_registry_updated(
         self, event: Event[EventFloorRegistryUpdatedData]
     ) -> None:
@@ -614,7 +641,9 @@ class PrometheusMetrics:
         if area_id is None and entity.device_id is not None:
             device = self.device_registry.async_get(entity.device_id)
             if device is not None:
-                area_id = device.area_id
+                area_id = dr.async_get_effective_area_id(
+                    self.device_registry.hass, device
+                )
 
         return area_id
 
@@ -770,14 +799,18 @@ class PrometheusMetrics:
                 "Distance of the geo location event from home in meters",
                 labels,
             ).set(value)
-        if (latitude := state.attributes.get(ATTR_LATITUDE)) is not None:
+        if (
+            latitude := state.attributes.get(EntityStateAttribute.LATITUDE)
+        ) is not None:
             self._metric(
                 "geo_location_latitude_degrees",
                 prometheus_client.Gauge,
                 "Latitude of the geo location event in degrees",
                 labels,
             ).set(latitude)
-        if (longitude := state.attributes.get(ATTR_LONGITUDE)) is not None:
+        if (
+            longitude := state.attributes.get(EntityStateAttribute.LONGITUDE)
+        ) is not None:
             self._metric(
                 "geo_location_longitude_degrees",
                 prometheus_client.Gauge,
@@ -829,7 +862,7 @@ class PrometheusMetrics:
     def _handle_climate(self, state: State) -> None:
         self._temperature_metric(
             state,
-            ClimateEntityStateAttribute.TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
             "climate_target_temperature_celsius",
             "Target temperature in degrees Celsius",
         )
@@ -911,7 +944,7 @@ class PrometheusMetrics:
         # Temperatures
         self._temperature_metric(
             state,
-            WaterHeaterStateAttribute.TEMPERATURE,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             "water_heater_temperature_celsius",
             "Target temperature in degrees Celsius",
         )

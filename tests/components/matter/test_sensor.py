@@ -8,7 +8,13 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, EntityCategory, Platform
+from homeassistant.components.matter.sensor import AIR_QUALITY_MAP
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -47,6 +53,30 @@ async def test_sensor_null_value(
     state = hass.states.get("sensor.mock_flow_sensor_flow")
     assert state
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_flow_sensor"])
+@pytest.mark.parametrize("attributes", [{"1/1028/0": None}])
+async def test_flow_sensor_discovered_with_null_value_at_startup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test flow sensor is still discovered when its value is null at startup.
+
+    This test helps prevent regressions if allow_none_value=True is removed
+    from the FlowSensor discovery schema.
+    """
+    state = hass.states.get("sensor.mock_flow_sensor_flow")
+    assert state
+    assert state.state == "unknown"
+
+    set_node_attribute(matter_node, 1, 1028, 0, 20)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_flow_sensor_flow")
+    assert state
+    assert state.state == "2.0"
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_flow_sensor"])
@@ -312,7 +342,35 @@ async def test_eve_weather_sensor_custom_cluster(
     assert state.state == "800.0"
 
 
+def test_air_quality_map_complete() -> None:
+    """Test every Matter air quality value is mapped."""
+    assert set(AIR_QUALITY_MAP) == set(clusters.AirQuality.Enums.AirQualityEnum)
+
+
 @pytest.mark.parametrize("node_fixture", ["air_quality_sensor"])
+async def test_air_quality_out_of_range(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test an out of spec AirQuality value reports unknown."""
+    set_node_attribute(matter_node, 1, 91, 0, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_air_quality")
+    assert state
+    assert state.state == "good"
+
+    set_node_attribute(matter_node, 1, 91, 0, 255)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_air_quality")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("node_fixture", ["air_quality_sensor"])
+@pytest.mark.parametrize("attributes", [{"1/1070/8": 1}])
 async def test_air_quality_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -323,6 +381,7 @@ async def test_air_quality_sensor(
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_carbon_dioxide")
     assert state
     assert state.state == "678.0"
+    assert state.attributes["unit_of_measurement"] == "ppm"
 
     set_node_attribute(matter_node, 1, 1037, 0, 789)
     await trigger_subscription_callback(hass, matter_client)
@@ -331,11 +390,20 @@ async def test_air_quality_sensor(
     assert state
     assert state.state == "789.0"
 
+    # TVOC
+    state = hass.states.get(
+        "sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts"
+    )
+    assert state
+    assert state.state == "189.0"
+    assert state.attributes["unit_of_measurement"] == "ppb"
+
     # Nitrogen Dioxide
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide")
     assert state
     assert state.state == "0.0"
     assert state.attributes["device_class"] == "nitrogen_dioxide"
+    assert state.attributes["unit_of_measurement"] == "ppm"
 
     set_node_attribute(matter_node, 1, 1043, 0, 12.5)
     await trigger_subscription_callback(hass, matter_client)
@@ -348,6 +416,7 @@ async def test_air_quality_sensor(
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_pm1")
     assert state
     assert state.state == "3.0"
+    assert state.attributes["unit_of_measurement"] == "μg/m³"
 
     set_node_attribute(matter_node, 1, 1068, 0, 50)
     await trigger_subscription_callback(hass, matter_client)
@@ -384,6 +453,7 @@ async def test_air_quality_sensor(
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_radon_concentration")
     assert state
     assert state.state == "60.0"
+    assert state.attributes["unit_of_measurement"] == "Bq/m³"
 
     set_node_attribute(matter_node, 1, 1071, 0, 50)
     await trigger_subscription_callback(hass, matter_client)
@@ -438,6 +508,34 @@ async def test_tvoc_level_sensor(
     state = hass.states.get("sensor.mock_air_purifier_tvoc_level")
     assert state
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
+@pytest.mark.usefixtures("matter_node")
+async def test_tvoc_concentration_sensor_ugm3(hass: HomeAssistant) -> None:
+    """Test TVOC concentration sensor with µg/m³ unit and matching device class."""
+    state = hass.states.get("sensor.mock_air_purifier_volatile_organic_compounds")
+    assert state
+    assert state.state == "2.0"
+    assert state.attributes["device_class"] == "volatile_organic_compounds"
+    assert state.attributes["unit_of_measurement"] == "μg/m³"
+
+
+@pytest.mark.parametrize("node_fixture", ["air_quality_sensor"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        pytest.param({"1/1037/8": 1}, id="unit_rejected_by_device_class"),
+        pytest.param({"1/1037/8": 2}, id="unit_without_ha_equivalent"),
+    ],
+)
+@pytest.mark.usefixtures("matter_node")
+async def test_concentration_sensor_unit_fallback(hass: HomeAssistant) -> None:
+    """Test the statically defined unit is kept for unusable MeasurementUnits."""
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_carbon_dioxide")
+    assert state
+    assert state.attributes["device_class"] == "carbon_dioxide"
+    assert state.attributes["unit_of_measurement"] == "ppm"
 
 
 @pytest.mark.parametrize("node_fixture", ["silabs_dishwasher"])
@@ -872,6 +970,109 @@ async def test_aqara_thermostat_w500_entity_exists_and_unknown(
     state = hass.states.get("sensor.floor_heating_thermostat_active_current")
     assert state is not None
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500_presets"])
+async def test_aqara_thermostat_w500_setpoint_change_source_options(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Aqara Thermostat W500 SetpointChangeSource sensor options."""
+    state = hass.states.get("sensor.floor_heating_thermostat_setpoint_change_source")
+    assert state
+    assert state.attributes["options"] == ["manual", "schedule", "external"]
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500_presets"])
+@pytest.mark.parametrize(
+    ("entity_id", "attribute_id", "initial_state", "updates"),
+    [
+        pytest.param(
+            "sensor.floor_heating_thermostat_setpoint_change_source",
+            48,
+            "manual",
+            [(1, "schedule"), (2, "external")],
+            id="setpoint_change_source",
+        ),
+        pytest.param(
+            "sensor.floor_heating_thermostat_last_setpoint_change",
+            50,
+            "2026-10-11T22:28:52+00:00",
+            [(757382400, "2024-01-01T00:00:00+00:00"), (0, "unknown")],
+            id="setpoint_change_source_timestamp",
+        ),
+        pytest.param(
+            "sensor.floor_heating_thermostat_setpoint_change_amount",
+            49,
+            "-0.5",
+            [(200, "2.0"), (-50, "-0.5")],
+            id="setpoint_change_amount",
+        ),
+    ],
+)
+async def test_aqara_thermostat_w500_setpoint_change(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    attribute_id: int,
+    initial_state: str,
+    updates: list[tuple[int, str]],
+) -> None:
+    """Test Aqara Thermostat W500 setpoint change sensors."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == initial_state
+
+    for value, expected_state in updates:
+        set_node_attribute(matter_node, 1, 513, attribute_id, value)
+        await trigger_subscription_callback(hass, matter_client)
+
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_state
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500_presets"])
+@pytest.mark.parametrize("attributes", [{"1/513/49": None}])
+async def test_aqara_thermostat_w500_setpoint_change_amount_null_at_startup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test SetpointChangeAmount sensor is discovered when its value is null at startup.
+
+    This test helps prevent regressions if allow_none_value=True is removed
+    from the ThermostatSetpointChangeAmount discovery schema.
+    """
+    state = hass.states.get("sensor.floor_heating_thermostat_setpoint_change_amount")
+    assert state
+    assert state.state == "unknown"
+
+    set_node_attribute(matter_node, 1, 513, 49, 200)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.floor_heating_thermostat_setpoint_change_amount")
+    assert state
+    assert state.state == "2.0"
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_eve_thermo_v5_setpoint_change_not_discovered(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the setpoint change sensors are not discovered when never recorded.
+
+    The Eve Thermo v5 fixture reports SetpointChangeSourceTimestamp as 0
+    (never recorded), so the sensors should not be created until the
+    device actually reports a setpoint change.
+    """
+    assert hass.states.get("sensor.eve_thermo_20ecd1701_setpoint_change_source") is None
+    assert hass.states.get("sensor.eve_thermo_20ecd1701_last_setpoint_change") is None
+    assert hass.states.get("sensor.eve_thermo_20ecd1701_setpoint_change_amount") is None
 
 
 @pytest.mark.parametrize("node_fixture", ["atios_knx_bridge"])

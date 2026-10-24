@@ -1,0 +1,10 @@
+{
+  "exceptions": {
+    "send_message_failed": {
+      "message": "Failed to send the Flock message."
+    },
+    "timeout": {
+      "message": "Timeout while sending the message to Flock."
+    }
+  }
+}

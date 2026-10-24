@@ -3,26 +3,19 @@
 from datetime import datetime
 from typing import override
 
-import aiohttp
-from yoto_api import AuthenticationError, Token, YotoClient, YotoError, YotoPlayer
+from yoto_api import AuthenticationError, YotoClient, YotoError, YotoPlayer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL, STATUS_PUSH_INTERVAL
+from .api import AsyncConfigEntryAuth
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL, STATUS_PUSH_INTERVAL
 
 type YotoConfigEntry = ConfigEntry[YotoDataUpdateCoordinator]
 
@@ -41,25 +34,16 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         """Initialize the coordinator."""
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-        self._session = session
-        self.client = YotoClient(session=async_get_clientsession(hass))
-        self._subscribed_players: set[str] = set()
-        self._sync_token()
-
-    def _sync_token(self) -> None:
-        """Sync the OAuth2 access token to the Yoto client."""
-        token = self._session.token
-        self.client.token = Token(
-            access_token=token[CONF_ACCESS_TOKEN],
-            refresh_token=token.get("refresh_token", ""),
-            token_type=token.get("token_type", "Bearer"),
-            valid_until=dt_util.utc_from_timestamp(token["expires_at"]),
+        self.client = YotoClient(
+            session=async_get_clientsession(hass),
+            auth=AsyncConfigEntryAuth(session),
         )
+        self._subscribed_players: set[str] = set()
 
     @override
     async def _async_setup(self) -> None:
@@ -105,22 +89,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
     async def _async_update_data(self) -> dict[str, YotoPlayer]:
         """Fetch fresh data from the Yoto cloud."""
         try:
-            await self._session.async_ensure_token_valid()
-        except OAuth2TokenRequestReauthError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="authentication_failed",
-            ) from err
-        except (aiohttp.ClientError, OAuth2TokenRequestError) as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
-        self._sync_token()
-
-        try:
             await self.client.refresh()
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
@@ -147,7 +115,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             for device_id in self._subscribed_players - current:
                 await self.client.unsubscribe_player_events(device_id)
         except YotoError as err:
-            _LOGGER.warning("Could not update Yoto event subscriptions: %s", err)
+            LOGGER.warning("Could not update Yoto event subscriptions: %s", err)
             return
         self._subscribed_players = current
 
@@ -161,27 +129,28 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
                 (ident[1] for ident in device.identifiers if ident[0] == DOMAIN), None
             )
             if player_id is not None and player_id not in self.client.players:
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_registry.async_remove_device(device.id)
 
     async def _async_load_library(self) -> None:
         """Load the card library and groups; failures only affect browsing."""
         try:
             await self.client.update_library()
         except YotoError as err:
-            _LOGGER.warning("Could not load Yoto card library: %s", err)
+            LOGGER.warning("Could not load Yoto card library: %s", err)
         try:
             await self.client.update_groups()
         except YotoError as err:
-            _LOGGER.warning("Could not load Yoto card groups: %s", err)
+            LOGGER.warning("Could not load Yoto card groups: %s", err)
 
     async def _async_status_push_tick(self, _now: datetime) -> None:
         """Ask each player to push a fresh status snapshot over MQTT."""
         if not self.client.is_mqtt_connected:
             return
         for device_id in list(self.client.players):
-            await self.client.request_player_status(device_id)
+            try:
+                await self.client.request_player_status(device_id)
+            except YotoError as err:
+                LOGGER.debug("Status request for %s failed: %s", device_id, err)
 
     def _mqtt_event(self, _player: YotoPlayer) -> None:
         """Handle a real-time update pushed by the Yoto MQTT broker."""

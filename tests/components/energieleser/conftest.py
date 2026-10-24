@@ -1,23 +1,25 @@
 """Fixtures for energieleser integration tests."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
 from energieleser import (
     GasleserDevice,
+    GasleserPulseDevice,
     StromleserOneDevice,
     WaermeleserDevice,
     WasserleserDevice,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.energieleser.const import DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
 
-from tests.common import MockConfigEntry
-
 STROMLESER_DEVICE_ID = "STROM_ONE_8529546829"
 GASLESER_DEVICE_ID = "GAS_8530321017"
+GASLESER_PULSE_DEVICE_ID = "GAS_PULSE_4466926439"
 WAERMELESER_DEVICE_ID = "HEAT_0000000001"
 WASSERLESER_DEVICE_ID = "WASSER_0499632826"
 
@@ -43,6 +45,16 @@ GASLESER_API_RESPONSE: dict = {
     "total_consumption": 37030.67,
     "current_flow_rate": 0.01,
     "rssi": "-51",
+}
+
+GASLESER_PULSE_API_RESPONSE: dict = {
+    "device_id": GASLESER_PULSE_DEVICE_ID,
+    "timestamp": "1785224596",
+    "count": 417,
+    "total_consumption": 21884.32,
+    "current_flow_rate": 0.03,
+    "signal_strength": "84 %",
+    "rssi": "-47",
 }
 
 WAERMELESER_API_RESPONSE: dict = {
@@ -79,9 +91,23 @@ def mock_stromleser_device() -> StromleserOneDevice:
 
 
 @pytest.fixture
+def mock_locked_stromleser_device(
+    mock_stromleser_device: StromleserOneDevice,
+) -> StromleserOneDevice:
+    """Return a stromleser device with PIN locked."""
+    return replace(mock_stromleser_device, pin_locked=True)
+
+
+@pytest.fixture
 def mock_gasleser_device() -> GasleserDevice:
     """Return a parsed gasleser device built from the API fixture."""
     return GasleserDevice.from_payload(GASLESER_API_RESPONSE)
+
+
+@pytest.fixture
+def mock_gasleser_pulse_device() -> GasleserPulseDevice:
+    """Return a parsed gasleser.pulse device built from the API fixture."""
+    return GasleserPulseDevice.from_payload(GASLESER_PULSE_API_RESPONSE)
 
 
 @pytest.fixture
@@ -125,6 +151,20 @@ def mock_gasleser_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_gasleser_pulse_config_entry() -> MockConfigEntry:
+    """Return a mocked config entry for a gasleser.pulse device."""
+    return MockConfigEntry(
+        title=GASLESER_PULSE_DEVICE_ID,
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.104",
+            CONF_DEVICE_ID: GASLESER_PULSE_DEVICE_ID,
+        },
+        unique_id=GASLESER_PULSE_DEVICE_ID,
+    )
+
+
+@pytest.fixture
 def mock_waermeleser_config_entry() -> MockConfigEntry:
     """Return a mocked config entry for a wärmeleser device."""
     return MockConfigEntry(
@@ -156,7 +196,7 @@ def mock_wasserleser_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.energieleser.async_setup_entry", return_value=True
+        "homeassistant.components.energieleser.async_setup_entry", return_value=None
     ):
         yield
 

@@ -3,7 +3,7 @@
 from copy import deepcopy
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -37,28 +37,28 @@ TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 
 FILE_OPTIONS_SCHEMAS = {
-    Platform.SENSOR.value: vol.Schema(
+    Platform.SENSOR.value: probatio.Schema(
         {
-            vol.Optional(CONF_VALUE_TEMPLATE): TEMPLATE_SELECTOR,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): TEXT_SELECTOR,
+            probatio.Optional(CONF_VALUE_TEMPLATE): TEMPLATE_SELECTOR,
+            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): TEXT_SELECTOR,
         }
     ),
-    Platform.NOTIFY.value: vol.Schema(
+    Platform.NOTIFY.value: probatio.Schema(
         {
-            vol.Optional(CONF_TIMESTAMP, default=False): BOOLEAN_SELECTOR,
+            probatio.Optional(CONF_TIMESTAMP, default=False): BOOLEAN_SELECTOR,
         }
     ),
 }
 
 FILE_FLOW_SCHEMAS = {
-    Platform.SENSOR.value: vol.Schema(
+    Platform.SENSOR.value: probatio.Schema(
         {
-            vol.Required(CONF_FILE_PATH): TEXT_SELECTOR,
+            probatio.Required(CONF_FILE_PATH): TEXT_SELECTOR,
         }
     ).extend(FILE_OPTIONS_SCHEMAS[Platform.SENSOR.value].schema),
-    Platform.NOTIFY.value: vol.Schema(
+    Platform.NOTIFY.value: probatio.Schema(
         {
-            vol.Required(CONF_FILE_PATH): TEXT_SELECTOR,
+            probatio.Required(CONF_FILE_PATH): TEXT_SELECTOR,
         }
     ).extend(FILE_OPTIONS_SCHEMAS[Platform.NOTIFY.value].schema),
 }

@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     DEGREE,
@@ -82,6 +82,11 @@ CONF_STATE_CLASS: Final = "state_class"
 ATTR_LAST_RESET: Final = "last_reset"
 ATTR_STATE_CLASS: Final = "state_class"
 ATTR_OPTIONS: Final = "options"
+
+UPTIME_DEFAULT_TOLERANCE_SECONDS: Final = 60
+UPTIME_MIN_TOLERANCE_SECONDS: Final = 5
+
+TEMPERATURE_UNITS = {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
 
 
 class SensorEntityCapabilityAttribute(StrEnum):
@@ -240,7 +245,7 @@ class SensorDeviceClass(StrEnum):
     electric energy consumption.
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
     `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
-    `Mcal`, `Gcal`
+    `Mcal`, `Gcal`, `thm`
     """
 
     ENERGY_DISTANCE = "energy_distance"
@@ -262,7 +267,7 @@ class SensorDeviceClass(StrEnum):
 
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
     `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
-    `Mcal`, `Gcal`
+    `Mcal`, `Gcal`, `thm`
     """
 
     FREQUENCY = "frequency"
@@ -560,7 +565,9 @@ NON_NUMERIC_DEVICE_CLASSES = {
     SensorDeviceClass.UPTIME,
 }
 
-DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
+DEVICE_CLASSES_SCHEMA: Final = probatio.All(
+    probatio.Lower, probatio.Coerce(SensorDeviceClass)
+)
 
 # DEVICE_CLASSES is deprecated as of 2021.12
 # use the SensorDeviceClass enum instead.
@@ -590,7 +597,9 @@ class SensorStateClass(StrEnum):
     For example: an amount of consumed gas"""
 
 
-STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorStateClass))
+STATE_CLASSES_SCHEMA: Final = probatio.All(
+    probatio.Lower, probatio.Coerce(SensorStateClass)
+)
 
 
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]

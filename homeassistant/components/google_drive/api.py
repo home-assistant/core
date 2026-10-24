@@ -13,11 +13,7 @@ from google_drive_api.api import AbstractAuth, GoogleDriveApi
 from homeassistant.components.backup import AgentBackup, suggested_filename
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
@@ -38,6 +34,43 @@ class StorageQuotaData:
     usage_in_trash: int
 
 
+def _invalid_metadata_reason(metadata: Any) -> str | None:
+    """Return why decoded metadata cannot be used, or None if it can.
+
+    AgentBackup.from_dict does not enforce its annotations, so the types the
+    backup manager relies on are checked here, before it is built: the manager
+    uses backup_id as a dict key and calls extra_metadata.get() on every backup.
+    """
+    if not isinstance(metadata, dict):
+        return "description is not a JSON object"
+    if not isinstance(metadata.get("backup_id"), str):
+        return "backup_id is not a string"
+    if not isinstance(metadata.get("extra_metadata"), dict):
+        return "extra_metadata is not a dictionary"
+    return None
+
+
+def _parse_backup_metadata(file: dict[str, Any]) -> AgentBackup | None:
+    """Return the backup a Drive file describes, or None if it cannot be read.
+
+    The metadata lives in the file description, which the user can edit or clear
+    from the Google Drive UI. One unreadable file should not hide the others.
+    """
+    reason: object
+    try:
+        metadata = json.loads(file["description"])
+        if (reason := _invalid_metadata_reason(metadata)) is None:
+            return AgentBackup.from_dict(metadata)
+    except (KeyError, TypeError, ValueError) as err:
+        reason = err
+    _LOGGER.warning(
+        "Ignoring backup file %s: its description is not valid backup metadata: %s",
+        file.get("id", "?"),
+        reason,
+    )
+    return None
+
+
 class AsyncConfigEntryAuth(AbstractAuth):
     """Provide Google Drive authentication tied to an OAuth2 based config entry."""
 
@@ -56,27 +89,32 @@ class AsyncConfigEntryAuth(AbstractAuth):
         try:
             await self._oauth_session.async_ensure_token_valid()
         except ClientError as ex:
-            if (
+            is_setup = (
                 self._oauth_session.config_entry.state
                 is ConfigEntryState.SETUP_IN_PROGRESS
-            ):
-                if isinstance(ex, ClientResponseError) and 400 <= ex.status < 500:
+            )
+
+            if isinstance(ex, ClientResponseError):
+                # OAuth2 spec uses 400 for invalid refresh tokens.
+                # During setup, we broaden this to all 4xx to abort cleanly.
+                if ex.status == 400 or (is_setup and 400 <= ex.status < 500):
+                    if not is_setup:
+                        self._oauth_session.config_entry.async_start_reauth(
+                            self._oauth_session.hass
+                        )
                     raise ConfigEntryAuthFailed(
                         translation_domain=DOMAIN,
                         translation_key="authentication_not_valid",
                     ) from ex
+
+            if is_setup:
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
                     translation_key="authentication_failed",
                 ) from ex
-            if hasattr(ex, "status") and ex.status == 400:
-                self._oauth_session.config_entry.async_start_reauth(
-                    self._oauth_session.hass
-                )
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="authentication_failed",
-            ) from ex
+
+            raise
+
         return str(self._oauth_session.token[CONF_ACCESS_TOKEN])
 
 
@@ -194,42 +232,49 @@ class DriveClient:
             backup_metadata["name"],
         )
 
-    async def async_list_backups(self) -> list[AgentBackup]:
-        """List backups."""
-        query = " and ".join(
+    def _backup_query(self, *extra: str) -> str:
+        """Return a query matching the backups of this Home Assistant instance."""
+        return " and ".join(
             [
                 "properties has { key='home_assistant' and value='backup' }",
                 "properties has { key='instance_id'"
                 f" and value='{self._ha_instance_id}' }}",
                 "trashed=false",
+                *extra,
             ]
         )
+
+    async def async_list_backups(self) -> list[AgentBackup]:
+        """List backups."""
         res = await self._api.list_files(
-            params={"q": query, "fields": "files(description)"}
+            params={"q": self._backup_query(), "fields": "files(id,description)"}
         )
-        backups = []
-        for file in res["files"]:
-            backup = AgentBackup.from_dict(json.loads(file["description"]))
-            backups.append(backup)
-        return backups
+        return [
+            backup
+            for file in res["files"]
+            if (backup := _parse_backup_metadata(file)) is not None
+        ]
 
     async def async_get_size_of_all_backups(self) -> int:
         """Get size of all backups."""
-        backups = await self.async_list_backups()
-
-        return sum(backup.size for backup in backups)
+        # Ask Drive for the size of each file instead of adding up the sizes stored
+        # in the metadata, which would mean downloading and parsing every backup's
+        # description just to update a sensor.
+        res = await self._api.list_files(
+            params={"q": self._backup_query(), "fields": "files(size)"}
+        )
+        return sum(int(file["size"]) for file in res["files"] if "size" in file)
 
     async def async_get_backup_file_id(self, backup_id: str) -> str | None:
         """Get file_id of backup if it exists."""
-        query = " and ".join(
-            [
-                "properties has { key='home_assistant' and value='backup' }",
-                "properties has { key='instance_id'"
-                f" and value='{self._ha_instance_id}' }}",
-                f"properties has {{ key='backup_id' and value='{backup_id}' }}",
-            ]
+        res = await self._api.list_files(
+            params={
+                "q": self._backup_query(
+                    f"properties has {{ key='backup_id' and value='{backup_id}' }}"
+                ),
+                "fields": "files(id)",
+            }
         )
-        res = await self._api.list_files(params={"q": query, "fields": "files(id)"})
         for file in res["files"]:
             return str(file["id"])
         return None

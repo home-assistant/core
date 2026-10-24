@@ -17,7 +17,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('folder_watcher', '1')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -61,6 +61,5 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2022-04-19T10:31:02.000+00:00',
   })
 # ---

@@ -11,7 +11,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -37,8 +37,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'hostname_battery',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_battery',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_battery-state]
@@ -47,7 +47,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_battery',
@@ -67,7 +67,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -90,7 +90,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_time_remaining',
-    'unique_id': 'hostname_battery_time_remaining',
+    'unique_id': 'uuid_battery_time_remaining',
     'unit_of_measurement': None,
   })
 # ---
@@ -118,10 +118,10 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.hostname_boot_time',
     'has_entity_name': True,
     'hidden_by': None,
@@ -141,7 +141,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boot_time',
-    'unique_id': 'hostname_boot_time',
+    'unique_id': 'uuid_boot_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -171,7 +171,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -197,7 +197,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_power_core',
-    'unique_id': 'hostname_cpu_power_core_0',
+    'unique_id': 'uuid_cpu_power_core_0',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -228,7 +228,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -254,7 +254,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_power_package',
-    'unique_id': 'hostname_cpu_power_package',
+    'unique_id': 'uuid_cpu_power_package',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -285,7 +285,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -311,7 +311,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_speed',
-    'unique_id': 'hostname_cpu_speed',
+    'unique_id': 'uuid_cpu_speed',
     'unit_of_measurement': <UnitOfFrequency.GIGAHERTZ: 'GHz'>,
   })
 # ---
@@ -343,7 +343,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -369,7 +369,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_temperature',
-    'unique_id': 'hostname_cpu_temperature',
+    'unique_id': 'uuid_cpu_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -401,7 +401,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -427,7 +427,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_voltage',
-    'unique_id': 'hostname_cpu_voltage',
+    'unique_id': 'uuid_cpu_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -459,7 +459,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -485,7 +485,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_refresh_rate',
-    'unique_id': 'hostname_display_abc123_refresh_rate',
+    'unique_id': 'uuid_display_abc123_refresh_rate',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -517,7 +517,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -540,7 +540,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_resolution_x',
-    'unique_id': 'hostname_display_abc123_resolution_x',
+    'unique_id': 'uuid_display_abc123_resolution_x',
     'unit_of_measurement': 'px',
   })
 # ---
@@ -571,7 +571,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -594,7 +594,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_resolution_y',
-    'unique_id': 'hostname_display_abc123_resolution_y',
+    'unique_id': 'uuid_display_abc123_resolution_y',
     'unit_of_measurement': 'px',
   })
 # ---
@@ -625,7 +625,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -648,7 +648,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'displays_connected',
-    'unique_id': 'hostname_displays_connected',
+    'unique_id': 'uuid_displays_connected',
     'unit_of_measurement': None,
   })
 # ---
@@ -676,10 +676,10 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.hostname_kernel',
     'has_entity_name': True,
     'hidden_by': None,
@@ -699,7 +699,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kernel',
-    'unique_id': 'hostname_kernel',
+    'unique_id': 'uuid_kernel',
     'unit_of_measurement': None,
   })
 # ---
@@ -726,10 +726,10 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.hostname_latest_version',
     'has_entity_name': True,
     'hidden_by': None,
@@ -749,7 +749,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'version_latest',
-    'unique_id': 'hostname_version_latest',
+    'unique_id': 'uuid_version_latest',
     'unit_of_measurement': None,
   })
 # ---
@@ -778,7 +778,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -804,8 +804,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load',
-    'unique_id': 'hostname_processes_load',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_processes_load',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_load-state]
@@ -813,7 +813,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Load',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_load',
@@ -835,7 +835,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -861,8 +861,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'processes_load_cpu',
-    'unique_id': 'hostname_processes_load_cpu_0',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_processes_load_cpu_0',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_load_cpu_0-state]
@@ -870,7 +870,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Load CPU 0',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_load_cpu_0',
@@ -892,7 +892,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -918,7 +918,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_free',
-    'unique_id': 'hostname_memory_free',
+    'unique_id': 'uuid_memory_free',
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
@@ -950,7 +950,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -976,8 +976,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_used_percentage',
-    'unique_id': 'hostname_memory_used_percentage',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_memory_used_percentage',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_memory_used-state]
@@ -985,7 +985,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Memory used %',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_memory_used',
@@ -1007,7 +1007,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1033,7 +1033,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_used',
-    'unique_id': 'hostname_memory_used',
+    'unique_id': 'uuid_memory_used',
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
@@ -1065,7 +1065,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1091,8 +1091,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'space_used',
-    'unique_id': 'hostname_filesystem_mountpoint',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_filesystem_mountpoint',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_mountpoint_space_used-state]
@@ -1100,7 +1100,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname mountpoint space used',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_mountpoint_space_used',
@@ -1122,7 +1122,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1148,7 +1148,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_core_clock_speed',
-    'unique_id': 'hostname_gpu_abc123_core_clock_speed',
+    'unique_id': 'uuid_gpu_abc123_core_clock_speed',
     'unit_of_measurement': <UnitOfFrequency.MEGAHERTZ: 'MHz'>,
   })
 # ---
@@ -1180,7 +1180,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1203,7 +1203,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_fan_speed',
-    'unique_id': 'hostname_gpu_abc123_fan_speed',
+    'unique_id': 'uuid_gpu_abc123_fan_speed',
     'unit_of_measurement': 'rpm',
   })
 # ---
@@ -1234,7 +1234,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1260,7 +1260,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_clock_speed',
-    'unique_id': 'hostname_gpu_abc123_memory_clock_speed',
+    'unique_id': 'uuid_gpu_abc123_memory_clock_speed',
     'unit_of_measurement': <UnitOfFrequency.MEGAHERTZ: 'MHz'>,
   })
 # ---
@@ -1292,7 +1292,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1318,7 +1318,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_free',
-    'unique_id': 'hostname_gpu_abc123_memory_free',
+    'unique_id': 'uuid_gpu_abc123_memory_free',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1350,7 +1350,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1376,8 +1376,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_used_percentage',
-    'unique_id': 'hostname_gpu_abc123_memory_used_percentage',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_gpu_abc123_memory_used_percentage',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_name_memory_used-state]
@@ -1385,7 +1385,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name memory used %',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_name_memory_used',
@@ -1407,7 +1407,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1433,7 +1433,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_used',
-    'unique_id': 'hostname_gpu_abc123_memory_used',
+    'unique_id': 'uuid_gpu_abc123_memory_used',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1465,7 +1465,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1488,7 +1488,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_power_usage',
-    'unique_id': 'hostname_gpu_abc123_power_usage',
+    'unique_id': 'uuid_gpu_abc123_power_usage',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1519,7 +1519,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1545,7 +1545,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_temperature',
-    'unique_id': 'hostname_gpu_abc123_temperature',
+    'unique_id': 'uuid_gpu_abc123_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1577,7 +1577,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1603,8 +1603,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_usage_percentage',
-    'unique_id': 'hostname_gpu_abc123_usage_percentage',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_gpu_abc123_usage_percentage',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_name_usage-state]
@@ -1612,7 +1612,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name usage %',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_name_usage',
@@ -1632,10 +1632,10 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.hostname_operating_system',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1655,7 +1655,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'os',
-    'unique_id': 'hostname_os',
+    'unique_id': 'uuid_os',
     'unit_of_measurement': None,
   })
 # ---
@@ -1684,7 +1684,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1710,7 +1710,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_usage',
-    'unique_id': 'hostname_power_usage',
+    'unique_id': 'uuid_power_usage',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1742,7 +1742,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1765,7 +1765,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'processes',
-    'unique_id': 'hostname_processes_count',
+    'unique_id': 'uuid_processes_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -1793,10 +1793,10 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.hostname_version',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1816,7 +1816,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'version',
-    'unique_id': 'hostname_version',
+    'unique_id': 'uuid_version',
     'unit_of_measurement': None,
   })
 # ---

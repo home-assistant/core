@@ -2,12 +2,11 @@
 
 from collections.abc import Iterable
 import logging
-from typing import cast, override
+from typing import override
 
 from uiprotect.data import (
     Camera as UFPCamera,
     ChannelQuality,
-    DeviceState,
     ModelType,
     ProtectAdoptableDeviceModel,
     PublicDeviceModel,
@@ -17,14 +16,10 @@ from uiprotect.data import (
 from uiprotect.data.public_devices import PublicCamera
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_platform,
-    issue_registry as ir,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import entity_platform, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -35,7 +30,6 @@ from .const import (
     ATTR_FPS,
     ATTR_HEIGHT,
     ATTR_WIDTH,
-    DEFAULT_BRAND,
     DOMAIN,
 )
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
@@ -63,6 +57,7 @@ def _create_rtsp_repair(
         hass,
         DOMAIN,
         f"rtsp_disabled_{public.id}",
+        config_entry_id=entry.entry_id,
         is_fixable=True,
         is_persistent=False,
         learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#camera-streams",
@@ -86,6 +81,9 @@ def _async_camera_entities(
     Stream URLs come from the public API because it carries the authoritative
     per-camera host (stacked consoles resolve correctly), SRTP-stripped for
     go2rtc.
+
+    Paths which can't tell whether a camera's RTSP repair issue is still valid
+    keep it, so a refresh of the issues doesn't delete it.
     """
     disable_stream = data.disable_stream
     entities: list[ProtectDeviceEntity] = []
@@ -119,8 +117,10 @@ def _async_camera_entities(
                     camera.display_name,
                 )
                 data.async_add_pending_camera_id(camera.id)
+                ir.async_keep_issue(hass, DOMAIN, f"rtsp_disabled_{camera.id}")
             continue
 
+        issue_id = f"rtsp_disabled_{public.id}"
         # Hybrid: a camera not yet in the private bootstrap (adopt race) is
         # skipped rather than built private-less — the adopt dispatch creates
         # it with its private fill, which would otherwise collide on unique_id.
@@ -129,10 +129,10 @@ def _async_camera_entities(
                 "Deferring camera %s until its private object is adopted",
                 public.display_name,
             )
+            ir.async_keep_issue(hass, DOMAIN, issue_id)
             continue
 
         streams = data.get_rtsps_streams(public.id)
-        issue_id = f"rtsp_disabled_{public.id}"
         tiers = public.hardware_stream_qualities()
         main_qualities = [q for q in _MAIN_QUALITIES if q in tiers]
         has_package = ChannelQuality.PACKAGE in tiers
@@ -145,6 +145,7 @@ def _async_camera_entities(
                 public.display_name,
                 tiers,
             )
+            ir.async_keep_issue(hass, DOMAIN, issue_id)
             continue
 
         # Active stream tiers come from the public ``rtsps_streams`` object.
@@ -182,10 +183,20 @@ def _async_camera_entities(
         # get the repair too; third-party is only knowable with a private fill.
         if (
             disable_stream
-            or public.state is not DeviceState.CONNECTED
+            or not public.is_reachable
             or (camera is not None and camera.is_third_party_camera)
         ):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
+        elif streams is None:
+            # None means the best-effort read failed, not that streams are absent.
+            _LOGGER.warning(
+                (
+                    "Could not read RTSPS streams for camera %s;"
+                    " live streaming stays disabled until streams can be read again"
+                ),
+                public.display_name,
+            )
+            ir.async_keep_issue(hass, DOMAIN, issue_id)
         else:
             _create_rtsp_repair(hass, entry, public)
     return entities
@@ -220,7 +231,16 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, data.channels_signal, _add_new_device)
     )
 
-    async_add_entities(_async_camera_entities(hass, entry, data))
+    # Without the public bootstrap no cameras are enumerated, so the RTSP repair
+    # issues can't be checked
+    if not data.api.has_public_bootstrap:
+        return
+    # Cameras which are gone or no longer adopted leave issues to be deleted
+    with ir.async_begin_issues_refresh(
+        hass, DOMAIN, issue_id_pattern="rtsp_disabled_", config_entry_id=entry.entry_id
+    ):
+        entities = _async_camera_entities(hass, entry, data)
+    async_add_entities(entities)
 
 
 _DISABLE_FEATURE = CameraEntityFeature(0)
@@ -263,11 +283,13 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._last_image: bytes | None = None
         # The base tracks the private device in hybrid (unchanged behaviour) and
         # the public device in public-only, so it always has a mac to key on.
-        super().__init__(data, cast(ProtectDeviceType, private or public))
+        super().__init__(data, private or public)
         self._attr_unique_id = f"{self.device.mac}_{self._channel_id}"
         self._attr_name = get_camera_base_name(quality)
         # only the default (first active) quality channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default
+        # RTSPS uses a self-signed certificate on the console IP
+        self.stream_options[CONF_VERIFY_SSL] = False
         # Set the stream source before finishing the init
         # because async_added_to_hass is too late and camera
         # integration uses async_internal_added_to_hass to access
@@ -293,25 +315,6 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             source = streams.get_stream_url(quality, srtp=False)
         self._attr_supported_features = _ENABLE_FEATURE if source else _DISABLE_FEATURE
         self._stream_source = source
-
-    @callback
-    @override
-    def _async_set_device_info(self) -> None:
-        if self._private is not None:
-            super()._async_set_device_info()
-            return
-        # public-only: no market_name/firmware_version/protect_url, and
-        # ``type`` only on newer firmware, so device identity is limited. The
-        # NVR link is omitted — an API-key-only client has no private
-        # bootstrap to read the NVR mac from, and resolving it publicly is
-        # async; the public-only config mode wires it at setup instead.
-        public = self._public
-        self._attr_device_info = DeviceInfo(
-            name=public.display_name,
-            model=public.type,
-            manufacturer=DEFAULT_BRAND,
-            connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
-        )
 
     @callback
     @override
@@ -381,7 +384,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._attr_available = (
             self.data.last_public_update_success
             and not self._public_missing
-            and public.state is DeviceState.CONNECTED
+            and public.is_reachable
         )
         self._async_set_stream_source()
         self._attr_extra_state_attributes = {
@@ -408,11 +411,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             self._public_missing = False
         else:
             self._public_missing = True
-        device = (
-            self._private
-            if self._private is not None
-            else cast(ProtectDeviceType, self._public)
-        )
+        device = self._private if self._private is not None else self._public
         self._async_updated_event(device)
 
     @override

@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from wmspro.action import Action, ActionList
 
 from homeassistant.components.wmspro.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import remove_config_entry
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture
@@ -117,7 +116,7 @@ def mock_dest_refresh() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_action_call() -> Generator[Callable]:
+def mock_action_call() -> Generator[Callable[..., None]]:
     """Override Action.__call__."""
 
     async def fake_call(self, **kwargs):
@@ -133,7 +132,7 @@ def mock_action_call() -> Generator[Callable]:
 
 
 @pytest.fixture
-def mock_action_list_call() -> Generator[Callable]:
+def mock_action_list_call() -> Generator[Callable[..., None]]:
     """Override ActionList.__call__."""
 
     async def fake_list_call(self, **kwargs):

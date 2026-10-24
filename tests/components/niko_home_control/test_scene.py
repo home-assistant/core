@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import find_update_callback, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.freeze_time("2025-10-10 21:00:00")
@@ -54,6 +53,7 @@ async def test_activate_scene(
 
 async def test_updating(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
     scene: AsyncMock,
@@ -63,7 +63,8 @@ async def test_updating(
 
     # Resolve the created scene entity dynamically
     entity_entries = er.async_entries_for_config_entry(
-        er.async_get(hass), mock_config_entry.entry_id
+        entity_registry,
+        mock_config_entry.entry_id,
     )
     scene_entities = [e for e in entity_entries if e.domain == SCENE_DOMAIN]
     assert scene_entities, "No scene entities registered"

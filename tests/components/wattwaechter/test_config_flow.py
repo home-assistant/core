@@ -9,10 +9,17 @@ from aio_wattwaechter import (
     WattwaechterAuthenticationError,
     WattwaechterConnectionError,
 )
+from aio_wattwaechter.models import _parse_system_info
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.wattwaechter.const import CONF_FW_VERSION, DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+    ConfigEntryDisabler,
+)
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_HOST,
@@ -25,16 +32,16 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import (
+    MOCK_CONFIG_DATA,
     MOCK_DEVICE_ID,
     MOCK_DEVICE_NAME,
     MOCK_FW_VERSION,
     MOCK_HOST,
     MOCK_MAC,
     MOCK_MODEL,
+    MOCK_SYSTEM_INFO_GAS,
     MOCK_TOKEN,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address(MOCK_HOST),
@@ -73,7 +80,7 @@ async def test_user_flow_success(
         CONF_HOST: MOCK_HOST,
         CONF_TOKEN: None,
         CONF_DEVICE_ID: MOCK_DEVICE_ID,
-        CONF_MODEL: "WW-Plus",
+        CONF_MODEL: "ww_plus",
         CONF_FW_VERSION: MOCK_FW_VERSION,
         CONF_MAC: MOCK_MAC,
     }
@@ -111,7 +118,7 @@ async def test_user_flow_auth_required(
         CONF_HOST: MOCK_HOST,
         CONF_TOKEN: MOCK_TOKEN,
         CONF_DEVICE_ID: MOCK_DEVICE_ID,
-        CONF_MODEL: "WW-Plus",
+        CONF_MODEL: "ww_plus",
         CONF_FW_VERSION: MOCK_FW_VERSION,
         CONF_MAC: MOCK_MAC,
     }
@@ -232,7 +239,7 @@ async def test_zeroconf_flow_no_token_needed(
         CONF_HOST: MOCK_HOST,
         CONF_TOKEN: None,
         CONF_DEVICE_ID: MOCK_DEVICE_ID,
-        CONF_MODEL: MOCK_MODEL,
+        CONF_MODEL: "ww_plus",
         CONF_FW_VERSION: MOCK_FW_VERSION,
         CONF_MAC: MOCK_MAC,
     }
@@ -268,7 +275,7 @@ async def test_zeroconf_flow_token_required(
         CONF_HOST: MOCK_HOST,
         CONF_TOKEN: MOCK_TOKEN,
         CONF_DEVICE_ID: MOCK_DEVICE_ID,
-        CONF_MODEL: MOCK_MODEL,
+        CONF_MODEL: "ww_plus",
         CONF_FW_VERSION: MOCK_FW_VERSION,
         CONF_MAC: MOCK_MAC,
     }
@@ -393,7 +400,7 @@ async def test_zeroconf_flow_device_name_fetch_fails(
         CONF_HOST: MOCK_HOST,
         CONF_TOKEN: None,
         CONF_DEVICE_ID: MOCK_DEVICE_ID,
-        CONF_MODEL: MOCK_MODEL,
+        CONF_MODEL: "ww_plus",
         CONF_FW_VERSION: MOCK_FW_VERSION,
         CONF_MAC: MOCK_MAC,
     }
@@ -479,3 +486,274 @@ async def test_reauth_flow_wrong_device(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_device"
     assert mock_config_entry.data[CONF_TOKEN] == MOCK_TOKEN
+
+
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring the host updates the entry and keeps the token."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    new_host = "192.168.1.222"
+    # The token field is pre-filled with the stored token and submitted as-is
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: new_host, CONF_TOKEN: MOCK_TOKEN}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == new_host
+    assert mock_config_entry.data[CONF_TOKEN] == MOCK_TOKEN
+
+
+async def test_reconfigure_flow_clear_token(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test clearing the token field stores None instead of an empty string."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST, CONF_TOKEN: ""}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_TOKEN] is None
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (WattwaechterAuthenticationError("Invalid token"), "invalid_auth"),
+        (WattwaechterConnectionError("Connection lost"), "cannot_connect"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reconfigure recovers after an invalid token or connection failure."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+
+    mock_client.system_info.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"]["base"] == expected_error
+
+    # Retry succeeds once the device is reachable again
+    mock_client.system_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_wrong_device(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when the host points to a different device."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+
+    mock_client.system_info.return_value = MagicMock(
+        **{"get_value.return_value": "WRONG-DEVICE"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.222"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+
+
+def _zeroconf_discovery(
+    properties: dict[str, str], host: str = MOCK_HOST
+) -> ZeroconfServiceInfo:
+    """Return a zeroconf discovery with the given TXT records."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        hostname="wattwaechter.local.",
+        port=80,
+        type="_wattwaechter._tcp.local.",
+        name=f"{properties.get('id', 'WW')}._wattwaechter._tcp.local.",
+        properties=properties,
+    )
+
+
+@pytest.mark.parametrize(
+    ("properties", "expected_unique_id"),
+    [
+        pytest.param(
+            {"id": f"WWP-{MOCK_DEVICE_ID}", "model": "WW-Plus"},
+            MOCK_DEVICE_ID,
+            id="plus",
+        ),
+        pytest.param(
+            {"id": f"WWGW-{MOCK_DEVICE_ID}", "model": "WW-GW-MF"},
+            MOCK_DEVICE_ID,
+            id="gw_mf",
+        ),
+        pytest.param(
+            {"id": f"WWGW-{MOCK_DEVICE_ID}", "model": "WW-GW-ID"},
+            MOCK_DEVICE_ID,
+            id="gw_id",
+        ),
+        pytest.param(
+            {"mac": "9b:fe:ff:45:3a:b4"},
+            "9BFEFF453AB4",
+            id="mac_fallback",
+        ),
+    ],
+)
+async def test_zeroconf_unique_id_is_bare_mac(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    properties: dict[str, str],
+    expected_unique_id: str,
+) -> None:
+    """Test the unique ID strips the product prefix for all products."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_discovery(properties),
+    )
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == expected_unique_id
+    assert result["data"][CONF_DEVICE_ID] == expected_unique_id
+
+
+async def test_zeroconf_gw_already_configured_by_user_flow(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a GW discovery matches the entry created from the system info esp_id."""
+    new_host = "192.168.1.201"
+    discovery = _zeroconf_discovery({"id": f"WWGW-{MOCK_DEVICE_ID}"}, new_host)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == new_host
+
+
+@pytest.mark.parametrize(
+    ("source", "disabled_by"),
+    [
+        (SOURCE_IGNORE, None),
+        (SOURCE_USER, ConfigEntryDisabler.USER),
+    ],
+    ids=["ignored", "disabled"],
+)
+async def test_zeroconf_gw_matches_unmigrated_legacy_entry(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    source: str,
+    disabled_by: ConfigEntryDisabler | None,
+) -> None:
+    """Test discovery matches an entry that kept its WWGW-<MAC> unique ID.
+
+    Ignored and disabled entries are not set up, so they are not migrated.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG_DATA, CONF_DEVICE_ID: f"WWGW-{MOCK_DEVICE_ID}"},
+        unique_id=f"WWGW-{MOCK_DEVICE_ID}",
+        source=source,
+        disabled_by=disabled_by,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_discovery({"id": f"WWGW-{MOCK_DEVICE_ID}"}),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_gw_model_from_system_info(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a gas/water device stores the model ID and shows its product name."""
+    mock_client.system_info.return_value = MOCK_SYSTEM_INFO_GAS
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_discovery(
+            {
+                "id": f"WWGW-{MOCK_DEVICE_ID}",
+                "model": "WW-GW-MF",
+                "ver": MOCK_FW_VERSION,
+                "mac": MOCK_MAC,
+            }
+        ),
+    )
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["description_placeholders"]["model"] == "WattWächter Gas"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_DEVICE_ID
+    assert result["data"][CONF_MODEL] == "ww_gw_mf"
+
+
+async def test_user_flow_legacy_firmware_without_model_id(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test firmware without model_id is stored as a WattWächter Plus."""
+    legacy = await async_load_json_object_fixture(hass, "system_info.json", DOMAIN)
+    legacy["esp"] = [
+        entry
+        for entry in legacy["esp"]
+        if entry["name"] not in ("model_id", "product_name")
+    ]
+    mock_client.system_info.return_value = _parse_system_info(legacy)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_DEVICE_ID
+    assert result["data"][CONF_MODEL] == "ww_plus"

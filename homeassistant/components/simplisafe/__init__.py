@@ -4,6 +4,7 @@ import asyncio
 from typing import Any
 
 from simplipy import API
+from simplipy.device.camera import Camera
 from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
@@ -12,6 +13,7 @@ from simplipy.errors import (
     WebsocketError,
 )
 from simplipy.system import SystemNotification
+from simplipy.system.v3 import SystemV3
 from simplipy.websocket import (
     EVENT_AUTOMATIC_TEST,
     EVENT_CAMERA_MOTION_DETECTED,
@@ -67,7 +69,7 @@ ATTR_MESSAGE = "message"
 ATTR_TIMESTAMP = "timestamp"
 
 WEBSOCKET_RECONNECT_RETRIES = 3
-WEBSOCKET_RETRY_DELAY = 2
+WEBSOCKET_RETRY_DELAY = 5
 WEBSOCKET_LOOP_TASK_NAME = "simplisafe websocket task"
 
 EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
@@ -77,11 +79,15 @@ PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.LOCK,
     Platform.SENSOR,
 ]
 
 
+# These events are fired on the HA bus as SIMPLISAFE_EVENT for backwards
+# compatibility. Do not use SIMPLISAFE_EVENT and do not copy this pattern when
+# making new integrations.
 WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_AUTOMATIC_TEST,
     EVENT_CAMERA_MOTION_DETECTED,
@@ -114,11 +120,13 @@ def _async_register_base_station(
         manufacturer="SimpliSafe",
         model=str(system.version),
         name=system.address,
+        serial_number=system.serial,
     )
 
     # Check for an old system ID format and remove it:
-    if old_base_station := device_registry.async_get_device(
-        identifiers={(DOMAIN, system.system_id)}  # type: ignore[arg-type]
+    if old_base_station := device_registry.async_get_device_by_identifier(
+        (DOMAIN, system.system_id),  # type: ignore[arg-type]
+        entry.entry_id,
     ):
         # Update the new base station with any properties the user might have configured
         # on the old base station:
@@ -129,6 +137,34 @@ def _async_register_base_station(
             name_by_user=old_base_station.name_by_user,
         )
         device_registry.async_remove_device(old_base_station.id)
+
+
+@callback
+def _async_register_camera(
+    hass: HomeAssistant, entry: ConfigEntry, system: SystemType, camera: Camera
+) -> None:
+    """Register a camera device."""
+    if not isinstance(system, SystemV3):
+        return
+
+    device_registry = dr.async_get(hass)
+
+    model_name = camera.camera_type.name.capitalize().replace("_", " ")
+    model_id = system.camera_data[camera.serial]["model"]
+    device_name = f"{camera.name.capitalize()} {model_name}"
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, camera.serial)},
+        manufacturer="SimpliSafe",
+        model=model_name,
+        model_id=model_id,
+        name=device_name,
+        serial_number=camera.serial,
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, str(system.system_id)), config_entry_id=entry.entry_id
+        ),
+    )
 
 
 @callback
@@ -156,7 +192,7 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> None:
     """Set up SimpliSafe as config entry."""
     _async_standardize_config_entry(hass, entry)
 
@@ -169,8 +205,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
     except InvalidCredentialsError as err:
         raise ConfigEntryAuthFailed from err
     except SimplipyError as err:
-        LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(f"Config entry failed: {err}") from err
 
     simplisafe = SimpliSafe(hass, entry, api)
 
@@ -204,12 +239,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> None:
     """Unload a SimpliSafe config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 class SimpliSafe:
@@ -274,7 +307,10 @@ class SimpliSafe:
         if task and not task.done():
             return
 
-        LOGGER.debug("Starting websocket loop task")
+        if task:
+            LOGGER.debug("Restarting websocket loop task")
+        else:
+            LOGGER.debug("Starting websocket loop task")
 
         self._websocket_task = self.entry.async_create_background_task(
             self._hass, self._async_websocket_loop(), WEBSOCKET_LOOP_TASK_NAME
@@ -288,6 +324,7 @@ class SimpliSafe:
             try:
                 await self._api.websocket.async_connect()
                 await self._api.websocket.async_listen()
+                retries = 0
             except asyncio.CancelledError:
                 await self._api.websocket.async_disconnect()
                 raise
@@ -339,6 +376,9 @@ class SimpliSafe:
             self._hass, DISPATCHER_TOPIC_WEBSOCKET_EVENT.format(event.system_id), event
         )
 
+        # Deprecated: SIMPLISAFE_EVENT bus events are maintained for backwards
+        # compatibility. Use the system event entity and event.received trigger
+        # instead.
         if event.event_type not in WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT:
             return
 
@@ -375,6 +415,11 @@ class SimpliSafe:
             self._system_notifications[system.system_id] = set()
 
             _async_register_base_station(self._hass, self.entry, system)
+
+            # Register each camera as a device:
+            if isinstance(system, SystemV3):
+                for camera in system.cameras.values():
+                    _async_register_camera(self._hass, self.entry, system, camera)
 
             # Future events will come from the websocket, but since subscription to the
             # websocket doesn't provide the most recent event, we grab it from the REST

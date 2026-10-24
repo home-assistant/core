@@ -19,6 +19,7 @@
     'entry': dict({
       'data': dict({
         'dsmr_version': '2.2',
+        'encryption_key': '**REDACTED**',
         'port': '/dev/ttyUSB0',
         'serial_id': '1234',
         'serial_id_gas': '5678',

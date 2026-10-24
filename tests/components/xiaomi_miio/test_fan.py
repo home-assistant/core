@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, Mock, patch
 from miio.integrations.fan.dmaker.fan import FanStatusP5
 from miio.integrations.fan.dmaker.fan_miot import FanStatusMiot
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.xiaomi_miio import MODEL_TO_CLASS_MAP
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import TEST_MAC
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 _MODEL_INFORMATION = {
     "dmaker.fan.p5": {
@@ -43,6 +42,22 @@ _MODEL_INFORMATION = {
         ),
     },
     "dmaker.fan.p18": {
+        "patch_class": "homeassistant.components.xiaomi_miio.FanMiot",
+        "mock_status": FanStatusMiot(
+            {
+                "swing_mode_angle": 90,
+                "buzzer": False,
+                "child_lock": False,
+                "power_off_time": 0,
+                "power": False,
+                "light": True,
+                "mode": 0,
+                "swing_mode": False,
+                "fan_speed": 100,
+            }
+        ),
+    },
+    "dmaker.fan.p33": {
         "patch_class": "homeassistant.components.xiaomi_miio.FanMiot",
         "mock_status": FanStatusMiot(
             {

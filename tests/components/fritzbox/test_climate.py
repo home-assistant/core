@@ -6,6 +6,7 @@ from unittest.mock import Mock, _Call, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from requests.exceptions import HTTPError
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -59,8 +60,6 @@ from . import (
     setup_config_entry,
 )
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = f"{CLIMATE_DOMAIN}.{CONF_FAKE_NAME}"
 

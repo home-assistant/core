@@ -125,6 +125,9 @@ desktop.ini
 /.mypy_cache/*
 /.dmypy.json
 
+# Local copy of HACS custom integrations, made by script/sync_custom_integrations.py
+/.custom_integration_sources/
+
 # Secrets
 .lokalise_token
 
@@ -140,8 +143,15 @@ tmp_cache
 # Will be created from script/split_tests.py
 pytest_buckets.txt
 
+# Will be created from script/gen_integration_paths.py
+.integration_paths.yaml
+
 # AI tooling
 .claude/settings.local.json
 .claude/worktrees/
 .serena/
 
+# Playwright e2e tests
+tests/e2e/node_modules/
+tests/e2e/playwright-report/
+tests/e2e/test-results/

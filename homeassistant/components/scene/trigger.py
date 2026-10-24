@@ -4,7 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import StatelessEntityTriggerBase, Trigger
 
-from . import DOMAIN
+from .const import DOMAIN
 
 
 class SceneActivatedTrigger(StatelessEntityTriggerBase):

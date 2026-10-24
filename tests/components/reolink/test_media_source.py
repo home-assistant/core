@@ -5,6 +5,7 @@ import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.exceptions import ReolinkError
 from reolink_aio.typings import VOD_trigger
 
@@ -44,8 +45,6 @@ from .conftest import (
     TEST_USE_HTTPS,
     TEST_USERNAME2,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_YEAR = 2023
 TEST_MONTH = 11
@@ -149,6 +148,7 @@ async def test_browsing(
     entry_id = config_entry.entry_id
     reolink_host.supported.return_value = 1
     reolink_host.model = "Reolink TrackMix PoE"
+    reolink_host.is_dual_lens = True
     reolink_host.is_nvr = False
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
@@ -263,6 +263,7 @@ async def test_browsing(
     )
 
     reolink_host.model = TEST_HOST_MODEL
+    reolink_host.is_dual_lens = False
 
     # browse event trigger person on a NVR
     reolink_host.is_nvr = True

@@ -8,7 +8,7 @@ from energieleser import (
     EnergieleserError,
     EnergieleserUnknownDeviceError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
@@ -18,9 +18,9 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_SW_VERSION, DOMAIN, device_model_name
 
-STEP_USER_SCHEMA = vol.Schema(
+STEP_USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_HOST): TextSelector(),
     }
 )
 

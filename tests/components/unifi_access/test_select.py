@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api import (
     ApiConnectionError,
@@ -22,8 +23,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FRONT_DOOR_LOCK_RULE_SELECT_ENTITY = "select.front_door_lock_rule"
 BACK_DOOR_LOCK_RULE_SELECT_ENTITY = "select.back_door_lock_rule"

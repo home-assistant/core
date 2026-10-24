@@ -1,9 +1,9 @@
 """Support for manual alarms."""
 
-import datetime
+import datetime as dt
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
@@ -48,9 +48,9 @@ CONF_ALARM_PENDING = "pending"
 CONF_ALARM_TRIGGERED = "triggered"
 
 DEFAULT_ALARM_NAME = "HA Alarm"
-DEFAULT_DELAY_TIME = datetime.timedelta(seconds=60)
-DEFAULT_ARMING_TIME = datetime.timedelta(seconds=60)
-DEFAULT_TRIGGER_TIME = datetime.timedelta(seconds=120)
+DEFAULT_DELAY_TIME = dt.timedelta(seconds=60)
+DEFAULT_ARMING_TIME = dt.timedelta(seconds=60)
+DEFAULT_TRIGGER_TIME = dt.timedelta(seconds=120)
 DEFAULT_DISARM_AFTER_TRIGGER = False
 
 SUPPORTED_STATES = [
@@ -110,66 +110,68 @@ def _state_validator(
     return config
 
 
-def _state_schema(state: str) -> vol.Schema:
+def _state_schema(state: str) -> probatio.Schema:
     """Validate the state."""
     schema = {}
     if state in SUPPORTED_PRETRIGGER_STATES:
-        schema[vol.Optional(CONF_DELAY_TIME)] = vol.All(
+        schema[probatio.Optional(CONF_DELAY_TIME)] = probatio.All(
             cv.time_period, cv.positive_timedelta
         )
-        schema[vol.Optional(CONF_TRIGGER_TIME)] = vol.All(
+        schema[probatio.Optional(CONF_TRIGGER_TIME)] = probatio.All(
             cv.time_period, cv.positive_timedelta
         )
     if state in SUPPORTED_ARMING_STATES:
-        schema[vol.Optional(CONF_ARMING_TIME)] = vol.All(
+        schema[probatio.Optional(CONF_ARMING_TIME)] = probatio.All(
             cv.time_period, cv.positive_timedelta
         )
-    return vol.Schema(schema)
+    return probatio.Schema(schema)
 
 
-PLATFORM_SCHEMA = vol.Schema(
-    vol.All(
+PLATFORM_SCHEMA = probatio.Schema(
+    probatio.All(
         ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
             {
-                vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
-                vol.Optional(CONF_UNIQUE_ID): cv.string,
-                vol.Exclusive(CONF_CODE, "code validation"): cv.string,
-                vol.Exclusive(CONF_CODE_TEMPLATE, "code validation"): cv.template,
-                vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-                vol.Optional(CONF_DELAY_TIME, default=DEFAULT_DELAY_TIME): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-                vol.Optional(CONF_ARMING_TIME, default=DEFAULT_ARMING_TIME): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-                vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-                vol.Optional(
+                probatio.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
+                probatio.Optional(CONF_UNIQUE_ID): cv.string,
+                probatio.Exclusive(CONF_CODE, "code validation"): cv.string,
+                probatio.Exclusive(CONF_CODE_TEMPLATE, "code validation"): cv.template,
+                probatio.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+                probatio.Optional(
+                    CONF_DELAY_TIME, default=DEFAULT_DELAY_TIME
+                ): probatio.All(cv.time_period, cv.positive_timedelta),
+                probatio.Optional(
+                    CONF_ARMING_TIME, default=DEFAULT_ARMING_TIME
+                ): probatio.All(cv.time_period, cv.positive_timedelta),
+                probatio.Optional(
+                    CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME
+                ): probatio.All(cv.time_period, cv.positive_timedelta),
+                probatio.Optional(
                     CONF_DISARM_AFTER_TRIGGER, default=DEFAULT_DISARM_AFTER_TRIGGER
                 ): cv.boolean,
-                vol.Optional(
+                probatio.Optional(
                     CONF_ARMING_STATES, default=SUPPORTED_ARMING_STATES
-                ): vol.All(cv.ensure_list, [vol.In(SUPPORTED_ARMING_STATES)]),
-                vol.Optional(CONF_ALARM_ARMED_AWAY, default={}): _state_schema(
+                ): probatio.All(
+                    probatio.EnsureList(), [probatio.In(SUPPORTED_ARMING_STATES)]
+                ),
+                probatio.Optional(CONF_ALARM_ARMED_AWAY, default={}): _state_schema(
                     AlarmControlPanelState.ARMED_AWAY
                 ),
-                vol.Optional(CONF_ALARM_ARMED_HOME, default={}): _state_schema(
+                probatio.Optional(CONF_ALARM_ARMED_HOME, default={}): _state_schema(
                     AlarmControlPanelState.ARMED_HOME
                 ),
-                vol.Optional(CONF_ALARM_ARMED_NIGHT, default={}): _state_schema(
+                probatio.Optional(CONF_ALARM_ARMED_NIGHT, default={}): _state_schema(
                     AlarmControlPanelState.ARMED_NIGHT
                 ),
-                vol.Optional(CONF_ALARM_ARMED_VACATION, default={}): _state_schema(
+                probatio.Optional(CONF_ALARM_ARMED_VACATION, default={}): _state_schema(
                     AlarmControlPanelState.ARMED_VACATION
                 ),
-                vol.Optional(CONF_ALARM_ARMED_CUSTOM_BYPASS, default={}): _state_schema(
-                    AlarmControlPanelState.ARMED_CUSTOM_BYPASS
-                ),
-                vol.Optional(CONF_ALARM_DISARMED, default={}): _state_schema(
+                probatio.Optional(
+                    CONF_ALARM_ARMED_CUSTOM_BYPASS, default={}
+                ): _state_schema(AlarmControlPanelState.ARMED_CUSTOM_BYPASS),
+                probatio.Optional(CONF_ALARM_DISARMED, default={}): _state_schema(
                     AlarmControlPanelState.DISARMED
                 ),
-                vol.Optional(CONF_ALARM_TRIGGERED, default={}): _state_schema(
+                probatio.Optional(CONF_ALARM_TRIGGERED, default={}): _state_schema(
                     AlarmControlPanelState.TRIGGERED
                 ),
             },
@@ -234,7 +236,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self._attr_code_arm_required = code_arm_required
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state: AlarmControlPanelState = self._state
-        self._state_ts: datetime.datetime = dt_util.utcnow()
+        self._state_ts: dt.datetime = dt_util.utcnow()
 
         self._delay_time_by_state: dict[AlarmControlPanelState, Any] = {
             state: config[state][CONF_DELAY_TIME]
@@ -261,7 +263,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         if self._state == AlarmControlPanelState.TRIGGERED:
             if self._within_pending_time(self._state):
                 return AlarmControlPanelState.PENDING
-            trigger_time: datetime.timedelta = self._trigger_time_by_state[
+            trigger_time: dt.timedelta = self._trigger_time_by_state[
                 self._previous_state
             ]
             if (
@@ -289,14 +291,14 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             return self._previous_state
         return self._state
 
-    def _arming_time(self, state: AlarmControlPanelState) -> datetime.timedelta:
+    def _arming_time(self, state: AlarmControlPanelState) -> dt.timedelta:
         """Get the arming time."""
-        arming_time: datetime.timedelta = self._arming_time_by_state[state]
+        arming_time: dt.timedelta = self._arming_time_by_state[state]
         return arming_time
 
-    def _pending_time(self, state: AlarmControlPanelState) -> datetime.timedelta:
+    def _pending_time(self, state: AlarmControlPanelState) -> dt.timedelta:
         """Get the pending time."""
-        delay_time: datetime.timedelta = self._delay_time_by_state[self._previous_state]
+        delay_time: dt.timedelta = self._delay_time_by_state[self._previous_state]
         return delay_time
 
     def _within_arming_time(self, state: AlarmControlPanelState) -> bool:
@@ -455,7 +457,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         return {ATTR_PREVIOUS_STATE: prev_state, ATTR_NEXT_STATE: state}
 
     @callback
-    def async_scheduled_update(self, now: datetime.datetime) -> None:
+    def async_scheduled_update(self, now: dt.datetime) -> None:
         """Update state at a scheduled point in time."""
         self.async_write_ha_state()
 

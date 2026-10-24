@@ -2,13 +2,13 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
     PLATFORM_SCHEMA as BUTTON_PLATFORM_SCHEMA,
-    SERVICE_PRESS,
     ButtonEntity,
+    ButtonService,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -35,9 +35,9 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = BUTTON_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(BUTTON_DOMAIN),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(BUTTON_DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -116,7 +116,7 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         """Forward the press to all buttons in the group."""
         await self.hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {ATTR_ENTITY_ID: self._entity_ids},
             blocking=True,
             context=self._context,

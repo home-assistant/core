@@ -3,6 +3,7 @@
 import logging
 
 import pytest
+from pytest_homeassistant.common import MockEntity, MockPlatform, mock_platform
 
 from homeassistant.components.button import DOMAIN, ButtonEntity
 from homeassistant.core import HomeAssistant
@@ -10,8 +11,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import TEST_DOMAIN
-
-from tests.common import MockEntity, MockPlatform, mock_platform
 
 _LOGGER = logging.getLogger(__name__)
 

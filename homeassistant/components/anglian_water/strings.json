@@ -4,12 +4,44 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
+      "account_not_found": "These credentials do not have access to the configured billing account.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "consent_required": "You need to accept the terms and conditions for your Anglian Water account before using this integration. Log in to their website for further information.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_code": "The security code provided is invalid. Please check your email for the correct code.",
       "smart_meter_unavailable": "This account does not have any smart meters associated with it. If this is unexpected, enter your Billing Account Number found at the top of your latest bill.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "mfa": {
+        "data": {
+          "code": "Security code"
+        },
+        "data_description": {
+          "code": "The security code sent to your email."
+        },
+        "description": "Two-factor authentication is enabled on your account. Check your email for the security code. It will come from `no-reply@anglianwater.co.uk`."
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::anglian_water::config::step::user::data_description::password%]",
+          "username": "[%key:component::anglian_water::config::step::user::data_description::username%]"
+        },
+        "description": "[%key:component::anglian_water::config::step::user::description%]"
+      },
+      "reauth_mfa": {
+        "data": {
+          "code": "[%key:component::anglian_water::config::step::mfa::data::code%]"
+        },
+        "data_description": {
+          "code": "[%key:component::anglian_water::config::step::mfa::data_description::code%]"
+        },
+        "description": "[%key:component::anglian_water::config::step::mfa::description%]"
+      },
       "select_account": {
         "data": {
           "account_number": "Billing account number"
@@ -55,11 +87,20 @@
     "auth_expired": {
       "message": "Authentication token expired"
     },
+    "consent_required": {
+      "message": "The terms and conditions for your Anglian Water account have been updated. Please visit and log in to your Anglian Water account to accept the new terms and conditions."
+    },
     "service_unavailable": {
-      "message": "Anglian Water services are currently unavailable for maintenance."
+      "message": "Anglian Water web services are currently unavailable, check the logs for more details."
     },
     "smart_meter_unavailable": {
       "message": "This account no longer has a smart meter associated with it."
+    }
+  },
+  "issues": {
+    "consent_required": {
+      "description": "The terms and conditions for account {account_number} have been updated. Please visit and log in to your Anglian Water account to accept the new terms and conditions.\n\nThis issue will automatically resolve once the new conditions have been accepted and on the next refresh cycle.",
+      "title": "Anglian Water terms and conditions updated"
     }
   }
 }

@@ -3,16 +3,22 @@
 from bleak.exc import BleakError
 from eurotronic_cometblue_ha import AsyncCometBlue
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
+    async_address_reachability_diagnostics,
+    async_ble_device_from_address,
+)
 from homeassistant.const import CONF_ADDRESS, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
+from .services import async_setup_services
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.CLIMATE,
@@ -21,7 +27,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> None:
     """Set up Eurotronic Comet Blue from a config entry."""
 
     address = entry.data[CONF_ADDRESS]
@@ -30,7 +36,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
 
     if not ble_device:
         raise ConfigEntryNotReady(
-            f"Couldn't find a nearby device for address: {entry.data[CONF_ADDRESS]}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "address": address,
+                "reason": async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
 
     cometblue_device = AsyncCometBlue(
@@ -46,11 +61,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
             except TimeoutError as ex:
                 # This likely means PIN was incorrect on Linux and ESPHome backends
                 raise ConfigEntryError(
-                    "Failed to read battery level, likely due to incorrect PIN"
+                    translation_domain=DOMAIN,
+                    translation_key="incorrect_pin",
                 ) from ex
     except BleakError as ex:
         raise ConfigEntryNotReady(
-            f"Failed to get device info from '{cometblue_device.device.address}'"
+            translation_domain=DOMAIN,
+            translation_key="cannot_get_device_info",
+            translation_placeholders={"address": address},
         ) from ex
 
     device_registry = dr.async_get(hass)
@@ -58,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, address)},
         connections={(dr.CONNECTION_BLUETOOTH, address)},
-        name=f"{ble_device_info['model']} {cometblue_device.device.address}",
+        name=f"{ble_device_info['model']} {address}",
         manufacturer=ble_device_info["manufacturer"],
         model=ble_device_info["model"],
         sw_version=ble_device_info["version"],
@@ -74,9 +92,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Eurotronic Comet Blue integration."""
+    async_setup_services(hass)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

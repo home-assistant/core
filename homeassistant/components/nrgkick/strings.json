@@ -2,11 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "json_api_disabled": "JSON API is disabled on the device. Enable it in the NRGkick mobile app under Extended \u2192 Local API \u2192 API Variants.",
       "no_serial_number": "Device does not provide a serial number",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The device does not match the previous device"
     },
     "error": {
@@ -267,9 +264,6 @@
       "n_current": {
         "name": "Neutral current"
       },
-      "network_rssi": {
-        "name": "Signal strength"
-      },
       "network_ssid": {
         "name": "SSID"
       },
@@ -349,9 +343,6 @@
     }
   },
   "exceptions": {
-    "auth_failure": {
-      "message": "Authentication failed (HTTP {status_code}). Verify BasicAuth settings. Target: {url}"
-    },
     "authentication_error": {
       "message": "Authentication failed. Please check your credentials."
     },
@@ -359,19 +350,10 @@
       "message": "The device rejected the request: {reason}"
     },
     "communication_error": {
-      "message": "Communication error with NRGkick device: {error}"
-    },
-    "connection_failed": {
-      "message": "Network connection failed: {error_details}. Target: {url}"
-    },
-    "connection_timeout": {
-      "message": "Connection timeout after {attempts} attempts. Check power and network. Target: {url}"
-    },
-    "generic_error": {
-      "message": "Connection failed: {error_details}. Target: {url}"
+      "message": "Communication error with the NRGkick device."
     },
     "http_error": {
-      "message": "Device returned HTTP error {status_code} ({status_message}). URL: {url}"
+      "message": "The NRGkick device returned an HTTP error ({status})."
     },
     "invalid_response": {
       "message": "The device returned an invalid response."
@@ -379,8 +361,11 @@
     "json_api_disabled": {
       "message": "JSON API is disabled on the device. Enable it in the NRGkick mobile app under Extended \u2192 Local API \u2192 API Variants."
     },
-    "unknown_error": {
-      "message": "An unknown error occurred."
+    "timeout": {
+      "message": "The NRGkick device did not respond in time. Make sure it is switched on and connected to your network."
+    },
+    "unreachable": {
+      "message": "Could not connect to the NRGkick device. Make sure it is switched on and that the host or IP address is correct."
     }
   }
 }

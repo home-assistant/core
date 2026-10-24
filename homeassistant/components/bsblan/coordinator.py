@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the BSB-LAN integration."""
 
-from dataclasses import dataclass
+import asyncio
+from dataclasses import dataclass, field, replace
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
@@ -9,6 +10,8 @@ from bsblan import (
     BSBLANAuthError,
     BSBLANConnectionError,
     BSBLANError,
+    BSBLANMalformedResponseError,
+    HeatingTimeSwitchPrograms,
     HotWaterConfig,
     HotWaterSchedule,
     HotWaterState,
@@ -17,7 +20,7 @@ from bsblan import (
 )
 
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -58,6 +61,7 @@ class BSBLanSlowData:
 
     dhw_config: HotWaterConfig | None = None
     dhw_schedule: HotWaterSchedule | None = None
+    heating_schedule: dict[int, HeatingTimeSwitchPrograms] = field(default_factory=dict)
 
 
 class BSBLanCoordinator[T](DataUpdateCoordinator[T]):
@@ -103,10 +107,18 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             update_interval=SCAN_INTERVAL_FAST,
         )
         self.circuits: list[int] = circuits
+        # Serializes full polls and re-reads after a write, so a poll that
+        # started before a write cannot publish its older values afterwards
+        self._read_lock = asyncio.Lock()
 
     @override
     async def _async_update_data(self) -> BSBLanFastData:
         """Fetch fast-changing data from the BSB-LAN device."""
+        async with self._read_lock:
+            return await self._async_fetch_data()
+
+    async def _async_fetch_data(self) -> BSBLanFastData:
+        """Read every circuit, the sensors and the hot water state."""
         states: dict[int, State] = {}
         host = self.config_entry.data[CONF_HOST]
         try:
@@ -162,6 +174,45 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             dhw=dhw,
         )
 
+    async def async_refresh_circuit(self, circuit: int) -> None:
+        """Re-read a single circuit after a write.
+
+        Much faster than a full refresh, which reads every circuit, the
+        sensors and the hot water state one parameter at a time. If the read
+        fails, the next scheduled refresh catches up.
+        """
+        async with self._read_lock:
+            try:
+                state = await self.client.state(include=STATE_INCLUDE, circuit=circuit)
+            except (BSBLANError, TimeoutError) as err:
+                LOGGER.debug(
+                    "Failed to re-read circuit %d after a write: %s", circuit, err
+                )
+                return
+            self._async_publish(
+                replace(self.data, states={**self.data.states, circuit: state})
+            )
+
+    async def async_refresh_hot_water(self) -> None:
+        """Re-read the hot water state after a write."""
+        async with self._read_lock:
+            try:
+                dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
+            except (BSBLANError, TimeoutError) as err:
+                LOGGER.debug("Failed to re-read hot water state after a write: %s", err)
+                return
+            self._async_publish(replace(self.data, dhw=dhw))
+
+    @callback
+    def _async_publish(self, data: BSBLanFastData) -> None:
+        """Publish partially refreshed data.
+
+        Unlike async_set_updated_data, this keeps the next full poll on
+        schedule, so frequent writes cannot postpone it.
+        """
+        self.data = data
+        self.async_update_listeners()
+
 
 class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
     """The BSB-LAN slow update coordinator for infrequently changing data."""
@@ -171,6 +222,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         hass: HomeAssistant,
         config_entry: BSBLanConfigEntry,
         client: BSBLAN,
+        circuits: list[int],
     ) -> None:
         """Initialize the BSB-LAN slow coordinator."""
         super().__init__(
@@ -180,36 +232,138 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             name=f"{DOMAIN}_slow_{config_entry.data[CONF_HOST]}",
             update_interval=SCAN_INTERVAL_SLOW,
         )
+        self.circuits: list[int] = circuits
+        self._dhw_schedule_refresh_pending = True
+        self._dhw_schedule_refresh_generation = 0
+        self._heating_schedule_refresh_pending = set(circuits)
+        self._heating_schedule_refresh_generations = dict.fromkeys(circuits, 0)
 
     @override
     async def _async_update_data(self) -> BSBLanSlowData:
-        """Fetch slow-changing data from the BSB-LAN device."""
-        try:
-            # Client is already initialized in async_setup_entry
-            # Use include filtering to only fetch parameters we actually use
-            dhw_config = await self.client.hot_water_config(include=DHW_CONFIG_INCLUDE)
-            dhw_schedule = await self.client.hot_water_schedule()
+        """Fetch slow-changing data from the BSB-LAN device.
 
+        Only the DHW config is polled here. Schedules change rarely and are
+        refreshed separately (on startup and after a write) to avoid extra
+        serial-bus traffic on every interval, so they are carried over from
+        the previous update.
+        """
+        previous = self.data or BSBLanSlowData()
+        dhw_config: HotWaterConfig | None
+        try:
+            dhw_config = await self.client.hot_water_config(include=DHW_CONFIG_INCLUDE)
         except (BSBLANConnectionError, BSBLANAuthError) as err:
-            # If config update fails, keep existing data
             LOGGER.debug(
                 "Failed to fetch DHW config from %s: %s",
                 self.config_entry.data[CONF_HOST],
                 err,
             )
-            if self.data:
-                return self.data
-            # First fetch failed, return empty data
-            return BSBLanSlowData()
-        except BSBLANError, AttributeError:
-            # Device does not support DHW functionality
+            dhw_config = previous.dhw_config
+        except BSBLANError, AttributeError, TimeoutError:
             LOGGER.debug(
                 "DHW (Domestic Hot Water) not available on device at %s",
                 self.config_entry.data[CONF_HOST],
             )
-            return BSBLanSlowData()
+            dhw_config = previous.dhw_config
+
+        dhw_schedule = previous.dhw_schedule
+        if self._dhw_schedule_refresh_pending:
+            refresh_generation = self._dhw_schedule_refresh_generation
+            refreshed_schedule, retryable = await self._async_fetch_dhw_schedule()
+            if refreshed_schedule is not None:
+                dhw_schedule = refreshed_schedule
+                if refresh_generation == self._dhw_schedule_refresh_generation:
+                    self._dhw_schedule_refresh_pending = False
+            elif (
+                refresh_generation == self._dhw_schedule_refresh_generation
+                and not retryable
+            ):
+                self._dhw_schedule_refresh_pending = False
+
+        heating_schedule = dict(previous.heating_schedule)
+        for circuit in self._heating_schedule_refresh_pending.copy():
+            refresh_generation = self._heating_schedule_refresh_generations[circuit]
+            (
+                refreshed_heating_schedule,
+                retryable,
+            ) = await self._async_fetch_heating_schedule(circuit)
+            if refreshed_heating_schedule is not None:
+                heating_schedule[circuit] = refreshed_heating_schedule
+                if (
+                    refresh_generation
+                    == self._heating_schedule_refresh_generations[circuit]
+                ):
+                    self._heating_schedule_refresh_pending.discard(circuit)
+            elif (
+                refresh_generation
+                == self._heating_schedule_refresh_generations[circuit]
+                and not retryable
+            ):
+                self._heating_schedule_refresh_pending.discard(circuit)
 
         return BSBLanSlowData(
             dhw_config=dhw_config,
             dhw_schedule=dhw_schedule,
+            heating_schedule=heating_schedule,
         )
+
+    async def async_refresh_schedule_after_write(self) -> None:
+        """Refresh slow data after a successful schedule write."""
+        self._dhw_schedule_refresh_pending = True
+        self._dhw_schedule_refresh_generation += 1
+        await self.async_refresh()
+
+    async def async_refresh_heating_schedule_after_write(self, circuit: int) -> None:
+        """Refresh a heating schedule after a successful write."""
+        self._heating_schedule_refresh_pending.add(circuit)
+        self._heating_schedule_refresh_generations[circuit] += 1
+        await self.async_refresh()
+
+    async def _async_fetch_dhw_schedule(
+        self,
+    ) -> tuple[HotWaterSchedule | None, bool]:
+        """Fetch the DHW schedule, returning None if unavailable."""
+        try:
+            return await self.client.hot_water_schedule(), False
+        except (
+            BSBLANConnectionError,
+            BSBLANAuthError,
+            BSBLANMalformedResponseError,
+            TimeoutError,
+        ):
+            LOGGER.debug(
+                "DHW schedule not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
+            return None, True
+        except BSBLANError, AttributeError:
+            LOGGER.debug(
+                "DHW schedule not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
+            return None, False
+
+    async def _async_fetch_heating_schedule(
+        self, circuit: int
+    ) -> tuple[HeatingTimeSwitchPrograms | None, bool]:
+        """Fetch a heating schedule, returning None if unavailable."""
+        try:
+            return await self.client.heating_schedule(circuit=circuit), False
+        except (
+            BSBLANConnectionError,
+            BSBLANAuthError,
+            BSBLANMalformedResponseError,
+            TimeoutError,
+        ):
+            LOGGER.debug(
+                "Heating schedule not available for circuit %d on device at %s",
+                circuit,
+                self.config_entry.data[CONF_HOST],
+            )
+            return None, True
+        except BSBLANError, AttributeError:
+            LOGGER.debug(
+                "Heating schedule not available for circuit %d on device at %s",
+                circuit,
+                self.config_entry.data[CONF_HOST],
+            )
+            return None, False

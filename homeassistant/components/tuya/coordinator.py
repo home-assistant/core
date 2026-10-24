@@ -149,9 +149,9 @@ class DeviceListener(SharingDeviceListener):
         """Register device with Home Assistant."""
         TUYA_QUIRKS_REGISTRY.initialise_device_quirk(device)
 
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=self._entry.entry_id,
-            **get_device_info(device, initial=True),
+            device_info=get_device_info(device),
         )
 
     def remove_device(self, device_id: str) -> None:
@@ -163,8 +163,8 @@ class DeviceListener(SharingDeviceListener):
     def async_remove_device(self, device_id: str) -> None:
         """Remove device from Home Assistant."""
         device_registry = dr.async_get(self.hass)
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), self._entry.entry_id
         )
         if device_entry is not None:
             device_registry.async_remove_device(device_entry.id)
