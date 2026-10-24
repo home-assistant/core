@@ -711,6 +711,7 @@ FLOWS = {
         "ruuvi_gateway",
         "ruuvitag_ble",
         "rympro",
+        "ryse",
         "sabnzbd",
         "saj",
         "samsung_exlink",
