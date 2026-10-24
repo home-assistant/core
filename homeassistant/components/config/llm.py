@@ -224,7 +224,7 @@ class ReloadConfigEntryTool(Tool):
             probatio.Required(
                 "entry_id",
                 description=(
-                    "The entry_id of the config entry to reload (e.g. 'hue:8k2m')."
+                    "The entry_id of the config entry to reload (e.g. 'hue:8K2M')."
                 ),
             ): _NON_EMPTY_STRING,
         }

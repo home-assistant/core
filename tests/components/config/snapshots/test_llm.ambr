@@ -38,7 +38,7 @@
       'additionalProperties': False,
       'properties': dict({
         'entry_id': dict({
-          'description': "The entry_id of the config entry to reload (e.g. 'hue:8k2m').",
+          'description': "The entry_id of the config entry to reload (e.g. 'hue:8K2M').",
           'format': 'strip',
           'type': 'string',
         }),
