@@ -21,15 +21,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: EgaugeConfigEntry) -> No
 
     # Set up main device
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, coordinator.serial_number)},
-            name=coordinator.hostname,
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            serial_number=coordinator.serial_number,
-        ),
+        identifiers={(DOMAIN, coordinator.serial_number)},
+        name=coordinator.hostname,
+        manufacturer=MANUFACTURER,
+        model=MODEL,
+        serial_number=coordinator.serial_number,
     )
 
     # Setup sensor platform

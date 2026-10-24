@@ -40,6 +40,8 @@ from .const import (
     CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverEntityStateAttribute,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from .entity import CoverEntity, CoverEntityDescription
@@ -89,6 +91,8 @@ __all__ = [
     "CoverEntityDescription",
     "CoverEntityFeature",
     "CoverEntityStateAttribute",
+    "CoverService",
+    "CoverServiceArgument",
     "CoverState",
     "make_cover_closed_trigger",
     "make_cover_is_closed_condition",

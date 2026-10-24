@@ -73,6 +73,8 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     __last_event_triggered: datetime | None = None
     __last_event_type: str | None = None
     __last_event_attributes: dict[str, Any] | None = None
+    __doorbell_event_type_checked: bool = False
+    _event_types_known: bool = True
 
     @cached_property
     @override
@@ -158,20 +160,6 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         await super().async_internal_added_to_hass()
 
         if (
-            self.device_class == EventDeviceClass.DOORBELL
-            and DoorbellEventType.RING not in self.event_types
-        ):
-            report_issue = self._suggest_report_issue()
-            _LOGGER.warning(
-                "Entity %s is a doorbell event entity but does not support "
-                "the '%s' event type. This will stop working in "
-                "Home Assistant 2027.4, please %s",
-                self.entity_id,
-                DoorbellEventType.RING,
-                report_issue,
-            )
-
-        if (
             (state := await self.async_get_last_state())
             and state.state is not None
             and (event_data := await self.async_get_last_event_data())
@@ -179,6 +167,35 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
             self.__last_event_triggered = dt_util.parse_datetime(state.state)
             self.__last_event_type = event_data.last_event_type
             self.__last_event_attributes = event_data.last_event_attributes
+
+    @final
+    @override
+    def _async_write_ha_state(self) -> None:
+        """Write the state to the state machine.
+
+        event_types may be resolved asynchronously (for example by a
+        template) after the entity is added to hass, so the doorbell
+        check is deferred to the first state write where event_types is
+        actually known instead of running at add-to-hass time.
+        """
+        if (
+            not self.__doorbell_event_type_checked
+            and self._event_types_known
+            and self.device_class == EventDeviceClass.DOORBELL
+        ):
+            self.__doorbell_event_type_checked = True
+            if DoorbellEventType.RING not in self.event_types:
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Entity %s is a doorbell event entity but does not support "
+                    "the '%s' event type. This will stop working in "
+                    "Home Assistant 2027.4, please %s",
+                    self.entity_id,
+                    DoorbellEventType.RING,
+                    report_issue,
+                )
+
+        super()._async_write_ha_state()
 
     @property
     @override

@@ -19,6 +19,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 FIXTURES = [
     "air_quality_sensor",
+    "aqara_camera_hub_g350",
     "aqara_door_window_p2",
     "aqara_light_switch_h2_us_4099",
     "aqara_light_switch_h2_us_4100",
@@ -62,6 +63,7 @@ FIXTURES = [
     "longan_link_thermostat",
     "mock_air_purifier",
     "mock_battery_storage",
+    "mock_camera",
     "mock_chime",
     "mock_closure_covering_lift",
     "mock_closure_roof_window",
