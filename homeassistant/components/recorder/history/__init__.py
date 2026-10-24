@@ -422,6 +422,7 @@ def _state_changed_during_period_stmt(
     limit: int | None,
     include_start_time_state: bool,
     run_start_ts: float | None,
+    descending: bool,
 ) -> Select | CompoundSelect:
     stmt = (
         _stmt_and_join_attributes(no_attributes, False, True)
@@ -442,7 +443,14 @@ def _state_changed_during_period_stmt(
         )
     if limit:
         stmt = stmt.limit(limit)
-    stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
+    if descending and limit:
+        # Select the newest samples before restoring the converter's ascending order.
+        subquery = stmt.order_by(States.last_updated_ts.desc()).subquery()
+        stmt = _select_from_subquery(subquery, no_attributes, False, True).order_by(
+            subquery.c.last_updated_ts
+        )
+    else:
+        stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
     if not include_start_time_state or not run_start_ts:
         # If we do not need the start time state or the
         # oldest possible timestamp is newer than the start time
@@ -519,11 +527,13 @@ def state_changes_during_period(
                 limit,
                 include_start_time_state,
                 oldest_ts,
+                descending,
             ),
             track_on=[
                 bool(end_time_ts),
                 no_attributes,
                 bool(limit),
+                descending,
                 include_start_time_state,
             ],
         )
