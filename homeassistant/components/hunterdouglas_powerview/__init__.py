@@ -67,17 +67,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
 
     # manual registration of the hub
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, hub.mac_address)},
-            identifiers={(DOMAIN, hub.serial_number)},
-            manufacturer=MANUFACTURER,
-            name=hub.name,
-            model=hub.model,
-            sw_version=hub.firmware,
-            hw_version=hub.main_processor_version.name,
-        ),
+        connections={(dr.CONNECTION_NETWORK_MAC, hub.mac_address)},
+        identifiers={(DOMAIN, hub.serial_number)},
+        manufacturer=MANUFACTURER,
+        name=hub.name,
+        model=hub.model,
+        sw_version=hub.firmware,
+        hw_version=hub.main_processor_version.name,
     )
 
     try:
