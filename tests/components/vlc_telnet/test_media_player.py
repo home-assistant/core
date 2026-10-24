@@ -11,6 +11,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -20,6 +21,7 @@ from homeassistant.components.media_player import (
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     MediaType,
+    RepeatMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -29,6 +31,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
+    SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
@@ -112,6 +115,18 @@ ENTITY_ID = "media_player.vlc_telnet"
             "random",
             id="shuffle_set",
         ),
+        pytest.param(
+            SERVICE_REPEAT_SET,
+            {ATTR_MEDIA_REPEAT: RepeatMode.ONE},
+            "repeat",
+            id="repeat_set_repeat",
+        ),
+        pytest.param(
+            SERVICE_REPEAT_SET,
+            {ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+            "loop",
+            id="repeat_set_loop",
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -179,3 +194,70 @@ async def test_update_logs_error_instead_of_raising(
     assert state
     assert state.state == expected_state
     assert expected_log in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("repeat", "repeat_command", "loop_command"),
+    [
+        pytest.param(RepeatMode.OFF, "off", "off", id="off"),
+        pytest.param(RepeatMode.ONE, "on", "off", id="one"),
+        pytest.param(RepeatMode.ALL, "off", "on", id="all"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_repeat_set(
+    hass: HomeAssistant,
+    vlc_mock: MagicMock,
+    repeat: RepeatMode,
+    repeat_command: str,
+    loop_command: str,
+) -> None:
+    """Test that repeat_set sends the VLC repeat and loop commands."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: repeat},
+        blocking=True,
+    )
+
+    vlc_mock.repeat.assert_awaited_once_with(repeat_command)
+    vlc_mock.loop.assert_awaited_once_with(loop_command)
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_MEDIA_REPEAT] == repeat
+
+
+@pytest.mark.parametrize(
+    "error_class",
+    [
+        pytest.param(CommandError, id="command_error"),
+        pytest.param(ConnectError, id="connect_error"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_repeat_set_partial_failure_clears_repeat(
+    hass: HomeAssistant,
+    vlc_mock: MagicMock,
+    error_class: type[Exception],
+) -> None:
+    """Test that a failed loop command after a successful repeat clears the mode."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ONE},
+        blocking=True,
+    )
+    vlc_mock.loop.side_effect = error_class("test error")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_REPEAT_SET,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+            blocking=True,
+        )
+
+    vlc_mock.repeat.assert_awaited_with("off")
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert ATTR_MEDIA_REPEAT not in state.attributes

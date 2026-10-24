@@ -14,6 +14,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    RepeatMode,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
@@ -109,6 +110,7 @@ class VlcDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.REPEAT_SET
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.SHUFFLE_SET
         | MediaPlayerEntityFeature.STOP
@@ -315,6 +317,23 @@ class VlcDevice(MediaPlayerEntity):
         """Enable/disable shuffle mode."""
         shuffle_command: Literal["on", "off"] = "on" if shuffle else "off"
         await self._vlc.random(shuffle_command)
+
+    @catch_vlc_errors()
+    @override
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Set repeat mode."""
+        repeat_command: Literal["on", "off"] = (
+            "on" if repeat == RepeatMode.ONE else "off"
+        )
+        loop_command: Literal["on", "off"] = "on" if repeat == RepeatMode.ALL else "off"
+        try:
+            await self._vlc.repeat(repeat_command)
+            await self._vlc.loop(loop_command)
+        except CommandError, ConnectError:
+            self._attr_repeat = None
+            self.async_write_ha_state()
+            raise
+        self._attr_repeat = repeat
 
     @override
     async def async_browse_media(
