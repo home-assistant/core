@@ -1,6 +1,6 @@
 """Websocket tests for Voice Assistant integration."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, AsyncIterable, Generator
 from dataclasses import FrozenInstanceError
 from pathlib import Path
 from typing import Any
@@ -2543,6 +2543,300 @@ async def test_stt_vad_enabled_based_on_audio_processing(
 
         # VAD should NOT be created when requires_external_vad is False
         mock_vad.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    (
+        "requires_external_vad",
+        "is_vad_enabled",
+        "segmenter_in_command",
+        "segmenter_results",
+        "fail_process_audio",
+        "expected_events",
+    ),
+    [
+        pytest.param(
+            False,
+            True,
+            False,
+            [],
+            False,
+            [
+                PipelineEventType.STT_VAD_START,
+                PipelineEventType.STT_VAD_END,
+                PipelineEventType.STT_END,
+            ],
+            id="provider_endpointing",
+        ),
+        pytest.param(
+            False,
+            False,
+            False,
+            [],
+            False,
+            [PipelineEventType.STT_END],
+            id="provider_endpointing_vad_disabled",
+        ),
+        pytest.param(
+            True,
+            True,
+            True,
+            [True, True, True],
+            False,
+            [
+                PipelineEventType.STT_VAD_START,
+                PipelineEventType.STT_VAD_END,
+                PipelineEventType.STT_END,
+            ],
+            id="provider_ends_before_segmenter",
+        ),
+        pytest.param(
+            True,
+            True,
+            False,
+            [True, True, True],
+            False,
+            [
+                PipelineEventType.STT_VAD_END,
+                PipelineEventType.STT_END,
+            ],
+            id="provider_ends_before_speech_detected",
+        ),
+        pytest.param(
+            True,
+            True,
+            True,
+            [True, False],
+            False,
+            [
+                PipelineEventType.STT_VAD_START,
+                PipelineEventType.STT_VAD_END,
+                PipelineEventType.STT_END,
+            ],
+            id="segmenter_ends_speech",
+        ),
+        pytest.param(
+            False,
+            True,
+            False,
+            [],
+            True,
+            [
+                PipelineEventType.STT_VAD_START,
+                PipelineEventType.STT_VAD_END,
+                PipelineEventType.ERROR,
+            ],
+            id="provider_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_stt_vad_end_sent_when_provider_ends_stream(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSTTProvider,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    mock_chat_session: chat_session.ChatSession,
+    requires_external_vad: bool,
+    is_vad_enabled: bool,
+    segmenter_in_command: bool,
+    segmenter_results: list[bool],
+    fail_process_audio: bool,
+    expected_events: list[PipelineEventType],
+) -> None:
+    """Test STT_VAD_END is sent once when the provider ends the stream.
+
+    Satellites rely on STT_VAD_END to stop recording, so it must be sent even when
+    the segmenter doesn't run or the provider returns before it detects silence.
+    """
+
+    async def audio_data():
+        yield make_10ms_chunk(b"speech!!")
+        yield make_10ms_chunk(b"speech!!")
+        yield b""
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.default_pipeline.VoiceCommandSegmenter"
+        ) as mock_vad,
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_engine",
+            return_value=mock_stt_provider,
+        ),
+    ):
+        mock_stt_provider._audio_processing = stt.SpeechAudioProcessing(
+            requires_external_vad=requires_external_vad,
+            prefers_auto_gain_enabled=False,
+            prefers_noise_reduction_enabled=False,
+        )
+        mock_stt_provider.fail_process_audio = fail_process_audio
+
+        mock_vad.return_value.in_command = segmenter_in_command
+        mock_vad.return_value.process.side_effect = segmenter_results
+
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            session=mock_chat_session,
+            device_id=None,
+            stt_metadata=stt.SpeechMetadata(
+                language="en-US",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.STT,
+                end_stage=assist_pipeline.PipelineStage.STT,
+                event_callback=events.append,
+                audio_settings=assist_pipeline.AudioSettings(
+                    is_vad_enabled=is_vad_enabled
+                ),
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+    assert [
+        event.type
+        for event in events
+        if event.type
+        in (
+            PipelineEventType.STT_VAD_START,
+            PipelineEventType.STT_VAD_END,
+            PipelineEventType.STT_END,
+            PipelineEventType.ERROR,
+        )
+    ] == expected_events
+
+
+@pytest.mark.parametrize(
+    ("requires_external_vad", "segmenter_in_command", "expected_events"),
+    [
+        pytest.param(
+            False,
+            False,
+            [
+                PipelineEventType.STT_VAD_START,
+                PipelineEventType.STT_VAD_END,
+                PipelineEventType.STT_END,
+            ],
+            id="provider_endpointing",
+        ),
+        pytest.param(
+            True,
+            True,
+            [
+                PipelineEventType.STT_VAD_START,
+                PipelineEventType.STT_VAD_END,
+                PipelineEventType.STT_END,
+            ],
+            id="speech_detected",
+        ),
+        pytest.param(
+            True,
+            False,
+            [PipelineEventType.STT_VAD_END, PipelineEventType.STT_END],
+            id="speech_not_detected",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_stt_vad_end_sent_when_provider_returns_with_open_input(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSTTProvider,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    mock_chat_session: chat_session.ChatSession,
+    requires_external_vad: bool,
+    segmenter_in_command: bool,
+    expected_events: list[PipelineEventType],
+) -> None:
+    """Test STT_VAD_END is sent when the provider returns while audio keeps coming."""
+
+    async def audio_data() -> AsyncGenerator[bytes]:
+        # The microphone never stops, only the provider ends the voice command
+        while True:
+            yield make_10ms_chunk(b"speech!!")
+
+    async def process_one_chunk(
+        metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> stt.SpeechResult:
+        async for _chunk in stream:
+            break
+        return stt.SpeechResult("test_result", stt.SpeechResultState.SUCCESS)
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.default_pipeline.VoiceCommandSegmenter"
+        ) as mock_vad,
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_engine",
+            return_value=mock_stt_provider,
+        ),
+        patch.object(
+            mock_stt_provider, "async_process_audio_stream", process_one_chunk
+        ),
+    ):
+        mock_stt_provider._audio_processing = stt.SpeechAudioProcessing(
+            requires_external_vad=requires_external_vad,
+            prefers_auto_gain_enabled=False,
+            prefers_noise_reduction_enabled=False,
+        )
+
+        # The segmenter never detects the end of speech
+        mock_vad.return_value.in_command = segmenter_in_command
+        mock_vad.return_value.process.return_value = True
+
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            session=mock_chat_session,
+            device_id=None,
+            stt_metadata=stt.SpeechMetadata(
+                language="en-US",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.STT,
+                end_stage=assist_pipeline.PipelineStage.STT,
+                event_callback=events.append,
+                audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+    assert [
+        event.type
+        for event in events
+        if event.type
+        in (
+            PipelineEventType.STT_VAD_START,
+            PipelineEventType.STT_VAD_END,
+            PipelineEventType.STT_END,
+        )
+    ] == expected_events
 
 
 async def test_invalid_pipeline_does_not_create_tts_stream(

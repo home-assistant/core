@@ -158,6 +158,8 @@ class _DefaultPipelineProcessor:
     _intent_agent_only: bool = field(init=False, default=False)
     _streamed_response_text: bool = field(init=False, default=False)
     _invalidated: bool = field(init=False, default=False)
+    _stt_last_timestamp_ms: int = field(init=False, default=0)
+    _stt_vad_end_sent: bool = field(init=False, default=False)
     intent_agent: conversation.AgentInfo | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
@@ -466,6 +468,17 @@ class _DefaultPipelineProcessor:
 
         _LOGGER.debug("speech-to-text result %s", result)
 
+        # Satellites only stop recording on STT_VAD_END, which the segmenter never
+        # sends if the provider ends the stream first or does its own endpointing
+        if self.host.audio_settings.is_vad_enabled and not self._stt_vad_end_sent:
+            self.host.process_event(
+                PipelineEvent(
+                    PipelineEventType.STT_VAD_END,
+                    {"timestamp": self._stt_last_timestamp_ms},
+                )
+            )
+            self._stt_vad_end_sent = True
+
         if result.result != stt.SpeechResultState.SUCCESS:
             raise SpeechToTextError(
                 code="stt-stream-failed",
@@ -501,6 +514,7 @@ class _DefaultPipelineProcessor:
         sent_vad_start = False
         async for chunk in audio_stream:
             self.host.capture_audio(chunk.audio)
+            self._stt_last_timestamp_ms = chunk.timestamp_ms
 
             if stt_vad is not None:
                 chunk_seconds = (len(chunk.audio) // sample_width) / sample_rate
@@ -512,17 +526,23 @@ class _DefaultPipelineProcessor:
                             {"timestamp": chunk.timestamp_ms},
                         )
                     )
+                    self._stt_vad_end_sent = True
                     break
 
-                if stt_vad.in_command and (not sent_vad_start):
-                    # Speech detected at start of voice command
-                    self.host.process_event(
-                        PipelineEvent(
-                            PipelineEventType.STT_VAD_START,
-                            {"timestamp": chunk.timestamp_ms},
-                        )
+                speech_started = stt_vad.in_command
+            else:
+                # No segmenter means either VAD is disabled or the provider does
+                # its own endpointing; only the latter needs VAD events
+                speech_started = self.host.audio_settings.is_vad_enabled
+
+            if speech_started and not sent_vad_start:
+                self.host.process_event(
+                    PipelineEvent(
+                        PipelineEventType.STT_VAD_START,
+                        {"timestamp": chunk.timestamp_ms},
                     )
-                    sent_vad_start = True
+                )
+                sent_vad_start = True
 
             yield chunk.audio
 

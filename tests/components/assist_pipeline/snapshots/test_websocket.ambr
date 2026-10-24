@@ -36,12 +36,17 @@
 # ---
 # name: test_audio_pipeline.2
   dict({
+    'timestamp': 0,
+  })
+# ---
+# name: test_audio_pipeline.3
+  dict({
     'stt_output': dict({
       'text': 'test transcript',
     }),
   })
 # ---
-# name: test_audio_pipeline.3
+# name: test_audio_pipeline.4
   dict({
     'conversation_id': 'mock-ulid',
     'device_id': None,
@@ -52,7 +57,7 @@
     'satellite_id': None,
   })
 # ---
-# name: test_audio_pipeline.4
+# name: test_audio_pipeline.5
   dict({
     'intent_output': dict({
       'continue_conversation': False,
@@ -76,7 +81,7 @@
     'processed_locally': True,
   })
 # ---
-# name: test_audio_pipeline.5
+# name: test_audio_pipeline.6
   dict({
     'acknowledge_override': False,
     'engine': 'tts.test',
@@ -85,7 +90,7 @@
     'voice': None,
   })
 # ---
-# name: test_audio_pipeline.6
+# name: test_audio_pipeline.7
   dict({
     'tts_output': dict({
       'media_id': 'media-source://tts/-stream-/test_token.mp3',
@@ -95,7 +100,7 @@
     }),
   })
 # ---
-# name: test_audio_pipeline.7
+# name: test_audio_pipeline.8
   None
 # ---
 # name: test_audio_pipeline_debug
@@ -135,12 +140,17 @@
 # ---
 # name: test_audio_pipeline_debug.2
   dict({
+    'timestamp': 0,
+  })
+# ---
+# name: test_audio_pipeline_debug.3
+  dict({
     'stt_output': dict({
       'text': 'test transcript',
     }),
   })
 # ---
-# name: test_audio_pipeline_debug.3
+# name: test_audio_pipeline_debug.4
   dict({
     'conversation_id': 'mock-ulid',
     'device_id': None,
@@ -151,7 +161,7 @@
     'satellite_id': None,
   })
 # ---
-# name: test_audio_pipeline_debug.4
+# name: test_audio_pipeline_debug.5
   dict({
     'intent_output': dict({
       'continue_conversation': False,
@@ -175,7 +185,7 @@
     'processed_locally': True,
   })
 # ---
-# name: test_audio_pipeline_debug.5
+# name: test_audio_pipeline_debug.6
   dict({
     'acknowledge_override': False,
     'engine': 'tts.test',
@@ -184,7 +194,7 @@
     'voice': None,
   })
 # ---
-# name: test_audio_pipeline_debug.6
+# name: test_audio_pipeline_debug.7
   dict({
     'tts_output': dict({
       'media_id': 'media-source://tts/-stream-/test_token.mp3',
@@ -194,7 +204,7 @@
     }),
   })
 # ---
-# name: test_audio_pipeline_debug.7
+# name: test_audio_pipeline_debug.8
   None
 # ---
 # name: test_audio_pipeline_no_wake_word_engine
@@ -246,12 +256,17 @@
 # ---
 # name: test_audio_pipeline_with_enhancements.2
   dict({
+    'timestamp': 990,
+  })
+# ---
+# name: test_audio_pipeline_with_enhancements.3
+  dict({
     'stt_output': dict({
       'text': 'test transcript',
     }),
   })
 # ---
-# name: test_audio_pipeline_with_enhancements.3
+# name: test_audio_pipeline_with_enhancements.4
   dict({
     'conversation_id': 'mock-ulid',
     'device_id': None,
@@ -262,7 +277,7 @@
     'satellite_id': None,
   })
 # ---
-# name: test_audio_pipeline_with_enhancements.4
+# name: test_audio_pipeline_with_enhancements.5
   dict({
     'intent_output': dict({
       'continue_conversation': False,
@@ -286,7 +301,7 @@
     'processed_locally': True,
   })
 # ---
-# name: test_audio_pipeline_with_enhancements.5
+# name: test_audio_pipeline_with_enhancements.6
   dict({
     'acknowledge_override': False,
     'engine': 'tts.test',
@@ -295,7 +310,7 @@
     'voice': None,
   })
 # ---
-# name: test_audio_pipeline_with_enhancements.6
+# name: test_audio_pipeline_with_enhancements.7
   dict({
     'tts_output': dict({
       'media_id': 'media-source://tts/-stream-/test_token.mp3',
@@ -305,7 +320,7 @@
     }),
   })
 # ---
-# name: test_audio_pipeline_with_enhancements.7
+# name: test_audio_pipeline_with_enhancements.8
   None
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout
