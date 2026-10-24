@@ -444,6 +444,9 @@ aiorussound==5.0.2
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
 
+# homeassistant.components.seafile
+aioseafile==0.1.1
+
 # homeassistant.components.shelly
 aioshelly==14.0.1
 
