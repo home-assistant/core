@@ -5,7 +5,12 @@ from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallClient
+from aiopowerwall import (
+    PowerwallAuthenticationError,
+    PowerwallClient,
+    PowerwallError,
+    PowerwallNotSupportedError,
+)
 from tesla_fleet_api.exceptions import TeslaFleetError
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
@@ -117,6 +122,23 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
         ) from e
     LOGGER.debug("Command result: %s", result)
     return result
+
+
+async def handle_local_command(command: Awaitable[None]) -> None:
+    """Handle a command sent to a local Powerwall gateway."""
+    try:
+        await command
+    except PowerwallNotSupportedError as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="local_command_not_supported",
+        ) from e
+    except PowerwallError as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="local_command_failed",
+            translation_placeholders={"message": str(e)},
+        ) from e
 
 
 async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
