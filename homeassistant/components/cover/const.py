@@ -55,6 +55,19 @@ class CoverEntityFeature(IntFlag):
     SPEED = 256
 
 
+class CoverSpeed(StrEnum):
+    """Standard speeds for cover entities."""
+
+    # Move at the device's default speed
+    DEFAULT = "default"
+
+    # Move faster than the default speed
+    FAST = "fast"
+
+    # Move slower and quieter than the default speed, e.g. in a whisper mode
+    SILENT = "silent"
+
+
 class CoverState(StrEnum):
     """State of Cover entities."""
 
