@@ -1,19 +1,12 @@
 """Tests for the Opower coordinator."""
 
-from datetime import UTC, date, datetime, timedelta
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
 from itertools import pairwise
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from opower import (
-    Account,
-    AggregateType,
-    Bill,
-    BillSegment,
-    BillServiceQuantity,
-    CostRead,
-    UnitOfMeasure,
-)
+from opower import Account, AggregateType, CostRead
 from opower.exceptions import ApiException
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -39,248 +32,102 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
 
-
-def _bill(
-    account: Account,
-    *,
-    usage_charges: float | None,
-    quantities: list[BillServiceQuantity],
-    extra_account: Account | None = None,
-) -> Bill:
-    """Create a completed bill."""
-    segments = [
-        BillSegment(
-            account=account,
-            current_amount=usage_charges,
-            service_quantities=quantities,
-        )
-    ]
-    if extra_account is not None:
-        segments.append(
-            BillSegment(
-                account=extra_account,
-                current_amount=1.0,
-                service_quantities=quantities,
-            )
-        )
-    return Bill(
-        bill_date=date(2023, 1, 31),
-        start_time=datetime(2023, 1, 1, tzinfo=UTC),
-        end_time=datetime(2023, 2, 1, tzinfo=UTC),
-        usage_charges=usage_charges,
-        segments=segments,
-    )
+BILL_READ = CostRead(
+    start_time=datetime(2023, 1, 1, tzinfo=UTC),
+    end_time=datetime(2023, 2, 1, tzinfo=UTC),
+    consumption=100.0,
+    provided_cost=30.0,
+)
+OLDER_BILL_READ = CostRead(
+    start_time=datetime(2022, 12, 1, tzinfo=UTC),
+    end_time=datetime(2023, 1, 1, tzinfo=UTC),
+    consumption=100.0,
+    provided_cost=25.0,
+)
 
 
-async def test_last_bill_electricity_rate(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_opower_api: AsyncMock,
-) -> None:
-    """Test repeated segments and only NET_USAGE kWh quantities are counted."""
-    account = mock_opower_api.async_get_accounts.return_value[0]
-    bill = _bill(
-        account,
-        usage_charges=45.0,
-        quantities=[
-            BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0),
-            BillServiceQuantity(UnitOfMeasure.KWH, "DELIVERED", 900.0),
-            BillServiceQuantity(UnitOfMeasure.THERM, "NET_USAGE", 5.0),
-        ],
-    )
-    bill.segments.append(
-        BillSegment(
-            account=account,
-            current_amount=20.0,
-            service_quantities=[
-                BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 50.0),
-                BillServiceQuantity(UnitOfMeasure.KWH, "EXPORTED", 0.0),
-            ],
-        )
-    )
-    mock_opower_api.async_get_bills.return_value = [
-        bill,
-        _bill(
-            account,
-            usage_charges=10.0,
-            quantities=[BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0)],
-        ),
-    ]
+def _mock_bill_reads(api: AsyncMock, bill_reads: list[CostRead]) -> None:
+    """Return the given bill reads and no interval reads."""
 
-    coordinator = OpowerCoordinator(hass, mock_config_entry)
-    data = await coordinator._async_update_data()
+    async def _get_cost_reads(
+        account: Account, aggregate_type: AggregateType, *args: Any, **kwargs: Any
+    ) -> list[CostRead]:
+        return bill_reads if aggregate_type is AggregateType.BILL else []
 
-    assert data["111111"].last_bill_electricity_rate == pytest.approx(0.3)
-    assert data["111111"].last_bill_received
-
-
-async def test_last_bill_electricity_rate_segment_without_net_usage(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_opower_api: AsyncMock,
-) -> None:
-    """Test a segment missing its quantities makes the bill unusable."""
-    account = mock_opower_api.async_get_accounts.return_value[0]
-    bill = _bill(
-        account,
-        usage_charges=45.0,
-        quantities=[BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0)],
-    )
-    bill.segments.append(
-        BillSegment(account=account, current_amount=20.0, service_quantities=[])
-    )
-    mock_opower_api.async_get_bills.return_value = [bill]
-
-    coordinator = OpowerCoordinator(hass, mock_config_entry)
-    data = await coordinator._async_update_data()
-
-    assert data["111111"].last_bill_electricity_rate is None
-    assert data["111111"].last_bill_received
+    api.async_get_cost_reads.side_effect = _get_cost_reads
 
 
 @pytest.mark.parametrize(
-    ("usage_charges", "quantities", "with_gas_account"),
+    "bill_read",
     [
+        pytest.param(BILL_READ, id="no_export_register"),
+        pytest.param(replace(BILL_READ, imported=100.0, exported=0.0), id="no_export"),
+    ],
+)
+async def test_last_bill_effective_electricity_rate(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+    bill_read: CostRead,
+) -> None:
+    """Test the rate comes from the newest bill read of electricity accounts."""
+    _mock_bill_reads(mock_opower_api, [bill_read, OLDER_BILL_READ])
+
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    data = await coordinator._async_update_data()
+
+    assert data["111111"].last_bill_effective_electricity_rate == pytest.approx(0.3)
+    assert data["111111"].last_bill_received
+    assert data["222222"].last_bill_effective_electricity_rate is None
+    assert not data["222222"].last_bill_received
+
+
+@pytest.mark.parametrize(
+    "bill_read",
+    [
+        pytest.param(replace(BILL_READ, consumption=0.0), id="zero_consumption"),
+        pytest.param(replace(BILL_READ, consumption=-100.0), id="net_export"),
+        pytest.param(replace(BILL_READ, provided_cost=0.0), id="zero_cost"),
+        pytest.param(replace(BILL_READ, provided_cost=-30.0), id="credit"),
         pytest.param(
-            45.0,
-            [BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0)],
-            True,
-            id="combined_gas_and_electric",
-        ),
-        pytest.param(
-            None,
-            [BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0)],
-            False,
-            id="no_usage_charges",
-        ),
-        pytest.param(
-            45.0,
-            [BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 0.0)],
-            False,
-            id="zero_net_usage",
-        ),
-        pytest.param(
-            45.0,
-            [BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", -100.0)],
-            False,
-            id="negative_net_usage",
-        ),
-        pytest.param(
-            45.0,
-            [BillServiceQuantity(UnitOfMeasure.KWH, "DELIVERED", 100.0)],
-            False,
-            id="no_net_usage",
-        ),
-        pytest.param(
-            45.0,
-            [BillServiceQuantity(UnitOfMeasure.KWH, "ELEC:NET_USAGE", 100.0)],
-            False,
-            id="prefixed_net_usage",
-        ),
-        pytest.param(
-            45.0,
-            [BillServiceQuantity(UnitOfMeasure.KWH, "net_usage", 100.0)],
-            False,
-            id="lowercase_net_usage",
-        ),
-        *(
-            pytest.param(
-                45.0,
-                [
-                    BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 1.0),
-                    BillServiceQuantity(UnitOfMeasure.KWH, identifier, 99.0),
-                ],
-                False,
-                id=identifier.lower(),
-            )
-            for identifier in ("EXPORTED", "GENERATED", "RECEIVED")
-        ),
-        pytest.param(
-            45.0,
-            [
-                BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0),
-                BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", None),
-            ],
-            False,
-            id="missing_net_usage_value",
-        ),
-        pytest.param(
-            45.0,
-            [
-                BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0),
-                BillServiceQuantity(None, "NET_USAGE", 50.0),
-            ],
-            False,
-            id="unknown_net_usage_unit",
-        ),
-        pytest.param(
-            45.0,
-            [
-                BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0),
-                BillServiceQuantity(UnitOfMeasure.KWH, "EXPORTED", None),
-            ],
-            False,
-            id="missing_export_value",
-        ),
-        pytest.param(
-            45.0,
-            [
-                BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0),
-                BillServiceQuantity(None, "EXPORTED", 50.0),
-            ],
-            False,
-            id="unknown_export_unit",
+            replace(BILL_READ, imported=150.0, exported=50.0), id="partial_export"
         ),
     ],
 )
-async def test_last_bill_electricity_rate_newest_bill_unusable(
+async def test_last_bill_effective_electricity_rate_newest_bill_unusable(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
-    usage_charges: float | None,
-    quantities: list[BillServiceQuantity],
-    with_gas_account: bool,
+    bill_read: CostRead,
 ) -> None:
-    """Test an unusable newest bill does not fall back to an older bill."""
-    electric_account, gas_account = mock_opower_api.async_get_accounts.return_value
-    mock_opower_api.async_get_bills.return_value = [
-        _bill(
-            electric_account,
-            usage_charges=usage_charges,
-            quantities=quantities,
-            extra_account=gas_account if with_gas_account else None,
-        ),
-        _bill(
-            electric_account,
-            usage_charges=25.0,
-            quantities=[BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0)],
-        ),
-    ]
+    """Test an unusable newest bill read does not fall back to an older one."""
+    _mock_bill_reads(mock_opower_api, [OLDER_BILL_READ, bill_read])
 
     coordinator = OpowerCoordinator(hass, mock_config_entry)
     data = await coordinator._async_update_data()
 
-    assert data["111111"].last_bill_electricity_rate is None
+    assert data["111111"].last_bill_effective_electricity_rate is None
     assert data["111111"].last_bill_received
 
 
-async def test_last_bill_electricity_rate_kept_without_bills(
+async def test_last_bill_effective_electricity_rate_kept_without_bill_reads(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
-    """Test the previous rate is kept when no bill is received for the account."""
+    """Test the previous rate is kept when no bill read is received."""
+    _mock_bill_reads(mock_opower_api, [BILL_READ])
     coordinator = OpowerCoordinator(hass, mock_config_entry)
     coordinator.async_set_updated_data(await coordinator._async_update_data())
+    await async_wait_recording_done(hass)
 
-    mock_opower_api.async_get_bills.return_value = []
+    _mock_bill_reads(mock_opower_api, [])
     data = await coordinator._async_update_data()
 
-    assert data["111111"].last_bill_electricity_rate == pytest.approx(0.3)
+    assert data["111111"].last_bill_effective_electricity_rate == pytest.approx(0.3)
     assert not data["111111"].last_bill_received
 
 

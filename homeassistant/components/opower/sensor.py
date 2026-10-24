@@ -128,13 +128,13 @@ ELEC_SENSORS: tuple[OpowerEntityDescription, ...] = (
         value_fn=lambda data: data.forecast.end_date if data.forecast else None,
     ),
 )
-LAST_BILL_ELECTRICITY_RATE_SENSOR = OpowerEntityDescription(
-    key="last_bill_electricity_rate",
-    translation_key="last_bill_electricity_rate",
+LAST_BILL_EFFECTIVE_ELECTRICITY_RATE_SENSOR = OpowerEntityDescription(
+    key="last_bill_effective_electricity_rate",
+    translation_key="last_bill_effective_electricity_rate",
     native_unit_of_measurement="USD/kWh",
     state_class=SensorStateClass.MEASUREMENT,
     suggested_display_precision=4,
-    value_fn=lambda data: data.last_bill_electricity_rate,
+    value_fn=lambda data: data.last_bill_effective_electricity_rate,
 )
 GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
     OpowerEntityDescription(
@@ -272,27 +272,27 @@ async def async_setup_entry(
 
             rate_sensor_key = (
                 account.utility_account_id,
-                LAST_BILL_ELECTRICITY_RATE_SENSOR.key,
+                LAST_BILL_EFFECTIVE_ELECTRICITY_RATE_SENSOR.key,
             )
-            # Restore a previously created rate sensor even if bills are
-            # unavailable right after startup.
+            # Restore a previously created rate sensor even if no bill read is
+            # received right after startup.
             if (
                 account.meter_type is MeterType.ELEC
                 and rate_sensor_key not in created_sensors
                 and (
-                    opower_data.last_bill_electricity_rate is not None
+                    opower_data.last_bill_effective_electricity_rate is not None
                     or entity_registry.async_get_entity_id(
                         Platform.SENSOR,
                         DOMAIN,
-                        f"{device_id}_{LAST_BILL_ELECTRICITY_RATE_SENSOR.key}",
+                        f"{device_id}_{LAST_BILL_EFFECTIVE_ELECTRICITY_RATE_SENSOR.key}",
                     )
                 )
             ):
                 created_sensors.add(rate_sensor_key)
                 new_entities.append(
-                    OpowerLastBillElectricityRateSensor(
+                    OpowerLastBillEffectiveElectricityRateSensor(
                         coordinator,
-                        LAST_BILL_ELECTRICITY_RATE_SENSOR,
+                        LAST_BILL_EFFECTIVE_ELECTRICITY_RATE_SENSOR,
                         account.utility_account_id,
                         device,
                         device_id,
@@ -377,14 +377,14 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
         )
 
 
-class OpowerLastBillElectricityRateSensor(OpowerSensor, RestoreSensor):
-    """Representation of an Opower last bill electricity rate sensor."""
+class OpowerLastBillEffectiveElectricityRateSensor(OpowerSensor, RestoreSensor):
+    """Representation of an Opower last bill effective electricity rate sensor."""
 
     _restored_rate: float | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Restore the last rate until a bill is received."""
+        """Restore the last rate until a bill read is received."""
         await super().async_added_to_hass()
         if (
             (data := self.coordinator.data.get(self.utility_account_id))
@@ -397,7 +397,7 @@ class OpowerLastBillElectricityRateSensor(OpowerSensor, RestoreSensor):
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        """Drop the restored rate once a bill is received."""
+        """Drop the restored rate once a bill read is received."""
         if (
             data := self.coordinator.data.get(self.utility_account_id)
         ) and data.last_bill_received:
@@ -416,6 +416,6 @@ class OpowerLastBillElectricityRateSensor(OpowerSensor, RestoreSensor):
         """Return the state."""
         if (
             data := self.coordinator.data.get(self.utility_account_id)
-        ) and data.last_bill_electricity_rate is not None:
-            return data.last_bill_electricity_rate
+        ) and data.last_bill_effective_electricity_rate is not None:
+            return data.last_bill_effective_electricity_rate
         return self._restored_rate
