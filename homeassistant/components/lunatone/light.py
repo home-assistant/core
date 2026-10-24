@@ -254,6 +254,8 @@ class LunatoneLineBroadcastLight(
 
     BRIGHTNESS_SCALE = (1, 100)
 
+    _last_brightness = 255
+
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_has_entity_name = True
     _attr_name = None
@@ -305,10 +307,38 @@ class LunatoneLineBroadcastLight(
     def is_on(self) -> bool:
         """Return True if light is on."""
         line_id = self._broadcast.line
+        devices = (
+            self.coordinator.data.get(line_id, {}).values()
+            if line_id is not None
+            else (
+                device
+                for devices in self.coordinator.data.values()
+                for device in devices.values()
+            )
+        )
+        return any(device.is_on for device in devices)
+
+    @property
+    @override
+    def brightness(self) -> int | None:
+        """Return the brightness of this light between 0..255."""
+        line_id = self._broadcast.line
+        devices = (
+            self.coordinator.data.get(line_id, {}).values()
+            if line_id is not None
+            else (
+                device
+                for devices in self.coordinator.data.values()
+                for device in devices.values()
+            )
+        )
+        brightness_values = {
+            device.brightness for device in devices if device.brightness is not None
+        }
         return (
-            any(device.is_on for device in self.coordinator.data[line_id].values())
-            if line_id is not None and line_id in self.coordinator.data
-            else False
+            value_to_brightness(self.BRIGHTNESS_SCALE, next(iter(brightness_values)))
+            if len(brightness_values) == 1
+            else None
         )
 
     @override
@@ -317,7 +347,8 @@ class LunatoneLineBroadcastLight(
         try:
             await self._broadcast.fade_to_brightness(
                 brightness_to_value(
-                    self.BRIGHTNESS_SCALE, kwargs.get(ATTR_BRIGHTNESS, 255)
+                    self.BRIGHTNESS_SCALE,
+                    kwargs.get(ATTR_BRIGHTNESS, self._last_brightness),
                 )
             )
         except aiohttp.ClientConnectionError as ex:
@@ -332,6 +363,8 @@ class LunatoneLineBroadcastLight(
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the line to turn off."""
         try:
+            if self.brightness:
+                self._last_brightness = self.brightness
             await self._broadcast.fade_to_brightness(0)
         except aiohttp.ClientConnectionError as ex:
             raise HomeAssistantError(
