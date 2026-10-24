@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/proxmoxve",
   "integration_type": "service",
   "iot_class": "local_polling",
-  "loggers": ["proxmoxer"],
+  "loggers": ["aioproxmox"],
   "quality_scale": "gold",
-  "requirements": ["proxmoxer==2.3.0"]
+  "requirements": ["aioproxmox==0.1.2"]
 }

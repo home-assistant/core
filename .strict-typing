@@ -496,6 +496,7 @@ homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
 homeassistant.components.prometheus.*
 homeassistant.components.proximity.*
+homeassistant.components.proxmoxve.*
 homeassistant.components.prusalink.*
 homeassistant.components.ptdevices.*
 homeassistant.components.pure_energie.*

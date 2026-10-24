@@ -24,7 +24,7 @@ PARALLEL_UPDATES = 1
 class ProxmoxNodeUpdateEntityDescription(UpdateEntityDescription):
     """Describes Proxmox node update entity."""
 
-    installed_version: Callable[[ProxmoxNodeData], str]
+    installed_version: Callable[[ProxmoxNodeData], str | None]
     update_info: Callable[[ProxmoxNodeData], ProxmoxUpdateInfo | bool]
 
 
@@ -33,10 +33,15 @@ NODE_UPDATES: tuple[ProxmoxNodeUpdateEntityDescription, ...] = (
         key="node_update",
         translation_key="node_update",
         entity_category=EntityCategory.CONFIG,
-        installed_version=lambda node_data: node_data.version.get("version", "unknown"),
-        update_info=lambda node_data: update_version(
-            node_data.version.get("version", "unknown"),
-            node_data.update if isinstance(node_data.update, list) else [],
+        installed_version=lambda data: data.version.version if data.version else None,
+        # An offline node reports no version
+        update_info=lambda data: (
+            update_version(
+                data.version.version,
+                data.update if isinstance(data.update, list) else [],
+            )
+            if data.version
+            else False
         ),
     ),
 )
@@ -63,9 +68,9 @@ async def async_setup_entry(
     coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
     _async_add_new_nodes(
         [
-            node_data
-            for node_data in coordinator.data.values()
-            if node_data.node["node"] in coordinator.known_nodes
+            data
+            for data in coordinator.data.values()
+            if data.node.node in coordinator.known_nodes
         ]
     )
 
