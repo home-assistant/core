@@ -1,13 +1,18 @@
 """The tests for the androidtv platform."""
 
+import base64
 from datetime import timedelta
+import gzip
+from io import BytesIO
 import logging
+import struct
 from typing import Any
 from unittest.mock import patch
 
 from adb_shell.exceptions import TcpTimeoutException as AdbShellTimeoutException
 from androidtv.constants import APPS as ANDROIDTV_APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
+from PIL import Image
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.typing import ClientSessionGenerator
@@ -22,6 +27,11 @@ from homeassistant.components.androidtv.const import (
     DEFAULT_ADB_SERVER_PORT,
     DEFAULT_PORT,
     DOMAIN,
+)
+from homeassistant.components.androidtv.media_player import (
+    MAX_SCREENSHOT_SIZE_BYTES,
+    SCREENCAP_DATASPACE_SRGB,
+    _encode_raw_screencap,
 )
 from homeassistant.components.androidtv.services import (
     ATTR_DEVICE_PATH,
@@ -847,6 +857,12 @@ async def test_get_image_http(
     This is based on `test_get_image_http` in
     tests/components/media_player/test_init.py.
     """
+    encoded = base64.b64encode(
+        gzip.compress(
+            struct.pack("<IIII", 1, 1, 1, SCREENCAP_DATASPACE_SRGB)
+            + b"\xff\x00\x00\xff"
+        )
+    ).decode()
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -862,10 +878,20 @@ async def test_get_image_http(
 
     with (
         patchers.patch_shell("11")[patch_key],
+        patch(
+            "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell",
+            return_value=f"28\n{encoded}",
+        ) as patch_raw,
         patchers.PATCH_SCREENCAP as patch_screen_cap,
     ):
         await async_update_entity(hass, entity_id)
-        patch_screen_cap.assert_called()
+        patch_raw.assert_awaited_once_with(
+            "if command -v gzip >/dev/null && command -v base64 >/dev/null "
+            "&& command -v getprop >/dev/null; then "
+            "printf '%s\\n' \"$(getprop ro.build.version.sdk)\"; "
+            "screencap | gzip -1 | base64; fi"
+        )
+        patch_screen_cap.assert_not_called()
 
     media_player_name = "media_player." + slugify(
         CONFIG_ANDROID_DEFAULT[TEST_ENTITY_NAME]
@@ -877,11 +903,17 @@ async def test_get_image_http(
 
     resp = await client.get(state.attributes["entity_picture"])
     content = await resp.read()
-    assert content == b"image"
+    image = Image.open(BytesIO(content))
+    assert image.size == (1, 1)
+    assert image.getpixel((0, 0)) == (255, 0, 0, 255)
 
     next_update = utcnow() + timedelta(minutes=1)
     with (
         patchers.patch_shell("11")[patch_key],
+        patch(
+            "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell",
+            return_value=f"28\n{encoded}",
+        ) as patch_raw,
         patchers.PATCH_SCREENCAP as patch_screen_cap,
         patch(
             "homeassistant.components.androidtv.media_player.utcnow",
@@ -891,10 +923,15 @@ async def test_get_image_http(
         async_fire_time_changed(hass, next_update, True)
         await hass.async_block_till_done()
         patch_screen_cap.assert_not_called()
+        patch_raw.assert_not_awaited()
 
     next_update = utcnow() + timedelta(minutes=2)
     with (
         patchers.patch_shell("11")[patch_key],
+        patch(
+            "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell",
+            return_value=f"28\n{encoded}",
+        ) as patch_raw,
         patchers.PATCH_SCREENCAP as patch_screen_cap,
         patch(
             "homeassistant.components.androidtv.media_player.utcnow",
@@ -903,7 +940,13 @@ async def test_get_image_http(
     ):
         async_fire_time_changed(hass, next_update, True)
         await hass.async_block_till_done()
-        patch_screen_cap.assert_called()
+        patch_raw.assert_awaited_once_with(
+            "if command -v gzip >/dev/null && command -v base64 >/dev/null "
+            "&& command -v getprop >/dev/null; then "
+            "printf '%s\\n' \"$(getprop ro.build.version.sdk)\"; "
+            "screencap | gzip -1 | base64; fi"
+        )
+        patch_screen_cap.assert_not_called()
 
 
 async def test_get_image_http_fail(hass: HomeAssistant) -> None:
@@ -925,7 +968,7 @@ async def test_get_image_http_fail(hass: HomeAssistant) -> None:
     with (
         patchers.patch_shell("11")[patch_key],
         patch(
-            "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap",
+            "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell",
             side_effect=ConnectionResetError,
         ),
     ):
@@ -1208,3 +1251,171 @@ async def test_options_reload(hass: HomeAssistant) -> None:
 
             assert setup_entry_call.called
             assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("sdk_version", [27, 28])
+@pytest.mark.parametrize(
+    ("pixel_format", "pixels", "expected"),
+    [
+        pytest.param(1, b"\xff\x00\x00\x80", (255, 0, 0, 128), id="rgba"),
+        pytest.param(2, b"\xff\x00\x00\x00", (255, 0, 0), id="rgbx"),
+        pytest.param(3, b"\xff\x00\x00", (255, 0, 0), id="rgb"),
+        pytest.param(4, b"\x00\xf8", (255, 0, 0), id="rgb565"),
+        pytest.param(5, b"\x00\x00\xff\x80", (255, 0, 0, 128), id="bgra"),
+    ],
+)
+def test_raw_screencap_pixels(
+    sdk_version: int,
+    pixel_format: int,
+    pixels: bytes,
+    expected: tuple[int, ...],
+) -> None:
+    """Preserve color and alpha for supported raw screenshot headers."""
+    header = struct.pack("<IIII", 1, 1, pixel_format, SCREENCAP_DATASPACE_SRGB)
+    encoded = base64.b64encode(gzip.compress(header + pixels)).decode()
+    png = _encode_raw_screencap(encoded, sdk_version)
+    assert png is not None
+    image = Image.open(BytesIO(png))
+    assert image.size == (1, 1)
+    assert image.getpixel((0, 0)) == expected
+
+
+@pytest.mark.parametrize(
+    ("sdk_version", "header"),
+    [
+        pytest.param(26, struct.pack("<III", 1, 1, 1), id="api-26-no-dataspace"),
+        pytest.param(27, struct.pack("<IIII", 1, 1, 1, 2), id="display-p3"),
+    ],
+)
+def test_raw_screencap_unsupported_color_space_falls_back(
+    sdk_version: int, header: bytes
+) -> None:
+    """Use the device PNG encoder when raw color space cannot be preserved."""
+    encoded = base64.b64encode(gzip.compress(header + bytes(4))).decode()
+    assert _encode_raw_screencap(encoded, sdk_version) is None
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        b"",
+        bytes(11),
+        struct.pack("<IIII", 2, 1, 1, SCREENCAP_DATASPACE_SRGB) + bytes(4),
+    ],
+)
+def test_raw_screencap_truncated(raw: bytes) -> None:
+    """Reject incomplete frames rather than inventing missing pixels."""
+    encoded = base64.b64encode(gzip.compress(raw)).decode()
+    with pytest.raises(ValueError):
+        _encode_raw_screencap(encoded, 27)
+
+
+def test_raw_screencap_oversized_frame() -> None:
+    """Defer frames above the host-side decode bound to the device PNG encoder."""
+    width = MAX_SCREENSHOT_SIZE_BYTES // 4
+    header = struct.pack("<IIII", width, 2, 1, SCREENCAP_DATASPACE_SRGB)
+    encoded = base64.b64encode(gzip.compress(header)).decode()
+    assert _encode_raw_screencap(encoded, 27) is None
+
+
+async def test_raw_screencap_oversized_frame_falls_back(hass: HomeAssistant) -> None:
+    """An oversized raw frame uses the existing native PNG capture."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
+    config_entry.add_to_hass(hass)
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    width = MAX_SCREENSHOT_SIZE_BYTES // 4
+    header = struct.pack("<IIII", width, 2, 1, SCREENCAP_DATASPACE_SRGB)
+    encoded = base64.b64encode(gzip.compress(header)).decode()
+    with (
+        patchers.patch_shell("11")[patch_key],
+        patch(
+            "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell",
+            return_value=f"28\n{encoded}",
+        ),
+        patchers.PATCH_SCREENCAP as legacy_capture,
+    ):
+        await async_update_entity(hass, entity_id)
+    legacy_capture.assert_awaited_once()
+    assert hass.states.get(entity_id).attributes["entity_picture"]
+
+
+def test_raw_screencap_unsupported_format() -> None:
+    """Leave unsupported pixel formats to the existing device PNG encoder."""
+    encoded = base64.b64encode(
+        gzip.compress(
+            struct.pack("<IIII", 1, 1, 43, SCREENCAP_DATASPACE_SRGB) + bytes(4)
+        )
+    ).decode()
+    assert _encode_raw_screencap(encoded, 27) is None
+
+
+@pytest.mark.parametrize(
+    ("compressed", "legacy_calls"),
+    [
+        pytest.param(gzip.compress(bytes(11)), 0, id="truncated-frame"),
+        pytest.param(
+            gzip.compress(
+                struct.pack("<IIII", 1, 1, 43, SCREENCAP_DATASPACE_SRGB) + bytes(4)
+            ),
+            1,
+            id="unsupported-format",
+        ),
+        pytest.param(
+            bytes.fromhex("1f8b0800000000000003070000000000000000"),
+            0,
+            id="invalid-deflate",
+        ),
+    ],
+)
+async def test_raw_screencap_failure_keeps_connection(
+    hass: HomeAssistant, compressed: bytes, legacy_calls: int
+) -> None:
+    """A decoding failure does not disconnect a healthy ADB transport."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
+    config_entry.add_to_hass(hass)
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    encoded = base64.b64encode(compressed).decode()
+    with (
+        patchers.patch_shell("11")[patch_key],
+        patch(
+            "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell",
+            return_value=f"28\n{encoded}",
+        ),
+        patchers.PATCH_SCREENCAP as legacy_capture,
+    ):
+        await async_update_entity(hass, entity_id)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert legacy_capture.call_count == legacy_calls
+    assert bool(state.attributes.get("entity_picture")) == bool(legacy_calls)
+
+
+async def test_raw_screencap_without_shell_utilities(hass: HomeAssistant) -> None:
+    """Keep screenshots working on devices without gzip or base64."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
+    config_entry.add_to_hass(hass)
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    with (
+        patchers.patch_shell("11")[patch_key],
+        patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=""),
+        patchers.PATCH_SCREENCAP as legacy_capture,
+    ):
+        await async_update_entity(hass, entity_id)
+    legacy_capture.assert_awaited_once()
+    assert hass.states.get(entity_id).attributes["entity_picture"]
