@@ -575,6 +575,13 @@ async def test_service_validation_errors(
             {ATTR_POWER: 10000, ATTR_DURATION: 1800},
             "dispatch_battery_power",
             (10000, 1800),
+            id="dispatch_battery_power_10kw",
+        ),
+        pytest.param(
+            SERVICE_DISPATCH_BATTERY_POWER,
+            {ATTR_POWER: 100000, ATTR_DURATION: 1800},
+            "dispatch_battery_power",
+            (100000, 1800),
             id="dispatch_battery_power_max",
         ),
         pytest.param(
@@ -626,6 +633,15 @@ async def test_local_battery_services(
             id="command_error",
         ),
         pytest.param(
+            PowerwallCommandError(
+                "dispatch_battery_power",
+                11,
+                "power 10100.000000 exceeds discharge limit 10000",
+            ),
+            "local_command_out_of_range",
+            id="out_of_range",
+        ),
+        pytest.param(
             PowerwallConnectionError("unreachable"),
             "local_command_failed",
             id="connection_error",
@@ -659,6 +675,40 @@ async def test_local_battery_services_errors(
             blocking=True,
         )
     assert exc_info.value.translation_key == translation_key
+
+
+async def test_dispatch_battery_power_out_of_range_message(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the gateway's own out of range text reaches the user."""
+    entry = await _setup_site(hass, [PAIRED_SITE])
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(SITE_ID)), entry.entry_id
+    )
+    assert device
+
+    with (
+        patch(
+            "aiopowerwall.PowerwallClient.dispatch_battery_power",
+            side_effect=PowerwallCommandError(
+                "dispatch_battery_power",
+                11,
+                "power 10100.000000 exceeds discharge limit 10000",
+            ),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DISPATCH_BATTERY_POWER,
+            {CONF_DEVICE_ID: device.id, ATTR_POWER: 10100, ATTR_DURATION: 1800},
+            blocking=True,
+        )
+    assert str(exc_info.value) == (
+        "The Powerwall gateway rejected the power as outside its limit: "
+        "power 10100.000000 exceeds discharge limit 10000"
+    )
 
 
 @pytest.mark.parametrize(("service", "data", "method"), LOCAL_BATTERY_SERVICES)
@@ -713,8 +763,8 @@ async def test_local_battery_services_not_paired(
     [
         pytest.param(5000, 0, id="duration_too_short"),
         pytest.param(5000, 86401, id="duration_too_long"),
-        pytest.param(-10001, 1800, id="charge_power_too_high"),
-        pytest.param(10001, 1800, id="discharge_power_too_high"),
+        pytest.param(-100001, 1800, id="charge_power_too_high"),
+        pytest.param(100001, 1800, id="discharge_power_too_high"),
     ],
 )
 async def test_dispatch_battery_power_out_of_range(

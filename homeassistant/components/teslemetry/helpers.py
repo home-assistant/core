@@ -8,6 +8,7 @@ from aiohttp import ClientError
 from aiopowerwall import (
     PowerwallAuthenticationError,
     PowerwallClient,
+    PowerwallCommandError,
     PowerwallError,
     PowerwallNotSupportedError,
 )
@@ -23,6 +24,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_KEY_FILE
+
+GATEWAY_OUT_OF_RANGE = 11
 
 
 class PowerwallKeyRejectedError(Exception):
@@ -132,6 +135,18 @@ async def handle_local_command(command: Awaitable[None]) -> None:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="local_command_not_supported",
+        ) from e
+    except PowerwallCommandError as e:
+        if e.code == GATEWAY_OUT_OF_RANGE:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="local_command_out_of_range",
+                translation_placeholders={"message": e.status_message},
+            ) from e
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="local_command_failed",
+            translation_placeholders={"message": str(e)},
         ) from e
     except PowerwallError as e:
         raise HomeAssistantError(

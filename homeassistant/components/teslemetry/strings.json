@@ -1296,6 +1296,9 @@
     "local_command_not_supported": {
       "message": "The Powerwall gateway firmware does not support this command"
     },
+    "local_command_out_of_range": {
+      "message": "The Powerwall gateway rejected the power as outside its limit: {message}"
+    },
     "local_update_failed": {
       "message": "Error fetching data from the local Powerwall gateway: {message}"
     },
