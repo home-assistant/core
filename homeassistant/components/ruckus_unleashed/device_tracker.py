@@ -96,7 +96,7 @@ class RuckusDevice(CoordinatorEntity, ScannerEntity):
         """Initialize a Ruckus client."""
         super().__init__(coordinator)
         self._mac = mac
-        self._name = name
+        self._attr_name = name
 
     @property
     @override
@@ -104,13 +104,15 @@ class RuckusDevice(CoordinatorEntity, ScannerEntity):
         """Return a mac address."""
         return self._mac
 
-    @property
+    @callback
     @override
-    def name(self) -> str:
-        """Return the name."""
-        if not self.is_connected:
-            return self._name
-        return self.coordinator.data[KEY_SYS_CLIENTS][self._mac][API_CLIENT_HOSTNAME]
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self.is_connected:
+            self._attr_name = self.coordinator.data[KEY_SYS_CLIENTS][self._mac][
+                API_CLIENT_HOSTNAME
+            ]
+        super()._handle_coordinator_update()
 
     @property
     @override

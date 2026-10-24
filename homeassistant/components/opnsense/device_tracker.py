@@ -3,7 +3,7 @@
 from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -58,6 +58,7 @@ class OPNsenseDeviceTrackerEntity(
         """Initialize the device tracker entity."""
         super().__init__(coordinator)
         self._attr_mac_address = mac_address
+        self._attr_name = self._device_name()
 
     @property
     def device_data(self) -> DeviceDetails | None:
@@ -75,14 +76,16 @@ class OPNsenseDeviceTrackerEntity(
             and self.mac_address in self.coordinator.data
         )
 
-    @property
+    def _device_name(self) -> str:
+        """Return the name of the tracked device."""
+        return self.hostname or f"OPNsense {self.mac_address}"
+
+    @callback
     @override
-    def name(self) -> str:
-        """Return device name."""
-        device_data = self.device_data
-        if device_data and device_data.get("hostname"):
-            return str(device_data["hostname"])
-        return f"OPNsense {self.mac_address}"
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_name = self._device_name()
+        super()._handle_coordinator_update()
 
     @property
     @override

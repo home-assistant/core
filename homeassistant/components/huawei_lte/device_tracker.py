@@ -166,12 +166,6 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
 
     @property
     @override
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self.hostname or self.mac_address
-
-    @property
-    @override
     def _device_unique_id(self) -> str:
         return self.mac_address
 

@@ -61,7 +61,7 @@ class FreeboxDevice(ScannerEntity):
     def __init__(self, router: FreeboxRouter, device: dict[str, Any]) -> None:
         """Initialize a Freebox device."""
         self._router = router
-        self._name = device["primary_name"].strip() or DEFAULT_DEVICE_NAME
+        self._attr_name = device["primary_name"].strip() or DEFAULT_DEVICE_NAME
         self._mac = device["l2ident"]["id"]
         self._manufacturer = device["vendor_name"]
         self._attr_icon = icon_for_freebox_device(device)
@@ -90,12 +90,6 @@ class FreeboxDevice(ScannerEntity):
     def mac_address(self) -> str:
         """Return a unique ID."""
         return self._mac
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
 
     @property
     @override

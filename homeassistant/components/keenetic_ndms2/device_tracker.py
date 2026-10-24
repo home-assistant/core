@@ -87,6 +87,7 @@ class KeeneticTracker(ScannerEntity):
     def __init__(self, device: Device, router: KeeneticRouter) -> None:
         """Initialize the tracked device."""
         self._device = device
+        self._attr_name = device.name or device.mac
         self._router = router
         self._last_seen = (
             dt_util.utcnow() if device.mac in router.last_devices else None
@@ -101,12 +102,6 @@ class KeeneticTracker(ScannerEntity):
             and (dt_util.utcnow() - self._last_seen)
             < self._router.consider_home_interval
         )
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._device.name or self._device.mac
 
     @property
     @override
@@ -157,6 +152,7 @@ class KeeneticTracker(ScannerEntity):
             new_device = self._router.last_devices.get(self._device.mac)
             if new_device:
                 self._device = new_device
+                self._attr_name = new_device.name or new_device.mac
                 self._last_seen = dt_util.utcnow()
 
             self.async_write_ha_state()

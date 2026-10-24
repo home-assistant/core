@@ -38,6 +38,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import CalculatedState, Entity, EntityDescription
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import UndefinedType
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.hass_dict import HassKey
 
@@ -660,15 +661,12 @@ class ScannerEntity(
         """Return unique ID of the entity."""
         return self.mac_address
 
-    @final
-    @property
-    @override
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device info of the tracked device.
+    @callback
+    def _async_tracked_device_connections(self) -> set[tuple[str, str]] | None:
+        """Return the connections of the tracker's device.
 
-        A device is only registered once the tracked device is known to another
-        integration. It is resolved before the entity registry entry is created,
-        so a new entity ID is derived from the device name.
+        A tracker only has a device once the tracked device is known to any
+        integration.
         """
         if (
             self.unique_id is None
@@ -677,12 +675,66 @@ class ScannerEntity(
             or not self._async_mac_address_registered()
         ):
             return None
+        return {(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+
+    @callback
+    def _async_has_tracked_device(self) -> bool:
+        """Return if the tracker has a device."""
+        if self.registry_entry is not None:
+            return self.device_entry is not None
+        # The name is read before the platform resolves the device; it may also
+        # be read before the entity is added to a platform at all.
+        return (
+            self.platform is not None
+            and self._async_tracked_device_connections() is not None
+        )
+
+    @callback
+    def _async_own_name(self) -> str | None:
+        """Return the name provided by the integration, else the hostname."""
+        if isinstance(name := super().name, str):
+            return name
+        return self.hostname
+
+    @property
+    @override
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity.
+
+        A tracker with a device is named after it, so the integration's name is
+        only used for a tracker without a device and for naming its device.
+        """
+        # An integration providing its own device info also names the tracker
+        if type(self).device_info is not ScannerEntity.device_info:
+            return super().name
+        if self._async_has_tracked_device():
+            return None
+        return self._async_own_name() or self.mac_address or super().name
+
+    @final
+    @property
+    @override
+    def device_info(self) -> DeviceInfo | None:
+        """Return the device info of the tracked device.
+
+        It is resolved before the entity registry entry is created, so a new
+        entity ID is derived from the device name.
+        """
+        if (connections := self._async_tracked_device_connections()) is None:
+            return None
+        if (name := self._async_own_name()) is None:
+            if TYPE_CHECKING:
+                assert self.platform.config_entry is not None
+            if dr.async_get(self.hass).async_get_devices(
+                connections=connections,
+                config_entry_id=self.platform.config_entry.entry_id,
+            ):
+                # Keep the name of the existing device
+                return DeviceInfo(connections=connections)
+            name = self.mac_address
         # Matching the split of a pre-migration composite device prunes the
         # identifiers and connections copied from the composite.
-        return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            name=self.hostname or self.mac_address,
-        )
+        return DeviceInfo(connections=connections, name=name)
 
     @property
     @override
