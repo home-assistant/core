@@ -1,0 +1,67 @@
+# serializer version: 1
+# name: test_entities[media_player.croma_tv-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'youtube',
+        'netflix',
+        'prime_video',
+        'live_tv',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.croma_tv',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.TV: 'tv'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'croma_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 23945>,
+    'translation_key': 'tv',
+    'unique_id': '01JTEST0000000000000000000',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[media_player.croma_tv-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Croma TV',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'youtube',
+        'netflix',
+        'prime_video',
+        'live_tv',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 23945>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.croma_tv',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

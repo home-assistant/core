@@ -367,6 +367,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/cover/ @home-assistant/core
 /homeassistant/components/cpuspeed/ @fabaff
 /tests/components/cpuspeed/ @fabaff
+/homeassistant/components/croma_infrared/ @Dr-Blank
+/tests/components/croma_infrared/ @Dr-Blank
 /homeassistant/components/crownstone/ @Crownstone @RicArch97
 /tests/components/crownstone/ @Crownstone @RicArch97
 /homeassistant/components/cync/ @Kinachi249

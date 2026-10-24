@@ -1,0 +1,12 @@
+{
+  "domain": "croma_infrared",
+  "name": "Croma Infrared",
+  "categories": ["media_entertainment.tv_streaming"],
+  "codeowners": ["@Dr-Blank"],
+  "config_flow": true,
+  "dependencies": ["infrared"],
+  "documentation": "https://www.home-assistant.io/integrations/croma_infrared",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "bronze"
+}

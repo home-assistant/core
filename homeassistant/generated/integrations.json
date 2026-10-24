@@ -1989,6 +1989,15 @@
       ],
       "supported_by": "splunk"
     },
+    "croma_infrared": {
+      "name": "Croma Infrared",
+      "integration_type": "device",
+      "categories": [
+        "media_entertainment.tv_streaming"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "crownstone": {
       "name": "Crownstone",
       "integration_type": "hub",
