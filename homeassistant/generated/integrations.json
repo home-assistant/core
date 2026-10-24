@@ -3734,6 +3734,12 @@
             "climate.heat_pumps_air_conditioning"
           ],
           "name": "FGLair"
+        },
+        "fujitsu_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Fujitsu Infrared"
         }
       }
     },
