@@ -6227,6 +6227,15 @@
       ],
       "supported_by": "shelly"
     },
+    "linknlink": {
+      "name": "LinknLink",
+      "integration_type": "device",
+      "categories": [
+        "sensors.motion_presence"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "linkplay": {
       "name": "LinkPlay",
       "integration_type": "hub",
