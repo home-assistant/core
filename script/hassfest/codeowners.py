@@ -18,6 +18,7 @@ BASE = """
 .pre-commit-config.yaml @home-assistant/core
 .prettierignore @home-assistant/core
 .yamllint @home-assistant/core
+codemeta.json @home-assistant/core
 pyproject.toml @home-assistant/core
 requirements_test.txt @home-assistant/core
 /.devcontainer/ @home-assistant/core @edenhaus
