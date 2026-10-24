@@ -6,6 +6,7 @@ from homeassistant.components.energy.helpers import (
     generate_power_sensor_entity_id,
     generate_power_sensor_unique_id,
 )
+from homeassistant.core import valid_entity_id
 
 
 def test_generate_power_sensor_unique_id_inverted() -> None:
@@ -109,3 +110,25 @@ def test_generate_power_sensor_entity_id_grid() -> None:
     }
     entity_id = generate_power_sensor_entity_id("grid", config)
     assert entity_id == "sensor.energy_grid_grid_import_grid_export_net_power"
+
+
+def test_generate_power_sensor_entity_id_combined_external_statistics() -> None:
+    """Test entity ID generation for combined config with external statistics."""
+    config = {
+        "stat_rate_from": "sunnyportal2ha:netzbezug_leistung",
+        "stat_rate_to": "sunnyportal2ha:einspeisung_leistung",
+    }
+    entity_id = generate_power_sensor_entity_id("grid", config)
+    assert (
+        entity_id == "sensor.energy_grid_sunnyportal2ha_netzbezug_leistung"
+        "_sunnyportal2ha_einspeisung_leistung_net_power"
+    )
+    assert valid_entity_id(entity_id)
+
+
+def test_generate_power_sensor_entity_id_inverted_external_statistic() -> None:
+    """Test entity ID generation for inverted config with an external statistic."""
+    config = {"stat_rate_inverted": "sunnyportal2ha:netzbezug_leistung"}
+    entity_id = generate_power_sensor_entity_id("grid", config)
+    assert entity_id == "sensor.sunnyportal2ha_netzbezug_leistung_inverted"
+    assert valid_entity_id(entity_id)
