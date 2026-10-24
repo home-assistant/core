@@ -26,7 +26,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ELEVATION_ASTRONOMICAL,
     ELEVATION_CIVIL,
-    ELEVATION_HORIZON,
+    ELEVATION_GEOMETRIC_HORIZON,
     ELEVATION_NAUTICAL,
     SIGNAL_EVENTS_CHANGED,
     SIGNAL_POSITION_CHANGED,
@@ -114,7 +114,8 @@ class Sun(Entity):
     next_dusk: datetime
     next_midnight: datetime
     next_noon: datetime
-    solar_elevation: float
+    solar_elevation: float  # Solar elevation corrected for refraction
+    _solar_elevation_geometric: float  # Geometric solar elevation (without refraction)
     solar_azimuth: float
     rising: bool
     _next_change: datetime
@@ -162,7 +163,10 @@ class Sun(Entity):
     @override
     def state(self) -> str:
         """Return the state of the sun."""
-        if self.solar_elevation > ELEVATION_HORIZON:
+        # Geometric elevation vs astral's geometric sunrise/sunset horizon, so the
+        # state flips exactly when those events fire (the apparent elevation would
+        # double-count refraction and report the sun up ~2-3 min too long).
+        if self._solar_elevation_geometric > ELEVATION_GEOMETRIC_HORIZON:
             return STATE_ABOVE_HORIZON
 
         return STATE_BELOW_HORIZON
@@ -249,6 +253,9 @@ class Sun(Entity):
         # even in the day at the poles, so we can't rely on it.
         # Need to calculate phase if next is noon or midnight
         if self.phase is None:
+            # Apparent (refraction-included) elevation to match the phase
+            # boundaries scheduled above via astral dawn/dusk, which resolve on
+            # apparent elevation. Only the horizon state (see `state`) is geometric.
             elevation = astral.sun.elevation(self.observer, self._next_change)
             if elevation >= 10:
                 self.phase = PHASE_DAY
@@ -289,6 +296,9 @@ class Sun(Entity):
         )
         self.solar_elevation = round(
             astral.sun.elevation(self.observer, utc_point_in_time), 2
+        )
+        self._solar_elevation_geometric = astral.sun.elevation(
+            self.observer, utc_point_in_time, with_refraction=False
         )
 
         _LOGGER.debug(
