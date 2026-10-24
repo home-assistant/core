@@ -1926,6 +1926,36 @@ async def test_scanner_entity_attaches_to_own_device(
     assert entity_entry.device_id == own_device.id
 
 
+async def test_scanner_entity_id_from_device_name(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a new scanner entity derives its entity ID from its device's name."""
+    mac = TEST_MAC_ADDRESS
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        name="Printer",
+    )
+
+    scanner_entity = MockScannerEntity(
+        mac_address=mac, hostname="Printer", unique_id=f"{mac}_scanner"
+    )
+    scanner_entity._attr_has_entity_name = True
+    scanner_entity._attr_name = None
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    # The device is known before the entity registry entry is created
+    entity_entry = entity_registry.async_get("device_tracker.printer")
+    assert entity_entry is not None
+    assert entity_entry.device_id == device.id
+    state = hass.states.get("device_tracker.printer")
+    assert state is not None
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Printer"
+
+
 @pytest.mark.parametrize(
     ("hostname", "expected_device_name"),
     [
