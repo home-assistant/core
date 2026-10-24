@@ -1,18 +1,27 @@
 """Coordinator for the Spin EV Charger integration."""
 
+import asyncio
+from collections.abc import Awaitable, Callable
 import logging
 from typing import override
 
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import close_stale_connections_by_address
 from habluetooth import HaBleakClientWrapper
-from spinev_ble import BleTransport, ChargerStatus, SpinEvCharger, SpinEvError
+from spinev_ble import (
+    BleTransport,
+    ChargerStatus,
+    SpinEvCharger,
+    SpinEvCommandRejectedError,
+    SpinEvError,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -61,6 +70,9 @@ class SpinEvCoordinator(DataUpdateCoordinator[ChargerStatus]):
             == ConnectionMode.PERSISTENT
         )
         self._charger: SpinEvCharger | None = None
+        # A command and a poll must not share the one link at the same time,
+        # or one releases it from under the other.
+        self._link = asyncio.Lock()
 
     @override
     async def _async_setup(self) -> None:
@@ -70,20 +82,21 @@ class SpinEvCoordinator(DataUpdateCoordinator[ChargerStatus]):
     @override
     async def _async_update_data(self) -> ChargerStatus:
         """Read a full status snapshot."""
-        charger = await self._async_charger()
-        try:
-            await charger.async_connect()
-            status = await charger.async_get_status()
-        except SpinEvError as err:
-            await self.async_release()
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_read",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        finally:
-            if not self._keep_connected:
+        async with self._link:
+            charger = await self._async_charger()
+            try:
+                await charger.async_connect()
+                status = await charger.async_get_status()
+            except SpinEvError as err:
                 await self.async_release()
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_read",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+            finally:
+                if not self._keep_connected:
+                    await self.async_release()
 
         # A suspended session can resume without a command, so it is polled at
         # the charging rate rather than the idle one.
@@ -92,6 +105,53 @@ class SpinEvCoordinator(DataUpdateCoordinator[ChargerStatus]):
         )
         self.update_interval = CHARGING_INTERVAL if session_open else IDLE_INTERVAL
         return status
+
+    async def async_start_charging(self) -> None:
+        """Start a charging session."""
+        await self._async_execute(lambda charger: charger.async_start_charging())
+
+    async def async_stop_charging(self) -> None:
+        """Stop the charging session."""
+        await self._async_execute(lambda charger: charger.async_stop_charging())
+
+    async def _async_execute(
+        self, action: Callable[[SpinEvCharger], Awaitable[None]]
+    ) -> None:
+        """Send a command over the same link a poll uses, then refresh."""
+        async with self._link:
+            # A command queued behind teardown would otherwise reconnect after
+            # the entry is gone and, when held, keep the slot claimed.
+            if self._shutdown_requested:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="unloading"
+                )
+            charger = await self._async_charger()
+            try:
+                await charger.async_connect()
+                await action(charger)
+            except SpinEvCommandRejectedError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="command_rejected"
+                ) from err
+            except SpinEvError as err:
+                await self.async_release()
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_send",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+            finally:
+                if not self._keep_connected:
+                    await self.async_release()
+
+        await self.async_request_refresh()
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Stop polling, then drop the link once whatever holds it is done."""
+        await super().async_shutdown()
+        async with self._link:
+            await self.async_release()
 
     async def async_release(self) -> None:
         """Drop the link so another client can reach the charger."""
