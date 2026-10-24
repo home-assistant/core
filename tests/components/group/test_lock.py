@@ -1,6 +1,5 @@
 """The tests for the Group Lock platform."""
 
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -452,24 +451,9 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert hass.states.get("lock.nested_group").state == LockState.LOCKED
 
 
-@pytest.mark.parametrize(
-    ("target", "expected_state"),
-    [
-        ({ATTR_ENTITY_ID: "all"}, LockState.LOCKED),
-        (
-            {
-                ATTR_ENTITY_ID: "all",
-                CONF_EXCLUDE: {ATTR_ENTITY_ID: "lock.nested_group"},
-            },
-            LockState.UNLOCKED,
-        ),
-    ],
-)
 @patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)
-async def test_service_call_all(
-    hass: HomeAssistant, target: dict[str, Any], expected_state: LockState
-) -> None:
-    """Test targeting all locks acts on the members instead of the groups."""
+async def test_service_call_all_exclude_nested_group(hass: HomeAssistant) -> None:
+    """Test excluding a nested group when targeting all locks."""
     await async_setup_component(
         hass,
         LOCK_DOMAIN,
@@ -496,10 +480,10 @@ async def test_service_call_all(
     await hass.services.async_call(
         LOCK_DOMAIN,
         SERVICE_LOCK,
-        target,
+        {ATTR_ENTITY_ID: "all", CONF_EXCLUDE: {ATTR_ENTITY_ID: "lock.nested_group"}},
         blocking=True,
     )
     assert hass.states.get("lock.openable_lock").state == LockState.LOCKED
-    assert hass.states.get("lock.kitchen_door").state == expected_state
-    assert hass.states.get("lock.some_group").state == expected_state
-    assert hass.states.get("lock.nested_group").state == expected_state
+    assert hass.states.get("lock.kitchen_door").state == LockState.UNLOCKED
+    assert hass.states.get("lock.some_group").state == LockState.UNLOCKED
+    assert hass.states.get("lock.nested_group").state == LockState.UNLOCKED

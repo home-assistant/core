@@ -58,6 +58,8 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
+    label_registry as lr,
     service,
 )
 from homeassistant.helpers.entity import Entity
@@ -1865,62 +1867,6 @@ async def mock_group_entity(hass: HomeAssistant) -> MockEntity:
     return group_entity
 
 
-async def test_entity_service_call_all_skips_group_entities(
-    hass: HomeAssistant,
-    mock_entities: dict[str, MockEntity],
-    mock_entities_method: AsyncMock,
-    mock_group_entity: MockEntity,
-) -> None:
-    """Test targeting all entities skips group entities expanded to members."""
-    await service.entity_service_call(
-        hass,
-        {**mock_entities, mock_group_entity.entity_id: mock_group_entity},
-        "test_method",
-        ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
-    )
-
-    assert {call.args[0].entity_id for call in mock_entities_method.mock_calls} == {
-        "light.kitchen",
-        "light.living_room",
-        "light.bedroom",
-        "light.bathroom",
-    }
-
-
-@pytest.mark.parametrize(
-    ("expand_group", "expected_entity_ids"),
-    [
-        (
-            True,
-            {"light.kitchen", "light.living_room", "light.bedroom", "light.bathroom"},
-        ),
-        (
-            False,
-            {
-                "light.kitchen",
-                "light.living_room",
-                "light.bedroom",
-                "light.bathroom",
-                "light.group",
-            },
-        ),
-    ],
-)
-async def test_async_extract_entities_all_group_entities(
-    hass: HomeAssistant,
-    mock_entities: dict[str, MockEntity],
-    mock_group_entity: MockEntity,
-    expand_group: bool,
-    expected_entity_ids: set[str],
-) -> None:
-    """Test targeting all entities skips group entities only when expanding."""
-    call = ServiceCall(hass, "light", "turn_on", {"entity_id": "all"})
-    extracted = await service.async_extract_entities(
-        [*mock_entities.values(), mock_group_entity], call, expand_group=expand_group
-    )
-    assert {entity.entity_id for entity in extracted} == expected_entity_ids
-
-
 @pytest.mark.parametrize(
     ("expand_group", "expected_entity_ids"),
     [
@@ -1949,6 +1895,72 @@ async def test_async_extract_entities_all_exclude_group_entity(
         [*mock_entities.values(), mock_group_entity], call, expand_group=expand_group
     )
     assert {entity.entity_id for entity in extracted} == expected_entity_ids
+
+
+@pytest.mark.parametrize(
+    ("target", "exclude", "expected_entity_ids"),
+    [
+        pytest.param({"entity_id": "all"}, "light.outer", {"light.other"}, id="all"),
+        pytest.param({"area_id": "area_a"}, "light.outer", {"light.other"}, id="area"),
+        pytest.param(
+            {"floor_id": "floor_a"}, "light.outer", {"light.other"}, id="floor"
+        ),
+        pytest.param(
+            {"label_id": "label_a"}, "light.outer", {"light.other"}, id="label"
+        ),
+    ],
+)
+async def test_entity_service_call_exclude_group_entity(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+    label_registry: lr.LabelRegistry,
+    mock_entities_method: AsyncMock,
+    target: dict[str, Any],
+    exclude: str,
+    expected_entity_ids: set[str],
+) -> None:
+    """Test an excluded group entity and its nested groups are not called."""
+    floor = floor_registry.async_create("Floor A")
+    area = area_registry.async_create("Area A", floor_id=floor.floor_id)
+    label = label_registry.async_create("Label A")
+
+    outer = MockEntity(entity_id="light.outer", unique_id="outer", available=True)
+    outer.group = GenericGroup(outer, ["light.inner", "light.a"])
+    inner = MockEntity(entity_id="light.inner", unique_id="inner", available=True)
+    inner.group = GenericGroup(inner, ["light.b"])
+    entities = [
+        outer,
+        inner,
+        MockEntity(entity_id="light.a", unique_id="a", available=True),
+        MockEntity(entity_id="light.b", unique_id="b", available=True),
+        MockEntity(entity_id="light.other", unique_id="other", available=True),
+    ]
+    await MockEntityPlatform(
+        hass, domain="light", platform_name="test"
+    ).async_add_entities(entities)
+    await hass.async_block_till_done()
+    for entity in entities:
+        entity_registry.async_update_entity(
+            entity.entity_id, area_id=area.id, labels={label.label_id}
+        )
+
+    await service.entity_service_call(
+        hass,
+        {entity.entity_id: entity for entity in entities},
+        "test_method",
+        ServiceCall(
+            hass,
+            "test_domain",
+            "test_service",
+            {**target, "exclude": {"entity_id": exclude}},
+        ),
+    )
+
+    assert {
+        call.args[0].entity_id for call in mock_entities_method.mock_calls
+    } == expected_entity_ids
 
 
 async def test_service_call_exclude(

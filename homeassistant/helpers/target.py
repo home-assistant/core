@@ -274,12 +274,16 @@ def _async_extract_excluded(
     """Resolve the exclude block of a target selection."""
     # All entities are resolved, so excluding an area also excludes its hidden,
     # config and diagnostic entities when those are part of the targeted entities.
+    # Group entities, nested ones included, are kept alongside their members as
+    # they are still candidates when targeting all entities, an area, a device,
+    # a floor or a label.
     return _async_extract_referenced_entity_ids(
         hass,
         exclude,
         expand_group=expand_group,
         primary_entities_only=False,
         include_hidden=True,
+        include_groups=True,
     )
 
 
@@ -290,6 +294,7 @@ def _async_extract_referenced_entity_ids(
     *,
     primary_entities_only: bool,
     include_hidden: bool = False,
+    include_groups: bool = False,
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a target selection, ignoring excludes."""
     selected = SelectedEntities()
@@ -299,7 +304,9 @@ def _async_extract_referenced_entity_ids(
 
     entity_ids: set[str] | list[str] = target_selection.entity_ids
     if expand_group:
-        entity_ids = group.expand_entity_ids(hass, entity_ids)
+        entity_ids = group.expand_entity_ids(
+            hass, entity_ids, include_groups=include_groups
+        )
 
     selected.referenced.update(entity_ids)
 
