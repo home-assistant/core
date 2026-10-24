@@ -5315,7 +5315,7 @@ async def test_unique_id_ignore(
     expected_entry_discovery_keys: dict,
 ) -> None:
     """Test that we can ignore flows that are in progress and have a unique ID."""
-    async_setup_entry = AsyncMock(return_value=False)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
 
@@ -11100,7 +11100,7 @@ async def test_unique_id_collision_issue_keeps_ignore(
     """Test an ignored unique id collision issue is kept while the collision persists."""
     issue_id = "config_entry_unique_id_collision_test1_not_unique"
     mock_integration(
-        hass, MockModule("test1", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test1", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test1.config_flow", None)
     entries = [
