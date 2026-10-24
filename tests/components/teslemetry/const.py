@@ -6,6 +6,7 @@ from homeassistant.components.teslemetry.const import DOMAIN, TeslemetryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 UNIQUE_ID = "abc-123"
+VIN = "LRW3F7EK4NC700000"
 CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}
 
 # The vehicle in products.json, and the Bluetooth address a subentry pairs it at.
@@ -70,6 +71,9 @@ ENERGY_TOTALS = {
 
 # An empty or malformed day: every field comes back null.
 ENERGY_TOTALS_NULL = dict.fromkeys(ENERGY_TOTALS)
+
+# Wh delivered per Wall Connector DIN; a DIN with no session that day is absent.
+WALL_CONNECTOR_TOTALS = {"abd-123": 7250}
 
 COMMAND_OK = {"response": {"result": True, "reason": ""}}
 COMMAND_REASON = {"response": {"result": False, "reason": "already closed"}}
@@ -154,6 +158,39 @@ METADATA_LEGACY = {
             "firmware": "2026.0.0",
             "discounted": True,
             "fleet_telemetry": "unknown",
+            "name": "Home Assistant",
+            "config": VEHICLE_CONFIG,
+        }
+    },
+    "energy_sites": {
+        "123456": {
+            "access": True,
+            "name": "Energy Site",
+        }
+    },
+}
+METADATA_OLD_FIRMWARE = {
+    "uid": UNIQUE_ID,
+    "region": "NA",
+    "scopes": [
+        "openid",
+        "offline_access",
+        "user_data",
+        "vehicle_device_data",
+        "vehicle_cmds",
+        "vehicle_charging_cmds",
+        "vehicle_location",
+        "energy_device_data",
+        "energy_cmds",
+    ],
+    "vehicles": {
+        "LRW3F7EK4NC700000": {
+            "proxy": True,
+            "access": True,
+            "polling": False,
+            "firmware": "2024.20",
+            "discounted": False,
+            "fleet_telemetry": "1.0.2",
             "name": "Home Assistant",
             "config": VEHICLE_CONFIG,
         }

@@ -1,7 +1,7 @@
 """iCloud account."""
 
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 import operator
 from typing import TYPE_CHECKING, Any
@@ -31,7 +31,7 @@ from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import as_utc, parse_datetime, utcnow
 from homeassistant.util.location import distance
 
 from .const import (
@@ -46,12 +46,20 @@ from .const import (
     DEVICE_BATTERY_STATUS,
     DEVICE_CLASS,
     DEVICE_DISPLAY_NAME,
+    DEVICE_FEATURE_LOCK,
+    DEVICE_FEATURES,
     DEVICE_ID,
     DEVICE_LOCATION,
+    DEVICE_LOCATION_ALTITUDE,
+    DEVICE_LOCATION_FLOOR_LEVEL,
     DEVICE_LOCATION_HORIZONTAL_ACCURACY,
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
+    DEVICE_LOCATION_POSITION_TYPE,
+    DEVICE_LOCATION_TIMESTAMP,
+    DEVICE_LOCKED_TIMESTAMP,
     DEVICE_LOST_MODE_CAPABLE,
+    DEVICE_LOST_TIMESTAMP,
     DEVICE_LOW_POWER_MODE,
     DEVICE_NAME,
     DEVICE_PERSON_ID,
@@ -59,6 +67,7 @@ from .const import (
     DEVICE_STATUS,
     DEVICE_STATUS_CODES,
     DEVICE_STATUS_SET,
+    DEVICE_WIPED_TIMESTAMP,
     DOMAIN,
 )
 
@@ -88,6 +97,18 @@ _AUTH_REQUIRED_STATUSES = frozenset(
 def is_auth_error(err: PyiCloudAPIResponseException) -> bool:
     """Return True if the account has to authenticate again to recover."""
     return isinstance(err.code, int) and err.code in _AUTH_REQUIRED_STATUSES
+
+
+def _is_usable_location(location: dict[str, Any] | None) -> bool:
+    """Return whether a location carries everything the tracker reads."""
+    return location is not None and all(
+        location.get(key) is not None
+        for key in (
+            DEVICE_LOCATION_LATITUDE,
+            DEVICE_LOCATION_LONGITUDE,
+            DEVICE_LOCATION_HORIZONTAL_ACCURACY,
+        )
+    )
 
 
 def _is_auth_failure(err: BaseException) -> bool:
@@ -126,6 +147,31 @@ def code_can_be_delivered(api: PyiCloudService | None) -> bool:
 
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
+
+
+def _parse_timestamp(value: Any) -> datetime | None:
+    """Parse an iCloud timestamp.
+
+    iCloud reports timestamps either as epoch milliseconds or as a string,
+    and uses ``None`` or an empty string when the event never happened.
+    """
+    if isinstance(value, bool) or value is None:
+        return None
+
+    if isinstance(value, (int, float)):
+        if value <= 0:
+            return None
+        try:
+            return datetime.fromtimestamp(value / 1000, tz=UTC)
+        except OSError, OverflowError, ValueError:
+            return None
+
+    if isinstance(value, str):
+        if (parsed := parse_datetime(value)) is None:
+            return None
+        return as_utc(parsed)
+
+    return None
 
 
 def _cannot_connect(err: PyiCloudConnectionException) -> ConfigEntryNotReady:
@@ -478,26 +524,39 @@ class IcloudAccount:
             if first_status is None:
                 first_status = status
 
-            if (
-                status[DEVICE_BATTERY_STATUS] == "Unknown"
-                or status.get(DEVICE_BATTERY_LEVEL) is None
-            ):
+            if self._devices.get(device_id) is not None:
+                # A device already being tracked is always updated. What
+                # follows decides whether to start tracking one, not whether
+                # to keep it current: skipping the update would leave the
+                # battery and location it has stopped reporting on show.
+                _LOGGER.debug("Updating iCloud device: %s", device_name)
+                if self._devices[device_id].update(status):
+                    new_device = True
                 continue
 
-            if self._devices.get(device_id) is not None:
-                # Seen device -> updating
-                _LOGGER.debug("Updating iCloud device: %s", device_name)
-                self._devices[device_id].update(status)
-            else:
-                # New device, should be unique
-                _LOGGER.debug(
-                    "Adding iCloud device: %s [model: %s]",
-                    device_name,
-                    status[DEVICE_RAW_DEVICE_MODEL],
-                )
-                self._devices[device_id] = IcloudDevice(self, device, status)
-                self._devices[device_id].update(status)
-                new_device = True
+            # Being locatable is what makes a device worth tracking, and
+            # iCloud reports no battery for one that is asleep or has none to
+            # report. Either on its own is worth keeping: the account feeds
+            # the tracker platform and the battery sensors, and each skips
+            # what it cannot use. Only a device reporting neither is of no
+            # use to either.
+            device_location = status.get(DEVICE_LOCATION)
+            has_location = _is_usable_location(device_location)
+            has_battery = (
+                status[DEVICE_BATTERY_STATUS] != "Unknown"
+                and status.get(DEVICE_BATTERY_LEVEL) is not None
+            )
+            if not has_location and not has_battery:
+                continue
+
+            _LOGGER.debug(
+                "Adding iCloud device: %s [model: %s]",
+                device_name,
+                status[DEVICE_RAW_DEVICE_MODEL],
+            )
+            self._devices[device_id] = IcloudDevice(self, device, status)
+            self._devices[device_id].update(status)
+            new_device = True
 
         if (
             # status() reports every requested field, using None for the ones
@@ -516,6 +575,9 @@ class IcloudAccount:
 
         dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
+            # Sent once, after the scan: the platforms iterate the account's
+            # devices on the event loop, so a signal sent from the middle of
+            # the scan could have one iterating while the next device is added.
             dispatcher_send(self.hass, self.signal_device_new)
 
         self._schedule_next_fetch()
@@ -766,7 +828,7 @@ class IcloudAccount:
         return self._fetch_interval
 
     @property
-    def devices(self) -> dict[str, Any]:
+    def devices(self) -> dict[str, IcloudDevice]:
         """Return the account devices."""
         return self._devices
 
@@ -814,8 +876,13 @@ class IcloudDevice:
         elif account.owner_fullname is not None:
             self._attrs[ATTR_OWNER_NAME] = account.owner_fullname
 
-    def update(self, status) -> None:
-        """Update the iCloud device."""
+    def update(self, status) -> bool:
+        """Update the iCloud device.
+
+        Returns whether the device has gained something the platforms build
+        entities from, so the caller can tell them once its scan is done.
+        """
+        announce = False
         self._status = status
 
         self._status[ATTR_ACCOUNT_FETCH_INTERVAL] = self._account.fetch_interval
@@ -825,20 +892,32 @@ class IcloudDevice:
 
         self._battery_status = self._status[DEVICE_BATTERY_STATUS]
         self._attrs[ATTR_BATTERY_STATUS] = self._battery_status
-        device_battery_level = self._status.get(DEVICE_BATTERY_LEVEL, 0)
+        device_battery_level = self._status.get(DEVICE_BATTERY_LEVEL)
         if self._battery_status != "Unknown" and device_battery_level is not None:
+            # The battery sensor is created from the new-device signal, and a
+            # device kept for its location alone was added without one.
+            # Nothing else reports that it has a battery now.
+            announce = self._battery_level is None
             self._battery_level = int(device_battery_level * 100)
             self._attrs[ATTR_BATTERY] = self._battery_level
             self._attrs[ATTR_LOW_POWER_MODE] = self._status[DEVICE_LOW_POWER_MODE]
+        else:
+            # Keeping a device whose battery iCloud has stopped reporting -
+            # one that has gone to sleep, say - would otherwise leave the
+            # sensor showing the last level it saw for as long as it lasts.
+            self._battery_level = None
+            self._attrs.pop(ATTR_BATTERY, None)
+            self._attrs.pop(ATTR_LOW_POWER_MODE, None)
 
-            if (
-                self._status[DEVICE_LOCATION]
-                and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE]
-            ):
-                location = self._status[DEVICE_LOCATION]
-                if self._location is None:
-                    dispatcher_send(self._account.hass, self._account.signal_device_new)
-                self._location = location
+        # Deliberately not nested under the battery block above: a device
+        # iCloud reports no battery for still has a location worth reading.
+        location = self._status.get(DEVICE_LOCATION)
+        if location and _is_usable_location(location):
+            announce = announce or self._location is None
+            self._location = location
+        else:
+            self._location = None
+        return announce
 
     def play_sound(self) -> None:
         """Play sound on the device."""
@@ -909,6 +988,87 @@ class IcloudDevice:
     def location(self) -> dict[str, Any] | None:
         """Return the Apple device location."""
         return self._location
+
+    @property
+    def location_timestamp(self) -> datetime | None:
+        """Return when the last location fix was recorded."""
+        if self._location is None:
+            return None
+        return _parse_timestamp(self._location.get(DEVICE_LOCATION_TIMESTAMP))
+
+    @property
+    def location_type(self) -> str | None:
+        """Return the type of the last location fix, for example GPS or Wifi."""
+        if self._location is None:
+            return None
+        return self._location.get(DEVICE_LOCATION_POSITION_TYPE)
+
+    @property
+    def location_accuracy(self) -> float | None:
+        """Return the horizontal accuracy of the last location fix in meters."""
+        if self._location is None:
+            return None
+        return self._location.get(DEVICE_LOCATION_HORIZONTAL_ACCURACY)
+
+    @property
+    def location_altitude(self) -> float | None:
+        """Return the altitude of the last location fix in meters."""
+        if self._location is None:
+            return None
+        return self._location.get(DEVICE_LOCATION_ALTITUDE)
+
+    @property
+    def location_floor_level(self) -> int | None:
+        """Return the floor level of the last location fix."""
+        if self._location is None:
+            return None
+        return self._location.get(DEVICE_LOCATION_FLOOR_LEVEL)
+
+    @property
+    def device_status(self) -> str:
+        """Return the device online status."""
+        return DEVICE_STATUS_CODES.get(self._status[DEVICE_STATUS], "error")
+
+    @property
+    def last_locked(self) -> datetime | None:
+        """Return when the device was last locked."""
+        return _parse_timestamp(self._status.get(DEVICE_LOCKED_TIMESTAMP))
+
+    @property
+    def last_lost(self) -> datetime | None:
+        """Return when the device was last put in lost mode."""
+        return _parse_timestamp(self._status.get(DEVICE_LOST_TIMESTAMP))
+
+    @property
+    def last_wiped(self) -> datetime | None:
+        """Return when the device was last wiped."""
+        return _parse_timestamp(self._status.get(DEVICE_WIPED_TIMESTAMP))
+
+    @property
+    def owner_name(self) -> str | None:
+        """Return the full name of the device owner."""
+        return self._attrs.get(ATTR_OWNER_NAME)
+
+    @property
+    def erase_available(self) -> bool:
+        """Return whether the device can be remotely erased."""
+        return self._device.erase_available
+
+    @property
+    def lock_available(self) -> bool:
+        """Return whether the device can be remotely locked."""
+        features = self._status.get(DEVICE_FEATURES) or {}
+        return bool(features.get(DEVICE_FEATURE_LOCK, False))
+
+    @property
+    def location_available(self) -> bool:
+        """Return whether the device reports a location."""
+        return self._device.location_available
+
+    @property
+    def lost_mode_available(self) -> bool:
+        """Return whether the device supports lost mode."""
+        return self._device.lost_mode_available
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

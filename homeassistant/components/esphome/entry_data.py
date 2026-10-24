@@ -23,6 +23,7 @@ from aioesphomeapi import (
     DateTimeInfo,
     DeviceCapabilities,
     DeviceInfo,
+    DeviceWizard,
     EntityInfo,
     EntityState,
     Event,
@@ -153,6 +154,7 @@ class StoreData(TypedDict, total=False):
 
     device_info: dict[str, Any]
     device_capabilities: dict[str, Any]
+    device_wizard: dict[str, Any]
     services: list[dict[str, Any]]
     api_version: dict[str, Any]
     states: dict[str, list[dict[str, Any]]]
@@ -186,6 +188,7 @@ class RuntimeEntryData:
     expected_disconnect: bool = False  # Last disconnect was expected (e.g. deep sleep)
     device_info: DeviceInfo | None = None
     device_capabilities: DeviceCapabilities | None = None
+    device_wizard: DeviceWizard | None = None
     # Identity of the device behind each serial proxy port, keyed by instance index.
     # Filled from the device on connect and kept current by its hotplug messages, so
     # the USB port scanner can answer without asking the device.
@@ -525,6 +528,8 @@ class RuntimeEntryData:
             device_capabilities := restored.pop("device_capabilities", None)
         ) is not None:
             self.device_capabilities = DeviceCapabilities.from_dict(device_capabilities)
+        if (device_wizard := restored.pop("device_wizard", None)) is not None:
+            self.device_wizard = DeviceWizard.from_dict(device_wizard)
         restored_states = restored.pop("states", {})
         expected_disconnect = restored.pop("expected_disconnect", False)
         infos: list[EntityInfo] = []
@@ -579,6 +584,8 @@ class RuntimeEntryData:
         }
         if self.device_capabilities is not None:
             store_data["device_capabilities"] = self.device_capabilities.to_dict()
+        if self.device_wizard is not None:
+            store_data["device_wizard"] = self.device_wizard.to_dict()
         for info_type, infos in self.info.items():
             comp_type = INFO_TO_COMPONENT_TYPE[info_type]
             store_data[comp_type] = [info.to_dict() for info in infos.values()]  # type: ignore[literal-required]
