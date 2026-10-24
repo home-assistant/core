@@ -1,0 +1,16 @@
+[
+  {
+    "id": "7c6d5e4f-3a2b-4c1d-9e8f-7a6b5c4d3001",
+    "listId": "5a4b3c2d-1e0f-4a9b-8c7d-6e5f4a3b2001",
+    "name": "Melk",
+    "quantity": 2,
+    "sortOrder": 1
+  },
+  {
+    "id": "7c6d5e4f-3a2b-4c1d-9e8f-7a6b5c4d3002",
+    "listId": "5a4b3c2d-1e0f-4a9b-8c7d-6e5f4a3b2001",
+    "name": "Brød",
+    "description": "Grovbrød",
+    "sortOrder": 2
+  }
+]
