@@ -133,6 +133,10 @@ class MatterDiscoverySchema:
     # must be at most this value (inclusive)
     cluster_revision_max: int | None = None
 
+    # [optional] the Matter server's schema version
+    # must be at least this value (inclusive)
+    server_schema_min: int | None = None
+
     # [optional] bool to specify if this primary value may be discovered
     # by multiple platforms
     allow_multi: bool = False
