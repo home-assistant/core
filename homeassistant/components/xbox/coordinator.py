@@ -5,10 +5,11 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
-from typing import override
+from typing import Self, override
 
 from httpx2 import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.client import XboxLiveClient
+from pythonxbox.api.provider.achievements.models import Achievement, Achievement360
 from pythonxbox.api.provider.catalog.const import SYSTEM_PFN_ID_MAP
 from pythonxbox.api.provider.catalog.models import AlternateIdType, Product
 from pythonxbox.api.provider.people.models import Person
@@ -22,10 +23,13 @@ from pythonxbox.common.exceptions import RateLimitExceededException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+SWEEP_INTERVAL = timedelta(minutes=15)
 
 type XboxConfigEntry = ConfigEntry[XboxCoordinators]
 
@@ -47,6 +51,78 @@ class XboxData:
     achievement_totals: dict[str, int] = field(default_factory=dict)
 
 
+@dataclass(frozen=True, kw_only=True)
+class AchievementUnlock:
+    """An unlocked achievement of an Xbox One or Xbox 360 title."""
+
+    name: str
+    description: str
+    gamerscore: int
+    game: str | None
+    title_id: int
+    rarity: str | None
+    rarity_percentage: float | None
+    time_unlocked: datetime
+    image: str | None
+
+    @classmethod
+    def from_xboxone(cls, achievement: Achievement) -> Self:
+        """Create from an Xbox One achievement."""
+        return cls(
+            name=achievement.name,
+            description=achievement.description,
+            gamerscore=next(
+                (
+                    int(reward.value)
+                    for reward in achievement.rewards
+                    if reward.type == "Gamerscore"
+                ),
+                0,
+            ),
+            game=achievement.title_associations[0].name,
+            title_id=achievement.title_associations[0].id,
+            rarity=(
+                achievement.rarity.current_category.lower()
+                if achievement.rarity
+                else None
+            ),
+            rarity_percentage=(
+                achievement.rarity.current_percentage if achievement.rarity else None
+            ),
+            time_unlocked=achievement.progression.time_unlocked,
+            image=next(
+                (
+                    asset.url
+                    for asset in achievement.media_assets
+                    if asset.type == "Icon"
+                ),
+                None,
+            ),
+        )
+
+    @classmethod
+    def from_xbox360(cls, achievement: Achievement360) -> Self:
+        """Create from an Xbox 360 achievement."""
+        return cls(
+            name=achievement.name,
+            description=achievement.description,
+            gamerscore=achievement.gamerscore,
+            # Xbox 360 achievements carry neither, they are looked up when needed
+            game=None,
+            title_id=achievement.title_id,
+            rarity=(
+                achievement.rarity.current_category.lower()
+                if achievement.rarity
+                else None
+            ),
+            rarity_percentage=(
+                achievement.rarity.current_percentage if achievement.rarity else None
+            ),
+            time_unlocked=achievement.time_unlocked,
+            image=None,
+        )
+
+
 @dataclass
 class XboxCoordinators:
     """Xbox coordinators."""
@@ -54,6 +130,7 @@ class XboxCoordinators:
     consoles: XboxConsolesCoordinator
     status: XboxConsoleStatusCoordinator
     presence: XboxPresenceCoordinator
+    achievements: XboxAchievementsCoordinator
 
 
 class XboxBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
@@ -325,3 +402,105 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
             for friend in self.config_entry.subentries.values()
             if friend.unique_id
         }
+
+
+class XboxAchievementsCoordinator(
+    DataUpdateCoordinator[dict[str, list[AchievementUnlock]]]
+):
+    """Update recently unlocked achievements."""
+
+    config_entry: XboxConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: XboxConfigEntry,
+        client: XboxLiveClient,
+        presence: XboxPresenceCoordinator,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, _LOGGER, config_entry=config_entry, name=DOMAIN)
+        self.client = client
+        self.presence = presence
+        self.data = {}
+
+        self.online: set[str] = set()
+        self.last_sweep: datetime | None = None
+        self.titles_360: dict[int, Title | None] = {}
+
+    @override
+    async def _async_update_data(self) -> dict[str, list[AchievementUnlock]]:
+        """Fetch recently unlocked achievements."""
+
+        online = {
+            xuid
+            for xuid, person in self.presence.data.presence.items()
+            if person.presence_state == "Online"
+        }
+        # Anyone who just went offline is polled once more, to catch the
+        # unlocks of their last minutes.
+        xuids = online | self.online
+        self.online = online
+
+        # People who appear offline look offline to presence too, so everyone
+        # is polled now and then.
+        now = dt_util.utcnow()
+        if self.last_sweep is None or now - self.last_sweep >= SWEEP_INTERVAL:
+            xuids = set(self.presence.data.presence)
+            self.last_sweep = now
+
+        achievements = self.client.achievements
+        data: dict[str, list[AchievementUnlock]] = {}
+        for xuid in xuids:
+            try:
+                xboxone = await achievements.get_achievements_xboxone_recent_unlocks(
+                    xuid
+                )
+                xbox360 = await achievements.get_achievements_xbox360_recent_unlocks(
+                    xuid
+                )
+            except (HTTPStatusError, RateLimitExceededException, RequestError) as e:
+                _LOGGER.debug("Unable to retrieve achievements for %s: %s", xuid, e)
+                continue
+
+            # Achievements without a known unlock time carry a placeholder date.
+            data[xuid] = [
+                *(
+                    AchievementUnlock.from_xboxone(achievement)
+                    for achievement in xboxone.achievements
+                    if achievement.progress_state == "Achieved"
+                    and achievement.progression.time_unlocked.year > 1
+                ),
+                *(
+                    AchievementUnlock.from_xbox360(achievement)
+                    for achievement in xbox360.achievements
+                    if achievement.unlocked and achievement.time_unlocked.year > 1753
+                ),
+            ]
+
+        if xuids and not data:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            )
+        return data
+
+    async def async_get_360_title(self, title_id: int) -> Title | None:
+        """Return the title details of an Xbox 360 game."""
+
+        if title_id not in self.titles_360:
+            try:
+                response = await self.client.titlehub.get_title_info(str(title_id))
+            except HTTPStatusError as e:
+                _LOGGER.debug("Unable to retrieve title %s: %s", title_id, e)
+                if e.response.status_code != HTTPStatus.NOT_FOUND:
+                    return None
+                # Titlehub doesn't know every Xbox 360 game, so don't ask again.
+                self.titles_360[title_id] = None
+            except RequestError as e:
+                _LOGGER.debug("Unable to retrieve title %s: %s", title_id, e)
+                return None
+            else:
+                self.titles_360[title_id] = next(iter(response.titles), None)
+
+        return self.titles_360[title_id]

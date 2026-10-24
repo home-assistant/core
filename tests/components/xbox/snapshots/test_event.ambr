@@ -1,0 +1,307 @@
+# serializer version: 1
+# name: test_event_platform[event.erics273_achievement_unlocked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.erics273_achievement_unlocked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Achievement unlocked',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Achievement unlocked',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'achievement_unlocked',
+    'unique_id': '2533274913657542_achievement_unlocked',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_platform[event.erics273_achievement_unlocked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Achievement unlocked',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.erics273_achievement_unlocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event_platform[event.gsr_ae_achievement_unlocked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.gsr_ae_achievement_unlocked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Achievement unlocked',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Achievement unlocked',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'achievement_unlocked',
+    'unique_id': '271958441785640_achievement_unlocked',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_platform[event.gsr_ae_achievement_unlocked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Achievement unlocked',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.gsr_ae_achievement_unlocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event_platform[event.ikken_hissatsuu_achievement_unlocked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.ikken_hissatsuu_achievement_unlocked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Achievement unlocked',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Achievement unlocked',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'achievement_unlocked',
+    'unique_id': '2533274838782903_achievement_unlocked',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_platform[event.ikken_hissatsuu_achievement_unlocked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Achievement unlocked',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.ikken_hissatsuu_achievement_unlocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_xbox360_unlocks[connection_error]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'description': 'You completed a Muscle-Only Series',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'achievement_unlocked',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Achievement unlocked',
+      'game': None,
+      'gamerscore': 10,
+      'image': None,
+      'name': 'Flex Those Muscles',
+      'rarity': 'common',
+      'rarity_percentage': 46.32,
+      'time_unlocked': datetime.datetime(2021, 3, 6, 18, 42, 11, 570000, tzinfo=TzInfo(0)),
+      'title_id': 1480659550,
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.gsr_ae_achievement_unlocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-03-06T18:51:00.000+00:00',
+  })
+# ---
+# name: test_xbox360_unlocks[found]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'description': 'You completed a Muscle-Only Series',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://store-images.s-microsoft.com/image/apps.55462.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.6e8da1e2-791b-4bc8-aaf6-a2665f7cdc90',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'achievement_unlocked',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Achievement unlocked',
+      'game': 'Joy Ride Turbo',
+      'gamerscore': 10,
+      'image': 'https://store-images.s-microsoft.com/image/apps.55462.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.6e8da1e2-791b-4bc8-aaf6-a2665f7cdc90',
+      'name': 'Flex Those Muscles',
+      'rarity': 'common',
+      'rarity_percentage': 46.32,
+      'time_unlocked': datetime.datetime(2021, 3, 6, 18, 42, 11, 570000, tzinfo=TzInfo(0)),
+      'title_id': 1480659550,
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.gsr_ae_achievement_unlocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-03-06T18:51:00.000+00:00',
+  })
+# ---
+# name: test_xbox360_unlocks[not_found]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'description': 'You completed a Muscle-Only Series',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'achievement_unlocked',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Achievement unlocked',
+      'game': None,
+      'gamerscore': 10,
+      'image': None,
+      'name': 'Flex Those Muscles',
+      'rarity': 'common',
+      'rarity_percentage': 46.32,
+      'time_unlocked': datetime.datetime(2021, 3, 6, 18, 42, 11, 570000, tzinfo=TzInfo(0)),
+      'title_id': 1480659550,
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.gsr_ae_achievement_unlocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-03-06T18:51:00.000+00:00',
+  })
+# ---
+# name: test_xbox360_unlocks[too_many_requests]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'description': 'You completed a Muscle-Only Series',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'achievement_unlocked',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Achievement unlocked',
+      'game': None,
+      'gamerscore': 10,
+      'image': None,
+      'name': 'Flex Those Muscles',
+      'rarity': 'common',
+      'rarity_percentage': 46.32,
+      'time_unlocked': datetime.datetime(2021, 3, 6, 18, 42, 11, 570000, tzinfo=TzInfo(0)),
+      'title_id': 1480659550,
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.gsr_ae_achievement_unlocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-03-06T18:51:00.000+00:00',
+  })
+# ---
+# name: test_xboxone_unlocks
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'description': 'Cook and eat a porkchop.',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://images-eds-ssl.xboxlive.com/image?url=27S1DHqE.cHkmFg4nspsd1He6mVFX2FYq_CneWhfs7CrexL77McQFotoaGqO9OA24UrU79r7hb9PI.7UziWrd_ryqLaOaZLCyjtE90GV09hk6gaZzbSzqccF9pJL5sRE',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'achievement_unlocked',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Achievement unlocked',
+      'game': 'Minecraft',
+      'gamerscore': 10,
+      'image': 'https://images-eds-ssl.xboxlive.com/image?url=27S1DHqE.cHkmFg4nspsd1He6mVFX2FYq_CneWhfs7CrexL77McQFotoaGqO9OA24UrU79r7hb9PI.7UziWrd_ryqLaOaZLCyjtE90GV09hk6gaZzbSzqccF9pJL5sRE',
+      'name': 'Pork Chop',
+      'rarity': 'common',
+      'rarity_percentage': 26.81,
+      'time_unlocked': datetime.datetime(2026, 9, 13, 14, 50, 10, 43000, tzinfo=TzInfo(0)),
+      'title_id': 1828326430,
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.gsr_ae_achievement_unlocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-09-13T15:00:30.001+00:00',
+  })
+# ---
