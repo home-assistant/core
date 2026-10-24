@@ -390,6 +390,13 @@ class ToolResultContentDeltaDict(TypedDict, total=False):
     tool_result: JsonObjectType
 
 
+def _is_intent_tool(tool: llm.Tool) -> bool:
+    """Return True if the tool, unwrapped from any namespace, handles an intent."""
+    while isinstance(tool, llm.NamespacedTool):
+        tool = tool.tool
+    return isinstance(tool, llm.IntentTool)
+
+
 @dataclass
 class ChatLog:
     """Class holding the chat history of a specific conversation."""
@@ -744,6 +751,43 @@ class ChatLog:
             user_extra_system_prompt=user_input.extra_system_prompt,
         )
 
+    @callback
+    def _async_match_external_tool_names(self, tools: list[llm.Tool]) -> None:
+        """Rename external intent calls to the intent tool the LLM is offered.
+
+        Some models fail when the history calls a tool that is not offered.
+        """
+        tool_names = {tool.name for tool in tools}
+        intent_tool_names = [tool.name for tool in tools if _is_intent_tool(tool)]
+        renamed: dict[str, str] = {}
+        for index, content in enumerate(self.content):
+            if isinstance(content, AssistantContent) and content.tool_calls:
+                tool_calls = content.tool_calls.copy()
+                for call_index, tool_call in enumerate(tool_calls):
+                    if not tool_call.external or tool_call.tool_name in tool_names:
+                        continue
+                    # A name renamed in an earlier turn may carry an old prefix.
+                    intent_name = tool_call.tool_name.rpartition("__")[2]
+                    matches = [
+                        name
+                        for name in intent_tool_names
+                        if name == intent_name or name.endswith(f"__{intent_name}")
+                    ]
+                    if len(matches) == 1:
+                        tool_calls[call_index] = replace(
+                            tool_call, tool_name=matches[0]
+                        )
+                        renamed[tool_call.id] = matches[0]
+                if tool_calls != content.tool_calls:
+                    self.content[index] = replace(content, tool_calls=tool_calls)
+            elif (
+                isinstance(content, ToolResultContent)
+                and content.tool_call_id in renamed
+            ):
+                self.content[index] = replace(
+                    content, tool_name=renamed[content.tool_call_id]
+                )
+
     async def async_provide_llm_data(
         self,
         llm_context: llm.LLMContext,
@@ -831,6 +875,9 @@ class ChatLog:
             prompt_parts.append(extra_system_prompt)
 
         prompt = "\n".join(prompt_parts)
+
+        if llm_api:
+            self._async_match_external_tool_names(llm_api.tools)
 
         self.llm_input_provided_index = len(self.content)
         self.llm_api = llm_api
