@@ -81,17 +81,39 @@ async def test_sensor_fault_flag(
 
 
 @pytest.mark.usefixtures("setup_integration")
-async def test_missing_sensor_fault_flag_is_not_a_fault(
+async def test_reported_fault_that_stops_being_reported_is_unknown(
     hass: HomeAssistant,
     mock_device: Mock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """An AC that stops reporting a fault flag is not reported as faulty."""
+    """A flag that reported a fault and then vanished is not a recovery."""
+    mock_device.measurements["I_BAD_ICT"] = "BAD"
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert hass.states.get(INDOOR_COIL_FAULT_ENTITY_ID).state == "on"
+
     mock_device.measurements.pop("I_BAD_ICT")
 
     await async_advance_to_next_poll(hass, freezer)
 
-    assert hass.states.get(INDOOR_COIL_FAULT_ENTITY_ID).state == "off"
+    assert hass.states.get(INDOOR_COIL_FAULT_ENTITY_ID).state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_fault_flag_that_stops_being_reported_is_unknown(
+    hass: HomeAssistant,
+    mock_device: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An AC that stops reporting a fault flag is not reported as healthy."""
+    mock_device.measurements.pop("I_BAD_ICT")
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert hass.states.get(INDOOR_COIL_FAULT_ENTITY_ID).state == STATE_UNKNOWN
+    # The flag it still reports keeps its own state.
+    assert hass.states.get(RETURN_AIR_FAULT_ENTITY_ID).state == "off"
 
 
 async def test_unit_without_the_reminder_flag_gets_no_filter_entity(

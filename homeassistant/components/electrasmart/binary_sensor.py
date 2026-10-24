@@ -22,16 +22,17 @@ from .entity import ElectraEntity
 PARALLEL_UPDATES = 0
 
 
-def _is_sensor_fault(device: ElectraAirConditioner, field: str) -> bool:
+def _is_sensor_fault(device: ElectraAirConditioner, field: str) -> bool | None:
     """Return whether the AC reports one of its temperature sensors as faulty.
 
     The healthy value of these flags is not identical across models ('NORM'
-    and 'NORMAL' are both in the wild) and a unit that does not report the
-    field at all is not reporting a fault.
+    and 'NORMAL' are both in the wild). An AC that stops reporting the field
+    leaves the flag unknown instead of healthy, because the entity only exists
+    for a unit that reported it at some point.
     """
     value = device.measurements.get(field)
     if value is None:
-        return False
+        return None
     return not str(value).upper().startswith("NORM")
 
 
