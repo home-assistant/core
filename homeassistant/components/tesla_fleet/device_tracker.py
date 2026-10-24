@@ -4,10 +4,8 @@ from typing import override
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from .entity import TeslaFleetVehicleEntity
 from .models import TeslaFleetVehicleData
@@ -32,9 +30,7 @@ async def async_setup_entry(
     )
 
 
-class TeslaFleetDeviceTrackerEntity(
-    TeslaFleetVehicleEntity, TrackerEntity, RestoreEntity
-):
+class TeslaFleetDeviceTrackerEntity(TeslaFleetVehicleEntity, TrackerEntity):
     """Base class for Tesla Fleet device tracker entities."""
 
     def __init__(
@@ -43,18 +39,6 @@ class TeslaFleetDeviceTrackerEntity(
     ) -> None:
         """Initialize the device tracker."""
         super().__init__(vehicle, self.key)
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        if (
-            (state := await self.async_get_last_state()) is not None
-            and self._attr_latitude is None
-            and self._attr_longitude is None
-        ):
-            self._attr_latitude = state.attributes.get(EntityStateAttribute.LATITUDE)
-            self._attr_longitude = state.attributes.get(EntityStateAttribute.LONGITUDE)
 
 
 class TeslaFleetDeviceTrackerLocationEntity(TeslaFleetDeviceTrackerEntity):
