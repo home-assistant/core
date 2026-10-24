@@ -8,7 +8,7 @@ from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import automation
 from homeassistant.components.homeassistant.trigger import RestartRequiredTrigger
-from homeassistant.config import DATA_PREVIOUS_VERSION
+from homeassistant.config import DATA_PREVIOUS_VERSION, DATA_UPDATED_AUTOMATICALLY
 from homeassistant.const import __version__
 from homeassistant.core import Context, CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import system_state
@@ -26,6 +26,7 @@ UPDATED_AUTOMATION = {
                 "description": "{{ trigger.description }}",
                 "from_version": "{{ trigger.from_version }}",
                 "to_version": "{{ trigger.to_version }}",
+                "automatic": "{{ trigger.automatic }}",
             },
         },
     }
@@ -58,6 +59,7 @@ async def test_updated_fires_once(
         "description": "Home Assistant updated",
         "from_version": previous_version,
         "to_version": __version__,
+        "automatic": False,
     }
 
     # Armed again after start, so it must stay silent
@@ -67,6 +69,25 @@ async def test_updated_fires_once(
     await hass.async_block_till_done()
 
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize("hass_config", [UPDATED_AUTOMATION])
+@pytest.mark.usefixtures("mock_hass_config")
+async def test_updated_automatically(
+    hass: HomeAssistant, hass_config: ConfigType
+) -> None:
+    """Test the updated trigger tells when the update was automatic."""
+    calls = async_mock_service(hass, "test", "automation")
+    hass.set_state(CoreState.not_running)
+    hass.data[DATA_PREVIOUS_VERSION] = "2026.9.4"
+    hass.data[DATA_UPDATED_AUTOMATICALLY] = True
+
+    assert await async_setup_component(hass, automation.DOMAIN, hass_config)
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["automatic"] is True
 
 
 async def test_updated_not_fired_without_version_change(hass: HomeAssistant) -> None:
