@@ -618,8 +618,8 @@ class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
     def last_reset(self) -> datetime | None:
         """Return when the current meter reading started (gas/water volume).
 
-        The first reading entry and a meter exchange on the device set it;
-        a correction of the reading keeps it.
+        A meter exchange on the device sets it; the first reading entry and
+        a correction of the reading keep it.
         """
         if self.entity_description.state_class is not SensorStateClass.TOTAL:
             return None
