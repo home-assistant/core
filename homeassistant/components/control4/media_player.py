@@ -277,6 +277,9 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
     @override
     def state(self) -> MediaPlayerState:
         """Return whether this room is on or idle."""
+        if self.coordinator.data is None:
+            # entity_picture reads this while the room is unavailable.
+            return MediaPlayerState.IDLE
 
         if source_state := self._get_current_source_state():
             return source_state
