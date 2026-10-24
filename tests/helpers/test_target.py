@@ -758,6 +758,47 @@ async def test_extract_referenced_entity_ids_primary_entities_only(
     assert non_primary_entities.isdisjoint(selected_primary.indirectly_referenced)
 
 
+@pytest.mark.parametrize(
+    ("selector_config", "hidden_entities"),
+    [
+        pytest.param(
+            {ATTR_AREA_ID: "own-area"}, {"light.hidden_in_own_area"}, id="area"
+        ),
+        pytest.param(
+            {ATTR_DEVICE_ID: "device-no-area-id"},
+            {"light.hidden_no_area"},
+            id="device",
+        ),
+        pytest.param(
+            {ATTR_LABEL_ID: "my-label"},
+            {"light.hidden_with_my_label"},
+            id="label",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("registries_mock")
+async def test_extract_referenced_entity_ids_include_hidden_entities(
+    hass: HomeAssistant,
+    selector_config: ConfigType,
+    hidden_entities: set[str],
+) -> None:
+    """Test include_hidden_entities controls hidden entity inclusion."""
+    target_selection = target.TargetSelection(selector_config)
+
+    selected_visible = target.async_extract_referenced_entity_ids(
+        hass, target_selection, expand_group=False
+    )
+    selected_all = target.async_extract_referenced_entity_ids(
+        hass, target_selection, expand_group=False, include_hidden_entities=True
+    )
+
+    assert (
+        selected_all.indirectly_referenced
+        == selected_visible.indirectly_referenced | hidden_entities
+    )
+    assert hidden_entities.isdisjoint(selected_visible.indirectly_referenced)
+
+
 async def test_async_track_target_selector_state_change_event_empty_selector(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1018,6 +1059,55 @@ async def test_async_track_target_selector_state_change_event_filter(
     )
     await set_states_and_check_events(
         [targeted_entity, label_entity], [targeted_entity]
+    )
+
+    unsub()
+
+
+@pytest.mark.parametrize(
+    ("include_hidden_entities", "expected_changed"),
+    [
+        pytest.param(False, [], id="hidden_skipped"),
+        pytest.param(True, ["light.hidden"], id="hidden_included"),
+    ],
+)
+async def test_async_track_target_selector_state_change_event_hidden(
+    hass: HomeAssistant,
+    include_hidden_entities: bool,
+    expected_changed: list[str],
+) -> None:
+    """Test include_hidden_entities is used when tracking a device target."""
+    events: list[target.TargetStateChangedData] = []
+
+    @callback
+    def state_change_callback(event: target.TargetStateChangedData) -> None:
+        """Handle state change events."""
+        events.append(event)
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device")},
+    )
+    er.async_get(hass).async_get_or_create(
+        domain="light",
+        platform="test",
+        unique_id="hidden",
+        device_id=device.id,
+        suggested_object_id="hidden",
+        hidden_by=er.RegistryEntryHider.USER,
+    )
+
+    unsub = await target.async_track_target_selector_state_change_event(
+        hass,
+        {ATTR_DEVICE_ID: device.id},
+        state_change_callback,
+        include_hidden_entities=include_hidden_entities,
+    )
+
+    await set_states_and_check_target_events(
+        hass, events, STATE_ON, ["light.hidden"], expected_changed
     )
 
     unsub()
