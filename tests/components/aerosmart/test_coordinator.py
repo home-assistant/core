@@ -147,7 +147,7 @@ async def test_partial_failure_only_marks_its_subsystem_unavailable(
     assert coordinator.last_update_success is True
     assert "carbon_dioxide" in coordinator.data.failed
 
-    co2 = hass.states.get("sensor.aerosmart_co2")
+    co2 = hass.states.get("sensor.aerosmart_carbon_dioxide")
     outside = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
     assert co2 is not None
     assert co2.state == STATE_UNAVAILABLE
