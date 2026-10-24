@@ -29,9 +29,11 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         entry: BluettiModbusConfigEntry,
         device: Balco260,
+        pack_summary: Balco260,
     ) -> None:
         """Initialize the coordinator."""
         self._device = device
+        self._pack_summary = pack_summary
         super().__init__(
             hass,
             _LOGGER,
@@ -47,6 +49,7 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # busy after its retry, or a failed teardown of the link, through unwrapped.
         try:
             await self._device.async_update_with_retry()
+            await self._pack_summary.async_update_with_retry()
         except ModbusError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -62,7 +65,7 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="wrong_device",
             )
-        return values
+        return values | self._pack_summary.values
 
 
 @dataclass(kw_only=True)
