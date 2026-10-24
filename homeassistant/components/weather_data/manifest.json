@@ -1,9 +1,0 @@
-{
-  "domain": "weather_data",
-  "name": "Weather data",
-  "codeowners": ["@home-assistant/frontend"],
-  "dependencies": ["websocket_api"],
-  "documentation": "https://www.home-assistant.io/integrations/weather_data",
-  "integration_type": "system",
-  "quality_scale": "internal"
-}

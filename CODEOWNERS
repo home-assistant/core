@@ -2119,8 +2119,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/waze_travel_time/ @eifinger
 /homeassistant/components/weather/ @home-assistant/core
 /tests/components/weather/ @home-assistant/core
-/homeassistant/components/weather_data/ @home-assistant/frontend
-/tests/components/weather_data/ @home-assistant/frontend
 /homeassistant/components/weatherflow/ @natekspencer @jeeftor
 /tests/components/weatherflow/ @natekspencer @jeeftor
 /homeassistant/components/weatherflow_cloud/ @jeeftor

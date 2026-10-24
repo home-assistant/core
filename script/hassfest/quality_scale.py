@@ -2020,7 +2020,6 @@ NO_QUALITY_SCALE = [
     "trace",
     "usage_prediction",
     "vibration",
-    "weather_data",
     "web_rtc",
     "webhook",
     "websocket_api",
