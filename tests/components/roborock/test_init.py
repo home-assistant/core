@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice, MockDeviceManagerContext
-from .mock_data import ROBOROCK_RRUID, USER_EMAIL
+from .mock_data import ROBOROCK_RRUID, STATUS, USER_EMAIL
 
 
 async def test_unload_entry(
@@ -195,6 +195,43 @@ async def test_home_assistant_stop(
     await hass.async_stop()
 
     assert device_manager.close.called
+
+
+@pytest.mark.parametrize(
+    ("map_present", "in_cleaning", "current_map", "expected_maps"),
+    [
+        pytest.param(0, 0, STATUS.current_map, (STATUS.current_map,), id="missing-map"),
+        pytest.param(1, 0, STATUS.current_map, (), id="map-present"),
+        pytest.param(0, 1, STATUS.current_map, (), id="cleaning"),
+        pytest.param(0, 0, None, (), id="no-current-map"),
+    ],
+)
+@patch("homeassistant.components.roborock.coordinator.MAP_SLEEP", 0)
+async def test_reload_missing_selected_map(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    map_present: int,
+    in_cleaning: int,
+    current_map: int | None,
+    expected_maps: tuple[int, ...],
+) -> None:
+    """Test reloading a selected map when the device reports no map."""
+    assert fake_vacuum.v1_properties
+    properties = fake_vacuum.v1_properties
+    await properties.status.refresh()
+    properties.status.map_present = map_present
+    properties.status.in_cleaning = in_cleaning
+    properties.status.refresh.side_effect = None
+    properties.maps.current_map = current_map
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert [
+        awaited_call.args[0]
+        for awaited_call in properties.maps.set_current_map.await_args_list
+    ] == list(expected_maps)
 
 
 @pytest.mark.parametrize(
