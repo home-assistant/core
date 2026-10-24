@@ -56,6 +56,8 @@ async def async_get_config_entry_diagnostics(
                         if (forecast := data.forecast)
                         else None
                     ),
+                    "last_bill_electricity_rate": data.last_bill_electricity_rate,
+                    "last_bill_received": data.last_bill_received,
                     "last_changed": (
                         data.last_changed.isoformat() if data.last_changed else None
                     ),

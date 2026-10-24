@@ -8,12 +8,13 @@ from typing import override
 from opower import MeterType, UnitOfMeasure
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfVolume
+from homeassistant.const import EntityCategory, Platform, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -127,6 +128,14 @@ ELEC_SENSORS: tuple[OpowerEntityDescription, ...] = (
         value_fn=lambda data: data.forecast.end_date if data.forecast else None,
     ),
 )
+LAST_BILL_ELECTRICITY_RATE_SENSOR = OpowerEntityDescription(
+    key="last_bill_electricity_rate",
+    translation_key="last_bill_electricity_rate",
+    native_unit_of_measurement="USD/kWh",
+    state_class=SensorStateClass.MEASUREMENT,
+    suggested_display_precision=4,
+    value_fn=lambda data: data.last_bill_electricity_rate,
+)
 GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
     OpowerEntityDescription(
         key="gas_usage_to_date",
@@ -208,6 +217,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Opower sensor."""
     coordinator = entry.runtime_data
+    entity_registry = er.async_get(hass)
     created_sensors: set[tuple[str, str]] = set()
 
     @callback
@@ -260,12 +270,40 @@ async def async_setup_entry(
                     )
                 )
 
+            rate_sensor_key = (
+                account.utility_account_id,
+                LAST_BILL_ELECTRICITY_RATE_SENSOR.key,
+            )
+            # Restore a previously created rate sensor even if bills are
+            # unavailable right after startup.
+            if (
+                account.meter_type is MeterType.ELEC
+                and rate_sensor_key not in created_sensors
+                and (
+                    opower_data.last_bill_electricity_rate is not None
+                    or entity_registry.async_get_entity_id(
+                        Platform.SENSOR,
+                        DOMAIN,
+                        f"{device_id}_{LAST_BILL_ELECTRICITY_RATE_SENSOR.key}",
+                    )
+                )
+            ):
+                created_sensors.add(rate_sensor_key)
+                new_entities.append(
+                    OpowerLastBillElectricityRateSensor(
+                        coordinator,
+                        LAST_BILL_ELECTRICITY_RATE_SENSOR,
+                        account.utility_account_id,
+                        device,
+                        device_id,
+                    )
+                )
+
         if new_entities:
             async_add_entities(new_entities)
 
         # Remove any registered devices not in the current coordinator data
         device_registry = dr.async_get(hass)
-        entity_registry = er.async_get(hass)
         for device_entry in dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
         ):
@@ -337,3 +375,47 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
         return self.entity_description.value_fn(
             self.coordinator.data[self.utility_account_id]
         )
+
+
+class OpowerLastBillElectricityRateSensor(OpowerSensor, RestoreSensor):
+    """Representation of an Opower last bill electricity rate sensor."""
+
+    _restored_rate: float | None = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last rate until a bill is received."""
+        await super().async_added_to_hass()
+        if (
+            (data := self.coordinator.data.get(self.utility_account_id))
+            and not data.last_bill_received
+            and (last_sensor_data := await self.async_get_last_sensor_data())
+            and isinstance(last_sensor_data.native_value, (int, float))
+        ):
+            self._restored_rate = float(last_sensor_data.native_value)
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Drop the restored rate once a bill is received."""
+        if (
+            data := self.coordinator.data.get(self.utility_account_id)
+        ) and data.last_bill_received:
+            self._restored_rate = None
+        super()._handle_coordinator_update()
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.native_value is not None
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the state."""
+        if (
+            data := self.coordinator.data.get(self.utility_account_id)
+        ) and data.last_bill_electricity_rate is not None:
+            return data.last_bill_electricity_rate
+        return self._restored_rate
