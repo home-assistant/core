@@ -80,6 +80,9 @@
       "end_of_service": {
         "name": "End of service"
       },
+      "eve_thermo_heating_schedule": {
+        "name": "Heating schedule"
+      },
       "evse_charging_status": {
         "name": "Charging status"
       },
