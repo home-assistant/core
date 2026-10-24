@@ -20,6 +20,7 @@ from roborock.web_api import RoborockApiClient
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -112,6 +113,31 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            self._username = user_input[CONF_USERNAME]
+            self._client = RoborockApiClient(
+                self._username,
+                base_url=entry.data.get(CONF_BASE_URL),
+                session=async_get_clientsession(self.hass),
+            )
+            errors = await self._request_code()
+            if not errors:
+                return await self.async_step_code()
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_USERNAME): str}),
+                {CONF_USERNAME: entry.data[CONF_USERNAME]},
+            ),
+            errors=errors,
+        )
+
     async def async_step_custom_url(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -133,17 +159,17 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 if not errors:
                     return await self.async_step_code()
 
+        if user_input is not None:
+            default_url = user_input[CONF_ROBOROCK_SERVER_URL]
+        else:
+            default_url = "https://usiot.roborock.com"
         return self.async_show_form(
             step_id="custom_url",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
                         CONF_ROBOROCK_SERVER_URL,
-                        default=(
-                            user_input[CONF_ROBOROCK_SERVER_URL]
-                            if user_input is not None
-                            else "https://usiot.roborock.com"
-                        ),
+                        default=default_url,
                     ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
                 }
             ),
@@ -201,6 +227,17 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                     reauth_entry = self._get_reauth_entry()
                     return self.async_update_reload_and_abort(
                         reauth_entry, data_updates={CONF_USER_DATA: user_data.as_dict()}
+                    )
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch(reason="wrong_account")
+                    reconfigure_entry = self._get_reconfigure_entry()
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data_updates={
+                            CONF_USER_DATA: user_data.as_dict(),
+                            CONF_USERNAME: self._username,
+                            CONF_BASE_URL: await self._client.base_url,
+                        },
                     )
                 self._abort_if_unique_id_configured(error="already_configured_account")
                 return await self._create_entry(self._client, self._username, user_data)

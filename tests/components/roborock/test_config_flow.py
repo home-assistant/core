@@ -22,6 +22,7 @@ from homeassistant.components.roborock.const import (
     CONF_ROBOROCK_SERVER_URL,
     CONF_SHOW_ROOMS,
     CONF_SHOW_WALLS,
+    CONF_USER_DATA,
     DOMAIN,
     DRAWABLES,
     REGION_CUSTOM,
@@ -643,3 +644,262 @@ async def test_config_flow_custom_url_invalid_format(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow updates entry data."""
+    result = await mock_roborock_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    schema_keys = {str(k): k for k in result["data_schema"].schema}
+    assert schema_keys[CONF_USERNAME].description == {"suggested_value": USER_EMAIL}
+
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "code"
+
+    new_user_data = deepcopy(USER_DATA)
+    new_user_data.rriot.s = "new_password_hash"
+    with (
+        patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
+            return_value=new_user_data,
+        ),
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_roborock_entry.data["user_data"]["rriot"]["s"] == "new_password_hash"
+    assert mock_roborock_entry.data[CONF_USERNAME] == USER_EMAIL
+
+
+async def test_reconfigure_flow_wrong_account(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure aborts when a different account is used."""
+    result = await mock_roborock_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+        )
+
+    assert result["step_id"] == "code"
+
+    wrong_user_data = deepcopy(USER_DATA)
+    wrong_user_data.rruid = "different-rruid"
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
+        return_value=wrong_user_data,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+
+
+async def test_reconfigure_flow_preserves_base_url(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow preserves the stored base URL."""
+    result = await mock_roborock_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient"
+    ) as mock_client_cls:
+        mock_client = mock_client_cls.return_value
+        mock_client.request_code_v4 = AsyncMock(return_value=None)
+        mock_client.code_login_v4 = AsyncMock(return_value=USER_DATA)
+        future_base_url = hass.loop.create_future()
+        future_base_url.set_result(mock_roborock_entry.data[CONF_BASE_URL])
+        mock_client.base_url = future_base_url
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+        )
+        assert result["step_id"] == "code"
+
+        mock_client_cls.assert_called_with(
+            USER_EMAIL,
+            base_url=mock_roborock_entry.data[CONF_BASE_URL],
+            session=async_get_clientsession(hass),
+        )
+
+        with patch(
+            "homeassistant.components.roborock.async_setup_entry", return_value=True
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+            )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_roborock_entry.data[CONF_BASE_URL] == "https://usiot.roborock.com"
+
+
+async def test_reconfigure_flow_request_code_error(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow recovers from a request-code error."""
+    result = await mock_roborock_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4",
+        side_effect=RoborockInvalidEmail,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "invalid_email_format"}
+
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "code"
+
+    new_user_data = deepcopy(USER_DATA)
+    with (
+        patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
+            return_value=new_user_data,
+        ),
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_invalid_code(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow recovers from an invalid OTP code."""
+    result = await mock_roborock_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+        )
+
+    assert result["step_id"] == "code"
+
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
+        side_effect=RoborockInvalidCode,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENTRY_CODE: "wrong"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "code"
+    assert result["errors"] == {"base": "invalid_code"}
+
+    new_user_data = deepcopy(USER_DATA)
+    with (
+        patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
+            return_value=new_user_data,
+        ),
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_with_custom_url(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfigure for an entry with a custom base URL preserves that URL."""
+    custom_url = "https://mycustom.roborock.com"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=USER_EMAIL,
+        data={
+            CONF_USERNAME: USER_EMAIL,
+            CONF_USER_DATA: USER_DATA.as_dict(),
+            CONF_BASE_URL: custom_url,
+        },
+        unique_id=ROBOROCK_RRUID,
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    schema_keys = {str(k): k for k in result["data_schema"].schema}
+    assert schema_keys[CONF_USERNAME].description == {"suggested_value": USER_EMAIL}
+
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient"
+    ) as mock_client_cls:
+        mock_client = mock_client_cls.return_value
+        mock_client.request_code_v4 = AsyncMock(return_value=None)
+        mock_client.code_login_v4 = AsyncMock(return_value=USER_DATA)
+        future_base_url = hass.loop.create_future()
+        future_base_url.set_result(custom_url)
+        mock_client.base_url = future_base_url
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "code"
+
+        mock_client_cls.assert_called_with(
+            USER_EMAIL,
+            base_url=custom_url,
+            session=async_get_clientsession(hass),
+        )
+
+        with patch(
+            "homeassistant.components.roborock.async_setup_entry", return_value=True
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+            )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_BASE_URL] == custom_url
