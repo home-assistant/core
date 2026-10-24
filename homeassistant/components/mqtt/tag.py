@@ -130,11 +130,12 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
         """Handle MQTT tag discovery updates."""
         # Update tag scanner
         config: DiscoveryInfoType = DISCOVERY_SCHEMA(discovery_data)
+        # Update the device first, so a failing update does not change the scanner
+        update_device(self.hass, self._config_entry, config)
         self._config = config
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE)
         ).async_render_with_possible_json_value
-        update_device(self.hass, self._config_entry, config)
         await self.subscribe_topics()
 
     @callback

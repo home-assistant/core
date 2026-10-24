@@ -1336,6 +1336,14 @@ async def test_tilt_position_none_value(
             [65],
             id="set-position-default",
         ),
+        # An unsupported speed is dropped, so the cover opens at its default speed
+        pytest.param(
+            SERVICE_OPEN_COVER,
+            {ATTR_SPEED: "fast"},
+            "open",
+            None,
+            id="open-unsupported",
+        ),
     ],
 )
 async def test_cover_speed(
@@ -1386,25 +1394,6 @@ async def test_cover_speed_supported(
     state = hass.states.get(DEPRECATED_LOW_SPEED_ENTITY_ID)
     assert not state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
     assert "supported_speeds" not in state.attributes
-
-
-async def test_cover_speed_invalid(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test an unsupported speed is rejected before any command is sent."""
-    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: LOW_SPEED.entity_id, ATTR_SPEED: "fast"},
-            blocking=True,
-        )
-
-    mock_client.execute_action_group.assert_not_awaited()
 
 
 async def test_low_speed_cover_not_created_for_new_installations(

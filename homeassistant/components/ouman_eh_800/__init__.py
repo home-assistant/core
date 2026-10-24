@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OumanEh800ConfigEntry) -
     # Register the main device up front so the L1/L2 sub-devices can
     # deterministically resolve their via_device_id, regardless of which
     # platform's entities are added first.
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
         device_info=coordinator.device_info(OumanDevice.MAIN),
     )
