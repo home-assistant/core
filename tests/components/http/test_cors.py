@@ -106,6 +106,22 @@ async def test_cors_preflight_allowed(client) -> None:
     assert req.headers[ACCESS_CONTROL_ALLOW_HEADERS] == "X-REQUESTED-WITH"
 
 
+async def test_cors_preflight_allows_frontend_base(client) -> None:
+    """Test preflight for the header the frontend sends with config flows."""
+    req = await client.options(
+        "/",
+        headers={
+            ORIGIN: TRUSTED_ORIGIN,
+            ACCESS_CONTROL_REQUEST_METHOD: "GET",
+            ACCESS_CONTROL_REQUEST_HEADERS: "ha-frontend-base",
+        },
+    )
+
+    assert req.status == HTTPStatus.OK
+    assert req.headers[ACCESS_CONTROL_ALLOW_ORIGIN] == TRUSTED_ORIGIN
+    assert req.headers[ACCESS_CONTROL_ALLOW_HEADERS] == "HA-FRONTEND-BASE"
+
+
 async def test_cors_middleware_with_cors_allowed_view(hass: HomeAssistant) -> None:
     """Test that we can configure cors and have a cors_allowed view."""
 
