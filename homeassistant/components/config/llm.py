@@ -43,13 +43,9 @@ _MIN_SHORT_ID_LEN = 4
 def _format_short_entry_id(hass: HomeAssistant, entry: ConfigEntry) -> str:
     """Return a short domain-scoped entry_id (e.g. 'hue:8k2m').
 
-    Full 26-character ULIDs consume many tokens and are prone to LLM transcription
-    errors across tool calls. In a ULID, the first 10 characters are a millisecond
-    timestamp (which can collide when entries are created together) and the last 16
-    characters are random. Prefixing the trailing random suffix with '<domain>:'
-    scopes lookup to a single domain (where ':' cannot appear in a domain name),
-    and the suffix length dynamically expands beyond 4 characters if another entry
-    in the same domain shares that suffix.
+    Short IDs reduce token usage and LLM transcription errors across tool calls.
+    The trailing suffix starts at 4 characters and expands if another entry in the
+    same domain shares that suffix.
     """
     full_id = entry.entry_id.lower()
     others = [
@@ -75,18 +71,22 @@ def _resolve_short_entry_id(
     Checks for an exact full entry_id match first, then resolves '<domain>:<suffix>'
     against entries of that domain by matching the trailing suffix.
     """
-    if (entry := hass.config_entries.async_get_entry(entry_id)) is not None:
+    if (
+        entry := hass.config_entries.async_get_entry(entry_id)
+        or hass.config_entries.async_get_entry(entry_id.upper())
+    ) is not None:
         return entry, None
 
     domain, sep, suffix = entry_id.partition(":")
-    if not sep or not domain or not suffix:
+    domain = domain.strip().lower()
+    suffix_lower = suffix.strip().lower()
+    if not sep or not domain or len(suffix_lower) < _MIN_SHORT_ID_LEN:
         return None, f"Config entry '{entry_id}' not found."
 
-    suffix_lower = suffix.lower()
     matches = [
         candidate
         for candidate in hass.config_entries.async_entries(
-            domain.lower(), include_ignore=True, include_disabled=True
+            domain, include_ignore=True, include_disabled=True
         )
         if candidate.entry_id.lower().endswith(suffix_lower)
     ]
@@ -273,9 +273,19 @@ class ReloadConfigEntryTool(Tool):
 
         try:
             await hass.config_entries.async_reload(entry.entry_id)
-        except config_entries.OperationNotAllowed as err:
+        except config_entries.UnknownEntry:
             return ToolResult(
-                data={"error": f"Config entry cannot be reloaded: {err}"},
+                data={"error": f"Config entry '{short_id}' not found."},
+                error=True,
+            )
+        except config_entries.OperationNotAllowed:
+            return ToolResult(
+                data={
+                    "error": (
+                        f"Config entry '{short_id}' cannot be reloaded in state "
+                        f"'{entry.state.value}'."
+                    )
+                },
                 error=True,
             )
 

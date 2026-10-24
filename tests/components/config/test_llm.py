@@ -89,6 +89,14 @@ async def test_call_through_api(
         read_only=True, destructive=False, idempotent=True, open_world=False
     )
 
+    reload_tool = next(
+        tool for tool in api.tools if tool.name == "config__reload_config_entry"
+    )
+    assert reload_tool.integration == config_component.DOMAIN
+    assert reload_tool.annotations == llm.ToolAnnotations(
+        read_only=False, destructive=False, idempotent=True, open_world=False
+    )
+
     result = await api.async_call_tool(
         llm.ToolInput(tool.name, {"domain": TEST_DOMAIN})
     )
@@ -379,6 +387,7 @@ async def test_get_config_entries_invalid_args(
     [
         pytest.param(f"{TEST_DOMAIN}:1001", id="short_id"),
         pytest.param("01J00000000000000000001001", id="full_id"),
+        pytest.param("01j00000000000000000001001", id="lowercase_full_id"),
     ],
 )
 async def test_reload_config_entry_success(
@@ -458,6 +467,7 @@ async def test_reload_config_entry_setup_failure_reason(
     [
         pytest.param("01J00000000000000000009999", id="full_id"),
         pytest.param("hue:9999", id="short_id"),
+        pytest.param("hue:99", id="suffix_too_short"),
     ],
 )
 async def test_reload_config_entry_not_found(
@@ -466,6 +476,13 @@ async def test_reload_config_entry_not_found(
     entry_id: str,
 ) -> None:
     """Test reloading a non-existent config entry."""
+    entry = MockConfigEntry(
+        domain="hue",
+        title="Hue",
+        entry_id="01J00000000000000000001099",
+    )
+    entry.add_to_hass(hass)
+
     tool = ReloadConfigEntryTool()
     res = await tool.async_call(
         hass,
@@ -570,6 +587,7 @@ async def test_reload_config_entry_operation_not_allowed(
     llm_context: llm.LLMContext,
 ) -> None:
     """Test reloading a config entry in a non-recoverable state."""
+    mock_integration(hass, MockModule("hue"))
     unrecoverable_entry = MockConfigEntry(
         domain="hue",
         title="Broken",
@@ -588,11 +606,38 @@ async def test_reload_config_entry_operation_not_allowed(
     assert res == llm.ToolResult(
         data={
             "error": (
-                "Config entry cannot be reloaded: The config entry 'Broken' (hue) "
-                "with entry_id '01J00000000000000000001007' cannot be unloaded because "
-                "it is in the non recoverable state ConfigEntryState.MIGRATION_ERROR"
+                "Config entry 'hue:1007' cannot be reloaded in state 'migration_error'."
             )
         },
+        error=True,
+    )
+
+
+async def test_reload_config_entry_removed_during_reload(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test reloading a config entry that is removed concurrently during reload."""
+    entry = MockConfigEntry(
+        domain="hue",
+        title="Hue",
+        entry_id="01J00000000000000000001008",
+    )
+    entry.add_to_hass(hass)
+
+    tool = ReloadConfigEntryTool()
+    with patch.object(
+        hass.config_entries,
+        "async_reload",
+        side_effect=config_entries.UnknownEntry("01J00000000000000000001008"),
+    ):
+        res = await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"entry_id": "hue:1008"}),
+            llm_context,
+        )
+    assert res == llm.ToolResult(
+        data={"error": "Config entry 'hue:1008' not found."},
         error=True,
     )
 
