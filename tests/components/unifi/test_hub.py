@@ -191,6 +191,59 @@ async def test_endpoint_not_found_disables_object_oriented_network_config_pollin
 
 
 @pytest.mark.parametrize(
+    ("handler_name", "unaffected_handler_name"),
+    [
+        pytest.param("firewall_policies", "traffic_rules", id="firewall_policies"),
+        pytest.param("traffic_rules", "firewall_policies", id="traffic_rules"),
+        pytest.param("traffic_routes", "firewall_policies", id="traffic_routes"),
+    ],
+)
+async def test_endpoint_not_found_disables_optional_endpoint_polling(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_entry_setup: MockConfigEntry,
+    handler_name: str,
+    unaffected_handler_name: str,
+) -> None:
+    """Ensure an unavailable optional endpoint stops polling after one warning."""
+    loader = config_entry_setup.runtime_data.entity_loader
+    api = config_entry_setup.runtime_data.api
+    handler = getattr(api, handler_name)
+    coordinator = loader.get_data_update_coordinator(handler)
+    unaffected_coordinator = loader.get_data_update_coordinator(
+        getattr(api, unaffected_handler_name)
+    )
+
+    with patch.object(
+        handler, "update", side_effect=EndpointNotFound("endpoint not found")
+    ) as mock_update:
+        async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert coordinator.update_interval is None
+        assert coordinator.last_update_success is False
+        assert mock_update.call_count == 1
+
+        async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+        await hass.async_block_till_done()
+
+        assert mock_update.call_count == 1
+
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert mock_update.call_count == 2
+    assert unaffected_coordinator.update_interval == IDLE_POLL_INTERVAL
+    assert (
+        caplog.text.count(
+            f"UniFi {type(handler).__name__} endpoint is unavailable; disabling polling"
+        )
+        == 1
+    )
+
+
+@pytest.mark.parametrize(
     "object_oriented_network_config_payload",
     [
         [
