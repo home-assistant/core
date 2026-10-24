@@ -7,6 +7,7 @@ from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
 
+import aiounifi
 from aiounifi.models.device import DeviceState
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
@@ -2713,6 +2714,35 @@ async def test_firewall_policy_schedule_status_time_zone_fallback(
     assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "inactive"
 
 
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_firewall_policy_schedule_status_time_zone_after_recovery(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """A controller time zone missing at setup is used after a reconnect.
+
+    20:00 UTC is 21:00 in Stockholm but noon in US/Pacific.
+    """
+    freezer.move_to("2026-01-15 20:00:00+00:00")
+    with patch(
+        "aiounifi.interfaces.system_information.SystemInformationHandler.update",
+        side_effect=aiounifi.AiounifiException,
+    ):
+        await config_entry_factory()
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "inactive"
+
+    await mock_websocket_state.disconnect()
+    await mock_websocket_state.reconnect()
+    # The zone is read after the resync, the next poll uses it
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "active"
+
+
 @pytest.mark.parametrize(
     ("firewall_policy_payload", "expected"),
     [
@@ -2753,6 +2783,7 @@ async def test_firewall_policy_schedule_status_by_policy(
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_firewall_policy_schedule_status_unsupported(
     hass: HomeAssistant,
 ) -> None:
