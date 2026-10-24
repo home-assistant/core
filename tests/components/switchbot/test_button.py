@@ -11,7 +11,9 @@ from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.switchbot.const import (
+    CONF_BOT_PRESS_BUTTON,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_LOCK_NIGHTLATCH,
@@ -38,9 +40,13 @@ from . import (
     ART_FRAME_INFO,
     DOMAIN,
     LOCK_ULTRA_SERVICE_INFO,
+    WOHAND_SERVICE_INFO,
     WOMETERTHP_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO,
 )
+
+BOT_BUTTON_ENTITY_ID = "button.test_name"
+BOT_SWITCH_ENTITY_ID = "switch.test_name"
 
 
 @pytest.mark.parametrize(
@@ -403,3 +409,78 @@ async def test_lock_ultra_half_lock_button_not_registered_without_nightlatch(
             entity.entity_id for entity in hass.states.async_all(BUTTON_DOMAIN)
         ]
         assert "button.test_name_half_lock" not in entity_ids
+
+
+async def test_bot_press_button(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the Bot is exposed as a button when the option is enabled."""
+    inject_bluetooth_service_info(hass, WOHAND_SERVICE_INFO)
+
+    entry = mock_entry_factory("bot")
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        entry, options={**entry.options, CONF_BOT_PRESS_BUTTON: True}
+    )
+
+    mock_press = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.button.switchbot.Switchbot",
+        update=AsyncMock(return_value=None),
+        press=mock_press,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert hass.states.async_entity_ids(SWITCH_DOMAIN) == []
+
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: BOT_BUTTON_ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_press.assert_awaited_once()
+    state = hass.states.get(BOT_BUTTON_ENTITY_ID)
+    assert state.attributes["last_run_success"] is True
+
+
+async def test_bot_press_button_option_toggle(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test toggling the option swaps the Bot entity and removes the stale one."""
+    inject_bluetooth_service_info(hass, WOHAND_SERVICE_INFO)
+
+    entry = mock_entry_factory("bot")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.switchbot.button.switchbot.Switchbot.update",
+        AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert entity_registry.async_get(BOT_SWITCH_ENTITY_ID) is not None
+        assert entity_registry.async_get(BOT_BUTTON_ENTITY_ID) is None
+
+        hass.config_entries.async_update_entry(
+            entry, options={**entry.options, CONF_BOT_PRESS_BUTTON: True}
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert entity_registry.async_get(BOT_SWITCH_ENTITY_ID) is None
+        assert entity_registry.async_get(BOT_BUTTON_ENTITY_ID) is not None
+
+        hass.config_entries.async_update_entry(
+            entry, options={**entry.options, CONF_BOT_PRESS_BUTTON: False}
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entity_registry.async_get(BOT_SWITCH_ENTITY_ID) is not None
+    assert entity_registry.async_get(BOT_BUTTON_ENTITY_ID) is None

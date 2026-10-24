@@ -37,6 +37,7 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_BOT_PRESS_BUTTON,
     CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
@@ -45,6 +46,7 @@ from .const import (
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     CURTAIN_SPEED_MAX,
     CURTAIN_SPEED_MIN,
+    DEFAULT_BOT_PRESS_BUTTON,
     DEFAULT_CURTAIN_SPEED,
     DEFAULT_LOCK_NIGHTLATCH,
     DEFAULT_RETRY_COUNT,
@@ -495,6 +497,20 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                         CONF_LOCK_NIGHTLATCH,
                         default=self.config_entry.options.get(
                             CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
+                        ),
+                    ): bool
+                }
+            )
+        if (
+            CONF_SENSOR_TYPE in self.config_entry.data
+            and self.config_entry.data[CONF_SENSOR_TYPE] == SupportedModels.BOT
+        ):
+            options.update(
+                {
+                    probatio.Optional(
+                        CONF_BOT_PRESS_BUTTON,
+                        default=self.config_entry.options.get(
+                            CONF_BOT_PRESS_BUTTON, DEFAULT_BOT_PRESS_BUTTON
                         ),
                     ): bool
                 }

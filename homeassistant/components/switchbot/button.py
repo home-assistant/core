@@ -7,14 +7,19 @@ import switchbot
 from switchbot import SwitchbotModel
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
+from .const import (
+    CONF_BOT_PRESS_BUTTON,
+    CONF_LOCK_NIGHTLATCH,
+    DEFAULT_BOT_PRESS_BUTTON,
+    DEFAULT_LOCK_NIGHTLATCH,
+)
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotEntity, exception_handler
+from .entity import SwitchbotEntity, async_remove_entity, exception_handler
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -51,6 +56,12 @@ async def async_setup_entry(
         and entry.options.get(CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH)
     ):
         entities.append(HalfLockButton(coordinator))
+
+    if coordinator.model is SwitchbotModel.BOT:
+        if entry.options.get(CONF_BOT_PRESS_BUTTON, DEFAULT_BOT_PRESS_BUTTON):
+            entities.append(BotPressButton(coordinator))
+        else:
+            async_remove_entity(hass, Platform.BUTTON, coordinator.base_unique_id)
 
     if entities:
         async_add_entities(entities)
@@ -194,3 +205,18 @@ class HalfLockButton(SwitchbotEntity, ButtonEntity):
         """Handle the button press."""
         _LOGGER.debug("Sending half lock command for %s", self._address)
         await self._device.half_lock()
+
+
+class BotPressButton(SwitchbotEntity, ButtonEntity):
+    """Representation of a Switchbot Bot exposed as a button."""
+
+    _attr_name = None
+    _device: switchbot.Switchbot
+
+    @exception_handler
+    @override
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        _LOGGER.debug("Pressing Bot %s", self._address)
+        self._last_run_success = bool(await self._device.press())
+        self.async_write_ha_state()
