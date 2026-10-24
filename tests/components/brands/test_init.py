@@ -304,9 +304,7 @@ async def test_stale_cache_triggers_background_refresh(
     assert aioclient_mock.call_count == 1
 
     # Make the cache stale by backdating the file mtime
-    cache_path = (
-        Path(hass.config.cache_path(DOMAIN)) / "integrations" / "hue" / "icon.png"
-    )
+    cache_path = Path(hass.config.cache_path(DOMAIN)) / "brands" / "hue" / "icon.png"
     assert cache_path.is_file()
     stale_time = time.time() - CACHE_TTL - 1
     os.utime(cache_path, (stale_time, stale_time))
@@ -347,9 +345,7 @@ async def test_stale_cache_404_marker_with_placeholder(
     assert aioclient_mock.call_count == 1
 
     # Make the cache stale
-    cache_path = (
-        Path(hass.config.cache_path(DOMAIN)) / "integrations" / "gone" / "icon.png"
-    )
+    cache_path = Path(hass.config.cache_path(DOMAIN)) / "brands" / "gone" / "icon.png"
     assert cache_path.is_file()
     stale_time = time.time() - CACHE_TTL - 1
     os.utime(cache_path, (stale_time, stale_time))
@@ -379,9 +375,7 @@ async def test_stale_cache_404_marker_no_placeholder(
     assert aioclient_mock.call_count == 1
 
     # Make the cache stale
-    cache_path = (
-        Path(hass.config.cache_path(DOMAIN)) / "integrations" / "gone" / "icon.png"
-    )
+    cache_path = Path(hass.config.cache_path(DOMAIN)) / "brands" / "gone" / "icon.png"
     assert cache_path.is_file()
     stale_time = time.time() - CACHE_TTL - 1
     os.utime(cache_path, (stale_time, stale_time))
@@ -946,6 +940,23 @@ async def test_marketplace_view_prefers_brands_repository(
     assert resp.status == HTTPStatus.OK
     assert await resp.read() == FAKE_PNG
     assert aioclient_mock.call_count == 1
+
+
+async def test_marketplace_view_does_not_change_integration_image(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that a domain that is a brand keeps its brand image."""
+    aioclient_mock.get(f"{BRANDS_CDN_URL}/google/icon.png", content=FAKE_PNG)
+    aioclient_mock.get(f"{BRANDS_CDN_URL}/brands/google/icon.png", content=BRAND_PNG)
+
+    client = await hass_client()
+    resp = await client.get("/api/brands/marketplace/google/icon.png")
+    assert await resp.read() == FAKE_PNG
+
+    resp = await client.get("/api/brands/integration/google/icon.png")
+    assert await resp.read() == BRAND_PNG
 
 
 async def test_marketplace_view_serves_marketplace_image(
