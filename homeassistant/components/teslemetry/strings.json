@@ -210,6 +210,9 @@
       "components_grid_services_enabled": {
         "name": "Grid services enabled"
       },
+      "contactor_closed": {
+        "name": "Contactor closed"
+      },
       "dc_dc_enable": {
         "name": "DC to DC converter"
       },
@@ -220,13 +223,16 @@
         "name": "Drive rail"
       },
       "driver_seat_belt": {
-        "name": "Driver seat belt"
+        "name": "Driver seat belt warning"
       },
       "driver_seat_occupied": {
         "name": "Driver seat occupied"
       },
       "emergency_lane_departure_avoidance": {
         "name": "Emergency lane departure avoidance"
+      },
+      "escan_firmware_updating": {
+        "name": "ESCAN firmware updating"
       },
       "europe_vehicle": {
         "name": "European vehicle"
@@ -236,6 +242,9 @@
       },
       "gps_state": {
         "name": "GPS state"
+      },
+      "grid_ok": {
+        "name": "Grid OK"
       },
       "grid_services_active": {
         "name": "Grid services active"
@@ -270,11 +279,17 @@
       "located_at_work": {
         "name": "Located at work"
       },
+      "microgrid_ok": {
+        "name": "Microgrid OK"
+      },
       "offroad_lightbar_present": {
         "name": "Offroad lightbar"
       },
       "pin_to_drive_enabled": {
         "name": "PIN to Drive enabled"
+      },
+      "pw3can_firmware_updating": {
+        "name": "PW3CAN firmware updating"
       },
       "rear_display_hvac_enabled": {
         "name": "Rear display HVAC"
@@ -290,6 +305,12 @@
       },
       "service_mode": {
         "name": "Service mode"
+      },
+      "site_manager_running": {
+        "name": "Site manager running"
+      },
+      "site_running": {
+        "name": "Site running"
       },
       "speed_limit_mode": {
         "name": "Speed limited"
@@ -427,7 +448,7 @@
         "name": "Sunroof"
       },
       "windows": {
-        "name": "Windows"
+        "name": "Vent windows"
       }
     },
     "device_tracker": {
@@ -460,6 +481,9 @@
     "number": {
       "backup_reserve_percent": {
         "name": "Backup reserve"
+      },
+      "charge_on_solar_lower_limit": {
+        "name": "Charge on solar lower limit"
       },
       "charge_state_charge_current_request": {
         "name": "Charge current"
@@ -1188,6 +1212,9 @@
       "vpp_backup_reserve_percent": {
         "name": "VPP backup reserve"
       },
+      "wall_connector_energy": {
+        "name": "Energy delivered"
+      },
       "wall_connector_fault_state": {
         "name": "Fault state code"
       },
@@ -1199,6 +1226,9 @@
       }
     },
     "switch": {
+      "charge_on_solar": {
+        "name": "Charge on solar"
+      },
       "charge_state_charging_state": {
         "name": "Charge"
       },
@@ -1269,6 +1299,9 @@
     },
     "command_reason": {
       "message": "Command was rejected: {reason}"
+    },
+    "local_update_failed": {
+      "message": "Error fetching data from the local Powerwall gateway: {message}"
     },
     "missing_scope": {
       "message": "Missing required scope: {scope}"
@@ -1390,6 +1423,14 @@
         }
       },
       "title": "Enable data streaming for {vehicle}"
+    }
+  },
+  "preview_features": {
+    "charge_on_solar": {
+      "description": "Adds a vehicle switch to enable and disable Tesla's charge on solar mode, and a number entity to set its lower charge limit. The existing charge limit number entity is reused as the upper charge limit.\n\nThis feature does not currently expose a reliable state from the API, so the switch and lower limit use an assumed state.",
+      "disable_confirmation": "The charge-on-solar switch and lower limit will be removed from your Teslemetry vehicles.",
+      "enable_confirmation": "The charge-on-solar switch and lower limit will be added to your Teslemetry vehicles.",
+      "name": "Charge on solar"
     }
   },
   "selector": {

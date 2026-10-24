@@ -17,7 +17,7 @@ from . import USER_INPUT
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.arve.async_setup_entry", return_value=True
+        "homeassistant.components.arve.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -92,5 +92,5 @@ def patch_async_setup_entry() -> AsyncMock:
     """Patch the async_setup_entry method and return a mock."""
     return patch(
         "homeassistant.components.cloudflare.async_setup_entry",
-        return_value=True,
+        return_value=None,
     )

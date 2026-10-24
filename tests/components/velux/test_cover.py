@@ -1,6 +1,6 @@
 """Tests for the Velux cover platform."""
 
-from unittest.mock import ANY, AsyncMock
+from unittest.mock import ANY, AsyncMock, MagicMock
 
 import pytest
 from pytest_homeassistant.common import (
@@ -279,6 +279,48 @@ async def test_window_current_position_and_opening_closing_states(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_CLOSING
+
+
+async def test_window_current_position_while_moving(
+    hass: HomeAssistant, mock_window: AsyncMock
+) -> None:
+    """While moving, current_position follows the position estimated by pyvlx."""
+
+    entity_id = "cover.test_window"
+
+    # reported device position is 30, estimated position is 60 -> 40
+    mock_window.is_closing = True
+    mock_window.get_position.side_effect = None
+    mock_window.get_position.return_value = MagicMock(
+        position_percent=60, closed=False, known=True
+    )
+    await update_callback_entity(hass, mock_window)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_CLOSING
+    assert state.attributes.get("current_position") == 40
+
+
+async def test_window_unknown_position_while_moving(
+    hass: HomeAssistant, mock_window: AsyncMock
+) -> None:
+    """An unknown reported position stays unknown while the cover moves."""
+
+    entity_id = "cover.test_window"
+
+    # pyvlx cannot estimate from an unknown position and raises
+    mock_window.position.known = False
+    mock_window.is_closing = True
+    mock_window.get_position.side_effect = PyVLXException(
+        "Position::percent_out_of_range"
+    )
+    await update_callback_entity(hass, mock_window)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_CLOSING
+    assert state.attributes.get("current_position") is None
 
 
 # Dual roller shutter command tests
