@@ -253,16 +253,20 @@ class IcloudAccount:
             self._fetch_interval = self._max_interval
             self._schedule_next_fetch()
 
+    def _create_service(self) -> PyiCloudService:
+        """Log in with the stored password, reusing the stored session if valid."""
+        return PyiCloudService(
+            self._username,
+            self._password,
+            self._icloud_dir.path,
+            with_family=self._with_family,
+            refresh_interval=None,
+        )
+
     def _setup(self) -> None:
         """Log in and read the account's devices."""
         try:
-            self.api = PyiCloudService(
-                self._username,
-                self._password,
-                self._icloud_dir.path,
-                with_family=self._with_family,
-                refresh_interval=None,
-            )
+            self.api = self._create_service()
 
         except PyiCloudConnectionException as err:
             # iCloud is unreachable; this says nothing about the credentials, so
@@ -530,6 +534,7 @@ class IcloudAccount:
                 # to keep it current: skipping the update would leave the
                 # battery and location it has stopped reporting on show.
                 _LOGGER.debug("Updating iCloud device: %s", device_name)
+                self._devices[device_id].attach(device)
                 if self._devices[device_id].update(status):
                     new_device = True
                 continue
@@ -734,6 +739,24 @@ class IcloudAccount:
             ),
         ).result()
 
+    def _poll_devices(self) -> None:
+        """Update the devices, logging in again once if the session is turned down.
+
+        The stored session is usually still valid: it is the old service's forced
+        re-login that iCloud rejects or challenges, and a new service reuses the
+        session instead. Only a login that fails as well needs the user.
+        """
+        assert self.api is not None
+        try:
+            self.api.authenticate()
+            self.update_devices()
+        except Exception as err:
+            if not _is_auth_failure(err):
+                raise
+            _LOGGER.debug("iCloud rejected the session, logging in again: %r", err)
+            self.api = self._create_service()
+            self.update_devices()
+
     def keep_alive(self, now=None) -> None:
         """Keep the API alive.
 
@@ -766,8 +789,7 @@ class IcloudAccount:
 
         try:
             try:
-                self.api.authenticate()
-                self.update_devices()
+                self._poll_devices()
             except PyiCloudAPIResponseException as err:
                 if not is_auth_error(err):
                     # Not an authentication failure. Hand it to the transient
@@ -958,6 +980,10 @@ class IcloudDevice:
     def name(self) -> str:
         """Return the Apple device name."""
         return self._name
+
+    def attach(self, device: AppleDevice) -> None:
+        """Use the device of the current session, which a new login replaces."""
+        self._device = device
 
     @property
     def device(self) -> AppleDevice:
