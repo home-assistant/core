@@ -9,20 +9,26 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
 from .const import DATA_TRACE, DATA_TRACE_STORE, DATA_TRACES_RESTORED
-from .models import ActionTrace, BaseTrace, RestoredTrace, TraceBuckets, TraceData
+from .models import (
+    TRACE_BUCKET_KEYS,
+    ActionTrace,
+    RestoredTrace,
+    TraceBuckets,
+    TraceData,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_trace(
-    hass: HomeAssistant, key: str, run_id: str
-) -> dict[str, BaseTrace]:
+async def async_get_trace(hass: HomeAssistant, key: str, run_id: str) -> dict[str, Any]:
     """Return the requested trace."""
     # Restore saved traces if not done
     await async_restore_traces(hass)
 
     trace_bucket = hass.data[DATA_TRACE][key]
-    trace = trace_bucket.runs.get(run_id) or trace_bucket.not_triggered[run_id]
+    trace = trace_bucket.get(run_id)
+    if trace is None:
+        raise KeyError(run_id)
     return trace.as_extended_dict()
 
 
@@ -78,37 +84,65 @@ async def async_list_traces(
     return traces
 
 
-def async_store_trace(
-    hass: HomeAssistant, trace: ActionTrace, stored_traces: int
-) -> None:
-    """Store a trace if its key is valid.
+def _create_trace_buckets(
+    size_limit: int | None = None,
+) -> TraceBuckets:
+    return TraceBuckets(
+        buckets={
+            bucket_key: LimitedSizeDict(size_limit=size_limit)
+            for bucket_key in TRACE_BUCKET_KEYS
+        }
+    )
 
-    Run traces and not-triggered traces are kept in separate, independently
-    size-limited buckets so a flood of not-triggered traces never evicts runs.
-    """
-    if key := trace.key:
-        traces = hass.data[DATA_TRACE]
-        if key not in traces:
-            traces[key] = TraceBuckets(
-                runs=LimitedSizeDict(size_limit=stored_traces),
-                not_triggered=LimitedSizeDict(size_limit=stored_traces),
-            )
-        trace_bucket = traces[key]
-        trace_bucket.runs.size_limit = stored_traces
-        trace_bucket.not_triggered.size_limit = stored_traces
-        bucket = trace_bucket.bucket(trace.not_triggered)
-        bucket[trace.run_id] = trace
+
+def async_store_trace(
+    hass: HomeAssistant,
+    trace: ActionTrace,
+    stored_traces: int,
+) -> None:
+    """Store a newly-created trace in its initial bucket."""
+    if not (key := trace.key):
+        return
+
+    traces = hass.data[DATA_TRACE]
+    if key not in traces:
+        traces[key] = _create_trace_buckets(stored_traces)
+
+    trace_buckets = traces[key]
+    trace_buckets.set_size_limit(stored_traces)
+
+    trace_buckets.bucket(trace.bucket_key())[trace.run_id] = trace
+
+
+def async_move_trace_to_final_bucket(
+    hass: HomeAssistant,
+    trace: ActionTrace,
+    stored_traces: int,
+) -> None:
+    """Move a stopped trace from running to its final outcome bucket."""
+    if trace.not_triggered or not trace.key:
+        return
+
+    trace_buckets = hass.data[DATA_TRACE].get(trace.key)
+    if trace_buckets is None:
+        return
+
+    running = trace_buckets.bucket("running")
+    if running.get(trace.run_id) is trace:
+        del running[trace.run_id]
+
+    trace_buckets.bucket(trace.bucket_key())[trace.run_id] = trace
 
 
 def _async_store_restored_trace(hass: HomeAssistant, trace: RestoredTrace) -> None:
-    """Store a restored trace and move it to the end of the LimitedSizeDict."""
+    """Store a restored trace and move it to the end of its bucket."""
     key = trace.key
     traces = hass.data[DATA_TRACE]
+
     if key not in traces:
-        traces[key] = TraceBuckets(
-            runs=LimitedSizeDict(), not_triggered=LimitedSizeDict()
-        )
-    bucket = traces[key].bucket(trace.not_triggered)
+        traces[key] = _create_trace_buckets()
+
+    bucket = traces[key].bucket(trace.bucket_key())
     bucket[trace.run_id] = trace
     bucket.move_to_end(trace.run_id, last=False)
 
@@ -137,10 +171,8 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
                 _LOGGER.exception("Failed to restore trace")
                 continue
 
-            # Runs and not-triggered traces are capped independently, so check
-            # the bucket this trace belongs to rather than breaking the loop.
-            if (trace_bucket := hass.data[DATA_TRACE].get(key)) is not None:
-                bucket = trace_bucket.bucket(trace.not_triggered)
+            if (trace_buckets := hass.data[DATA_TRACE].get(key)) is not None:
+                bucket = trace_buckets.bucket(trace.bucket_key())
                 if bucket.size_limit is not None and len(bucket) >= bucket.size_limit:
                     continue
 
