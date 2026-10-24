@@ -290,8 +290,36 @@ class DatasetStore:
         the way a Thread mesh orders them itself, so a dataset that is not newer
         than the stored one for its network is discarded rather than stored.
         """
-        # Make sure the tlv is valid
-        dataset = tlv_parser.parse_tlv(tlv)
+        return self._async_add(
+            source, tlv, preferred_border_agent_id, preferred_extended_address, False
+        )
+
+    @callback
+    def async_update(
+        self,
+        source: str,
+        tlv: str,
+        preferred_border_agent_id: str | None,
+        preferred_extended_address: str | None,
+    ) -> DatasetAddResult:
+        """Like async_add, but a network the store does not hold is discarded."""
+        return self._async_add(
+            source, tlv, preferred_border_agent_id, preferred_extended_address, True
+        )
+
+    @callback
+    def _async_add(
+        self,
+        source: str,
+        tlv: str,
+        preferred_border_agent_id: str | None,
+        preferred_extended_address: str | None,
+        update_only: bool,
+    ) -> DatasetAddResult:
+        try:
+            dataset = tlv_parser.parse_tlv(tlv)
+        except tlv_parser.TLVError as err:
+            raise HomeAssistantError(str(err)) from err
 
         # Don't allow adding a dataset which does not have an extended pan id or
         # timestamp
@@ -366,6 +394,9 @@ class DatasetStore:
                 entry, preferred_border_agent_id, preferred_extended_address
             )
             return DatasetAddResult.STORED
+
+        if update_only:
+            return DatasetAddResult.DISCARDED
 
         entry = DatasetEntry(
             preferred_border_agent_id=preferred_border_agent_id,
@@ -593,10 +624,29 @@ async def async_add_dataset(
 
     Returns STORED when the store's dataset for the network is the one that
     was passed, DISCARDED when the store kept a same-or-newer dataset for it
-    and changed nothing.
+    and changed nothing. Raises HomeAssistantError for a dataset that cannot
+    be stored.
     """
     store = await async_get_store(hass)
     return store.async_add(
+        source, tlv, preferred_border_agent_id, preferred_extended_address
+    )
+
+
+async def async_update_dataset(
+    hass: HomeAssistant,
+    source: str,
+    tlv: str,
+    *,
+    preferred_border_agent_id: str | None = None,
+    preferred_extended_address: str | None = None,
+) -> DatasetAddResult:
+    """Update the dataset of a network the store holds; see async_add_dataset.
+
+    A dataset of a network the store does not hold is discarded, not added.
+    """
+    store = await async_get_store(hass)
+    return store.async_update(
         source, tlv, preferred_border_agent_id, preferred_extended_address
     )
 
