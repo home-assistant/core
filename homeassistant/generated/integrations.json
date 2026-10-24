@@ -12468,6 +12468,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "vrchat": {
+      "name": "VRChat",
+      "integration_type": "hub",
+      "categories": [
+        "media_entertainment.gaming"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "w800rf32": {
       "name": "WGL Designs W800RF32",
       "integration_type": "hub",
