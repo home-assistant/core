@@ -32,6 +32,7 @@ from zha.zigbee.device import (
 )
 import zigpy.backups
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+from zigpy.device import GreenPowerDevice as ZigpyGreenPowerDevice
 import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
@@ -39,6 +40,7 @@ import zigpy.util
 from zigpy.zcl.clusters import closures, general, security
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
+from zigpy.zgp.types import ApplicationID, SrcID
 
 from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
@@ -505,6 +507,61 @@ async def test_list_groupable_devices(
 
     device_endpoints = msg["result"]
     assert len(device_endpoints) == 0
+
+
+async def test_green_power_device_listings(hass: HomeAssistant, zha_client) -> None:
+    """Test that a Green Power device does not break device-wide listings."""
+    gateway = get_zha_gateway(hass)
+    zigpy_gpd = ZigpyGreenPowerDevice(
+        gateway.application_controller,
+        application_id=ApplicationID.SrcID,
+        src_id=SrcID(0x12345678),
+    )
+    gateway.application_controller.devices[zigpy_gpd.ieee] = zigpy_gpd
+    gateway.get_or_create_device(zigpy_gpd)
+    await gateway.async_device_initialized(zigpy_gpd)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert zigpy_gpd.ieee in get_zha_gateway_proxy(hass).device_proxies
+
+    await zha_client.send_json({ID: 10, TYPE: "zha/devices"})
+    msg = await zha_client.receive_json()
+    assert msg["success"]
+    assert str(zigpy_gpd.ieee) in {device[ATTR_IEEE] for device in msg["result"]}
+
+    await zha_client.send_json({ID: 11, TYPE: "zha/devices/groupable"})
+    msg = await zha_client.receive_json()
+    assert msg["success"]
+    groupable = {endpoint["device"][ATTR_IEEE] for endpoint in msg["result"]}
+    assert IEEE_GROUPABLE_DEVICE in groupable
+    assert str(zigpy_gpd.ieee) not in groupable
+
+    await zha_client.send_json(
+        {ID: 12, TYPE: "zha/devices/bindable", ATTR_IEEE: IEEE_SWITCH_DEVICE}
+    )
+    msg = await zha_client.receive_json()
+    assert msg["success"]
+    assert str(zigpy_gpd.ieee) not in {device[ATTR_IEEE] for device in msg["result"]}
+
+    # A GPD source has no clusters to bind from, not even to the coordinator
+    await zha_client.send_json(
+        {ID: 13, TYPE: "zha/devices/bindable", ATTR_IEEE: str(zigpy_gpd.ieee)}
+    )
+    msg = await zha_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == []
+
+    # A GPD target has no clusters to bind to, so nothing is sent
+    await zha_client.send_json(
+        {
+            ID: 14,
+            TYPE: "zha/devices/bind",
+            ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+            ATTR_TARGET_IEEE: str(zigpy_gpd.ieee),
+        }
+    )
+    msg = await zha_client.receive_json()
+    assert msg["success"]
 
 
 async def test_add_group(hass: HomeAssistant, zha_client) -> None:
@@ -1216,8 +1273,8 @@ async def test_websocket_bind_unbind_group(
         unbind_mock = AsyncMock()
         device_mock.async_bind_to_group = bind_mock
         device_mock.async_unbind_from_group = unbind_mock
-        gateway_mock.get_device = MagicMock()
-        gateway_mock.get_device.return_value = device_mock
+        gateway_mock.get_zigbee_device = MagicMock()
+        gateway_mock.get_zigbee_device.return_value = device_mock
         await zha_client.send_json(
             {
                 ID: 27,

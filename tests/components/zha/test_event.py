@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import mock_restore_cache_with_extra_data
+from zha.application.platforms import ZclPlatformEntity
 from zha.application.platforms.event import BaseEvent, EntityEventTriggeredEvent
 from zha.application.platforms.event.const import (
     ATTR_MULTI_PRESS_COUNT,
@@ -37,7 +38,7 @@ from homeassistant.helpers import entity_registry as er
 ENTITY_ID = "event.fakemanufacturer_fakemodel_button"
 
 
-class FakeEvent(BaseEvent):
+class FakeEvent(BaseEvent, ZclPlatformEntity):
     """Event entity that can be triggered from tests."""
 
     _attr_fallback_name = "Fake"

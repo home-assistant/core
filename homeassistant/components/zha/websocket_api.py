@@ -601,7 +601,8 @@ async def websocket_device_cluster_attributes(
     cluster_attributes: list[dict[str, Any]] = []
     zha_device = zha_gateway.get_device(ieee)
     attributes = None
-    if zha_device is not None:
+    # Green Power devices have no clusters
+    if isinstance(zha_device, Device):
         attributes = zha_device.async_get_cluster_attributes(
             endpoint_id, cluster_id, cluster_type
         )
@@ -648,7 +649,8 @@ async def websocket_device_cluster_commands(
     zha_device = zha_gateway.get_device(ieee)
     cluster_commands: list[dict[str, Any]] = []
     commands = None
-    if zha_device is not None:
+    # Green Power devices have no clusters
+    if isinstance(zha_device, Device):
         commands = zha_device.async_get_cluster_commands(
             endpoint_id, cluster_id, cluster_type
         )
@@ -720,7 +722,8 @@ async def websocket_read_zigbee_cluster_attributes(
     zha_device = zha_gateway.get_device(ieee)
     success = {}
     failure = {}
-    if zha_device is not None:
+    # Green Power devices have no clusters
+    if isinstance(zha_device, Device):
         cluster = zha_device.async_get_cluster(
             endpoint_id, cluster_id, cluster_type=cluster_type
         )
@@ -862,8 +865,7 @@ async def websocket_bind_group(
     source_ieee: EUI64 = msg[ATTR_SOURCE_IEEE]
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
-    source_device = zha_gateway.get_device(source_ieee)
-    assert source_device
+    source_device = zha_gateway.get_zigbee_device(source_ieee)
     await source_device.async_bind_to_group(group_id, bindings)
     connection.send_result(msg[ID])
 
@@ -888,8 +890,7 @@ async def websocket_unbind_group(
     source_ieee: EUI64 = msg[ATTR_SOURCE_IEEE]
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
-    source_device = zha_gateway.get_device(source_ieee)
-    assert source_device
+    source_device = zha_gateway.get_zigbee_device(source_ieee)
     await source_device.async_unbind_from_group(group_id, bindings)
     connection.send_result(msg[ID])
 
@@ -902,10 +903,9 @@ async def async_binding_operation(
 ) -> None:
     """Create or remove a direct zigbee binding between 2 devices."""
 
-    source_device = zha_gateway.get_device(source_ieee)
+    source_device = zha_gateway.get_zigbee_device(source_ieee)
     target_device = zha_gateway.get_device(target_ieee)
 
-    assert source_device
     assert target_device
     clusters_to_bind = await get_matched_clusters(source_device, target_device)
 

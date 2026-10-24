@@ -1,8 +1,13 @@
 """Tests for the ZHA services."""
 
+from collections.abc import Callable, Coroutine
+
 import pytest
+from zigpy.device import GreenPowerDevice as ZigpyGreenPowerDevice
+from zigpy.zgp.types import ApplicationID, SrcID
 
 from homeassistant.components.zha.const import DOMAIN
+from homeassistant.components.zha.helpers import get_zha_gateway
 from homeassistant.components.zha.services import (
     SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
     SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND,
@@ -93,3 +98,52 @@ async def test_service_without_gateway_raises(
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "no_gateway"
+
+
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        pytest.param(
+            SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
+            {"endpoint_id": 1, "cluster_id": 6, "attribute": 0, "value": 1},
+            id="set_zigbee_cluster_attribute",
+        ),
+        pytest.param(
+            SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
+            {
+                "endpoint_id": 1,
+                "cluster_id": 6,
+                "command": 0,
+                "command_type": "server",
+                "params": {},
+            },
+            id="issue_zigbee_cluster_command",
+        ),
+    ],
+)
+async def test_cluster_service_green_power_device_raises(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    service: str,
+    data: dict,
+) -> None:
+    """Test the cluster actions reject a Green Power device."""
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_gpd = ZigpyGreenPowerDevice(
+        gateway.application_controller,
+        application_id=ApplicationID.SrcID,
+        src_id=SrcID(0x12345678),
+    )
+    gateway.application_controller.devices[zigpy_gpd.ieee] = zigpy_gpd
+    gateway.get_or_create_device(zigpy_gpd)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN, service, {"ieee": str(zigpy_gpd.ieee), **data}, blocking=True
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "not_zigbee_device"
+    assert err.value.translation_placeholders == {"ieee": str(zigpy_gpd.ieee)}

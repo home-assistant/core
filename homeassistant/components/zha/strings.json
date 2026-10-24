@@ -2306,6 +2306,9 @@
   "exceptions": {
     "no_gateway": {
       "message": "ZHA is not loaded, so this action cannot be performed."
+    },
+    "not_zigbee_device": {
+      "message": "Device {ieee} is not a Zigbee device, so this action cannot be performed."
     }
   },
   "issues": {

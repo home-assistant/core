@@ -68,6 +68,7 @@ from zha.event import EventBase
 from zha.exceptions import ZHAException
 from zha.mixins import LogMixin
 from zha.zigbee.device import (
+    BaseDevice,
     ClusterBindEvent,
     ClusterConfigureReportingEvent,
     Device,
@@ -447,7 +448,7 @@ class ZHADeviceProxy(EventBase):
 
     _ha_device_id: str
 
-    def __init__(self, device: Device, gateway_proxy: ZHAGatewayProxy) -> None:
+    def __init__(self, device: BaseDevice, gateway_proxy: ZHAGatewayProxy) -> None:
         """Initialize the gateway proxy."""
         super().__init__()
         self.device = device
@@ -456,7 +457,7 @@ class ZHADeviceProxy(EventBase):
         self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
 
     @callback
-    def async_rebind_device(self, device: Device) -> None:
+    def async_rebind_device(self, device: BaseDevice) -> None:
         """Repoint this proxy to a replacement device object after a re-interview."""
         for unsub in self._unsubs:
             unsub()
@@ -1081,7 +1082,9 @@ class ZHAGatewayProxy(EventBase):
             e for e in entity_refs if e.ha_entity_id != entity.entity_id
         ]
 
-    def _async_get_or_create_device_proxy(self, zha_device: Device) -> ZHADeviceProxy:
+    def _async_get_or_create_device_proxy(
+        self, zha_device: BaseDevice
+    ) -> ZHADeviceProxy:
         """Get or create a ZHA device."""
         if (zha_device_proxy := self.device_proxies.get(zha_device.ieee)) is None:
             coordinator_ieee = self.gateway.state.node_info.ieee
