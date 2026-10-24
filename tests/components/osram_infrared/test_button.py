@@ -5,6 +5,15 @@ from unittest.mock import patch
 from infrared_protocols.codes.osram.light import OSRAM_ADDRESS, OsramLightCode
 from infrared_protocols.commands.nec import NECCommand
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -21,16 +30,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.components.common import (
-    assert_availability_follows_source_entity,
-)
-from pytest_homeassistant.components.infrared import (
-    EMITTER_ENTITY_ID,
-    RECEIVER_ENTITY_ID,
-)
-from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
 ENABLED_CODES = {
     OsramLightCode.BRIGHTNESS_UP,
