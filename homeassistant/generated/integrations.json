@@ -8139,6 +8139,15 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "openaq": {
+      "name": "OpenAQ",
+      "integration_type": "service",
+      "categories": [
+        "weather_alerts.air_quality_pollen"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "opendisplay": {
       "name": "OpenDisplay",
       "integration_type": "device",
