@@ -1,0 +1,33 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This controller is already configured."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Check the host and whether the API is enabled.",
+      "invalid_auth": "Authentication failed. Check the API secret and ensure the API is enabled.",
+      "invalid_host": "Enter a valid hostname or IP address without a URL path."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_secret": "API secret",
+          "host": "Host",
+          "ssl": "Use HTTPS"
+        },
+        "data_description": {
+          "api_secret": "The shared secret shown in the NXT API settings.",
+          "host": "The local hostname or IP address, optionally including a port, without http:// or a path.",
+          "ssl": "Enable if your controller provides HTTPS with a trusted certificate."
+        },
+        "description": "Enable the developer API in your NXT administrator settings. Enter its local hostname or IP address and API secret.",
+        "title": "Connect to Dobiss NXT"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Unable to send the light command to Dobiss. Check the connection and API settings."
+    }
+  }
+}
