@@ -70,6 +70,41 @@ class AuthStore:
         """Retrieve all users."""
         return self._groups.get(group_id)
 
+    async def async_create_group(self, name: str, policy: PolicyType) -> models.Group:
+        """Create a custom group."""
+        group = models.Group(name=name, policy=policy)
+        self._groups[group.id] = group
+        self._async_schedule_save()
+        return group
+
+    async def async_update_group(
+        self,
+        group: models.Group,
+        name: str | None = None,
+        policy: PolicyType | None = None,
+    ) -> None:
+        """Update a custom group."""
+        if group.system_generated:
+            raise ValueError("Unable to modify a system generated group")
+        if name is not None:
+            group.name = name
+        if policy is not None:
+            group.policy = policy
+            for user in self._users.values():
+                if any(user_group is group for user_group in user.groups):
+                    user.invalidate_cache()
+        self._async_schedule_save()
+
+    async def async_remove_group(self, group: models.Group) -> None:
+        """Remove a custom group and drop it from its members."""
+        if group.system_generated:
+            raise ValueError("Unable to remove a system generated group")
+        del self._groups[group.id]
+        for user in self._users.values():
+            if any(user_group is group for user_group in user.groups):
+                user.groups = [gr for gr in user.groups if gr is not group]
+        self._async_schedule_save()
+
     async def async_get_users(self) -> list[models.User]:
         """Retrieve all users."""
         return list(self._users.values())
