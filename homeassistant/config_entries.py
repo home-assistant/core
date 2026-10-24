@@ -783,7 +783,10 @@ class ConfigEntry[_DataT = Any]:
         reason = _SetupErrorReason()
         retry_later = False
 
-        if isinstance(exc, ConfigEntryError):
+        if isinstance(exc, ConfigEntryError) or (
+            # Without a reauth flow the user can't recover from an auth failure
+            isinstance(exc, ConfigEntryAuthFailed) and not self._has_reauth_flow()
+        ):
             reason = _SetupErrorReason(
                 reason=str(exc) or "Unknown fatal config entry error",
                 translation_key=exc.translation_key,
@@ -820,7 +823,7 @@ class ConfigEntry[_DataT = Any]:
             logger.debug("Full exception", exc_info=True)  # noqa: LOG014
             if not migration:
                 # Reauth flows assume post-migration config entry state
-                self.async_start_reauth_if_available(hass)
+                self.async_start_reauth(hass)
 
         elif isinstance(exc, ConfigEntryNotReady):
             reason = _SetupErrorReason(
@@ -1460,10 +1463,15 @@ class ConfigEntry[_DataT = Any]:
         data: dict[str, Any] | None = None,
     ) -> None:
         """Start a reauth flow only if the integration implements one."""
-        handler = HANDLERS.get(self.domain)
-        if handler is None or not hasattr(handler, "async_step_reauth"):
+        if not self._has_reauth_flow():
             return
         self.async_start_reauth(hass, context, data)
+
+    @callback
+    def _has_reauth_flow(self) -> bool:
+        """Return if the integration implements a reauth flow."""
+        handler = HANDLERS.get(self.domain)
+        return handler is not None and hasattr(handler, "async_step_reauth")
 
     async def _async_init_reauth(
         self,
