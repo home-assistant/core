@@ -17,7 +17,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowRe
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import aiohttp_client
 
-from .const import CLIENT_ID, CLIENT_NAME, DOMAIN
+from .const import CLIENT_ID, CLIENT_NAME, DOMAIN, WEBSESSION_MAX_HEADER_SIZE
 from .utils.logger import LOGGER
 
 if TYPE_CHECKING:
@@ -64,7 +64,11 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self.device:
             self.device = GitHubDeviceAPI(
                 client_id=CLIENT_ID,
-                session=aiohttp_client.async_get_clientsession(self.hass),
+                session=aiohttp_client.async_create_clientsession(
+                    self.hass,
+                    max_line_size=WEBSESSION_MAX_HEADER_SIZE,
+                    max_field_size=WEBSESSION_MAX_HEADER_SIZE,
+                ),
                 client_name=CLIENT_NAME,
             )
             try:
