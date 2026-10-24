@@ -489,6 +489,7 @@ FLOWS = {
         "marketplace",
         "mastodon",
         "matter",
+        "mawaqit",
         "mcp",
         "mcp_server",
         "mealie",
