@@ -141,7 +141,6 @@ async def validate_config_entry(
             _LOGGER.error("Routes API is disabled: %s", auth_error)
             raise PermissionDeniedException from auth_error
         if auth_error.reason == REFERRER_BLOCKED_REASON:
-            _LOGGER.error("Referrer blocked: %s", auth_error)
             raise InvalidReferrerException from auth_error
         _LOGGER.error("Request denied: %s", auth_error)
         raise InvalidApiKeyException from auth_error
