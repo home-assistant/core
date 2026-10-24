@@ -6609,6 +6609,15 @@
         }
       }
     },
+    "marstek": {
+      "name": "Marstek",
+      "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "martec": {
       "name": "Martec",
       "integration_type": "virtual",

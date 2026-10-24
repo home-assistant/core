@@ -357,6 +357,9 @@ aiolookin==1.0.0
 # homeassistant.components.lyric
 aiolyric==2.2.1
 
+# homeassistant.components.marstek
+aiomarstek==0.1.9
+
 # homeassistant.components.mealie
 aiomealie==2.1.3
 
