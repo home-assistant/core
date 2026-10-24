@@ -398,6 +398,18 @@
           "calculated"
         ]
       },
+      "categories": {
+        "description": "The categories of the integration, the primary category first.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#categories",
+        "examples": [["energy"], ["energy.ev_charging"]],
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 3,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+)?$"
+        }
+      },
       "single_config_entry": {
         "description": "Whether the integration only supports a single config entry.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#single_config_entry",
         "const": true
