@@ -8,6 +8,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import init_integration
 
@@ -98,3 +99,30 @@ async def test_only_one_battery_sensor_detected(
             entity_registry, mock_config_entry.entry_id
         )
         assert len(entries) == 1
+
+
+async def test_battery_sensor_value_updates(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_thermostat_parent: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test that the battery sensor value updates."""
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [mock_thermostat_parent]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.room_1_test_climate_5_battery"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "80"
+
+    mock_thermostat_parent.battery_level = 50
+    await async_update_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "50"
