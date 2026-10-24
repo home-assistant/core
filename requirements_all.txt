@@ -2336,6 +2336,9 @@ pygti==1.1.1
 # homeassistant.components.hase_iq
 pyhaseiq==0.2.1
 
+# homeassistant.components.hausbus
+pyhausbus==1.0.75
+
 # homeassistant.components.version
 pyhaversion==22.8.0
 

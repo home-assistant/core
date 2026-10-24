@@ -773,6 +773,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/hase_iq/ @bbayszczak
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
+/homeassistant/components/hausbus/ @hausbus
+/tests/components/hausbus/ @hausbus
 /homeassistant/components/haven_iaq/ @krhtzoa
 /tests/components/haven_iaq/ @krhtzoa
 /homeassistant/components/hdfury/ @glenndehaan
