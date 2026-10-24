@@ -2285,6 +2285,9 @@ pyevilgenius==2.0.0
 # homeassistant.components.ezviz
 pyezvizapi==1.0.5.0
 
+# homeassistant.components.fenix_control
+pyfenixcontrol==0.1.0
+
 # homeassistant.components.fibaro
 pyfibaro==0.8.4
 

@@ -221,6 +221,7 @@ homeassistant.components.faa_delays.*
 homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.feedreader.*
+homeassistant.components.fenix_control.*
 homeassistant.components.file_upload.*
 homeassistant.components.filesize.*
 homeassistant.components.filter.*

@@ -241,6 +241,7 @@ FLOWS = {
         "faa_delays",
         "fastdotcom",
         "feedreader",
+        "fenix_control",
         "fibaro",
         "file",
         "filesize",

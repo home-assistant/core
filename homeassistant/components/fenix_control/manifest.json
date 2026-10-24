@@ -1,0 +1,13 @@
+{
+  "domain": "fenix_control",
+  "name": "FENIX Control",
+  "categories": ["climate.thermostats_heating"],
+  "codeowners": ["@baracudaz"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/fenix_control",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyfenixcontrol"],
+  "quality_scale": "bronze",
+  "requirements": ["pyfenixcontrol==0.1.0"]
+}
