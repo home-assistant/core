@@ -1149,7 +1149,7 @@ async def test_webhook_person_event(
         ("NACamera", "12:34:56:00:f1:62", "camera.hall", ["person", "person_home"]),
     ],
 )
-async def test_camera_event(
+async def test_camera_event_local(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     camera_type: str,
@@ -1157,7 +1157,7 @@ async def test_camera_event(
     camera_entity: str,
     camera_events: list[str],
 ) -> None:
-    """Test camera event processing."""
+    """Test local camera event processing."""
     fake_post_hits = 0
     home_id = "91763b24c43d3e344f424e8b"
 
@@ -1187,6 +1187,102 @@ async def test_camera_event(
         await hass.async_block_till_done()
 
     netatmo_data = config_entry.runtime_data
+
+    # Initial state checks
+    assert hass.states.get(camera_entity).attributes.get("is_local") is True
+
+    await netatmo_data.account.async_update_events(home_id=home_id)
+
+    # Trigger the event update callback to parse them into runtime_data.events
+    async_dispatcher_send(hass, f"event-{home_id}")
+
+    processed_events = netatmo_data.events.get(camera_id)
+
+    assert processed_events is not None
+
+    person_event_found = False
+    for event_data in processed_events.values():
+        event_type = event_data.get("event_type")
+
+        if event_type in camera_events:
+            person_event_found = True
+
+        assert "media_url" in event_data
+
+    assert person_event_found
+
+
+@pytest.mark.parametrize(
+    ("camera_type", "camera_id", "camera_entity", "camera_events"),
+    [
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall", ["person", "person_home"]),
+    ],
+)
+async def test_camera_event_vpn(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    camera_type: str,
+    camera_id: str,
+    camera_entity: str,
+    camera_events: list[str],
+) -> None:
+    """Test vpn camera event processing."""
+    home_id = "91763b24c43d3e344f424e8b"
+
+    # Mock data for payload_modifier to simulate camera status change
+    mock_state = {
+        "module_id": "aa:bb:cc:dd:ee:ff",
+        "timestamp": None,
+        "attributes": {"alim_status": 2},
+    }
+
+    async def fake_camera_post(*args: Any, **kwargs: Any):
+        """Fake camera status during requesting backend data."""
+        callback = partial(
+            payload_modifier,
+            target_id=mock_state["module_id"],
+            new_attributes=dict(mock_state["attributes"]),
+            timestamp=mock_state["timestamp"],
+        )
+        return await fake_post_request(hass, *args, msg_callback=callback, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_camera_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    netatmo_data = config_entry.runtime_data
+
+    # Initial state check
+    assert hass.states.get(camera_entity).attributes.get("is_local") is True
+
+    # Change mocked status to vpn
+    mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+    mock_state["module_id"] = camera_id
+    mock_state["attributes"] = {
+        "is_local": False,
+    }
+
+    # Trigger some polling cycle to let local change be picked up
+    await advance_time(hass, freezer, **POLLING_INTERVAL)
+
+    # State checks after change
+    assert hass.states.get(camera_entity).attributes.get("is_local") is False
 
     await netatmo_data.account.async_update_events(home_id=home_id)
 
