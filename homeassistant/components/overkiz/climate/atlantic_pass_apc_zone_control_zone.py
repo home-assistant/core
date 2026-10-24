@@ -676,33 +676,19 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                     )
                 return
 
-        # With no side running, the program has no setpoint to change and a
-        # manual one would start a derogation over it.
-        states = self.device.states
-        if (
-            self.active_hvac_mode == HVACMode.HEAT_COOL
-            and states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
-            != OverkizCommandParam.ON
-            and OverkizCommandParam.INTERNAL_SCHEDULING
-            in (
-                states.get_value(OverkizState.IO_PASS_APC_HEATING_MODE),
-                states.get_value(OverkizState.IO_PASS_APC_COOLING_MODE),
-            )
-        ):
+        # With no side running, the program has no setpoint to change, in any
+        # mode: writing the manual setpoints instead would start a derogation.
+        if self.active_hvac_mode not in (HVACMode.HEAT, HVACMode.COOL):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="zone_control_side_unknown",
             )
 
         # A single setpoint applies to the side currently running.
-        if (
-            self.device_hvac_mode == HVACMode.HEAT_COOL
-            and ATTR_TEMPERATURE in kwargs
-            and (active_hvac_mode := self.active_hvac_mode) != HVACMode.HEAT_COOL
-        ):
+        if self.device_hvac_mode == HVACMode.HEAT_COOL and ATTR_TEMPERATURE in kwargs:
             active_target_temp = (
                 ATTR_TARGET_TEMP_LOW
-                if active_hvac_mode == HVACMode.HEAT
+                if self.active_hvac_mode == HVACMode.HEAT
                 else ATTR_TARGET_TEMP_HIGH
             )
             kwargs[active_target_temp] = kwargs.pop(ATTR_TEMPERATURE)

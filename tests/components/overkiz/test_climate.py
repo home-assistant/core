@@ -1053,16 +1053,6 @@ async def test_zone_control_zone_with_the_derogated_temperature_fallback(
             ],
             id="hvac_mode",
         ),
-        pytest.param(
-            "set_temperature",
-            {ATTR_TARGET_TEMP_LOW: 19.0, ATTR_TARGET_TEMP_HIGH: 26.0},
-            [
-                ("setHeatingTargetTemperature", [19.0]),
-                ("setCoolingTargetTemperature", [26.0]),
-                ("setDerogationOnOffState", ["on"]),
-            ],
-            id="temperature",
-        ),
     ],
 )
 async def test_zone_control_zone_batches_commands(
@@ -1076,7 +1066,7 @@ async def test_zone_control_zone_batches_commands(
 ) -> None:
     """Test a zone sends its commands and its refreshes as a single execution."""
     await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
-    # The range is only accepted while the zone control runs neither side.
+    # The zone control runs neither side.
     await _async_set_zone_control_operating_mode(
         hass, freezer, mock_client, "stop", "stop"
     )
@@ -1276,20 +1266,20 @@ async def test_zone_control_zone_set_temperature_while_off(
     )
 
 
+@pytest.mark.parametrize("program", ["internalScheduling", "manu"])
 async def test_zone_control_zone_set_temperature_without_running_side(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_client: MockOverkizClient,
     setup_overkiz_integration: SetupOverkizIntegration,
+    program: str,
 ) -> None:
-    """Test a scheduled zone is not overridden when no side is running."""
+    """Test a zone is not overridden when no side is running, in any mode."""
     await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
     await _async_set_zone_control_operating_mode(
         hass, freezer, mock_client, "stop", "stop"
     )
-    await _async_set_zone_program(
-        hass, freezer, mock_client, "internalScheduling", "off"
-    )
+    await _async_set_zone_program(hass, freezer, mock_client, program, "off")
     mock_client.execute_action_group.reset_mock()
 
     with pytest.raises(ServiceValidationError) as exc_info:
