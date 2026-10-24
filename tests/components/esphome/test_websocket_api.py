@@ -1045,7 +1045,7 @@ async def test_subscribe_sendspin_clients_client_id_refresh_stops(
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A device that disconnects, or stops answering, is not asked again."""
+    """A disconnected device is not asked again; a connected one that fails is."""
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_capabilities=_sendspin_capabilities(client_id=""),
@@ -1058,12 +1058,57 @@ async def test_subscribe_sendspin_clients_client_id_refresh_stops(
 
     await device.mock_connect()
     assert mock_client.device_capabilities_compat.await_count == 2
+    # A request that times out while connected is retried with a longer delay
     mock_client.device_capabilities_compat.side_effect = APIConnectionError("boom")
     await _retry_client_id_fetch(hass, freezer, 5)
     assert mock_client.device_capabilities_compat.await_count == 3
-    await _retry_client_id_fetch(hass, freezer, 300)
-    assert mock_client.device_capabilities_compat.await_count == 3
+    await _retry_client_id_fetch(hass, freezer, 10)
+    assert mock_client.device_capabilities_compat.await_count == 4
     await _assert_nothing_received(websocket_client)
+
+    mock_client.device_capabilities_compat.side_effect = None
+    mock_client.device_capabilities_compat.return_value = DeviceCapabilities.from_dict(
+        _sendspin_capabilities()
+    )
+    await _retry_client_id_fetch(hass, freezer, 20)
+    assert await _receive_sendspin_clients(websocket_client) == [SENDSPIN_CLIENT_ID]
+
+
+async def test_subscribe_sendspin_clients_refresh_survives_capabilities_update(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A cache update in the same connection, like a Z-Wave home id, does not stop the refresh."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_capabilities=_sendspin_capabilities(client_id=""),
+    )
+    websocket_client, _ = await _subscribe_sendspin_clients(hass_ws_client)
+
+    fetch_started = asyncio.Event()
+    release_fetch = asyncio.Event()
+
+    async def _slow_fetch(device_info: DeviceInfo) -> DeviceCapabilities:
+        fetch_started.set()
+        await release_fetch.wait()
+        return DeviceCapabilities.from_dict(_sendspin_capabilities())
+
+    mock_client.device_capabilities_compat.side_effect = _slow_fetch
+    freezer.tick(6)
+    async_fire_time_changed(hass)
+    await fetch_started.wait()
+
+    entry_data = device.entry.runtime_data
+    entry_data.device_capabilities = DeviceCapabilities.from_dict(
+        entry_data.device_capabilities.to_dict()
+    )
+    release_fetch.set()
+    await hass.async_block_till_done()
+    assert await _receive_sendspin_clients(websocket_client) == [SENDSPIN_CLIENT_ID]
+    assert entry_data.device_capabilities.sendspin.client_id == SENDSPIN_CLIENT_ID
 
 
 async def test_subscribe_sendspin_clients_refresh_after_reconnect(

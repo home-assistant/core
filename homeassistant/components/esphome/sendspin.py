@@ -111,28 +111,31 @@ def _async_schedule_client_id_refresh(
     """Fetch the capabilities again later, until they carry the client id."""
 
     async def _async_refresh(_now: datetime) -> None:
-        entry_data.disconnect_callbacks.discard(cancel)
+        # The disconnect callbacks are replaced on every disconnect, so the set
+        # identifies the connection this refresh was scheduled for
+        session = entry_data.disconnect_callbacks
+        session.discard(cancel)
         assert entry_data.device_info is not None
-        stale = entry_data.device_capabilities
+        next_delay = min(delay * 2, CLIENT_ID_RETRY_MAX_DELAY)
         try:
             capabilities = await entry_data.client.device_capabilities_compat(
                 entry_data.device_info
             )
         except APIConnectionError as err:
-            # the disconnect that follows starts over on the next connect
-            _LOGGER.debug("%s: capabilities unavailable: %s", entry_data.name, err)
+            if entry_data.disconnect_callbacks is session:
+                # still connected: the device did not answer in time, ask again later
+                _LOGGER.debug("%s: capabilities unavailable: %s", entry_data.name, err)
+                _async_schedule_client_id_refresh(hass, entry_data, next_delay)
             return
-        if not entry_data.available or entry_data.device_capabilities is not stale:
-            # the device dropped off, or reconnected and was fetched afresh, meanwhile
+        if entry_data.disconnect_callbacks is not session:
+            # the device dropped off meanwhile; the next connect starts over
             return
         entry_data.device_capabilities = capabilities
         entry_data.async_save_to_store()
         if client_id := capabilities.sendspin.client_id:
             _async_set_client_id(hass, entry_data, client_id)
         else:
-            _async_schedule_client_id_refresh(
-                hass, entry_data, min(delay * 2, CLIENT_ID_RETRY_MAX_DELAY)
-            )
+            _async_schedule_client_id_refresh(hass, entry_data, next_delay)
 
     cancel = async_call_later(hass, delay, _async_refresh)
     entry_data.disconnect_callbacks.add(cancel)
