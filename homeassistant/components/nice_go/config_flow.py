@@ -47,6 +47,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                     async_get_clientsession(self.hass),
                 )
+                await hub.get_all_barriers()
             except AuthFailedError:
                 errors["base"] = "invalid_auth"
             except Exception:
