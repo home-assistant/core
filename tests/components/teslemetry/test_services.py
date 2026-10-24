@@ -1,7 +1,6 @@
 """Test the Teslemetry services."""
 
 from datetime import time
-from typing import Any
 from unittest.mock import patch
 
 from aiopowerwall import (
@@ -103,8 +102,22 @@ LOCAL_BATTERY_SERVICES = [
 ]
 
 
-async def _setup_paired_site(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up an entry whose energy site is paired with its local gateway."""
+PAIRED_SITE = ConfigSubentryData(
+    subentry_type=SUBENTRY_TYPE_ENERGY_SITE,
+    unique_id=str(SITE_ID),
+    title="Energy Site",
+    data={
+        CONF_SITE_ID: SITE_ID,
+        CONF_HOST: "192.168.91.1",
+        CONF_PASSWORD: "abcde",
+    },
+)
+
+
+async def _setup_site(
+    hass: HomeAssistant, subentries: list[ConfigSubentryData]
+) -> MockConfigEntry:
+    """Set up an entry whose energy site has the given local-control subentry."""
     entry = mock_config_entry()
     entry = MockConfigEntry(
         domain=entry.domain,
@@ -112,18 +125,7 @@ async def _setup_paired_site(hass: HomeAssistant) -> MockConfigEntry:
         minor_version=entry.minor_version,
         unique_id=entry.unique_id,
         data=dict(entry.data),
-        subentries_data=[
-            ConfigSubentryData(
-                subentry_type=SUBENTRY_TYPE_ENERGY_SITE,
-                unique_id=str(SITE_ID),
-                title="Energy Site",
-                data={
-                    CONF_SITE_ID: SITE_ID,
-                    CONF_HOST: "192.168.91.1",
-                    CONF_PASSWORD: "abcde",
-                },
-            )
-        ],
+        subentries_data=subentries,
     )
     entry.add_to_hass(hass)
     with (
@@ -581,12 +583,12 @@ async def test_local_battery_services(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     service: str,
-    data: dict[str, Any],
+    data: dict[str, int],
     method: str,
     expected_args: tuple[int, ...],
 ) -> None:
     """Test the local battery services call the paired gateway."""
-    entry = await _setup_paired_site(hass)
+    entry = await _setup_site(hass, [PAIRED_SITE])
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, str(SITE_ID)), entry.entry_id
     )
@@ -627,13 +629,13 @@ async def test_local_battery_services_errors(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     service: str,
-    data: dict[str, Any],
+    data: dict[str, int],
     method: str,
     error: PowerwallError,
     translation_key: str,
 ) -> None:
     """Test the local battery services translate gateway errors."""
-    entry = await _setup_paired_site(hass)
+    entry = await _setup_site(hass, [PAIRED_SITE])
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, str(SITE_ID)), entry.entry_id
     )
@@ -653,15 +655,33 @@ async def test_local_battery_services_errors(
 
 
 @pytest.mark.parametrize(("service", "data", "method"), LOCAL_BATTERY_SERVICES)
+@pytest.mark.parametrize(
+    "subentries",
+    [
+        pytest.param([], id="not_added"),
+        pytest.param(
+            [
+                ConfigSubentryData(
+                    subentry_type=SUBENTRY_TYPE_ENERGY_SITE,
+                    unique_id=str(SITE_ID),
+                    title="Energy Site",
+                    data={CONF_SITE_ID: SITE_ID},
+                )
+            ],
+            id="added_without_credentials",
+        ),
+    ],
+)
 async def test_local_battery_services_not_paired(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     service: str,
-    data: dict[str, Any],
+    data: dict[str, int],
     method: str,
+    subentries: list[ConfigSubentryData],
 ) -> None:
     """Test the local battery services reject a site without a local gateway."""
-    entry = await setup_platform(hass, [])
+    entry = await _setup_site(hass, subentries)
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, str(SITE_ID)), entry.entry_id
     )
@@ -681,14 +701,23 @@ async def test_local_battery_services_not_paired(
     mock_method.assert_not_called()
 
 
-@pytest.mark.parametrize("duration", [0, 86401])
-async def test_dispatch_battery_power_duration_out_of_range(
+@pytest.mark.parametrize(
+    ("power", "duration"),
+    [
+        pytest.param(5000, 0, id="duration_too_short"),
+        pytest.param(5000, 86401, id="duration_too_long"),
+        pytest.param(-100001, 1800, id="charge_power_too_high"),
+        pytest.param(100001, 1800, id="discharge_power_too_high"),
+    ],
+)
+async def test_dispatch_battery_power_out_of_range(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    power: int,
     duration: int,
 ) -> None:
-    """Test a duration outside 1 to 86400 seconds is rejected."""
-    entry = await _setup_paired_site(hass)
+    """Test a power or duration outside the allowed range is rejected."""
+    entry = await _setup_site(hass, [PAIRED_SITE])
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, str(SITE_ID)), entry.entry_id
     )
@@ -701,7 +730,7 @@ async def test_dispatch_battery_power_duration_out_of_range(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DISPATCH_BATTERY_POWER,
-            {CONF_DEVICE_ID: device.id, ATTR_POWER: 5000, ATTR_DURATION: duration},
+            {CONF_DEVICE_ID: device.id, ATTR_POWER: power, ATTR_DURATION: duration},
             blocking=True,
         )
     mock_method.assert_not_called()

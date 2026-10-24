@@ -1309,7 +1309,7 @@
       "message": "No energy site data for device ID: {device_id}"
     },
     "no_local_powerwall": {
-      "message": "Energy site {device_id} is not set up for local control. Add it as a local energy site in the Teslemetry integration, then try again."
+      "message": "{name} is not connected to its Powerwall for local control. Add it as a local energy site in the Teslemetry integration, or restore its local connection, then try again."
     },
     "no_vehicle_data_for_device": {
       "message": "No vehicle data for device ID: {device_id}"

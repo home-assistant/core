@@ -1,15 +1,9 @@
 """Service calls for the Teslemetry integration."""
 
-from collections.abc import Awaitable
 import logging
 from typing import TYPE_CHECKING
 
-from aiopowerwall import (
-    PowerwallClient,
-    PowerwallEnergySite,
-    PowerwallError,
-    PowerwallNotSupportedError,
-)
+from aiopowerwall import PowerwallClient, PowerwallEnergySite
 import probatio
 from tesla_fleet_api.tesla import EnergySiteRouter
 
@@ -31,7 +25,7 @@ from homeassistant.helpers import (
 )
 
 from .const import DOMAIN
-from .helpers import handle_command, handle_vehicle_command
+from .helpers import handle_command, handle_local_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 if TYPE_CHECKING:
@@ -78,6 +72,7 @@ SERVICE_REMOVE_PRECONDITION_SCHEDULE = "remove_precondition_schedule"
 SERVICE_DISPATCH_BATTERY_POWER = "dispatch_battery_power"
 SERVICE_RESUME_BATTERY_OPERATION = "resume_battery_operation"
 
+MAX_DISPATCH_POWER = 100000
 MAX_DISPATCH_DURATION = 86400
 
 
@@ -131,27 +126,12 @@ def async_get_local_powerwall_for_site(
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="no_local_powerwall",
-            translation_placeholders={"device_id": device.id},
+            translation_placeholders={
+                "name": device.name_by_user or device.name or str(site.id)
+            },
         )
     local: PowerwallEnergySite = site.api.primary
     return local.powerwall
-
-
-async def handle_local_command(command: Awaitable[None]) -> None:
-    """Handle a command sent to a local Powerwall gateway."""
-    try:
-        await command
-    except PowerwallNotSupportedError as e:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="local_command_not_supported",
-        ) from e
-    except PowerwallError as e:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="local_command_failed",
-            translation_placeholders={"message": str(e)},
-        ) from e
 
 
 async def async_dispatch_battery_power(call: ServiceCall) -> None:
@@ -599,7 +579,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=probatio.Schema(
             {
                 probatio.Required(CONF_DEVICE_ID): cv.string,
-                probatio.Required(ATTR_POWER): probatio.Coerce(int),
+                probatio.Required(ATTR_POWER): probatio.All(
+                    probatio.Coerce(int),
+                    probatio.Range(min=-MAX_DISPATCH_POWER, max=MAX_DISPATCH_POWER),
+                ),
                 probatio.Required(ATTR_DURATION): probatio.All(
                     cv.positive_int, probatio.Range(min=1, max=MAX_DISPATCH_DURATION)
                 ),
