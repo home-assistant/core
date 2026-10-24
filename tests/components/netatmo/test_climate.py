@@ -28,6 +28,7 @@ from homeassistant.components.netatmo.climate import PRESET_FROST_GUARD, PRESET_
 from homeassistant.components.netatmo.const import (
     ATTR_END_DATETIME,
     ATTR_SCHEDULE_NAME,
+    ATTR_SETPOINT_END_TIME,
     ATTR_TARGET_TEMPERATURE,
     ATTR_TIME_PERIOD,
     DOMAIN,
@@ -1237,3 +1238,57 @@ async def test_webhook_set_point(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "heat"
+
+
+async def test_webhook_set_point_with_end_time(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test setpoint_end_time attribute is set and cleared via webhook events."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_livingroom = "climate.livingroom_livingroom"
+
+    end_time = int(dt_util.utcnow().timestamp()) + 900
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "manual",
+                    "therm_setpoint_temperature": 22,
+                    "therm_setpoint_end_time": end_time,
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "manual",
+        "event_type": "set_point",
+        "temperature": 22,
+        "push_type": "display_change",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    state = hass.states.get(climate_entity_livingroom)
+    assert state.attributes[ATTR_SETPOINT_END_TIME] == dt_util.utc_from_timestamp(
+        end_time
+    )
+
+    response["home"]["rooms"][0]["therm_setpoint_mode"] = "home"
+    response["home"]["rooms"][0]["therm_setpoint_temperature"] = 19
+    response["home"]["rooms"][0]["therm_setpoint_end_time"] = 0
+    await simulate_webhook(hass, webhook_id, response)
+
+    state = hass.states.get(climate_entity_livingroom)
+    assert ATTR_SETPOINT_END_TIME not in state.attributes
