@@ -16,7 +16,7 @@ def snapshot_keba_platform(
     """Snapshot the registry entries and states of one KEBA platform.
 
     The integration is set up from YAML, so its entities have no config entry
-    and tests.common.snapshot_platform cannot find them.
+    and pytest_homeassistant.common.snapshot_platform cannot find them.
     """
     entries = sorted(
         (

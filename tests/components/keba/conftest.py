@@ -29,12 +29,14 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from keba_kecontact.keba_protocol import KebaProtocol
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.keba.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed, load_json_object_fixture
 
 HOST = "192.0.2.10"
 UDP_PORT = 7090
