@@ -89,6 +89,17 @@
         "name": "Reset filter"
       }
     },
+    "climate": {
+      "coolmaster": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "vlow": "Very low"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "error_code": {
         "name": "Error code"
