@@ -732,10 +732,8 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the state attributes."""
         state_attr: dict[str, Any] = {}
 
-        if self.support_grouping:
-            state_attr[MediaPlayerEntityStateAttribute.GROUP_MEMBERS] = (
-                self.group_members
-            )
+        if (group_members := self.group_members) is not None:
+            state_attr[MediaPlayerEntityStateAttribute.GROUP_MEMBERS] = group_members
 
         if self.state == MediaPlayerState.OFF:
             return state_attr

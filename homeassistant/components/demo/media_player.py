@@ -438,6 +438,11 @@ class DemoGroupPlayer(AbstractDemoPlayer):
         | MediaPlayerEntityFeature.TURN_OFF
     )
 
+    def __init__(self, name: str) -> None:
+        """Initialize the demo device."""
+        super().__init__(name)
+        self._attr_group_members: list[str] = []
+
 
 class DemoSearchPlayer(AbstractDemoPlayer):
     """A Demo media player that supports searching."""
