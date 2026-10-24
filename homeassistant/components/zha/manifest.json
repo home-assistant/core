@@ -115,6 +115,18 @@
       "known_devices": ["sonoff zigbee dongle lite mg21"],
       "pid": "EA60",
       "vid": "10C4"
+    },
+    {
+      "description": "*zbm-mg21*",
+      "known_devices": ["Inswift ZBM-MG21"],
+      "pid": "55D4",
+      "vid": "1A86"
+    },
+    {
+      "description": "*zbm-mg24*",
+      "known_devices": ["Inswift ZBM-MG24"],
+      "pid": "EA60",
+      "vid": "10C4"
     }
   ],
   "zeroconf": [
