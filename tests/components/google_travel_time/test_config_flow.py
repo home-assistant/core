@@ -276,6 +276,46 @@ async def test_reconfigure_referrer(
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("data", "options"),
+    [(MOCK_CONFIG_REFERRER, DEFAULT_OPTIONS)],
+)
+async def test_reconfigure_error_keeps_submitted_values(
+    hass: HomeAssistant, mock_config: MockConfigEntry, routes_mock: AsyncMock
+) -> None:
+    """Test the form shows the submitted values again when validation fails."""
+    result = await mock_config.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    routes_mock.async_compute_routes.side_effect = GoogleMapsRoutingApiAuthError(
+        "Requests from referer <empty> are blocked.",
+        status="PERMISSION_DENIED",
+        reason="API_KEY_HTTP_REFERRER_BLOCKED",
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **RECONFIGURE_CONFIG,
+            SECTION_API_KEY_OPTIONS: {CONF_REFERRER: "https://example.org/"},
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_referrer"}
+
+    schema = result["data_schema"].schema
+    suggested = {
+        key.schema: key.description["suggested_value"]
+        for key in schema
+        if key.description and "suggested_value" in key.description
+    }
+    assert suggested[CONF_API_KEY] == RECONFIGURE_CONFIG[CONF_API_KEY]
+    assert suggested[CONF_ORIGIN] == RECONFIGURE_CONFIG[CONF_ORIGIN]
+    section_schema = schema[SECTION_API_KEY_OPTIONS].schema.schema
+    referrer_key = next(key for key in section_schema if key == CONF_REFERRER)
+    assert referrer_key.description["suggested_value"] == "https://example.org/"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
 @pytest.mark.parametrize(

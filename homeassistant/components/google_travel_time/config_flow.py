@@ -227,12 +227,17 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._get_reconfigure_entry(), data=_extract_entry_data(user_input)
                 )
 
-        entry_data = self._get_reconfigure_entry().data
-        suggested_values = {
-            key: value for key, value in entry_data.items() if key != CONF_REFERRER
-        }
-        if referrer := entry_data.get(CONF_REFERRER):
-            suggested_values[SECTION_API_KEY_OPTIONS] = {CONF_REFERRER: referrer}
+        suggested_values: dict[str, Any]
+        if user_input is not None:
+            # Keep what the user submitted so it can be corrected
+            suggested_values = user_input
+        else:
+            entry_data = self._get_reconfigure_entry().data
+            suggested_values = {
+                key: value for key, value in entry_data.items() if key != CONF_REFERRER
+            }
+            if referrer := entry_data.get(CONF_REFERRER):
+                suggested_values[SECTION_API_KEY_OPTIONS] = {CONF_REFERRER: referrer}
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
