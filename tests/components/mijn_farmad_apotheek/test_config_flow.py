@@ -15,7 +15,7 @@ from homeassistant.components.mijn_farmad_apotheek.const import (
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -23,6 +23,8 @@ from . import (
     API_ACCESS_TOKEN,
     API_ACCOUNT_FULL_NAME,
     API_ACCOUNT_ID,
+    API_OTP,
+    API_OTP_2,
     API_REFRESH_TOKEN,
     USER_INPUT,
 )
@@ -53,6 +55,7 @@ async def test_form(hass: HomeAssistant, mock_farmad_client: MagicMock) -> None:
     client = mock_farmad_client.return_value
     client.async_login.assert_awaited_once()
     client.async_close.assert_awaited_once()
+    assert mock_farmad_client.call_args.kwargs["otp_provider"] is None
 
 
 @pytest.mark.parametrize(
@@ -61,7 +64,6 @@ async def test_form(hass: HomeAssistant, mock_farmad_client: MagicMock) -> None:
         pytest.param(
             FarmadAuthenticationError("mock"), "invalid_auth", id="invalid_auth"
         ),
-        pytest.param(FarmadMfaRequiredError("mock"), "mfa_required", id="mfa_required"),
         pytest.param(
             FarmadCommunicationError("mock"), "cannot_connect", id="cannot_connect"
         ),
@@ -114,6 +116,90 @@ async def test_form_no_access_token(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_mfa(hass: HomeAssistant, mock_farmad_client: MagicMock) -> None:
+    """Test a two-factor account asks for the code and then creates the entry."""
+    client = mock_farmad_client.return_value
+    client.async_login.side_effect = [FarmadMfaRequiredError("mock"), None]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: API_OTP}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == API_ACCOUNT_FULL_NAME
+    assert result["data"] == {
+        CONF_ACCESS_TOKEN: API_ACCESS_TOKEN,
+        CONF_REFRESH_TOKEN: API_REFRESH_TOKEN,
+    }
+    assert result["result"].unique_id == API_ACCOUNT_ID
+    provider = mock_farmad_client.call_args.kwargs["otp_provider"]
+    assert await provider() == API_OTP
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "errors"),
+    [
+        pytest.param(
+            FarmadAuthenticationError("mock"),
+            {CONF_CODE: "wrong_code"},
+            id="wrong_code",
+        ),
+        pytest.param(
+            FarmadCommunicationError("mock"),
+            {"base": "cannot_connect"},
+            id="cannot_connect",
+        ),
+        pytest.param(RuntimeError("mock"), {"base": "unknown"}, id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_mfa_errors(
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    side_effect: Exception,
+    errors: dict[str, str],
+) -> None:
+    """Test the code step shows the error and recovers on the next attempt."""
+    client = mock_farmad_client.return_value
+    client.async_login.side_effect = [FarmadMfaRequiredError("mock"), side_effect]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: API_OTP}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+    assert result["errors"] == errors
+
+    client.async_login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: API_OTP_2}
+    )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

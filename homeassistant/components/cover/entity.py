@@ -6,16 +6,14 @@ from typing import Any, final, override
 
 from propcache.api import cached_property
 
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import (
-    ATTR_SPEED,
-    DOMAIN,
     CoverDeviceClass,
     CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverEntityStateAttribute,
+    CoverServiceArgument,
     CoverState,
 )
 
@@ -179,54 +177,27 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     @final
-    def _valid_speed_or_raise(self, speed: str, supported: list[str]) -> None:
-        """Raise ServiceValidationError if speed is not in the supported list."""
-        if speed not in supported:
-            supported_str = ", ".join(supported)
-            raise ServiceValidationError(
-                translation_key="not_valid_speed",
-                translation_domain=DOMAIN,
-                translation_placeholders={
-                    "speed": speed,
-                    "supported_speeds": supported_str,
-                },
-            )
+    def _without_unsupported_speed(self, kwargs: dict[str, Any]) -> dict[str, Any]:
+        """Return kwargs without a speed the cover does not support."""
+        speed = kwargs.get(CoverServiceArgument.SPEED)
+        if speed is None or speed in (self.supported_speeds or ()):
+            return kwargs
+        return {k: v for k, v in kwargs.items() if k != CoverServiceArgument.SPEED}
 
     @final
     async def async_handle_open_cover(self, **kwargs: Any) -> None:
-        """Validate speed and open the cover."""
-        call_kwargs = kwargs
-        if (speed := kwargs.get(ATTR_SPEED)) is not None:
-            if speeds := self.supported_speeds:
-                self._valid_speed_or_raise(speed, speeds)
-            else:
-                call_kwargs = dict(kwargs)
-                call_kwargs.pop(ATTR_SPEED)
-        await self.async_open_cover(**call_kwargs)
+        """Open the cover, ignoring a speed it does not support."""
+        await self.async_open_cover(**self._without_unsupported_speed(kwargs))
 
     @final
     async def async_handle_close_cover(self, **kwargs: Any) -> None:
-        """Validate speed and close the cover."""
-        call_kwargs = kwargs
-        if (speed := kwargs.get(ATTR_SPEED)) is not None:
-            if speeds := self.supported_speeds:
-                self._valid_speed_or_raise(speed, speeds)
-            else:
-                call_kwargs = dict(kwargs)
-                call_kwargs.pop(ATTR_SPEED)
-        await self.async_close_cover(**call_kwargs)
+        """Close the cover, ignoring a speed it does not support."""
+        await self.async_close_cover(**self._without_unsupported_speed(kwargs))
 
     @final
     async def async_handle_set_cover_position(self, **kwargs: Any) -> None:
-        """Validate speed and move the cover to a specific position."""
-        call_kwargs = kwargs
-        if (speed := kwargs.get(ATTR_SPEED)) is not None:
-            if speeds := self.supported_speeds:
-                self._valid_speed_or_raise(speed, speeds)
-            else:
-                call_kwargs = dict(kwargs)
-                call_kwargs.pop(ATTR_SPEED)
-        await self.async_set_cover_position(**call_kwargs)
+        """Move the cover to a position, ignoring a speed it does not support."""
+        await self.async_set_cover_position(**self._without_unsupported_speed(kwargs))
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

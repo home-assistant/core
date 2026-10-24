@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import patch
 
+from evohomeasync2 import Zone, exceptions as evo_exc
 from evohomeasync2.const import SZ_DURATION, SZ_MODE, SZ_PERIOD, SZ_SETPOINT, SZ_STATE
 from freezegun.api import FrozenDateTimeFactory
 import probatio
@@ -20,7 +21,7 @@ from homeassistant.components.evohome.water_heater import EvoDHW
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES
 from homeassistant.setup import async_setup_component
@@ -219,6 +220,51 @@ async def test_set_zone_override(
         mock_fcn.assert_awaited_once_with(
             19.5, until=datetime(2024, 7, 10, 14, 15, tzinfo=UTC)
         )
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_zone_override_advance_schedule_fetch_failed(
+    hass: HomeAssistant,
+    zone_id: str,
+) -> None:
+    """Test set_zone_override (duration=0) fails if it can't fetch the schedule.
+
+    The GET is made for the action, so must fail as the action would, rather than
+    let the temporary override become a permanent one.
+    """
+
+    entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES].get(
+        (CLIMATE_DOMAIN, DOMAIN), {}
+    )
+
+    zone_entity = entities[zone_id]
+    assert isinstance(zone_entity, EvoZone)
+
+    zone_entity._schedule = None  # so the schedule must be fetched
+    zone_entity._setpoints = {}
+
+    with (
+        patch.object(
+            Zone,
+            "get_schedule",
+            side_effect=evo_exc.ApiCallFailedError("API call failed"),
+        ),
+        patch.object(Zone, "set_temperature") as mock_fcn,
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_OVERRIDE,
+            {
+                SZ_SETPOINT: 19.5,
+                SZ_DURATION: {"minutes": 0},
+            },
+            target={ATTR_ENTITY_ID: zone_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "api_call_failed"
+    mock_fcn.assert_not_awaited()
 
 
 @pytest.mark.parametrize("install", ["default"])

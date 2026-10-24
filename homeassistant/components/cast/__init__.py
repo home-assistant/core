@@ -27,6 +27,10 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 type CastConfigEntry = ConfigEntry[CastRuntimeData]
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 @dataclass
 class CastRuntimeData:

@@ -3,6 +3,8 @@
 import logging
 from typing import Any, override
 
+from PyTado.const import CONST_HVAC_HEAT
+
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
@@ -12,7 +14,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    CONST_HVAC_HEAT,
     CONST_MODE_AUTO,
     CONST_MODE_HEAT,
     CONST_MODE_OFF,

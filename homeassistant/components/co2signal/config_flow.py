@@ -16,11 +16,14 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_COUNTRY_CODE,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    LocationSelector,
+    LocationSelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -92,15 +95,21 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Validate coordinates."""
-        data_schema = probatio.Schema(
-            {
-                probatio.Required(
-                    CONF_LATITUDE,
-                ): cv.latitude,
-                probatio.Required(
-                    CONF_LONGITUDE,
-                ): cv.longitude,
-            }
+        data_schema = self.add_suggested_values_to_schema(
+            probatio.Schema(
+                {
+                    probatio.Required(CONF_LOCATION): LocationSelector(
+                        LocationSelectorConfig(radius=False)
+                    ),
+                }
+            ),
+            user_input
+            or {
+                CONF_LOCATION: {
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                }
+            },
         )
         if user_input is None:
             return self.async_show_form(step_id="coordinates", data_schema=data_schema)
@@ -108,7 +117,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._data is not None
 
         return await self._validate_and_create(
-            "coordinates", data_schema, {**self._data, **user_input}
+            "coordinates", data_schema, {**self._data, **user_input[CONF_LOCATION]}
         )
 
     async def async_step_country(
