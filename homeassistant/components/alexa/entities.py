@@ -1120,12 +1120,8 @@ class VacuumCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(
             EntityStateAttribute.SUPPORTED_FEATURES, 0
         )
-        if (
-            (supported & vacuum.VacuumEntityFeature.TURN_ON)
-            or (supported & vacuum.VacuumEntityFeature.START)
-        ) and (
-            (supported & vacuum.VacuumEntityFeature.TURN_OFF)
-            or (supported & vacuum.VacuumEntityFeature.RETURN_HOME)
+        if supported & vacuum.VacuumEntityFeature.START and (
+            supported & vacuum.VacuumEntityFeature.RETURN_HOME
         ):
             yield AlexaPowerController(self.entity)
 

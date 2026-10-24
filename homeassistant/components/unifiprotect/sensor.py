@@ -59,7 +59,10 @@ from .entity import (
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
-from .migrate import async_is_new_private_only_entity
+from .migrate import (
+    async_is_new_private_only_entity,
+    async_is_new_ring_or_motion_sensor,
+)
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -207,14 +210,6 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         # voltage sensor (i.e. is not G4 Doorbell or not on 1.20.1+)
         ufp_required_field="voltage",
         precision=2,
-    ),
-    ProtectSensorEntityDescription(
-        key="doorbell_last_trip_time",
-        translation_key="last_doorbell_ring",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_required_field="feature_flags.is_doorbell",
-        ufp_value="last_ring",
-        entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
         key="lens_type",
@@ -552,6 +547,17 @@ MOTION_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
+DOORBELL_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="doorbell_last_trip_time",
+        translation_key="last_doorbell_ring",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_required_field="feature_flags.is_doorbell",
+        ufp_value="last_ring",
+        entity_registry_enabled_default=False,
+    ),
+)
+
 CHIME_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="last_ring",
@@ -849,7 +855,13 @@ def _async_event_entities(
     entities: list[ProtectDeviceEntity] = []
     cameras = data.get_cameras() if ufp_device is None else [ufp_device]
     for camera in cameras:
-        for description in MOTION_TRIP_SENSORS:
+        for description in MOTION_TRIP_SENSORS + DOORBELL_TRIP_SENSORS:
+            if not description.has_required(camera):
+                continue
+            if async_is_new_ring_or_motion_sensor(
+                data.hass, Platform.SENSOR, camera.mac, description.key
+            ):
+                continue
             entities.append(ProtectDeviceSensor(data, camera, description))
             _LOGGER.debug(
                 "Adding trip sensor entity %s for %s",
