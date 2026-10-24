@@ -35,6 +35,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "filter": {
+        "name": "Filter"
+      }
+    },
     "fan": {
       "ventilation": {
         "state_attributes": {
