@@ -484,6 +484,10 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         mode = PRESET_MODES_TO_OVERKIZ[preset_mode]
 
+        # A setpoint still waiting to be sent would start a derogation over the
+        # mode chosen now.
+        self.coordinator.discard_pending_commands(self.device_url)
+
         # For consistency, it is better both are synced like on the Thermostat.
         commands = [
             Command(name=OverkizCommand.SET_PASS_APC_HEATING_MODE, parameters=[mode]),

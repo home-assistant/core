@@ -2317,3 +2317,82 @@ async def test_zone_control_zone_superseded_replay_is_dropped(
     await hass.async_block_till_done()
 
     assert _sent_commands(mock_client) == [[("setHeatingTargetTemperature", [19.0])]]
+
+
+async def test_zone_control_zone_preset_drops_a_waiting_setpoint(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a setpoint still waiting is not sent after a newer preset."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_set_zone_setpoint(hass, 20.0)
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {ATTR_ENTITY_ID: ZONE_CONTROL_ZONE.entity_id, ATTR_PRESET_MODE: "schedule"},
+        blocking=True,
+    )
+    await _async_end_execution(hass, freezer, mock_client, "exec-1")
+
+    sent = _sent_commands(mock_client)
+    assert len(sent) == 2
+    assert ("setPassAPCHeatingMode", ["internalScheduling"]) in sent[1]
+    assert not any(("setHeatingTargetTemperature", [20.0]) in batch for batch in sent)
+
+
+async def test_zone_control_zone_reported_derogation_replaces_a_written_one(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a derogation ended from the remote is started again by a new setpoint."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_end_execution(hass, freezer, mock_client, "exec-1")
+
+    # The device reports the derogation on, then off from the remote.
+    await _async_set_zone_program(hass, freezer, mock_client, "manu", "on")
+    await _async_set_zone_program(hass, freezer, mock_client, "manu", "off")
+    await _async_set_zone_setpoint(hass, 20.0)
+
+    assert ("setDerogationOnOffState", ["on"]) in _sent_commands(mock_client)[-1]
+
+
+async def test_failed_single_command_is_reported(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a single command that did not reach its device is reported."""
+    entry = await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    executor = OverkizExecutor(
+        ZONE_CONTROL_ZONE.device_url, entry.runtime_data.coordinator
+    )
+    mock_client.execute_action_group.reset_mock()
+
+    await executor.async_execute_command("setHeatingTargetTemperature", 19.0)
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        [{"rank": 0}],
+    )
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"execution_failed_{ZONE_CONTROL_ZONE.device_url}"
+    )

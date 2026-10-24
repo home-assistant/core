@@ -79,6 +79,7 @@ class OverkizExecutor:
             {
                 "device_url": self.device.device_url,
                 "command_name": command_name,
+                "command_names": [command_name],
                 "commands": [Command(name=command_name, parameters=parameters)],
             }
         )

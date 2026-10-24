@@ -15,6 +15,7 @@ from pyoverkiz.enums import (
     FailureType,
     OverkizCommand,
     OverkizCommandParam,
+    OverkizState,
     Protocol,
 )
 from pyoverkiz.exceptions import (
@@ -158,6 +159,11 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 )
             finally:
                 self._last_write_at = monotonic()
+
+    def discard_pending_commands(self, device_url: str) -> None:
+        """Forget what waits to be written to a device."""
+        for key in [key for key in self.pending_commands if key[0] == device_url]:
+            del self.pending_commands[key]
 
     @callback
     def async_send_pending_commands(self, key: tuple[str, tuple[str, ...]]) -> None:
@@ -323,6 +329,10 @@ async def on_device_state_changed(
         device = coordinator.devices[event.device_url]
         device.states[state.name] = state
 
+        # The derogation the device reports replaces the one a write left.
+        if state.name == OverkizState.CORE_DEROGATION_ON_OFF:
+            coordinator.derogation_writes.pop(event.device_url, None)
+
 
 @EVENT_HANDLERS.register(EventName.DEVICE_REMOVED)
 async def on_device_removed(
@@ -414,7 +424,7 @@ def _track_derogation_writes(
                 continue
             if new_state == ExecutionState.COMPLETED and command.parameters:
                 coordinator.derogation_writes[record["device_url"]] = (
-                    command.parameters[0],
+                    str(command.parameters[0]),
                     monotonic(),
                 )
             else:
