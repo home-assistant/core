@@ -1126,6 +1126,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "connectable": True,
+        "domain": "spin_ble",
+        "service_uuid": "49535343-fe7d-4ae5-8fa9-9fafd205e455",
+    },
+    {
+        "connectable": True,
         "domain": "steamvr_base_station",
         "local_name": "LHB-*",
         "manufacturer_id": 1373,

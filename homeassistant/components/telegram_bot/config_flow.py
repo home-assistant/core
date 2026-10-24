@@ -32,8 +32,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import initialize_bot
-from .bot import TelegramBotConfigEntry, TelegramNotificationService
+from .bot import TelegramBotConfigEntry, TelegramNotificationService, initialize_bot
 from .const import (
     ATTR_PARSER,
     BOT_NAME,

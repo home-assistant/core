@@ -1412,7 +1412,7 @@ async def test_conversation_id(
     )
 
     result = await conversation.async_converse(
-        hass, "hello", None, None, agent_id="conversation.claude_conversation"
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
     )
 
     conversation_id = result.conversation_id
@@ -1421,7 +1421,7 @@ async def test_conversation_id(
         hass,
         "hello",
         conversation_id,
-        None,
+        Context(),
         agent_id="conversation.claude_conversation",
     )
 
@@ -1430,13 +1430,17 @@ async def test_conversation_id(
     unknown_id = ulid_util.ulid()
 
     result = await conversation.async_converse(
-        hass, "hello", unknown_id, None, agent_id="conversation.claude_conversation"
+        hass,
+        "hello",
+        unknown_id,
+        Context(),
+        agent_id="conversation.claude_conversation",
     )
 
     assert result.conversation_id != unknown_id
 
     result = await conversation.async_converse(
-        hass, "hello", "koala", None, agent_id="conversation.claude_conversation"
+        hass, "hello", "koala", Context(), agent_id="conversation.claude_conversation"
     )
 
     assert result.conversation_id == "koala"

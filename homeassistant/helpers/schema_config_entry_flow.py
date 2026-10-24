@@ -248,11 +248,11 @@ class SchemaCommonFlowHandler:
         """Show form for next step."""
         if isinstance(self._flow[next_step_id], SchemaFlowMenuStep):
             menu_step = cast(SchemaFlowMenuStep, self._flow[next_step_id])
-            menu_options = await self._get_options(menu_step)
-            with self._handler._as_step(next_step_id):  # noqa: SLF001
-                return self._handler.async_show_menu(
-                    menu_options=menu_options, sort=menu_step.sort
-                )
+            return self._handler.async_show_menu(
+                step_id=next_step_id,
+                menu_options=await self._get_options(menu_step),
+                sort=menu_step.sort,
+            )
 
         form_step = cast(SchemaFlowFormStep, self._flow[next_step_id])
 
@@ -288,25 +288,25 @@ class SchemaCommonFlowHandler:
         last_step = None
         if not callable(form_step.next_step):
             last_step = form_step.next_step is None
-        with self._handler._as_step(next_step_id):  # noqa: SLF001
-            return self._handler.async_show_form(
-                data_schema=data_schema,
-                description_placeholders=description_placeholders,
-                errors=errors,
-                last_step=last_step,
-                preview=form_step.preview,
-            )
+        return self._handler.async_show_form(
+            step_id=next_step_id,
+            data_schema=data_schema,
+            description_placeholders=description_placeholders,
+            errors=errors,
+            last_step=last_step,
+            preview=form_step.preview,
+        )
 
     async def _async_menu_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a menu step."""
         menu_step: SchemaFlowMenuStep = cast(SchemaFlowMenuStep, self._flow[step_id])
-        menu_options = await self._get_options(menu_step)
-        with self._handler._as_step(step_id):  # noqa: SLF001
-            return self._handler.async_show_menu(
-                menu_options=menu_options, sort=menu_step.sort
-            )
+        return self._handler.async_show_menu(
+            step_id=step_id,
+            menu_options=await self._get_options(menu_step),
+            sort=menu_step.sort,
+        )
 
 
 class SchemaConfigFlowHandler(ConfigFlow, ABC):

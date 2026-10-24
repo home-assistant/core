@@ -52,7 +52,7 @@ def silent_ssdp_scanner() -> Generator[None]:
 def mock_setup_entry():
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.yamaha_musiccast.async_setup_entry", return_value=True
+        "homeassistant.components.yamaha_musiccast.async_setup_entry", return_value=None
     ):
         yield
 
