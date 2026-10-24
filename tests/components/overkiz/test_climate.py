@@ -2522,7 +2522,8 @@ async def test_zone_control_zone_value_waiting_for_a_cancelled_write_is_sent(
     [
         # The schedule just selected: the setpoint is only stored.
         (None, [("setHeatingTargetTemperature", [21.0])]),
-        # The device reports manual again: the setpoint starts a derogation.
+        # Once the preset is applied, the device reports manual again (from the
+        # remote or the app): the setpoint starts a derogation.
         ("report_manual", None),
         # The preset was not applied: the zone is still manual.
         ("fail", None),
@@ -2548,6 +2549,7 @@ async def test_zone_control_zone_temperature_follows_the_preset_just_set(
         blocking=True,
     )
     if after_preset == "report_manual":
+        await _async_end_execution(hass, freezer, mock_client, "exec-1")
         await _async_set_zone_program(hass, freezer, mock_client, "manu", "off")
     elif after_preset == "fail":
         await _async_end_execution(
@@ -2937,3 +2939,62 @@ async def test_zone_control_zone_replay_polls_its_events(
 
     assert mock_client.execute_action_group.await_count == 2
     refresh.assert_awaited()
+
+
+async def test_zone_control_zone_reported_mode_keeps_a_newer_preset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a mode reported while a newer preset waits keeps that preset."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    # Manual is running and reported, the schedule waits behind it.
+    await _async_select_preset(hass, "manual")
+    await _async_select_preset(hass, "schedule")
+    await _async_set_zone_program(hass, freezer, mock_client, "manu", "off")
+    await _async_end_execution(hass, freezer, mock_client, "exec-1")
+    await _async_set_zone_setpoint(hass, 21.0)
+
+    assert _sent_commands(mock_client)[-1] == [("setHeatingTargetTemperature", [21.0])]
+
+
+@pytest.mark.parametrize(
+    ("presets", "failed_rank"),
+    [
+        # The cooling side was not switched.
+        (["schedule"], 1),
+        # The same preset twice: the second one is not sent.
+        (["schedule", "schedule"], 0),
+    ],
+)
+async def test_zone_control_zone_preset_not_applied_is_forgotten(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    presets: list[str],
+    failed_rank: int,
+) -> None:
+    """Test a preset not applied to both sides does not decide any more."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    for preset in presets:
+        await _async_select_preset(hass, preset)
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.PEER_DOWN,
+        [{"rank": failed_rank}],
+    )
+    await _async_set_zone_setpoint(hass, 21.0)
+
+    assert ("setDerogationOnOffState", ["on"]) in _sent_commands(mock_client)[-1]
