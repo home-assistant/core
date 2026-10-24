@@ -241,6 +241,14 @@ def _async_get_pipeline_from_conversation_entity(
     )
     settings["id"] = entity_id
 
+    # The agent handles the spoken audio and the response audio itself
+    if agent_info := conversation.async_get_agent_info(hass, entity_id):
+        if agent_info.supports_audio_input:
+            settings["stt_engine"] = settings["stt_language"] = None
+        if agent_info.supports_audio_output:
+            settings["tts_engine"] = settings["tts_language"] = None
+            settings["tts_voice"] = None
+
     return Pipeline.from_json(settings)
 
 

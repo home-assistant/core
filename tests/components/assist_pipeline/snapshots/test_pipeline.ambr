@@ -986,6 +986,395 @@
     }),
   ])
 # ---
+# name: test_pipeline_audio_agent[no_response_audio]
+  list([
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'language': 'en',
+        'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/x-wav',
+          'stream_response': True,
+          'token': 'test_token.wav',
+          'url': '/api/tts_proxy/test_token.wav',
+        }),
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'engine': 'conversation.audio_agent',
+        'metadata': dict({
+          'bit_rate': <AudioBitRates.BITRATE_16: 16>,
+          'channel': <AudioChannels.CHANNEL_MONO: 1>,
+          'codec': <AudioCodecs.PCM: 'pcm'>,
+          'format': <AudioFormats.WAV: 'wav'>,
+          'language': '',
+          'sample_rate': <AudioSampleRates.SAMPLERATE_16000: 16000>,
+        }),
+      }),
+      'type': <PipelineEventType.STT_START: 'stt-start'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'device_id': None,
+        'engine': 'conversation.audio_agent',
+        'intent_input': None,
+        'language': 'en',
+        'prefer_local_intents': False,
+        'satellite_id': None,
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'stt_output': dict({
+          'text': 'agent transcript',
+        }),
+      }),
+      'type': <PipelineEventType.STT_END: 'stt-end'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'failed': list([
+              ]),
+              'success': list([
+              ]),
+            }),
+            'language': 'en',
+            'response_type': 'action_done',
+            'speech': dict({
+              'plain': dict({
+                'extra_data': None,
+                'speech': 'agent response',
+              }),
+            }),
+          }),
+        }),
+        'processed_locally': False,
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
+# name: test_pipeline_audio_agent[response_audio]
+  list([
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'language': 'en',
+        'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/x-wav',
+          'stream_response': True,
+          'token': 'test_token.wav',
+          'url': '/api/tts_proxy/test_token.wav',
+        }),
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'engine': 'conversation.audio_agent',
+        'metadata': dict({
+          'bit_rate': <AudioBitRates.BITRATE_16: 16>,
+          'channel': <AudioChannels.CHANNEL_MONO: 1>,
+          'codec': <AudioCodecs.PCM: 'pcm'>,
+          'format': <AudioFormats.WAV: 'wav'>,
+          'language': '',
+          'sample_rate': <AudioSampleRates.SAMPLERATE_16000: 16000>,
+        }),
+      }),
+      'type': <PipelineEventType.STT_START: 'stt-start'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'device_id': None,
+        'engine': 'conversation.audio_agent',
+        'intent_input': None,
+        'language': 'en',
+        'prefer_local_intents': False,
+        'satellite_id': None,
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'stt_output': dict({
+          'text': 'agent transcript',
+        }),
+      }),
+      'type': <PipelineEventType.STT_END: 'stt-end'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_start_streaming': True,
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'failed': list([
+              ]),
+              'success': list([
+              ]),
+            }),
+            'language': 'en',
+            'response_type': 'action_done',
+            'speech': dict({
+              'plain': dict({
+                'extra_data': None,
+                'speech': 'agent response',
+              }),
+            }),
+          }),
+        }),
+        'processed_locally': False,
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': dict({
+        'acknowledge_override': False,
+        'engine': None,
+        'language': None,
+        'tts_input': 'agent response',
+        'voice': None,
+      }),
+      'type': <PipelineEventType.TTS_START: 'tts-start'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_output': dict({
+          'media_id': 'media-source://tts/-stream-/test_token.wav',
+          'mime_type': 'audio/x-wav',
+          'token': 'test_token.wav',
+          'url': '/api/tts_proxy/test_token.wav',
+        }),
+      }),
+      'type': <PipelineEventType.TTS_END: 'tts-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
+# name: test_pipeline_audio_agent[text_to_speech]
+  list([
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'language': 'en',
+        'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/x-wav',
+          'stream_response': False,
+          'token': 'test_token.wav',
+          'url': '/api/tts_proxy/test_token.wav',
+        }),
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'engine': 'conversation.audio_agent',
+        'metadata': dict({
+          'bit_rate': <AudioBitRates.BITRATE_16: 16>,
+          'channel': <AudioChannels.CHANNEL_MONO: 1>,
+          'codec': <AudioCodecs.PCM: 'pcm'>,
+          'format': <AudioFormats.WAV: 'wav'>,
+          'language': '',
+          'sample_rate': <AudioSampleRates.SAMPLERATE_16000: 16000>,
+        }),
+      }),
+      'type': <PipelineEventType.STT_START: 'stt-start'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'device_id': None,
+        'engine': 'conversation.audio_agent',
+        'intent_input': None,
+        'language': 'en',
+        'prefer_local_intents': False,
+        'satellite_id': None,
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'stt_output': dict({
+          'text': 'agent transcript',
+        }),
+      }),
+      'type': <PipelineEventType.STT_END: 'stt-end'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'failed': list([
+              ]),
+              'success': list([
+              ]),
+            }),
+            'language': 'en',
+            'response_type': 'action_done',
+            'speech': dict({
+              'plain': dict({
+                'extra_data': None,
+                'speech': 'agent response',
+              }),
+            }),
+          }),
+        }),
+        'processed_locally': False,
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': dict({
+        'acknowledge_override': False,
+        'engine': 'tts.test',
+        'language': 'en_US',
+        'tts_input': 'agent response',
+        'voice': None,
+      }),
+      'type': <PipelineEventType.TTS_START: 'tts-start'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_output': dict({
+          'media_id': 'media-source://tts/-stream-/test_token.wav',
+          'mime_type': 'audio/x-wav',
+          'token': 'test_token.wav',
+          'url': '/api/tts_proxy/test_token.wav',
+        }),
+      }),
+      'type': <PipelineEventType.TTS_END: 'tts-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
+# name: test_pipeline_audio_agent_text_input
+  list([
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'language': 'en',
+        'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/x-wav',
+          'stream_response': True,
+          'token': 'test_token.wav',
+          'url': '/api/tts_proxy/test_token.wav',
+        }),
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'device_id': None,
+        'engine': 'conversation.audio_agent',
+        'intent_input': 'hello',
+        'language': 'en',
+        'prefer_local_intents': False,
+        'satellite_id': None,
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_start_streaming': True,
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'failed': list([
+              ]),
+              'success': list([
+              ]),
+            }),
+            'language': 'en',
+            'response_type': 'action_done',
+            'speech': dict({
+              'plain': dict({
+                'extra_data': None,
+                'speech': 'agent response',
+              }),
+            }),
+          }),
+        }),
+        'processed_locally': False,
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': dict({
+        'acknowledge_override': False,
+        'engine': None,
+        'language': None,
+        'tts_input': 'agent response',
+        'voice': None,
+      }),
+      'type': <PipelineEventType.TTS_START: 'tts-start'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_output': dict({
+          'media_id': 'media-source://tts/-stream-/test_token.wav',
+          'mime_type': 'audio/x-wav',
+          'token': 'test_token.wav',
+          'url': '/api/tts_proxy/test_token.wav',
+        }),
+      }),
+      'type': <PipelineEventType.TTS_END: 'tts-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
 # name: test_pipeline_language_used_instead_of_conversation_language
   list([
     dict({

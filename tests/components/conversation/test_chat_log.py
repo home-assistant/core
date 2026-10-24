@@ -3,10 +3,11 @@
 import asyncio
 from collections.abc import AsyncGenerator
 import contextvars
+from dataclasses import replace
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 import probatio
@@ -14,9 +15,11 @@ import pytest
 from pytest_homeassistant.common import MockUser, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import tts
 from homeassistant.components.conversation import (
     AssistantContent,
     AssistantContentDeltaDict,
+    ConversationAudioInput,
     ConversationInput,
     ConverseError,
     ToolResultContent,
@@ -1448,3 +1451,67 @@ async def test_add_delta_content_stream_deprecated_tool_result(
                 "mock-agent-id", stream()
             )
         ]
+
+
+async def test_chat_log_delta_listener_user_content(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test the delta listener receives user content added after the input."""
+    deltas: list[dict] = []
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(
+            hass,
+            session,
+            mock_conversation_input,
+            chat_log_delta_listener=lambda chat_log, delta: deltas.append(delta),
+        ) as chat_log,
+    ):
+        assert chat_log.content[-1].content == "Hello"
+        assert not deltas
+
+        chat_log.async_add_user_content(UserContent(content="More"))
+
+    assert deltas == [{"role": "user", "content": "More", "created": ANY}]
+
+
+async def _audio_stream() -> AsyncGenerator[bytes]:
+    """Yield spoken audio."""
+    yield b"audio"
+
+
+async def test_chat_log_audio_input(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test the agent adds the transcript of spoken audio to the chat log."""
+    audio_input = replace(
+        mock_conversation_input,
+        text="",
+        audio=ConversationAudioInput(
+            pcm_format=tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
+            stream=_audio_stream(),
+        ),
+    )
+    deltas: list[dict] = []
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(
+            hass,
+            session,
+            audio_input,
+            chat_log_delta_listener=lambda chat_log, delta: deltas.append(delta),
+        ) as chat_log,
+    ):
+        # There is no text from the user until the agent has a transcript
+        assert [content.role for content in chat_log.content] == ["system"]
+
+        # Like an agent that opens the chat log of the pipeline
+        with async_get_chat_log(hass, session, audio_input) as agent_chat_log:
+            assert agent_chat_log is chat_log
+            assert [content.role for content in chat_log.content] == ["system"]
+
+            agent_chat_log.async_add_user_content(UserContent(content="transcript"))
+
+    assert deltas == [{"role": "user", "content": "transcript", "created": ANY}]

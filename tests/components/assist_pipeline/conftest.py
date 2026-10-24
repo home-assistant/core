@@ -1,8 +1,8 @@
 """Test fixtures for voice assistant."""
 
-from collections.abc import AsyncIterable, Generator
+from collections.abc import AsyncGenerator, AsyncIterable, Generator
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -28,9 +28,9 @@ from homeassistant.components.assist_pipeline.pipeline import (
     PipelineStorageCollection,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import Platform
+from homeassistant.const import MATCH_ALL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import chat_session, device_registry as dr
+from homeassistant.helpers import chat_session, device_registry as dr, intent
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
@@ -38,6 +38,10 @@ from tests.components.stt.common import MockSTTProvider, MockSTTProviderEntity
 from tests.components.tts.common import MockTTSEntity, MockTTSProvider
 
 _TRANSCRIPT = "test transcript"
+_AGENT_TRANSCRIPT = "agent transcript"
+_AGENT_RESPONSE = "agent response"
+
+AUDIO_AGENT_ID = "conversation.audio_agent"
 
 BYTES_ONE_SECOND = SAMPLE_RATE * SAMPLE_WIDTH * SAMPLE_CHANNELS
 
@@ -184,6 +188,61 @@ async def mock_wake_word_provider_entity() -> MockWakeWordEntity:
 async def mock_wake_word_provider_entity2() -> MockWakeWordEntity2:
     """Mock wake word provider."""
     return MockWakeWordEntity2()
+
+
+class MockAudioConversationEntity(conversation.ConversationEntity):
+    """Mock conversation agent that understands and responds with spoken audio."""
+
+    _attr_name = "Audio Agent"
+    _attr_supports_audio_input = True
+    _attr_supports_audio_output = True
+
+    def __init__(self) -> None:
+        """Initialize the agent."""
+        self.received_audio: list[bytes] = []
+        self.response_audio: bytes | None = b"\x01\x02\x03\x04"
+
+    @property
+    def supported_languages(self) -> Literal["*"]:
+        """Return a list of supported languages."""
+        return MATCH_ALL
+
+    async def _async_handle_message(
+        self,
+        user_input: conversation.ConversationInput,
+        chat_log: conversation.ChatLog,
+    ) -> conversation.ConversationResult:
+        """Respond to the spoken audio or text of the user."""
+        if user_input.audio is not None:
+            self.received_audio.extend(
+                [chunk async for chunk in user_input.audio.stream]
+            )
+            chat_log.async_add_user_content(
+                conversation.UserContent(content=_AGENT_TRANSCRIPT)
+            )
+
+        chat_log.async_add_assistant_content_without_tools(
+            conversation.AssistantContent(
+                agent_id=user_input.agent_id, content=_AGENT_RESPONSE
+            )
+        )
+
+        if user_input.audio_output is not None and self.response_audio is not None:
+            response_audio = self.response_audio
+
+            async def audio_stream() -> AsyncGenerator[bytes]:
+                yield response_audio
+
+            user_input.audio_output.async_set_audio_stream(
+                tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
+                audio_stream(),
+            )
+
+        intent_response = intent.IntentResponse(language=user_input.language)
+        intent_response.async_set_speech(_AGENT_RESPONSE)
+        return conversation.ConversationResult(
+            response=intent_response, conversation_id=chat_log.conversation_id
+        )
 
 
 class MockFlow(ConfigFlow):
@@ -380,6 +439,55 @@ async def assist_device(
         await hass.async_block_till_done()
 
     return device
+
+
+@pytest.fixture
+def mock_audio_agent() -> MockAudioConversationEntity:
+    """Mock conversation agent with audio input and output."""
+    return MockAudioConversationEntity()
+
+
+@pytest.fixture
+async def init_audio_agent(
+    hass: HomeAssistant,
+    init_components,
+    mock_audio_agent: MockAudioConversationEntity,
+) -> None:
+    """Set up a conversation agent with audio input and output."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.CONVERSATION]
+        )
+
+    async def async_setup_entry_conversation_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Set up test conversation platform via config entry."""
+        async_add_entities([mock_audio_agent])
+
+    mock_integration(
+        hass, MockModule("test_audio_agent", async_setup_entry=async_setup_entry_init)
+    )
+    mock_platform(
+        hass,
+        "test_audio_agent.conversation",
+        MockPlatform(async_setup_entry=async_setup_entry_conversation_platform),
+    )
+    mock_platform(hass, "test_audio_agent.config_flow")
+
+    config_entry = MockConfigEntry(domain="test_audio_agent")
+    config_entry.add_to_hass(hass)
+    with mock_config_flow("test_audio_agent", ConfigFlow):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(AUDIO_AGENT_ID)
 
 
 @pytest.fixture

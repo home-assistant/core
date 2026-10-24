@@ -43,6 +43,8 @@ from .http import async_setup as async_setup_conversation_http
 from .models import (
     AbstractConversationAgent,
     AgentInfo,
+    ConversationAudioInput,
+    ConversationAudioOutput,
     ConversationInput,
     ConversationResult,
 )
@@ -60,6 +62,8 @@ __all__ = [
     "Attachment",
     "ChatLog",
     "Content",
+    "ConversationAudioInput",
+    "ConversationAudioOutput",
     "ConversationEntity",
     "ConversationEntityFeature",
     "ConversationInput",
@@ -183,6 +187,8 @@ def async_get_agent_info(
             id=agent.entity_id,
             name=name,
             supports_streaming=agent.supports_streaming,
+            supports_audio_input=agent.supports_audio_input,
+            supports_audio_output=agent.supports_audio_output,
         )
 
     manager = get_agent_manager(hass)
