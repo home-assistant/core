@@ -75,7 +75,7 @@ class JellyfinSource(MediaSource):
             raise BrowseError("Jellyfin integration not loaded")
         entry: JellyfinConfigEntry = entries[0]
         self.entry = entry
-        self.client = entry.runtime_data.api_client
+        self.client = entry.runtime_data.client
         self.api = self.client.jellyfin
         self.url = jellyfin_url(self.client, "")
 
