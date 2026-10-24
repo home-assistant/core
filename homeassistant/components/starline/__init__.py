@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: StarlineConfigEntry) -> 
 
     device_registry = dr.async_get(hass)
     for device in account.api.devices.values():
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=entry.entry_id, device_info=account.device_info(device)
         )
 
