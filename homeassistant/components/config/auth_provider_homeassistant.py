@@ -5,6 +5,7 @@ from typing import Any
 
 import probatio
 
+from homeassistant.auth import LastLoginMethodError
 from homeassistant.auth.providers import InvalidStepUpError, homeassistant as auth_ha
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -107,17 +108,25 @@ async def websocket_delete(
     # Removing the credential will also remove the auth.
     if not credentials.is_new:
         user = await hass.auth.async_get_user_by_credentials(credentials)
-        if user is not None and user.is_owner:
+        # Only the owner may remove a login of the owner.
+        if user is not None and user.is_owner and not connection.user.is_owner:
             connection.send_error(
                 msg["id"],
                 "cannot_delete_owner_credentials",
                 "Unable to delete the credentials of the owner",
             )
             return
-
         # Deleting the password of this session ends it, so that waits for the result.
         with connection.async_defer_auth_close():
-            await hass.auth.async_remove_credentials(credentials)
+            try:
+                await hass.auth.async_remove_credentials(credentials)
+            except LastLoginMethodError:
+                connection.send_error(
+                    msg["id"],
+                    "cannot_delete_owner_credentials",
+                    "Unable to delete the credentials of the owner",
+                )
+                return
             connection.send_result(msg["id"])
         return
 

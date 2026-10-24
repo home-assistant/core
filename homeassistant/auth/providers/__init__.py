@@ -117,6 +117,15 @@ class AuthProvider:
         """
         return True
 
+    @callback
+    def async_is_fallback_login(self, credentials: Credentials) -> bool:
+        """Return if the user can count on the credentials to get back in.
+
+        Credentials that only work in some places, like on a trusted network,
+        don't keep the owner from being locked out.
+        """
+        return True
+
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
@@ -142,7 +151,11 @@ class AuthProvider:
         """Initialize the auth provider."""
 
     async def async_will_remove_credentials(self, credentials: Credentials) -> None:
-        """Clean up provider owned data before credentials are removed."""
+        """Clean up provider owned data before credentials are removed.
+
+        Runs while the auth manager holds its credential removal lock, so it must
+        not remove credentials itself.
+        """
 
     @callback
     def async_validate_refresh_token(

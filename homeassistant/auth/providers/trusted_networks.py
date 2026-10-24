@@ -204,6 +204,12 @@ class TrustedNetworksAuthProvider(AuthProvider):
 
     @callback
     @override
+    def async_is_fallback_login(self, credentials: Credentials) -> bool:
+        """Return False, as a trusted network login only works on that network."""
+        return False
+
+    @callback
+    @override
     def async_can_start_login(self, context: AuthFlowContext) -> bool:
         """Return if the request comes from a trusted network."""
         if (ip_addr := context.get("ip_address")) is None:
