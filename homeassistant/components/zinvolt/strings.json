@@ -98,6 +98,11 @@
           "self_use": "Self-use"
         }
       }
+    },
+    "sensor": {
+      "photovoltaic_power": {
+        "name": "Photovoltaic power"
+      }
     }
   },
   "exceptions": {
