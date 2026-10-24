@@ -571,6 +571,13 @@ async def test_service_validation_errors(
             id="dispatch_battery_power",
         ),
         pytest.param(
+            SERVICE_DISPATCH_BATTERY_POWER,
+            {ATTR_POWER: 10000, ATTR_DURATION: 1800},
+            "dispatch_battery_power",
+            (10000, 1800),
+            id="dispatch_battery_power_max",
+        ),
+        pytest.param(
             SERVICE_RESUME_BATTERY_OPERATION,
             {},
             "resume_battery_operation",
@@ -706,8 +713,8 @@ async def test_local_battery_services_not_paired(
     [
         pytest.param(5000, 0, id="duration_too_short"),
         pytest.param(5000, 86401, id="duration_too_long"),
-        pytest.param(-100001, 1800, id="charge_power_too_high"),
-        pytest.param(100001, 1800, id="discharge_power_too_high"),
+        pytest.param(-10001, 1800, id="charge_power_too_high"),
+        pytest.param(10001, 1800, id="discharge_power_too_high"),
     ],
 )
 async def test_dispatch_battery_power_out_of_range(
