@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import logging
-from typing import Final
+from typing import Any, Final
 
 import aiooui
 from getmac import get_mac_address
@@ -247,21 +247,11 @@ class NmapDeviceScanner:
             await aiooui.async_load()
         self._hass.async_create_task(self._async_scan_devices())
 
-    def _build_options(self):
+    def _build_options(self) -> str:
         """Build the options and strip out last results that don't need updating."""
+        self._last_results = self._recent_results()
         options = self._options
-        if self.home_interval:
-            boundary = dt_util.now() - self.home_interval
-            last_results = [
-                device for device in self._last_results if device.last_update > boundary
-            ]
-            if last_results:
-                exclude_hosts = self._exclude + [device.ipv4 for device in last_results]
-            else:
-                exclude_hosts = self._exclude
-        else:
-            last_results = []
-            exclude_hosts = self._exclude
+        exclude_hosts = self._exclude + [device.ipv4 for device in self._last_results]
         if exclude_hosts:
             options += f" --exclude {','.join(exclude_hosts)}"
         # Report reason
@@ -270,8 +260,16 @@ class NmapDeviceScanner:
         # Report down hosts
         if "-v" not in options:
             options += " -v"
-        self._last_results = last_results
         return options
+
+    def _recent_results(self) -> list[NmapDevice]:
+        """Return last results that are still inside the home interval."""
+        if not self.home_interval:
+            return []
+        boundary = dt_util.now() - self.home_interval
+        return [
+            device for device in self._last_results if device.last_update > boundary
+        ]
 
     async def _async_scan_devices(self, *_):
         """Scan devices and dispatch."""
@@ -313,27 +311,14 @@ class NmapDeviceScanner:
             )
             async_dispatcher_send(self._hass, self.signal_device_missing, mac_address)
 
-    def _run_nmap_scan(self):
+    def _run_nmap_scan(self) -> dict[str, Any]:
         """Run nmap and return the result."""
         options = self._build_options()
-        if not self._scanner:
-            self._scanner = PortScanner()
+        scanner = self._scanner
+        if scanner is None:
+            scanner = self._scanner = PortScanner()
         _LOGGER.debug("Scanning %s with args: %s", self._hosts, options)
-        for attempt in range(MAX_SCAN_ATTEMPTS):
-            try:
-                result = self._scanner.scan(
-                    hosts=" ".join(self._hosts),
-                    arguments=options,
-                    timeout=TRACKER_SCAN_INTERVAL * 10,
-                )
-                break
-            except PortScannerError as ex:
-                if attempt < (MAX_SCAN_ATTEMPTS - 1) and NMAP_TRANSIENT_FAILURE in str(
-                    ex
-                ):
-                    _LOGGER.debug("Nmap saw transient error %s", NMAP_TRANSIENT_FAILURE)
-                    continue
-                raise
+        result = self._scan_with_retry(scanner, options)
         _LOGGER.debug(
             "Finished scanning %s with args: %s",
             self._hosts,
@@ -341,20 +326,48 @@ class NmapDeviceScanner:
         )
         return result
 
+    def _scan_with_retry(self, scanner: PortScanner, options: str) -> dict[str, Any]:
+        """Scan, retrying nmap's known transient failure."""
+        for attempt in range(MAX_SCAN_ATTEMPTS):
+            try:
+                return scanner.scan(
+                    hosts=" ".join(self._hosts),
+                    arguments=options,
+                    timeout=TRACKER_SCAN_INTERVAL * 10,
+                )
+            except PortScannerError as ex:
+                if attempt < MAX_SCAN_ATTEMPTS - 1 and NMAP_TRANSIENT_FAILURE in str(
+                    ex
+                ):
+                    _LOGGER.debug("Nmap saw transient error %s", NMAP_TRANSIENT_FAILURE)
+                    continue
+                raise
+        raise RuntimeError("Nmap scan ended without a result")
+
     @callback
     def _async_device_offline(self, ipv4: str, reason: str, now: datetime) -> None:
-        """Mark an IP offline."""
+        """Mark an IP offline once it has been unseen long enough."""
         if not (formatted_mac := self.devices.ipv4_last_mac.get(ipv4)):
             return
         if not (device := self.devices.tracked.get(formatted_mac)):
             # Device was unloaded
             return
+        if self._still_considered_home(device, ipv4, formatted_mac, now):
+            return
+        device.reason = reason
+        async_dispatcher_send(self._hass, signal_device_update(formatted_mac), False)
+        del self.devices.ipv4_last_mac[ipv4]
+
+    def _still_considered_home(
+        self, device: NmapDevice, ipv4: str, formatted_mac: str, now: datetime
+    ) -> bool:
+        """Return whether an offline device should still count as home."""
         if not device.first_offline:
             _LOGGER.debug(
                 "Setting first_offline for %s (%s) to: %s", ipv4, formatted_mac, now
             )
             device.first_offline = now
-            return
+            return True
         if device.first_offline + self.consider_home > now:
             _LOGGER.debug(
                 (
@@ -366,7 +379,7 @@ class NmapDeviceScanner:
                 device.first_offline,
                 self.consider_home,
             )
-            return
+            return True
         _LOGGER.debug(
             (
                 "Device %s (%s) has been offline (first offline at: %s) long enough to"
@@ -377,63 +390,68 @@ class NmapDeviceScanner:
             device.first_offline,
             self.consider_home,
         )
-        device.reason = reason
-        async_dispatcher_send(self._hass, signal_device_update(formatted_mac), False)
-        del self.devices.ipv4_last_mac[ipv4]
+        return False
 
-    async def _async_run_nmap_scan(self):
+    async def _async_run_nmap_scan(self) -> None:
         """Scan the network for devices and dispatch events."""
         result = await self._hass.async_add_executor_job(self._run_nmap_scan)
         if self._stopping:
             return
 
-        devices = self.devices
-        entry_id = self._entry_id
         now = dt_util.now()
         for ipv4, info in result["scan"].items():
-            status = info["status"]
-            reason = status["reason"]
-            if status["state"] != "up":
-                self._async_device_offline(ipv4, reason, now)
-                continue
-            # Mac address only returned if nmap ran as root
-            mac = info["addresses"].get(
-                "mac"
-            ) or await self._hass.async_add_executor_job(
-                partial(get_mac_address, ip=ipv4)
-            )
-            if mac is None:
-                self._async_device_offline(ipv4, "No MAC address found", now)
-                _LOGGER.warning("No MAC address found for %s", ipv4)
-                continue
+            await self._async_process_host(ipv4, info, now)
 
-            formatted_mac = format_mac(mac)
+    async def _async_process_host(
+        self, ipv4: str, info: dict[str, Any], now: datetime
+    ) -> None:
+        """Update tracking for one host from an nmap result."""
+        status = info["status"]
+        reason = status["reason"]
+        if status["state"] != "up":
+            self._async_device_offline(ipv4, reason, now)
+            return
 
-            if formatted_mac in self._mac_exclude:
-                _LOGGER.debug("MAC address %s is excluded from tracking", formatted_mac)
-                continue
+        # Mac address only returned if nmap ran as root
+        mac = info["addresses"].get("mac") or await self._hass.async_add_executor_job(
+            partial(get_mac_address, ip=ipv4)
+        )
+        if mac is None:
+            self._async_device_offline(ipv4, "No MAC address found", now)
+            _LOGGER.warning("No MAC address found for %s", ipv4)
+            return
 
-            if (
-                devices.config_entry_owner.setdefault(formatted_mac, entry_id)
-                != entry_id
-            ):
-                continue
+        formatted_mac = format_mac(mac)
+        if not self._claims_device(formatted_mac):
+            return
 
-            hostname = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
-            vendor = info.get("vendor", {}).get(mac) or aiooui.get_vendor(mac)
-            name = human_readable_name(hostname, vendor, mac)
-            device = NmapDevice(
-                formatted_mac, hostname, name, ipv4, vendor, reason, now, None
-            )
+        hostname = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
+        vendor = info.get("vendor", {}).get(mac) or aiooui.get_vendor(mac)
+        device = NmapDevice(
+            formatted_mac,
+            hostname,
+            human_readable_name(hostname, vendor, mac),
+            ipv4,
+            vendor,
+            reason,
+            now,
+            None,
+        )
+        new = formatted_mac not in self.devices.tracked
+        self.devices.tracked[formatted_mac] = device
+        self.devices.ipv4_last_mac[ipv4] = formatted_mac
+        self._last_results.append(device)
+        if new:
+            async_dispatcher_send(self._hass, self.signal_device_new, formatted_mac)
+            return
+        async_dispatcher_send(self._hass, signal_device_update(formatted_mac), True)
 
-            new = formatted_mac not in devices.tracked
-            devices.tracked[formatted_mac] = device
-            devices.ipv4_last_mac[ipv4] = formatted_mac
-            self._last_results.append(device)
-
-            if new:
-                async_dispatcher_send(self._hass, self.signal_device_new, formatted_mac)
-            else:
-                async_dispatcher_send(
-                    self._hass, signal_device_update(formatted_mac), True
-                )
+    def _claims_device(self, formatted_mac: str) -> bool:
+        """Return whether this config entry should track the MAC address."""
+        if formatted_mac in self._mac_exclude:
+            _LOGGER.debug("MAC address %s is excluded from tracking", formatted_mac)
+            return False
+        return (
+            self.devices.config_entry_owner.setdefault(formatted_mac, self._entry_id)
+            == self._entry_id
+        )
