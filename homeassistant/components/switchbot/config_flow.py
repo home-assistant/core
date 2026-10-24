@@ -1,7 +1,7 @@
 """Config flow for Switchbot."""
 
 import logging
-from typing import Any, override
+from typing import Any, Literal, override
 
 import probatio
 from switchbot import (
@@ -11,29 +11,31 @@ from switchbot import (
     SwitchbotAuthenticationError,
     SwitchbotModel,
     fetch_cloud_devices,
+    fetch_cloud_devices_by_token,
     parse_advertisement_data,
 )
 
 from homeassistant.components import bluetooth
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
     CONF_ADDRESS,
     CONF_PASSWORD,
     CONF_SENSOR_TYPE,
+    CONF_TOKEN,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers import selector
+from homeassistant.helpers import config_entry_oauth2_flow, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -52,6 +54,7 @@ from .const import (
     ENCRYPTED_MODELS,
     ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS,
     NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    OAUTH_CLIENT_ID,
     SUPPORTED_MODEL_TYPES,
     SupportedModels,
 )
@@ -75,9 +78,12 @@ def name_from_discovery(discovery: SwitchBotAdvertisement) -> str:
     return f"{discovery.data['modelFriendlyName']} {short_address(discovery.address)}"
 
 
-class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
+class SwitchbotConfigFlow(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
     """Handle a config flow for Switchbot."""
 
+    DOMAIN = DOMAIN
     VERSION = 2
     MINOR_VERSION = 1
 
@@ -92,11 +98,105 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
+        super().__init__()
         self._discovered_adv: SwitchBotAdvertisement | None = None
         self._discovered_advs: dict[str, SwitchBotAdvertisement] = {}
         self._cloud_username: str | None = None
         self._cloud_password: str | None = None
         self._encryption_method_selected = False
+        self._oauth_access_token: str | None = None
+        self._oauth_next_step: Literal["select_device", "encrypted_key"] | None = None
+
+    @property
+    @override
+    def logger(self) -> logging.Logger:
+        """Return the logger."""
+        return _LOGGER
+
+    async def _async_start_oauth(
+        self, next_step: Literal["select_device", "encrypted_key"]
+    ) -> ConfigFlowResult:
+        """Start OAuth and remember where to continue after authorization."""
+        self._oauth_next_step = next_step
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(OAUTH_CLIENT_ID, "", name="SwitchBot"),
+        )
+        return await self.async_step_pick_implementation()
+
+    async def async_step_oauth_login(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Start OAuth for cloud device discovery."""
+        return await self._async_start_oauth("select_device")
+
+    async def async_step_encrypted_oauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Use OAuth to retrieve an encrypted device key."""
+        if self._oauth_access_token is None:
+            return await self._async_start_oauth("encrypted_key")
+        return await self._async_retrieve_encryption_key_by_token()
+
+    @override
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
+        """Continue device setup without persisting the OAuth token."""
+        access_token = data[CONF_TOKEN].get(CONF_ACCESS_TOKEN)
+        if not isinstance(access_token, str) or not access_token:
+            return self.async_abort(reason="oauth_error")
+
+        self._oauth_access_token = access_token
+        if self._oauth_next_step == "select_device":
+            try:
+                await fetch_cloud_devices_by_token(
+                    async_get_clientsession(self.hass), access_token
+                )
+            except SwitchbotAuthenticationError:
+                return self.async_abort(reason="oauth_unauthorized")
+            except (SwitchbotApiError, SwitchbotAccountConnectionError) as ex:
+                _LOGGER.debug(
+                    "Failed to connect to SwitchBot API: %s", ex, exc_info=True
+                )
+                return self.async_abort(
+                    reason="api_error",
+                    description_placeholders={"error_detail": str(ex)},
+                )
+            except Exception:
+                _LOGGER.exception("Unexpected error during OAuth cloud login")
+                return self.async_abort(reason="unknown")
+            return await self.async_step_select_device()
+
+        if self._oauth_next_step == "encrypted_key":
+            return await self._async_retrieve_encryption_key_by_token()
+
+        return self.async_abort(reason="oauth_error")
+
+    async def _async_retrieve_encryption_key_by_token(self) -> ConfigFlowResult:
+        """Retrieve an encryption key with the current flow's OAuth token."""
+        assert self._discovered_adv is not None
+        assert self._oauth_access_token is not None
+        model: SwitchbotModel = self._discovered_adv.data["modelName"]
+        cls = ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS[model]
+        try:
+            key_details = await cls.async_retrieve_encryption_key_by_token(
+                async_get_clientsession(self.hass),
+                self._discovered_adv.address,
+                self._oauth_access_token,
+            )
+        except SwitchbotAuthenticationError as ex:
+            _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
+            return self.async_abort(reason="oauth_unauthorized")
+        except (SwitchbotApiError, SwitchbotAccountConnectionError) as ex:
+            _LOGGER.debug("Failed to connect to SwitchBot API: %s", ex, exc_info=True)
+            return self.async_abort(
+                reason="api_error",
+                description_placeholders={"error_detail": str(ex)},
+            )
+        except Exception:
+            _LOGGER.exception("Unexpected error retrieving encryption key with OAuth")
+            return self.async_abort(reason="unknown")
+        return await self.async_step_encrypted_key(key_details)
 
     @override
     async def async_step_bluetooth(
@@ -272,7 +372,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._encryption_method_selected = True
         return self.async_show_menu(
             step_id="encrypted_choose_method",
-            menu_options=["encrypted_auth", "encrypted_key"],
+            menu_options=["encrypted_oauth", "encrypted_auth", "encrypted_key"],
             description_placeholders={
                 "name": name_from_discovery(self._discovered_adv),
             },
@@ -361,7 +461,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the user step to choose cloud login or direct discovery."""
         return self.async_show_menu(
             step_id="user",
-            menu_options=["cloud_login", "select_device"],
+            menu_options=["oauth_login", "cloud_login", "select_device"],
         )
 
     async def async_step_cloud_login(

@@ -23,7 +23,7 @@
           "password": "[%key:component::switchbot::config::step::encrypted_auth::data_description::password%]",
           "username": "[%key:component::switchbot::config::step::encrypted_auth::data_description::username%]"
         },
-        "description": "Please provide your SwitchBot app username and password. This data won't be saved and is only used to retrieve device model information to automate discovery. Usernames and passwords are case-sensitive."
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and is only used to retrieve device model information to automate discovery. Usernames and passwords are case-sensitive. OAuth sign-in is recommended when available."
       },
       "confirm": {
         "description": "Do you want to set up {name}?"
@@ -37,13 +37,14 @@
           "password": "The password of your SwitchBot account",
           "username": "The username of your SwitchBot account"
         },
-        "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your device's encryption key. Usernames and passwords are case-sensitive."
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and is only used to retrieve your device's encryption key. Usernames and passwords are case-sensitive. OAuth sign-in is recommended when available."
       },
       "encrypted_choose_method": {
-        "description": "An encrypted SwitchBot device can be set up in Home Assistant in two different ways.\n\nYou can enter the key ID and encryption key yourself, or Home Assistant can import them from your SwitchBot account.",
+        "description": "An encrypted SwitchBot device can be set up by signing in with OAuth, entering your SwitchBot app username and password, or entering the encryption key manually. Credentials and OAuth tokens are only used during setup and are not saved.",
         "menu_options": {
-          "encrypted_auth": "SwitchBot account (recommended)",
-          "encrypted_key": "Enter encryption key manually"
+          "encrypted_auth": "Sign in with username and password",
+          "encrypted_key": "Enter encryption key manually",
+          "encrypted_oauth": "Sign in with SwitchBot OAuth (recommended)"
         }
       },
       "encrypted_key": {
@@ -66,6 +67,15 @@
         },
         "description": "The {name} device requires a password"
       },
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
       "select_device": {
         "data": {
           "address": "MAC address"
@@ -75,9 +85,10 @@
         }
       },
       "user": {
-        "description": "One or more of your Bluetooth adapters is using passive scanning, which may not discover all SwitchBot devices. Would you like to sign in to your SwitchBot account to download device information and automate discovery? If you're not sure, we recommend signing in.",
+        "description": "One or more of your Bluetooth adapters is using passive scanning, which may not discover all SwitchBot devices. Sign in to download device information and automate discovery, or continue without signing in. OAuth is recommended and its tokens are not saved.",
         "menu_options": {
-          "cloud_login": "Sign in to SwitchBot account",
+          "cloud_login": "Sign in with username and password",
+          "oauth_login": "Sign in with SwitchBot OAuth (recommended)",
           "select_device": "Continue without signing in"
         }
       }
