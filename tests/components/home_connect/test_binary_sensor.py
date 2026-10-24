@@ -1,6 +1,7 @@
 """Tests for home_connect binary_sensor entities."""
 
 from collections.abc import Awaitable, Callable
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
@@ -13,10 +14,15 @@ from aiohomeconnect.model import (
     StatusKey,
 )
 from aiohomeconnect.model.error import HomeConnectApiError
+from aiohomeconnect.model.program import ProgramKey
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.home_connect.const import (
+    BSH_OPERATION_STATE_FINISHED,
+    BSH_OPERATION_STATE_PAUSE,
+    BSH_OPERATION_STATE_READY,
+    BSH_OPERATION_STATE_RUN,
     DOMAIN,
     REFRIGERATION_STATUS_DOOR_CLOSED,
     REFRIGERATION_STATUS_DOOR_OPEN,
@@ -31,6 +37,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from . import create_event_message
 
 
 @pytest.fixture
@@ -349,3 +357,71 @@ async def test_connected_sensor_functionality(
     await hass.async_block_till_done()
 
     assert hass.states.is_state(entity_id, STATE_ON)
+
+
+def _operation_state(operation_state: str) -> tuple[EventType, dict[EventKey, Any]]:
+    """Return the event items of an operation state change."""
+    return (
+        EventType.STATUS,
+        {EventKey.BSH_COMMON_STATUS_OPERATION_STATE: operation_state},
+    )
+
+
+def _remaining_program_time(
+    seconds: int | None,
+) -> tuple[EventType, dict[EventKey, Any]]:
+    """Return the event items of a remaining program time update."""
+    return (
+        EventType.NOTIFY,
+        {EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: seconds},
+    )
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+async def test_remaining_program_time_set_binary_sensor(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test the binary sensor follows the remaining time of the current program."""
+    entity_id = "binary_sensor.oven_remaining_program_time_set"
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    for events, expected_state in (
+        ([_operation_state(BSH_OPERATION_STATE_RUN)], STATE_OFF),
+        ([_remaining_program_time(1800)], STATE_ON),
+        ([_operation_state(BSH_OPERATION_STATE_PAUSE)], STATE_ON),
+        ([_operation_state(BSH_OPERATION_STATE_RUN)], STATE_ON),
+        ([_remaining_program_time(None)], STATE_OFF),
+        ([_remaining_program_time(60)], STATE_ON),
+        # The program is aborted and a program without a timer is started
+        ([_operation_state(BSH_OPERATION_STATE_READY)], STATE_UNAVAILABLE),
+        (
+            [
+                (
+                    EventType.NOTIFY,
+                    {
+                        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                            ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
+                        )
+                    },
+                ),
+                _operation_state(BSH_OPERATION_STATE_RUN),
+            ],
+            STATE_OFF,
+        ),
+        ([_remaining_program_time(0)], STATE_OFF),
+        ([_operation_state(BSH_OPERATION_STATE_FINISHED)], STATE_OFF),
+    ):
+        await client.add_events(
+            [
+                create_event_message(appliance.ha_id, event_type, items)
+                for event_type, items in events
+            ]
+        )
+        await hass.async_block_till_done()
+        assert hass.states.is_state(entity_id, expected_state)

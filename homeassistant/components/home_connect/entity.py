@@ -7,7 +7,7 @@ from datetime import datetime
 import logging
 from typing import Any, Concatenate, cast, override
 
-from aiohomeconnect.model import EventKey, OptionKey
+from aiohomeconnect.model import EventKey, OptionKey, StatusKey
 from aiohomeconnect.model.error import (
     ActiveProgramNotSetError,
     HomeConnectError,
@@ -21,11 +21,29 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import API_DEFAULT_RETRY_AFTER, DOMAIN
-from .coordinator import HomeConnectApplianceCoordinator
+from .const import (
+    API_DEFAULT_RETRY_AFTER,
+    BSH_OPERATION_STATE_DELAYED_START,
+    BSH_OPERATION_STATE_FINISHED,
+    BSH_OPERATION_STATE_PAUSE,
+    BSH_OPERATION_STATE_RUN,
+    DOMAIN,
+)
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectApplianceData
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def is_program_running(appliance: HomeConnectApplianceData) -> bool:
+    """Return whether a program is running, paused or finished."""
+    status = appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
+    return status is not None and status.value in (
+        BSH_OPERATION_STATE_DELAYED_START,
+        BSH_OPERATION_STATE_RUN,
+        BSH_OPERATION_STATE_PAUSE,
+        BSH_OPERATION_STATE_FINISHED,
+    )
 
 
 class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
