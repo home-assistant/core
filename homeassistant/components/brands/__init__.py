@@ -267,10 +267,12 @@ class BrandsIntegrationView(_BrandsBaseView):
         ) is not None:
             return response
 
-        # 2. Try cache / CDN (always use direct path for proper 404 caching)
+        # 2. Try cache / CDN (always use direct path for proper 404 caching).
+        # The brand image can differ from the integration image the
+        # Marketplace view caches under "integrations/", like for Google.
         return await self._serve_from_cache_or_cdn(
             cdn_path=f"brands/{domain}/{image}",
-            cache_subpath=f"integrations/{domain}/{image}",
+            cache_subpath=f"brands/{domain}/{image}",
             fallback_placeholder=use_placeholder,
         )
 
