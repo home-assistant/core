@@ -1,6 +1,7 @@
 """Tests for the iCloud account."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -20,6 +21,7 @@ from requests import Response
 from homeassistant.components.icloud.account import IcloudAccount
 from homeassistant.components.icloud.const import (
     ATTR_OWNER_NAME,
+    CONF_AUTO_DELETE,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
@@ -36,6 +38,7 @@ from homeassistant.helpers.storage import Store
 from .conftest import MockAppleDevice, MockDevicesContainer
 from .const import (
     DEVICE,
+    DEVICE_2,
     MEMBER_1_FULL_NAME,
     MEMBER_1_PERSON_ID,
     MOCK_CONFIG,
@@ -1133,3 +1136,103 @@ async def test_device_without_a_status_keeps_the_account_polling(
         await hass.async_block_till_done()
 
         assert service_instance.authenticate.called
+
+
+class UnavailableService:
+    """A session whose Find My webservice cannot be read."""
+
+    requires_2fa = False
+
+    @property
+    def devices(self) -> Any:
+        """Fail the way a service Apple will not answer for does."""
+        raise PyiCloudAPIResponseException("Service unavailable", 503)
+
+
+async def test_a_failed_fetch_keeps_the_reported_devices(
+    hass: HomeAssistant,
+    mock_icloud_service: MagicMock,
+    icloud_devices: list[MockAppleDevice],
+) -> None:
+    """Test that a poll which cannot read the devices reports the old list.
+
+    What Apple currently reports is what tells a device went missing, so a
+    fetch that dies before reaching that answer has to leave it as it was:
+    an error is not the account reporting nothing.
+    """
+    del mock_icloud_service  # the class patch is what the setup needs
+
+    icloud_devices.append(MockAppleDevice(DEVICE_2))
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        entry_id="test",
+        unique_id=USERNAME,
+        options={CONF_AUTO_DELETE: True},
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    account = config_entry.runtime_data
+    assert account.reported_device_ids == {"device1", "device2"}
+
+    account.api = UnavailableService()
+    await hass.async_add_executor_job(account.update_devices)
+    await hass.async_block_till_done()
+
+    assert account.reported_device_ids == {"device1", "device2"}
+    assert set(account.devices) == {"device1", "device2"}
+
+
+async def test_a_pending_fetch_keeps_the_devices_it_did_not_list(
+    hass: HomeAssistant,
+    mock_icloud_service: MagicMock,
+    icloud_devices: list[MockAppleDevice],
+) -> None:
+    """Test that a device missing from a still-loading list is kept.
+
+    Apple lists the account in stages and reports the read as pending until
+    it is finished, so the devices left out of such a read are not gone from
+    the account yet.
+    """
+    del mock_icloud_service  # the class patch is what the setup needs
+
+    icloud_devices.append(MockAppleDevice(DEVICE_2))
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        entry_id="test",
+        unique_id=USERNAME,
+        options={CONF_AUTO_DELETE: True},
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    account = config_entry.runtime_data
+    assert set(account.devices) == {"device1", "device2"}
+
+    # The iPad has not shown up yet and the iPhone it does list is still
+    # loading, so the read is only a slice of the account.
+    icloud_devices.pop()
+    icloud_devices[0] = MockAppleDevice({**DEVICE, "deviceStatus": "203"})
+
+    await hass.async_add_executor_job(account.update_devices)
+    await hass.async_block_till_done()
+
+    assert set(account.devices) == {"device1", "device2"}
+    # A pending read shortens the interval to the 15 second retry.
+    assert account.fetch_interval == 0.25
+
+    # The listing finishes, and the iPad is still not in it.
+    icloud_devices[0] = MockAppleDevice(DEVICE)
+
+    await hass.async_add_executor_job(account.update_devices)
+    await hass.async_block_till_done()
+
+    assert set(account.devices) == {"device1"}
