@@ -5,7 +5,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast, override
 
-from pysmartthings import Attribute, Capability, ComponentStatus, SmartThings, Status
+from pysmartthings import (
+    Attribute,
+    Capability,
+    ComponentStatus,
+    DeviceEvent,
+    SmartThings,
+    Status,
+)
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -153,6 +160,11 @@ def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
     return state
 
 
+def _meat_probe_connected(status: dict[Attribute | str, Status]) -> bool:
+    """Return if the meat probe is plugged in; it reports 0 °F when it isn't."""
+    return status[Attribute.STATUS].value == "connected"
+
+
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSensorEntityDescription(SensorEntityDescription):
     """Describe a SmartThings sensor entity."""
@@ -165,6 +177,10 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     translation_placeholders_fn: Callable[[str], dict[str, str]] | None = None
     component_fn: Callable[[str], bool] | None = None
     exists_fn: Callable[[Status], bool] | None = None
+    available_fn: Callable[[dict[Attribute | str, Status]], bool] | None = None
+    # Stay unavailable after available_fn recovers until a new value arrives,
+    # so a value cached while unavailable is never published.
+    requires_fresh_value: bool = False
     use_temperature_unit: bool = False
     deprecated: Callable[[ComponentStatus], tuple[str, str] | None] | None = None
     component_translation_key: dict[str, str] | None = None
@@ -1218,6 +1234,26 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.SAMSUNG_CE_MEAT_PROBE: {
+        Attribute.TEMPERATURE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.TEMPERATURE,
+                translation_key="meat_probe_temperature",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT,
+                available_fn=_meat_probe_connected,
+                requires_fresh_value=True,
+            )
+        ],
+        Attribute.TEMPERATURE_SETPOINT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.TEMPERATURE_SETPOINT,
+                translation_key="meat_probe_temperature_setpoint",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                available_fn=_meat_probe_connected,
+            )
+        ],
+    },
     Capability.SAMSUNG_CE_WATER_CONSUMPTION_REPORT: {
         Attribute.WATER_CONSUMPTION: [
             SmartThingsSensorEntityDescription(
@@ -1465,6 +1501,10 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
+        self._value_is_stale = (
+            entity_description.requires_fresh_value
+            and not self._available_fn_passes(self._internal_state[capability])
+        )
         if self.entity_description.translation_placeholders_fn:
             self._attr_translation_placeholders = (
                 self.entity_description.translation_placeholders_fn(component)
@@ -1473,6 +1513,40 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             self._attr_translation_key = (
                 self.entity_description.component_translation_key.get(component)
             )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the entity is available."""
+        return (
+            super().available
+            and self._available_fn_passes(self._internal_state[self.capability])
+            and not self._value_is_stale
+        )
+
+    def _available_fn_passes(self, status: dict[Attribute | str, Status]) -> bool:
+        available_fn = self.entity_description.available_fn
+        return available_fn is None or available_fn(status)
+
+    @override
+    def _update_handler(self, event: DeviceEvent) -> None:
+        # Status objects are shared between entities of the device, so another
+        # listener may already have applied this event. Judge it from the event
+        # alone: a value cached while available_fn failed stays stale until this
+        # attribute is reported again.
+        if self.entity_description.requires_fresh_value and (
+            event.capability == self.capability
+        ):
+            if event.attribute == self._attribute:
+                self._value_is_stale = False
+            elif not self._available_fn_passes(
+                {
+                    **self._internal_state[self.capability],
+                    event.attribute: Status(event.value),
+                }
+            ):
+                self._value_is_stale = True
+        super()._update_handler(event)
 
     @property
     @override
