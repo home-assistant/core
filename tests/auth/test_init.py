@@ -2,13 +2,14 @@
 
 import asyncio
 from datetime import timedelta
-from ipaddress import ip_address
+from ipaddress import IPv4Address, IPv6Network, ip_address, ip_network
 from pathlib import Path
 import time
 from typing import Any
 from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import jwt
 import probatio
 import pytest
@@ -26,12 +27,17 @@ from homeassistant.auth import (
     EVENT_USER_UPDATED,
     DuplicateCredentialsError,
     InvalidAuthError,
+    TooManyRequestsError,
     auth_store,
     const as auth_const,
     models as auth_models,
 )
-from homeassistant.auth.const import GROUP_ID_ADMIN, MFA_SESSION_EXPIRATION
-from homeassistant.auth.models import Credentials
+from homeassistant.auth.const import (
+    GROUP_ID_ADMIN,
+    LOGIN_FLOW_EVICTION_INTERVAL,
+    MFA_SESSION_EXPIRATION,
+)
+from homeassistant.auth.models import AuthFlowContext, Credentials
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
@@ -1081,6 +1087,224 @@ async def test_login_trusted_networks_skips_auth_module(
     assert step["result"].id == "mock-id"
 
 
+@patch("homeassistant.auth.MAX_LOGIN_FLOWS", 1)
+async def test_login_flow_limit_unknown_provider(mock_hass: HomeAssistant) -> None:
+    """Test a request for an unknown provider doesn't evict a login flow."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass, [{"type": "insecure_example", "users": []}], []
+    )
+    step = await manager.login_flow.async_init(("insecure_example", None))
+
+    with pytest.raises(data_entry_flow.UnknownHandler):
+        await manager.login_flow.async_init(("unknown", None))
+    assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
+        step["flow_id"]
+    ]
+
+    # The eviction interval wasn't used up by the rejected request.
+    step = await manager.login_flow.async_init(("insecure_example", None))
+    assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
+        step["flow_id"]
+    ]
+
+
+@pytest.mark.parametrize("limit", ["MAX_LOGIN_FLOWS", "MAX_LOGIN_FLOWS_PER_SOURCE"])
+async def test_login_flow_limit_keeps_mfa_flows(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    monkeypatch: pytest.MonkeyPatch,
+    limit: str,
+) -> None:
+    """Test flows waiting for MFA are not evicted when a limit is reached."""
+    monkeypatch.setattr(auth, limit, 2)
+    manager = await auth.auth_manager_from_config(
+        hass,
+        [
+            {
+                "type": "insecure_example",
+                "users": [{"username": "test-user", "password": "test-pass"}],
+            }
+        ],
+        [
+            {
+                "type": "insecure_example",
+                "data": [{"user_id": "mock-user", "pin": "test-pin"}],
+            }
+        ],
+    )
+    hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+    user = MockUser(id="mock-user").add_to_auth_manager(manager)
+    user.credentials.append(
+        auth_models.Credentials(
+            id="mock-id",
+            auth_provider_type="insecure_example",
+            auth_provider_id=None,
+            data={"username": "test-user"},
+            is_new=False,
+        )
+    )
+
+    async def async_init_mfa_flow() -> str:
+        step = await manager.login_flow.async_init(("insecure_example", None))
+        step = await manager.login_flow.async_configure(
+            step["flow_id"], {"username": "test-user", "password": "test-pass"}
+        )
+        assert step["step_id"] == "mfa"
+        return step["flow_id"]
+
+    mfa_flow_id = await async_init_mfa_flow()
+    await manager.login_flow.async_init(("insecure_example", None))
+
+    # The flow that didn't reach MFA is evicted instead of the older MFA flow.
+    step = await manager.login_flow.async_init(("insecure_example", None))
+    assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
+        mfa_flow_id,
+        step["flow_id"],
+    ]
+
+    freezer.tick(LOGIN_FLOW_EVICTION_INTERVAL)
+    await manager.login_flow.async_configure(
+        step["flow_id"], {"username": "test-user", "password": "test-pass"}
+    )
+
+    # Nothing can be evicted when all flows are waiting for MFA.
+    with pytest.raises(TooManyRequestsError):
+        await manager.login_flow.async_init(("insecure_example", None))
+
+    # Once their MFA window is over they can't finish, so they make room.
+    freezer.tick(MFA_SESSION_EXPIRATION)
+    step = await manager.login_flow.async_init(("insecure_example", None))
+    assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
+        step["flow_id"]
+    ]
+
+
+@patch("homeassistant.auth.MAX_LOGIN_FLOWS", 3)
+@patch("homeassistant.auth.MAX_LOGIN_FLOWS_PER_SOURCE", 2)
+async def test_login_flow_limit_per_source(mock_hass: HomeAssistant) -> None:
+    """Test a flood from one source can't push out or lock out other logins."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass, [{"type": "insecure_example", "users": []}], []
+    )
+
+    async def async_init_flow(address: str) -> str:
+        step = await manager.login_flow.async_init(
+            ("insecure_example", None),
+            context=AuthFlowContext(ip_address=ip_address(address)),
+        )
+        return step["flow_id"]
+
+    other = await async_init_flow("192.168.1.2")
+    flood = [await async_init_flow("192.168.1.1") for _ in range(6)]
+
+    # The flooding source only ever evicts its own oldest flow.
+    assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
+        other,
+        *flood[-2:],
+    ]
+
+    # A new source gets in by evicting from the source with the most flows.
+    newcomer = await async_init_flow("192.168.1.3")
+    assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
+        other,
+        flood[-1],
+        newcomer,
+    ]
+
+
+@patch("homeassistant.auth.MAX_LOGIN_FLOWS", 5)
+async def test_login_flow_limit_counts_mfa_flows_toward_their_source(
+    hass: HomeAssistant,
+) -> None:
+    """Test the source with the most flows loses one, counting flows at MFA."""
+    manager = await auth.auth_manager_from_config(
+        hass,
+        [
+            {
+                "type": "insecure_example",
+                "users": [{"username": "test-user", "password": "test-pass"}],
+            }
+        ],
+        [
+            {
+                "type": "insecure_example",
+                "data": [{"user_id": "mock-user", "pin": "test-pin"}],
+            }
+        ],
+    )
+    hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+    user = MockUser(id="mock-user").add_to_auth_manager(manager)
+    user.credentials.append(
+        auth_models.Credentials(
+            id="mock-id",
+            auth_provider_type="insecure_example",
+            auth_provider_id=None,
+            data={"username": "test-user"},
+            is_new=False,
+        )
+    )
+
+    async def async_init_flow(address: str) -> str:
+        step = await manager.login_flow.async_init(
+            ("insecure_example", None),
+            context=AuthFlowContext(ip_address=ip_address(address)),
+        )
+        return step["flow_id"]
+
+    async def async_init_mfa_flow(address: str) -> str:
+        flow_id = await async_init_flow(address)
+        step = await manager.login_flow.async_configure(
+            flow_id, {"username": "test-user", "password": "test-pass"}
+        )
+        assert step["step_id"] == "mfa"
+        return flow_id
+
+    busiest = [
+        await async_init_mfa_flow("192.168.1.1"),
+        await async_init_mfa_flow("192.168.1.1"),
+        await async_init_flow("192.168.1.1"),
+    ]
+    other = [await async_init_flow("192.168.1.2") for _ in range(2)]
+
+    newcomer = await async_init_flow("192.168.1.3")
+
+    assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
+        *busiest[:2],
+        *other,
+        newcomer,
+    ]
+
+
+@pytest.mark.parametrize(
+    ("context", "source"),
+    [
+        pytest.param(
+            AuthFlowContext(ip_address=ip_address("192.168.1.1")),
+            ip_address("192.168.1.1"),
+            id="ipv4",
+        ),
+        pytest.param(
+            AuthFlowContext(ip_address=ip_address("::ffff:192.168.1.1")),
+            ip_address("192.168.1.1"),
+            id="ipv4-mapped",
+        ),
+        pytest.param(
+            AuthFlowContext(ip_address=ip_address("2001:db8:1:2:aaaa::1")),
+            ip_network("2001:db8:1:2::/64"),
+            id="ipv6-network",
+        ),
+        pytest.param(AuthFlowContext(), None, id="no-address"),
+    ],
+)
+def test_login_flow_source(
+    context: AuthFlowContext, source: IPv4Address | IPv6Network | None
+) -> None:
+    """Test login flows count toward their address, IPv6 by its /64 network."""
+    assert auth._async_login_flow_source(context) == source
+
+
 async def test_login_with_multi_auth_module(mock_hass) -> None:
     """Test login as existing user with multiple auth modules."""
     manager = await auth.auth_manager_from_config(
@@ -1154,7 +1378,9 @@ async def test_login_with_multi_auth_module(mock_hass) -> None:
     assert step["result"].id == "mock-id"
 
 
-async def test_auth_module_expired_session(mock_hass) -> None:
+async def test_auth_module_expired_session(
+    mock_hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test login as existing user."""
     manager = await auth.auth_manager_from_config(
         mock_hass,
@@ -1204,13 +1430,13 @@ async def test_auth_module_expired_session(mock_hass) -> None:
     assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
-    with freeze_time(dt_util.utcnow() + MFA_SESSION_EXPIRATION):
-        step = await manager.login_flow.async_configure(
-            step["flow_id"], {"pin": "test-pin"}
-        )
-        # login flow abort due session timeout
-        assert step["type"] is data_entry_flow.FlowResultType.ABORT
-        assert step["reason"] == "login_expired"
+    freezer.tick(MFA_SESSION_EXPIRATION + timedelta(seconds=1))
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"pin": "test-pin"}
+    )
+    # login flow abort due session timeout
+    assert step["type"] is data_entry_flow.FlowResultType.ABORT
+    assert step["reason"] == "login_expired"
 
 
 async def test_enable_mfa_for_user(
