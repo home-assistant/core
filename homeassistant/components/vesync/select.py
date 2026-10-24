@@ -192,4 +192,4 @@ class VeSyncSelectEntity(VeSyncBaseEntity, SelectEntity):
         """Set an option."""
         if not await self.entity_description.select_option_fn(self.device, option):
             raise HomeAssistantError(self.device.last_response.message)
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)
