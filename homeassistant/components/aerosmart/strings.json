@@ -27,7 +27,7 @@
       "tcp": {
         "data": {
           "host": "Host",
-          "port": "Port",
+          "port": "[%key:common::config_flow::data::port%]",
           "unit_heat_pump": "Heat pump unit",
           "unit_ventilation": "Ventilation unit"
         },
@@ -50,26 +50,14 @@
   },
   "entity": {
     "sensor": {
-      "active_fan_level": {
-        "name": "Active fan level"
-      },
       "air_condenser_solenoid_valve_operating_hours": {
         "name": "Air condenser solenoid valve operating hours"
-      },
-      "boiler_temperature_overshoot": {
-        "name": "Boiler temperature overshoot"
       },
       "brine_temperature_after_outdoor_air_preheating": {
         "name": "Brine temperature after outdoor air preheating"
       },
-      "carbon_dioxide": {
-        "name": "CO2"
-      },
       "coarse_dust_filter_maximum_conveyed_volume": {
         "name": "Coarse dust filter maximum conveyed volume"
-      },
-      "coarse_dust_filter_monitoring_mode": {
-        "name": "Coarse dust filter monitoring mode"
       },
       "coarse_dust_filter_operating_hours": {
         "name": "Coarse dust filter operating hours"
@@ -82,9 +70,6 @@
       },
       "conveyed_air_volume_since_filter_change": {
         "name": "Conveyed air volume since filter change"
-      },
-      "domestic_hot_water_heating_delay": {
-        "name": "Domestic hot water heating delay"
       },
       "domestic_hot_water_temperature_space_heating_lockout": {
         "name": "Domestic hot water temperature space heating lockout"
@@ -100,9 +85,6 @@
       },
       "extract_air_fan_operating_hours": {
         "name": "Extract air fan operating hours"
-      },
-      "extract_air_fan_speed": {
-        "name": "Extract air fan speed"
       },
       "fan_level_0_operating_hours": {
         "name": "Fan level 0 operating hours"
@@ -128,18 +110,6 @@
       "frost_protection_operating_hours": {
         "name": "Frost protection operating hours"
       },
-      "heat_pump": {
-        "name": "Heat pump"
-      },
-      "heat_pump_central_unit_address": {
-        "name": "Heat pump central unit address"
-      },
-      "heat_pump_high_pressure": {
-        "name": "Heat pump high pressure"
-      },
-      "heat_pump_low_pressure": {
-        "name": "Heat pump low pressure"
-      },
       "heat_pump_status": {
         "name": "Heat pump status",
         "state": {
@@ -157,9 +127,6 @@
           "restart_lockout": "Restart lockout",
           "starting_compressor": "Starting compressor"
         }
-      },
-      "heat_pump_status_remaining_time": {
-        "name": "Heat pump status remaining time"
       },
       "heating_stage_1_operating_hours": {
         "name": "Heating stage 1 operating hours"
@@ -233,17 +200,11 @@
       "shading_operating_hours": {
         "name": "Shading operating hours"
       },
-      "summer_mode": {
-        "name": "Summer mode"
-      },
       "supply_air_fan_actual_speed": {
         "name": "Supply air fan actual speed"
       },
       "supply_air_fan_operating_hours": {
         "name": "Supply air fan operating hours"
-      },
-      "supply_air_fan_speed": {
-        "name": "Supply air fan speed"
       },
       "supply_and_extract_airflow_balance": {
         "name": "Supply and extract airflow balance"
