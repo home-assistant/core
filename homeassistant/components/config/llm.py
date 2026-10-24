@@ -1,6 +1,7 @@
 """LLM tools for the config integration."""
 
 from collections import defaultdict
+from collections.abc import Iterable
 from typing import override
 
 import probatio
@@ -9,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.llm import LLMTools
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import translation
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
@@ -41,33 +43,24 @@ _NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
 _MIN_SHORT_ID_LEN = 4
 
 
-def _format_domain_short_entry_ids(hass: HomeAssistant, domain: str) -> dict[str, str]:
-    """Return a mapping of full entry_id to short '<domain>:<suffix>' ID for a domain.
+def _format_short_entry_ids(entries: Iterable[ConfigEntry]) -> dict[str, str]:
+    """Return a mapping of full entry_id to short '<domain>:<suffix>' ID.
 
     Short IDs reduce token usage and LLM transcription errors across tool calls.
     The trailing suffix starts at 4 characters and expands if another entry in the
     same domain shares that suffix.
     """
-    domain_entries = hass.config_entries.async_entries(
-        domain, include_ignore=True, include_disabled=True
-    )
-    if len(domain_entries) == 1:
-        entry_id = domain_entries[0].entry_id
-        return {entry_id: f"{domain}:{entry_id[-_MIN_SHORT_ID_LEN:].lower()}"}
-
-    by_suffix: defaultdict[str, list[tuple[str, str]]] = defaultdict(list)
-    for entry in domain_entries:
+    groups: defaultdict[tuple[str, str], list[tuple[str, str]]] = defaultdict(list)
+    for entry in entries:
         full_lower = entry.entry_id.lower()
-        by_suffix[full_lower[-_MIN_SHORT_ID_LEN:]].append((entry.entry_id, full_lower))
+        groups[(entry.domain, full_lower[-_MIN_SHORT_ID_LEN:])].append(
+            (entry.entry_id, full_lower)
+        )
 
     result: dict[str, str] = {}
-    for suffix, group in by_suffix.items():
-        if len(group) == 1:
-            entry_id, _ = group[0]
-            result[entry_id] = f"{domain}:{suffix}"
-            continue
+    for (domain, _), group in groups.items():
         for entry_id, full_lower in group:
-            length = min(_MIN_SHORT_ID_LEN + 1, len(full_lower))
+            length = min(_MIN_SHORT_ID_LEN, len(full_lower))
             while length < len(full_lower) and any(
                 other_lower.endswith(full_lower[-length:])
                 for other_id, other_lower in group
@@ -78,15 +71,10 @@ def _format_domain_short_entry_ids(hass: HomeAssistant, domain: str) -> dict[str
     return result
 
 
-def _format_short_entry_id(hass: HomeAssistant, entry: ConfigEntry) -> str:
-    """Return a short domain-scoped entry_id (e.g. 'hue:8k2m')."""
-    return _format_domain_short_entry_ids(hass, entry.domain)[entry.entry_id]
-
-
 def _resolve_short_entry_id(
     hass: HomeAssistant, entry_id: str
-) -> tuple[ConfigEntry | None, str | None]:
-    """Resolve a ConfigEntry by short '<domain>:<suffix>' ID or full entry_id.
+) -> tuple[ConfigEntry, str]:
+    """Resolve a ConfigEntry and its short ID by '<domain>:<suffix>' or full entry_id.
 
     Checks for an exact full entry_id match first, then resolves '<domain>:<suffix>'
     against entries of that domain by matching the trailing suffix.
@@ -95,34 +83,37 @@ def _resolve_short_entry_id(
         entry := hass.config_entries.async_get_entry(entry_id)
         or hass.config_entries.async_get_entry(entry_id.upper())
     ) is not None:
-        return entry, None
+        short_ids = _format_short_entry_ids(
+            hass.config_entries.async_entries(entry.domain)
+        )
+        return entry, short_ids[entry.entry_id]
 
     domain, sep, suffix = entry_id.partition(":")
     domain = domain.strip().lower()
     suffix_lower = suffix.strip().lower()
     if not sep or not domain or len(suffix_lower) < _MIN_SHORT_ID_LEN:
-        return None, f"Config entry '{entry_id}' not found."
+        raise HomeAssistantError(f"Config entry '{entry_id}' not found.")
 
+    domain_entries = hass.config_entries.async_entries(domain)
     matches = [
         candidate
-        for candidate in hass.config_entries.async_entries(
-            domain, include_ignore=True, include_disabled=True
-        )
+        for candidate in domain_entries
         if candidate.entry_id.lower().endswith(suffix_lower)
     ]
-    if len(matches) == 1:
-        return matches[0], None
     if not matches:
-        return None, f"Config entry '{entry_id}' not found."
+        raise HomeAssistantError(f"Config entry '{entry_id}' not found.")
 
-    short_ids = _format_domain_short_entry_ids(hass, domain)
+    short_ids = _format_short_entry_ids(domain_entries)
+    if len(matches) == 1:
+        match = matches[0]
+        return match, short_ids[match.entry_id]
+
     options = ", ".join(
         f"{short_ids[candidate.entry_id]} ({candidate.title!r})"
         for candidate in matches
     )
-    return (
-        None,
-        f"Config entry '{entry_id}' is ambiguous; matches: {options}.",
+    raise HomeAssistantError(
+        f"Config entry '{entry_id}' is ambiguous; matches: {options}."
     )
 
 
@@ -203,9 +194,7 @@ class GetConfigEntriesTool(Tool):
         domain_filter: str | list[str] | None = args.get("domain")
         status_filter: str | None = args.get("status")
 
-        entries = hass.config_entries.async_entries(
-            include_ignore=True, include_disabled=True
-        )
+        entries = hass.config_entries.async_entries()
 
         if domain_filter is not None:
             domains = {
@@ -218,13 +207,11 @@ class GetConfigEntriesTool(Tool):
             }
             entries = [entry for entry in entries if entry.domain.lower() in domains]
 
+        short_ids = _format_short_entry_ids(entries)
+
         if status_filter is not None:
             allowed_states = _STATUS_STATES[status_filter]
             entries = [entry for entry in entries if entry.state in allowed_states]
-
-        short_ids: dict[str, str] = {}
-        for domain in {entry.domain for entry in entries}:
-            short_ids.update(_format_domain_short_entry_ids(hass, domain))
 
         return ToolResult(
             data={
@@ -269,13 +256,11 @@ class ReloadConfigEntryTool(Tool):
         args = self.parameters(tool_input.tool_args)
         entry_id: str = args["entry_id"]
 
-        entry, error = _resolve_short_entry_id(hass, entry_id)
-        if entry is None:
-            return ToolResult(
-                data={"error": error},
-                error=True,
-            )
-        short_id = _format_short_entry_id(hass, entry)
+        try:
+            entry, short_id = _resolve_short_entry_id(hass, entry_id)
+        except HomeAssistantError as err:
+            return ToolResult(data={"error": str(err)}, error=True)
+
         if entry.disabled_by is not None:
             return ToolResult(
                 data={
@@ -299,11 +284,6 @@ class ReloadConfigEntryTool(Tool):
 
         try:
             await hass.config_entries.async_reload(entry.entry_id)
-        except config_entries.UnknownEntry:
-            return ToolResult(
-                data={"error": f"Config entry '{short_id}' not found."},
-                error=True,
-            )
         except config_entries.OperationNotAllowed:
             return ToolResult(
                 data={

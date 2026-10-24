@@ -24,6 +24,7 @@ from homeassistant.components.config.llm import (
 )
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
@@ -432,27 +433,38 @@ async def test_reload_config_entry_success(
 async def test_reload_config_entry_setup_failure_reason(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Test reloading a config entry that remains in an error state with a reason."""
+    """Test reloading a config entry that fails setup with a reason."""
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=AsyncMock(
+                side_effect=ConfigEntryError("Failed to connect to Z-Wave stick")
+            ),
+            async_unload_entry=AsyncMock(return_value=None),
+        ),
+    )
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=TEST_DOMAIN,
         title="Z-Wave Stick",
         entry_id="01J00000000000000000001004",
-        state=ConfigEntryState.SETUP_ERROR,
-        reason="Failed to connect to Z-Wave stick",
+        state=ConfigEntryState.LOADED,
     )
     entry.add_to_hass(hass)
+    hass.config.components.add(TEST_DOMAIN)
 
     tool = ReloadConfigEntryTool()
-    with patch.object(hass.config_entries, "async_reload", return_value=False):
+    with mock_config_flow(TEST_DOMAIN, config_entries.ConfigFlow):
         res = await tool.async_call(
             hass,
-            llm.ToolInput(tool.name, {"entry_id": "zwave_js:1004"}),
+            llm.ToolInput(tool.name, {"entry_id": f"{TEST_DOMAIN}:1004"}),
             llm_context,
         )
     assert res == llm.ToolResult(
         data={
             "result": {
-                "entry_id": "zwave_js:1004",
+                "entry_id": f"{TEST_DOMAIN}:1004",
                 "state": "setup_error",
                 "reason": "Failed to connect to Z-Wave stick",
             }
@@ -530,16 +542,16 @@ async def test_reload_config_entry_ambiguous_short_id(
 
 
 @pytest.mark.parametrize(
-    ("entry_id", "expected_error"),
+    ("entry_kwargs", "expected_error"),
     [
         pytest.param(
-            "spotify:1005",
-            "Config entry 'spotify:1005' cannot be reloaded because it is disabled.",
+            {"disabled_by": ConfigEntryDisabler.USER},
+            "Config entry 'hue:1005' cannot be reloaded because it is disabled.",
             id="disabled",
         ),
         pytest.param(
-            "hue:1006",
-            "Config entry 'hue:1006' cannot be reloaded because it is ignored.",
+            {"source": config_entries.SOURCE_IGNORE},
+            "Config entry 'hue:1005' cannot be reloaded because it is ignored.",
             id="ignored",
         ),
     ],
@@ -547,31 +559,22 @@ async def test_reload_config_entry_ambiguous_short_id(
 async def test_reload_config_entry_disabled_or_ignored(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
-    entry_id: str,
+    entry_kwargs: dict[str, Any],
     expected_error: str,
 ) -> None:
     """Test that disabled or ignored config entries cannot be reloaded."""
-    disabled_entry = MockConfigEntry(
-        domain="spotify",
-        title="Spotify",
-        entry_id="01J00000000000000000001005",
-        state=ConfigEntryState.NOT_LOADED,
-        disabled_by=ConfigEntryDisabler.USER,
-    )
-    disabled_entry.add_to_hass(hass)
-
-    ignored_entry = MockConfigEntry(
+    entry = MockConfigEntry(
         domain="hue",
-        title="Ignored",
-        entry_id="01J00000000000000000001006",
-        source=config_entries.SOURCE_IGNORE,
+        title="Hue",
+        entry_id="01J00000000000000000001005",
+        **entry_kwargs,
     )
-    ignored_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
 
     tool = ReloadConfigEntryTool()
     res = await tool.async_call(
         hass,
-        llm.ToolInput(tool.name, {"entry_id": entry_id}),
+        llm.ToolInput(tool.name, {"entry_id": "hue:1005"}),
         llm_context,
     )
     assert res == llm.ToolResult(
@@ -607,35 +610,6 @@ async def test_reload_config_entry_operation_not_allowed(
                 "Config entry 'hue:1007' cannot be reloaded in state 'migration_error'."
             )
         },
-        error=True,
-    )
-
-
-async def test_reload_config_entry_removed_during_reload(
-    hass: HomeAssistant,
-    llm_context: llm.LLMContext,
-) -> None:
-    """Test reloading a config entry that is removed concurrently during reload."""
-    entry = MockConfigEntry(
-        domain="hue",
-        title="Hue",
-        entry_id="01J00000000000000000001008",
-    )
-    entry.add_to_hass(hass)
-
-    tool = ReloadConfigEntryTool()
-    with patch.object(
-        hass.config_entries,
-        "async_reload",
-        side_effect=config_entries.UnknownEntry("01J00000000000000000001008"),
-    ):
-        res = await tool.async_call(
-            hass,
-            llm.ToolInput(tool.name, {"entry_id": "hue:1008"}),
-            llm_context,
-        )
-    assert res == llm.ToolResult(
-        data={"error": "Config entry 'hue:1008' not found."},
         error=True,
     )
 
