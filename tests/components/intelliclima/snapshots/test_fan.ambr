@@ -51,7 +51,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('intelliclima', '56789')]>,
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,

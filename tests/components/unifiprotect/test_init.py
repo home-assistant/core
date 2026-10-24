@@ -146,7 +146,6 @@ async def test_setup_multiple(
     nvr = bootstrap.nvr
     nvr._api = ufp.api
     nvr.mac = "A1E00C826983"
-    ufp.api.get_nvr = AsyncMock(return_value=nvr)
 
     with patch(
         "homeassistant.components.unifiprotect.utils.ProtectApiClient"
@@ -185,6 +184,23 @@ async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture, light: Light) ->
     await hass.config_entries.async_unload(ufp.entry.entry_id)
     assert ufp.entry.state is ConfigEntryState.NOT_LOADED
     assert ufp.api.async_disconnect_ws.called
+    assert ufp.public_resync_unsub is not None
+    ufp.public_resync_unsub.assert_called_once()
+
+
+async def test_public_only_unload(
+    hass: HomeAssistant,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Unloading an API-key-only entry drops the public resync subscription."""
+    await setup_public_only()
+    assert ufp_public_only.entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(ufp_public_only.entry.entry_id)
+    assert ufp_public_only.entry.state is ConfigEntryState.NOT_LOADED
+    assert ufp_public_only.public_resync_unsub is not None
+    ufp_public_only.public_resync_unsub.assert_called_once()
 
 
 async def test_remove_entry(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
@@ -648,7 +664,7 @@ async def test_migrate_entry_version_2(hass: HomeAssistant) -> None:
     """Test remove CONF_ALLOW_EA from options while migrating a 1 config entry to 2."""
     with (
         patch(
-            "homeassistant.components.unifiprotect.async_setup_entry", return_value=True
+            "homeassistant.components.unifiprotect.async_setup_entry", return_value=None
         ),
     ):
         entry = MockConfigEntry(
@@ -1006,7 +1022,7 @@ async def test_public_only_setup_retakes_add_baseline(
     HA only drops ``runtime_data`` after a successful unload, so an entry that
     never loaded keeps its ProtectData across a mode switch. Its baseline was
     taken in full-access mode, where the mac set stays empty on purpose, and
-    reusing it would re-offer every enumerated device on the first reconnect.
+    reusing it would re-offer an enumerated device on its next add frame.
     """
     api = ufp_public_only.api
     api.public_bootstrap.lights = {light.id: make_public_light(light)}
@@ -1021,8 +1037,7 @@ async def test_public_only_setup_retakes_add_baseline(
     await setup_public_only()
     assert len(hass.states.async_entity_ids(Platform.LIGHT.value)) == 1
 
-    ufp_public_only.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
-    ufp_public_only.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    ufp_public_only.public_resync(added=api.public_bootstrap.lights.values())
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(Platform.LIGHT.value)) == 1

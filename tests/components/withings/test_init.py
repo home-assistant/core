@@ -1,5 +1,6 @@
 """Tests for the Withings component."""
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -55,7 +56,7 @@ async def test_data_manager_webhook_subscription(
     await setup_integration(hass, webhook_config_entry)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert withings.subscribe_notification.call_count == 6
 
@@ -899,4 +900,34 @@ async def test_webhook_subscription_invalid_params(
     await prepare_webhook_setup(hass, freezer)
 
     assert "Webhook URL rejected by Withings" in caplog.text
+    assert withings.subscribe_notification.call_count == 1
+
+
+async def test_unload_during_webhook_subscription(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unloading cancels an in-flight webhook subscription."""
+    subscribe_started = asyncio.Event()
+    release_subscribe = asyncio.Event()
+
+    async def _subscribe_notification(*args: Any) -> None:
+        subscribe_started.set()
+        await release_subscribe.wait()
+
+    withings.subscribe_notification.side_effect = _subscribe_notification
+
+    await setup_integration(hass, webhook_config_entry)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await subscribe_started.wait()
+
+    assert await hass.config_entries.async_unload(webhook_config_entry.entry_id)
+    release_subscribe.set()
+    await hass.async_block_till_done()
+
+    assert webhook_config_entry.state is ConfigEntryState.NOT_LOADED
     assert withings.subscribe_notification.call_count == 1
