@@ -131,7 +131,11 @@ async def browse_node(
 
         else:
             # Browse to correct folder
-            await afsapi.nav_select_folder_via_path(parent_keys)
+            if parent_keys:
+                await afsapi.nav_select_folder_via_path(parent_keys)
+            else:
+                # An empty path may leave the device in the last played folder.
+                await afsapi.nav_reset()
 
             # Return items in this folder
             children = [
