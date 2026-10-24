@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from aiohttp import ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
@@ -24,9 +24,13 @@ from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DATA_COMPONENT as CLIMATE_DATA_COMPONENT,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
+)
+from homeassistant.components.overkiz.climate.atlantic_pass_apc_zone_control_zone import (
+    AtlanticPassAPCZoneControlZone,
 )
 from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.overkiz.coordinator import (
@@ -961,6 +965,80 @@ ZONE_CONTROL_ZONE_REFRESH_COMMANDS: list[tuple[str, list[Any]]] = [
     ("refreshPassAPCCoolingProfile", []),
     ("refreshTargetTemperature", []),
 ]
+
+
+def _zone_entity(hass: HomeAssistant) -> AtlanticPassAPCZoneControlZone:
+    """Return the climate entity of the zone set up in a test."""
+    entity = hass.data[CLIMATE_DATA_COMPONENT].get_entity(ZONE_CONTROL_ZONE.entity_id)
+    assert isinstance(entity, AtlanticPassAPCZoneControlZone)
+    return entity
+
+
+@pytest.mark.parametrize(
+    ("device_hvac_mode", "command"),
+    [
+        (HVACMode.HEAT, "setHeatingTargetTemperature"),
+        (HVACMode.COOL, "setCoolingTargetTemperature"),
+    ],
+)
+async def test_zone_control_zone_with_a_single_side(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    device_hvac_mode: HVACMode,
+    command: str,
+) -> None:
+    """Test a zone that only heats or only cools writes the setpoint of its side."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    await _async_set_zone_control_operating_mode(hass, freezer, mock_client, "heating")
+    await _async_set_zone_program(hass, freezer, mock_client, "manu", "on")
+    mock_client.execute_action_group.reset_mock()
+
+    entity = _zone_entity(hass)
+    entity.__dict__["device_hvac_mode"] = device_hvac_mode
+    assert entity.active_hvac_mode == device_hvac_mode
+
+    await entity.async_set_temperature(**{ATTR_TEMPERATURE: 21.0})
+
+    assert_commands_call(
+        mock_client,
+        device_url=ZONE_CONTROL_ZONE.device_url,
+        commands=[(command, [21.0])],
+    )
+
+
+async def test_zone_control_zone_without_a_known_mode(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a zone without a known mode offers no target temperature."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+
+    entity = _zone_entity(hass)
+    entity.__dict__["device_hvac_mode"] = None
+
+    assert entity.supported_features == entity._attr_supported_features
+
+
+async def test_zone_control_zone_with_the_derogated_temperature_fallback(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a zone that behaves like a heating zone has no program setpoints."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    entity = _zone_entity(hass)
+
+    with patch.object(
+        AtlanticPassAPCZoneControlZone,
+        "is_using_derogated_temperature_fallback",
+        new_callable=PropertyMock,
+        return_value=True,
+    ):
+        assert entity.active_hvac_mode == entity.device_hvac_mode
+        assert entity.active_program_setpoints is None
+        assert entity.program_setpoints is None
+        assert entity.supported_features == entity._attr_supported_features
 
 
 @pytest.mark.parametrize(
