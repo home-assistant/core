@@ -2,11 +2,13 @@
 
 from typing import Any
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.google_travel_time.const import DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_OPTIONS, MOCK_CONFIG, MOCK_CONFIG_REFERRER
 
@@ -119,3 +121,15 @@ async def test_service_no_referrer_sent_to_api(
     assert str(url) == ROUTES_URL
     assert "Referer" not in headers
     assert headers["X-Goog-Api-Key"] == "api_key"
+
+
+async def test_service_timeout_raises_home_assistant_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a timeout raises a HomeAssistantError so continue_on_error works."""
+    aioclient_mock.post(ROUTES_URL, exc=TimeoutError())
+    config_entry = await _setup_config_entry(hass, MOCK_CONFIG)
+
+    with pytest.raises(HomeAssistantError, match="Timed out getting travel times"):
+        await _call_get_travel_times(hass, config_entry)
