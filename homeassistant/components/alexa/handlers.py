@@ -2,9 +2,13 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+from datetime import datetime
+import ipaddress
 import logging
 import math
 from typing import Any
+
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant import core as ha
 from homeassistant.components import (
@@ -112,10 +116,13 @@ from homeassistant.const import (
     EntityStateAttribute,
     UnitOfTemperature,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import network
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     TemperatureDeltaConverter,
@@ -128,12 +135,14 @@ from .const import (
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
+    DOMAIN,
     PRESET_MODE_NA,
     Cause,
     Inputs,
 )
-from .entities import async_get_entities
+from .entities import async_get_camera_entity, async_get_entities
 from .errors import (
+    AlexaEndpointUnreachableError,
     AlexaInvalidDirectiveError,
     AlexaInvalidValueError,
     AlexaSecurityPanelAuthorizationRequired,
@@ -147,6 +156,19 @@ from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_
 _LOGGER = logging.getLogger(__name__)
 DIRECTIVE_NOT_SUPPORTED = "Entity does not support directive"
 TO_REDACT_SERVICE_DATA = {ATTR_CODE}
+
+# Alexa expects the SDP answer within 6 seconds, including the Home Assistant
+# Cloud round trip, and does not support trickle ICE. Negotiation and candidate
+# gathering therefore share one overall deadline.
+RTC_ANSWER_TIMEOUT = 5
+RTC_CANDIDATE_GATHERING_TIMEOUT = 1.5
+
+# Alexa does not send SessionDisconnected when an Echo loses power or its network
+# connection, so sessions are closed after a maximum duration.
+RTC_MAX_SESSION_DURATION = 3600
+DATA_RTC_SESSIONS: HassKey[dict[str, ha.CALLBACK_TYPE]] = HassKey(
+    f"{DOMAIN}_rtc_sessions"
+)
 
 MIN_MAX_TEMP: dict[str, dict[str, str]] = {
     CLIMATE_DOMAIN: {
@@ -2204,4 +2226,262 @@ async def async_api_initialize_camera_stream(
     }
     return directive.response(
         name="Response", namespace="Alexa.CameraStreamController", payload=payload
+    )
+
+
+def _is_ipv4_candidate(candidate: str) -> bool:
+    """Return if the ICE candidate has an IPv4 address."""
+    parts = candidate.split()
+    try:
+        return ipaddress.ip_address(parts[4]).version == 4
+    except IndexError, ValueError:
+        return False
+
+
+def _embed_candidates(sdp: str, candidates: list[RTCIceCandidateInit]) -> str:
+    """Add gathered ICE candidates to the media sections of an SDP answer."""
+    lines = sdp.replace("\r\n", "\n").rstrip("\n").split("\n")
+    media_starts = [idx for idx, line in enumerate(lines) if line.startswith("m=")]
+    if not media_starts:
+        return sdp
+
+    mids: dict[str, int] = {}
+    for section, start in enumerate(media_starts):
+        end = media_starts[section + 1] if section + 1 < len(media_starts) else None
+        for line in lines[start:end]:
+            if line.startswith("a=mid:"):
+                mids[line.removeprefix("a=mid:")] = section
+
+    extra_lines: dict[int, list[str]] = {}
+    for candidate in candidates:
+        if not _is_ipv4_candidate(candidate.candidate):
+            _LOGGER.debug("Skipping non-IPv4 candidate %s", candidate.candidate)
+            continue
+        if candidate.sdp_mid is not None and candidate.sdp_mid in mids:
+            section = mids[candidate.sdp_mid]
+        elif (
+            candidate.sdp_m_line_index is not None
+            and candidate.sdp_m_line_index < len(media_starts)
+        ):
+            section = candidate.sdp_m_line_index
+        else:
+            _LOGGER.debug(
+                "Adding candidate %s to the first media section", candidate.candidate
+            )
+            section = 0
+        extra_lines.setdefault(section, []).append(f"a={candidate.candidate}")
+
+    result: list[str] = lines[: media_starts[0]]
+    for section, start in enumerate(media_starts):
+        end = media_starts[section + 1] if section + 1 < len(media_starts) else None
+        section_lines = [
+            line
+            for line in lines[start:end]
+            if line != "a=end-of-candidates"
+            and (
+                not line.startswith("a=candidate:")
+                or _is_ipv4_candidate(line.removeprefix("a="))
+            )
+        ]
+        result.extend(section_lines)
+        result.extend(extra_lines.get(section, []))
+        result.append("a=end-of-candidates")
+
+    return "\r\n".join(result) + "\r\n"
+
+
+async def _async_get_webrtc_answer(
+    hass: ha.HomeAssistant, camera_entity: camera.Camera, offer: str, session_id: str
+) -> str:
+    """Negotiate a WebRTC session and return a complete SDP answer."""
+    answer_future: asyncio.Future[str] = hass.loop.create_future()
+    gathering_done = asyncio.Event()
+    candidates: list[RTCIceCandidateInit] = []
+    error: str | None = None
+
+    @ha.callback
+    def send_message(message: camera.WebRTCMessage) -> None:
+        """Collect the answer and candidates from the camera.
+
+        Messages arriving after the answer is returned are ignored, since Alexa
+        does not support trickle ICE.
+        """
+        nonlocal error
+        match message:
+            case camera.WebRTCAnswer():
+                if not answer_future.done():
+                    answer_future.set_result(message.answer)
+            case camera.WebRTCCandidate(candidate=RTCIceCandidateInit() as candidate):
+                if candidate.candidate:
+                    candidates.append(candidate)
+                else:
+                    gathering_done.set()
+            case camera.WebRTCCandidate(candidate=candidate):
+                candidates.append(RTCIceCandidateInit(candidate.candidate))
+            case camera.WebRTCError():
+                error = message.message
+                gathering_done.set()
+                if not answer_future.done():
+                    answer_future.set_exception(HomeAssistantError(message.message))
+
+    deadline = hass.loop.time() + RTC_ANSWER_TIMEOUT
+    try:
+        async with asyncio.timeout_at(deadline):
+            await camera_entity.async_handle_async_webrtc_offer(
+                offer, session_id, send_message
+            )
+            answer = await answer_future
+    except TimeoutError as err:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            "Failed to negotiate WebRTC session: camera did not answer in time"
+        ) from err
+    except HomeAssistantError as err:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            f"Failed to negotiate WebRTC session: {err}"
+        ) from err
+
+    try:
+        async with asyncio.timeout_at(
+            min(deadline, hass.loop.time() + RTC_CANDIDATE_GATHERING_TIMEOUT)
+        ):
+            await gathering_done.wait()
+    except TimeoutError:
+        _LOGGER.debug(
+            "ICE candidate gathering for WebRTC session %s did not complete in time",
+            session_id,
+        )
+
+    if error is not None:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            f"Failed to negotiate WebRTC session: {error}"
+        )
+
+    answer = _embed_candidates(answer, candidates)
+    ipv4_candidates = [
+        line.removeprefix("a=")
+        for line in answer.split("\r\n")
+        if line.startswith("a=candidate:")
+    ]
+    if not ipv4_candidates:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            "Failed to negotiate WebRTC session: no IPv4 ICE candidates available"
+        )
+    _LOGGER.debug(
+        "WebRTC answer for session %s includes ICE candidates: %s",
+        session_id,
+        ipv4_candidates,
+    )
+    return answer
+
+
+def _get_webrtc_camera(hass: ha.HomeAssistant, entity_id: str) -> camera.Camera:
+    """Return the camera entity if it supports WebRTC."""
+    try:
+        camera_entity = camera.get_camera_from_entity_id(hass, entity_id)
+    except HomeAssistantError as err:
+        raise AlexaEndpointUnreachableError(str(err)) from err
+
+    if (
+        camera.StreamType.WEB_RTC
+        not in camera_entity.camera_capabilities.frontend_stream_types
+    ):
+        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
+
+    return camera_entity
+
+
+@HANDLERS.register(("Alexa.RTCSessionController", "InitiateSessionWithOffer"))
+async def async_api_initiate_session_with_offer(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
+    """Process an InitiateSessionWithOffer request."""
+    camera_entity = _get_webrtc_camera(hass, directive.entity.entity_id)
+    session_id: str = directive.payload["sessionId"]
+    offer: str = directive.payload["offer"]["value"]
+    _LOGGER.debug(
+        "Starting WebRTC session %s for %s", session_id, camera_entity.entity_id
+    )
+
+    start = hass.loop.time()
+    try:
+        answer = await _async_get_webrtc_answer(hass, camera_entity, offer, session_id)
+    except asyncio.CancelledError:
+        camera_entity.close_webrtc_session(session_id)
+        raise
+    _LOGGER.debug(
+        "Generated WebRTC answer for session %s in %.2f s",
+        session_id,
+        hass.loop.time() - start,
+    )
+
+    @ha.callback
+    def async_expire_session(_now: datetime) -> None:
+        """Close the session when Alexa did not disconnect it in time."""
+        hass.data[DATA_RTC_SESSIONS].pop(session_id, None)
+        _LOGGER.debug(
+            "WebRTC session %s for %s expired", session_id, camera_entity.entity_id
+        )
+        camera_entity.close_webrtc_session(session_id)
+
+    sessions = hass.data.setdefault(DATA_RTC_SESSIONS, {})
+    if cancel_expiry := sessions.pop(session_id, None):
+        cancel_expiry()
+    sessions[session_id] = async_call_later(
+        hass, RTC_MAX_SESSION_DURATION, async_expire_session
+    )
+
+    return directive.response(
+        name="AnswerGeneratedForSession",
+        namespace="Alexa.RTCSessionController",
+        payload={"answer": {"format": "SDP", "value": answer}},
+    )
+
+
+@HANDLERS.register(("Alexa.RTCSessionController", "SessionConnected"))
+async def async_api_rtc_session_connected(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
+    """Process a SessionConnected request."""
+    session_id: str = directive.payload["sessionId"]
+    _LOGGER.debug("WebRTC session %s connected for %s", session_id, directive.entity_id)
+    return directive.response(
+        name="SessionConnected",
+        namespace="Alexa.RTCSessionController",
+        payload={"sessionId": session_id},
+    )
+
+
+@HANDLERS.register(("Alexa.RTCSessionController", "SessionDisconnected"))
+async def async_api_rtc_session_disconnected(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
+    """Process a SessionDisconnected request."""
+    session_id: str = directive.payload["sessionId"]
+    _LOGGER.debug(
+        "WebRTC session %s disconnected for %s", session_id, directive.entity_id
+    )
+    if cancel_expiry := hass.data.get(DATA_RTC_SESSIONS, {}).pop(session_id, None):
+        cancel_expiry()
+    if camera_entity := async_get_camera_entity(hass, directive.entity.entity_id):
+        camera_entity.close_webrtc_session(session_id)
+    else:
+        _LOGGER.debug("Cannot close WebRTC session %s: camera not found", session_id)
+
+    return directive.response(
+        name="SessionDisconnected",
+        namespace="Alexa.RTCSessionController",
+        payload={"sessionId": session_id},
     )
