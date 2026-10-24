@@ -1,29 +1,102 @@
 {
+  "application_credentials": {
+    "description": "For development and local testing, request OAuth credentials from NuHeat/Chemelex using the [OpenAPI documentation]({docs_url}). Do not use credentials extracted from a mobile app. An official integration should use Home Assistant Cloud Account Linking."
+  },
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_thermostat": "The thermostat serial number is invalid.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "Unable to connect to NuHeat.",
+      "invalid_account_identity": "NuHeat authorization did not provide a valid account identity. No settings were changed.",
+      "invalid_auth": "NuHeat rejected the authorization.",
+      "migration_account_mismatch": "The linked NuHeat account does not contain this thermostat. No legacy settings were changed.",
+      "migration_failed": "NuHeat migration could not be completed. No legacy config entry was removed.",
+      "migration_successful": "NuHeat was reconnected successfully and matching legacy thermostats were consolidated.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_oauth_credentials": "OAuth application credentials are required for this development build. A future official Home Assistant integration should use centrally managed credentials.",
+      "reauth_account_mismatch": "The linked NuHeat account does not match the existing account."
     },
     "step": {
-      "user": {
+      "migration_confirm": {
+        "description": "{thermostat} uses the obsolete username/password API. Create a Home Assistant backup before continuing. Stored legacy credentials are retained until the NuHeat account and thermostat are validated, then removed after successful migration.",
+        "title": "Reconnect NuHeat"
+      },
+      "pick_implementation": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "serial_number": "Serial number of the thermostat.",
-          "username": "[%key:common::config_flow::data::username%]"
+          "implementation": "[%key:common::config_flow::data::implementation%]"
         },
-        "description": "You will need to obtain your thermostat’s numeric serial number or ID by logging into {nuheat_url} and selecting your thermostat(s).",
-        "title": "Connect to the NuHeat"
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The authorization for {account} has expired. Link the account again.",
+        "title": "Relink NuHeat"
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "permanent_hold": "Permanent hold",
+              "run_schedule": "Run schedule",
+              "temporary_hold": "Temporary hold"
+            }
+          }
+        }
       }
     }
   },
   "exceptions": {
-    "login_failed": {
-      "message": "Failed to log in to NuHeat"
+    "invalid_hold_temperature": {
+      "message": "Choose a finite temperature within the thermostat's supported range, using Home Assistant's temperature unit."
+    },
+    "invalid_hold_time": {
+      "message": "Choose a future hold expiry. Ambiguous or nonexistent local times require a valid explicit UTC offset."
+    },
+    "legacy_migration_required": {
+      "message": "This NuHeat entry must be reconnected through OAuth."
+    },
+    "oauth_subject_migration_duplicate": {
+      "message": "Another NuHeat entry already uses this OAuth account subject. No settings were changed."
+    },
+    "oauth_subject_migration_failed": {
+      "message": "The stored NuHeat authorization has no valid account subject. Reauthenticate the entry before retrying migration."
+    },
+    "unsupported_preset": {
+      "message": "The preset {preset} is not supported by NuHeat."
+    },
+    "unsupported_state": {
+      "message": "NuHeat reported thermostat state {state}, which cannot be controlled safely. Refresh before retrying."
+    }
+  },
+  "issues": {
+    "migration_cleanup_incomplete": {
+      "description": "NuHeat account migration succeeded, but one or more obsolete config entries could not be removed. Home Assistant will retry cleanup when the surviving NuHeat account loads. The migrated thermostats remain attached to the account entry. Restore a Home Assistant backup if cleanup cannot be completed.",
+      "title": "NuHeat migration cleanup is incomplete"
+    },
+    "migration_rollback_failed": {
+      "description": "Home Assistant could not completely restore local NuHeat registry or config-entry state after a migration failure. Stop retrying migration and restore the Home Assistant backup made before migration testing.",
+      "title": "NuHeat migration rollback needs manual recovery"
+    }
+  },
+  "services": {
+    "set_temporary_hold": {
+      "description": "Hold a target until a future date and time. Local times use Home Assistant's timezone.",
+      "fields": {
+        "hold_until": {
+          "description": "Future expiry in Home Assistant's timezone. Use an explicit UTC offset for ambiguous local times.",
+          "name": "Hold until"
+        },
+        "temperature": {
+          "description": "Target in Home Assistant's temperature unit (Celsius or Fahrenheit).",
+          "name": "Target temperature"
+        }
+      },
+      "name": "Set temporary hold"
     }
   }
 }

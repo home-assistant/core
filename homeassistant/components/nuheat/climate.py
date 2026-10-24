@@ -1,276 +1,408 @@
-"""Support for NuHeat thermostats."""
+"""Climate entities for NuHeat thermostats."""
 
-import logging
+from asyncio import Lock
+from datetime import UTC, datetime
+from math import isfinite
 from typing import Any, override
+from zoneinfo import ZoneInfo
 
-from nuheat.config import SCHEDULE_HOLD, SCHEDULE_RUN, SCHEDULE_TEMPORARY_HOLD
-from nuheat.util import (
-    celsius_to_nuheat,
-    fahrenheit_to_nuheat,
-    nuheat_to_celsius,
-    nuheat_to_fahrenheit,
-)
+from chemelex_nuheat import ScheduleMode, Thermostat, ThermostatState
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import event as event_helper
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN, MANUFACTURER, NUHEAT_API_STATE_SHIFT_DELAY
-from .coordinator import NuHeatConfigEntry, NuHeatCoordinator
-
-_LOGGER = logging.getLogger(__name__)
-
-
-# The device does not have an off function.
-# To turn it off set to min_temp and PRESET_PERMANENT_HOLD
-OPERATION_LIST = [HVACMode.AUTO, HVACMode.HEAT]
-
-PRESET_RUN = "Run Schedule"
-PRESET_TEMPORARY_HOLD = "Temporary Hold"
-PRESET_PERMANENT_HOLD = "Permanent Hold"
-
-PRESET_MODES = [PRESET_RUN, PRESET_TEMPORARY_HOLD, PRESET_PERMANENT_HOLD]
-
-PRESET_MODE_TO_SCHEDULE_MODE_MAP = {
-    PRESET_RUN: SCHEDULE_RUN,
-    PRESET_TEMPORARY_HOLD: SCHEDULE_TEMPORARY_HOLD,
-    PRESET_PERMANENT_HOLD: SCHEDULE_HOLD,
-}
-
-SCHEDULE_MODE_TO_PRESET_MODE_MAP = {
-    value: key for key, value in PRESET_MODE_TO_SCHEDULE_MODE_MAP.items()
-}
+from . import NuHeatConfigEntry
+from .behavior import (
+    api_mode_for_hvac_mode,
+    api_mode_for_preset,
+    hvac_mode_for_thermostat,
+    preset_for_thermostat,
+    setpoint_command_mode,
+)
+from .const import DOMAIN, PRESET_MODES
+from .coordinator import NuHeatCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: NuHeatConfigEntry,
+    entry: NuHeatConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the NuHeat thermostat(s)."""
-    coordinator = config_entry.runtime_data
+    """Create entities initially and when later polls discover thermostats."""
+    coordinator = entry.runtime_data.coordinator
+    known_serials: set[str] = set()
 
-    temperature_unit = hass.config.units.temperature_unit
+    def async_add_new_entities() -> None:
+        new_serials = set(coordinator.data or {}) - known_serials
+        if not new_serials:
+            return
+        known_serials.update(new_serials)
+        async_add_entities(
+            NuHeatClimateEntity(coordinator, serial_number)
+            for serial_number in sorted(new_serials)
+        )
 
-    entity = NuHeatThermostat(coordinator, coordinator.thermostat, temperature_unit)
-
-    # No longer need a service as set_hvac_mode to auto does this
-    # since climate 1.0 has been implemented
-
-    async_add_entities([entity], True)
+    async_add_new_entities()
+    entry.async_on_unload(coordinator.async_add_listener(async_add_new_entities))
 
 
-class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
-    """Representation of a NuHeat Thermostat."""
+class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
+    """A NuHeat radiant-floor thermostat."""
 
-    _attr_hvac_modes = OPERATION_LIST
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
-    )
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "thermostat"
+    _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
     _attr_preset_modes = PRESET_MODES
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
 
-    def __init__(self, coordinator, thermostat, temperature_unit):
-        """Initialize the thermostat."""
+    def __init__(self, coordinator: NuHeatCoordinator, serial_number: str) -> None:
+        """Initialize a NuHeat thermostat entity."""
         super().__init__(coordinator)
-        self._thermostat = thermostat
-        self._temperature_unit = temperature_unit
-        self._schedule_mode = None
-        self._target_temperature = None
-        self._attr_unique_id = thermostat.serial_number
+        self._serial_number = serial_number
+        self._setpoint_lock = Lock()
+        self._attr_unique_id = serial_number
+        self._attr_native_temperature_unit = (
+            coordinator.hass.config.units.temperature_unit
+        )
+        self._attr_target_temperature_step = (
+            0.5
+            if self._attr_native_temperature_unit == UnitOfTemperature.CELSIUS
+            else 1.0
+        )
 
     @property
-    @override
-    def native_temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        if self._temperature_unit == "C":
-            return UnitOfTemperature.CELSIUS
+    def thermostat(self) -> Thermostat:
+        """Return the latest thermostat state."""
+        return self.coordinator.data[self._serial_number]
 
-        return UnitOfTemperature.FAHRENHEIT
+    def _from_celsius(self, value: float) -> float:
+        return TemperatureConverter.convert(
+            value, UnitOfTemperature.CELSIUS, self.native_temperature_unit
+        )
+
+    def _to_celsius(self, value: float) -> float:
+        return TemperatureConverter.convert(
+            value, self.native_temperature_unit, UnitOfTemperature.CELSIUS
+        )
 
     @property
-    @override
-    def native_current_temperature(self) -> int | None:
-        """Return the current temperature."""
-        if self._temperature_unit == "C":
-            return self._thermostat.celsius
+    def _optimistic_standby(self) -> bool:
+        """Bound Standby display to the coordinator's current intent."""
+        return (
+            self.coordinator.pending_mode(self._serial_number)
+            is ThermostatState.STANDBY
+        )
 
-        return self._thermostat.fahrenheit
+    def _command_temperature(self) -> float | None:
+        """Preserve an accepted target while switching mode before readback."""
+        if (
+            pending := self.coordinator.pending_setpoint(self._serial_number)
+        ) is not None:
+            return pending
+        return self.thermostat.target_temperature
 
     @property
     @override
     def available(self) -> bool:
-        """Return the unique id."""
-        return self.coordinator.last_update_success and self._thermostat.online
-
-    @override
-    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set the system mode."""
-        if hvac_mode == HVACMode.AUTO:
-            self._set_schedule_mode(SCHEDULE_RUN)
-        elif hvac_mode == HVACMode.HEAT:
-            self._set_schedule_mode(SCHEDULE_HOLD)
+        return super().available and self.coordinator.is_thermostat_available(
+            self._serial_number
+        )
 
     @property
     @override
-    def hvac_mode(self) -> HVACMode:
-        """Return current setting heat or auto."""
-        if self._schedule_mode in (SCHEDULE_TEMPORARY_HOLD, SCHEDULE_HOLD):
-            return HVACMode.HEAT
-        return HVACMode.AUTO
+    def native_current_temperature(self) -> float | None:
+        if (temperature := self.thermostat.current_temperature) is None:
+            return None
+        return self._from_celsius(temperature)
 
     @property
     @override
-    def hvac_action(self) -> HVACAction:
-        """Return current operation heat or idle."""
-        return HVACAction.HEATING if self._thermostat.heating else HVACAction.IDLE
+    def native_target_temperature(self) -> float | None:
+        if (
+            pending := self.coordinator.pending_setpoint(self._serial_number)
+        ) is not None:
+            return self._from_celsius(pending)
+        if self._optimistic_standby or self.thermostat.state is ThermostatState.STANDBY:
+            return None
+        if (temperature := self.thermostat.target_temperature) is None:
+            return None
+        return self._from_celsius(temperature)
 
     @property
     @override
     def min_temp(self) -> float:
-        """Return the minimum supported temperature for the thermostat."""
-        if self._temperature_unit == "C":
-            return self._thermostat.min_celsius
-
-        return self._thermostat.min_fahrenheit
+        # OpenAPI v2 does not expose the thermostat's native minimum.
+        return self._from_celsius(DEFAULT_MIN_TEMP)
 
     @property
     @override
     def max_temp(self) -> float:
-        """Return the maximum supported temperature for the thermostat."""
-        if self._temperature_unit == "C":
-            return self._thermostat.max_celsius
-
-        return self._thermostat.max_fahrenheit
+        # OpenAPI v2 does not expose the thermostat's native maximum.
+        return self._from_celsius(DEFAULT_MAX_TEMP)
 
     @property
     @override
-    def native_target_temperature(self) -> int:
-        """Return the currently programmed temperature."""
-        if self._temperature_unit == "C":
-            return nuheat_to_celsius(self._target_temperature)
-
-        return nuheat_to_fahrenheit(self._target_temperature)
+    def hvac_mode(self) -> HVACMode | None:
+        if self._optimistic_standby:
+            return HVACMode.OFF
+        return hvac_mode_for_thermostat(self.thermostat)
 
     @property
     @override
-    def preset_mode(self) -> str:
-        """Return current preset mode."""
-        return SCHEDULE_MODE_TO_PRESET_MODE_MAP.get(self._schedule_mode, PRESET_RUN)
+    def hvac_action(self) -> HVACAction:
+        if self._optimistic_standby or self.thermostat.state is ThermostatState.STANDBY:
+            return HVACAction.OFF
+        return HVACAction.HEATING if self.thermostat.heating else HVACAction.IDLE
+
+    @property
+    @override
+    def assumed_state(self) -> bool:
+        """Return whether a successful command is awaiting cloud confirmation."""
+        return (
+            self.coordinator.pending_mode(self._serial_number) is not None
+            or self.coordinator.pending_setpoint(self._serial_number) is not None
+        )
+
+    @property
+    @override
+    def preset_mode(self) -> str | None:
+        return preset_for_thermostat(self.thermostat)
 
     @override
-    def set_preset_mode(self, preset_mode: str) -> None:
-        """Update the hold mode of the thermostat."""
-        self._set_schedule_mode(
-            PRESET_MODE_TO_SCHEDULE_MODE_MAP.get(preset_mode, SCHEDULE_RUN)
-        )
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        # Serialize setpoints so a slow earlier command cannot replace a newer
+        # request with its completion. Keep vendor mode/hold selection unchanged.
+        async with self._setpoint_lock:
+            await self._async_set_temperature(**kwargs)
 
-    def _set_schedule_mode(self, schedule_mode):
-        """Set a schedule mode."""
-        self._schedule_mode = schedule_mode
-        # Changing the property here does the actual set
-        self._thermostat.schedule_mode = schedule_mode
-        self._schedule_update()
-
-    @override
-    def set_temperature(self, **kwargs: Any) -> None:
-        """Set a new target temperature."""
-        self._set_temperature_and_mode(
-            kwargs.get(ATTR_TEMPERATURE), hvac_mode=kwargs.get(ATTR_HVAC_MODE)
-        )
-
-    def _set_temperature_and_mode(self, temperature, hvac_mode=None, preset_mode=None):
-        """Set temperature and hvac mode at the same time."""
-        if self._temperature_unit == "C":
-            target_temperature = celsius_to_nuheat(temperature)
-        else:
-            target_temperature = fahrenheit_to_nuheat(temperature)
-
-        # If they set a temperature without changing the mode
-        # to heat, we behave like the device does locally
-        # and set a temp hold.
-        target_schedule_mode = SCHEDULE_TEMPORARY_HOLD
-        if preset_mode:
-            target_schedule_mode = PRESET_MODE_TO_SCHEDULE_MODE_MAP.get(
-                preset_mode, SCHEDULE_RUN
-            )
-        elif self._schedule_mode == SCHEDULE_HOLD or (
-            hvac_mode and hvac_mode == HVACMode.HEAT
-        ):
-            target_schedule_mode = SCHEDULE_HOLD
-
-        _LOGGER.debug(
-            "Setting NuHeat thermostat temperature to %s %s and schedule mode: %s",
-            temperature,
-            self.native_temperature_unit,
-            target_schedule_mode,
-        )
-
-        self._thermostat.set_target_temperature(
-            target_temperature, target_schedule_mode
-        )
-        self._schedule_mode = target_schedule_mode
-        self._target_temperature = target_temperature
-        self._schedule_update()
-
-    def _schedule_update(self):
-        if not self.hass:
+    async def _async_set_temperature(self, **kwargs: Any) -> None:
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
             return
+        requested_hvac_mode = kwargs.get(ATTR_HVAC_MODE)
+        pending_mode = self.coordinator.pending_mode(self._serial_number)
+        if (
+            self.hvac_mode is HVACMode.OFF
+            and requested_hvac_mode is None
+            and pending_mode in (None, ThermostatState.STANDBY)
+        ):
+            # A setpoint from OFF exits Standby using Manual.
+            requested_hvac_mode = HVACMode.HEAT
+        try:
+            if requested_hvac_mode is None and pending_mode in (
+                ThermostatState.SCHEDULED,
+                ThermostatState.TIMED_HOLD,
+                ThermostatState.PERMANENT_HOLD,
+                ThermostatState.MANUAL,
+            ):
+                mode = {
+                    ThermostatState.SCHEDULED: ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE,
+                    ThermostatState.TIMED_HOLD: ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE,
+                    ThermostatState.PERMANENT_HOLD: ScheduleMode.PERMANENT_HOLD,
+                    ThermostatState.MANUAL: ScheduleMode.MANUAL,
+                }[pending_mode]
+            else:
+                mode = setpoint_command_mode(self.thermostat, requested_hvac_mode)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_state",
+                translation_placeholders={"state": self.thermostat.state},
+            ) from err
+        temperature_celsius = self._to_celsius(float(temperature))
+        hold_until = None
+        if (
+            pending_mode is None
+            and mode is ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE
+            and self.thermostat.state is ThermostatState.TIMED_HOLD
+            and self.thermostat.hold_until is not None
+        ):
+            hold_until = self.thermostat.hold_until
+        if (
+            requested_hvac_mode is None
+            and (
+                pending_until := self.coordinator.pending_hold_until(
+                    self._serial_number
+                )
+            )
+            is not None
+        ):
+            mode = ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE
+            hold_until = pending_until
+        await self._async_write_setpoint(temperature_celsius, mode, hold_until)
 
-        # Update the new state
-        self.schedule_update_ha_state(False)
+    async def async_set_temporary_hold(
+        self, temperature: float, hold_until: datetime
+    ) -> None:
+        """Hold a target until an explicit future time in HA's timezone."""
+        async with self._setpoint_lock:
+            temperature_celsius = self._to_celsius(temperature)
+            if not isfinite(temperature_celsius) or not (
+                DEFAULT_MIN_TEMP <= temperature_celsius <= DEFAULT_MAX_TEMP
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_hold_temperature",
+                )
+            if hold_until.tzinfo is None:
+                zone = ZoneInfo(self.hass.config.time_zone)
+                candidates = [
+                    hold_until.replace(tzinfo=zone, fold=fold) for fold in (0, 1)
+                ]
+                valid = [
+                    item
+                    for item in candidates
+                    if item.astimezone(UTC).astimezone(zone).replace(tzinfo=None)
+                    == hold_until
+                ]
+                if not valid or len({item.utcoffset() for item in valid}) != 1:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN, translation_key="invalid_hold_time"
+                    )
+                hold_until = valid[0]
+            hold_until = hold_until.astimezone(UTC)
+            if hold_until <= dt_util.utcnow():
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="invalid_hold_time"
+                )
+            await self._async_write_setpoint(
+                temperature_celsius, ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE, hold_until
+            )
 
-        # nuheat has a delay switching state
-        # so we schedule a poll of the api
-        # in the future to make sure the change actually
-        # took effect
-        event_helper.call_later(
-            self.hass, NUHEAT_API_STATE_SHIFT_DELAY, self._forced_refresh
+    async def _async_write_setpoint(
+        self,
+        temperature_celsius: float,
+        mode: ScheduleMode,
+        hold_until: datetime | None = None,
+    ) -> None:
+        """Share the existing write, optimism and reconciliation contract."""
+        command_kwargs: dict[str, Any] = {"mode": mode}
+        if hold_until is not None:
+            command_kwargs["hold_until"] = hold_until
+        try:
+            await self.coordinator.api.set_target_temperature(
+                self._serial_number,
+                temperature_celsius,
+                **command_kwargs,
+            )
+        except Exception:
+            # The library also GETs after PUT: an exception need not mean that
+            # the write failed. Read later, without retrying or assuming success.
+            self.coordinator.async_schedule_reconciliation()
+            raise
+        self.coordinator.async_set_pending_mode(self._serial_number, mode)
+        self.coordinator.async_set_pending_setpoint(
+            self._serial_number, temperature_celsius, hold_until=hold_until
         )
-
-    async def _forced_refresh(self, *_) -> None:
-        """Force a refresh."""
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._update_internal_state()
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        async with self._setpoint_lock:
+            await self._async_set_hvac_mode(hvac_mode)
 
-    @callback
-    def _update_internal_state(self):
-        """Update our internal state from the last api response."""
-        self._schedule_mode = self._thermostat.schedule_mode
-        self._target_temperature = self._thermostat.target_temperature
+    async def _async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        if hvac_mode is HVACMode.OFF:
+            await self._async_turn_off()
+            return
+        mode = api_mode_for_hvac_mode(hvac_mode)
+        try:
+            if mode is ScheduleMode.AUTO:
+                await self.coordinator.api.set_schedule_mode(self._serial_number, mode)
+            else:
+                await self.coordinator.api.set_schedule_mode(
+                    self._serial_number,
+                    mode,
+                    temperature=self._command_temperature(),
+                )
+        except Exception:
+            self.coordinator.async_schedule_reconciliation()
+            raise
+        self.coordinator.async_clear_pending_setpoint(self._serial_number)
+        self.coordinator.async_set_pending_mode(self._serial_number, mode)
+        await self.coordinator.async_request_refresh()
 
-    @callback
     @override
-    def _handle_coordinator_update(self):
-        """Get the latest state from the thermostat."""
-        self._update_internal_state()
-        self.async_write_ha_state()
+    async def async_turn_off(self) -> None:
+        """Enter NuHeat's frost-protected Standby state."""
+        async with self._setpoint_lock:
+            await self._async_turn_off()
+
+    async def _async_turn_off(self) -> None:
+        try:
+            await self.coordinator.api.set_standby(self._serial_number)
+        except Exception:
+            self.coordinator.async_schedule_reconciliation()
+            raise
+        self.coordinator.async_clear_pending_setpoint(self._serial_number)
+        self.coordinator.async_set_pending_mode(self._serial_number, None)
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Resume the schedule and exit Standby."""
+        await self.async_set_hvac_mode(HVACMode.AUTO)
+
+    @override
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        async with self._setpoint_lock:
+            await self._async_set_preset_mode(preset_mode)
+
+    async def _async_set_preset_mode(self, preset_mode: str) -> None:
+        try:
+            mode = api_mode_for_preset(preset_mode)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_preset",
+                translation_placeholders={"preset": preset_mode},
+            ) from err
+        try:
+            if mode is ScheduleMode.AUTO:
+                await self.coordinator.api.set_schedule_mode(self._serial_number, mode)
+            else:
+                # Permanent Hold uses the verified v1 schedule-mode-3 request;
+                # Temporary Hold without an end lasts until the next schedule event.
+                await self.coordinator.api.set_schedule_mode(
+                    self._serial_number,
+                    mode,
+                    temperature=self._command_temperature(),
+                )
+        except Exception:
+            self.coordinator.async_schedule_reconciliation()
+            raise
+        self.coordinator.async_clear_pending_setpoint(self._serial_number)
+        self.coordinator.async_set_pending_mode(self._serial_number, mode)
+        await self.coordinator.async_request_refresh()
 
     @property
     @override
     def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self._thermostat.serial_number)},
-            serial_number=self._thermostat.serial_number,
-            name=self._thermostat.room,
-            model="nVent Signature",
-            manufacturer=MANUFACTURER,
-            suggested_area=self._thermostat.room,
+            identifiers={(DOMAIN, self._serial_number)},
+            serial_number=self._serial_number,
+            name=self.thermostat.name or self._serial_number,
+            manufacturer="Chemelex / NuHeat",
+            suggested_area=self.thermostat.name,
         )

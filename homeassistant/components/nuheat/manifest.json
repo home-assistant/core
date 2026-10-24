@@ -4,6 +4,7 @@
   "categories": ["climate.thermostats_heating"],
   "codeowners": ["@tstabrawa"],
   "config_flow": true,
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "hostname": "nuheat",
@@ -11,8 +12,8 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/nuheat",
-  "integration_type": "device",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "loggers": ["nuheat"],
-  "requirements": ["nuheat==1.0.1"]
+  "loggers": ["chemelex_nuheat"],
+  "requirements": ["chemelex-nuheat==0.1.2"]
 }
