@@ -1,8 +1,9 @@
 """Coordinator to handle Opower connections."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
+import math
 from typing import Any, cast, override
 
 from opower import (
@@ -12,6 +13,7 @@ from opower import (
     Forecast,
     MeterType,
     Opower,
+    ReadComponent,
     ReadResolution,
     create_cookie_jar,
 )
@@ -26,6 +28,7 @@ from homeassistant.components.recorder.models import (
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
+    get_metadata,
     statistics_during_period,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -35,7 +38,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.unit_conversion import EnergyConverter, VolumeConverter
 
 from .const import CONF_LOGIN_DATA, CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
@@ -55,6 +58,218 @@ class OpowerData:
     last_updated: datetime
 
 
+# The four statistics kept per rate period, mirroring the account totals:
+# consumption and cost hold the positive side of the period's components,
+# return and compensation the negative side (energy exported to the grid
+# and the money received for it).
+_RATE_PERIOD_KINDS = ("consumption", "return", "cost", "compensation")
+
+
+@dataclass
+class _RatePeriodStatistics:
+    """Statistics of one rate period (a time-of-use period or a tier)."""
+
+    metadata: dict[str, StatisticMetaData]
+    sums: dict[str, float] = field(
+        default_factory=lambda: dict.fromkeys(_RATE_PERIOD_KINDS, 0.0)
+    )
+    statistics: dict[str, list[StatisticData]] = field(
+        default_factory=lambda: {kind: [] for kind in _RATE_PERIOD_KINDS}
+    )
+    # Start of the stored point each statistic continues from, None for a
+    # statistic that is not stored yet. Each of the four is independent, so a
+    # statistic deleted by hand is rebuilt while the others carry on.
+    last_stats_time: dict[str, float | None] = field(
+        default_factory=lambda: dict.fromkeys(_RATE_PERIOD_KINDS)
+    )
+
+    def statistic_ids(self) -> set[str]:
+        """Return the statistic ids of this period."""
+        return {metadata["statistic_id"] for metadata in self.metadata.values()}
+
+
+def _rate_period_key(component: ReadComponent) -> str | None:
+    """Return the rate period key of a read component.
+
+    Time-of-use utilities report the period in day_part, e.g. "ON_PEAK+RT02/TOD"
+    where the period is the part before the "+". Tiered utilities report the
+    tier in tier_number. A rate that is both reports both, and each
+    combination is billed at its own price, so the key keeps both, e.g.
+    "off_peak_tier_2". Returns None if the component has neither.
+    """
+    parts = []
+    if component.day_part:
+        parts.append(component.day_part.split("+", 1)[0])
+    if component.tier_number is not None:
+        parts.append(f"tier_{component.tier_number}")
+    return slugify("_".join(parts)) or None
+
+
+def _read_resolution(cost_read: CostRead) -> str:
+    """Return the resolution of a read: hour, day or bill."""
+    hours = round((cost_read.end_time - cost_read.start_time).total_seconds() / 3600)
+    if hours <= 1:
+        return "hour"
+    if hours <= 25:
+        return "day"
+    return "bill"
+
+
+def _read_adds_up(cost_read: CostRead) -> bool:
+    """Return whether the read's components add up to the read."""
+    if any(
+        _rate_period_key(component) is None
+        for component in cost_read.read_components
+        if component.consumption or component.cost
+    ):
+        return False
+    return math.isclose(
+        sum(component.consumption for component in cost_read.read_components),
+        cost_read.consumption,
+        rel_tol=1e-3,
+        abs_tol=1e-2,
+    ) and math.isclose(
+        sum(component.cost for component in cost_read.read_components),
+        cost_read.provided_cost,
+        rel_tol=1e-3,
+        abs_tol=1e-2,
+    )
+
+
+def _period_reads(cost_reads: list[CostRead]) -> list[CostRead]:
+    """Return the reads that feed the rate periods.
+
+    Only reads with a breakdown do, so monthly bills never do. Some utilities
+    return daily components that do not add up to the read they belong to,
+    while their hourly components do. Feeding the days that happen to add up
+    and nothing for the rest would store a patchwork that looks like real
+    history, so a resolution feeds the periods as a whole or not at all: if
+    any of its reads with a breakdown does not add up, none of them do. On
+    such a utility the periods start where the hourly reads start and grow
+    from there, as the daily reads never replace the stored hourly points.
+    """
+    reads_by_resolution: dict[str, list[CostRead]] = {}
+    for cost_read in cost_reads:
+        if cost_read.read_components:
+            reads_by_resolution.setdefault(_read_resolution(cost_read), []).append(
+                cost_read
+            )
+    qualified = set()
+    for resolution, reads in reads_by_resolution.items():
+        if all(_read_adds_up(cost_read) for cost_read in reads):
+            qualified.add(resolution)
+        else:
+            _LOGGER.debug(
+                "Leaving the %s reads out of the rate periods: components do not"
+                " add up to the reads",
+                resolution,
+            )
+    return [
+        cost_read
+        for cost_read in cost_reads
+        if cost_read.read_components and _read_resolution(cost_read) in qualified
+    ]
+
+
+def _rate_period_statistics(
+    key: str,
+    id_prefix: str,
+    name_prefix: str,
+    consumption_unit_class: str,
+    consumption_unit: str,
+) -> _RatePeriodStatistics:
+    """Return the four statistics of the rate period with the given key."""
+    label = key.replace("_", " ")
+    return _RatePeriodStatistics(
+        metadata={
+            kind: StatisticMetaData(
+                mean_type=StatisticMeanType.NONE,
+                has_sum=True,
+                name=f"{name_prefix} {label} {kind}",
+                source=DOMAIN,
+                statistic_id=f"{DOMAIN}:{id_prefix}_{key}_energy_{kind}",
+                unit_class=(
+                    consumption_unit_class
+                    if kind in ("consumption", "return")
+                    else None
+                ),
+                unit_of_measurement=(
+                    consumption_unit if kind in ("consumption", "return") else None
+                ),
+            )
+            for kind in _RATE_PERIOD_KINDS
+        }
+    )
+
+
+def _rate_periods(
+    period_reads: list[CostRead],
+    id_prefix: str,
+    name_prefix: str,
+    consumption_unit_class: str,
+    consumption_unit: str,
+) -> dict[str, _RatePeriodStatistics]:
+    """Return the rate periods (time-of-use periods or tiers) found in the reads.
+
+    Utilities on time-of-use or tiered rates break each read down into
+    components, one per rate period. The same four statistics as for the
+    account totals are created for every period so the Energy dashboard can
+    show how much energy and money went to each one. Utilities without
+    components get no additional statistics. Components that contribute
+    nothing are ignored, so a period that never moves is not created.
+    """
+    rate_periods: dict[str, _RatePeriodStatistics] = {}
+    for cost_read in period_reads:
+        for component in cost_read.read_components:
+            if not (component.consumption or component.cost):
+                continue
+            if (key := _rate_period_key(component)) is None or key in rate_periods:
+                continue
+            rate_periods[key] = _rate_period_statistics(
+                key, id_prefix, name_prefix, consumption_unit_class, consumption_unit
+            )
+    if rate_periods:
+        _LOGGER.debug("Found rate periods: %s", list(rate_periods))
+    return rate_periods
+
+
+def _stored_rate_period_keys(
+    hass: HomeAssistant, id_prefix: str, name_prefix: str
+) -> set[str]:
+    """Return the keys of the rate periods with stored statistics.
+
+    Statistic ids replace "-" with "_", so the ids of an account whose id is a
+    prefix of another's, e.g. "123" and "123-456", nest. The statistic names
+    keep the account id as is, so a stored statistic only counts as one of
+    this account's periods when its name is the one this account would give
+    that period. Otherwise the totals of the other account would be taken for
+    a period of this one and written over.
+    """
+    prefix = f"{DOMAIN}:{id_prefix}_"
+    keys = set()
+    for statistic_id, (_, metadata) in get_metadata(
+        hass, statistic_source=DOMAIN
+    ).items():
+        if not statistic_id.startswith(prefix):
+            continue
+        for kind in _RATE_PERIOD_KINDS:
+            suffix = f"_energy_{kind}"
+            if not statistic_id.endswith(suffix):
+                continue
+            key = statistic_id[len(prefix) : -len(suffix)]
+            label = key.replace("_", " ")
+            if key and metadata["name"] == f"{name_prefix} {label} {kind}":
+                keys.add(key)
+            break
+    return keys
+
+
+def _safe_get_sum(records: list[Any]) -> float:
+    if records and "sum" in records[0]:
+        return float(records[0]["sum"])
+    return 0.0
+
+
 class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
     """Handle fetching Opower data, updating sensors and inserting statistics."""
 
@@ -66,6 +281,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         config_entry: OpowerConfigEntry,
     ) -> None:
         """Initialize the data handler."""
+        # Rate period statistics the full history could not fill this run.
+        self._rate_period_backfills: set[str] = set()
         super().__init__(
             hass,
             _LOGGER,
@@ -296,11 +513,6 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 # so statistics_during_period should also have found at least one.
                 assert stats
 
-                def _safe_get_sum(records: list[Any]) -> float:
-                    if records and "sum" in records[0]:
-                        return float(records[0]["sum"])
-                    return 0.0
-
                 cost_sum = _safe_get_sum(stats.get(cost_statistic_id, []))
                 compensation_sum = _safe_get_sum(
                     stats.get(compensation_statistic_id, [])
@@ -317,6 +529,93 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 last_changed_per_account[account.utility_account_id] = (
                     dt_util.utc_from_timestamp(last_stats_time)
                 )
+
+            # The rate periods are fed from the reads with a breakdown. A
+            # period with stored statistics is kept even when the reads no
+            # longer mention it, so a corrected read that drops it still
+            # replaces its old point with a zero one.
+            period_reads = _period_reads(cost_reads)
+            rate_periods = _rate_periods(
+                period_reads,
+                id_prefix,
+                name_prefix,
+                consumption_unit_class,
+                consumption_unit,
+            )
+            stored_keys = await get_instance(self.hass).async_add_executor_job(
+                _stored_rate_period_keys, self.hass, id_prefix, name_prefix
+            )
+            for key in stored_keys - set(rate_periods):
+                rate_periods[key] = _rate_period_statistics(
+                    key,
+                    id_prefix,
+                    name_prefix,
+                    consumption_unit_class,
+                    consumption_unit,
+                )
+            if last_stats_time is None:
+                # The totals have no statistics, so the reads are the full
+                # history already. The periods may still have statistics, e.g.
+                # when the user deleted a total, and continue from their own
+                # last stored points. Only what they lack is written whole.
+                if rate_periods:
+                    await self._async_init_rate_period_sums(rate_periods, None)
+                self._add_rate_period_statistics(period_reads, rate_periods, True)
+                self._add_rate_period_statistics(period_reads, rate_periods, False)
+            else:
+                if rate_periods:
+                    await self._async_init_rate_period_sums(
+                        rate_periods, dt_util.utc_from_timestamp(last_stats_time)
+                    )
+                missing_statistic_ids = sorted(
+                    rate_period.metadata[kind]["statistic_id"]
+                    for rate_period in rate_periods.values()
+                    for kind, start in rate_period.last_stats_time.items()
+                    if start is None
+                )
+                # A statistic the full history cannot fill, e.g. one deleted
+                # by hand on a utility whose only history at that age does not
+                # add up, would be fetched for on every refresh. Try once per
+                # run of Home Assistant. Only what stays empty after the
+                # backfill is remembered, so a failed fetch is retried and a
+                # statistic filled now is rebuilt again if deleted later.
+                if set(missing_statistic_ids) - self._rate_period_backfills:
+                    # The reads only cover the last few weeks once statistics
+                    # exist. A statistic that is not stored yet, e.g. right after
+                    # upgrading, for a seasonal period seen for the first time, or
+                    # after the user deleted it, gets the same full history the
+                    # totals got on their first run. Only the periods see these
+                    # reads: the totals keep the incremental ones, which are
+                    # guarded against replacing finer stored points with coarser
+                    # reads.
+                    _LOGGER.debug(
+                        "Fetching full history for rate period statistics: %s",
+                        missing_statistic_ids,
+                    )
+                    backfill_reads = _period_reads(
+                        await self._async_get_cost_reads(
+                            account, self.api.utility.timezone()
+                        )
+                    )
+                    for key, rate_period in _rate_periods(
+                        backfill_reads,
+                        id_prefix,
+                        name_prefix,
+                        consumption_unit_class,
+                        consumption_unit,
+                    ).items():
+                        # A period only seen in the full history, e.g. a seasonal
+                        # one, is new and not stored, so it is backfilled whole.
+                        rate_periods.setdefault(key, rate_period)
+                    self._add_rate_period_statistics(backfill_reads, rate_periods, True)
+                    self._rate_period_backfills.update(
+                        metadata["statistic_id"]
+                        for rate_period in rate_periods.values()
+                        for kind, metadata in rate_period.metadata.items()
+                        if rate_period.last_stats_time[kind] is None
+                        and not rate_period.statistics[kind]
+                    )
+                self._add_rate_period_statistics(period_reads, rate_periods, False)
 
             cost_statistics = []
             compensation_statistics = []
@@ -392,8 +691,117 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 return_statistic_id,
             )
             async_add_external_statistics(self.hass, return_metadata, return_statistics)
+            for rate_period in rate_periods.values():
+                for kind, metadata in rate_period.metadata.items():
+                    statistics = rate_period.statistics[kind]
+                    _LOGGER.debug(
+                        "Adding %s statistics for %s",
+                        len(statistics),
+                        metadata["statistic_id"],
+                    )
+                    async_add_external_statistics(self.hass, metadata, statistics)
 
         return last_changed_per_account
+
+    def _add_rate_period_statistics(
+        self,
+        period_reads: list[CostRead],
+        rate_periods: dict[str, _RatePeriodStatistics],
+        backfill: bool,
+    ) -> None:
+        """Add the reads to the rate period statistics.
+
+        Every period gets a point for every read, zero when the read has no
+        component for it, so a corrected read replaces the old point and the
+        sums stay continuous. Each statistic continues from its own stored
+        point and skips the reads up to it. With backfill, only the statistics
+        without a stored point are written, from the full history; without,
+        only the stored ones are, from the incremental reads.
+        """
+        for cost_read in period_reads:
+            start = cost_read.start_time
+            period_consumption = dict.fromkeys(rate_periods, 0.0)
+            period_cost = dict.fromkeys(rate_periods, 0.0)
+            for component in cost_read.read_components:
+                if (key := _rate_period_key(component)) not in period_consumption:
+                    continue
+                period_consumption[key] += component.consumption
+                period_cost[key] += component.cost
+            for key, rate_period in rate_periods.items():
+                states = {
+                    "consumption": max(0, period_consumption[key]),
+                    "return": max(0, -period_consumption[key]),
+                    "cost": max(0, period_cost[key]),
+                    "compensation": max(0, -period_cost[key]),
+                }
+                for kind, state in states.items():
+                    last_stats_time = rate_period.last_stats_time[kind]
+                    if backfill != (last_stats_time is None):
+                        continue
+                    if (
+                        last_stats_time is not None
+                        and start.timestamp() <= last_stats_time
+                    ):
+                        continue
+                    rate_period.sums[kind] += state
+                    rate_period.statistics[kind].append(
+                        StatisticData(
+                            start=start, state=state, sum=rate_period.sums[kind]
+                        )
+                    )
+
+    async def _async_init_rate_period_sums(
+        self, rate_periods: dict[str, _RatePeriodStatistics], start: datetime | None
+    ) -> None:
+        """Continue the rate period sums from the statistics stored at start.
+
+        Each of a period's four statistics continues from its own stored
+        point, the same way the totals do: the point at start, else the
+        oldest point after start, e.g. for a period first seen after the reads
+        at the start of the window, else the last point before start, e.g. a
+        summer-only period seen again after winter. Without a start, when the
+        totals have no statistics to give one, each continues from its last
+        stored point. A statistic without any stored point, because it is new
+        or the user deleted it, starts from zero and keeps last_stats_time None
+        so it is backfilled from the full history. The others are not touched:
+        nothing is ever deleted or rewritten on the user's behalf.
+        """
+        statistic_ids = set().union(
+            *(rate_period.statistic_ids() for rate_period in rate_periods.values())
+        )
+        stats: dict[str, list[Any]] = {}
+        for end in (start + timedelta(seconds=1), None) if start else ():
+            stats |= await get_instance(self.hass).async_add_executor_job(
+                statistics_during_period,
+                self.hass,
+                start,
+                end,
+                statistic_ids - set(stats),
+                "hour",
+                None,
+                {"sum"},
+            )
+            if statistic_ids <= set(stats):
+                break
+        for rate_period in rate_periods.values():
+            for kind, metadata in rate_period.metadata.items():
+                statistic_id = metadata["statistic_id"]
+                record = stats.get(statistic_id)
+                if not record:
+                    # Not stored at or after start. Look for the last stored point.
+                    last_stat = await get_instance(self.hass).async_add_executor_job(
+                        get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
+                    )
+                    if last_stat and (
+                        start is None
+                        or last_stat[statistic_id][0]["start"] < start.timestamp()
+                    ):
+                        record = last_stat[statistic_id]
+                if not record:
+                    _LOGGER.debug("No statistics stored for %s", statistic_id)
+                    continue
+                rate_period.last_stats_time[kind] = float(record[0]["start"])
+                rate_period.sums[kind] = _safe_get_sum(record)
 
     async def _async_maybe_migrate_statistics(
         self,
