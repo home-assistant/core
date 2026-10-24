@@ -146,7 +146,6 @@ async def test_setup_multiple(
     nvr = bootstrap.nvr
     nvr._api = ufp.api
     nvr.mac = "A1E00C826983"
-    ufp.api.get_nvr = AsyncMock(return_value=nvr)
 
     with patch(
         "homeassistant.components.unifiprotect.utils.ProtectApiClient"
