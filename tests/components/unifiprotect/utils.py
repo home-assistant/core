@@ -844,21 +844,23 @@ def setup_public_light(ufp: MockUFPFixture, **mirror_overrides: Any) -> None:
     ufp.api.public_bootstrap = pb
 
 
-def setup_public_camera(ufp: MockUFPFixture) -> None:
+def setup_public_camera(ufp: MockUFPFixture, **public_overrides: Any) -> None:
     """Expose private cameras over the public API via a real ``PublicBootstrap``.
 
     Mirrors ``setup_public_sensor`` for ``ModelType.CAMERA`` so the migrated
-    camera config entities read from the public object.
+    camera config entities read from the public object. Keyword arguments are
+    handed to ``make_public_camera``.
     """
     public_bootstrap = PublicBootstrap()
     pb = make_public_bootstrap(cameras=public_bootstrap.cameras)
+    make = partial(make_public_camera, **public_overrides)
 
     def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
         if (
             model is ModelType.CAMERA
             and (private := ufp.api.bootstrap.cameras.get(obj_id)) is not None
         ):
-            public_bootstrap.cameras[obj_id] = make_public_camera(private)
+            public_bootstrap.cameras[obj_id] = make(private)
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
