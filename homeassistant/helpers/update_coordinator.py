@@ -37,12 +37,21 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
+from .restore_state import (
+    RESTORE_SCOPE_CONFIG_ENTRIES,
+    RESTORE_SCOPE_DOMAINS,
+    RestoreScope,
+    _async_get_restore_store_manager,
+)
 from .typing import UNDEFINED, UndefinedType
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _DataT = TypeVar("_DataT", default=dict[str, Any])
+
+RESTORE_SAVE_DELAY = 10
+RESTORE_DEFAULT_STORAGE_KEY = "__restore_coordinator_default_key"
 
 
 class UpdateFailed(HomeAssistantError):
@@ -658,8 +667,105 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     @override
     def _async_refresh_finished(self) -> None:
         """Handle when a refresh has finished."""
+        super()._async_refresh_finished()
         if self.last_update_success:
             self.last_update_success_time = utcnow()
+
+
+class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
+    """DataUpdateCoordinator that persists data and restores it on creation.
+
+    The data must be JSON-serializable. storage_key must be stable and unique
+    within the config entry, or the domain when there is no config entry; a
+    second live coordinator with the same key raises ValueError. Coordinators
+    with a config entry release their key on unload or failed setup, but domain
+    scoped ones only release it in async_shutdown, so shut the old one down
+    before recreating it, e.g. on a YAML reload. Stored data is restored at the
+    end of __init__, so a subclass assigning self.data in its own __init__
+    after calling super shadows it.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        *,
+        config_entry: config_entries.ConfigEntry | None,
+        domain: str | None = None,
+        name: str,
+        storage_key: str = RESTORE_DEFAULT_STORAGE_KEY,
+        update_interval: timedelta | None = None,
+        update_method: Callable[[], Awaitable[_DataT]] | None = None,
+        setup_method: Callable[[], Awaitable[None]] | None = None,
+        request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
+        always_update: bool = True,
+        save_delay: float = RESTORE_SAVE_DELAY,
+    ) -> None:
+        """Initialize the restoring data update coordinator."""
+        storage_scope: RestoreScope
+        if config_entry is not None:
+            storage_scope = (RESTORE_SCOPE_CONFIG_ENTRIES, config_entry.entry_id)
+        elif domain is not None:
+            storage_scope = (RESTORE_SCOPE_DOMAINS, domain)
+        else:
+            raise ValueError("config_entry or domain is required")
+        store_manager = _async_get_restore_store_manager(hass)
+        store_manager.async_register(storage_scope, storage_key)
+        super().__init__(
+            hass,
+            logger,
+            config_entry=config_entry,
+            name=name,
+            update_interval=update_interval,
+            update_method=update_method,
+            setup_method=setup_method,
+            request_refresh_debouncer=request_refresh_debouncer,
+            always_update=always_update,
+        )
+        self._save_delay = save_delay
+        self._storage_key = storage_key
+        self._storage_scope = storage_scope
+        self._store_manager = store_manager
+        if (stored := store_manager.async_get(storage_scope, storage_key)) is not None:
+            self.data = stored
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Free the storage key so it can be reused by a new coordinator."""
+        self._store_manager.async_unregister(self._storage_scope, self._storage_key)
+        await super().async_shutdown()
+
+    @callback
+    def _schedule_save(self) -> None:
+        """Schedule saving the current data to storage."""
+        self._store_manager.async_schedule_save(
+            self._storage_scope, self._storage_key, self.data, self._save_delay
+        )
+
+    @override
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Persist data after a successful refresh."""
+        super()._async_refresh_finished()
+        if self.last_update_success:
+            self._schedule_save()
+
+    @override
+    @callback
+    def async_set_updated_data(self, data: _DataT) -> None:
+        """Manually update data and persist it."""
+        # The base method does not route through _async_refresh_finished, so persist
+        # here to cover push and webhook based sources.
+        super().async_set_updated_data(data)
+        self._schedule_save()
+
+    @callback
+    def async_remove_stored_data(self) -> None:
+        """Remove the stored data of this coordinator.
+
+        Safe to call when nothing is stored.
+        """
+        self._store_manager.async_remove_data(self._storage_scope, self._storage_key)
 
 
 class BaseCoordinatorEntity[
