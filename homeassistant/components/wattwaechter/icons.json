@@ -10,9 +10,6 @@
       "export_total": {
         "default": "mdi:meter-electric-outline"
       },
-      "gas_consumption": {
-        "default": "mdi:meter-gas"
-      },
       "gas_flow_rate": {
         "default": "mdi:meter-gas-outline"
       },
@@ -27,9 +24,6 @@
       },
       "ssid": {
         "default": "mdi:access-point"
-      },
-      "water_consumption": {
-        "default": "mdi:water"
       },
       "water_flow_rate": {
         "default": "mdi:water-pump"

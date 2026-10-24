@@ -23,6 +23,7 @@ import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_load_json_object_fixture,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
@@ -506,6 +507,37 @@ async def test_stale_medium_entities_removed_on_setup(
             "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_8-0:1.0.0"
         )
         is not None
+    )
+
+
+async def test_generic_entities_of_previous_medium_removed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test switching the medium also removes generic registers of the old medium."""
+    gas_data = await async_load_json_object_fixture(hass, "meter_data_gas.json", DOMAIN)
+    gas_data["7-0:1.0.0"] = {"value": 1234.5, "unit": "m³", "name": "Gas volume"}
+    mock_client.meter_data.return_value = _parse_meter_data(gas_data)
+    mock_client.system_info.return_value = MOCK_SYSTEM_INFO_GAS
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    unique_id = f"{MOCK_DEVICE_ID}_7-0:1.0.0"
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+
+    mock_client.meter_data.return_value = MOCK_METER_DATA_WATER
+    mock_client.system_info.return_value = MOCK_SYSTEM_INFO_WATER
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id) is None
+    assert entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_8-0:1.0.0"
     )
 
 

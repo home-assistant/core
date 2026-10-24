@@ -40,7 +40,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
 from .coordinator import WattwaechterConfigEntry, WattwaechterCoordinator
 from .entity import WattwaechterEntity
 
@@ -386,11 +385,11 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     ),
 }
 
-# OBIS codes of a gas/water device per medium. The medium can be switched on
-# the device at runtime, which switches the reported codes.
-GW_OBIS_CODES: dict[Medium, frozenset[str]] = {
-    Medium.GAS: frozenset({OBIS_GAS_VOLUME, OBIS_GAS_FLOW}),
-    Medium.WATER: frozenset({OBIS_WATER_VOLUME, OBIS_WATER_FLOW}),
+# OBIS media (value group A) of a gas/water device per medium. The medium can
+# be switched on the device at runtime, which switches the reported codes.
+GW_OBIS_MEDIA: dict[Medium, frozenset[str]] = {
+    Medium.GAS: frozenset({"7"}),
+    Medium.WATER: frozenset({"8", "9"}),
 }
 
 OBIS_PHASE: dict[str, str] = {
@@ -519,17 +518,27 @@ async def async_setup_entry(
     def _async_remove_other_medium_entities() -> None:
         """Remove the entities of the medium a gas/water device no longer meters."""
         medium = coordinator.data.meter.medium
-        if medium not in GW_OBIS_CODES:
+        if medium not in GW_OBIS_MEDIA:
             return
-        for other_medium, obis_codes in GW_OBIS_CODES.items():
-            if other_medium is medium:
-                continue
-            for obis_code in obis_codes:
+        other_media = {
+            obis_medium
+            for gw_medium, obis_media in GW_OBIS_MEDIA.items()
+            if gw_medium is not medium
+            for obis_medium in obis_media
+        }
+        prefix = f"{coordinator.device_id}_"
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            obis_code = entity_entry.unique_id.removeprefix(prefix)
+            if (
+                entity_entry.domain == SENSOR_DOMAIN
+                and entity_entry.unique_id.startswith(prefix)
+                and ":" in obis_code
+                and _split_obis(obis_code)[0] in other_media
+            ):
                 known_obis_codes.discard(obis_code)
-                if entity_id := entity_registry.async_get_entity_id(
-                    SENSOR_DOMAIN, DOMAIN, f"{coordinator.device_id}_{obis_code}"
-                ):
-                    entity_registry.async_remove(entity_id)
+                entity_registry.async_remove(entity_entry.entity_id)
 
     @callback
     def _async_add_obis_entities() -> None:
