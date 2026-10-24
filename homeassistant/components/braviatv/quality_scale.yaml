@@ -6,14 +6,8 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow:
-    status: todo
-    comment: Missing data_description for the use_psk, use_ssl and pin fields.
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Every test must finish with CREATE_ENTRY or ABORT (test_show_form ends on the form).
-      The reauth flow needs an error recovery test (invalid_auth -> reauth_successful).
+  config-flow: done
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions:
     status: exempt
