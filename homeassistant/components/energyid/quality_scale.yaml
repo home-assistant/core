@@ -3,9 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: The integration does not expose any custom service actions.
-  appropriate-polling:
-    status: exempt
-    comment: The integration uses a push-based mechanism with a background sync task, not polling.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -23,15 +21,9 @@ rules:
   docs-triggers:
     status: exempt
     comment: This integration does not have any triggers.
-  entity-event-setup:
-    status: exempt
-    comment: This integration does not create its own entities.
-  entity-unique-id:
-    status: exempt
-    comment: This integration does not create its own entities.
-  has-entity-name:
-    status: exempt
-    comment: This integration does not create its own entities.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -44,23 +36,17 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable:
-    status: exempt
-    comment: This integration does not create its own entities.
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable:
     status: done
-    comment: The integration logs a single  message when the EnergyID service is unavailable.
-  parallel-updates:
-    status: exempt
-    comment: This integration does not create its own entities.
+    comment: The integration logs a single message when the EnergyID service is unavailable.
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
-  devices:
-    status: exempt
-    comment: The integration does not create any entities, nor does it create devices.
+  devices: done
   diagnostics:
     status: todo
     comment: Diagnostics will be added in a follow-up PR to help with debugging.
@@ -81,23 +67,19 @@ rules:
   docs-use-cases: done
   dynamic-devices:
     status: exempt
-    comment: The integration creates a single device entry for the service connection.
+    comment: The integration creates one static service device per config entry.
   entity-category:
     status: exempt
-    comment: This integration does not create its own entities.
-  entity-device-class:
-    status: exempt
-    comment: This integration does not create its own entities.
+    comment: Directive sensors are primary user-facing entities.
+  entity-device-class: done
   entity-disabled-by-default:
     status: exempt
-    comment: This integration does not create its own entities.
-  entity-translations:
-    status: exempt
-    comment: This integration does not create its own entities.
+    comment: Each directive is a primary user-facing signal.
+  entity-translations: done
   exception-translations: done
   icon-translations:
     status: exempt
-    comment: This integration does not create its own entities.
+    comment: The directive enum sensor uses the default sensor icon.
   reconfiguration-flow:
     status: todo
     comment: Reconfiguration will be added in a follow-up PR to allow updating the device name.
@@ -111,6 +93,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing:
-    status: todo
-    comment: Full strict typing compliance will be addressed in a future update.
+  strict-typing: done
