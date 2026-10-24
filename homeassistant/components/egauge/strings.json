@@ -38,5 +38,20 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "invert_registers": "Registers to invert"
+        },
+        "data_description": {
+          "invert_registers": "Registers whose sign should be flipped, for example a current transformer installed backwards or a register that reports generation as negative"
+        }
+      }
+    },
+    "abort": {
+      "not_loaded": "The eGauge integration is still starting up. Try again in a moment."
+    }
   }
 }

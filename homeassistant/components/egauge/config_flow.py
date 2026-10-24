@@ -8,7 +8,12 @@ from egauge_async.json.client import EgaugeJsonClient
 from httpx2 import ConnectError
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -16,9 +21,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.helpers import selector
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_INVERT_REGISTERS, DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -38,6 +44,12 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
 
 class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an eGauge config flow."""
+
+    @staticmethod
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithReload:
+        """Return the options flow."""
+        return EgaugeOptionsFlowHandler()
 
     async def _async_validate_input(
         self, data: Mapping[str, Any], errors: dict[str, str]
@@ -121,4 +133,38 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: reauth_entry.data[CONF_HOST],
                 CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
             },
+        )
+
+
+class EgaugeOptionsFlowHandler(OptionsFlowWithReload):
+    """Handle an eGauge options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user pick which registers report an inverted sign."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        coordinator = self.config_entry.runtime_data
+        if coordinator is None:
+            return self.async_abort(reason="not_loaded")
+        registers = sorted(coordinator.data.register_info)
+        current = self.config_entry.options.get(CONF_INVERT_REGISTERS, [])
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional(CONF_INVERT_REGISTERS, default=current): (
+                        selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=registers,
+                                multiple=True,
+                                mode=selector.SelectSelectorMode.LIST,
+                            )
+                        )
+                    )
+                }
+            ),
         )
