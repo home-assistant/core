@@ -10,7 +10,7 @@ from pyatmo.event import Event as NaEvent
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.const import ATTR_PERSONS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -32,7 +32,7 @@ from .const import (
     WEBHOOK_PUSH_TYPE,
 )
 from .coordinator import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
-from .entity import NetatmoModuleEntity
+from .entity import NetatmoModuleEntity, netatmo_exception_handler
 from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
@@ -223,11 +223,13 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         }
 
     @override
+    @netatmo_exception_handler
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         await self.device.async_monitoring_off()
 
     @override
+    @netatmo_exception_handler
     async def async_turn_on(self) -> None:
         """Turn on camera."""
         await self.device.async_monitoring_on()
@@ -287,7 +289,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             )
         return f"{self.device.vpn_url}/vod/{video_id}/files/{self._quality}/index.m3u8"
 
-    def fetch_person_ids(self, persons: list[str | None]) -> list[str]:
+    def fetch_person_ids(self, persons: list[str]) -> list[str]:
         """Fetch matching person ids for given list of persons."""
         person_ids = []
         person_id_errors = []
@@ -304,18 +306,24 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 person_id_errors.append(person)
 
         if person_id_errors:
-            raise HomeAssistantError(f"Person(s) not registered {person_id_errors}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="person_not_found",
+                translation_placeholders={"persons": ", ".join(person_id_errors)},
+            )
 
         return person_ids
 
+    @netatmo_exception_handler
     async def _service_set_persons_home(self, **kwargs: Any) -> None:
         """Service to change current home schedule."""
-        persons = kwargs.get(ATTR_PERSONS, [])
+        persons = kwargs[ATTR_PERSONS]
         person_ids = self.fetch_person_ids(persons)
 
         await self.home.async_set_persons_home(person_ids=person_ids)
         _LOGGER.debug("Set %s as at home", persons)
 
+    @netatmo_exception_handler
     async def _service_set_person_away(self, **kwargs: Any) -> None:
         """Service to mark a person as away or set the home as empty."""
         person = kwargs.get(ATTR_PERSON)
@@ -331,13 +339,16 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         else:
             _LOGGER.debug("Set home as empty")
 
+    @netatmo_exception_handler
     async def _service_set_camera_light(self, **kwargs: Any) -> None:
         """Service to set light mode."""
         if not isinstance(self.device, NaModules.netatmo.NOC):
-            raise HomeAssistantError(
-                f"{self.device_type} <{self.device.name}> does not have a floodlight"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_floodlight",
+                translation_placeholders={"entity_id": self.entity_id},
             )
 
-        mode = str(kwargs.get(ATTR_CAMERA_LIGHT_MODE))
+        mode = kwargs[ATTR_CAMERA_LIGHT_MODE]
         _LOGGER.debug("Turn %s camera light for '%s'", mode, self._attr_name)
         await self.device.async_set_floodlight_state(mode)

@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -44,7 +45,7 @@ from .const import (
     NETATMO_CREATE_CLIMATE,
 )
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
-from .entity import NetatmoRoomEntity
+from .entity import NetatmoRoomEntity, netatmo_exception_handler
 from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
@@ -310,6 +311,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             await self.async_set_preset_mode(PRESET_BOOST)
 
     @override
+    @netatmo_exception_handler
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if (
@@ -343,6 +345,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @override
+    @netatmo_exception_handler
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature for 2 hours."""
         await self.device.async_therm_set(
@@ -351,6 +354,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @override
+    @netatmo_exception_handler
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         if self.device_type == NA_VALVE:
@@ -363,6 +367,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @override
+    @netatmo_exception_handler
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self.device.async_therm_set(STATE_NETATMO_HOME)
@@ -425,8 +430,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
         self.async_write_ha_state()
 
+    @netatmo_exception_handler
     async def _async_service_set_schedule(self, **kwargs: Any) -> None:
-        schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
+        schedule_name = kwargs[ATTR_SCHEDULE_NAME]
         schedule_id = None
         for sid, schedule in self.data_handler.schedules[self.home.entity_id].items():
             if schedule.name == schedule_name:
@@ -434,17 +440,21 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                 break
 
         if not schedule_id:
-            _LOGGER.error("%s is not a valid schedule", kwargs.get(ATTR_SCHEDULE_NAME))
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="schedule_not_found",
+                translation_placeholders={"schedule_name": schedule_name},
+            )
 
         await self.home.async_switch_schedule(schedule_id=schedule_id)
         _LOGGER.debug(
             "Setting %s schedule to %s (%s)",
             self.home.entity_id,
-            kwargs.get(ATTR_SCHEDULE_NAME),
+            schedule_name,
             schedule_id,
         )
 
+    @netatmo_exception_handler
     async def _async_service_set_preset_mode_with_end_datetime(
         self, **kwargs: Any
     ) -> None:
@@ -462,6 +472,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             end_timestamp,
         )
 
+    @netatmo_exception_handler
     async def _async_service_set_temperature_with_end_datetime(
         self, **kwargs: Any
     ) -> None:
@@ -477,6 +488,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         )
         await self.device.async_therm_manual(target_temperature, end_timestamp)
 
+    @netatmo_exception_handler
     async def _async_service_set_temperature_with_time_period(
         self, **kwargs: Any
     ) -> None:
@@ -494,6 +506,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         end_timestamp = int(now_timestamp + time_period.seconds)
         await self.device.async_therm_manual(target_temperature, end_timestamp)
 
+    @netatmo_exception_handler
     async def _async_service_clear_temperature_setting(self, **kwargs: Any) -> None:
         _LOGGER.debug("Clearing %s temperature setting", self.device.entity_id)
         await self.device.async_therm_home()

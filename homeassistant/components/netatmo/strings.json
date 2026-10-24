@@ -153,6 +153,9 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Error communicating with Netatmo: {error}"
+    },
     "entry_not_loaded": {
       "message": "The Netatmo integration is not loaded. Please set it up before calling this action."
     },
@@ -161,6 +164,27 @@
     },
     "missing_scopes": {
       "message": "The Netatmo token is missing the required scopes: {scopes}."
+    },
+    "no_floodlight": {
+      "message": "{entity_id} does not have a floodlight."
+    },
+    "person_not_found": {
+      "message": "No person registered with Netatmo under the name: {persons}."
+    },
+    "rate_limited": {
+      "message": "Netatmo is rate limiting requests. Please try again later."
+    },
+    "schedule_not_found": {
+      "message": "No Netatmo schedule named {schedule_name}."
+    },
+    "webhook_registration_failed": {
+      "message": "The Netatmo webhook could not be registered. Home Assistant keeps retrying in the background."
+    },
+    "webhook_unregister_failed": {
+      "message": "Netatmo did not confirm that the webhook was dropped."
+    },
+    "webhook_url_not_supported": {
+      "message": "The Netatmo webhook was not registered because Netatmo requires an https URL on port 443. Check the URL configuration of Home Assistant."
     }
   },
   "issues": {

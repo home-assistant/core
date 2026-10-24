@@ -679,7 +679,7 @@ async def test_webhook_event_handling_no_data(
 
 
 async def test_service_schedule_thermostats(
-    hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture, netatmo_auth
+    hass: HomeAssistant, config_entry, netatmo_auth
 ) -> None:
     """Test service for selecting Netatmo schedule with thermostats."""
     with selected_platforms([Platform.CLIMATE]):
@@ -731,17 +731,19 @@ async def test_service_schedule_thermostats(
     )
 
     # Test setting an invalid schedule
-    with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule:
+    with (
+        patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule,
+        pytest.raises(ServiceValidationError) as excinfo,
+    ):
         await hass.services.async_call(
             "netatmo",
             SERVICE_SET_SCHEDULE,
             {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_SCHEDULE_NAME: "summer"},
             blocking=True,
         )
-        await hass.async_block_till_done()
-        mock_switch_home_schedule.assert_not_called()
-
-    assert "summer is not a valid schedule" in caplog.text
+    mock_switch_home_schedule.assert_not_called()
+    assert excinfo.value.translation_key == "schedule_not_found"
+    assert excinfo.value.translation_placeholders == {"schedule_name": "summer"}
 
 
 async def test_service_preset_mode_with_end_time_thermostats(

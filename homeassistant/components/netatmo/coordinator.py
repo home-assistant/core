@@ -182,6 +182,7 @@ class NetatmoDataHandler:
         # Netatmo can hold a registration made before this load, so the first
         # teardown drops one even though this load never registered
         self.webhook_dropped: bool = False
+        self.webhook_drop_failed: bool = False
         if config_entry.data["auth_implementation"] == cloud.DOMAIN:
             self._interval_factor = CLOUD_FACTOR
             self._rate_limit = CLOUD_LIMIT
