@@ -2,7 +2,7 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
-import datetime
+import datetime as dt
 from functools import partial
 from http import HTTPStatus
 from ipaddress import AddressValueError, IPv4Address
@@ -120,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> None:
     """Set up Sonos from a config entry."""
     _LOGGER.debug("Setting up Sonos config entry: %s", entry.entry_id)
     soco_reset()
@@ -152,20 +152,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> boo
         hass, entry, data, hosts
     )
     await manager.setup_platforms_and_discovery()
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: SonosConfigEntry
-) -> bool:
+) -> None:
     """Unload a Sonos config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
-    soco_reset()
-    _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, PLATFORMS
+        )
+    finally:
+        await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
+        soco_reset()
+        _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
 
 
 class SonosDiscoveryManager:
@@ -304,7 +304,7 @@ class SonosDiscoveryManager:
                 eager_start=True,
             )
 
-        async def async_subscription_failed(now: datetime.datetime) -> None:
+        async def async_subscription_failed(now: dt.datetime) -> None:
             """Fallback logic if the subscription callback never arrives."""
             addr, port = sub.event_listener.address
             listener_address = f"{addr}:{port}"
@@ -469,9 +469,7 @@ class SonosDiscoveryManager:
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
 
-    async def async_poll_manual_hosts(
-        self, now: datetime.datetime | None = None
-    ) -> None:
+    async def async_poll_manual_hosts(self, now: dt.datetime | None = None) -> None:
         """Add and maintain Sonos devices from a manual configuration."""
 
         # Loop through each configured host and verify that

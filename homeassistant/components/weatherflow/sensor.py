@@ -381,6 +381,7 @@ class WeatherFlowSensorEntity(RestoreSensor):
         """Initialize a WeatherFlow sensor entity."""
         self.device = device
         self.entity_description = description
+        self._last_reset: datetime | None = None
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.serial_number)},
@@ -398,11 +399,17 @@ class WeatherFlowSensorEntity(RestoreSensor):
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         if self.entity_description.state_class == SensorStateClass.TOTAL:
-            return self.device.last_report
+            return self._last_reset
         return None
 
     def _async_update_state(self) -> None:
         """Update entity state."""
+        if self.entity_description.state_class == SensorStateClass.TOTAL and (
+            self._last_reset is None or self._attr_native_value
+        ):
+            # A new accumulation cycle only needs to be recorded once the
+            # previous report actually accumulated a nonzero amount.
+            self._last_reset = self.device.last_report
         value = self.entity_description.get_native_value(self.device)
         self._attr_available = (
             value is not None or self.entity_description.none_is_unknown

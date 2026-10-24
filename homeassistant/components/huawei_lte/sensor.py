@@ -804,7 +804,7 @@ async def async_setup_entry(
                 _LOGGER.debug("Ignoring sensor %s.%s due to None value", key, item)
                 continue
             if not (desc := SENSOR_META[key].descriptions.get(item)):
-                _LOGGER.debug(  # pylint: disable=home-assistant-logger-period # false positive
+                _LOGGER.debug(
                     (
                         "Ignoring unknown sensor %s.%s. "
                         "Opening an issue at GitHub against the "
@@ -813,7 +813,7 @@ async def async_setup_entry(
                         "add support for it in a future release. "
                         'Include the sensor name "%s.%s" in the issue, '
                         "as well as any information you may have about it, "
-                        "such as values received for it as shown in the debug log."
+                        "such as values received for it as shown in the debug log"
                     ),
                     key,
                     item,

@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, async_mock_service
 
 from homeassistant.components.demo.vacuum import (
     DEMO_VACUUM_BASIC,
@@ -34,7 +35,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, async_mock_service
 from tests.components.vacuum import common
 
 ENTITY_VACUUM_BASIC = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_BASIC}".replace(" ", "_").lower()

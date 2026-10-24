@@ -11,6 +11,11 @@ from unittest.mock import Mock, PropertyMock, patch
 
 from probatio import Invalid, MultipleInvalid
 import pytest
+from pytest_homeassistant.common import (
+    MockEntityPlatform,
+    MockUser,
+    async_capture_events,
+)
 from webrtc_models import RTCConfiguration, RTCIceServer
 
 from homeassistant.const import (
@@ -44,8 +49,6 @@ from homeassistant.util.unit_system import (
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
 )
-
-from .common import MockEntityPlatform, MockUser, async_capture_events
 
 
 def test_core_config_schema() -> None:

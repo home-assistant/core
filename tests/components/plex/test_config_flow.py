@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, patch
 
 import plexapi.exceptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 import requests.exceptions
 import requests_mock
 
@@ -20,7 +22,6 @@ from homeassistant.components.plex.const import (
     CONF_USE_EPISODE_ART,
     DOMAIN,
     PLEX_SERVER_CONFIG,
-    SERVERS,
 )
 from homeassistant.config_entries import (
     SOURCE_INTEGRATION_DISCOVERY,
@@ -42,9 +43,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN, PLEX_DIRECT_URL
 from .mock_classes import MockGDM
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 
 async def _async_retry_website_auth(
@@ -499,8 +497,7 @@ async def test_option_flow_new_users_available(
     mock_plex_server = await setup_plex_server(config_entry=entry)
     await hass.async_block_till_done()
 
-    server_id = "unique_id_123"
-    monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
+    monitored_users = entry.runtime_data.server.option_monitored_users
 
     new_users = [x for x in mock_plex_server.accounts if x not in monitored_users]
     assert len(monitored_users) == 1

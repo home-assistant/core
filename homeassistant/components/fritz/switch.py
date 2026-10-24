@@ -33,30 +33,21 @@ PARALLEL_UPDATES = 5
 WIFI_STANDARD = {1: "2.4Ghz", 2: "5Ghz", 3: "5Ghz", 4: "Guest"}
 
 WIFI_BAND = {
-    0: {"band": "2.4Ghz"},
-    1: {"band": "5Ghz"},
-    3: {"band": "5Ghz High / 6Ghz"},
+    1: "2.4Ghz",
+    2: "5Ghz",
+    3: "5Ghz High / 6Ghz",
 }
 
 
-def _wifi_naming(
-    network_info: dict[str, Any], wifi_index: int, wifi_count: int
-) -> str | None:
+def _wifi_naming(wifi_index: int, wifi_count: int) -> str | None:
     """Return a friendly name for a Wi-Fi network."""
 
-    if wifi_index == 2 and wifi_count == 4:
-        # In case of 4 Wi-Fi networks, the 2nd one is used
-        # for internal communication between mesh devices and
-        # should not be named like the others to avoid confusion
-        return None
-
-    if (wifi_index + 1) == wifi_count:
+    if wifi_index == wifi_count:
         # Last Wi-Fi network in the guest network, both bands available
         return "Guest"
 
-    # Cast to correct type for type checker
-    if (result := WIFI_BAND.get(wifi_index)) is not None:
-        return f"Main {result['band']}"
+    if (band := WIFI_BAND.get(wifi_index)) is not None:
+        return f"Main {band}"
 
     return None
 
@@ -74,10 +65,10 @@ async def _get_wifi_networks_list(avm_wrapper: AvmWrapper) -> dict[int, dict[str
     networks: dict[int, dict[str, Any]] = {}
     for i in range(1, wifi_count + 1):
         network_info = await avm_wrapper.async_get_wlan_configuration(i)
-        if (switch_name := _wifi_naming(network_info, i - 1, wifi_count)) is None:
+        if (switch_name := _wifi_naming(i, wifi_count)) is None:
             continue
         networks[i] = network_info
-        networks[i]["switch_name"] = switch_name
+        networks[i]["switch_name"] = slugify(switch_name)
 
     LOGGER.debug("WiFi networks list: %s", networks)
     return networks
@@ -107,10 +98,7 @@ async def _migrate_to_new_unique_id(
             description += f" ({WIFI_STANDARD[index]})"
 
         old_unique_id = f"{avm_wrapper.unique_id}-{slugify(description)}"
-        new_unique_id = (
-            f"{avm_wrapper.unique_id}-wi_fi_"
-            f"{slugify(_wifi_naming(network, index - 1, len(networks)))}"
-        )
+        new_unique_id = f"{avm_wrapper.unique_id}-wi_fi_{network['switch_name']}"
 
         entity_id = entity_registry.async_get_entity_id(
             Platform.SWITCH, DOMAIN, old_unique_id
@@ -559,16 +547,15 @@ class FritzBoxWifiSwitch(FritzBoxBaseCoordinatorSwitch):
     ) -> None:
         """Init Fritz Wifi switch."""
         self._network_num = network_num
-        name = f"Wi-Fi {network_data['switch_name']}"
+        key = slugify(f"Wi-Fi {network_data['switch_name']}")
         description = SwitchEntityDescription(
-            key=slugify(name),
-            translation_key=slugify(name),
+            key=key,
+            translation_key=key,
             icon="mdi:wifi",
             entity_registry_enabled_default=avm_wrapper.mesh_role
             is not MeshRoles.SLAVE,
         )
         super().__init__(avm_wrapper, device_friendly_name, description)
-        self._attr_name = name
 
     @override
     async def async_added_to_hass(self) -> None:

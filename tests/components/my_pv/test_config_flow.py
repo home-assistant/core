@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from my_pv.exceptions import MyPVAuthenticationError, MyPVDeviceNotSupportedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.my_pv.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import ELWA2_SERIAL_NUMBER
-
-from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     "127.0.0.1",

@@ -6,6 +6,7 @@ import time
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.components.tibber.const import AUTH_IMPLEMENTATION
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_entry_unload(

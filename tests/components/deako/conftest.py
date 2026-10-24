@@ -4,10 +4,9 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.deako.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -40,6 +39,6 @@ def mock_deako_setup() -> Generator[MagicMock]:
     """Mock async_setup_entry for config flow tests."""
     with patch(
         "homeassistant.components.deako.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup

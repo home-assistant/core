@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientError as HTTPClientError
 from devialet.const import UrlSuffix
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.devialet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -20,8 +21,6 @@ from . import (
     mock_playing,
     setup_integration,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -57,7 +56,7 @@ async def test_cannot_connect(
     aioclient_mock.clear_requests()
     mock_playing(aioclient_mock)
     with patch(
-        "homeassistant.components.devialet.async_setup_entry", return_value=True
+        "homeassistant.components.devialet.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -100,7 +99,7 @@ async def test_full_user_flow_implementation(
 
     user_input = MOCK_USER_INPUT.copy()
     with patch(
-        "homeassistant.components.devialet.async_setup_entry", return_value=True
+        "homeassistant.components.devialet.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -129,7 +128,7 @@ async def test_zeroconf_devialet(
 
     with patch(
         "homeassistant.components.devialet.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -173,7 +172,7 @@ async def test_async_step_confirm(
     mock_playing(aioclient_mock)
     with patch(
         "homeassistant.components.devialet.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

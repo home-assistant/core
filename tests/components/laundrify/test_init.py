@@ -1,6 +1,7 @@
 """Test the laundrify init file."""
 
 from laundrify_aio import exceptions
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.laundrify.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -8,8 +9,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import VALID_ACCESS_TOKEN
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_api_unauthorized(

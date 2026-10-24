@@ -1,6 +1,7 @@
 {
   "domain": "husqvarna_automower",
   "name": "Husqvarna Automower",
+  "categories": ["garden_plants"],
   "codeowners": ["@Thomas55555"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

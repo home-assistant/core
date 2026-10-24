@@ -1,6 +1,7 @@
 {
   "domain": "dwd_weather_warnings",
   "name": "Deutscher Wetterdienst (DWD) Weather Warnings",
+  "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@runningman84", "@stephan192"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dwd_weather_warnings",

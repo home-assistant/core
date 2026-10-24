@@ -59,7 +59,7 @@ class LutronData:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: LutronConfigEntry
-) -> bool:
+) -> None:
     """Set up the Lutron integration."""
 
     host = config_entry.data[CONF_HOST]
@@ -147,8 +147,6 @@ async def async_setup_entry(
     config_entry.runtime_data = entry_data
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    return True
 
 
 def _setup_output(
@@ -329,6 +327,6 @@ def _async_check_keypad_identifiers(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LutronConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LutronConfigEntry) -> None:
     """Clean up resources and entities associated with the integration."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

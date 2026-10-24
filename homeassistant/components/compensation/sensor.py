@@ -130,6 +130,8 @@ class CompensationSensor(SensorEntity):
                 self._async_compensation_sensor_state_listener,
             )
         )
+        if (state := self.hass.states.get(self._source_entity_id)) is not None:
+            self._update_from_source_state(state)
 
     @property
     @override
@@ -154,17 +156,18 @@ class CompensationSensor(SensorEntity):
                 "While updating compensation %s, the new_state is None", self.name
             )
             self._attr_native_value = None
-            self.async_write_ha_state()
-            return
+        else:
+            self._update_from_source_state(new_state)
+        self.async_write_ha_state()
 
+    def _update_from_source_state(self, new_state: State) -> None:
+        """Update the compensated value from the source state."""
         if new_state.state == STATE_UNKNOWN:
             self._attr_native_value = None
-            self.async_write_ha_state()
             return
 
         if new_state.state == STATE_UNAVAILABLE:
             self._attr_available = False
-            self.async_write_ha_state()
             return
 
         self._attr_available = True
@@ -210,5 +213,3 @@ class CompensationSensor(SensorEntity):
                 )
             else:
                 _LOGGER.warning("%s state is not numerical", self._source_entity_id)
-
-        self.async_write_ha_state()

@@ -1,6 +1,7 @@
 {
   "domain": "notion",
   "name": "Notion",
+  "categories": ["sensors", "water.meters_leak_detection"],
   "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/notion",

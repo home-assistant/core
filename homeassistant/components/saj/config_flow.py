@@ -1,5 +1,6 @@
 """Config flow for SAJ."""
 
+from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -244,4 +245,46 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Secret(CONF_PASSWORD), default=self._pending_password
                 ): str,
             }
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when the inverter rejects the credentials."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for a new password for the inverter."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            try:
+                serial_number = await self._async_validate_input(
+                    {**reauth_entry.data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
+                )
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(serial_number)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
+            description_placeholders={
+                CONF_HOST: reauth_entry.data[CONF_HOST],
+                CONF_USERNAME: reauth_entry.data.get(CONF_USERNAME) or "",
+            },
+            errors=errors,
         )

@@ -1,6 +1,7 @@
 {
   "domain": "atome",
   "name": "Atome Linky",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@baqs"],
   "documentation": "https://www.home-assistant.io/integrations/atome",
   "iot_class": "cloud_polling",
