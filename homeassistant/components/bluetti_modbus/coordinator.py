@@ -29,9 +29,16 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         entry: BluettiModbusConfigEntry,
         device: Balco260,
+        pack_summary: Balco260,
+        packs: dict[int, Balco260],
     ) -> None:
         """Initialize the coordinator."""
         self._device = device
+        self._pack_summary = pack_summary
+        self._packs = packs
+        # Each expansion pack's values, by unit ID, for the packs that answered
+        # the last poll.
+        self.pack_values: dict[int, dict[str, Any]] = {}
         super().__init__(
             hass,
             _LOGGER,
@@ -47,6 +54,7 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # busy after its retry, or a failed teardown of the link, through unwrapped.
         try:
             await self._device.async_update_with_retry()
+            await self._pack_summary.async_update_with_retry()
         except ModbusError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -62,7 +70,28 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="wrong_device",
             )
-        return values
+        summary = self._pack_summary.values
+        await self._async_update_packs(summary["d_num_battery_packs"])
+        return values | summary
+
+    async def _async_update_packs(self, count: int) -> None:
+        """Read the expansion packs the pack summary counts.
+
+        The count includes the built-in pack. A pack that fails to answer
+        only leaves its own entities unavailable.
+        """
+        pack_values: dict[int, dict[str, Any]] = {}
+        # Unit IDs in order, so the first count - 1 are the packs counted.
+        for unit_id, pack in list(self._packs.items())[: max(count - 1, 0)]:
+            try:
+                await pack.async_update_with_retry()
+            except ModbusError as err:
+                _LOGGER.debug(
+                    "Battery pack at unit %s did not answer: %s", unit_id, err
+                )
+                continue
+            pack_values[unit_id] = pack.values
+        self.pack_values = pack_values
 
 
 @dataclass(kw_only=True)
@@ -71,4 +100,6 @@ class BluettiModbusRuntimeData:
 
     coordinator: BluettiModbusDataUpdateCoordinator
     device_info: DeviceInfo
+    # The power station's device, which expansion packs are attached to.
+    device_id: str
     serial: str

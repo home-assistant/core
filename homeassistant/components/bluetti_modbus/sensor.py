@@ -2,9 +2,15 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
-from bluetti_modbus_lib import InverterStatus, PvType
+from bluetti_modbus_lib import (
+    EXPANSION_PACK_FIRST_SLAVE_ID,
+    InverterStatus,
+    PackChargingStatus,
+    PvType,
+    pack_is_reporting,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,11 +26,15 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DOMAIN
 from .coordinator import BluettiModbusConfigEntry
 from .entity import BluettiModbusEntity
 
@@ -39,6 +49,12 @@ _INVERTER_STATUS: dict[InverterStatus, str] = {
     InverterStatus.GridConnectedDischarging: "grid_connected_discharging",
     InverterStatus.InverterFault: "inverter_fault",
     InverterStatus.AbnormalOffGrid: "abnormal_off_grid",
+}
+
+_BATTERY_STATUS: dict[PackChargingStatus, str] = {
+    PackChargingStatus.Idle: "idle",
+    PackChargingStatus.Charging: "charging",
+    PackChargingStatus.Discharging: "discharging",
 }
 
 _PV_TYPE: dict[PvType, str] = {
@@ -66,6 +82,9 @@ class BluettiModbusSensorEntityDescription(SensorEntityDescription):
     """Describes a BLUETTI Modbus sensor."""
 
     value_fn: Callable[[Any], StateType] = _as_is
+    # The estimate is only kept up to date in this battery status; in any
+    # other it holds a stale value.
+    only_while: PackChargingStatus | None = None
 
 
 _PV_INPUT_DESCRIPTIONS = tuple(
@@ -278,6 +297,46 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     BluettiModbusSensorEntityDescription(
+        key="d_num_battery_packs",
+        translation_key="battery_pack_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="b_status",
+        translation_key="battery_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(_BATTERY_STATUS.values()),
+        value_fn=_BATTERY_STATUS.get,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="b_soc_total",
+        translation_key="total_battery_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="b_soh_total",
+        translation_key="total_battery_soh",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="b_time_to_full_total",
+        translation_key="time_to_full",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        only_while=PackChargingStatus.Charging,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="b_time_to_empty_total",
+        translation_key="time_to_empty",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        only_while=PackChargingStatus.Discharging,
+    ),
+    BluettiModbusSensorEntityDescription(
         key="b_soc",
         translation_key="battery_soc",
         native_unit_of_measurement=PERCENTAGE,
@@ -335,6 +394,97 @@ async def async_setup_entry(
         for description in SENSOR_DESCRIPTIONS
     )
 
+    coordinator = entry.runtime_data.coordinator
+    device_registry = dr.async_get(hass)
+    known_packs: set[str] = set()
+
+    @callback
+    def _async_add_new_packs() -> None:
+        """Add the packs seen for the first time, told apart by serial number."""
+        # A pack whose device was deleted is added again once it answers.
+        known_packs.difference_update(
+            [
+                pack_serial
+                for pack_serial in known_packs
+                if device_registry.async_get_device_by_identifier(
+                    (DOMAIN, pack_serial), entry.entry_id
+                )
+                is None
+            ]
+        )
+        for values in coordinator.pack_values.values():
+            _async_update_pack_device(device_registry, entry, values)
+        new_packs = {
+            pack_serial: (unit_id, values)
+            for unit_id, values in coordinator.pack_values.items()
+            if values["b_serial"]
+            and (pack_serial := str(values["b_serial"])) not in known_packs
+        }
+        known_packs.update(new_packs)
+        async_add_entities(
+            BluettiModbusPackSensor(
+                entry=entry,
+                description=description,
+                unit_id=unit_id,
+                values=values,
+            )
+            for unit_id, values in new_packs.values()
+            for description in PACK_SENSOR_DESCRIPTIONS
+        )
+
+    _async_add_new_packs()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_packs))
+
+
+def _pack_model(values: dict[str, Any]) -> str | None:
+    return values["b_type"] or None
+
+
+def _pack_firmware(values: dict[str, Any]) -> str | None:
+    return values["b_ver_1"] if values["b_ver_count"] else None
+
+
+@callback
+def _async_update_pack_device(
+    device_registry: dr.DeviceRegistry,
+    entry: BluettiModbusConfigEntry,
+    values: dict[str, Any],
+) -> None:
+    """Fill in a pack's model and firmware once it reports them.
+
+    A pack first seen reporting only its serial number gets a device without
+    them, and its firmware can change later.
+    """
+    if not pack_is_reporting(values):
+        return
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(values["b_serial"])), entry.entry_id
+    )
+    if device is None:
+        return
+    model, firmware = _pack_model(values), _pack_firmware(values)
+    if (device.model, device.sw_version) != (model, firmware):
+        device_registry.async_update_device(device.id, model=model, sw_version=firmware)
+
+
+# The built-in pack's sensors, which each expansion pack has too.
+PACK_SENSOR_DESCRIPTIONS = tuple(
+    description
+    for description in SENSOR_DESCRIPTIONS
+    if description.key
+    in {
+        "b_v",
+        "b_c",
+        "b_soc",
+        "b_soh",
+        "b_cycle_count",
+        "b_cell_count",
+        "b_ntc_count",
+        "b_i_e",
+        "b_o_e",
+    }
+)
+
 
 class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
     """Defines a BLUETTI Modbus sensor."""
@@ -354,4 +504,67 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the field's most recently read value."""
-        return self.entity_description.value_fn(self.coordinator.data[self._field_name])
+        data = self.coordinator.data
+        only_while = self.entity_description.only_while
+        if only_while is not None and data["b_status"] is not only_while:
+            return None
+        return self.entity_description.value_fn(data[self._field_name])
+
+
+class BluettiModbusPackSensor(BluettiModbusEntity, SensorEntity):
+    """Defines a sensor on a BC260 expansion pack."""
+
+    entity_description: BluettiModbusSensorEntityDescription
+
+    def __init__(
+        self,
+        *,
+        entry: BluettiModbusConfigEntry,
+        description: BluettiModbusSensorEntityDescription,
+        unit_id: int,
+        values: dict[str, Any],
+    ) -> None:
+        """Initialize an expansion pack sensor."""
+        super().__init__(entry=entry, field_name=description.key)
+        self.entity_description = description
+        pack_serial = str(values["b_serial"])
+        self._pack_serial = pack_serial
+        self._attr_unique_id = f"{pack_serial}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, pack_serial)},
+            manufacturer="BLUETTI",
+            model=_pack_model(values),
+            # The built-in pack is pack 1.
+            name=f"Pack {unit_id - EXPANSION_PACK_FIRST_SLAVE_ID + 2}",
+            serial_number=pack_serial,
+            sw_version=_pack_firmware(values),
+            via_device_id=entry.runtime_data.device_id,
+        )
+
+    @property
+    def _values(self) -> dict[str, Any] | None:
+        """This pack's values from the last poll, wherever its slot is now."""
+        return next(
+            (
+                values
+                for values in self.coordinator.pack_values.values()
+                if str(values["b_serial"]) == self._pack_serial
+            ),
+            None,
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the pack reported data in the last poll."""
+        values = self._values
+        return super().available and values is not None and pack_is_reporting(values)
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the pack's most recently read value."""
+        values = self._values
+        if TYPE_CHECKING:
+            assert values is not None
+        return self.entity_description.value_fn(values[self._field_name])

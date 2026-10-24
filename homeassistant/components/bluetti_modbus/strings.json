@@ -43,11 +43,22 @@
       "battery_cycle_count": {
         "name": "Battery cycle count"
       },
+      "battery_pack_count": {
+        "name": "Battery pack count"
+      },
       "battery_soc": {
         "name": "Battery SoC"
       },
       "battery_soh": {
         "name": "Battery SoH"
+      },
+      "battery_status": {
+        "name": "Battery status",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "idle": "[%key:common::state::idle%]"
+        }
       },
       "battery_voltage": {
         "name": "Battery voltage"
@@ -121,6 +132,12 @@
       "temperature_sensor_count": {
         "name": "Temperature sensor count"
       },
+      "time_to_empty": {
+        "name": "Time to empty"
+      },
+      "time_to_full": {
+        "name": "Time to full charge"
+      },
       "total_ac_output_energy": {
         "name": "Total AC output energy"
       },
@@ -129,6 +146,12 @@
       },
       "total_battery_discharged_energy": {
         "name": "Total battery discharged energy"
+      },
+      "total_battery_soc": {
+        "name": "Total battery SoC"
+      },
+      "total_battery_soh": {
+        "name": "Total battery SoH"
       },
       "total_grid_export_energy": {
         "name": "Total grid export energy"
