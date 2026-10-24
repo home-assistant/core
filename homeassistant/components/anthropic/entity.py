@@ -114,10 +114,11 @@ from homeassistant.util.json import JsonArrayType, JsonObjectType
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
+    CONF_EFFORT,
     CONF_MAX_TOKENS,
     CONF_PROMPT_CACHING,
     CONF_THINKING_BUDGET,
-    CONF_THINKING_EFFORT,
+    CONF_THINKING_TYPE,
     CONF_TOOL_SEARCH,
     CONF_WEB_FETCH,
     CONF_WEB_FETCH_MAX_USES,
@@ -131,10 +132,10 @@ from .const import (
     DEFAULT,
     DOMAIN,
     LOGGER,
-    MIN_THINKING_BUDGET,
     PromptCaching,
 )
 from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
+from .model_options import reconcile_model_options
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -950,6 +951,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
     ) -> MessageCreateParamsStreaming:
         """Get the model arguments."""
         options: dict[str, Any] = DEFAULT | self.subentry.data
+        reconcile_model_options(options, self.model_info)
 
         preloaded_tools = [
             "intent__HassTurnOn",
@@ -1005,38 +1007,22 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         elif options[CONF_PROMPT_CACHING] == PromptCaching.AUTOMATIC:
             model_args["cache_control"] = {"type": "ephemeral"}
 
-        if (
-            self.model_info.capabilities
-            and self.model_info.capabilities.thinking.types.adaptive.supported
-        ):
-            thinking_effort = options[CONF_THINKING_EFFORT]
-            if thinking_effort != "none":
+        match options.get(CONF_THINKING_TYPE):
+            case "adaptive":
                 model_args["thinking"] = ThinkingConfigAdaptiveParam(
                     type="adaptive", display="summarized"
                 )
-                model_args["output_config"] = OutputConfigParam(effort=thinking_effort)
-            else:
-                model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
-        else:
-            thinking_budget = options[CONF_THINKING_BUDGET]
-            if (
-                self.model_info.capabilities
-                and self.model_info.capabilities.thinking.types.enabled.supported
-                and thinking_budget >= MIN_THINKING_BUDGET
-            ):
+            case "enabled":
                 model_args["thinking"] = ThinkingConfigEnabledParam(
-                    type="enabled", display="summarized", budget_tokens=thinking_budget
+                    type="enabled",
+                    display="summarized",
+                    budget_tokens=options[CONF_THINKING_BUDGET],
                 )
-            else:
+            case "disabled":
                 model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
 
-            if (
-                self.model_info.capabilities
-                and self.model_info.capabilities.effort.supported
-            ):
-                model_args["output_config"] = OutputConfigParam(
-                    effort=options[CONF_THINKING_EFFORT]
-                )
+        if effort := options.get(CONF_EFFORT):
+            model_args["output_config"] = OutputConfigParam(effort=effort)
 
         tools: list[
             ToolParam
@@ -1053,13 +1039,16 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 for tool in chat_log.llm_api.tools
             ]
 
-        if options[CONF_CODE_EXECUTION]:
+        if options.get(CONF_CODE_EXECUTION, False):
             # The `web_search_20260209` and `web_fetch_20260209` tools
             # automatically enable `code_execution_20260120` tool
             if (
                 not self.model_info.capabilities
                 or not self.model_info.capabilities.code_execution.supported
-                or (not options[CONF_WEB_SEARCH] and not options[CONF_WEB_FETCH])
+                or (
+                    not options.get(CONF_WEB_SEARCH, False)
+                    and not options[CONF_WEB_FETCH]
+                )
             ):
                 tools.append(
                     CodeExecutionTool20250825Param(
@@ -1068,11 +1057,11 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     ),
                 )
 
-        if options[CONF_WEB_SEARCH]:
+        if options.get(CONF_WEB_SEARCH, False):
             if (
                 not self.model_info.capabilities
                 or not self.model_info.capabilities.code_execution.supported
-                or not options[CONF_CODE_EXECUTION]
+                or not options.get(CONF_CODE_EXECUTION, False)
             ):
                 web_search: WebSearchTool20250305Param | WebSearchTool20260209Param = (
                     WebSearchTool20250305Param(
@@ -1101,7 +1090,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             if (
                 not self.model_info.capabilities
                 or not self.model_info.capabilities.code_execution.supported
-                or not options[CONF_CODE_EXECUTION]
+                or not options.get(CONF_CODE_EXECUTION, False)
             ):
                 tools.append(
                     WebFetchTool20250910Param(
@@ -1156,7 +1145,10 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             )
 
         if tools:
-            if options[CONF_TOOL_SEARCH] and len(tools) > len(preloaded_tools) + 1:
+            if (
+                options.get(CONF_TOOL_SEARCH, False)
+                and len(tools) > len(preloaded_tools) + 1
+            ):
                 for tool in tools:
                     if not tool["name"].endswith(tuple(preloaded_tools)):
                         tool["defer_loading"] = True
