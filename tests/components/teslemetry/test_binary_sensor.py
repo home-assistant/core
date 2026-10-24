@@ -29,6 +29,7 @@ from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from teslemetry_stream import Signal
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
 from homeassistant.components.teslemetry.const import (
@@ -43,6 +44,7 @@ from homeassistant.components.teslemetry.coordinator import (
 )
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     CONF_HOST,
     CONF_PASSWORD,
     STATE_OFF,
@@ -175,8 +177,43 @@ async def test_binary_sensors_streaming(
     assert hass.states.get("binary_sensor.test_rear_passenger_window").state == "on"
     assert hass.states.get("binary_sensor.test_front_driver_door").state == "on"
     assert hass.states.get("binary_sensor.test_front_passenger_door").state == "off"
-    assert hass.states.get("binary_sensor.test_driver_seat_belt").state == STATE_UNKNOWN
+    assert (
+        hass.states.get("binary_sensor.test_driver_seat_belt_warning").state
+        == STATE_UNKNOWN
+    )
     assert hass.states.get("binary_sensor.test_rear_defroster").state == "on"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("driver_seat_belt", "expected_state"),
+    [
+        pytest.param(True, STATE_ON, id="occupied_unbuckled"),
+        pytest.param(False, STATE_OFF, id="buckled_or_empty"),
+    ],
+)
+async def test_driver_seat_belt_warning(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    driver_seat_belt: bool,
+    expected_state: str,
+) -> None:
+    """Tests that DriverSeatBelt reports the unbuckled-driver safety warning."""
+
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.DRIVER_SEAT_BELT: driver_seat_belt},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_driver_seat_belt_warning")
+    assert state.state == expected_state
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.SAFETY
 
 
 @pytest.mark.parametrize("restored_state", [STATE_UNKNOWN, STATE_UNAVAILABLE])

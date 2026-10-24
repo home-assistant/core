@@ -167,7 +167,7 @@ def _read_all_timers(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.neopool.async_setup_entry", return_value=True
+        "homeassistant.components.neopool.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

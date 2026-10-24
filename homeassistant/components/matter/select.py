@@ -760,4 +760,24 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(custom_clusters.WagoCluster.Attributes.DirectlyConnected,),
         vendor_id=(5428,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoManualMode",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="travel_time_mode",
+            options=["automatic", "manual"],
+            device_to_ha={
+                False: "automatic",
+                True: "manual",
+            }.get,
+            ha_to_device={
+                "automatic": False,
+                "manual": True,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.WindowCovering.Attributes.WagoManualMode,),
+        vendor_id=(5428,),
+    ),
 ]
