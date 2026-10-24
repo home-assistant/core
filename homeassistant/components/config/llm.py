@@ -50,55 +50,37 @@ def _format_short_entry_ids(entries: Iterable[ConfigEntry]) -> dict[str, str]:
     The trailing suffix starts at 4 characters and expands if another entry in the
     same domain shares that suffix.
     """
-    groups: defaultdict[tuple[str, str], list[tuple[str, str]]] = defaultdict(list)
+    groups: defaultdict[tuple[str, str], list[str]] = defaultdict(list)
     for entry in entries:
-        full_lower = entry.entry_id.lower()
-        groups[(entry.domain, full_lower[-_MIN_SHORT_ID_LEN:])].append(
-            (entry.entry_id, full_lower)
+        groups[(entry.domain, entry.entry_id[-_MIN_SHORT_ID_LEN:])].append(
+            entry.entry_id
         )
 
     result: dict[str, str] = {}
     for (domain, _), group in groups.items():
-        for entry_id, full_lower in group:
-            length = min(_MIN_SHORT_ID_LEN, len(full_lower))
-            while length < len(full_lower) and any(
-                other_lower.endswith(full_lower[-length:])
-                for other_id, other_lower in group
-                if other_id != entry_id
+        for full_id in group:
+            length = min(_MIN_SHORT_ID_LEN, len(full_id))
+            while length < len(full_id) and any(
+                other_id.endswith(full_id[-length:])
+                for other_id in group
+                if other_id != full_id
             ):
                 length += 1
-            result[entry_id] = f"{domain}:{full_lower[-length:]}"
+            result[full_id] = f"{domain}:{full_id[-length:]}"
     return result
 
 
 def _resolve_short_entry_id(
     hass: HomeAssistant, entry_id: str
 ) -> tuple[ConfigEntry, str]:
-    """Resolve a ConfigEntry and its short ID by '<domain>:<suffix>' or full entry_id.
-
-    Checks for an exact full entry_id match first, then resolves '<domain>:<suffix>'
-    against entries of that domain by matching the trailing suffix.
-    """
-    if (
-        entry := hass.config_entries.async_get_entry(entry_id)
-        or hass.config_entries.async_get_entry(entry_id.upper())
-    ) is not None:
-        short_ids = _format_short_entry_ids(
-            hass.config_entries.async_entries(entry.domain)
-        )
-        return entry, short_ids[entry.entry_id]
-
+    """Resolve a ConfigEntry and its short ID from '<domain>:<suffix>'."""
     domain, sep, suffix = entry_id.partition(":")
-    domain = domain.strip().lower()
-    suffix_lower = suffix.strip().lower()
-    if not sep or not domain or len(suffix_lower) < _MIN_SHORT_ID_LEN:
+    if not sep or not domain or len(suffix) < _MIN_SHORT_ID_LEN:
         raise HomeAssistantError(f"Config entry '{entry_id}' not found.")
 
     domain_entries = hass.config_entries.async_entries(domain)
     matches = [
-        candidate
-        for candidate in domain_entries
-        if candidate.entry_id.lower().endswith(suffix_lower)
+        candidate for candidate in domain_entries if candidate.entry_id.endswith(suffix)
     ]
     if not matches:
         raise HomeAssistantError(f"Config entry '{entry_id}' not found.")

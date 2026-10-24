@@ -154,14 +154,14 @@ MOCK_EXCEPTION_TRANSLATIONS: dict[str, str] = {
                     "reason": "Failed to connect to Z-Wave stick",
                 },
                 {
-                    "entry_id": "hue:a8k2m",
+                    "entry_id": "hue:A8K2M",
                     "domain": "hue",
                     "title": "Hue Bridge",
                     "state": "setup_retry",
                     "reason": "Failed to connect to bridge at 192.168.1.50",
                 },
                 {
-                    "entry_id": "hue:b8k2m",
+                    "entry_id": "hue:B8K2M",
                     "domain": "hue",
                     "title": "Hue Bridge 2",
                     "state": "setup_error",
@@ -245,14 +245,14 @@ MOCK_EXCEPTION_TRANSLATIONS: dict[str, str] = {
             {"domain": "  HUE  ", "status": "error"},
             [
                 {
-                    "entry_id": "hue:a8k2m",
+                    "entry_id": "hue:A8K2M",
                     "domain": "hue",
                     "title": "Hue Bridge",
                     "state": "setup_retry",
                     "reason": "Failed to connect to bridge at 192.168.1.50",
                 },
                 {
-                    "entry_id": "hue:b8k2m",
+                    "entry_id": "hue:B8K2M",
                     "domain": "hue",
                     "title": "Hue Bridge 2",
                     "state": "setup_error",
@@ -383,18 +383,10 @@ async def test_get_config_entries_invalid_args(
         await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
 
 
-@pytest.mark.parametrize(
-    "input_entry_id",
-    [
-        pytest.param(f"{TEST_DOMAIN}:1001", id="short_id"),
-        pytest.param("01J00000000000000000001001", id="full_id"),
-        pytest.param("01j00000000000000000001001", id="lowercase_full_id"),
-    ],
-)
 async def test_reload_config_entry_success(
-    hass: HomeAssistant, llm_context: llm.LLMContext, input_entry_id: str
+    hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Test reloading a config entry by short ID or full entry_id."""
+    """Test reloading a config entry by short ID."""
     mock_integration(
         hass,
         MockModule(
@@ -417,7 +409,7 @@ async def test_reload_config_entry_success(
     with mock_config_flow(TEST_DOMAIN, config_entries.ConfigFlow):
         res = await tool.async_call(
             hass,
-            llm.ToolInput(tool.name, {"entry_id": input_entry_id}),
+            llm.ToolInput(tool.name, {"entry_id": f"{TEST_DOMAIN}:1001"}),
             llm_context,
         )
     assert res == llm.ToolResult(
@@ -475,7 +467,7 @@ async def test_reload_config_entry_setup_failure_reason(
 @pytest.mark.parametrize(
     "entry_id",
     [
-        pytest.param("01J00000000000000000009999", id="full_id"),
+        pytest.param("01J00000000000000000001099", id="missing_colon"),
         pytest.param("hue:9999", id="short_id"),
         pytest.param("hue:99", id="suffix_too_short"),
     ],
@@ -527,14 +519,14 @@ async def test_reload_config_entry_ambiguous_short_id(
     tool = ReloadConfigEntryTool()
     res = await tool.async_call(
         hass,
-        llm.ToolInput(tool.name, {"entry_id": "hue:8k2m"}),
+        llm.ToolInput(tool.name, {"entry_id": "hue:8K2M"}),
         llm_context,
     )
     assert res == llm.ToolResult(
         data={
             "error": (
-                "Config entry 'hue:8k2m' is ambiguous; matches: "
-                "hue:a8k2m ('Hue 1'), hue:b8k2m ('Hue 2')."
+                "Config entry 'hue:8K2M' is ambiguous; matches: "
+                "hue:A8K2M ('Hue 1'), hue:B8K2M ('Hue 2')."
             )
         },
         error=True,
