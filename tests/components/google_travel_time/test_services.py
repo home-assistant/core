@@ -1,8 +1,10 @@
 """Tests for Google Maps Travel Time services."""
 
-from unittest.mock import AsyncMock
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 from google_maps_routing_api import (
+    ComputeRoutesResponse,
     GoogleMapsRoutingApiAuthError,
     GoogleMapsRoutingApiConnectionTimeoutError,
     GoogleMapsRoutingApiError,
@@ -19,7 +21,24 @@ from homeassistant.components.google_travel_time.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DEFAULT_OPTIONS, MOCK_CONFIG
+from .const import DEFAULT_OPTIONS, MOCK_CONFIG, MOCK_CONFIG_REFERRER
+
+
+def _mock_routes_response() -> dict[str, Any]:
+    """Return a mocked ComputeRoutes response."""
+    return {
+        "routes": [
+            {
+                "distanceMeters": 21300,
+                "duration": "1620s",
+                "localizedValues": {
+                    "distance": {"text": "21.3 km"},
+                    "duration": {"text": "27 mins"},
+                    "staticDuration": {"text": "26 mins"},
+                },
+            }
+        ]
+    }
 
 
 @pytest.mark.parametrize(
@@ -122,6 +141,40 @@ async def test_service_get_travel_times_empty_response(
         return_response=True,
     )
     assert response_data == {"routes": []}
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG_REFERRER, DEFAULT_OPTIONS)],
+)
+async def test_service_get_travel_times_with_referrer(
+    hass: HomeAssistant,
+    routes_mock: AsyncMock,
+    mock_config: MockConfigEntry,
+) -> None:
+    """Test the referrer from the config entry is passed to the client."""
+    client_mock = AsyncMock()
+    client_mock.async_compute_routes.return_value = ComputeRoutesResponse.from_dict(
+        _mock_routes_response()
+    )
+    with patch(
+        "homeassistant.components.google_travel_time.helpers.GoogleMapsRoutingApi",
+        return_value=client_mock,
+    ) as mock_client:
+        await hass.services.async_call(
+            DOMAIN,
+            "get_travel_times",
+            {
+                "config_entry_id": mock_config.entry_id,
+                "origin": "location1",
+                "destination": "location2",
+                "mode": "driving",
+                "units": "metric",
+            },
+            blocking=True,
+            return_response=True,
+        )
+        assert mock_client.call_args.kwargs["referrer"] == "https://example.com/"
 
 
 @pytest.mark.parametrize(

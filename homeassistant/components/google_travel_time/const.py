@@ -1,5 +1,7 @@
 """Constants for Google Travel Time."""
 
+from typing import Final
+
 from google_maps_routing_api import (
     TrafficModel,
     TransitRoutingPreference,
@@ -23,6 +25,8 @@ CONF_TRANSIT_MODE = "transit_mode"
 CONF_TRANSIT_ROUTING_PREFERENCE = "transit_routing_preference"
 CONF_TIME_TYPE = "time_type"
 CONF_TIME = "time"
+CONF_REFERRER: Final = "referrer"
+SECTION_API_KEY_OPTIONS: Final = "api_key_options"
 
 ARRIVAL_TIME = "Arrival Time"
 DEPARTURE_TIME = "Departure Time"

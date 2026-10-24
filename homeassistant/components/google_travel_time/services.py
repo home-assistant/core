@@ -28,6 +28,7 @@ from .const import (
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_ORIGIN,
+    CONF_REFERRER,
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
@@ -118,7 +119,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         travel_mode = TRAVEL_MODES_TO_API_ENUM[service.data[CONF_MODE]]
 
-        client = get_client(hass, api_key)
+        client = get_client(hass, api_key, entry.data.get(CONF_REFERRER))
 
         try:
             response = await async_compute_routes(
@@ -146,7 +147,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         api_key = entry.data[CONF_API_KEY]
 
-        client = get_client(hass, api_key)
+        client = get_client(hass, api_key, entry.data.get(CONF_REFERRER))
 
         try:
             response = await async_compute_routes(
