@@ -3063,6 +3063,9 @@ roombapy==2.0.2
 # homeassistant.components.roon
 roonapi==0.1.6
 
+# homeassistant.components.rotarex
+rotarex-dimes-srg-api==0.2.1
+
 # homeassistant.components.rova
 rova==0.4.1
 
