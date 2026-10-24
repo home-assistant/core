@@ -1,4 +1,4 @@
-"""Constants for the WattWächter Plus integration."""
+"""Constants for the WattWächter integration."""
 
 DOMAIN = "wattwaechter"
 
@@ -25,3 +25,7 @@ LEGACY_MODEL_IDS: dict[str, str] = {
     "WW-GW-MF": "ww_gw_mf",
     "WW-GW-ID": "ww_gw_id",
 }
+
+# Gas power in kW, derived by the device from the flow rate and the energy
+# factor (calorific value times z-number). Reported for gas only.
+OBIS_GAS_POWER = "7-0:16.7.0"
