@@ -18,15 +18,17 @@ from propcache.api import cached_property
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UndefinedType
 
 from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
 from .helpers import (
     MatterConfigEntry,
+    endpoint_requires_child_device,
+    get_child_device_id,
     get_device_id,
     get_discovery_key,
     get_entity_unique_id,
@@ -99,6 +101,7 @@ class MatterEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _name_postfix: str | None = None
+    _child_device_name: str | None = None
     _platform_translation_key: str | None = None
     # Cooldown in seconds to debounce state writes on updates from the device.
     # Platforms which derive their state from multiple attributes can set this
@@ -127,19 +130,25 @@ class MatterEntity(Entity):
         self._attr_unique_id = get_entity_unique_id(
             node_device_id, endpoint, entity_info
         )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
-        )
+        # An endpoint that represents an independent physical sub-unit (e.g. one
+        # socket of a multi-socket plug) gets its own child device, and all its
+        # entities are placed there with clean names instead of a numeric suffix.
+        self._requires_endpoint_device = endpoint_requires_child_device(endpoint)
         self._attr_available = (
             self._endpoint.node.available and self._get_bridged_reachable()
         )
-        # mark endpoint postfix if the device has the primary
-        # attribute on multiple endpoints
-        if not self._endpoint.node.is_bridge_device and any(
-            ep
-            for ep in self._endpoint.node.endpoints.values()
-            if ep != self._endpoint
-            and ep.has_attribute(None, entity_info.primary_attribute)
+        # mark endpoint postfix if the device has the primary attribute on
+        # multiple endpoints (skipped for endpoints split into a child device,
+        # whose entities inherit the clean child device name instead)
+        if (
+            not self._requires_endpoint_device
+            and not self._endpoint.node.is_bridge_device
+            and any(
+                ep
+                for ep in self._endpoint.node.endpoints.values()
+                if ep != self._endpoint
+                and ep.has_attribute(None, entity_info.primary_attribute)
+            )
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
         # Always set translation_key for state_attributes translations.
@@ -150,13 +159,46 @@ class MatterEntity(Entity):
             if not self._name_postfix:
                 self._attr_name = None
 
-        # Matter labels can be used to modify the entity name
-        # by appending the text.
+        # Matter labels can be used to modify the entity name by appending the
+        # text, or to name the endpoint's child device when it has one.
         if name_modifier := self._get_name_modifier():
-            self._name_postfix = name_modifier
+            if self._requires_endpoint_device:
+                self._child_device_name = name_modifier
+            else:
+                self._name_postfix = name_modifier
 
         # make sure to update the attributes once
         self._update_from_device()
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:
+        """Return device info for this entity.
+
+        An endpoint that is split into its own child device declares that child
+        (created on demand by the entity platform); all other endpoints belong to
+        the node device.
+        """
+        server_info = cast(ServerInfoMessage, self.matter_client.server_info)
+        node_device_id = get_device_id(server_info, self._endpoint)
+        node_identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
+        if not self._requires_endpoint_device:
+            return DeviceInfo(identifiers={node_identifier})
+        # The node device is pre-created in the adapter before entities are added,
+        # so it resolves here for use as the child device's parent.
+        config_entry = self.platform.config_entry
+        assert config_entry is not None
+        parent_device_id = dr.async_get_device_id_by_identifier(
+            self.hass,
+            node_identifier,
+            config_entry_id=config_entry.entry_id,
+        )
+        child_device_id = get_child_device_id(server_info, self._endpoint)
+        return ChildDeviceInfo(
+            identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{child_device_id}")},
+            name=self._child_device_name or f"Endpoint {self._endpoint.endpoint_id}",
+            parent_device_id=parent_device_id,
+        )
 
     def _find_matching_labels(self) -> list[str]:
         """Find all labels for a Matter entity."""
@@ -412,10 +454,11 @@ class MatterEntity(Entity):
         if not self._unsupported():
             return
         entry = cast(MatterConfigEntry, self.platform.config_entry)
-        # let discovery add the entity again if the device supports it later
-        entry.runtime_data.adapter.discovered_entities.discard(
-            get_discovery_key(self._endpoint, self._entity_info)
-        )
+        # let discovery add the entity again if the device supports it later;
+        # discovered keys are grouped per (node_id, endpoint_id)
+        entry.runtime_data.adapter.discovered_entities.get(
+            (self._endpoint.node.node_id, self._endpoint.endpoint_id), set()
+        ).discard(get_discovery_key(self._endpoint, self._entity_info))
         er.async_get(self.hass).async_remove(self.entity_id)
 
     @callback

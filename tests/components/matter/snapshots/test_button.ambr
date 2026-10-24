@@ -2345,7 +2345,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_bottom-entry]
+# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_bottom_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2355,11 +2355,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C7-MatterNodeDevice'), ('matter', 'serial_serial_199')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C7-MatterNodeDevice-2')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.eve_energy_20ecn4101_identify_bottom',
+    'entity_id': 'button.eve_energy_20ecn4101_bottom_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2367,12 +2367,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify (bottom)',
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify (bottom)',
+    'original_name': 'Identify',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2382,21 +2382,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_bottom-state]
+# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_bottom_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Identify (bottom)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'bottom Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.eve_energy_20ecn4101_identify_bottom',
+    'entity_id': 'button.eve_energy_20ecn4101_bottom_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_top-entry]
+# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_top_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2406,11 +2406,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C7-MatterNodeDevice'), ('matter', 'serial_serial_199')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C7-MatterNodeDevice-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.eve_energy_20ecn4101_identify_top',
+    'entity_id': 'button.eve_energy_20ecn4101_top_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2418,12 +2418,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify (top)',
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify (top)',
+    'original_name': 'Identify',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2433,14 +2433,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_top-state]
+# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_top_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Identify (top)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'top Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.eve_energy_20ecn4101_identify_top',
+    'entity_id': 'button.eve_energy_20ecn4101_top_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3617,6 +3617,210 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_41_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice-41')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.kitchen_switch_endpoint_41_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-41-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_41_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 41 Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kitchen_switch_endpoint_41_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_42_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice-42')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.kitchen_switch_endpoint_42_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-42-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_42_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 42 Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kitchen_switch_endpoint_42_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_43_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice-43')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.kitchen_switch_endpoint_43_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-43-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_43_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 43 Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kitchen_switch_endpoint_43_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_44_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice-44')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.kitchen_switch_endpoint_44_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-44-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_44_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 44 Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kitchen_switch_endpoint_44_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[lifx_switch_115][button.kitchen_switch_identify_21-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4019,210 +4223,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.kitchen_switch_identify_34',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_identify_41-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice'), ('matter', 'serial_serial_1094')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.kitchen_switch_identify_41',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Identify (41)',
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (41)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-41-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_identify_41-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Identify (41)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.kitchen_switch_identify_41',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_identify_42-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice'), ('matter', 'serial_serial_1094')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.kitchen_switch_identify_42',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Identify (42)',
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (42)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-42-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_identify_42-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Identify (42)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.kitchen_switch_identify_42',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_identify_43-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice'), ('matter', 'serial_serial_1094')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.kitchen_switch_identify_43',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Identify (43)',
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (43)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-43-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_identify_43-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Identify (43)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.kitchen_switch_identify_43',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_identify_44-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice'), ('matter', 'serial_serial_1094')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.kitchen_switch_identify_44',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Identify (44)',
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (44)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-44-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_identify_44-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Identify (44)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.kitchen_switch_identify_44',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
