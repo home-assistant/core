@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 import time
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -23,6 +24,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.smartthings import CONF_INSTALLED_APP_ID, OLD_DATA
 from homeassistant.components.smartthings.const import (
+    CONF_APP_ID,
     CONF_LOCATION_ID,
     CONF_REFRESH_TOKEN,
     DOMAIN,
@@ -75,6 +77,21 @@ def mock_smartthings() -> Generator[AsyncMock]:
             "homeassistant.components.smartthings.config_flow.SmartThings",
             new=mock_client,
         ),
+        # pysmartthings doesn't have create_app/delete_app yet, so autospec
+        # doesn't know about them -- create=True adds them as plain AsyncMocks
+        # until the real methods exist and this can go through autospec too.
+        patch.object(
+            mock_client.return_value,
+            "create_app",
+            create=True,
+            new_callable=AsyncMock,
+        ),
+        patch.object(
+            mock_client.return_value,
+            "delete_app",
+            create=True,
+            new_callable=AsyncMock,
+        ),
     ):
         client = mock_client.return_value
         client.get_scenes.return_value = SceneResponse.from_json(
@@ -95,6 +112,13 @@ def mock_smartthings() -> Generator[AsyncMock]:
         client.get_installed_app.return_value = InstalledApp.from_json(
             load_fixture("installed_app.json", DOMAIN)
         )
+        # Stand-in for pysmartthings' not-yet-existing AppRegistration model.
+        client.create_app.return_value = SimpleNamespace(
+            app_id="mock-app-id",
+            client_id="mock-client-id",
+            client_secret="mock-client-secret",
+        )
+        client.delete_app.return_value = None
         yield client
 
 
@@ -154,6 +178,35 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
             },
             CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
             CONF_INSTALLED_APP_ID: "123",
+        },
+        version=3,
+        minor_version=3,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_with_app_id(expires_at: int) -> MockConfigEntry:
+    """Mock a config entry provisioned via the PAT flow, owning an app id."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="My home",
+        unique_id="397678e5-9995-4a39-9d9f-ae6ba310236c",
+        data={
+            "auth_implementation": f"{DOMAIN}_existing-app-id",
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(SCOPES),
+                "access_tier": 0,
+                "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+            },
+            CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+            CONF_INSTALLED_APP_ID: "123",
+            # Deliberately distinct from mock_smartthings' default
+            # create_app.return_value.app_id ("mock-app-id"), so tests using
+            # both a live entry and a freshly-created app can tell them apart.
+            CONF_APP_ID: "existing-app-id",
         },
         version=3,
         minor_version=3,

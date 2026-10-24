@@ -10,14 +10,17 @@ from pysmartthings import (
     DeviceEvent,
     DeviceHealthEvent,
     SmartThings,
+    SmartThingsForbiddenError,
+    SmartThingsQuotaExceededError,
 )
 from pysmartthings.models import HealthStatus
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from . import FullDevice
-from .const import DOMAIN, MAIN
+from .const import DOMAIN, MAIN, MANAGE_PLANS_URL
 
 
 class SmartThingsEntity(Entity):
@@ -105,6 +108,24 @@ class SmartThingsEntity(Entity):
         kwargs = {}
         if argument is not None:
             kwargs["argument"] = argument
-        await self.client.execute_device_command(
-            self.device.device.device_id, capability, command, self.component, **kwargs
-        )
+        try:
+            await self.client.execute_device_command(
+                self.device.device.device_id,
+                capability,
+                command,
+                self.component,
+                **kwargs,
+            )
+        except SmartThingsQuotaExceededError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="quota_exceeded",
+                translation_placeholders={"manage_plans_url": MANAGE_PLANS_URL},
+            ) from err
+        except SmartThingsForbiddenError as err:
+            # TODO: check actual error for unentitled users after switch. We may want to revert this change.  # pylint: disable=fixme
+            if (entry := self.platform.config_entry) is not None:
+                entry.async_start_reauth_if_available(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="entitlement_required"
+            ) from err

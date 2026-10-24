@@ -20,8 +20,11 @@ from pysmartthings import (
     SmartThingsAuthenticationFailedError,
     SmartThingsConnectionError,
     SmartThingsError,
+    SmartThingsForbiddenError,
+    SmartThingsQuotaExceededError,
     SmartThingsSinkError,
     Status,
+    Subscription,
 )
 from pysmartthings.models import HealthStatus
 
@@ -59,8 +62,10 @@ from .const import (
     DOMAIN,
     EVENT_BUTTON,
     MAIN,
+    MANAGE_PLANS_URL,
     OLD_DATA,
     SENSOR_ATTRIBUTES_TO_CAPABILITIES,
+    SMARTTHINGS_ACCOUNT_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,6 +120,112 @@ PLATFORMS = [
 ]
 
 
+def _quota_exceeded_not_ready() -> ConfigEntryNotReady:
+    """Build a retryable setup error explaining the quota problem."""
+    return ConfigEntryNotReady(
+        translation_domain=DOMAIN,
+        translation_key="quota_exceeded",
+        translation_placeholders={"manage_plans_url": MANAGE_PLANS_URL},
+    )
+
+
+async def _async_fetch_devices(
+    client: SmartThings, entry: SmartThingsConfigEntry
+) -> tuple[dict[str, str], dict[str, FullDevice], dict[str, Scene]]:
+    """Fetch rooms, device status and scenes, translating setup failures."""
+    device_status: dict[str, FullDevice] = {}
+    try:
+        rooms = {
+            room.room_id: room.name
+            for room in await client.get_rooms(location_id=entry.data[CONF_LOCATION_ID])
+        }
+        devices = await client.get_devices()
+        for device in devices:
+            if (
+                (main_component := device.components.get(MAIN)) is not None
+                and main_component.manufacturer_category is Category.BLUETOOTH_TRACKER
+            ):
+                device_status[device.device_id] = FullDevice(
+                    device=device,
+                    status={},
+                    online=True,
+                )
+                continue
+            status = process_status(await client.get_device_status(device.device_id))
+            online = await client.get_device_health(device.device_id)
+            device_status[device.device_id] = FullDevice(
+                device=device, status=status, online=online.state == HealthStatus.ONLINE
+            )
+        scenes = {
+            scene.scene_id: scene
+            for scene in await client.get_scenes(
+                location_id=entry.data[CONF_LOCATION_ID]
+            )
+        }
+    except SmartThingsAuthenticationFailedError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        ) from err
+    except SmartThingsConnectionError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": str(err)},
+        ) from err
+    except SmartThingsQuotaExceededError as err:
+        raise _quota_exceeded_not_ready() from err
+    except SmartThingsForbiddenError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="entitlement_required"
+        ) from err
+    return rooms, device_status, scenes
+
+
+async def _async_replace_subscription(
+    client: SmartThings, entry: SmartThingsConfigEntry
+) -> Subscription:
+    """Delete the stale subscription and create a new one, translating failures."""
+    if (old_identifier := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
+        _LOGGER.debug("Trying to delete old subscription %s", old_identifier)
+        try:
+            await client.delete_subscription(old_identifier)
+        except SmartThingsConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="delete_subscription_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        except SmartThingsQuotaExceededError as err:
+            raise _quota_exceeded_not_ready() from err
+        except SmartThingsAuthenticationFailedError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from err
+
+    _LOGGER.debug("Trying to create a new subscription")
+    try:
+        subscription = await client.create_subscription(
+            entry.data[CONF_LOCATION_ID],
+        )
+    except SmartThingsQuotaExceededError as err:
+        raise _quota_exceeded_not_ready() from err
+    except (SmartThingsConnectionError, SmartThingsSinkError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="create_subscription_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
+    except SmartThingsAuthenticationFailedError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        ) from err
+    except SmartThingsForbiddenError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="entitlement_required"
+        ) from err
+    return subscription
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) -> None:
     """Initialize config entry which represents an installed SmartApp."""
     # The oauth smartthings entry will have a token, older ones are version 3
@@ -164,81 +275,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     client.new_subscription_id_callback = _handle_new_subscription_identifier
 
-    if (old_identifier := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
-        _LOGGER.debug("Trying to delete old subscription %s", old_identifier)
-        try:
-            await client.delete_subscription(old_identifier)
-        except SmartThingsConnectionError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="delete_subscription_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
-    _LOGGER.debug("Trying to create a new subscription")
-    try:
-        subscription = await client.create_subscription(
-            entry.data[CONF_LOCATION_ID],
-            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
-        )
-    except (SmartThingsConnectionError, SmartThingsSinkError) as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="create_subscription_error",
-            translation_placeholders={"error": str(err)},
-        ) from err
+    subscription = await _async_replace_subscription(client, entry)
     subscription_id = subscription.subscription_id
     _handle_new_subscription_identifier(subscription_id)
 
+    async def _async_subscribe() -> None:
+        try:
+            await client.subscribe(
+                entry.data[CONF_LOCATION_ID],
+                subscription,
+            )
+        except (
+            SmartThingsForbiddenError,
+            SmartThingsAuthenticationFailedError,
+        ):
+            entry.async_start_reauth_if_available(hass)
+
     entry.async_create_background_task(
         hass,
-        client.subscribe(
-            entry.data[CONF_LOCATION_ID],
-            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
-            subscription,
-        ),
+        _async_subscribe(),
         "smartthings_socket",
     )
 
-    device_status: dict[str, FullDevice] = {}
-    try:
-        rooms = {
-            room.room_id: room.name
-            for room in await client.get_rooms(location_id=entry.data[CONF_LOCATION_ID])
-        }
-        devices = await client.get_devices()
-        for device in devices:
-            if (
-                (main_component := device.components.get(MAIN)) is not None
-                and main_component.manufacturer_category is Category.BLUETOOTH_TRACKER
-            ):
-                device_status[device.device_id] = FullDevice(
-                    device=device,
-                    status={},
-                    online=True,
-                )
-                continue
-            status = process_status(await client.get_device_status(device.device_id))
-            online = await client.get_device_health(device.device_id)
-            device_status[device.device_id] = FullDevice(
-                device=device, status=status, online=online.state == HealthStatus.ONLINE
-            )
-        scenes = {
-            scene.scene_id: scene
-            for scene in await client.get_scenes(
-                location_id=entry.data[CONF_LOCATION_ID]
-            )
-        }
-    except SmartThingsAuthenticationFailedError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="authentication_failed"
-        ) from err
-    except SmartThingsConnectionError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-            translation_placeholders={"error": str(err)},
-        ) from err
+    rooms, device_status, scenes = await _async_fetch_devices(client, entry)
 
     device_registry = dr.async_get(hass)
     create_devices(device_registry, device_status, entry, rooms)
@@ -275,6 +334,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             event.capability is Capability.BUTTON
             and event.attribute is Attribute.BUTTON
         ):
+            if event.device_id not in device_status:
+                hass.config_entries.async_schedule_reload(entry.entry_id)
+                return
+            if event.device_id not in entry.runtime_data.devices:
+                return
             hass.bus.async_fire(
                 EVENT_BUTTON,
                 {
@@ -506,7 +570,7 @@ def create_devices(
     for device in devices.values():
         device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, device.device.device_id)},
-            configuration_url="https://account.smartthings.com",
+            configuration_url=SMARTTHINGS_ACCOUNT_URL,
             name=device.device.label,
         )
         connections: set[tuple[str, str]] = set()
