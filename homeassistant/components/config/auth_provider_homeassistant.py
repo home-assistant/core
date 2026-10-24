@@ -5,6 +5,7 @@ from typing import Any
 
 import probatio
 
+from homeassistant.auth import CredentialsExistError
 from homeassistant.auth.providers import InvalidStepUpError, homeassistant as auth_ha
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -61,12 +62,11 @@ async def websocket_create(
     if user.is_owner and not connection.user.is_owner:
         raise Unauthorized(context=connection.context(msg))
 
-    # Serialize the check with the link so concurrent requests can't both
-    # pass it and attach two passwords.
+    # Serialized, so a password that loses to a concurrent create is never
+    # stored, not even until it is removed again.
     async with hass.data[CREATE_LOCK]:
-        # A second password would let an admin log in as the user without
-        # going through the owner-only admin_change_password command.
-        if provider.async_get_username(user) is not None:
+        # Checked up front to not store a password that can't be linked.
+        if not hass.auth.async_can_link_credentials(user, provider):
             connection.send_error(
                 msg["id"],
                 "credentials_exist",
@@ -74,12 +74,30 @@ async def websocket_create(
             )
             return
 
-        await provider.async_add_auth(msg["username"], msg["password"])
-
+        hashed_password = await provider.async_hash_password(msg["password"])
+        # Checked before linking, so a taken username doesn't get linked.
+        provider.async_validate_new_username(msg["username"])
         credentials = await provider.async_get_or_create_credentials(
             {"username": msg["username"]}
         )
-        await hass.auth.async_link_user(user, credentials)
+        try:
+            await hass.auth.async_link_user(user, credentials)
+        except CredentialsExistError:
+            # Linked by another way than this command in the meantime.
+            connection.send_error(
+                msg["id"],
+                "credentials_exist",
+                "User already has credentials for this provider",
+            )
+            return
+
+        # Added only once linked, so no sign in can get a code for a password
+        # that is removed again.
+        try:
+            await provider.async_add_hashed_auth(msg["username"], hashed_password)
+        except BaseException:
+            await hass.auth.async_remove_credentials(credentials)
+            raise
 
     connection.send_result(msg["id"])
 

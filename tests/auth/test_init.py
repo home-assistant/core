@@ -422,6 +422,80 @@ async def test_removing_credentials_ends_their_sessions(
     assert manager.async_get_refresh_token(unrelated.id) is unrelated
 
 
+async def test_link_one_credential_per_provider(mock_hass: HomeAssistant) -> None:
+    """Test a user can only have one credential of each auth provider."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {"type": "insecure_example", "users": []},
+            {"type": "insecure_example", "id": "another-provider", "users": []},
+        ],
+        [],
+    )
+    provider = manager.get_auth_provider("insecure_example", None)
+    other_provider = manager.get_auth_provider("insecure_example", "another-provider")
+    assert provider is not None
+    assert other_provider is not None
+    user = await manager.async_create_user("Alice")
+    await manager.async_link_user(
+        user, provider.async_create_credentials({"username": "alice"})
+    )
+    # The limit is per provider.
+    await manager.async_link_user(
+        user, other_provider.async_create_credentials({"username": "alice"})
+    )
+
+    assert manager.async_can_link_credentials(user, provider) is False
+    with pytest.raises(auth.CredentialsExistError):
+        await manager.async_link_user(
+            user, provider.async_create_credentials({"username": "alice-2"})
+        )
+    assert [
+        (credential.auth_provider_id, credential.data["username"])
+        for credential in user.credentials
+    ] == [(None, "alice"), ("another-provider", "alice")]
+
+
+async def test_link_one_credential_of_an_unconfigured_provider(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test the limit also holds for credentials of a provider that isn't set up."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = await manager.async_create_user("Alice")
+    first = Credentials(
+        auth_provider_type="removed", auth_provider_id=None, data={"id": "1"}
+    )
+    await manager.async_link_user(user, first)
+
+    with pytest.raises(auth.CredentialsExistError):
+        await manager.async_link_user(
+            user,
+            Credentials(
+                auth_provider_type="removed", auth_provider_id=None, data={"id": "2"}
+            ),
+        )
+    assert user.credentials == [first]
+
+
+async def test_link_credentials_to_a_system_generated_user(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test a system generated user can't get credentials to log in with."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass, [{"type": "insecure_example", "users": []}], []
+    )
+    provider = manager.get_auth_provider("insecure_example", None)
+    assert provider is not None
+    user = await manager.async_create_system_user("Hass.io")
+
+    assert manager.async_can_link_credentials(user, provider) is False
+    with pytest.raises(auth.CredentialsLinkError, match="system generated user"):
+        await manager.async_link_user(
+            user, provider.async_create_credentials({"username": "hassio"})
+        )
+    assert user.credentials == []
+
+
 async def test_saving_loading(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
