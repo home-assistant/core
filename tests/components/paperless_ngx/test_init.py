@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pypaperless.exceptions import (
+    AsnRequestError,
     InitializationError,
     PaperlessConnectionError,
     PaperlessForbiddenError,
@@ -13,6 +14,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -31,6 +33,20 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_load_config_entry_next_asn_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_paperless: AsyncMock,
+) -> None:
+    """Test integration setup succeeds when the initial ASN request fails."""
+    mock_paperless.documents.get_next_asn.side_effect = AsnRequestError
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.paperless_ngx_next_asn").state == STATE_UNAVAILABLE
 
 
 async def test_load_config_status_forbidden(

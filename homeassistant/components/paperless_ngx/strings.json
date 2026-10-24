@@ -102,6 +102,9 @@
           "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]"
         }
       },
+      "next_asn": {
+        "name": "Next ASN"
+      },
       "redis_status": {
         "name": "Status Redis",
         "state": {
