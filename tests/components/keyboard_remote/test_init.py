@@ -27,10 +27,12 @@ from homeassistant.components.keyboard_remote.const import (
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
+    CONF_EXCLUSIVE,
     CONF_KEY_TYPES,
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+    DEFAULT_EXCLUSIVE,
     DEFAULT_KEY_TYPES,
     DEVINPUT,
     DEVINPUT_BY_ID,
@@ -73,6 +75,7 @@ OTHER_LINK = "/dev/input/by-id/usb-Other-event-kbd"
 
 OPTIONS = {
     CONF_KEY_TYPES: DEFAULT_KEY_TYPES,
+    CONF_EXCLUSIVE: DEFAULT_EXCLUSIVE,
     CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
@@ -986,6 +989,65 @@ async def test_unexpected_read_error_releases_device(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("options", "expected_grabbed", "expected_log"),
+    [
+        pytest.param(
+            {CONF_EXCLUSIVE: True},
+            True,
+            "Start exclusive monitoring of Test Keyboard (/dev/input/event5)",
+            id="exclusive",
+        ),
+        pytest.param(
+            {CONF_EXCLUSIVE: False},
+            False,
+            "Start non-exclusive monitoring of Test Keyboard (/dev/input/event5)",
+            id="non_exclusive",
+        ),
+    ],
+)
+async def test_exclusive_option_decides_the_grab(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    caplog: pytest.LogCaptureFixture,
+    options: dict[str, bool],
+    expected_grabbed: bool,
+    expected_log: str,
+) -> None:
+    """Test the device is only grabbed when the entry is exclusive.
+
+    Either way the device is read and released, and the mode is logged.
+    """
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_DEVICE_PATH,
+        data={CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+        options={
+            **{key: value for key, value in OPTIONS.items() if key != CONF_EXCLUSIVE},
+            **options,
+        },
+    )
+
+    await _set_up(hass, fake_input, entry)
+
+    assert kbd.grab.called is expected_grabbed
+    assert expected_log in caplog.text
+
+    await fake_input.press(kbd, 30, KEY_VALUE["key_up"])
+
+    assert len(commands) == 1
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await fake_input.settle()
+
+    assert kbd.ungrab.called is expected_grabbed
+    kbd.close.assert_called_once()
+    assert len(disconnected) == 1
+
+
 async def test_grab_failure_warns_and_releases(
     hass: HomeAssistant,
     fake_input: FakeInput,
@@ -999,9 +1061,10 @@ async def test_grab_failure_warns_and_releases(
 
     await _set_up(hass, fake_input, mock_config_entry)
 
-    assert "Unable to grab Test Keyboard, it may be in use by another program" in (
-        caplog.text
-    )
+    assert (
+        "Unable to grab Test Keyboard, it may be in use by another program"
+        " (turn off Exclusive access to share it)"
+    ) in caplog.text
     kbd.close.assert_called_once()
     assert len(disconnected) == 1
 
