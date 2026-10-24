@@ -219,6 +219,7 @@ def async_extract_referenced_entity_ids(
     expand_group: bool = True,
     *,
     primary_entities_only: bool = True,
+    include_hidden_entities: bool = False,
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a target selection.
 
@@ -230,6 +231,9 @@ def async_extract_referenced_entity_ids(
     rules as other indirect device/area expansion paths: filtered when
     `primary_entities_only` is True, and included when it is False.
 
+    Hidden entities are skipped by indirect expansion unless
+    `include_hidden_entities` is True.
+
     If the target selection has an exclude block, the entities, devices and
     areas it resolves to are removed from the result, regardless of whether
     they were referenced directly or indirectly.
@@ -239,6 +243,7 @@ def async_extract_referenced_entity_ids(
         target_selection,
         expand_group,
         primary_entities_only=primary_entities_only,
+        include_hidden=include_hidden_entities,
     )
 
     if target_selection.exclude is None or not target_selection.has_any_target:
@@ -414,12 +419,14 @@ class TargetEntityChangeTracker(abc.ABC):
         entity_filter: Callable[[set[str]], set[str]],
         *,
         primary_entities_only: bool = True,
+        include_hidden_entities: bool = False,
     ) -> None:
         """Initialize the state change tracker."""
         self._hass = hass
         self._target_selection = target_selection
         self._entity_filter = entity_filter
         self._primary_entities_only = primary_entities_only
+        self._include_hidden_entities = include_hidden_entities
 
         self._registry_unsubs: list[CALLBACK_TYPE] = []
 
@@ -442,6 +449,7 @@ class TargetEntityChangeTracker(abc.ABC):
             self._target_selection,
             expand_group=False,
             primary_entities_only=self._primary_entities_only,
+            include_hidden_entities=self._include_hidden_entities,
         )
         return self._entity_filter(selected.referenced | selected.indirectly_referenced)
 
@@ -497,6 +505,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         | None = None,
         *,
         primary_entities_only: bool = True,
+        include_hidden_entities: bool = False,
     ) -> None:
         """Initialize the state change tracker.
 
@@ -510,6 +519,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
             target_selection,
             entity_filter,
             primary_entities_only=primary_entities_only,
+            include_hidden_entities=include_hidden_entities,
         )
         self._action = action
         self._on_entities_update = on_entities_update
@@ -620,6 +630,7 @@ async def async_track_target_selector_state_change_event(
     | None = None,
     *,
     primary_entities_only: bool = True,
+    include_hidden_entities: bool = False,
 ) -> CALLBACK_TYPE:
     """Track state changes for entities in a target selector.
 
@@ -627,6 +638,8 @@ async def async_track_target_selector_state_change_event(
     When `primary_entities_only` is True, indirect target
     expansion (via device, area, and floor) skips entities
     with an `entity_category` (config or diagnostic entities).
+    Hidden entities are skipped by indirect expansion unless
+    `include_hidden_entities` is True.
 
     `on_entities_update` is called with the added and removed entity ids and
     the states of all currently targeted entities. It may be a coroutine
@@ -646,5 +659,6 @@ async def async_track_target_selector_state_change_event(
         entity_filter,
         on_entities_update,
         primary_entities_only=primary_entities_only,
+        include_hidden_entities=include_hidden_entities,
     )
     return await tracker.async_setup()
