@@ -17,7 +17,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientResponse
 from aiohttp.test_utils import TestClient
-from pytest_homeassistant.common import mock_platform
+from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed, mock_platform
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -32,7 +33,10 @@ from homeassistant.components.backup import (
 )
 from homeassistant.components.backup.backup import CoreLocalBackupAgent
 from homeassistant.components.backup.const import BUF_SIZE, DATA_MANAGER
-from homeassistant.components.backup.manager import ManagerStateEvent
+from homeassistant.components.backup.manager import (
+    UPLOAD_PROGRESS_DEBOUNCE_SECONDS,
+    ManagerStateEvent,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
@@ -281,3 +285,14 @@ def collect_upload_events(
         yield events
     finally:
         unsub()
+
+
+@callback
+def flush_upload_progress(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """End the cooldown of the manager's upload progress debouncer.
+
+    Call it between two progress reports of an agent, so both are emitted as
+    upload events.
+    """
+    freezer.tick(UPLOAD_PROGRESS_DEBOUNCE_SECONDS)
+    async_fire_time_changed(hass)
