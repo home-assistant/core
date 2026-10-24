@@ -14,6 +14,7 @@ APPLICATION_CREDENTIALS = [
     "geocaching",
     "google",
     "google_assistant_sdk",
+    "google_docs",
     "google_drive",
     "google_health",
     "google_mail",

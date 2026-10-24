@@ -301,6 +301,7 @@ FLOWS = {
         "google_air_quality",
         "google_assistant_sdk",
         "google_cloud",
+        "google_docs",
         "google_drive",
         "google_generative_ai_conversation",
         "google_health",

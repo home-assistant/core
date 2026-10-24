@@ -709,6 +709,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/google_assistant_sdk/ @tronikos
 /homeassistant/components/google_cloud/ @lufton @tronikos
 /tests/components/google_cloud/ @lufton @tronikos
+/homeassistant/components/google_docs/ @moryoav
+/tests/components/google_docs/ @moryoav
 /homeassistant/components/google_drive/ @tronikos
 /tests/components/google_drive/ @tronikos
 /homeassistant/components/google_generative_ai_conversation/ @tronikos @ivanlh

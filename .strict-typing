@@ -257,6 +257,7 @@ homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_assistant_sdk.*
 homeassistant.components.google_cloud.*
+homeassistant.components.google_docs.*
 homeassistant.components.google_drive.*
 homeassistant.components.google_generative_ai_conversation.*
 homeassistant.components.google_health.*

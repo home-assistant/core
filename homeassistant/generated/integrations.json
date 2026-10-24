@@ -4079,6 +4079,15 @@
           ],
           "name": "Google Cloud"
         },
+        "google_docs": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "productivity_information.documents_photos"
+          ],
+          "name": "Google Docs"
+        },
         "google_drive": {
           "integration_type": "service",
           "config_flow": true,
