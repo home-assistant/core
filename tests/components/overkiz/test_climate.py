@@ -2567,3 +2567,54 @@ async def test_zone_control_zone_temperature_follows_the_preset_just_set(
         assert sent == commands
     else:
         assert ("setDerogationOnOffState", ["on"]) in sent
+
+
+async def test_failed_refresh_without_details_is_not_reported(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a refresh alone that fails is not reported, even on a device down."""
+    entry = await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    executor = OverkizExecutor(
+        ZONE_CONTROL_ZONE.device_url, entry.runtime_data.coordinator
+    )
+    mock_client.execute_action_group.reset_mock()
+
+    await executor.async_execute_command("refreshTargetTemperature")
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.PEER_DOWN,
+    )
+
+    assert not issue_registry.issues
+
+
+async def test_zone_control_zone_unload_forgets_waiting_writes(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the writes still waiting are not sent once the integration unloads."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+    coordinator = _zone_coordinator(hass)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_set_zone_setpoint(hass, 21.0)
+    assert coordinator.pending_commands
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not coordinator.pending_commands
+    assert _sent_commands(mock_client) == [[("setHeatingTargetTemperature", [19.0])]]

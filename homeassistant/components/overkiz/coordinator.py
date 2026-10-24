@@ -174,10 +174,23 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             del self.pending_commands[key]
 
     @callback
+    def async_create_write_task(self, target: Coroutine[Any, Any, None]) -> None:
+        """Run a deferred write, canceled when the config entry is unloaded."""
+        self.config_entry.async_create_background_task(
+            self.hass, target, "overkiz deferred write"
+        )
+
+    @callback
     def async_send_pending_commands(self, key: tuple[str, tuple[str, ...]]) -> None:
         """Send what waits for a write of these settings, if anything."""
         if key in self.pending_commands:
-            self.hass.async_create_task(_send_pending_commands(self, key))
+            self.async_create_write_task(_send_pending_commands(self, key))
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Forget the writes still waiting, then shut down."""
+        self.pending_commands.clear()
+        await super().async_shutdown()
 
     def is_execution_running(self, key: tuple[str, tuple[str, ...]]) -> bool:
         """Return whether a write of the same settings has been running lately."""
@@ -268,7 +281,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
             # What waited for a running write, which is forgotten now, is sent.
             for key in list(self.pending_commands):
-                self.hass.async_create_task(_send_pending_commands(self, key))
+                self.async_create_write_task(_send_pending_commands(self, key))
 
             return self.devices
 
@@ -424,7 +437,7 @@ async def on_execution_state_changed(
     if not replaying:
         for record in records:
             if (key := record.get("key")) is not None:
-                coordinator.hass.async_create_task(
+                coordinator.async_create_write_task(
                     _send_pending_commands(coordinator, key)
                 )
 
@@ -535,9 +548,13 @@ def _report_failed_execution(
     # applied and only delays the new states: nothing for the user to act on.
     failed_names = _failed_command_names(commands, event)
     if failed_names is None:
-        # Executions merged under one id don't tell whose command failed: the
-        # failure is reported when they all wrote a setting.
-        actionable = event.failure_type_code == FailureType.PEER_DOWN or (
+        # Without the failed commands, only a device that is down, or executions
+        # merged under one id that all wrote a setting, are reported. A refresh
+        # alone leaves no setting unapplied.
+        actionable = (
+            event.failure_type_code == FailureType.PEER_DOWN
+            and any(_written_commands(record) for record in commands)
+        ) or (
             len(commands) > 1 and all(_written_commands(record) for record in commands)
         )
     else:
@@ -562,7 +579,7 @@ def _report_failed_execution(
         and commands[0].get("replay_allowed")
     ):
         LOGGER.debug("Replaying Overkiz execution %s", event.exec_id)
-        coordinator.hass.async_create_task(
+        coordinator.async_create_write_task(
             _replay_failed_execution(coordinator, commands[0], event)
         )
         return True
