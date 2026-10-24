@@ -321,6 +321,7 @@ FLOWS = {
         "green_planet_energy",
         "greencell",
         "growatt_server",
+        "gtfs",
         "guardian",
         "guntamatic",
         "habitica",

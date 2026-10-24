@@ -751,6 +751,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/group/ @home-assistant/core
 /homeassistant/components/growatt_server/ @johanzander
 /tests/components/growatt_server/ @johanzander
+/homeassistant/components/gtfs/ @raman325
+/tests/components/gtfs/ @raman325
 /homeassistant/components/guardian/ @bachya
 /tests/components/guardian/ @bachya
 /homeassistant/components/guntamatic/ @JensTimmerman
