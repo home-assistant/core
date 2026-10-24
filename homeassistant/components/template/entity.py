@@ -11,11 +11,12 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
 )
-from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.core import Context, Event, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.script import Script, _VarsType
@@ -74,6 +75,7 @@ class AbstractTemplateEntity(Entity):
     _extra_optimistic_options: tuple[str, ...] | None = None
     _state_option: str | None = None
     _restore_state_extra_data: Any | None = None
+    _restore_state_cache_data: Any | None = None
     _blocked_attributes: BlockedTemplateAttributes | None = None
 
     # Restore state properties. The state will be restored if set to None.
@@ -269,8 +271,26 @@ class AbstractTemplateEntity(Entity):
             self.async_write_ha_state()
 
     @override
+    async def async_added_to_hass(self) -> None:
+        """Register the cache dump at shutdown."""
+        await super().async_added_to_hass()
+        if self._restore_state_cache_data is not None:
+
+            async def _async_dump_cache_at_stop(_: Event) -> None:
+                await self.async_dump_cache()
+
+            self.async_on_remove(
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STOP, _async_dump_cache_at_stop
+                )
+            )
+
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up scripts when removing from Home Assistant."""
+        if self._restore_state_cache_data is not None:
+            await self.async_dump_cache()
+
         for action_script in self._action_scripts.values():
             await action_script.async_unload()
 
@@ -293,6 +313,12 @@ class AbstractTemplateEntity(Entity):
             context=context,
         )
 
+    async def async_dump_cache(self) -> None:
+        """Save the current cached data."""
+
+    async def async_get_cached_data(self) -> Any | None:
+        """Get the cached data."""
+
     async def _async_get_last_template_data(
         self,
     ) -> Any | None:
@@ -311,6 +337,9 @@ class AbstractTemplateEntity(Entity):
 
     def restore_extra_data(self, extra_data: Any) -> None:
         """Restore extra data from the last state."""
+
+    def restore_cached_data(self, cached_data: Any) -> None:
+        """Restore cached data from the last state."""
 
     async def async_restore_last_state(self) -> None:
         """Restore the state from the last state."""
@@ -344,9 +373,14 @@ class AbstractTemplateEntity(Entity):
 
         self.restore_last_state_attributes(last_state)
 
-        # Extra data should be loaded last
+        # Extra data and cached data should be loaded last
         if extra_data is not _SENTINEL:
             self.restore_extra_data(extra_data)
+
+        if (self._restore_state_cache_data is not None) and (
+            cached_data := await self.async_get_cached_data()
+        ):
+            self.restore_cached_data(cached_data)
 
     def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""

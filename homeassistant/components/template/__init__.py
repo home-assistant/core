@@ -3,7 +3,7 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -12,6 +12,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ADDITIONAL_OPTIONS, CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .helpers import async_get_blueprints, process_config
+from .image_cache import async_prune_image_cache, async_remove_entry_image_cache
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +34,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # separate task to avoid waiting for it to finish setting up
     # since a tracked task will be waited at the end of startup
     hass.async_create_task(blueprints.async_populate(), eager_start=True)
+
+    # Before any image entity is added, so no cache file is in use.
+    await async_prune_image_cache(hass)
 
     if DOMAIN in config:
         await process_config(hass, config)
@@ -99,6 +103,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_unload_platforms_or_raise(
         entry, (entry.options["template_type"],)
     )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Clean up the storage of a removed config entry."""
+    if entry.options["template_type"] == Platform.IMAGE:
+        await async_remove_entry_image_cache(hass, entry)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
