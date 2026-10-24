@@ -1,0 +1,11 @@
+{
+  "domain": "tsun",
+  "name": "TSUN",
+  "codeowners": ["@jptstar"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tsun",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["tsun-local-api==0.2.0"]
+}
