@@ -35,8 +35,8 @@
         "state_attributes": {
           "speed": {
             "state": {
-              "default": "[%key:component::cover::entity_component::_::state_attributes::speed::state::default%]",
-              "slow": "[%key:component::cover::entity_component::_::state_attributes::speed::state::slow%]"
+              "default": "Default",
+              "slow": "Slow"
             }
           }
         }

@@ -177,15 +177,6 @@
         },
         "current_tilt_position": {
           "name": "Tilt position"
-        },
-        "speed": {
-          "name": "[%key:component::cover::common::field_speed_name%]",
-          "state": {
-            "default": "Default",
-            "fast": "Fast",
-            "silent": "Silent",
-            "slow": "Slow"
-          }
         }
       }
     },

@@ -108,6 +108,18 @@
         }
       }
     },
+    "cover": {
+      "cover": {
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "Default",
+              "slow": "Slow"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "memorized_simple_volume": {
         "state": {

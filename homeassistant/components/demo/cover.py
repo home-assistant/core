@@ -6,8 +6,6 @@ from typing import Any, override
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    SPEED_DEFAULT,
-    SPEED_SLOW,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -37,7 +35,7 @@ async def async_setup_entry(
                 "Living Room Window",
                 70,
                 50,
-                supported_speeds=[SPEED_SLOW, SPEED_DEFAULT],
+                supported_speeds=["slow", "default"],
                 translation_key="living_room_window",
             ),
             DemoCover(

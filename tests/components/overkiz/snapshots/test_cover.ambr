@@ -36,7 +36,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 271>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-1698/4080031',
     'unit_of_measurement': None,
   })
@@ -99,7 +99,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 271>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-1698/141613',
     'unit_of_measurement': None,
   })
@@ -162,7 +162,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 271>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-1698/9740264',
     'unit_of_measurement': None,
   })
@@ -220,7 +220,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 123>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'rts://1234-1234-6362/16730044',
     'unit_of_measurement': None,
   })
@@ -274,7 +274,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 123>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'rts://1234-1234-6362/16753206',
     'unit_of_measurement': None,
   })
@@ -328,7 +328,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'rts://1234-1234-6362/16749917',
     'unit_of_measurement': None,
   })
@@ -382,7 +382,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'rts://1234-1234-6362/16718220',
     'unit_of_measurement': None,
   })
@@ -435,7 +435,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 123>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'rts://1234-1234-6362/16747291',
     'unit_of_measurement': None,
   })
@@ -489,7 +489,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'rts://1234-1234-6362/16730022',
     'unit_of_measurement': None,
   })
@@ -543,7 +543,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-5010/13522671',
     'unit_of_measurement': None,
   })
@@ -597,7 +597,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-5010/3912866',
     'unit_of_measurement': None,
   })
@@ -651,7 +651,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-5010/5719467',
     'unit_of_measurement': None,
   })
@@ -705,7 +705,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-5010/2890799',
     'unit_of_measurement': None,
   })
@@ -759,7 +759,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-5010/13915941',
     'unit_of_measurement': None,
   })
@@ -813,7 +813,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-5010/4905039',
     'unit_of_measurement': None,
   })
@@ -867,7 +867,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-5010/13149769',
     'unit_of_measurement': None,
   })
@@ -921,7 +921,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-5010/2150846',
     'unit_of_measurement': None,
   })
@@ -976,7 +976,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-5010/12931361',
     'unit_of_measurement': None,
   })
@@ -1031,7 +1031,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/7019474',
     'unit_of_measurement': None,
   })
@@ -1085,7 +1085,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/2487349',
     'unit_of_measurement': None,
   })
@@ -1139,7 +1139,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/8170693',
     'unit_of_measurement': None,
   })
@@ -1193,7 +1193,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/9749383',
     'unit_of_measurement': None,
   })
@@ -1247,7 +1247,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/13136078',
     'unit_of_measurement': None,
   })
@@ -1301,7 +1301,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/13911608',
     'unit_of_measurement': None,
   })
@@ -1355,7 +1355,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/180461',
     'unit_of_measurement': None,
   })
@@ -1409,7 +1409,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/1166864',
     'unit_of_measurement': None,
   })
@@ -1462,7 +1462,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/9337336',
     'unit_of_measurement': None,
   })
@@ -1516,7 +1516,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 128>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'ogp://1234-1234-6233/10943109',
     'unit_of_measurement': None,
   })
@@ -1570,7 +1570,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/6416929',
     'unit_of_measurement': None,
   })
@@ -1623,7 +1623,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/16730050',
     'unit_of_measurement': None,
   })
@@ -1676,7 +1676,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/877679',
     'unit_of_measurement': None,
   })
@@ -1729,7 +1729,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/1166863',
     'unit_of_measurement': None,
   })
@@ -1783,7 +1783,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'ogp://1234-1234-6233/6632544',
     'unit_of_measurement': None,
   })
@@ -1836,7 +1836,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'ogp://1234-1234-6233/10410217',
     'unit_of_measurement': None,
   })
@@ -1889,7 +1889,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/7433515',
     'unit_of_measurement': None,
   })
@@ -1942,7 +1942,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/11447718',
     'unit_of_measurement': None,
   })
@@ -1996,7 +1996,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'rts://1234-1234-6233/16721270',
     'unit_of_measurement': None,
   })
@@ -2050,7 +2050,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'rts://1234-1234-6233/16730717',
     'unit_of_measurement': None,
   })
@@ -2104,7 +2104,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/3880877',
     'unit_of_measurement': None,
   })
@@ -2158,7 +2158,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/16730051',
     'unit_of_measurement': None,
   })
@@ -2211,7 +2211,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'ogp://1234-1234-6233/14356699',
     'unit_of_measurement': None,
   })
@@ -2265,7 +2265,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-8983/1959462',
     'unit_of_measurement': None,
   })
@@ -2318,7 +2318,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/13064380',
     'unit_of_measurement': None,
   })
@@ -2372,7 +2372,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 143>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'ogp://1234-1234-6233/16730100',
     'unit_of_measurement': None,
   })
@@ -2427,7 +2427,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/12184029',
     'unit_of_measurement': None,
   })
@@ -2481,7 +2481,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-6233/8939545',
     'unit_of_measurement': None,
   })
@@ -2535,7 +2535,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-1234/5928358',
     'unit_of_measurement': None,
   })
@@ -2589,7 +2589,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-1234-1234/5928357',
     'unit_of_measurement': None,
   })
@@ -2643,7 +2643,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-6508/5456600',
     'unit_of_measurement': None,
   })
@@ -2698,7 +2698,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-6508/16130150',
     'unit_of_measurement': None,
   })
@@ -2753,7 +2753,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-6508/13662182',
     'unit_of_measurement': None,
   })
@@ -2808,7 +2808,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-6508/11292138',
     'unit_of_measurement': None,
   })
@@ -2863,7 +2863,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-6508/6553884',
     'unit_of_measurement': None,
   })
@@ -2918,7 +2918,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-6508/10076003',
     'unit_of_measurement': None,
   })
@@ -2973,7 +2973,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-6508/3248049',
     'unit_of_measurement': None,
   })
@@ -3028,7 +3028,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-6508/6380765',
     'unit_of_measurement': None,
   })
@@ -3083,7 +3083,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-6508/12736675',
     'unit_of_measurement': None,
   })
@@ -3138,7 +3138,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-6508/4803435',
     'unit_of_measurement': None,
   })
@@ -3193,7 +3193,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-6508/4877511',
     'unit_of_measurement': None,
   })
@@ -3248,7 +3248,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-6508/6375755',
     'unit_of_measurement': None,
   })
@@ -3303,7 +3303,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-1516/3897767',
     'unit_of_measurement': None,
   })
@@ -3357,7 +3357,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-1516/3656107',
     'unit_of_measurement': None,
   })
@@ -3416,7 +3416,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 271>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-1516/77700',
     'unit_of_measurement': None,
   })
@@ -3474,7 +3474,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'rts://1234-5678--9373/16757362',
     'unit_of_measurement': None,
   })
@@ -3528,7 +3528,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678--9373/3868695',
     'unit_of_measurement': None,
   })
@@ -3582,7 +3582,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678--9373/3904805',
     'unit_of_measurement': None,
   })
@@ -3636,7 +3636,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678--9373/10202865',
     'unit_of_measurement': None,
   })
@@ -3690,7 +3690,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678--9373/15097783',
     'unit_of_measurement': None,
   })
@@ -3744,7 +3744,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678--9373/5632438',
     'unit_of_measurement': None,
   })
@@ -3798,7 +3798,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-3293/5770898',
     'unit_of_measurement': None,
   })
@@ -3852,7 +3852,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-3293/5353900',
     'unit_of_measurement': None,
   })
@@ -3906,7 +3906,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-3293/12745774',
     'unit_of_measurement': None,
   })
@@ -3959,7 +3959,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 240>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-3293/7614902',
     'unit_of_measurement': None,
   })
@@ -4013,7 +4013,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'rts://1234-5678-3293/16757826',
     'unit_of_measurement': None,
   })
@@ -4067,7 +4067,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'rts://1234-5678-3293/16757362',
     'unit_of_measurement': None,
   })
@@ -4121,7 +4121,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 143>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'zigbee://1234-5678-3293/16730099',
     'unit_of_measurement': None,
   })
@@ -4176,7 +4176,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
+    'translation_key': 'cover',
     'unique_id': 'io://1234-5678-3293/3541212',
     'unit_of_measurement': None,
   })
