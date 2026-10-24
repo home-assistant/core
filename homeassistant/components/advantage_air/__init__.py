@@ -10,6 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
 from .coordinator import AdvantageAirCoordinator, AdvantageAirDataConfigEntry
+from .helpers import get_system_id
 from .services import async_setup_services
 
 PLATFORMS = [
@@ -55,7 +56,7 @@ async def async_setup_entry(
     system = coordinator.data["system"]
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, system["rid"])},
+        identifiers={(DOMAIN, get_system_id(system))},
         manufacturer="Advantage Air",
         model=system["sysType"],
         name=system["name"],
