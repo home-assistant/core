@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unique_id_mismatch": "This key belongs to a different ecosmart account than the one set up here. Enter a key from the same account, or add the other account as a new entry."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -11,6 +12,15 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::ecosmart::config::step::user::data_description::api_key%]"
+        },
+        "description": "The ecosmart API key stopped working. This usually means a new key was created in the ecosmart app, which disables the previous one. Enter the current key for the same account."
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"

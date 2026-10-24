@@ -1453,8 +1453,8 @@ async def test_selector_serializer(
     assert selector_serializer(selector.LocationSelector()) == {
         "type": "object",
         "properties": {
-            "latitude": {"type": "number"},
-            "longitude": {"type": "number"},
+            "latitude": {"maximum": 90, "minimum": -90, "type": "number"},
+            "longitude": {"maximum": 180, "minimum": -180, "type": "number"},
             "radius": {"type": "number"},
         },
         "required": ["latitude", "longitude"],

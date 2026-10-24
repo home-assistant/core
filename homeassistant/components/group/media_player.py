@@ -7,19 +7,13 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_SEEK_POSITION,
-    ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
-    SERVICE_CLEAR_PLAYLIST,
-    SERVICE_PLAY_MEDIA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerEntityStateAttribute,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
     MediaType,
 )
@@ -29,17 +23,6 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
@@ -285,7 +268,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         data = {ATTR_ENTITY_ID: self._features[KEY_CLEAR_PLAYLIST]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_CLEAR_PLAYLIST,
+            MediaPlayerService.CLEAR_PLAYLIST,
             data,
             context=self._context,
         )
@@ -296,7 +279,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_NEXT_TRACK,
+            MediaPlayerService.MEDIA_NEXT_TRACK,
             data,
             context=self._context,
         )
@@ -307,7 +290,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PAUSE,
+            MediaPlayerService.MEDIA_PAUSE,
             data,
             context=self._context,
         )
@@ -318,7 +301,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PLAY,
+            MediaPlayerService.MEDIA_PLAY,
             data,
             context=self._context,
         )
@@ -329,7 +312,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PREVIOUS_TRACK,
+            MediaPlayerService.MEDIA_PREVIOUS_TRACK,
             data,
             context=self._context,
         )
@@ -339,11 +322,11 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Send seek command."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_SEEK],
-            ATTR_MEDIA_SEEK_POSITION: position,
+            MediaPlayerServiceArgument.SEEK_POSITION: position,
         }
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_SEEK,
+            MediaPlayerService.MEDIA_SEEK,
             data,
             context=self._context,
         )
@@ -354,7 +337,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_STOP,
+            MediaPlayerService.MEDIA_STOP,
             data,
             context=self._context,
         )
@@ -364,11 +347,11 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Mute the volume."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_VOLUME],
-            ATTR_MEDIA_VOLUME_MUTED: mute,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: mute,
         }
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_MUTE,
+            MediaPlayerService.VOLUME_MUTE,
             data,
             context=self._context,
         )
@@ -380,14 +363,14 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Play a piece of media."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_PLAY_MEDIA],
-            ATTR_MEDIA_CONTENT_ID: media_id,
-            ATTR_MEDIA_CONTENT_TYPE: media_type,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
         }
         if kwargs:
             data.update(kwargs)
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             data,
             context=self._context,
         )
@@ -397,11 +380,11 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Enable/disable shuffle mode."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_SHUFFLE],
-            ATTR_MEDIA_SHUFFLE: shuffle,
+            MediaPlayerServiceArgument.SHUFFLE: shuffle,
         }
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SHUFFLE_SET,
+            MediaPlayerService.SHUFFLE_SET,
             data,
             context=self._context,
         )
@@ -412,7 +395,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_TURN_ON,
+            MediaPlayerService.TURN_ON,
             data,
             context=self._context,
         )
@@ -422,11 +405,11 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Set volume level(s)."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_VOLUME],
-            ATTR_MEDIA_VOLUME_LEVEL: volume,
+            MediaPlayerServiceArgument.VOLUME_LEVEL: volume,
         }
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_SET,
+            MediaPlayerService.VOLUME_SET,
             data,
             context=self._context,
         )
@@ -437,7 +420,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_TURN_OFF,
+            MediaPlayerService.TURN_OFF,
             data,
             context=self._context,
         )

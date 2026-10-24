@@ -39,7 +39,7 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.vallox.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -76,7 +76,7 @@ async def test_form_invalid_ip(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.vallox.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -116,7 +116,7 @@ async def test_form_vallox_api_exception_cannot_connect(hass: HomeAssistant) -> 
         ),
         patch(
             "homeassistant.components.vallox.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -156,7 +156,7 @@ async def test_form_os_error_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.vallox.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -196,7 +196,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.vallox.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

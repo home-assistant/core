@@ -40,6 +40,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
     valid_entity_id,
+    verify_event_loop_thread,
 )
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import async_suggest_report_issue
@@ -1573,6 +1574,7 @@ class EntityRegistry(BaseRegistry):
         )
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_get_or_create")
     def async_get_or_create(
         self,
         domain: str,
@@ -1637,7 +1639,6 @@ class EntityRegistry(BaseRegistry):
                 unit_of_measurement=unit_of_measurement,
             )
 
-        self.hass.verify_event_loop_thread("entity_registry.async_get_or_create")
         device_id = self._ignore_composite_device_id(platform, device_id)
         _validate_item(
             self.hass,
@@ -1784,9 +1785,9 @@ class EntityRegistry(BaseRegistry):
         return entry
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_remove")
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
-        self.hass.verify_event_loop_thread("entity_registry.async_remove")
         if entity_id not in self.entities:
             # Allow attempts to remove an entity which does not exist. If this is
             # not allowed, there will be races during cleanup where we iterate over
@@ -1991,6 +1992,7 @@ class EntityRegistry(BaseRegistry):
         return UNDEFINED
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_update_entity")
     def _async_update_entity(
         self,
         entity_id: str,
@@ -2133,8 +2135,6 @@ class EntityRegistry(BaseRegistry):
             return old
 
         new_values["modified_at"] = utcnow()
-
-        self.hass.verify_event_loop_thread("entity_registry.async_update_entity")
 
         if original_name_unprefixed is UNDEFINED and (
             original_name is not UNDEFINED
@@ -2310,14 +2310,13 @@ class EntityRegistry(BaseRegistry):
         return self._async_update_entity(entity_id, options=new_options)
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_update_settings")
     def async_update_settings(
         self,
         *,
         entity_id_parts: list[EntityNamePart] | UndefinedType | None = UNDEFINED,
     ) -> EntityRegistrySettings:
         """Update entity registry settings."""
-        self.hass.verify_event_loop_thread("entity_registry.async_update_settings")
-
         old = self.settings
         new = old
         if entity_id_parts is not UNDEFINED:

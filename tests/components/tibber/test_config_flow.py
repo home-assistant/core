@@ -33,7 +33,7 @@ from homeassistant.data_entry_flow import FlowResultType
 @pytest.fixture(name="tibber_setup", autouse=True)
 def tibber_setup_fixture():
     """Patch tibber setup entry."""
-    with patch("homeassistant.components.tibber.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.tibber.async_setup_entry", return_value=None):
         yield
 
 

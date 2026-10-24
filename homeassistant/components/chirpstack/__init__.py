@@ -32,7 +32,7 @@ class ChirpStackData:
 type ChirpStackConfigEntry = ConfigEntry[ChirpStackData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ChirpStackConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ChirpStackConfigEntry) -> None:
     """Connect and register this entry's selected applications with LoRaWAN."""
     connection = ChirpStackConnection(
         entry.data[CONF_ENDPOINT],
@@ -44,7 +44,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ChirpStackConfigEntry) -
     try:
         await connection.async_connect()
         unregister = await lorawan.async_register_connection(
-            hass, entry, connection=connection
+            hass,
+            entry,
+            connection=connection,
+            configuration_url=f"{entry.data[CONF_ENDPOINT]}/",
         )
     except AuthenticationError as error:
         await connection.close()
@@ -70,12 +73,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ChirpStackConfigEntry) -
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ChirpStackConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ChirpStackConfigEntry) -> None:
     """Withdraw the registration before closing the server connection."""
     entry.runtime_data.unsubscribe_disconnect()
     entry.runtime_data.unregister()
     await entry.runtime_data.connection.close()
-    return True
