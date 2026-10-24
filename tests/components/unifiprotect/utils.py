@@ -667,9 +667,9 @@ def make_public_camera(
     The stream tiers/mic/HDR back the migrated stream and select entities; the
     ``is_*`` flags back the migrated ``ufp_public_value`` detection paths and the
     ``smart_detect_settings`` types back the per-type ``ufp_public_enabled_fn``
-    gates (default: all types enabled). ``state``, ``video_mode``, ``mic_volume``
-    and ``hdr_type`` (derived from the private ``hdr_mode``) mirror the
-    private camera when not overridden.
+    gates (default: all types enabled). ``state`` and ``mic_volume`` mirror the
+    private camera when not overridden, ``video_mode`` and ``hdr_type``
+    default to the fixture's default mode and HDR off.
 
     ``status_light`` and the ``osd_*`` flags deliberately default to off instead
     of mirroring, so a test overriding one sets a value the private object would
@@ -692,7 +692,7 @@ def make_public_camera(
         is_logo_enabled=osd_logo,
         is_debug_enabled=osd_debug,
     )
-    public.video_mode = camera.video_mode if video_mode is None else video_mode
+    public.video_mode = VideoMode.DEFAULT if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
     public.is_mic_enabled = is_mic_enabled
     public.lcd_message = lcd_message
@@ -740,11 +740,7 @@ def make_public_camera(
         "is_glass_break_detection_on",
     ):
         setattr(public, name, getattr(PublicCamera, name).fget(public))
-    public.hdr_type = (
-        (PublicHdrMode.AUTO if camera.hdr_mode else PublicHdrMode.OFF)
-        if hdr_type is None
-        else hdr_type
-    )
+    public.hdr_type = PublicHdrMode.OFF if hdr_type is None else hdr_type
     public.hdr_mode_display = PublicCamera.hdr_mode_display.fget(public)
     flags = camera.feature_flags
     # The doorbell fixture appends the package channel (id 3).
@@ -870,7 +866,7 @@ def make_public_chime(
     state: DeviceState | None = None,
     ring_settings: list[PublicRingSettings] | None = None,
 ) -> Mock:
-    """Build a public-API chime mirroring the private fixture's ring settings."""
+    """Build a public-API chime with the given ring settings."""
     public = Mock(spec=PublicChime)
     bind_public_device_properties(public, PublicChime)
     public.id = chime.id
@@ -880,25 +876,15 @@ def make_public_chime(
     public.type = chime.type
     public.model = ModelType.CHIME
     public.state = DeviceState[chime.state.name] if state is None else state
-    public.ring_settings = (
-        [
-            PublicRingSettings(
-                camera_id=setting.camera_id,
-                repeat_times=setting.repeat_times,
-                ringtone_id=setting.ringtone_id,
-                volume=setting.volume,
-            )
-            for setting in chime.ring_settings
-        ]
-        if ring_settings is None
-        else ring_settings
-    )
+    public.ring_settings = [] if ring_settings is None else ring_settings
     # The real lookup, over the mock's ring settings.
     public.get_ring_setting = partial(PublicChime.get_ring_setting, public)
     return public
 
 
-def setup_public_chime(ufp: MockUFPFixture) -> None:
+def setup_public_chime(
+    ufp: MockUFPFixture, ring_settings: list[PublicRingSettings] | None = None
+) -> None:
     """Expose private chimes over the public API via a real ``PublicBootstrap``.
 
     Mirrors ``setup_public_light`` for ``ModelType.CHIME`` so the ring volume
@@ -906,6 +892,7 @@ def setup_public_chime(ufp: MockUFPFixture) -> None:
     """
     public_bootstrap = PublicBootstrap()
     pb = make_public_bootstrap(chimes=public_bootstrap.chimes)
+    make = partial(make_public_chime, ring_settings=ring_settings)
 
     def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
         # One mock per id so command assertions hit the entity's cached object.
@@ -914,12 +901,12 @@ def setup_public_chime(ufp: MockUFPFixture) -> None:
             and obj_id not in public_bootstrap.chimes
             and (private := ufp.api.bootstrap.chimes.get(obj_id)) is not None
         ):
-            public_bootstrap.chimes[obj_id] = make_public_chime(private)
+            public_bootstrap.chimes[obj_id] = make(private)
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
     _mirror_on_update_public(
-        ufp, "chimes", public_bootstrap.chimes, make_public_chime, keep_existing=True
+        ufp, "chimes", public_bootstrap.chimes, make, keep_existing=True
     )
     ufp.api.has_public_bootstrap = True
     # Keep the fixture's public NVR (identity and doorbell settings).
