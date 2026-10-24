@@ -102,6 +102,7 @@ from .cover import (
     CLOSE_ACTION,
     CONF_OPEN_AND_CLOSE,
     CONF_POSITION,
+    CONF_SUPPORTED_SPEEDS,
     OPEN_ACTION,
     POSITION_ACTION,
     STOP_ACTION,
@@ -287,6 +288,16 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
                     selector.DeviceClassSelectorConfig(domain=Platform.COVER),
                 ),
             }
+        additional_options |= {
+            probatio.Optional(CONF_SUPPORTED_SPEEDS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[],
+                    multiple=True,
+                    custom_value=True,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+        }
 
     if domain == Platform.DEVICE_TRACKER:
         schema |= {
