@@ -785,6 +785,12 @@
     "bitmap_write_not_supported": {
       "message": "The device does not support changing {name}."
     },
+    "closure_no_position_panel": {
+      "message": "No position panel found."
+    },
+    "closure_no_tilt_panel": {
+      "message": "No tilt panel found."
+    },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."
     },
