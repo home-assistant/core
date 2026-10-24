@@ -17,7 +17,7 @@ def platforms() -> list[Platform]:
     return [Platform.MEDIA_PLAYER]
 
 
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director", "mock_update_variables")
+@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director", "mock_room_variables")
 async def test_media_player_with_and_without_sources(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

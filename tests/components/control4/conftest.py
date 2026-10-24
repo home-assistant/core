@@ -1,6 +1,7 @@
 """Common fixtures for the Control4 tests."""
 
 from collections.abc import AsyncGenerator, Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -12,6 +13,8 @@ from pytest_homeassistant.common import (
 
 from homeassistant.components.control4.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+
+from . import mock_director_variables
 
 MOCK_HOST = "192.168.1.100"
 MOCK_USERNAME = "test-username"
@@ -95,11 +98,11 @@ def mock_c4_director() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_update_variables() -> Generator[AsyncMock]:
-    """Mock the update_variables_for_config_entry function."""
-
-    async def _mock_update_variables(*args, **kwargs):
-        return {
+def mock_room_variables(mock_c4_director: MagicMock) -> None:
+    """Mock the room variables reported by the director."""
+    mock_director_variables(
+        mock_c4_director,
+        {
             1: {
                 "POWER_STATE": True,
                 "CURRENT_VOLUME": 50,
@@ -110,17 +113,12 @@ def mock_update_variables() -> Generator[AsyncMock]:
                 "PAUSED": False,
                 "STOPPED": False,
             }
-        }
-
-    with patch(
-        "homeassistant.components.control4.media_player.update_variables_for_config_entry",
-        new=_mock_update_variables,
-    ) as mock_update:
-        yield mock_update
+        },
+    )
 
 
 @pytest.fixture
-def mock_climate_variables() -> dict:
+def mock_climate_variables() -> dict[int, dict[str, Any]]:
     """Mock climate variable data for default thermostat state."""
     return {
         123: {
@@ -139,18 +137,10 @@ def mock_climate_variables() -> dict:
 
 @pytest.fixture
 def mock_climate_update_variables(
-    mock_climate_variables: dict,
-) -> Generator[AsyncMock]:
-    """Mock update_variables for climate platform."""
-
-    async def _mock_update_variables(*args, **kwargs):
-        return mock_climate_variables
-
-    with patch(
-        "homeassistant.components.control4.climate.update_variables_for_config_entry",
-        new=_mock_update_variables,
-    ) as mock_update:
-        yield mock_update
+    mock_c4_director: MagicMock, mock_climate_variables: dict[int, dict[str, Any]]
+) -> None:
+    """Mock the climate variables reported by the director."""
+    mock_director_variables(mock_c4_director, mock_climate_variables)
 
 
 @pytest.fixture
