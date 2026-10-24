@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from electrasmart.device import OperationMode
 from electrasmart.device.const import Feature
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -15,6 +16,16 @@ from homeassistant.components.electrasmart.const import (
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
+MEASUREMENTS = {
+    "WI_FI_RSSI": "-53",
+    "I_ICT": "21",
+    "O_OCT": "25",
+    "I_BAD_ICT": "NORM",
+    "I_BAD_RAT": "NORM",
+}
+
+MEASUREMENT_TEMPERATURES = {"I_ICT": 21, "O_OCT": 25}
+
 
 @pytest.fixture(name="mock_device")
 def mock_device_fixture() -> Mock:
@@ -23,12 +34,18 @@ def mock_device_fixture() -> Mock:
         mac="a8032ab12345",
         model="Electra A/C",
         manufactor="Electra",
+        serial_number="J4B60300391",
+        fm_version="611V4-C20",
+        hw_version="1.0",
+        measurements=dict(MEASUREMENTS),
         features=[Feature.V_SWING, Feature.H_SWING],
         is_disconnected=Mock(return_value=False),
         is_on=Mock(return_value=False),
         is_horizontal_swing=Mock(return_value=False),
         is_vertical_swing=Mock(return_value=False),
         get_fan_speed=Mock(return_value=OperationMode.FAN_SPEED_AUTO),
+        get_filter_clean_required=Mock(return_value=False),
+        get_measurement_temperature=Mock(side_effect=MEASUREMENT_TEMPERATURES.get),
         get_mode=Mock(return_value=OperationMode.MODE_COOL),
         get_sensor_temperature=Mock(return_value=24),
         get_temperature=Mock(return_value=22),
@@ -74,9 +91,17 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture(name="setup_integration")
 async def setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_api: Mock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Set up the integration with a single mocked AC."""
+    """Set up the integration with a single mocked AC.
+
+    Takes the freezer so that the integration is set up with a frozen clock:
+    the coordinator schedules its polls against the event loop's clock, so a
+    test that freezes only after setup would see a first poll immediately.
+    """
     config_entry.add_to_hass(hass)
 
     with patch(
