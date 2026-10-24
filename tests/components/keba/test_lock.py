@@ -1,5 +1,6 @@
 """Tests for the KEBA charging station authentication lock."""
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,7 +15,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import snapshot_keba_platform
-from .conftest import FakeKebaStation, PollClock
+from .conftest import (
+    POLL_INTERVAL,
+    FakeKebaStation,
+    async_advance,
+    async_seconds_until_poll,
+    async_settle,
+)
 
 ENTITY_ID = "lock.keba_p30_authentication"
 
@@ -36,15 +43,14 @@ async def test_lock(
 async def test_lock_follows_authreq(
     hass: HomeAssistant,
     setup_keba: FakeKebaStation,
-    poll_clock: PollClock,
+    freezer: FrozenDateTimeFactory,
     authreq: int,
     expected: LockState,
 ) -> None:
     """Test the lock is locked while the station requires authorization."""
     setup_keba.push("2", Authreq=authreq)
 
-    await poll_clock.tick()
-    await hass.async_block_till_done()
+    await async_advance(hass, freezer, POLL_INTERVAL)
 
     assert hass.states.get(ENTITY_ID).state == expected
 
@@ -59,7 +65,7 @@ async def test_lock_follows_authreq(
 async def test_lock_commands(
     hass: HomeAssistant,
     setup_keba: FakeKebaStation,
-    poll_clock: PollClock,
+    freezer: FrozenDateTimeFactory,
     service: str,
     command: str,
 ) -> None:
@@ -67,7 +73,7 @@ async def test_lock_commands(
     await hass.services.async_call(
         LOCK_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
-    await poll_clock.wait_for_sleep()
+    await async_settle(hass)
 
     assert setup_keba.commands[1:] == [command]
-    assert poll_clock.delays == [5, 2]
+    assert await async_seconds_until_poll(hass, freezer, setup_keba) == 2

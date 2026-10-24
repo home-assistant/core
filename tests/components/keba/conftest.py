@@ -13,15 +13,20 @@ enabled, and ``p30_charging.json`` is charging. The serial is replaced with
 ``12345678`` and the RFID fields with zeros; everything else, whitespace
 included, is as received. A report a test has not changed is answered byte for
 byte.
+
+The integration's polling loop sleeps with ``asyncio.sleep``; tests move time
+forward with ``freezer`` and ``async_fire_time_changed``.
 """
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator
+from datetime import timedelta
 import json
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from keba_kecontact.keba_protocol import KebaProtocol
 import pytest
 
@@ -29,14 +34,18 @@ from homeassistant.components.keba.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_json_object_fixture
+from tests.common import async_fire_time_changed, load_json_object_fixture
 
 HOST = "192.0.2.10"
 UDP_PORT = 7090
+POLL_INTERVAL = 5  # seconds; the default, and the minimum refresh_interval
 
 
 class FakeKebaStation:
-    """A KEBA charging station on the far side of a fake UDP transport."""
+    """A KEBA charging station on the far side of a fake UDP transport.
+
+    Replies are delivered at once, from inside ``sendto``.
+    """
 
     def __init__(self, raw_reports: dict[str, str]) -> None:
         """Initialize the station with the raw datagrams it answers with."""
@@ -88,19 +97,11 @@ class FakeKebaStation:
                 reply = json.dumps(report).encode()
         else:
             reply = b"TCH-OK :done\n"
-        asyncio.get_running_loop().call_soon(
-            self._protocol.datagram_received,  # type: ignore[union-attr]
-            reply,
-            (HOST, UDP_PORT),
-        )
+        self.broadcast(reply)
 
     def broadcast(self, data: bytes) -> None:
-        """Send a datagram the station was not asked for."""
-        asyncio.get_running_loop().call_soon(
-            self._protocol.datagram_received,  # type: ignore[union-attr]
-            data,
-            (HOST, UDP_PORT),
-        )
+        """Send a datagram to the integration, asked for or not."""
+        self._protocol.datagram_received(data, (HOST, UDP_PORT))  # type: ignore[union-attr]
 
     def push(self, report_id: str, **changes: Any) -> None:
         """Change a report; the next poll picks it up."""
@@ -109,50 +110,6 @@ class FakeKebaStation:
     def close(self) -> None:
         """Close the fake transport."""
         self.closed = True
-
-
-class PollClock:
-    """Stand in for the integration's asyncio.sleep in its polling loop.
-
-    Each sleep is recorded and blocks until the test calls tick(), so the
-    polling cadence (normal interval, fast polling after commands) can be
-    asserted step by step.
-    """
-
-    def __init__(self) -> None:
-        """Initialize the clock."""
-        self.delays: list[float] = []
-        self._waiters: list[asyncio.Future[None]] = []
-        self._slept = asyncio.Event()
-
-    async def sleep(self, delay: float) -> None:
-        """Record the delay and wait until released."""
-        self.delays.append(delay)
-        waiter = asyncio.get_running_loop().create_future()
-        self._waiters.append(waiter)
-        self._slept.set()
-        try:
-            await waiter
-        finally:
-            if waiter in self._waiters:
-                self._waiters.remove(waiter)
-
-    async def wait_for_sleep(self) -> None:
-        """Wait until the polling loop is sleeping again."""
-        await asyncio.wait_for(self._slept.wait(), timeout=1)
-        self._slept.clear()
-
-    async def tick(self) -> None:
-        """End the current sleep and wait for the next poll to finish."""
-        self._slept.clear()
-        self._waiters[0].set_result(None)
-        await self.wait_for_sleep()
-
-
-async def _yield(delay: float, result: Any = None) -> Any:
-    """Replace the library's fixed waits with a single loop iteration."""
-    await asyncio.sleep(0)
-    return result
 
 
 @pytest.fixture
@@ -169,33 +126,29 @@ def raw_reports(corpus: str) -> dict[str, str]:
 
 @pytest.fixture
 def station(
-    hass: HomeAssistant, raw_reports: dict[str, str]
+    raw_reports: dict[str, str], freezer: FrozenDateTimeFactory
 ) -> Generator[FakeKebaStation]:
-    """Return a fake station wired into the event loop and the library."""
+    """Return a fake station wired into the library.
+
+    keba-kecontact 1.3.0 opens its datagram endpoint on
+    ``asyncio.get_event_loop()``, and waits with ``asyncio.sleep`` between
+    requests and for the first reply. Its ``asyncio`` is swapped for one that
+    hands it the fake station and does not wait.
+
+    Depends on ``freezer`` so that time is frozen before the polling loop
+    schedules its first sleep.
+    """
     fake = FakeKebaStation(raw_reports)
     with (
-        patch.object(
-            hass.loop, "create_datagram_endpoint", fake.create_datagram_endpoint
-        ),
         # The library keeps received data in a class attribute, shared by
         # every connection in the process. Give each test its own.
         patch.object(KebaProtocol, "data", {}),
         patch(
             "keba_kecontact.connection.asyncio",
-            SimpleNamespace(sleep=_yield, get_event_loop=asyncio.get_event_loop),
+            SimpleNamespace(sleep=AsyncMock(), get_event_loop=lambda: fake),
         ),
     ):
         yield fake
-
-
-@pytest.fixture
-def poll_clock() -> Generator[PollClock]:
-    """Return the clock driving the integration's polling loop."""
-    clock = PollClock()
-    with patch(
-        "homeassistant.components.keba.asyncio", SimpleNamespace(sleep=clock.sleep)
-    ):
-        yield clock
 
 
 @pytest.fixture
@@ -208,7 +161,6 @@ def keba_config() -> dict[str, Any]:
 async def setup_keba(
     hass: HomeAssistant,
     station: FakeKebaStation,
-    poll_clock: PollClock,
     keba_config: dict[str, Any],
 ) -> AsyncGenerator[FakeKebaStation]:
     """Set up the integration against the fake station.
@@ -217,10 +169,49 @@ async def setup_keba(
     stops. Cancel it here so the test leaves no lingering task.
     """
     assert await async_setup_component(hass, DOMAIN, keba_config)
-    await hass.async_block_till_done()
-    await poll_clock.wait_for_sleep()
+    await async_settle(hass)
     yield station
     await stop_polling(hass)
+
+
+async def async_settle(hass: HomeAssistant) -> None:
+    """Wait until the polling loop has finished its current poll.
+
+    The loop reschedules itself in a task created with ``loop.create_task``.
+    ``async_block_till_done`` does not track those, and returns one loop
+    iteration before the new task has polled.
+    """
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+
+async def async_advance(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, seconds: float
+) -> None:
+    """Move time forward and run the polls that fall due."""
+    freezer.tick(timedelta(seconds=seconds))
+    async_fire_time_changed(hass)
+    await async_settle(hass)
+
+
+async def async_seconds_until_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    station: FakeKebaStation,
+    limit: int = 60,
+) -> int:
+    """Move time forward a second at a time until the station is polled.
+
+    Return how many seconds that took. ``async_fire_time_changed`` runs
+    timers up to half a second early, so whole-second steps land on each
+    delay exactly.
+    """
+    sent_before = len(station.sent)
+    for seconds in range(1, limit + 1):
+        await async_advance(hass, freezer, 1)
+        if station.sent[sent_before:]:
+            return seconds
+    pytest.fail(f"No poll within {limit} seconds")
 
 
 async def stop_polling(hass: HomeAssistant) -> None:

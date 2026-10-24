@@ -1,5 +1,6 @@
 """Tests for the KEBA charging station binary sensors."""
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -8,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import snapshot_keba_platform
-from .conftest import FakeKebaStation, PollClock
+from .conftest import POLL_INTERVAL, FakeKebaStation, async_advance
 
 
 async def test_binary_sensors(
@@ -37,7 +38,7 @@ async def test_binary_sensors(
 async def test_plug_state(
     hass: HomeAssistant,
     setup_keba: FakeKebaStation,
-    poll_clock: PollClock,
+    freezer: FrozenDateTimeFactory,
     plug: int,
     plugged: str,
     plug_locked: bool,
@@ -45,8 +46,7 @@ async def test_plug_state(
     """Test the plug sensor and its plug_locked attribute for each plug state."""
     setup_keba.push("2", Plug=plug)
 
-    await poll_clock.tick()
-    await hass.async_block_till_done()
+    await async_advance(hass, freezer, POLL_INTERVAL)
 
     state = hass.states.get("binary_sensor.keba_p30_plug")
     assert state.state == plugged
@@ -65,7 +65,7 @@ async def test_plug_state(
 async def test_charging_state(
     hass: HomeAssistant,
     setup_keba: FakeKebaStation,
-    poll_clock: PollClock,
+    freezer: FrozenDateTimeFactory,
     charging_state: int,
     expected: str,
     details: str,
@@ -73,8 +73,7 @@ async def test_charging_state(
     """Test the charging state sensor and its status attribute."""
     setup_keba.push("2", State=charging_state)
 
-    await poll_clock.tick()
-    await hass.async_block_till_done()
+    await async_advance(hass, freezer, POLL_INTERVAL)
 
     state = hass.states.get("binary_sensor.keba_p30_charging_state")
     assert state.state == expected
@@ -88,14 +87,13 @@ async def test_charging_state(
 async def test_failsafe_mode_is_inverted(
     hass: HomeAssistant,
     setup_keba: FakeKebaStation,
-    poll_clock: PollClock,
+    freezer: FrozenDateTimeFactory,
     timeout: int,
     expected: str,
 ) -> None:
     """Test the failsafe sensor is on (unsafe) while failsafe is off."""
     setup_keba.push("2", **{"Tmo FS": timeout})
 
-    await poll_clock.tick()
-    await hass.async_block_till_done()
+    await async_advance(hass, freezer, POLL_INTERVAL)
 
     assert hass.states.get("binary_sensor.keba_p30_failsafe_mode").state == expected

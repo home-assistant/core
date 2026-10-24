@@ -1,5 +1,6 @@
 """Tests for the KEBA charging station sensors."""
 
+from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -7,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import snapshot_keba_platform
-from .conftest import FakeKebaStation, PollClock
+from .conftest import POLL_INTERVAL, FakeKebaStation, async_advance
 
 
 async def test_sensors(
@@ -21,15 +22,14 @@ async def test_sensors(
 
 
 async def test_sensors_follow_the_station(
-    hass: HomeAssistant, setup_keba: FakeKebaStation, poll_clock: PollClock
+    hass: HomeAssistant, setup_keba: FakeKebaStation, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test a poll carries new report values into the sensors."""
     station = setup_keba
     station.push("2", **{"Curr user": 10000, "Setenergy": 200000})
     station.push("3", P=3600000, **{"E total": 123500000})
 
-    await poll_clock.tick()
-    await hass.async_block_till_done()
+    await async_advance(hass, freezer, POLL_INTERVAL)
 
     assert hass.states.get("sensor.keba_p30_max_current").state == "10.0"
     assert hass.states.get("sensor.keba_p30_energy_target").state == "20.0"
@@ -38,7 +38,7 @@ async def test_sensors_follow_the_station(
 
 
 async def test_report_2_alone_currently_does_not_update(
-    hass: HomeAssistant, setup_keba: FakeKebaStation, poll_clock: PollClock
+    hass: HomeAssistant, setup_keba: FakeKebaStation, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test changes in report 2 only show up once report 3 or 100 arrives.
 
@@ -50,18 +50,16 @@ async def test_report_2_alone_currently_does_not_update(
     reports_3_and_100 = {key: station.reports.pop(key) for key in ("3", "100")}
     station.push("2", **{"Curr user": 10000})
 
-    await poll_clock.tick()
-    await hass.async_block_till_done()
+    await async_advance(hass, freezer, POLL_INTERVAL)
     assert hass.states.get("sensor.keba_p30_max_current").state == "16.0"
 
     station.reports.update(reports_3_and_100)
-    await poll_clock.tick()
-    await hass.async_block_till_done()
+    await async_advance(hass, freezer, POLL_INTERVAL)
     assert hass.states.get("sensor.keba_p30_max_current").state == "10.0"
 
 
 async def test_session_energy_currently_from_report_100(
-    hass: HomeAssistant, setup_keba: FakeKebaStation, poll_clock: PollClock
+    hass: HomeAssistant, setup_keba: FakeKebaStation, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test report 100 overwrites report 3's present-session energy.
 
@@ -72,8 +70,7 @@ async def test_session_energy_currently_from_report_100(
     station.push("3", **{"E pres": 10000})  # codespell:ignore pres
     station.push("100", **{"E pres": 20000})  # codespell:ignore pres
 
-    await poll_clock.tick()
-    await hass.async_block_till_done()
+    await async_advance(hass, freezer, POLL_INTERVAL)
 
     assert hass.states.get("sensor.keba_p30_session_energy").state == "2.0"
 

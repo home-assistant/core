@@ -7,12 +7,19 @@ parse; tests named ``..._currently_...`` pin that and other suspect behaviour.
 
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.keba.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .conftest import HOST, FakeKebaStation, PollClock
+from .conftest import (
+    HOST,
+    POLL_INTERVAL,
+    FakeKebaStation,
+    async_seconds_until_poll,
+    async_settle,
+)
 
 
 @pytest.mark.parametrize(
@@ -85,7 +92,7 @@ async def test_set_failsafe_currently_sends_python_bool(
 
 
 async def test_request_data_requests_all_reports(
-    hass: HomeAssistant, setup_keba: FakeKebaStation, poll_clock: PollClock
+    hass: HomeAssistant, setup_keba: FakeKebaStation, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test request_data requests every report and does not start fast polling."""
     station = setup_keba
@@ -99,7 +106,7 @@ async def test_request_data_requests_all_reports(
         "report 3",
         "report 100",
     ]
-    assert poll_clock.delays == [5]
+    assert await async_seconds_until_poll(hass, freezer, setup_keba) == POLL_INTERVAL
 
 
 @pytest.mark.parametrize(
@@ -112,7 +119,7 @@ async def test_request_data_requests_all_reports(
 async def test_service_without_fast_polling(
     hass: HomeAssistant,
     setup_keba: FakeKebaStation,
-    poll_clock: PollClock,
+    freezer: FrozenDateTimeFactory,
     service: str,
     data: dict[str, Any],
 ) -> None:
@@ -120,7 +127,7 @@ async def test_service_without_fast_polling(
     await hass.services.async_call(DOMAIN, service, data, blocking=True)
     await hass.async_block_till_done()
 
-    assert poll_clock.delays == [5]
+    assert await async_seconds_until_poll(hass, freezer, setup_keba) == POLL_INTERVAL
 
 
 @pytest.mark.parametrize(
@@ -140,15 +147,15 @@ async def test_service_without_fast_polling(
 async def test_service_with_fast_polling(
     hass: HomeAssistant,
     setup_keba: FakeKebaStation,
-    poll_clock: PollClock,
+    freezer: FrozenDateTimeFactory,
     service: str,
     data: dict[str, Any],
 ) -> None:
     """Test the other actions switch the polling loop to 2-second polls."""
     await hass.services.async_call(DOMAIN, service, data, blocking=True)
-    await poll_clock.wait_for_sleep()
+    await async_settle(hass)
 
-    assert poll_clock.delays == [5, 2]
+    assert await async_seconds_until_poll(hass, freezer, setup_keba) == 2
 
 
 @pytest.mark.parametrize(

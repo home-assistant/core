@@ -6,12 +6,13 @@ so its action is notify.notify, not notify.keba.
 
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .conftest import FakeKebaStation, PollClock
+from .conftest import POLL_INTERVAL, FakeKebaStation, async_seconds_until_poll
 
 
 @pytest.mark.parametrize(
@@ -32,7 +33,7 @@ from .conftest import FakeKebaStation, PollClock
 async def test_notify_shows_text(
     hass: HomeAssistant,
     setup_keba: FakeKebaStation,
-    poll_clock: PollClock,
+    freezer: FrozenDateTimeFactory,
     data: dict[str, Any],
     command: str,
 ) -> None:
@@ -41,7 +42,7 @@ async def test_notify_shows_text(
     await hass.async_block_till_done()
 
     assert setup_keba.commands[1:] == [command]
-    assert poll_clock.delays == [5]
+    assert await async_seconds_until_poll(hass, freezer, setup_keba) == POLL_INTERVAL
 
 
 async def test_display_action_is_named_notify(
