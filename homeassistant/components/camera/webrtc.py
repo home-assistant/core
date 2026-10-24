@@ -12,9 +12,10 @@ from mashumaro import MissingField
 import probatio
 from webrtc_models import RTCConfiguration, RTCIceCandidate, RTCIceCandidateInit
 
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid
@@ -228,6 +229,8 @@ def require_webrtc_support(
         ) -> None:
             """Validate that the camera supports WebRTC."""
             entity_id = msg["entity_id"]
+            if not connection.user.permissions.check_entity(entity_id, POLICY_READ):
+                raise Unauthorized(entity_id=entity_id, permission=POLICY_READ)
             camera = get_camera_from_entity_id(hass, entity_id)
             if StreamType.WEB_RTC not in (
                 stream_types := camera.camera_capabilities.frontend_stream_types
