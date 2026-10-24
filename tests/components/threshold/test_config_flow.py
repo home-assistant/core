@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
@@ -11,9 +13,6 @@ from homeassistant.components.threshold.const import DOMAIN
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
-from tests.typing import WebSocketGenerator
 
 
 async def test_config_flow(hass: HomeAssistant) -> None:
@@ -28,7 +27,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.threshold.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -92,7 +91,7 @@ async def test_fail(
 
     with patch(
         "homeassistant.components.threshold.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -6,13 +6,12 @@ from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.webhook import DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_capture_events
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)

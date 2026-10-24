@@ -20,7 +20,7 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -194,10 +194,6 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the list."""
-        position = 0
-        if len(self.shopping_items) > 0:
-            position = self.shopping_items[-1].position + 1
-
         new_shopping_item: MutateShoppingItem | None = None
 
         if item.summary and self.parse_todo_new:
@@ -210,11 +206,42 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                 quantity=0.0,
             )
 
-        new_shopping_item.list_id = self._shopping_list_id
-        new_shopping_item.position = position
+        await self._async_add_shopping_item(new_shopping_item)
+
+    async def async_add_ingredient(
+        self,
+        food_id: str | None = None,
+        note: str | None = None,
+        unit_id: str | None = None,
+        quantity: float = 0.0,
+    ) -> None:
+        """Add an ingredient directly to the shopping list."""
+        food_id = food_id or None
+        if not food_id and not note:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="ingredient_requires_food_or_note",
+            )
+
+        await self._async_add_shopping_item(
+            MutateShoppingItem(
+                food_id=food_id,
+                note=note,
+                unit_id=unit_id,
+                quantity=quantity,
+                is_food=bool(food_id),
+            )
+        )
+
+    async def _async_add_shopping_item(self, item: MutateShoppingItem) -> None:
+        """Append a shopping item and refresh the list."""
+        item.list_id = self._shopping_list_id
+        item.position = (
+            self.shopping_items[-1].position + 1 if self.shopping_items else 0
+        )
 
         try:
-            await self.coordinator.client.add_shopping_item(new_shopping_item)
+            await self.coordinator.client.add_shopping_item(item)
         except MealieError as exception:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

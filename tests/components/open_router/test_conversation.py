@@ -14,6 +14,7 @@ from openai.types.chat.chat_completion_chunk import (
     ChoiceDeltaToolCallFunction,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -25,7 +26,6 @@ from homeassistant.helpers.llm import ToolInput, ToolResult
 from . import setup_integration
 from .conftest import get_generator_from_data
 
-from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.conversation import MockChatLog, mock_chat_log  # noqa: F401
 
 

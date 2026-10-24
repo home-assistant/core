@@ -8,6 +8,12 @@ from unittest.mock import ANY, AsyncMock, Mock, call, patch
 from azure.core.exceptions import AzureError, HttpResponseError, ServiceRequestError
 from azure.storage.blob import BlobProperties
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.azure_storage.backup import (
     async_get_backup_agents,
@@ -23,9 +29,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import BACKUP_METADATA, TEST_BACKUP
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

@@ -55,6 +55,7 @@ from aiohasupervisor.store import StoreClient
 from aiohasupervisor.supervisor import SupervisorManagementClient
 import probatio
 import pytest
+from pytest_homeassistant.common import QualityScaleStatus, get_quality_scale
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 
@@ -93,8 +94,6 @@ from homeassistant.helpers.typing import VolSchemaType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml as yaml_util
 
-from tests.common import QualityScaleStatus, get_quality_scale
-
 if TYPE_CHECKING:
     from homeassistant.components.hassio import AddonManager
 
@@ -104,7 +103,7 @@ if TYPE_CHECKING:
     from .sensor.common import MockSensor
     from .switch.common import MockSwitch
 
-pytest.register_assert_rewrite("tests.components.common")
+pytest.register_assert_rewrite("pytest_homeassistant.components.common")
 
 # Regex for accessing the integration name from the test path
 RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([^/]+)\/.*")
@@ -823,6 +822,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.coordinator.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.websocket_api.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(

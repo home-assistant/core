@@ -12,6 +12,7 @@ from google.genai.types import (
     ThinkingLevel,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -43,7 +44,6 @@ from homeassistant.helpers.llm import ToolInput
 
 from . import API_ERROR_500, CLIENT_ERROR_BAD_REQUEST
 
-from tests.common import MockConfigEntry
 from tests.components.conversation import (
     MockChatLog,
     mock_chat_log,  # noqa: F401

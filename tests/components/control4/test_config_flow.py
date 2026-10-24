@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from aiohttp.client_exceptions import ClientError
 from pyControl4.error_handling import BadCredentials, NotFound, Unauthorized
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.control4.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(

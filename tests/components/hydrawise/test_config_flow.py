@@ -7,6 +7,7 @@ from pydrawise import APIError, auth as pydrawise_auth
 from pydrawise.exceptions import NotAuthorizedError
 from pydrawise.schema import User
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.hydrawise.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

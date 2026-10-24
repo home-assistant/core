@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from swisscom_internet_box import SwisscomAuthError, SwisscomConnectionError
 
 from homeassistant.components.swisscom.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import TEST_FORMATTED_MAC, TEST_MODEL_NAME, USER_INPUT
-
-from tests.common import MockConfigEntry
 
 NEW_PASSWORD = "new-password"
 

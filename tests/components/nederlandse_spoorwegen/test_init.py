@@ -1,13 +1,12 @@
 """Test the Nederlandse Spoorwegen init."""
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_device_registry_integration(

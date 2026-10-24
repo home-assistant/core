@@ -5,6 +5,12 @@ import logging
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    patch,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rpi_power import binary_sensor
@@ -19,13 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    patch,
-    snapshot_platform,
-)
 
 ENTITY_ID = "binary_sensor.raspberry_pi_power_status"
 

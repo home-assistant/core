@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock
 from aiostreammagic import StreamMagicError
 from aiostreammagic.models import CallbackType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cambridge_audio.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import mock_state_update, setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_entry_not_ready(

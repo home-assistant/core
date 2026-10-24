@@ -4,7 +4,6 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Final
-from urllib.parse import urlsplit
 
 from fronius_modbus import (
     GEN24_UNIT_ID,
@@ -36,6 +35,7 @@ from .const import (
     FroniusDeviceInfo,
     SolarNetId,
     discovery_signal,
+    host_from_config,
 )
 from .coordinator import (
     FroniusCoordinatorBase,
@@ -253,9 +253,9 @@ class FroniusSolarNet:
             solar_net_device.sw_version = _logger_info["software_version"]["value"]
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=self.config_entry.entry_id,
-            **solar_net_device,
+            device_info=solar_net_device,
         )
         return solar_net_device
 
@@ -362,9 +362,7 @@ class FroniusSolarNet:
 
     def _modbus_params(self) -> ModbusTcpParams | None:
         """Return the Modbus link settings, or None for an unusable host."""
-        # the configured host may be a bare host name or a full URL
-        url = self.host if "://" in self.host else f"//{self.host}"
-        if (modbus_host := urlsplit(url).hostname) is None:
+        if (modbus_host := host_from_config(self.host)) is None:
             return None
         return ModbusTcpParams(
             host=modbus_host, port=self.config_entry.data[CONF_MODBUS_PORT]

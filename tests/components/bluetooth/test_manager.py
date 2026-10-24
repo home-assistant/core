@@ -14,6 +14,28 @@ from habluetooth import BluetoothScanningMode, HaScanner
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 from habluetooth.const import STALE_ROAM_FACTOR
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_call_logger_set_level,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    mock_integration,
+)
+from pytest_homeassistant.components.bluetooth import (
+    HCI0_SOURCE_ADDRESS,
+    HCI1_SOURCE_ADDRESS,
+    FakeRemoteScanner,
+    FakeScanner,
+    MockBleakClient,
+    _get_manager,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_source,
+    inject_advertisement_with_time_and_source,
+    inject_advertisement_with_time_and_source_connectable,
+    patch_bluetooth_time,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import bluetooth
@@ -45,30 +67,6 @@ from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
-
-from . import (
-    HCI0_SOURCE_ADDRESS,
-    HCI1_SOURCE_ADDRESS,
-    FakeRemoteScanner,
-    FakeScanner,
-    MockBleakClient,
-    _get_manager,
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement_with_source,
-    inject_advertisement_with_time_and_source,
-    inject_advertisement_with_time_and_source_connectable,
-    patch_bluetooth_time,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_call_logger_set_level,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    mock_integration,
-)
 
 
 @pytest.mark.usefixtures("enable_bluetooth")

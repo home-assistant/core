@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pysuez.exception import PySuezError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(

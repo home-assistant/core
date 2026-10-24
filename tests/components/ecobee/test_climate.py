@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import const
 from homeassistant.components.climate import ClimateEntityFeature
@@ -22,8 +23,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "climate.ecobee"
 

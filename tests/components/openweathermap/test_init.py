@@ -1,12 +1,11 @@
 """Test the OpenWeatherMap integration setup."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openweathermap.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("mode", ["v2.5"], indirect=True)

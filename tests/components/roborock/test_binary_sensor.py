@@ -4,6 +4,7 @@ import copy
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from roborock.data import RoborockDockTypeCode
 from roborock.device_features import RoborockDockFeatures
 from roborock.exceptions import RoborockException
@@ -18,8 +19,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
