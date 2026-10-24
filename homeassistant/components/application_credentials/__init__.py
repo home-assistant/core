@@ -39,7 +39,13 @@ from homeassistant.loader import (
 from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
-__all__ = ["AuthorizationServer", "ClientCredential", "async_import_client_credential"]
+__all__ = [
+    "AuthorizationServer",
+    "ClientCredential",
+    "DeviceFlowAuthorizationServer",
+    "DeviceFlowClientCredential",
+    "async_import_client_credential",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,8 +81,27 @@ class ClientCredential:
 
 
 @dataclass
+class DeviceFlowClientCredential:
+    """Represent the public OAuth client of a device flow integration."""
+
+    client_id: str
+    name: str | None = None
+
+
+@dataclass
 class AuthorizationServer:
     """Represent an OAuth2 Authorization Server."""
+
+    authorize_url: str
+    token_url: str
+
+
+@dataclass
+class DeviceFlowAuthorizationServer:
+    """Represent an OAuth2 Authorization Server that supports Device Flow.
+
+    The authorize_url is the device authorization endpoint (RFC 8628 section 3.1).
+    """
 
     authorize_url: str
     token_url: str
@@ -224,14 +249,53 @@ class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
         return self._name or self.client_id
 
 
+class DeviceFlowImplementation(config_entry_oauth2_flow.DeviceFlowImplementation):
+    """Application Credentials device flow implementation."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        domain: str,
+        credential: DeviceFlowClientCredential,
+        authorization_server: DeviceFlowAuthorizationServer,
+        integration_name: str,
+    ) -> None:
+        """Initialize DeviceFlowImplementation."""
+        super().__init__(
+            hass,
+            domain,
+            credential.client_id,
+            authorization_server.authorize_url,
+            authorization_server.token_url,
+        )
+        self._name = credential.name or integration_name
+
+    @property
+    @override
+    def name(self) -> str:
+        """Name of the implementation."""
+        return self._name
+
+
 async def _async_provide_implementation(
     hass: HomeAssistant, domain: str
-) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+) -> list[config_entry_oauth2_flow.AbstractOAuth2BaseImplementation]:
     """Return registered OAuth implementations."""
 
     platform = await _get_platform(hass, domain)
     if not platform:
         return []
+
+    if hasattr(platform, "async_get_device_flow_authorization_server"):
+        return [
+            DeviceFlowImplementation(
+                hass,
+                domain,
+                await platform.async_get_device_flow_client_credential(hass),
+                await platform.async_get_device_flow_authorization_server(hass),
+                (await async_get_integration(hass, domain)).name,
+            )
+        ]
 
     credentials = hass.data[DATA_COMPONENT].async_client_credentials(domain)
     if hasattr(platform, "async_get_auth_implementation"):
@@ -273,12 +337,28 @@ class ApplicationCredentialsProtocol(Protocol):
     the default oauth implementation will be used. Otherwise a platform may
     implement async_get_auth_implementation to give their use a custom
     AbstractOAuth2Implementation.
+
+    A platform for a provider that only offers the device authorization grant
+    (RFC 8628) implements async_get_device_flow_authorization_server and
+    async_get_device_flow_client_credential instead. The integration supplies
+    its public client, so users never add credentials for it. A platform never
+    implements both grants; the authorization code grant is preferred.
     """
 
     async def async_get_authorization_server(
         self, hass: HomeAssistant
     ) -> AuthorizationServer:
         """Return authorization server, for the default auth implementation."""
+
+    async def async_get_device_flow_authorization_server(
+        self, hass: HomeAssistant
+    ) -> DeviceFlowAuthorizationServer:
+        """Return authorization server, for the device flow implementation."""
+
+    async def async_get_device_flow_client_credential(
+        self, hass: HomeAssistant
+    ) -> DeviceFlowClientCredential:
+        """Return the public client, for the device flow implementation."""
 
     async def async_get_auth_implementation(
         self, hass: HomeAssistant, auth_domain: str, credential: ClientCredential
@@ -309,12 +389,32 @@ async def _get_platform(
             err,
         )
         return None
-    if not hasattr(platform, "async_get_authorization_server") and not hasattr(
-        platform, "async_get_auth_implementation"
+    if hasattr(platform, "async_get_device_flow_authorization_server") != hasattr(
+        platform, "async_get_device_flow_client_credential"
+    ):
+        raise ValueError(
+            f"Integration '{integration_domain}' platform {DOMAIN} must implement"
+            " both 'async_get_device_flow_authorization_server' and"
+            " 'async_get_device_flow_client_credential'"
+        )
+    if hasattr(platform, "async_get_device_flow_authorization_server") and (
+        hasattr(platform, "async_get_authorization_server")
+        or hasattr(platform, "async_get_auth_implementation")
+    ):
+        raise ValueError(
+            f"Integration '{integration_domain}' platform {DOMAIN} must implement"
+            " one grant: the device flow only when the provider offers no"
+            " authorization code grant"
+        )
+    if not (
+        hasattr(platform, "async_get_authorization_server")
+        or hasattr(platform, "async_get_auth_implementation")
+        or hasattr(platform, "async_get_device_flow_authorization_server")
     ):
         raise ValueError(
             f"Integration '{integration_domain}' platform {DOMAIN} did not implement"
-            " 'async_get_authorization_server' or 'async_get_auth_implementation'"
+            " 'async_get_authorization_server', 'async_get_auth_implementation'"
+            " or 'async_get_device_flow_authorization_server'"
         )
     return platform
 
@@ -335,7 +435,15 @@ async def handle_integration_list(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
-    domains = await async_get_application_credentials(hass)
+    domains = [
+        domain
+        for domain in await async_get_application_credentials(hass)
+        # Device flow integrations supply their own client
+        if not (
+            (platform := await _get_platform(hass, domain))
+            and hasattr(platform, "async_get_device_flow_authorization_server")
+        )
+    ]
     result = {
         "domains": domains,
         "integrations": {
