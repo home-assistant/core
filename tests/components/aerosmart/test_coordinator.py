@@ -96,7 +96,7 @@ async def test_device_info_recovers_after_initial_general_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(device.id)
+    device = device_registry.async_get(device.id)
     assert device is not None
     assert device.model == "3"
     assert device.sw_version == "42"

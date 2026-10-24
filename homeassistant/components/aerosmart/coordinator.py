@@ -93,8 +93,8 @@ class AerosmartCoordinator(DataUpdateCoordinator[UpdateReport]):
             return
 
         registry = dr.async_get(self.hass)
-        device = registry.async_get_device(
-            identifiers={(DOMAIN, self.config_entry.entry_id)}
+        device = registry.async_get_device_by_identifier(
+            (DOMAIN, self.config_entry.entry_id), self.config_entry.entry_id
         )
         if device is None:
             return
