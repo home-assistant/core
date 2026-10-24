@@ -21,11 +21,13 @@ class WeatherFlowCloudEntity[T](CoordinatorEntity[BaseWeatherFlowCoordinator[T]]
         """Class initializer."""
         super().__init__(coordinator)
         self.station_id = station_id
+        outdoor_device = coordinator.stations.station_map[station_id].outdoor_devices[0]
 
         self._attr_device_info = DeviceInfo(
             name=coordinator.get_station_name(station_id),
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, str(station_id))},
             manufacturer="WeatherFlow",
+            sw_version=outdoor_device.firmware_revision,
             configuration_url=f"https://tempestwx.com/station/{station_id}/grid",
         )
