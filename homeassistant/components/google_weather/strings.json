@@ -113,7 +113,7 @@
   },
   "services": {
     "get_minute_forecast": {
-      "description": "Retrieves the precipitation forecast (nowcast) for up to 6 hours. Unlike the cached forecasts, every call makes a live request to the Google Weather API and counts toward your quota.",
+      "description": "Retrieves the precipitation forecast (nowcast) for up to 6 hours. Amounts are returned in the weather entity's precipitation unit; the snowfall amount is the liquid-water equivalent, not the snow depth. Unlike the cached forecasts, every call makes a live request to the Google Weather API and counts toward your quota.",
       "name": "Get minute forecast"
     }
   }

@@ -41,6 +41,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 
 async def test_weather(
@@ -259,6 +260,30 @@ async def test_minute_forecast_service(
         latitude=10.1, longitude=20.1
     )
     assert response == snapshot
+
+
+async def test_minute_forecast_service_unit_conversion(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test that amounts follow the configured unit system like get_forecasts."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        GoogleWeatherService.GET_MINUTE_FORECAST,
+        {ATTR_ENTITY_ID: "weather.home"},
+        blocking=True,
+        return_response=True,
+    )
+    segments = response["weather.home"]["segments"]
+    # 0.5 mm and 0 mm from the fixture, converted to inches.
+    assert segments[0]["precipitation"] == 0.02
+    assert segments[0]["snowfall_amount"] == 0.0
+    assert segments[1]["precipitation"] is None
+    assert segments[1]["snowfall_amount"] is None
 
 
 async def test_minute_forecast_service_error(

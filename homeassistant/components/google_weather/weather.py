@@ -7,6 +7,7 @@ from google_weather_api import (
     GoogleWeatherApiError,
     HourlyForecastResponse,
     PrecipitationSegment,
+    QuantitativePrecipitationForecast,
     WeatherCondition,
 )
 
@@ -38,6 +39,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
+    ATTR_WEATHER_PRECIPITATION_UNIT,
+    UNIT_CONVERSIONS,
     CoordinatorWeatherEntity,
     Forecast,
     WeatherEntityFeature,
@@ -66,6 +69,9 @@ from .coordinator import (
 from .entity import GoogleWeatherBaseEntity
 
 PARALLEL_UPDATES = 0
+
+# Same precision the weather platform applies when converting forecast values.
+_PRECIPITATION_ROUNDING_PRECISION = 2
 
 # Maps https://developers.google.com/maps/documentation/weather/weather-condition-icons
 # to https://contributors.home-assistant.io/core/entities/weather/#conditions
@@ -231,19 +237,35 @@ class GoogleWeatherEntity(
                     "end_time": segment.time_frame.end_time,
                     "precipitation_type": _PRECIPITATION_TYPE_MAP[segment.type],
                     "precipitation_probability": segment.probability,
-                    "precipitation": (
-                        segment.qpf.quantity if segment.qpf is not None else None
-                    ),
-                    "snowfall": (
-                        segment.snowfall_amount.quantity
-                        if segment.snowfall_amount is not None
-                        else None
+                    "precipitation": self._convert_precipitation(segment.qpf),
+                    "snowfall_amount": self._convert_precipitation(
+                        segment.snowfall_amount
                     ),
                     "intensity": _PRECIPITATION_INTENSITY_MAP[segment.intensity],
                 }
                 for segment in response.segments
             ],
         }
+
+    def _convert_precipitation(
+        self, amount: QuantitativePrecipitationForecast | None
+    ) -> float | None:
+        """Convert a precipitation amount to the entity's precipitation unit.
+
+        The API always reports amounts in millimeters because the client is
+        configured for metric units; expose them the same way weather.get_forecasts
+        does, in the unit the weather entity uses.
+        """
+        if amount is None:
+            return None
+        return round(
+            UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
+                amount.quantity,
+                UnitOfPrecipitationDepth.MILLIMETERS,
+                self._precipitation_unit,
+            ),
+            _PRECIPITATION_ROUNDING_PRECISION,
+        )
 
     @property
     @override

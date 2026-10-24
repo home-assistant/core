@@ -134,7 +134,7 @@
           'precipitation': 0.5,
           'precipitation_probability': 62,
           'precipitation_type': 'rain',
-          'snowfall': 0.0,
+          'snowfall_amount': 0.0,
           'start_time': '2025-06-01T00:00:00Z',
         }),
         dict({
@@ -143,7 +143,7 @@
           'precipitation': None,
           'precipitation_probability': 0,
           'precipitation_type': 'none',
-          'snowfall': None,
+          'snowfall_amount': None,
           'start_time': '2025-06-01T00:02:00Z',
         }),
       ]),
