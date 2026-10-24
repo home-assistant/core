@@ -148,7 +148,9 @@ class OverkizExecutor:
                         self.coordinator.writes_waiting.discard(key)
                         self.coordinator.async_send_pending_commands(key)
                     raise
-                finally:
+                else:
+                    # Released once: the write that replaces a failed one may
+                    # already hold it.
                     if key is not None:
                         self.coordinator.writes_waiting.discard(key)
             else:

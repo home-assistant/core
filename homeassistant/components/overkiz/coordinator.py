@@ -111,6 +111,8 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         # Mode of the program a zone was set to, until the device reports it.
         self.mode_writes: dict[str, tuple[str, float]] = {}
         self._write_lock = asyncio.Lock()
+        # Once the config entry unloads, nothing deferred is sent any more.
+        self._shutting_down = False
         self._last_write_at: float | None = None
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
@@ -176,6 +178,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     @callback
     def async_create_write_task(self, target: Coroutine[Any, Any, None]) -> None:
         """Run a deferred write, canceled when the config entry is unloaded."""
+        if self._shutting_down:
+            target.close()
+            return
         self.config_entry.async_create_background_task(
             self.hass, target, "overkiz deferred write"
         )
@@ -189,6 +194,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     @override
     async def async_shutdown(self) -> None:
         """Forget the writes still waiting, then shut down."""
+        self._shutting_down = True
         self.pending_commands.clear()
         await super().async_shutdown()
 

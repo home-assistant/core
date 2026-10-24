@@ -2618,3 +2618,78 @@ async def test_zone_control_zone_unload_forgets_waiting_writes(
 
     assert not coordinator.pending_commands
     assert _sent_commands(mock_client) == [[("setHeatingTargetTemperature", [19.0])]]
+
+
+async def test_zone_control_zone_nothing_deferred_after_unload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test no deferred write starts once the integration is unloaded."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+    coordinator = _zone_coordinator(hass)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+    key = (ZONE_CONTROL_ZONE.device_url, ("setHeatingTargetTemperature",))
+    coordinator.pending_commands[key] = [
+        Command(name="setHeatingTargetTemperature", parameters=[21.0])
+    ]
+    coordinator.async_send_pending_commands(key)
+    await hass.async_block_till_done()
+
+    mock_client.execute_action_group.assert_not_called()
+
+
+async def test_zone_control_zone_replacement_of_a_failed_write_keeps_its_turn(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a value set while the replacement of a failed write runs waits for it."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+    coordinator = _zone_coordinator(hass)
+    executor = OverkizExecutor(ZONE_CONTROL_ZONE.device_url, coordinator)
+    replacement_sent = asyncio.Event()
+    calls = 0
+
+    async def execute_action_group(*args: Any, **kwargs: Any) -> str:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise BaseOverkizError("Server is down")
+        await replacement_sent.wait()
+        return f"exec-{calls}"
+
+    mock_client.execute_action_group.side_effect = execute_action_group
+
+    async with coordinator._write_lock:
+        first = hass.async_create_task(
+            executor.async_execute_commands(
+                [Command(name="setHeatingTargetTemperature", parameters=[19.0])],
+                coalesce=True,
+            )
+        )
+        await executor.async_execute_commands(
+            [Command(name="setHeatingTargetTemperature", parameters=[20.0])],
+            coalesce=True,
+        )
+
+    with pytest.raises(HomeAssistantError):
+        await first
+
+    # 20 °C is being sent in place of 19 °C: 21 °C waits behind it.
+    await executor.async_execute_commands(
+        [Command(name="setHeatingTargetTemperature", parameters=[21.0])],
+        coalesce=True,
+    )
+    assert calls == 2
+
+    replacement_sent.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
