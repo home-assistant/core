@@ -41,16 +41,18 @@ async def async_setup_entry(
         application_ids=entry.data[CONF_APPLICATION_IDS],
         network_id=entry.entry_id,
     )
+    endpoint = URL(entry.data[CONF_ENDPOINT])
+    # Hosted TTN serves its console on the default HTTPS port. Self-hosted
+    # servers can use any port, so their console address is unknown.
+    configuration_url = (
+        str(endpoint.with_port(None).with_path("/console/"))
+        if endpoint.host and endpoint.host.endswith(".cloud.thethings.network")
+        else None
+    )
     try:
         await connection.async_connect()
         unregister = await lorawan.async_register_connection(
-            hass,
-            entry,
-            connection=connection,
-            # The console is served over HTTPS without the gRPC port.
-            configuration_url=str(
-                URL(entry.data[CONF_ENDPOINT]).with_port(None).with_path("/console/")
-            ),
+            hass, entry, connection=connection, configuration_url=configuration_url
         )
     except AuthenticationError as error:
         await connection.close()
