@@ -13,3 +13,5 @@ MOCK_STATUS = ArrayOfStatus.from_dict(
 MOCK_AVAILABLE_COMMANDS: dict[str, Any] = load_json_object_fixture(
     "home_connect/available_commands.json"
 )
+MOCK_IMAGES: dict[str, Any] = load_json_object_fixture("home_connect/images.json")
+MOCK_IMAGE_CONTENT = b"image content"

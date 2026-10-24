@@ -112,6 +112,17 @@
         "name": "Stop program"
       }
     },
+    "camera": {
+      "camera": {
+        "name": "{camera}"
+      },
+      "refrigerator_door_camera": {
+        "name": "Refrigerator door camera"
+      },
+      "refrigerator_interior_camera": {
+        "name": "Refrigerator interior camera"
+      }
+    },
     "climate": {
       "air_conditioner": {
         "state_attributes": {
@@ -1582,6 +1593,9 @@
     },
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
+    },
+    "fetch_image_error": {
+      "message": "Error obtaining the image of {entity_id}: {error}"
     },
     "fetch_program_error": {
       "message": "Error obtaining the selected or active program: {error}"
