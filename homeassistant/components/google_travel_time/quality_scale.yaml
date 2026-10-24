@@ -1,0 +1,82 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: todo
+  config-flow-test-coverage: todo
+  dependency-transparency: done
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide triggers.
+  entity-event-setup: todo
+  entity-unique-id: done
+  has-entity-name: todo
+  runtime-data: todo
+  test-before-configure: done
+  test-before-setup: todo
+  unique-config-entry: todo
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: todo
+  docs-configuration-parameters: todo
+  docs-installation-parameters: done
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: This integration is a cloud service and does not support discovery.
+  discovery:
+    status: exempt
+    comment: This integration is a cloud service and does not support discovery.
+  docs-data-update: todo
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: This integration is a cloud service and does not connect to physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: The integration manages a single static service device per config entry.
+  entity-category:
+    status: exempt
+    comment: The integration only provides a primary sensor entity.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration only provides a primary sensor entity.
+  entity-translations: todo
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The sensor relies on the icon provided by its device class.
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: The dependency uses gRPC and does not accept a Home Assistant web session.
+  strict-typing: todo

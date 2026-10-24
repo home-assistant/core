@@ -398,7 +398,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "google_pubsub",
     "google_sheets",
     "google_translate",
-    "google_travel_time",
     "google_wifi",
     "govee_ble",
     "govee_light_local",
