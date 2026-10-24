@@ -338,6 +338,7 @@ FLOWS = {
         "here_travel_time",
         "hikvision",
         "hisense_aehw4a1",
+        "hitron_coda",
         "hive",
         "hko",
         "hlk_sw16",
