@@ -7392,12 +7392,26 @@
     },
     "nad": {
       "name": "NAD",
-      "integration_type": "hub",
-      "categories": [
-        "media_entertainment.speakers_audio"
-      ],
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "integrations": {
+        "nad": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "categories": [
+            "media_entertainment.speakers_audio"
+          ],
+          "name": "NAD"
+        },
+        "nad_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "categories": [
+            "media_entertainment.speakers_audio"
+          ],
+          "name": "NAD Infrared"
+        }
+      }
     },
     "nam": {
       "name": "Nettigo Air Monitor",

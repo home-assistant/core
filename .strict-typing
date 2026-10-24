@@ -429,6 +429,7 @@ homeassistant.components.music_assistant.*
 homeassistant.components.my.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*
+homeassistant.components.nad_infrared.*
 homeassistant.components.nam.*
 homeassistant.components.namecheapdns.*
 homeassistant.components.nasweb.*

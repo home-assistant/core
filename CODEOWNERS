@@ -1280,6 +1280,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/mystrom/ @fabaff
 /homeassistant/components/myuplink/ @pajzo @astrandb
 /tests/components/myuplink/ @pajzo @astrandb
+/homeassistant/components/nad_infrared/ @rrooggiieerr
+/tests/components/nad_infrared/ @rrooggiieerr
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
 /homeassistant/components/namecheapdns/ @tr4nt0r
