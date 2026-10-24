@@ -512,6 +512,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_set_window_open_good(
     hass: HomeAssistant,
     fritz: Mock,
+    device_registry: dr.DeviceRegistry,
     service_data: dict[str, int],
 ) -> None:
     """Test set_window_open action with valid durations."""
@@ -522,8 +523,7 @@ async def test_set_window_open_good(
     )
     assert fritz().update_devices.call_count == 1
 
-    device_reg = dr.async_get(hass)
-    device_entry = device_reg.async_get_device(identifiers={(DOMAIN, device.ain)})
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, device.ain)})
     assert device_entry
 
     await hass.services.async_call(
@@ -560,6 +560,7 @@ async def test_set_window_open_good(
 async def test_set_window_open_bad(
     hass: HomeAssistant,
     fritz: Mock,
+    device_registry: dr.DeviceRegistry,
     service_data: tuple[dict[str, int], str],
 ) -> None:
     """Test set_window_open action with invalid durations."""
@@ -570,8 +571,7 @@ async def test_set_window_open_bad(
     )
     assert fritz().update_devices.call_count == 1
 
-    device_reg = dr.async_get(hass)
-    device_entry = device_reg.async_get_device(identifiers={(DOMAIN, device.ain)})
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, device.ain)})
     assert device_entry
 
     with pytest.raises(probatio.error.MultipleInvalid, match=service_data[1]):
@@ -585,7 +585,9 @@ async def test_set_window_open_bad(
     assert fritz().set_window_open.call_count == 0
 
 
-async def test_set_window_close(hass: HomeAssistant, fritz: Mock) -> None:
+async def test_set_window_close(
+    hass: HomeAssistant, fritz: Mock, device_registry: dr.DeviceRegistry
+) -> None:
     """Test set_window_close action."""
     device = FritzDeviceClimateMock()
 
@@ -594,8 +596,7 @@ async def test_set_window_close(hass: HomeAssistant, fritz: Mock) -> None:
     )
     assert fritz().update_devices.call_count == 1
 
-    device_reg = dr.async_get(hass)
-    device_entry = device_reg.async_get_device(identifiers={(DOMAIN, device.ain)})
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, device.ain)})
     assert device_entry
 
     await hass.services.async_call(
