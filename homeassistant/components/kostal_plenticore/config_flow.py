@@ -45,7 +45,7 @@ async def test_connection(hass: HomeAssistant, data) -> str:
             data[CONF_PASSWORD], service_code=data.get(CONF_SERVICE_CODE)
         )
         hostname_id = await get_hostname_id(client)
-        values = await client.get_setting_values("scb:network", hostname_id)
+        values = await client.get_setting_values({"scb:network": [hostname_id]})
 
     return values["scb:network"][hostname_id]
 

@@ -104,7 +104,7 @@ async def async_setup_entry(
 
     # add shadow management switches for strings which support it
     string_count_setting = await plenticore.client.get_setting_values(
-        "devices:local", "Properties:StringCnt"
+        "devices:local", ["Properties:StringCnt"]
     )
     try:
         string_count = int(
@@ -114,7 +114,7 @@ async def async_setup_entry(
         string_count = 0
 
     dc_strings = tuple(range(string_count))
-    dc_string_feature_ids = tuple(
+    dc_string_feature_ids = list(
         PlenticoreShadowMgmtSwitch.DC_STRING_FEATURE_DATA_ID % dc_string
         for dc_string in dc_strings
     )
