@@ -1,0 +1,14 @@
+[
+  {
+    "id": "L_111",
+    "organizationId": "123456",
+    "name": "Home",
+    "productTypes": ["appliance", "switch", "wireless"]
+  },
+  {
+    "id": "L_222",
+    "organizationId": "123456",
+    "name": "Cameras",
+    "productTypes": ["camera"]
+  }
+]
