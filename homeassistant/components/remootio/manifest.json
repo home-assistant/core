@@ -1,0 +1,12 @@
+{
+  "domain": "remootio",
+  "name": "Remootio",
+  "codeowners": ["@remootio"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/remootio",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["pyremootio"],
+  "quality_scale": "bronze",
+  "requirements": ["pyremootio==0.1.4"]
+}
