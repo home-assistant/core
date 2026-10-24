@@ -160,9 +160,15 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             finally:
                 self._last_write_at = monotonic()
 
-    def discard_pending_commands(self, device_url: str) -> None:
-        """Forget what waits to be written to a device."""
-        for key in [key for key in self.pending_commands if key[0] == device_url]:
+    def discard_pending_commands(
+        self, device_url: str, command_names: set[str]
+    ) -> None:
+        """Forget the writes of these commands that wait for a device."""
+        for key in [
+            key
+            for key in self.pending_commands
+            if key[0] == device_url and command_names.intersection(key[1])
+        ]:
             del self.pending_commands[key]
 
     @callback
@@ -245,6 +251,10 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 raise ConfigEntryAuthFailed("Invalid authentication.") from exception
             except TooManyRequestsError as exception:
                 raise UpdateFailed("Too many requests, try again later.") from exception
+
+            # The states have just been fetched again: the derogation they
+            # report replaces the one a write left.
+            self.derogation_writes.clear()
 
             # What waited for a running write, which is forgotten now, is sent.
             for key in list(self.pending_commands):
@@ -502,7 +512,11 @@ def _report_failed_execution(
     # applied and only delays the new states: nothing for the user to act on.
     failed_names = _failed_command_names(commands, event)
     if failed_names is None:
-        actionable = event.failure_type_code == FailureType.PEER_DOWN
+        # Executions merged under one id don't tell whose command failed: the
+        # failure is reported when they all wrote a setting.
+        actionable = event.failure_type_code == FailureType.PEER_DOWN or (
+            len(commands) > 1 and all(_written_commands(record) for record in commands)
+        )
     else:
         actionable = any(not name.startswith("refresh") for name in failed_names)
 
@@ -530,9 +544,8 @@ def _report_failed_execution(
         )
         return True
 
-    _create_failure_issue(
-        coordinator, commands[0]["device_url"], event.failure_type_code.name
-    )
+    for device_url in {record["device_url"] for record in commands}:
+        _create_failure_issue(coordinator, device_url, event.failure_type_code.name)
     return False
 
 

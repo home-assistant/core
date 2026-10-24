@@ -486,7 +486,13 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         # A setpoint still waiting to be sent would start a derogation over the
         # mode chosen now.
-        self.coordinator.discard_pending_commands(self.device_url)
+        self.coordinator.discard_pending_commands(
+            self.device_url,
+            {
+                OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
+                OverkizCommand.SET_COOLING_TARGET_TEMPERATURE,
+            },
+        )
 
         # For consistency, it is better both are synced like on the Thermostat.
         commands = [

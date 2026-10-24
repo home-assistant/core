@@ -141,9 +141,9 @@ class OverkizExecutor:
                     self.coordinator.writes_waiting.add(key)
                 try:
                     exec_id = await self.coordinator.async_execute_throttled(actions)
-                except Exception:
+                except BaseException:
                     # What came in while this write waited its turn is not sent
-                    # after it: send it now.
+                    # after it, whether it failed or was cancelled: send it now.
                     if key is not None:
                         self.coordinator.writes_waiting.discard(key)
                         self.coordinator.async_send_pending_commands(key)
