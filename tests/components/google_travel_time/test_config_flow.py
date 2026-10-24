@@ -312,6 +312,25 @@ async def test_reconfigure_error_keeps_submitted_values(
     referrer_key = next(key for key in section_schema if key == CONF_REFERRER)
     assert referrer_key.description["suggested_value"] == "https://example.org/"
 
+    # Fixing the referrer lets the flow finish
+    routes_mock.async_compute_routes.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **RECONFIGURE_CONFIG,
+            SECTION_API_KEY_OPTIONS: {CONF_REFERRER: "https://example.com/"},
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data == {
+        **RECONFIGURE_CONFIG,
+        CONF_REFERRER: "https://example.com/",
+    }
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
