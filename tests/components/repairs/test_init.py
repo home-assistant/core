@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, Mock
 from awesomeversion.exceptions import AwesomeVersionStrategyException
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import mock_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.repairs import repairs_flow_manager
 from homeassistant.components.repairs.const import DOMAIN
@@ -13,9 +15,6 @@ from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import mock_platform
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])

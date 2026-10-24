@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_qube_heatpump import StatusCode
 from python_qube_heatpump.models import QubeState
 
 from homeassistant.components.hr_energy_qube.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -32,7 +31,7 @@ def mock_device_info() -> Generator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.hr_energy_qube.async_setup_entry", return_value=True
+        "homeassistant.components.hr_energy_qube.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

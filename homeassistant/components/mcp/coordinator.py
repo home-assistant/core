@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = dt.timedelta(minutes=30)
-TIMEOUT = 10
+TIMEOUT = 30
 
 type TokenManager = Callable[[], Awaitable[str]]
 

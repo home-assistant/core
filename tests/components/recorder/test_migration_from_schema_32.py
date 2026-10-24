@@ -10,6 +10,7 @@ import uuid
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import async_test_home_assistant
 from pytest_homeassistant.components.recorder.common import (
     async_attach_db_engine,
     async_drop_index,
@@ -17,6 +18,7 @@ from pytest_homeassistant.components.recorder.common import (
     async_wait_recording_done,
     get_patched_live_version,
 )
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -52,9 +54,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import bytes_to_ulid, ulid_at_time, ulid_to_bytes
 
 from .conftest import instrument_migration
-
-from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceContextManager
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE_32 = "pytest_homeassistant.components.recorder.db_schema_32"

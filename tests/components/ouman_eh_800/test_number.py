@@ -13,6 +13,7 @@ from ouman_eh_800_api import (
     OumanClientError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -26,8 +27,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import SCENARIOS
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize("scenario", SCENARIOS.keys(), indirect=True)

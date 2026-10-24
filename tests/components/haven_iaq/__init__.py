@@ -2,11 +2,11 @@
 
 from ipaddress import ip_address
 
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+
 from homeassistant.components.haven_iaq.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_HOST = "192.0.2.1"
 TEST_PORT = 80

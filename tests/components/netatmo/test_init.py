@@ -16,6 +16,12 @@ from freezegun.api import FrozenDateTimeFactory
 import pyatmo
 from pyatmo.const import ALL_SCOPES
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud, netatmo, webhook
@@ -57,9 +63,7 @@ from .common import (
     simulate_webhook,
 )
 
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 from tests.components.cloud import mock_cloud
-from tests.typing import WebSocketGenerator
 
 # Fake webhook thermostat mode change to "Max"
 FAKE_WEBHOOK = {
@@ -1594,6 +1598,74 @@ async def test_log_when_unavailable(
         await data_handler.async_fetch_data(ACCOUNT)
 
         assert caplog.text.count("recovered") == 1
+
+
+@pytest.mark.parametrize(
+    "error",
+    [TimeoutError, pyatmo.ApiError],
+    ids=["timeout", "api_error"],
+)
+async def test_setup_retried_when_homes_cannot_be_fetched(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    error: type[Exception],
+) -> None:
+    """Test that setup is retried until the homes can be fetched."""
+    failing = True
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        if failing and kwargs.get("endpoint", "").endswith("homesdata"):
+            raise error
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch(
+            "homeassistant.components.netatmo.coordinator.PLATFORMS", [Platform.SWITCH]
+        ),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch("homeassistant.components.netatmo.webhook.webhook_generate_url"),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert hass.states.get(SWITCH_ENTITY_ID) is None
+
+        failing = False
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON
+
+
+async def test_setup_without_homes(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that an account without homes still loads, as a retry cannot help."""
+
+    def remove_homes(payload: dict) -> None:
+        if isinstance(payload.get("body", {}).get("homes"), list):
+            payload["body"]["homes"] = []
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        return await fake_post_request(hass, *args, msg_callback=remove_homes, **kwargs)
+
+    await _setup_switch_platform(hass, config_entry, fake_post)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(SWITCH_ENTITY_ID) is None
 
 
 @contextmanager

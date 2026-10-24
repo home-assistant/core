@@ -6,6 +6,11 @@ from unittest.mock import Mock, call, patch
 from aioshelly.const import MODEL_CAMERA, MODEL_PLUG, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, NotInitialized, RpcCallError
 import pytest
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.shelly.const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -27,9 +32,6 @@ from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration, mock_block_device_push_update_failure
-
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 IR_RAW_RECEIVE_FIRMWARE = "20260903-114309/g0b4c0d1"
 
@@ -272,6 +274,83 @@ async def test_deprecated_firmware_issue(
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 0
+
+
+def _create_unlinked_issue(
+    hass: HomeAssistant, issue_id: str, translation_key: str
+) -> None:
+    """Create an issue as it was raised before issues were linked to entries."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=translation_key,
+        translation_placeholders={
+            "device_name": "Test name",
+            "ip_address": "192.168.1.37",
+            "firmware": "1.0.0",
+            "ha_version": "2025.10.0",
+        },
+    )
+
+
+@pytest.mark.usefixtures("mock_rpc_device")
+async def test_deprecated_firmware_issue_linked_on_setup(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test setup links an issue raised before it was linked to the entry."""
+    issue_id = DEPRECATED_FIRMWARE_ISSUE_ID.format(unique=MOCK_MAC)
+    _create_unlinked_issue(hass, issue_id, "deprecated_firmware")
+    issue_registry.async_ignore(DOMAIN, issue_id, True)
+    with patch(
+        "homeassistant.components.shelly.repairs.DEPRECATED_FIRMWARES",
+        {
+            MODEL_WALL_DISPLAY: DeprecatedFirmwareInfo(
+                {"min_firmware": "2.3.0", "ha_version": "2025.10.0"}
+            )
+        },
+    ):
+        entry = await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.dismissed_version is not None
+
+
+@pytest.mark.parametrize(
+    ("issue_id_format", "translation_key"),
+    [
+        (
+            BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
+            "ble_scanner_firmware_unsupported",
+        ),
+        (DEPRECATED_FIRMWARE_ISSUE_ID, "deprecated_firmware"),
+        (
+            OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
+            "outbound_websocket_incorrectly_enabled",
+        ),
+    ],
+)
+async def test_unlinked_issue_removed_with_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    issue_id_format: str,
+    translation_key: str,
+) -> None:
+    """Test removing an entry that never set up deletes its unlinked issue."""
+    issue_id = issue_id_format.format(unique=MOCK_MAC)
+    _create_unlinked_issue(hass, issue_id, translation_key)
+    entry = await init_integration(hass, 2, skip_setup=True)
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_open_wifi_ap_issue(

@@ -8,6 +8,7 @@ from aiohttp import web
 from aioimmich.assets.models import AssetType
 from aioimmich.exceptions import ImmichError, ImmichForbiddenError, ImmichNotFoundError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.immich.const import DOMAIN
 from homeassistant.components.immich.media_source import (
@@ -27,8 +28,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockRequest, MockStreamReaderChunked
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_get_media_source(hass: HomeAssistant) -> None:

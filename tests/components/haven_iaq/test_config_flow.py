@@ -9,6 +9,7 @@ from haveniaq import (
     HavenUnsupportedProductError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.haven_iaq.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -23,8 +24,6 @@ from . import (
     TEST_UNSUPPORTED_CONTROLLER_INFO,
     ZEROCONF_DISCOVERY,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_haven_client")

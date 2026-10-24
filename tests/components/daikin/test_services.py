@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.components.daikin.services import ATTR_EN_DEMAND, ATTR_MAX_POW
@@ -13,8 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import ZoneDevice
-
-from tests.common import MockConfigEntry
 
 HOST = "127.0.0.1"
 

@@ -1,6 +1,7 @@
 """The tests for the Traccar device tracker platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -17,8 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, mock_restore_cache
 
 DEVICE_ID = "device_1"
 ENTITY_ID = f"{DEVICE_TRACKER_DOMAIN}.{DEVICE_ID}"

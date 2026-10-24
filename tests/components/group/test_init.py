@@ -6,6 +6,15 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    assert_setup_component,
+    async_capture_events,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components import group
 from homeassistant.components.group import DOMAIN
@@ -31,16 +40,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import common
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    assert_setup_component,
-    async_capture_events,
-    mock_integration,
-    mock_platform,
-)
 
 
 async def help_test_mixed_entity_platforms_on_off_state_test(

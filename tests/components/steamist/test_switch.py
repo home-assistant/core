@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
@@ -15,8 +16,6 @@ from . import (
     MOCK_ASYNC_GET_STATUS_INACTIVE,
     _async_setup_entry_with_status,
 )
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_aio_discovery")

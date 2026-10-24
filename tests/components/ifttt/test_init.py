@@ -3,6 +3,8 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_setup_component
+from pytest_homeassistant.typing import ClientSessionGenerator
 import requests
 
 from homeassistant import config_entries
@@ -13,9 +15,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import async_setup_component
-from tests.typing import ClientSessionGenerator
 
 
 async def test_config_flow_registers_webhook(

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from pynecil import CommunicationError, DeviceInfoResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN
@@ -14,8 +15,6 @@ import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 
 from .conftest import DEFAULT_NAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_pynecil", "ble_device")
