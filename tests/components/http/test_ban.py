@@ -1,5 +1,6 @@
 """The tests for the Home Assistant HTTP component."""
 
+from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging
@@ -16,11 +17,13 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import http
 from homeassistant.components.http import DOMAIN
+from homeassistant.components.http.auth import async_setup_auth, async_sign_path
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
     process_success_login,
+    process_wrong_login,
     setup_bans,
 )
 from homeassistant.components.http.view import request_handler_factory
@@ -461,6 +464,99 @@ async def test_failed_login_attempts_counter(
     resp = await client.get("/auth_false")
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+
+
+@pytest.mark.parametrize(
+    ("signed_path", "expiration", "signature_suffix", "headers", "failed_attempts"),
+    [
+        pytest.param("/auth", timedelta(seconds=-5), "", {}, 0, id="expired"),
+        pytest.param("/auth", timedelta(seconds=-5), "x", {}, 1, id="expired_invalid"),
+        pytest.param(
+            "/other", timedelta(seconds=-5), "", {}, 1, id="expired_other_path"
+        ),
+        pytest.param(
+            "/auth",
+            timedelta(seconds=-5),
+            "",
+            {"Authorization": "Bearer invalid"},
+            1,
+            id="expired_with_invalid_token",
+        ),
+        pytest.param("/auth", timedelta(seconds=5), "x", {}, 1, id="invalid"),
+    ],
+)
+async def test_expired_signed_path_not_counted_as_failed_login(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    signed_path: str,
+    expiration: timedelta,
+    signature_suffix: str,
+    headers: dict[str, str],
+    failed_attempts: int,
+) -> None:
+    """Test an expired but genuine signed path is rejected without a ban strike."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def auth_handler(request: web.Request) -> tuple[None, int]:
+        """Return 200 status code."""
+        return None, 200
+
+    app.router.add_get(
+        "/auth",
+        request_handler_factory(hass, Mock(requires_auth=True), auth_handler),
+    )
+    setup_bans(hass, app, 2)
+    remote_ip = ip_address("192.168.1.68")
+    mock_real_ip(app)(str(remote_ip))
+    await async_setup_auth(hass, app)
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=FileNotFoundError,
+    ):
+        client = await aiohttp_client(app)
+
+    resp = await client.get(
+        async_sign_path(hass, signed_path, expiration).replace(signed_path, "/auth")
+        + signature_suffix,
+        headers=headers,
+    )
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == failed_attempts
+    assert len(async_get_persistent_notifications(hass)) == failed_attempts
+
+
+async def test_expired_signed_path_not_exempt_outside_middleware(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test an expired signature doesn't hide failed logins checked by a view."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def login_handler(request: web.Request) -> tuple[None, int]:
+        """Reject the login like the websocket API does."""
+        await process_wrong_login(request)
+        return None, 401
+
+    app.router.add_get(
+        "/login",
+        request_handler_factory(hass, Mock(requires_auth=False), login_handler),
+    )
+    setup_bans(hass, app, 2)
+    remote_ip = ip_address("192.168.1.68")
+    mock_real_ip(app)(str(remote_ip))
+    await async_setup_auth(hass, app)
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=FileNotFoundError,
+    ):
+        client = await aiohttp_client(app)
+
+    resp = await client.get(async_sign_path(hass, "/login", timedelta(seconds=-5)))
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
 
 
 async def test_failed_login_attempts_counter_reverse_dns_unicode_decode_error(

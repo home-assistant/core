@@ -29,7 +29,7 @@ from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
 from homeassistant.helpers.http import KEY_HASS, HomeAssistantView
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from .const import is_supervisor_unix_socket_request
+from .const import KEY_EXPIRED_SIGNED_REQUEST, is_supervisor_unix_socket_request
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -87,7 +87,14 @@ async def ban_middleware(
     try:
         return await handler(request)
     except HTTPUnauthorized:
-        await process_wrong_login(request)
+        if request.get(KEY_EXPIRED_SIGNED_REQUEST):
+            _LOGGER.debug(
+                "Rejected request with expired signature from %s for %s",
+                request.remote,
+                request.path,
+            )
+        else:
+            await process_wrong_login(request)
         raise
 
 
