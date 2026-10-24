@@ -25,6 +25,7 @@ from .coordinator import (
     TeslemetryLocalStatusCoordinator,
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
+    TeslemetryWallConnectorTotalsCoordinator,
 )
 
 STORAGE_VERSION = 1
@@ -120,6 +121,7 @@ class TeslemetryEnergyData:
     live_coordinator: TeslemetryEnergySiteLiveCoordinator | None
     info_coordinator: TeslemetryEnergySiteInfoCoordinator
     history_coordinator: TeslemetryEnergyHistoryCoordinator | None
+    wall_connector_totals_coordinator: TeslemetryWallConnectorTotalsCoordinator | None
     id: int
     device: DeviceInfo
     # Only sites with a battery/Powerwall can pair for local TEDAPI control.

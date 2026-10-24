@@ -23,6 +23,7 @@ from .coordinator import (
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryLocalStatusCoordinator,
     TeslemetryVehicleDataCoordinator,
+    TeslemetryWallConnectorTotalsCoordinator,
 )
 from .models import (
     TeslemetryChargeOnSolarStore,
@@ -54,6 +55,7 @@ class TeslemetryPollingEntity(
         | TeslemetryEnergyHistoryCoordinator
         | TeslemetryEnergySiteLiveCoordinator
         | TeslemetryEnergySiteInfoCoordinator
+        | TeslemetryWallConnectorTotalsCoordinator
     ],
 ):
     """Parent class for all Teslemetry Coordinator entities."""
@@ -63,7 +65,8 @@ class TeslemetryPollingEntity(
         coordinator: TeslemetryVehicleDataCoordinator
         | TeslemetryEnergyHistoryCoordinator
         | TeslemetryEnergySiteLiveCoordinator
-        | TeslemetryEnergySiteInfoCoordinator,
+        | TeslemetryEnergySiteInfoCoordinator
+        | TeslemetryWallConnectorTotalsCoordinator,
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
@@ -208,6 +211,35 @@ class TeslemetryEnergyHistoryEntity(TeslemetryPollingEntity):
         """Keep the streamed totals; the stream is their only source."""
 
 
+def _wall_connector_device_info(
+    data: TeslemetryEnergyData,
+    din: str,
+    coordinator: TeslemetryEnergySiteLiveCoordinator
+    | TeslemetryWallConnectorTotalsCoordinator,
+) -> DeviceInfo:
+    """Return the device info of a Wall Connector."""
+    # Find the model from the info coordinator
+    model: str | None = None
+    for wc in data.info_coordinator.data.get("components_wall_connectors", []):
+        if wc["din"] == din:
+            model = wc.get("part_name")
+            break
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, din)},
+        manufacturer="Tesla",
+        configuration_url="https://teslemetry.com/console",
+        name="Wall Connector",
+        via_device_id=dr.async_get_device_id_by_identifier(
+            coordinator.hass,
+            (DOMAIN, str(data.id)),
+            config_entry_id=coordinator.config_entry.entry_id,
+        ),
+        serial_number=din.rsplit("-", maxsplit=1)[-1],
+        model=model,
+    )
+
+
 class TeslemetryEnergyLocalStatusEntity(
     TeslemetryRootEntity, CoordinatorEntity[TeslemetryLocalStatusCoordinator]
 ):
@@ -248,26 +280,8 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
         self.api = data.api
         self.din = din
         self._attr_unique_id = f"{data.id}-{din}-{key}"
-
-        # Find the model from the info coordinator
-        model: str | None = None
-        for wc in data.info_coordinator.data.get("components_wall_connectors", []):
-            if wc["din"] == din:
-                model = wc.get("part_name")
-                break
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, din)},
-            manufacturer="Tesla",
-            configuration_url="https://teslemetry.com/console",
-            name="Wall Connector",
-            via_device_id=dr.async_get_device_id_by_identifier(
-                data.live_coordinator.hass,
-                (DOMAIN, str(data.id)),
-                config_entry_id=data.live_coordinator.config_entry.entry_id,
-            ),
-            serial_number=din.rsplit("-", maxsplit=1)[-1],
-            model=model,
+        self._attr_device_info = _wall_connector_device_info(
+            data, din, data.live_coordinator
         )
 
         super().__init__(data.live_coordinator, key)
@@ -289,6 +303,36 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
         return self.key in self.coordinator.data.get("wall_connectors", {}).get(
             self.din, {}
         )
+
+
+class TeslemetryWallConnectorTotalsEntity(TeslemetryPollingEntity):
+    """Parent class for Teslemetry Wall Connector Totals Entities."""
+
+    api: EnergySite | EnergySiteRouter
+    coordinator: TeslemetryWallConnectorTotalsCoordinator
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        din: str,
+        key: str,
+    ) -> None:
+        """Initialize common aspects of a Teslemetry Wall Connector Totals entity."""
+
+        assert data.wall_connector_totals_coordinator
+
+        self.api = data.api
+        self.din = din
+        self._attr_unique_id = f"{data.id}-{din}-{key}"
+        self._attr_device_info = _wall_connector_device_info(
+            data, din, data.wall_connector_totals_coordinator
+        )
+
+        super().__init__(data.wall_connector_totals_coordinator, key)
+
+    @override
+    async def async_update(self) -> None:
+        """Keep the streamed totals; the stream is their only source."""
 
 
 class TeslemetryVehicleEntity(TeslemetryRootEntity):

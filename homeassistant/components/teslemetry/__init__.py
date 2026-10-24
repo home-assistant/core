@@ -101,6 +101,7 @@ from .coordinator import (
     TeslemetryLocalStatusCoordinator,
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
+    TeslemetryWallConnectorTotalsCoordinator,
 )
 from .helpers import (
     async_get_ble_parent,
@@ -151,6 +152,7 @@ STREAM_TOPICS: Final = (
     SseTopic.SITE_INFO,
     SseTopic.TARIFF_CONTENT_V2,
     SseTopic.ENERGY_TOTALS,
+    SseTopic.WALL_CONNECTOR_TOTALS,
 )
 
 
@@ -872,6 +874,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 live_coordinator,
                 info_coordinator,
                 history_coordinator,
+                wall_connector_totals_coordinator,
             ) = await _async_setup_energy_site(
                 hass,
                 entry,
@@ -880,6 +883,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 product,
                 site_id,
                 powerwall,
+                wall_connector,
             )
 
             (
@@ -909,6 +913,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     live_coordinator=live_coordinator,
                     info_coordinator=info_coordinator,
                     history_coordinator=history_coordinator,
+                    wall_connector_totals_coordinator=wall_connector_totals_coordinator,
                     id=site_id,
                     device=device,
                     can_local_control=can_local_control,
@@ -1051,6 +1056,10 @@ def create_handle_energy_stream_connection(
             energysite.info_coordinator.async_set_update_error(error)
             if energysite.history_coordinator is not None:
                 energysite.history_coordinator.async_set_update_error(error)
+            if energysite.wall_connector_totals_coordinator is not None:
+                energysite.wall_connector_totals_coordinator.async_set_update_error(
+                    error
+                )
 
     return handle_connection
 
@@ -1063,10 +1072,12 @@ async def _async_setup_energy_site(
     product: dict[str, Any],
     site_id: int,
     powerwall: Any,
+    wall_connector: bool,
 ) -> tuple[
     TeslemetryEnergySiteLiveCoordinator | None,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergyHistoryCoordinator | None,
+    TeslemetryWallConnectorTotalsCoordinator | None,
 ]:
     """Cold-read live status, build the energy coordinators, and register listeners."""
     # The stream has no ready boundary, so keep a deterministic REST cold read
@@ -1138,18 +1149,38 @@ async def _async_setup_energy_site(
             )
         )
 
-    return live_coordinator, info_coordinator, history_coordinator
+    wall_connector_totals_coordinator = (
+        TeslemetryWallConnectorTotalsCoordinator(hass, entry, site_id)
+        if wall_connector
+        else None
+    )
+    if wall_connector_totals_coordinator is not None:
+        entry.async_on_unload(
+            stream_energysite.listen_WallConnectorTotals(
+                wall_connector_totals_coordinator.handle_stream_update
+            )
+        )
+
+    return (
+        live_coordinator,
+        info_coordinator,
+        history_coordinator,
+        wall_connector_totals_coordinator,
+    )
 
 
 async def _async_refresh_energy_site(energysite: TeslemetryEnergyData) -> None:
     """Cold read the site info, then resolve the site timezone it carries."""
     await energysite.info_coordinator.async_config_entry_first_refresh()
+    time_zone = energysite.info_coordinator.data.get("installation_time_zone")
     if energysite.local_status_coordinator is not None:
         # A local gateway failure must not block the cloud entities.
         await energysite.local_status_coordinator.async_refresh()
     if energysite.history_coordinator is not None:
-        await energysite.history_coordinator.async_set_time_zone(
-            energysite.info_coordinator.data.get("installation_time_zone")
+        await energysite.history_coordinator.async_set_time_zone(time_zone)
+    if energysite.wall_connector_totals_coordinator is not None:
+        await energysite.wall_connector_totals_coordinator.async_set_time_zone(
+            time_zone
         )
 
 

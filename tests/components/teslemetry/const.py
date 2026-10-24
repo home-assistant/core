@@ -72,6 +72,9 @@ ENERGY_TOTALS = {
 # An empty or malformed day: every field comes back null.
 ENERGY_TOTALS_NULL = dict.fromkeys(ENERGY_TOTALS)
 
+# Wh delivered per Wall Connector DIN; a DIN with no session that day is absent.
+WALL_CONNECTOR_TOTALS = {"abd-123": 7250}
+
 COMMAND_OK = {"response": {"result": True, "reason": ""}}
 COMMAND_REASON = {"response": {"result": False, "reason": "already closed"}}
 COMMAND_IGNORED_REASON = {"response": {"result": False, "reason": "already_set"}}

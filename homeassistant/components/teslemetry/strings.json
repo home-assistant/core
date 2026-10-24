@@ -1211,6 +1211,9 @@
       "vpp_backup_reserve_percent": {
         "name": "VPP backup reserve"
       },
+      "wall_connector_energy": {
+        "name": "Energy delivered"
+      },
       "wall_connector_fault_state": {
         "name": "Fault state code"
       },
