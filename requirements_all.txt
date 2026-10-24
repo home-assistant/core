@@ -768,7 +768,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.23.4
+bthome-ble==3.24.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1963,7 +1963,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.14.7
+plugwise==1.14.8
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2451,7 +2451,7 @@ pylitejet==0.6.3
 pylitterbot==2025.7.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.29.0
+pylutron-caseta==0.30.0
 
 # homeassistant.components.lutron
 pylutron==0.4.4
@@ -2558,7 +2558,7 @@ pyotgw==2.2.3
 pyotp==2.10.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.2.2
+pyoverkiz[nexity]==2.3.0
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
