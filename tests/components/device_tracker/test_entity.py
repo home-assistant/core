@@ -1956,6 +1956,48 @@ async def test_scanner_entity_id_from_device_name(
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Printer"
 
 
+async def test_scanner_entity_keeps_existing_entity_id(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test linking the device does not change an existing entity ID."""
+    mac = TEST_MAC_ADDRESS
+    unique_id = f"{mac}_scanner"
+    # Registered before the device was resolved ahead of the registry entry
+    existing = entity_registry.async_get_or_create(
+        DOMAIN,
+        TEST_DOMAIN,
+        unique_id,
+        config_entry=config_entry,
+        has_entity_name=True,
+        object_id_base="Printer",
+    )
+    assert existing.entity_id == "device_tracker.printer"
+    assert existing.device_id is None
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        name="Office printer",
+    )
+
+    scanner_entity = MockScannerEntity(
+        mac_address=mac, hostname="Office printer", unique_id=unique_id
+    )
+    scanner_entity._attr_has_entity_name = True
+    scanner_entity._attr_name = None
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_entry = entity_registry.async_get(existing.entity_id)
+    assert entity_entry is not None
+    assert entity_entry.id == existing.id
+    assert entity_entry.unique_id == unique_id
+    assert entity_entry.device_id == device.id
+    assert hass.states.get("device_tracker.printer") is not None
+    assert hass.states.get("device_tracker.office_printer") is None
+
+
 @pytest.mark.parametrize(
     ("hostname", "expected_device_name"),
     [
