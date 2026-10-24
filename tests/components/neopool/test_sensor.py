@@ -383,6 +383,63 @@ async def test_filtration_remaining_holds_steady_within_variance(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filtration_remaining_resets_after_countdown_stops(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A new countdown after a stop is not masked by the held end time.
+
+    A short new countdown can land within the tolerance of the stopped one, so
+    the held end time must be dropped on the stop, not reused.
+    """
+    countdown = {"value": 20}
+
+    def _timers(
+        enabled_timers: list[str] | None = None, **_kwargs: object
+    ) -> dict[str, dict[str, object]]:
+        return {
+            name: {
+                "enable": 1,
+                "on": 0,
+                "interval": 0,
+                "period": 0,
+                "countdown": countdown["value"],
+                "stop": None,
+            }
+            for name in (enabled_timers or [])
+        }
+
+    mock_neopool_client.read_all_timers.side_effect = _timers
+    await setup_integration(hass, mock_config_entry)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.neopool_filtration_time_remaining") is not None
+
+    # Countdown stops.
+    countdown["value"] = 0
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    stopped = hass.states.get("sensor.neopool_filtration_time_remaining")
+    assert stopped is not None
+    assert stopped.state == STATE_UNKNOWN
+
+    # A new short countdown whose end falls within the tolerance of the stopped
+    # one must be reported fresh, not held over.
+    countdown["value"] = 5
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    restarted = hass.states.get("sensor.neopool_filtration_time_remaining")
+    assert restarted is not None
+    expected = (dt_util.utcnow() + timedelta(seconds=5)).replace(microsecond=0)
+    assert restarted.state == expected.isoformat()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_filtration_remaining_polls_filtration_blocks_when_enabled(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

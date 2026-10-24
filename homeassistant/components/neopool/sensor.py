@@ -346,8 +346,13 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         self._attr_unique_id = (
             f"{self.coordinator.config_entry.unique_id}_{key.lower()}"
         )
-        # Per-entity so each remembers its own end time across polls.
-        self._remaining_end = ignore_variance(
+        # Holds the countdown end time across polls to absorb per-second drift.
+        # Recreated on a stop so a new countdown is not masked (see native_value).
+        self._remaining_end = self._new_remaining_filter()
+
+    def _new_remaining_filter(self) -> Callable[[int], datetime]:
+        """Return a fresh end-time filter that ignores sub-tolerance drift."""
+        return ignore_variance(
             lambda seconds: utcnow() + timedelta(seconds=seconds),
             _REMAINING_VARIANCE,
         )
@@ -395,6 +400,9 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         if (remaining_fn := self.entity_description.remaining_fn) is not None:
             remaining = remaining_fn(self.coordinator.data)
             if remaining is None or remaining <= 0:
+                # Countdown stopped; recreate the filter so a new countdown is
+                # not held over as an expired end time within tolerance.
+                self._remaining_end = self._new_remaining_filter()
                 return None
             return self._remaining_end(remaining)
         if (value_fn := self.entity_description.value_fn) is not None:
