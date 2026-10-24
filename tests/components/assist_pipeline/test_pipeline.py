@@ -1321,7 +1321,7 @@ async def test_prefer_local_intents_match_failed(
     async def mock_converse(**kwargs: Any) -> conversation.ConversationResult:
         with (
             chat_session.async_get_chat_session(
-                hass, kwargs["conversation_id"]
+                hass, kwargs["conversation_id"], context=None
             ) as session,
             conversation.async_get_chat_log(hass, session) as chat_log,
         ):
@@ -1973,7 +1973,9 @@ async def test_chat_log_tts_streaming(
                         yield {"content": chunk}
 
         with (
-            chat_session.async_get_chat_session(hass, conversation_id) as session,
+            chat_session.async_get_chat_session(
+                hass, conversation_id, context=None
+            ) as session,
             conversation.async_get_chat_log(
                 hass,
                 session,
