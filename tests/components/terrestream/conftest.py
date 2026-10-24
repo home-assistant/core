@@ -1,6 +1,7 @@
 """Fixtures for local Terrestream sensors."""
 
 from collections.abc import Generator
+from dataclasses import asdict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -10,6 +11,7 @@ from terrestream_local import Credentials
 from homeassistant.core import HomeAssistant
 
 UUID = "00000000-0000-4000-8000-000000000001"
+HOST = "192.0.2.10"
 CREDENTIALS = Credentials(UUID, "ab" * 32, "cd" * 32)
 
 
@@ -21,13 +23,8 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
         unique_id=UUID,
         title="Terrestream",
         data={
-            "host": "sensor.local",
-            "credentials": {
-                "uuid": UUID,
-                "fingerprint": "ab" * 32,
-                "token": "cd" * 32,
-                "port": 6053,
-            },
+            "host": HOST,
+            "credentials": asdict(CREDENTIALS),
         },
     )
     entry.add_to_hass(hass)
@@ -35,7 +32,26 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_client() -> Generator[MagicMock]:
+def mock_pair_device() -> Generator[AsyncMock]:
+    """Mock the library's pairing entry point."""
+    with patch(
+        "homeassistant.components.terrestream.config_flow.pair_device",
+        autospec=True,
+    ) as mock_pair:
+        yield mock_pair
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Skip integration setup when testing the config flow."""
+    with patch(
+        "homeassistant.components.terrestream.async_setup_entry", return_value=None
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
+def mock_client(mock_pair_device: AsyncMock) -> Generator[MagicMock]:
     """Mock the published client at the HA boundary."""
     with patch("homeassistant.components.terrestream.Client", autospec=True) as factory:
         client = factory.return_value
@@ -71,4 +87,5 @@ def mock_client() -> Generator[MagicMock]:
         client.measurement_available.side_effect = lambda key: (
             client.refresh.return_value["measurements"][key]["available"]
         )
+        mock_pair_device.return_value = (CREDENTIALS, client)
         yield client

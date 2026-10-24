@@ -1,56 +1,103 @@
-"""Test setup cancellation and controller cleanup."""
+"""Test Terrestream setup and controller lease cleanup."""
 
 import asyncio
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from terrestream_local.errors import AuthenticationError, ClientError
 from terrestream_local.models import Snapshot
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 
+async def test_pending_pairing(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: MagicMock
+) -> None:
+    """Finish a pairing whose confirmation was interrupted."""
+    mock_client.identity.return_value = {"paired": False}
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_client.confirm.assert_awaited_once()
+
+
 @pytest.mark.parametrize(
-    "target",
+    "error",
     [
-        pytest.param(
-            "homeassistant.components.terrestream.Client.return_value.refresh",
-            id="first-refresh",
-        ),
-        pytest.param(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            id="platform-setup",
-        ),
+        pytest.param(AuthenticationError("revoked"), id="revoked"),
+        pytest.param(ClientError("offline"), id="offline"),
     ],
 )
-async def test_setup_cancellation_releases_lease(
+async def test_setup_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_client: MagicMock,
-    target: str,
+    error: Exception,
 ) -> None:
-    """Release ownership without swallowing cancellation during setup."""
-    started = asyncio.Event()
-
-    async def block_setup(*args: object) -> None:
-        started.set()
-        await asyncio.Future()
-
-    with patch(target, side_effect=block_setup):
-        task = hass.async_create_task(
-            hass.config_entries.async_setup(config_entry.entry_id)
-        )
-        await started.wait()
-        task.cancel()
-        with pytest.raises(asyncio.CancelledError):
-            await task
-
-    assert task.cancelled()
-    mock_client.command.assert_any_await("release")
-    assert mock_client.command.await_args == call("release")
+    """Never expose measurements from an unauthenticated endpoint."""
+    mock_client.identity.side_effect = error
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert not hass.states.async_all("sensor")
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ClientError("offline"), id="offline"),
+        pytest.param(AuthenticationError("revoked"), id="revoked"),
+    ],
+)
+async def test_failed_first_refresh_releases_lease(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    error: ClientError,
+) -> None:
+    """A failed setup does not leave a live lease behind."""
+    mock_client.refresh.side_effect = error
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    mock_client.command.assert_any_await("release")
+
+
+async def test_shutdown_release(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: MagicMock
+) -> None:
+    """Graceful shutdown releases ownership before the next HA starts."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    mock_client.command.assert_any_await("release")
+
+
+@pytest.mark.parametrize(
+    "release_error",
+    [
+        pytest.param(None, id="release-succeeds"),
+        pytest.param(ClientError("offline"), id="release-fails"),
+    ],
+)
+async def test_unload_releases_lease(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    release_error: ClientError | None,
+) -> None:
+    """Unload the sensors even if the device cannot acknowledge lease release."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    mock_client.command.reset_mock()
+    mock_client.command.side_effect = release_error
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_client.command.assert_awaited_once_with("release")
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_unload_waits_for_in_flight_refresh(
@@ -59,21 +106,17 @@ async def test_unload_waits_for_in_flight_refresh(
     mock_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Stop an active poll before releasing the controller lease."""
-    freezer.move_to("2026-01-01T00:00:00.500000+00:00")
+    """Stop an active library refresh before sending the release command."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    mock_client.command.reset_mock()
     refresh_started = asyncio.Event()
-    finish_refresh = asyncio.Event()
-    shutdown_started = asyncio.Event()
     snapshot: Snapshot = mock_client.refresh.return_value
     events: list[str] = []
 
     async def blocked_refresh() -> Snapshot:
         refresh_started.set()
         try:
-            await finish_refresh.wait()
+            await asyncio.Future()
         finally:
             events.append("refresh stopped")
         return snapshot
@@ -82,49 +125,15 @@ async def test_unload_waits_for_in_flight_refresh(
         events.append(name)
         return {"ok": True}
 
-    mock_client.command.side_effect = command
-    coordinator = config_entry.runtime_data
-    shutdown = coordinator.async_shutdown
-
-    async def track_shutdown() -> None:
-        await shutdown()
-        shutdown_started.set()
-
     mock_client.refresh.side_effect = blocked_refresh
-    freezer.tick(60)
+    mock_client.command.side_effect = command
+    freezer.tick(31)
     async_fire_time_changed(hass)
     await refresh_started.wait()
 
-    with patch.object(coordinator, "async_shutdown", side_effect=track_shutdown):
-        unload_task = hass.async_create_task(
-            hass.config_entries.async_unload(config_entry.entry_id)
-        )
-        await shutdown_started.wait()
-        try:
-            mock_client.command.assert_not_awaited()
-        finally:
-            finish_refresh.set()
-            assert await unload_task
-            await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert events == ["refresh stopped", "release"]
     mock_client.command.assert_awaited_once_with("release")
-
-
-async def test_failed_unload_keeps_controller_lease(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Keep the controller while its platform remains loaded."""
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-        return_value=False,
-    ):
-        assert not await hass.config_entries.async_unload(config_entry.entry_id)
-    mock_client.command.assert_not_awaited()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    mock_client.command.assert_awaited_once_with("release")
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

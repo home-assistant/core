@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors_and_unload[device]
+# name: test_sensors[device]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
@@ -29,7 +29,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_carbon_dioxide-entry]
+# name: test_sensors[sensor.terrestream_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -68,7 +68,7 @@
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_carbon_dioxide-state]
+# name: test_sensors[sensor.terrestream_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
@@ -84,7 +84,7 @@
     'state': '500',
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_computed_epa_particulate_aqi-entry]
+# name: test_sensors[sensor.terrestream_computed_epa_particulate_aqi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -123,7 +123,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_computed_epa_particulate_aqi-state]
+# name: test_sensors[sensor.terrestream_computed_epa_particulate_aqi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
@@ -138,7 +138,7 @@
     'state': '10',
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_humidity-entry]
+# name: test_sensors[sensor.terrestream_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -177,7 +177,7 @@
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_humidity-state]
+# name: test_sensors[sensor.terrestream_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
@@ -193,7 +193,7 @@
     'state': '45',
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_illuminance-entry]
+# name: test_sensors[sensor.terrestream_illuminance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -232,7 +232,7 @@
     'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_illuminance-state]
+# name: test_sensors[sensor.terrestream_illuminance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'illuminance',
@@ -248,7 +248,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_nox_index-entry]
+# name: test_sensors[sensor.terrestream_nox_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -287,7 +287,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_nox_index-state]
+# name: test_sensors[sensor.terrestream_nox_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrestream NOx index',
@@ -301,7 +301,7 @@
     'state': '7',
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_pm1-entry]
+# name: test_sensors[sensor.terrestream_pm1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -340,7 +340,7 @@
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_pm1-state]
+# name: test_sensors[sensor.terrestream_pm1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
@@ -356,7 +356,7 @@
     'state': '1',
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_pm10-entry]
+# name: test_sensors[sensor.terrestream_pm10-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -395,7 +395,7 @@
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_pm10-state]
+# name: test_sensors[sensor.terrestream_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
@@ -411,7 +411,7 @@
     'state': '4',
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_pm2_5-entry]
+# name: test_sensors[sensor.terrestream_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -450,7 +450,7 @@
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_pm2_5-state]
+# name: test_sensors[sensor.terrestream_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
@@ -466,7 +466,7 @@
     'state': '2',
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_pm4-entry]
+# name: test_sensors[sensor.terrestream_pm4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -505,7 +505,7 @@
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_pm4-state]
+# name: test_sensors[sensor.terrestream_pm4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm4',
@@ -521,7 +521,7 @@
     'state': '3',
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_pressure-entry]
+# name: test_sensors[sensor.terrestream_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -563,7 +563,7 @@
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_pressure-state]
+# name: test_sensors[sensor.terrestream_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'atmospheric_pressure',
@@ -579,7 +579,7 @@
     'state': '1013',
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_temperature-entry]
+# name: test_sensors[sensor.terrestream_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -621,7 +621,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_temperature-state]
+# name: test_sensors[sensor.terrestream_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -637,7 +637,7 @@
     'state': '22',
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_voc_index-entry]
+# name: test_sensors[sensor.terrestream_voc_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -676,7 +676,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_and_unload[sensor.terrestream_voc_index-state]
+# name: test_sensors[sensor.terrestream_voc_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrestream VOC index',

@@ -1,52 +1,40 @@
 """Test physical pairing and duplicate prevention."""
 
-from unittest.mock import AsyncMock, patch
+from dataclasses import asdict
+from unittest.mock import ANY, AsyncMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from terrestream_local.errors import AuthenticationError, ClientError
 
+from homeassistant.components.terrestream.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import CREDENTIALS, UUID
+from .conftest import CREDENTIALS, HOST, UUID
+
+pytestmark = pytest.mark.usefixtures("mock_client", "mock_setup_entry")
 
 
-async def test_user_form(hass: HomeAssistant) -> None:
-    """Show a pairing form without contacting the sensor."""
+async def test_pairing(hass: HomeAssistant, mock_pair_device: AsyncMock) -> None:
+    """Show the form and persist pairing data, including leading code zeros."""
     result = await hass.config_entries.flow.async_init(
-        "terrestream", context={"source": "user"}
+        DOMAIN, context={"source": "user"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
+    mock_pair_device.assert_not_awaited()
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"host": HOST, "code": "00123456"}
+    )
+    await hass.async_block_till_done()
 
-async def test_pairing(hass: HomeAssistant) -> None:
-    """Persist authenticated identity and preserve leading zeros."""
-    with (
-        patch(
-            "homeassistant.components.terrestream.config_flow.pair_device",
-            return_value=(CREDENTIALS, AsyncMock()),
-        ) as pair,
-        patch(
-            "homeassistant.components.terrestream.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            "terrestream", context={"source": "user"}
-        )
-        assert result["type"] is FlowResultType.FORM
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"host": "sensor.local", "code": "00123456"},
-        )
-        await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == UUID
-    assert result["data"]["credentials"]["fingerprint"] == CREDENTIALS.fingerprint
-    assert pair.call_args.args[2] == "00123456"
+    assert result["data"] == {"host": HOST, "credentials": asdict(CREDENTIALS)}
+    mock_pair_device.assert_awaited_once_with(ANY, HOST, "00123456")
 
 
 @pytest.mark.parametrize(
@@ -58,58 +46,43 @@ async def test_pairing(hass: HomeAssistant) -> None:
     ],
 )
 async def test_pairing_error(
-    hass: HomeAssistant, error: Exception, expected: str
+    hass: HomeAssistant,
+    mock_pair_device: AsyncMock,
+    error: Exception,
+    expected: str,
 ) -> None:
-    """Keep pairing failures recoverable in the form."""
-    with patch(
-        "homeassistant.components.terrestream.config_flow.pair_device",
-        side_effect=error,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            "terrestream", context={"source": "user"}
-        )
-        assert result["type"] is FlowResultType.FORM
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"host": "sensor.local", "code": "00123456"},
-        )
+    """Recover from a pairing failure within the same config flow."""
+    mock_pair_device.side_effect = error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"host": HOST, "code": "00123456"}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected}
 
-    with (
-        patch(
-            "homeassistant.components.terrestream.config_flow.pair_device",
-            return_value=(CREDENTIALS, AsyncMock()),
-        ),
-        patch(
-            "homeassistant.components.terrestream.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"host": "sensor.local", "code": "00123456"},
-        )
-        await hass.async_block_till_done()
+    mock_pair_device.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"host": HOST, "code": "00123456"}
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == UUID
-    assert result["data"]["credentials"]["fingerprint"] == CREDENTIALS.fingerprint
+    assert result["data"] == {"host": HOST, "credentials": asdict(CREDENTIALS)}
 
 
 async def test_duplicate(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
-    """Do not create two entries for the same authenticated UUID."""
-    with patch(
-        "homeassistant.components.terrestream.config_flow.pair_device",
-        return_value=(CREDENTIALS, AsyncMock()),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            "terrestream", context={"source": "user"}
-        )
-        assert result["type"] is FlowResultType.FORM
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"host": "sensor.local", "code": "00123456"},
-        )
+    """Keep the existing entry when the same device is paired again."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"host": HOST, "code": "00123456"}
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [config_entry]

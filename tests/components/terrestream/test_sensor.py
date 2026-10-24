@@ -1,5 +1,6 @@
-"""Test measurement availability and controller lifecycle."""
+"""Test Terrestream measurements and availability."""
 
+import asyncio
 from copy import deepcopy
 from unittest.mock import MagicMock
 
@@ -14,24 +15,25 @@ from syrupy.assertion import SnapshotAssertion
 from terrestream_local.errors import AuthenticationError, ClientError
 from terrestream_local.models import Snapshot
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import UUID
 
 ENTITY = "sensor.terrestream_carbon_dioxide"
+LIGHT = "sensor.terrestream_illuminance"
 
 
-async def test_sensors_and_unload(
+@pytest.mark.usefixtures("mock_client")
+async def test_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_client: MagicMock,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Expose 12 measurements and release ownership on unload."""
+    """Expose the supported measurements and stable device identity."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 12
@@ -41,38 +43,6 @@ async def test_sensors_and_unload(
     )
     assert device is not None
     assert device == snapshot(name="device")
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    mock_client.command.assert_any_await("release")
-
-
-async def test_pending_pairing(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: MagicMock
-) -> None:
-    """Finish a pairing whose confirmation was interrupted."""
-    mock_client.identity.return_value = {"paired": False}
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    mock_client.confirm.assert_awaited_once()
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-
-@pytest.mark.parametrize(
-    "error",
-    [
-        pytest.param(AuthenticationError("revoked"), id="revoked"),
-        pytest.param(ClientError("offline"), id="offline"),
-    ],
-)
-async def test_setup_failure(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_client: MagicMock,
-    error: Exception,
-) -> None:
-    """Never expose measurements from an unauthenticated endpoint."""
-    mock_client.identity.side_effect = error
-    assert not await hass.config_entries.async_setup(config_entry.entry_id)
-    assert not hass.states.async_all("sensor")
 
 
 @pytest.mark.parametrize(
@@ -96,7 +66,6 @@ async def test_measurement_unavailable(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
     assert hass.states.get("sensor.terrestream_illuminance").state == "100"
-    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_expired_on_receipt(
@@ -108,7 +77,6 @@ async def test_expired_on_receipt(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
-    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_zero_measurement(
@@ -119,48 +87,6 @@ async def test_zero_measurement(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.terrestream_illuminance").state == "0"
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-
-@pytest.mark.parametrize(
-    "error",
-    [
-        pytest.param(ClientError("offline"), id="offline"),
-        pytest.param(AuthenticationError("revoked"), id="revoked"),
-    ],
-)
-async def test_failed_first_refresh_releases_lease(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_client: MagicMock,
-    error: ClientError,
-) -> None:
-    """A failed setup does not leave a live lease behind."""
-    mock_client.refresh.side_effect = error
-    assert not await hass.config_entries.async_setup(config_entry.entry_id)
-    mock_client.command.assert_any_await("release")
-
-
-async def test_shutdown_release(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: MagicMock
-) -> None:
-    """Graceful shutdown releases ownership before the next HA starts."""
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    mock_client.command.assert_any_await("release")
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-
-async def test_offline_unload(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: MagicMock
-) -> None:
-    """An unreachable sensor does not prevent unloading HA entities."""
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    mock_client.command.side_effect = ClientError("offline")
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_offline_poll_and_recovery(
@@ -182,7 +108,6 @@ async def test_offline_poll_and_recovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY).state == "500"
-    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_revoked_pairing_during_refresh(
@@ -199,4 +124,70 @@ async def test_revoked_pairing_during_refresh(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
-    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_polling_interval(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Read every 30 seconds without issuing clock commands between polls."""
+    freezer.move_to("2026-01-01T00:00:00.500000+00:00")
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_client.refresh.assert_awaited_once()
+    assert hass.states.get(LIGHT).state == "100"
+
+    freezer.tick(29)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_client.refresh.assert_awaited_once()
+    assert hass.states.get(LIGHT).state == "100"
+
+    updated: Snapshot = deepcopy(mock_client.refresh.return_value)
+    updated["measurements"]["illuminance"]["value"] = 200
+    mock_client.refresh.return_value = updated
+    freezer.tick(1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_client.refresh.await_count == 2
+    assert hass.states.get(LIGHT).state == "200"
+    mock_client.command.assert_not_awaited()
+
+
+async def test_delayed_refresh_publishes_one_snapshot(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Keep the last observation until the next poll has completed."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    updated: Snapshot = deepcopy(mock_client.refresh.return_value)
+    updated["measurements"]["illuminance"]["value"] = 200
+    refresh_started = asyncio.Event()
+    finish_refresh = asyncio.Event()
+
+    async def blocked_refresh() -> Snapshot:
+        mock_client.measurement_available.side_effect = None
+        mock_client.measurement_available.return_value = False
+        refresh_started.set()
+        await finish_refresh.wait()
+        mock_client.measurement_available.return_value = True
+        return updated
+
+    mock_client.refresh.side_effect = blocked_refresh
+    freezer.tick(31)
+    async_fire_time_changed(hass)
+    await refresh_started.wait()
+    try:
+        await hass.async_block_till_done()
+        assert hass.states.get(LIGHT).state == "100"
+    finally:
+        finish_refresh.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(LIGHT).state == "200"
+    mock_client.command.assert_not_awaited()
