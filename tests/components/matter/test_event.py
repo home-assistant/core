@@ -289,3 +289,13 @@ async def test_doorbell_multi_press_node(
     )
     state = hass.states.get("event.mock_doorbell_multi_doorbell")
     assert state.attributes[ATTR_EVENT_TYPE] == "ring"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_doorbell_both"])
+async def test_doorbell_node_also_generic_switch(
+    hass: HomeAssistant,
+    matter_node: MatterNode,
+) -> None:
+    """Test an endpoint listing both Doorbell and GenericSwitch yields a single entity."""
+    assert hass.states.get("event.mock_doorbell_both_doorbell")
+    assert not hass.states.get("event.mock_doorbell_both_button")
