@@ -47,7 +47,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: The integration talks to a cloud service, not to a network device.

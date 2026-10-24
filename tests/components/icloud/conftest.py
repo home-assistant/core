@@ -157,6 +157,10 @@ class MockAppleDevice:
         self._status = status
         self.play_sound = MagicMock()
 
+    def _feature(self, key: str) -> bool:
+        """Return whether the device reports the feature flag."""
+        return bool((self._status.get("features") or {}).get(key, False))
+
     def status(self, additional: list[str] | None = None) -> dict:
         """Return the device status."""
         return self._status
@@ -164,6 +168,21 @@ class MockAppleDevice:
     def __getitem__(self, key: str):
         """Return a status value by key."""
         return self._status.get(key)
+
+    @property
+    def erase_available(self) -> bool:
+        """Return whether the device can be remotely erased."""
+        return self._feature("WIP")
+
+    @property
+    def location_available(self) -> bool:
+        """Return whether the device reports a location."""
+        return self._feature("LOC") and self._status.get("location") is not None
+
+    @property
+    def lost_mode_available(self) -> bool:
+        """Return whether the device supports lost mode."""
+        return bool(self._status.get("lostModeCapable", False))
 
 
 class MockDevicesContainer:

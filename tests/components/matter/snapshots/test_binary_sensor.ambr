@@ -1,4 +1,55 @@
 # serializer version: 1
+# name: test_binary_sensors[aqara_camera_hub_g350][binary_sensor.aqara_camera_hub_g350_occupancy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000BB-MatterNodeDevice'), ('matter', 'serial_serial_187')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aqara_camera_hub_g350_occupancy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Occupancy',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+    'original_icon': None,
+    'original_name': 'Occupancy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000BB-MatterNodeDevice-2-OccupancySensor-1030-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[aqara_camera_hub_g350][binary_sensor.aqara_camera_hub_g350_occupancy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Camera Hub G350 Occupancy',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aqara_camera_hub_g350_occupancy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[aqara_door_window_p2][binary_sensor.aqara_door_and_window_sensor_p2_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
