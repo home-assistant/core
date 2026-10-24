@@ -36,9 +36,11 @@ async def test_coordinator_updates_arrivals(
     entry.add_to_hass(hass)
     coordinator = BizkaibusUpdateCoordinator(hass, api, entry)
 
+    remove_listener = coordinator.async_add_listener(lambda: None)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    remove_listener()
 
     assert coordinator.last_update_success
     assert coordinator.friendly_name == "Central Station"
@@ -57,9 +59,11 @@ async def test_coordinator_returns_empty_data_without_timetable(
     entry.add_to_hass(hass)
     coordinator = BizkaibusUpdateCoordinator(hass, api, entry)
 
+    remove_listener = coordinator.async_add_listener(lambda: None)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    remove_listener()
 
     assert coordinator.last_update_success
     assert coordinator.data == []
@@ -106,9 +110,11 @@ async def test_coordinator_skips_arrivals_without_nearest_arrival(
     entry.add_to_hass(hass)
     coordinator = BizkaibusUpdateCoordinator(hass, api, entry)
 
+    remove_listener = coordinator.async_add_listener(lambda: None)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    remove_listener()
 
     assert coordinator.last_update_success
     assert len(coordinator.data) == 1

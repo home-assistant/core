@@ -172,7 +172,15 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                 if self._line_ids == []:
                     errors["base"] = "cannot_connect"
                 else:
-                    title = await _get_title_name(api, self._stop_id)
+                    try:
+                        title = await _get_title_name(api, self._stop_id)
+                    except BizkaibusParseError:
+                        errors["base"] = "api_parse_error"
+                        return self.async_show_form(
+                            step_id="user",
+                            data_schema=USER_DATA_SCHEMA,
+                            errors=errors,
+                        )
                     if title is None:
                         errors["base"] = "cannot_connect"
                     else:
@@ -265,7 +273,17 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 else:
                     self._stop_id = stop_id
-                    title = await _get_title_name(api, self._stop_id)
+                    try:
+                        title = await _get_title_name(api, self._stop_id)
+                    except BizkaibusParseError:
+                        errors["base"] = "api_parse_error"
+                        return self.async_show_form(
+                            step_id="reconfigure",
+                            data_schema=self.add_suggested_values_to_schema(
+                                USER_DATA_SCHEMA, reconfigure_entry.data
+                            ),
+                            errors=errors,
+                        )
                     if title is None:
                         errors["base"] = "cannot_connect"
                     else:
@@ -320,7 +338,10 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             return self.async_abort(reason="invalid_line_id")
 
-        title = await _get_title_name(api, stop_id)
+        try:
+            title = await _get_title_name(api, stop_id)
+        except BizkaibusParseError:
+            return self.async_abort(reason="api_parse_error")
         if title is None:
             return self.async_abort(reason="cannot_connect")
 
@@ -404,10 +425,13 @@ class BizkaibusOptionsFlow(OptionsFlowWithReload):
 
         selected_line_ids = self.config_entry.options.get(CONF_LINE_IDS, [])
 
-        title = await _get_title_name(
-            api,
-            self.config_entry.data[CONF_STOP_ID],
-        )
+        try:
+            title = await _get_title_name(
+                api,
+                self.config_entry.data[CONF_STOP_ID],
+            )
+        except BizkaibusParseError:
+            return self.async_abort(reason="api_parse_error")
 
         if title is None:
             return self.async_abort(reason="cannot_connect")
