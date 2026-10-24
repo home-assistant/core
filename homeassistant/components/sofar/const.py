@@ -13,6 +13,8 @@ SETTINGS_SCAN_INTERVAL = 60
 CONF_BAUDRATE = "baudrate"
 CONF_UNIT_ID = "unit_id"
 
+HAS_FAULT_LOG = "has_fault_log"
+
 METER_ENERGY = "meter_energy"
 
 TYPE_SERIAL = "serial"

@@ -28,12 +28,14 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from .const import (
     CONF_UNIT_ID,
     DOMAIN,
+    HAS_FAULT_LOG,
     METER_ENERGY,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
+from .event import fault_log_store
 from .helpers import create_modbus_params
 from .sensor import TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
@@ -43,6 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -125,7 +128,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         entry.data[CONF_UNIT_ID],
     )
 
-    device = SofarInverter(unit, serial_number=serial)
+    device = SofarInverter(
+        unit,
+        serial_number=serial,
+        has_fault_log=entry.data.get(HAS_FAULT_LOG, False),
+    )
     _async_seed_high_water_marks(hass, serial, device)
 
     readings = SofarDataUpdateCoordinator(
@@ -169,6 +176,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         await settings.async_refresh()
         # Not tied to a coordinator: identity never changes once read.
         await device.async_read_identity()
+        # Stored so a flaky read at a later setup never drops the log.
+        if device.has_fault_log and not entry.data.get(HAS_FAULT_LOG):
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, HAS_FAULT_LOG: True}
+            )
 
     # Up front: a part's device must name an inverter that has an id.
     inverter = dr.async_get(hass).async_get_or_create_from_info(
@@ -192,6 +204,11 @@ def _battery_pack_number(serial: str, identifier: str) -> int | None:
     suffix = identifier.removeprefix(prefix)
     number = int(suffix) if suffix.isdecimal() else None
     return number if number in BATTERY_STRING_COMPONENTS else None
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
+    """Remove the fault log entries a deleted entry has handled."""
+    await fault_log_store(hass, entry.entry_id).async_remove()
 
 
 async def async_remove_config_entry_device(
