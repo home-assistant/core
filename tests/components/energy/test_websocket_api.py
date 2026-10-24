@@ -1275,13 +1275,15 @@ async def test_save_home_source(
 @pytest.mark.parametrize(
     "energy_sources",
     [
-        [
-            {"type": "home", "stat_energy_from": "sensor.home_a"},
-            {"type": "home", "stat_energy_from": "sensor.home_b"},
-        ],
-        [{"type": "home"}],
+        pytest.param(
+            [
+                {"type": "home", "stat_energy_from": "sensor.home_a"},
+                {"type": "home", "stat_energy_from": "sensor.home_b"},
+            ],
+            id="two_home_sources",
+        ),
+        pytest.param([{"type": "home"}], id="missing_stat_energy_from"),
     ],
-    ids=["two_home_sources", "missing_stat_energy_from"],
 )
 async def test_save_home_source_invalid(
     hass: HomeAssistant,
