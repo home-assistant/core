@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "timestamp": "1760011200",
+  "station": "Brussel-Zuid/Bruxelles-Midi",
+  "stationinfo": {
+    "@id": "http://irail.be/stations/NMBS/008814001",
+    "id": "BE.NMBS.008814001",
+    "name": "Brussels-South/Brussels-Midi",
+    "locationX": "4.336531",
+    "locationY": "50.835707",
+    "standardname": "Brussel-Zuid/Bruxelles-Midi"
+  },
+  "departures": {
+    "departure": [
+      {
+        "id": "http://irail.be/departures/2",
+        "station": "Gent-Sint-Pieters",
+        "stationinfo": {
+          "@id": "http://irail.be/stations/NMBS/008892007",
+          "id": "BE.NMBS.008892007",
+          "name": "Ghent-Sint-Pieters",
+          "locationX": "3.716670",
+          "locationY": "51.035301",
+          "standardname": "Gent-Sint-Pieters"
+        },
+        "time": "1760011500",
+        "delay": "0",
+        "canceled": "0",
+        "left": "0",
+        "isExtra": "0",
+        "vehicle": "BE.NMBS.IC3536",
+        "vehicleinfo": {
+          "name": "IC 3536",
+          "shortname": "IC3536",
+          "number": "3536",
+          "type": "IC",
+          "locationX": "3.71",
+          "locationY": "51.03",
+          "@id": "http://irail.be/vehicle/IC3536"
+        },
+        "platform": "7",
+        "platforminfo": {
+          "name": "7",
+          "normal": "1"
+        },
+        "occupancy": {
+          "@id": "http://irail.be/occupancy/low",
+          "name": "low"
+        },
+        "departureConnection": "http://irail.be/connections/4"
+      }
+    ]
+  },
+  "arrivals": null
+}

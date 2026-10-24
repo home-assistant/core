@@ -2,11 +2,22 @@
 
 from unittest.mock import AsyncMock
 
+from mashumaro.exceptions import MissingField
 from pyrail import ApiUnavailableError
+from pyrail.models import StationsApiResponse
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.nmbs.const import (
+    CONF_STATION_FROM,
+    CONF_STATION_TO,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
+
+from .conftest import STATION_FROM, STATION_TO
 
 
 async def test_setup_entry(
@@ -23,33 +34,138 @@ async def test_setup_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_setup_entry_api_unavailable(
+async def test_unload_entry(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
+    """Test a config entry is unloaded successfully."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    "stations_side_effect",
+    [
+        pytest.param([None], id="no_response"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(ApiUnavailableError("API unavailable"), id="api_unavailable"),
+        pytest.param(ValueError("Unexpected response schema"), id="decoding_error"),
+        pytest.param(MissingField("name", "str", "StationDetails"), id="missing_field"),
+    ],
+)
+async def test_setup_entry_station_list_unavailable(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    stations_side_effect: list[None] | Exception | type[Exception],
+) -> None:
     """Test the entry is retried when the station list cannot be fetched."""
-    mock_nmbs_client.get_stations.side_effect = ApiUnavailableError(
-        "The iRail API is unavailable"
+    mock_nmbs_client.get_stations.side_effect = stations_side_effect
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_connections_api_unavailable(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry loads when the connections API is unavailable."""
+    mock_nmbs_client.get_connections.return_value = None
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_entry_unknown_station(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+) -> None:
+    """Test setup fails when a configured station no longer exists."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Train from nowhere to Brussel-Zuid/Bruxelles-Midi",
+        data={
+            CONF_STATION_FROM: "BE.NMBS.999999999",
+            CONF_STATION_TO: STATION_TO,
+        },
+        unique_id=f"BE.NMBS.999999999_{STATION_TO}",
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_finds_new_station_after_reload(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup fetches a fresh station list each time it runs."""
+    stations = mock_nmbs_client.get_stations.return_value
+    mock_nmbs_client.get_stations.return_value = StationsApiResponse(
+        version=stations.version,
+        timestamp=stations.timestamp,
+        stations=[station for station in stations.stations if station.id != STATION_TO],
     )
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_station_list_not_modified(
-    hass: HomeAssistant,
-    mock_nmbs_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the entry is retried when the station list is not modified."""
-    mock_nmbs_client.get_stations.return_value = None
-    mock_config_entry.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_nmbs_client.get_stations.return_value = stations
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("old_data", "show_on_map"),
+    [
+        pytest.param({CONF_SHOW_ON_MAP: True}, True, id="map_on"),
+        pytest.param({}, False, id="map_not_set"),
+    ],
+)
+async def test_migrate_show_on_map_to_options(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    old_data: dict[str, bool],
+    show_on_map: bool,
+) -> None:
+    """Test the map setting moves from the entry data to the options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Train from Brussel-Noord/Bruxelles-Nord to Brussel-Zuid/Bruxelles-Midi",
+        data={CONF_STATION_FROM: STATION_FROM, CONF_STATION_TO: STATION_TO, **old_data},
+        unique_id=f"{STATION_FROM}_{STATION_TO}",
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    assert entry.data == {CONF_STATION_FROM: STATION_FROM, CONF_STATION_TO: STATION_TO}
+    assert entry.options == {CONF_SHOW_ON_MAP: show_on_map}

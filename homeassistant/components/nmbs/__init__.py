@@ -1,42 +1,56 @@
 """The NMBS component."""
 
-from pyrail import IRail, PyRailError
+import logging
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, NMBS_STATION_DATA
+from .const import DOMAIN, PLATFORMS
+from .coordinator import (
+    NMBSConfigEntry,
+    NMBSCoordinator,
+    StationListUnavailableError,
+    async_fetch_stations,
+)
 
-PLATFORMS = [Platform.SENSOR]
+_LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: NMBSConfigEntry) -> None:
     """Set up NMBS from a config entry."""
+    try:
+        stations = await async_fetch_stations(hass)
+    except StationListUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="station_list_unavailable",
+        ) from err
 
-    # The station list is shared by all entries, so fetch and cache it only
-    # once. Raise ConfigEntryNotReady if the API is unavailable so setup is
-    # retried instead of failing permanently.
-    if not hass.data.get(NMBS_STATION_DATA):
-        api_client = IRail(session=async_get_clientsession(hass))
-        message = "Unable to fetch the NMBS station list from the iRail API"
-        try:
-            station_response = await api_client.get_stations()
-        except PyRailError as err:
-            raise ConfigEntryNotReady(message) from err
-        if station_response is None:
-            raise ConfigEntryNotReady(message)
-        hass.data[NMBS_STATION_DATA] = station_response.stations
+    coordinator = NMBSCoordinator(hass, entry, stations)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: NMBSConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: NMBSConfigEntry) -> None:
+    """Migrate an old config entry."""
+    if entry.minor_version < 2:
+        data = dict(entry.data)
+        show_on_map = data.pop(CONF_SHOW_ON_MAP, False)
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+            options={**entry.options, CONF_SHOW_ON_MAP: show_on_map},
+            minor_version=2,
+        )
+        _LOGGER.debug("Moved the map setting of %s to the options", entry.title)

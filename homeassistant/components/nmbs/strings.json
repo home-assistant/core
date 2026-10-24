@@ -1,15 +1,22 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-      "api_unavailable": "The API is currently unavailable.",
-      "invalid_station": "Invalid station.",
-      "same_station": "[%key:component::nmbs::config::error::same_station%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "api_unavailable": "The iRail API is unavailable. Try again later."
     },
     "error": {
-      "same_station": "The departure and arrival station cannot be the same."
+      "same_station": "The departure and arrival stations cannot be the same."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "exclude_vias": "[%key:component::nmbs::config::step::user::data::exclude_vias%]"
+        },
+        "data_description": {
+          "exclude_vias": "[%key:component::nmbs::config::step::user::data_description::exclude_vias%]"
+        },
+        "title": "Reconfigure NMBS"
+      },
       "user": {
         "data": {
           "exclude_vias": "Direct connections only",
@@ -19,9 +26,39 @@
         },
         "data_description": {
           "exclude_vias": "Exclude connections with transfers",
-          "show_on_map": "Show the station on the map",
+          "show_on_map": "Add the departure station's location to the travel time sensor, so it shows up on the map",
           "station_from": "Station where the train departs",
           "station_to": "Station where the train arrives"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "connection": {
+        "name": "Train from {station_from} to {station_to}"
+      },
+      "liveboard": {
+        "name": "Trains in {station}"
+      }
+    }
+  },
+  "exceptions": {
+    "station_list_unavailable": {
+      "message": "Unable to fetch the NMBS station list because the iRail API is unavailable"
+    },
+    "station_not_found": {
+      "message": "A configured station no longer exists"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "show_on_map": "[%key:component::nmbs::config::step::user::data::show_on_map%]"
+        },
+        "data_description": {
+          "show_on_map": "[%key:component::nmbs::config::step::user::data_description::show_on_map%]"
         }
       }
     }

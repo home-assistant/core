@@ -2,11 +2,12 @@
   "domain": "nmbs",
   "name": "NMBS",
   "categories": ["vehicles_transport.public_transport"],
-  "codeowners": [],
+  "codeowners": ["@DaanVervacke"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nmbs",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pyrail"],
+  "quality_scale": "bronze",
   "requirements": ["pyrail==0.6.1"]
 }

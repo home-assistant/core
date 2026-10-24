@@ -1,14 +1,11 @@
 """Get ride details and liveboard details for NMBS (Belgian railway)."""
 
 from datetime import datetime
-import logging
 from typing import Any, override
 
-from pyrail import IRail, PyRailError
 from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_SHOW_ON_MAP,
@@ -16,263 +13,145 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import (  # noqa: F401
-    CONF_EXCLUDE_VIAS,
-    CONF_STATION_FROM,
-    CONF_STATION_LIVE,
-    CONF_STATION_TO,
-    DOMAIN,
-    PLATFORMS,
-    find_station,
-    find_station_by_name,
+from .const import (
+    CONNECTION_FEED,
+    CONNECTION_UNIQUE_ID_PREFIX,
+    LIVEBOARD_UNIQUE_ID_PREFIX,
 )
+from .coordinator import NMBSConfigEntry, NMBSCoordinator
+from .entity import NMBSEntity
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 DEFAULT_ICON = "mdi:train"
 DEFAULT_ICON_ALERT = "mdi:alert-octagon"
 
 
-def get_time_until(departure_time: datetime | None = None):
-    """Calculate the time between now and a train's departure time."""
-    if departure_time is None:
-        return 0
-
+def get_time_until(departure_time: datetime) -> int:
+    """Calculate the minutes between now and a train's departure time."""
     delta = dt_util.as_utc(departure_time) - dt_util.utcnow()
     return round(delta.total_seconds() / 60)
 
 
-def get_delay_in_minutes(delay=0):
+def get_delay_in_minutes(delay: int) -> int:
     """Get the delay in minutes from a delay in seconds."""
-    return round(int(delay) / 60)
+    return round(delay / 60)
 
 
-def get_ride_duration(departure_time: datetime, arrival_time: datetime, delay=0):
+def get_ride_duration(
+    departure_time: datetime, arrival_time: datetime, delay: int
+) -> int:
     """Calculate the total travel time in minutes."""
     duration = arrival_time - departure_time
-    duration_time = round(duration.total_seconds() / 60)
-    return duration_time + get_delay_in_minutes(delay)
+    return round(duration.total_seconds() / 60) + get_delay_in_minutes(delay)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NMBSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NMBS sensor entities based on a config entry."""
-    api_client = IRail(session=async_get_clientsession(hass))
-
-    name = config_entry.data.get(CONF_NAME, None)
-    show_on_map = config_entry.data.get(CONF_SHOW_ON_MAP, False)
-    excl_vias = config_entry.data.get(CONF_EXCLUDE_VIAS, False)
-
-    station_from = find_station(hass, config_entry.data[CONF_STATION_FROM])
-    station_to = find_station(hass, config_entry.data[CONF_STATION_TO])
-
-    # setup the connection from station to station
-    # setup a disabled liveboard for both from and to station
+    coordinator = config_entry.runtime_data
     async_add_entities(
         [
-            NMBSSensor(
-                api_client, name, show_on_map, station_from, station_to, excl_vias
-            ),
-            NMBSLiveBoard(
-                api_client, station_from, station_from, station_to, excl_vias
-            ),
-            NMBSLiveBoard(api_client, station_to, station_from, station_to, excl_vias),
+            NMBSSensor(coordinator),
+            NMBSLiveBoard(coordinator, coordinator.station_from),
+            NMBSLiveBoard(coordinator, coordinator.station_to),
         ]
     )
 
 
-class NMBSLiveBoard(SensorEntity):
-    """Get the next train from a station's liveboard."""
-
-    _attr_attribution = "https://api.irail.be/"
-
-    def __init__(
-        self,
-        api_client: IRail,
-        live_station: StationDetails,
-        station_from: StationDetails,
-        station_to: StationDetails,
-        excl_vias: bool,
-    ) -> None:
-        """Initialize the sensor for getting liveboard data."""
-        self._station = live_station
-        self._api_client = api_client
-        self._station_from = station_from
-        self._station_to = station_to
-
-        self._excl_vias = excl_vias
-        self._attrs: LiveboardDeparture | None = None
-
-        self._state: str | None = None
-
-        self.entity_registry_enabled_default = False
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return the sensor default name."""
-        return f"Trains in {self._station.standard_name}"
-
-    @property
-    @override
-    def unique_id(self) -> str:
-        """Return the unique ID."""
-
-        unique_id = f"{self._station.id}_{self._station_from.id}_{self._station_to.id}"
-        vias = "_excl_vias" if self._excl_vias else ""
-        # Legacy format, kept as migrating existing unique IDs is not worth the risk
-        return f"nmbs_live_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
-
-    @property
-    @override
-    def icon(self) -> str:
-        """Return the default icon or an alert icon if delays."""
-        if self._attrs and int(self._attrs.delay) > 0:
-            return DEFAULT_ICON_ALERT
-
-        return DEFAULT_ICON
-
-    @property
-    @override
-    def native_value(self) -> str | None:
-        """Return sensor state."""
-        return self._state
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the sensor attributes if data is available."""
-        if self._state is None or not self._attrs:
-            return None
-
-        delay = get_delay_in_minutes(self._attrs.delay)
-        departure = get_time_until(self._attrs.time)
-
-        attrs = {
-            "departure": f"In {departure} minutes",
-            "departure_minutes": departure,
-            "extra_train": self._attrs.is_extra,
-            "vehicle_id": self._attrs.vehicle,
-            "monitored_station": self._station.standard_name,
-        }
-
-        if delay > 0:
-            attrs["delay"] = f"{delay} minutes"
-            attrs["delay_minutes"] = delay
-
-        return attrs
-
-    async def async_update(self, **kwargs: Any) -> None:
-        """Set the state equal to the next departure."""
-        try:
-            liveboard = await self._api_client.get_liveboard(
-                station_id=self._station.id
-            )
-        except PyRailError:
-            _LOGGER.warning("API failed in NMBSLiveBoard")
-            return
-
-        if liveboard is None:
-            return
-
-        if not (departures := liveboard.departures):
-            _LOGGER.warning("API returned invalid departures: %r", liveboard)
-            return
-
-        _LOGGER.debug("API returned departures: %r", departures)
-        if len(departures) == 0:
-            # No trains are scheduled
-            return
-        next_departure = departures[0]
-
-        self._attrs = next_departure
-        self._state = f"Track {next_departure.platform} - {next_departure.station}"
-
-
-class NMBSSensor(SensorEntity):
+class NMBSSensor(NMBSEntity, SensorEntity):
     """Get the total travel time for a given connection."""
 
-    _attr_attribution = "https://api.irail.be/"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
-    def __init__(
-        self,
-        api_client: IRail,
-        name: str,
-        show_on_map: bool,
-        station_from: StationDetails,
-        station_to: StationDetails,
-        excl_vias: bool,
-    ) -> None:
+    def __init__(self, coordinator: NMBSCoordinator) -> None:
         """Initialize the NMBS connection sensor."""
-        self._name = name
-        self._show_on_map = show_on_map
-        self._api_client = api_client
-        self._station_from = station_from
-        self._station_to = station_to
-        self._excl_vias = excl_vias
-
-        self._attrs: ConnectionDetails | None = None
-        self._state = None
+        super().__init__(coordinator)
+        self._location: dict[str, float] = (
+            {
+                EntityStateAttribute.LATITUDE: coordinator.station_from.latitude,
+                EntityStateAttribute.LONGITUDE: coordinator.station_from.longitude,
+            }
+            if coordinator.config_entry.options.get(CONF_SHOW_ON_MAP, False)
+            else {}
+        )
+        self._attr_translation_key = "connection"
+        self._attr_translation_placeholders = {
+            "station_from": coordinator.station_from.standard_name,
+            "station_to": coordinator.station_to.standard_name,
+        }
+        if custom_name := coordinator.config_entry.data.get(CONF_NAME):
+            self._attr_name = custom_name
+        unique_id = f"{coordinator.station_from.id}_{coordinator.station_to.id}"
+        vias = "_excl_vias" if coordinator.exclude_vias else ""
+        self._attr_unique_id = f"{CONNECTION_UNIQUE_ID_PREFIX}{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
     @override
-    def unique_id(self) -> str:
-        """Return the unique ID."""
-        unique_id = f"{self._station_from.id}_{self._station_to.id}"
-
-        vias = "_excl_vias" if self._excl_vias else ""
-        # Legacy format, kept as migrating existing unique IDs is not worth the risk
-        return f"nmbs_connection_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+    def available(self) -> bool:
+        """Return True if the coordinator and the connection feed succeeded."""
+        return (
+            super().available
+            and CONNECTION_FEED not in self.coordinator.data.failed_feeds
+        )
 
     @property
-    @override
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        if self._name is None:
-            return (
-                f"Train from {self._station_from.standard_name}"
-                f" to {self._station_to.standard_name}"
-            )
-        return self._name
+    def connection(self) -> ConnectionDetails | None:
+        """Return the current connection data."""
+        return self.coordinator.data.connection
 
     @property
     @override
     def icon(self) -> str:
         """Return the sensor default icon or an alert icon if any delay."""
-        if self._attrs:
-            delay = get_delay_in_minutes(self._attrs.departure.delay)
-            if delay > 0:
-                return "mdi:alert-octagon"
+        if (connection := self.connection) and get_delay_in_minutes(
+            connection.departure.delay
+        ) > 0:
+            return DEFAULT_ICON_ALERT
+        return DEFAULT_ICON
 
-        return "mdi:train"
+    @property
+    @override
+    def native_value(self) -> int | None:
+        """Return the travel time in minutes."""
+        if (connection := self.connection) is None:
+            return None
+        return get_ride_duration(
+            connection.departure.time,
+            connection.arrival.time,
+            connection.departure.delay,
+        )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return sensor attributes if data is available."""
-        if self._state is None or not self._attrs:
-            return None
+        """Return sensor attributes, or only the map location when there is no connection.
 
-        delay = get_delay_in_minutes(self._attrs.departure.delay)
-        departure = get_time_until(self._attrs.departure.time)
+        The departure and delay attributes are text forms of
+        departure_minutes and delay_minutes, kept for existing templates.
+        """
+        if (connection := self.connection) is None:
+            return self._location or None
 
-        attrs = {
-            "destination": self._attrs.departure.station,
-            "direction": self._attrs.departure.direction.name,
-            "platform_arriving": self._attrs.arrival.platform,
-            "platform_departing": self._attrs.departure.platform,
-            "vehicle_id": self._attrs.departure.vehicle,
+        delay = get_delay_in_minutes(connection.departure.delay)
+        departure = get_time_until(connection.departure.time)
+
+        attrs: dict[str, Any] = {
+            "destination": connection.arrival.station,
+            "direction": connection.departure.direction.name,
+            "platform_arriving": connection.arrival.platform,
+            "platform_departing": connection.departure.platform,
+            "vehicle_id": connection.departure.vehicle,
+            "departure_time": connection.departure.time,
         }
 
-        attrs["canceled"] = self._attrs.departure.canceled
+        attrs["canceled"] = connection.departure.canceled
         if attrs["canceled"]:
             attrs["departure"] = None
             attrs["departure_minutes"] = None
@@ -280,12 +159,10 @@ class NMBSSensor(SensorEntity):
             attrs["departure"] = f"In {departure} minutes"
             attrs["departure_minutes"] = departure
 
-        if self._show_on_map and self.station_coordinates:
-            attrs[EntityStateAttribute.LATITUDE] = self.station_coordinates[0]
-            attrs[EntityStateAttribute.LONGITUDE] = self.station_coordinates[1]
+        attrs.update(self._location)
 
-        if self.is_via_connection and not self._excl_vias:
-            via = self._attrs.vias[0]
+        if connection.vias and not self.coordinator.exclude_vias:
+            via = connection.vias[0]
 
             attrs["via"] = via.station
             attrs["via_arrival_platform"] = via.arrival.platform
@@ -294,70 +171,87 @@ class NMBSSensor(SensorEntity):
                 via.timebetween
             ) + get_delay_in_minutes(via.departure.delay)
 
+        attrs["delay_seconds"] = connection.departure.delay
         attrs["delay"] = f"{delay} minutes"
         attrs["delay_minutes"] = delay
 
         return attrs
 
+
+class NMBSLiveBoard(NMBSEntity, SensorEntity):
+    """Get the next train from a station's liveboard."""
+
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: NMBSCoordinator, station: StationDetails) -> None:
+        """Initialize the sensor for getting liveboard data."""
+        super().__init__(coordinator)
+        self._station = station
+        self._attr_translation_key = "liveboard"
+        self._attr_translation_placeholders = {"station": station.standard_name}
+        unique_id = (
+            f"{station.id}_{coordinator.station_from.id}_{coordinator.station_to.id}"
+        )
+        vias = "_excl_vias" if coordinator.exclude_vias else ""
+        self._attr_unique_id = f"{LIVEBOARD_UNIQUE_ID_PREFIX}{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+
     @property
     @override
-    def native_value(self) -> int | None:
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def station_coordinates(self) -> list[float]:
-        """Get the lat, long coordinates for station."""
-        if self._state is None or not self._attrs:
-            return []
-
-        latitude = float(self._attrs.departure.station_info.latitude)
-        longitude = float(self._attrs.departure.station_info.longitude)
-        return [latitude, longitude]
-
-    @property
-    def is_via_connection(self) -> bool:
-        """Return whether the connection goes through another station."""
-        if not self._attrs:
-            return False
-
-        return self._attrs.vias is not None and len(self._attrs.vias) > 0
-
-    async def async_update(self, **kwargs: Any) -> None:
-        """Set the state to the duration of a connection."""
-        try:
-            connections = await self._api_client.get_connections(
-                self._station_from.id, self._station_to.id
-            )
-        except PyRailError:
-            _LOGGER.warning("API failed in NMBSSensor")
-            return
-
-        if connections is None:
-            return
-
-        if not (connection := connections.connections):
-            _LOGGER.warning("API returned invalid connection: %r", connections)
-            return
-
-        _LOGGER.debug("API returned connection: %r", connection)
-        if connection[0].departure.left:
-            next_connection = connection[1]
-        else:
-            next_connection = connection[0]
-
-        self._attrs = next_connection
-
-        if self._excl_vias and self.is_via_connection:
-            _LOGGER.debug(
-                "Skipping update of NMBSSensor because this connection is a via"
-            )
-            return
-
-        duration = get_ride_duration(
-            next_connection.departure.time,
-            next_connection.arrival.time,
-            next_connection.departure.delay,
+    def available(self) -> bool:
+        """Return True if the coordinator and the liveboard feed succeeded."""
+        return (
+            super().available
+            and self._station.id not in self.coordinator.data.failed_feeds
         )
 
-        self._state = duration
+    @property
+    def next_departure(self) -> LiveboardDeparture | None:
+        """Return the next departure for the monitored station."""
+        return self.coordinator.data.next_departures[self._station.id]
+
+    @property
+    @override
+    def icon(self) -> str:
+        """Return the default icon or an alert icon if the next departure is delayed."""
+        if (departure := self.next_departure) and departure.delay > 0:
+            return DEFAULT_ICON_ALERT
+        return DEFAULT_ICON
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the track and destination of the next departure."""
+        if (departure := self.next_departure) is None:
+            return None
+        return f"Track {departure.platform} - {departure.station}"
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the sensor attributes if data is available.
+
+        The departure and delay attributes are text forms of
+        departure_minutes and delay_minutes, kept for existing templates.
+        """
+        if (departure := self.next_departure) is None:
+            return None
+
+        delay = get_delay_in_minutes(departure.delay)
+        departure_minutes = get_time_until(departure.time)
+
+        attrs: dict[str, Any] = {
+            "departure_time": departure.time,
+            "departure": f"In {departure_minutes} minutes",
+            "departure_minutes": departure_minutes,
+            "extra_train": departure.is_extra,
+            "vehicle_id": departure.vehicle,
+            "monitored_station": self._station.standard_name,
+        }
+
+        if departure.delay > 0:
+            attrs["delay_seconds"] = departure.delay
+        if delay > 0:
+            attrs["delay"] = f"{delay} minutes"
+            attrs["delay_minutes"] = delay
+
+        return attrs
