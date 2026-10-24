@@ -791,8 +791,29 @@
     "invalid_credential_data": {
       "message": "Invalid credential data: {reason}."
     },
+    "media_playback_failed": {
+      "message": "The device could not carry out the playback command (status {status})."
+    },
+    "media_playback_invalid_state": {
+      "message": "The device cannot do this in its current playback state, for example because nothing is playing."
+    },
+    "media_playback_not_active": {
+      "message": "The device is not ready for playback, for example because it is turned off."
+    },
+    "media_playback_not_allowed": {
+      "message": "The device does not allow this right now."
+    },
+    "media_playback_seek_out_of_range": {
+      "message": "This position is outside the part of the media the device can seek to."
+    },
+    "media_playback_speed_out_of_range": {
+      "message": "The device cannot play any faster or slower."
+    },
     "set_credential_failed": {
       "message": "Failed to set credential: lock returned status `{status}`."
+    },
+    "unknown_media_input": {
+      "message": "The device has no input named `{source}`."
     }
   },
   "issues": {
