@@ -39,7 +39,7 @@ from pyoverkiz.models import (
     Place,
 )
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
@@ -158,6 +158,12 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 )
             finally:
                 self._last_write_at = monotonic()
+
+    @callback
+    def async_send_pending_commands(self, key: tuple[str, tuple[str, ...]]) -> None:
+        """Send what waits for a write of these settings, if anything."""
+        if key in self.pending_commands:
+            self.hass.async_create_task(_send_pending_commands(self, key))
 
     def is_execution_running(self, key: tuple[str, tuple[str, ...]]) -> bool:
         """Return whether a write of the same settings has been running lately."""
@@ -538,6 +544,12 @@ async def _replay_failed_execution(
             for command in _written_commands(record)
         )
 
+    # Until the replay runs, a new value of the setting waits behind it, as it
+    # would behind the write that failed.
+    key = record.get("key")
+    if key is not None:
+        coordinator.writes_waiting.add(key)
+
     try:
         exec_id = await coordinator.async_execute_throttled(
             [Action(device_url=device_url, commands=sent)], still_wanted
@@ -550,25 +562,31 @@ async def _replay_failed_execution(
     ):
         LOGGER.warning("Replay of the Overkiz command failed", exc_info=True)
         _report_failed_execution(coordinator, event, [record], replayed=True)
-        if (key := record.get("key")) is not None:
-            await _send_pending_commands(coordinator, key)
-        return
+        exec_id = None
+    else:
+        if exec_id is None:
+            LOGGER.debug(
+                "Not replaying Overkiz execution %s: superseded", event.exec_id
+            )
+        else:
+            # The replay is not replayed in turn.
+            coordinator.executions.setdefault(exec_id, []).append(
+                {
+                    "device_url": device_url,
+                    "command_name": record["command_name"],
+                    "command_names": record["command_names"],
+                    "commands": sent,
+                    "key": key,
+                    "started": monotonic(),
+                }
+            )
+    finally:
+        if key is not None:
+            coordinator.writes_waiting.discard(key)
 
-    if exec_id is None:
-        LOGGER.debug("Not replaying Overkiz execution %s: superseded", event.exec_id)
-        return
-
-    # The replay is not replayed in turn.
-    coordinator.executions.setdefault(exec_id, []).append(
-        {
-            "device_url": device_url,
-            "command_name": record["command_name"],
-            "command_names": record["command_names"],
-            "commands": sent,
-            "key": record.get("key"),
-            "started": monotonic(),
-        }
-    )
+    # Without a replay running, nothing will send what waits once it ends.
+    if exec_id is None and key is not None:
+        await _send_pending_commands(coordinator, key)
 
 
 def _failed_command_names(

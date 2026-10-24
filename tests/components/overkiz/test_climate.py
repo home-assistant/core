@@ -29,6 +29,10 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.overkiz.coordinator import (
+    OverkizDataUpdateCoordinator,
+    on_execution_state_changed,
+)
 from homeassistant.components.overkiz.executor import OverkizExecutor
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -37,7 +41,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.state import async_reproduce_state
 
@@ -2067,3 +2071,116 @@ async def test_zone_control_zone_schedule_ends_a_derogation_not_reported_yet(
             *ZONE_CONTROL_ZONE_REFRESH_COMMANDS,
         ],
     )
+
+
+def _zone_coordinator(hass: HomeAssistant) -> OverkizDataUpdateCoordinator:
+    """Return the coordinator of the Overkiz integration set up in a test."""
+    return hass.config_entries.async_entries(DOMAIN)[0].runtime_data.coordinator
+
+
+async def test_zone_control_zone_new_write_drops_an_older_waiting_value(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a value still waiting is dropped when a newer write starts."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_set_zone_setpoint(hass, 20.0)
+
+    # The running write is over before what waits for it is sent.
+    _zone_coordinator(hass).executions.clear()
+    await _async_set_zone_setpoint(hass, 22.0)
+    await _async_end_execution(hass, freezer, mock_client, "exec-2")
+
+    assert _sent_commands(mock_client) == [
+        [("setHeatingTargetTemperature", [19.0])],
+        [("setHeatingTargetTemperature", [22.0])],
+    ]
+
+
+async def test_zone_control_zone_value_waits_behind_a_replay(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a value set while a replay waits its turn replaces the waiting one."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+    coordinator = _zone_coordinator(hass)
+    executor = OverkizExecutor(ZONE_CONTROL_ZONE.device_url, coordinator)
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_set_zone_setpoint(hass, 20.0)
+
+    # The replay of the lost 19 °C waits for the turn of the writes.
+    async with coordinator._write_lock:
+        await on_execution_state_changed(
+            coordinator,
+            execution_state_changed_event(
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+                failed_commands=[{"rank": 0}],
+            ),
+        )
+        await executor.async_execute_commands(
+            [Command(name="setHeatingTargetTemperature", parameters=[21.0])],
+            coalesce=True,
+        )
+        assert mock_client.execute_action_group.await_count == 1
+
+    await hass.async_block_till_done()
+    await _async_end_execution(hass, freezer, mock_client, "exec-2")
+
+    assert _sent_commands(mock_client) == [
+        [("setHeatingTargetTemperature", [19.0])],
+        [("setHeatingTargetTemperature", [19.0])],
+        [("setHeatingTargetTemperature", [21.0])],
+    ]
+
+
+async def test_zone_control_zone_value_waiting_for_a_failed_write_is_sent(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a value that waited for a write that could not be sent is sent."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+    coordinator = _zone_coordinator(hass)
+    executor = OverkizExecutor(ZONE_CONTROL_ZONE.device_url, coordinator)
+    mock_client.execute_action_group.side_effect = [
+        BaseOverkizError("Server is down"),
+        "exec-2",
+    ]
+
+    async with coordinator._write_lock:
+        first = hass.async_create_task(
+            executor.async_execute_commands(
+                [Command(name="setHeatingTargetTemperature", parameters=[19.0])],
+                coalesce=True,
+            )
+        )
+        await executor.async_execute_commands(
+            [Command(name="setHeatingTargetTemperature", parameters=[20.0])],
+            coalesce=True,
+        )
+
+    with pytest.raises(HomeAssistantError):
+        await first
+    await hass.async_block_till_done()
+
+    assert _sent_commands(mock_client) == [
+        [("setHeatingTargetTemperature", [19.0])],
+        [("setHeatingTargetTemperature", [20.0])],
+    ]

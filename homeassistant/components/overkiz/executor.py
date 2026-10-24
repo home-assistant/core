@@ -129,6 +129,10 @@ class OverkizExecutor:
                     self.coordinator.pending_commands[key] = commands
                 return
 
+            # A write that starts now is newer than what still waits for the
+            # end of the previous one.
+            self.coordinator.pending_commands.pop(key, None)
+
         actions = [Action(device_url=self.device.device_url, commands=commands)]
         try:
             if coalesce:
@@ -136,6 +140,13 @@ class OverkizExecutor:
                     self.coordinator.writes_waiting.add(key)
                 try:
                     exec_id = await self.coordinator.async_execute_throttled(actions)
+                except Exception:
+                    # What came in while this write waited its turn is not sent
+                    # after it: send it now.
+                    if key is not None:
+                        self.coordinator.writes_waiting.discard(key)
+                        self.coordinator.async_send_pending_commands(key)
+                    raise
                 finally:
                     if key is not None:
                         self.coordinator.writes_waiting.discard(key)
