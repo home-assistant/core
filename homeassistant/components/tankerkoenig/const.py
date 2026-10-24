@@ -5,6 +5,8 @@ NAME = "tankerkoenig"
 
 CONF_STATIONS = "stations"
 
+SERVICE_GET_OPENING_TIMES = "get_opening_times"
+
 DEFAULT_RADIUS = 2
 DEFAULT_SCAN_INTERVAL = 30
 
@@ -12,6 +14,7 @@ ATTR_BRAND = "brand"
 ATTR_CITY = "city"
 ATTR_FUEL_TYPE = "fuel_type"
 ATTR_HOUSE_NUMBER = "house_number"
+ATTR_OPENING_TIMES = "opening_times"
 ATTR_POSTCODE = "postcode"
 ATTR_STATION_NAME = "station_name"
 ATTR_STREET = "street"

@@ -10,9 +10,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import EntityStateAttribute
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.json import JsonObjectType, JsonValueType
 
+from .const import ATTR_OPENING_TIMES
 from .coordinator import TankerkoenigConfigEntry, TankerkoenigDataUpdateCoordinator
 from .entity import TankerkoenigCoordinatorEntity
 
@@ -20,6 +22,14 @@ from .entity import TankerkoenigCoordinatorEntity
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
+
+# Tankerkoenig marks a station that never closes with `wholeDay` and sends no opening
+# times for it. Returning that as an opening time keeps a single list for both.
+WHOLE_DAY_OPENING_TIME: JsonObjectType = {
+    "days": "Mo-So",
+    "start_time": "00:00:00",
+    "end_time": "23:59:59",
+}
 
 
 async def async_setup_entry(
@@ -54,6 +64,18 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
         super().__init__(coordinator, station)
         self._station_id = station.id
         self._attr_unique_id = f"{station.id}_status"
+        self._opening_times: list[JsonValueType] = []
+        if station.whole_day:
+            self._opening_times = [dict(WHOLE_DAY_OPENING_TIME)]
+        elif station.opening_times:
+            self._opening_times = [
+                {
+                    "days": opening_time.text,
+                    "start_time": opening_time.start,
+                    "end_time": opening_time.end,
+                }
+                for opening_time in station.opening_times
+            ]
         if coordinator.show_on_map:
             self._attr_extra_state_attributes = {
                 EntityStateAttribute.LATITUDE: station.lat,
@@ -66,3 +88,7 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
         """Return true if the station is open."""
         data: PriceInfo = self.coordinator.data[self._station_id]
         return data is not None and data.status == Status.OPEN
+
+    async def async_get_opening_times(self) -> ServiceResponse:
+        """Return the opening times of the station."""
+        return {ATTR_OPENING_TIMES: self._opening_times}
