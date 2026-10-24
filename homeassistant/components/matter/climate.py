@@ -6,10 +6,12 @@ from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
+from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
@@ -26,12 +28,21 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
+from .const import (
+    ATTR_COOLING_SETPOINT,
+    ATTR_HEATING_SETPOINT,
+    ATTR_PRESET_NAME,
+    ATTR_PRESET_SCENARIO,
+    PRESET_SCENARIO_REVERSE_MAP,
+)
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
+from .thermostat_helpers import remove_thermostat_preset, set_thermostat_preset
 
 HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
@@ -356,6 +367,74 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
             attribute=clusters.Thermostat.Attributes.ActivePresetHandle,
         )
         self._endpoint.set_attribute_value(active_preset_path, preset_handle)
+
+    async def async_set_thermostat_preset(self, **kwargs: Any) -> None:
+        """Create a new thermostat preset, or edit an existing one."""
+        preset_mode: str | None = kwargs.get(ATTR_PRESET_MODE)
+        preset_scenario_str: str | None = kwargs.get(ATTR_PRESET_SCENARIO)
+        preset_handle: bytes | None = None
+        if preset_mode is not None:
+            if preset_scenario_str is not None:
+                raise ServiceValidationError(
+                    "preset_scenario cannot be changed on an existing preset"
+                )
+            if preset_mode not in self._preset_handle_by_name:
+                raise ServiceValidationError(f"Unknown preset_mode '{preset_mode}'")
+            preset_handle = self._preset_handle_by_name[preset_mode]
+            if preset_handle is None:
+                raise ServiceValidationError(
+                    f"'{preset_mode}' is not an editable preset"
+                )
+        elif preset_scenario_str is None:
+            raise ServiceValidationError(
+                "preset_scenario is required when adding a new preset"
+            )
+        preset_scenario = (
+            PRESET_SCENARIO_REVERSE_MAP[preset_scenario_str]
+            if preset_scenario_str is not None
+            else None
+        )
+        heating_setpoint: float | None = kwargs.get(ATTR_HEATING_SETPOINT)
+        cooling_setpoint: float | None = kwargs.get(ATTR_COOLING_SETPOINT)
+        try:
+            await set_thermostat_preset(
+                self.matter_client,
+                self._endpoint.node,
+                preset_handle=preset_handle,
+                preset_scenario=preset_scenario,
+                name=kwargs.get(ATTR_PRESET_NAME),
+                heating_setpoint=(
+                    round(heating_setpoint * TEMPERATURE_SCALING_FACTOR)
+                    if heating_setpoint is not None
+                    else None
+                ),
+                cooling_setpoint=(
+                    round(cooling_setpoint * TEMPERATURE_SCALING_FACTOR)
+                    if cooling_setpoint is not None
+                    else None
+                ),
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to set thermostat preset on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_clear_thermostat_preset(self, **kwargs: Any) -> None:
+        """Remove a thermostat preset."""
+        preset_mode: str = kwargs[ATTR_PRESET_MODE]
+        if preset_mode not in self._preset_handle_by_name:
+            raise ServiceValidationError(f"Unknown preset_mode '{preset_mode}'")
+        preset_handle = self._preset_handle_by_name[preset_mode]
+        if preset_handle is None:
+            raise ServiceValidationError(f"'{preset_mode}' is not a removable preset")
+        try:
+            await remove_thermostat_preset(
+                self.matter_client, self._endpoint.node, preset_handle
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to remove thermostat preset on {self.entity_id}: {err}"
+            ) from err
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

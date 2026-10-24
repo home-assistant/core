@@ -834,6 +834,16 @@
       },
       "name": "Clear lock user"
     },
+    "clear_thermostat_preset": {
+      "description": "Removes a preset from a thermostat.",
+      "fields": {
+        "preset_mode": {
+          "description": "The preset to remove, as shown in the entity's preset_mode/preset_modes.",
+          "name": "Preset mode"
+        }
+      },
+      "name": "Clear thermostat preset"
+    },
     "get_lock_credential_status": {
       "description": "Returns the status of a credential slot on a lock.",
       "fields": {
@@ -917,6 +927,32 @@
         }
       },
       "name": "Set lock user"
+    },
+    "set_thermostat_preset": {
+      "description": "Creates a new thermostat preset, or edits an existing one.",
+      "fields": {
+        "cooling_setpoint": {
+          "description": "The cooling setpoint for the preset. Leave empty to keep the current value.",
+          "name": "Cooling setpoint"
+        },
+        "heating_setpoint": {
+          "description": "The heating setpoint for the preset. Leave empty to keep the current value.",
+          "name": "Heating setpoint"
+        },
+        "name": {
+          "description": "The display name for the preset. Only used for scenarios that support custom names.",
+          "name": "Name"
+        },
+        "preset_mode": {
+          "description": "The existing preset to edit, as shown in the entity's preset_mode/preset_modes. Leave empty to add a new preset.",
+          "name": "Preset mode"
+        },
+        "preset_scenario": {
+          "description": "The scenario for a new preset. Required when adding a preset; cannot be changed on an existing one.",
+          "name": "Preset scenario"
+        }
+      },
+      "name": "Set thermostat preset"
     },
     "water_heater_boost": {
       "description": "Enables water heater boost for a specific duration.",
