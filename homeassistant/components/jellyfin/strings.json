@@ -41,6 +41,11 @@
       }
     }
   },
+  "exceptions": {
+    "update_failed": {
+      "message": "Unable to fetch sessions from the Jellyfin server: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {

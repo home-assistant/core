@@ -1,15 +1,21 @@
 """Data update coordinator for the Jellyfin integration."""
 
 from datetime import timedelta
+from functools import partial
 from typing import Any, override
 
 from jellyfin_apiclient_python import JellyfinClient
+from jellyfin_apiclient_python.exceptions import HTTPException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, LOGGER, USER_APP_NAME
+
+# Fail fast when the server is offline instead of blocking an executor
+# thread with the library's default retries; the next poll retries anyway.
+SESSIONS_TIMEOUT = 10
 
 type JellyfinConfigEntry = ConfigEntry[JellyfinDataUpdateCoordinator]
 
@@ -49,9 +55,20 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, An
     @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from Jellyfin."""
-        sessions = await self.hass.async_add_executor_job(
-            self.api_client.jellyfin.sessions
-        )
+        try:
+            sessions = await self.hass.async_add_executor_job(
+                partial(
+                    self.api_client.jellyfin.sessions,
+                    timeout=SESSIONS_TIMEOUT,
+                    retry=0,
+                )
+            )
+        except HTTPException as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err.status)},
+            ) from err
 
         if sessions is None:
             return {}
