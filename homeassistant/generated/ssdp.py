@@ -26,6 +26,11 @@ SSDP = {
             "st": "c4:director",
         },
     ],
+    "cookidoo": [
+        {
+            "deviceType": "urn:device:vorwerk:nwotdevice:1",
+        },
+    ],
     "deconz": [
         {
             "manufacturer": "Royal Philips Electronics",
