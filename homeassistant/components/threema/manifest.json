@@ -1,6 +1,7 @@
 {
   "domain": "threema",
   "name": "Threema",
+  "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@LukasQ"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/threema",

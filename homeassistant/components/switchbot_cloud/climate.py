@@ -37,11 +37,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
+from . import SwitchbotCloudConfigEntry
 from .const import (
     CLIMATE_PRESET_SCHEDULE,
     SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH,
 )
+from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 _LOGGER = getLogger(__name__)

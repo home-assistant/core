@@ -12,6 +12,7 @@ from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController
 import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
 from homeassistant.components.homekit_controller.connection import (
@@ -38,8 +39,6 @@ from .common import (
     setup_test_component,
     time_changed,
 )
-
-from tests.common import MockConfigEntry
 
 
 @dataclasses.dataclass

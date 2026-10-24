@@ -1,6 +1,7 @@
 """Tests for Vallox number platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -11,8 +12,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from .conftest import patch_set_values
-
-from tests.common import MockConfigEntry
 
 TEST_TEMPERATURE_ENTITIES_DATA = [
     (

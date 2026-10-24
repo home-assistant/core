@@ -40,6 +40,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -1100,37 +1101,13 @@ async def test_rpc_rgbcct_light(
 
 async def test_rpc_ledstrip_light(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
+    mock_ledstrip_rpc_device: Mock,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC LED strip light."""
     entity_id = f"{LIGHT_DOMAIN}.test_name_ledstrip_0"
-
-    config = deepcopy(mock_rpc_device.config)
-    config["ledstrip:0"] = {
-        "id": 0,
-        "name": None,
-        "initial_state": 2,
-        "num_leds": 100,
-        "protocol": "ws2812b",
-        "color_order": "rgb",
-        "ddp_port": 4048,
-        "effects": ["solid", "blink", "fade", "rainbow"],
-    }
-    monkeypatch.setattr(mock_rpc_device, "config", config)
-
-    status = deepcopy(mock_rpc_device.status)
-    status["ledstrip:0"] = {
-        "id": 0,
-        "on": False,
-        "brightness": 36,
-        "effect": "rainbow",
-        "speed": 33,
-        "reverse": True,
-    }
-    monkeypatch.setattr(mock_rpc_device, "status", status)
 
     await init_integration(hass, 4)
 
@@ -1147,12 +1124,14 @@ async def test_rpc_ledstrip_light(
         blocking=True,
     )
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
+    mock_ledstrip_rpc_device.call_rpc.assert_called_once_with(
         "LedStrip.Set", {"id": 0, "on": False}
     )
 
-    mock_rpc_device.call_rpc.reset_mock()
-    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "ledstrip:0", "on", True)
+    mock_ledstrip_rpc_device.call_rpc.reset_mock()
+    mutate_rpc_device_status(
+        monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", "on", True
+    )
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -1160,10 +1139,10 @@ async def test_rpc_ledstrip_light(
         blocking=True,
     )
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
+    mock_ledstrip_rpc_device.call_rpc.assert_called_once_with(
         "LedStrip.Set", {"id": 0, "on": True}
     )
-    mock_rpc_device.mock_update()
+    mock_ledstrip_rpc_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
@@ -1172,7 +1151,7 @@ async def test_rpc_ledstrip_light(
     assert state.attributes[ATTR_RGB_COLOR] is None
     assert state.attributes[ATTR_EFFECT] == "rainbow"
 
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_ledstrip_rpc_device.call_rpc.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -1181,11 +1160,11 @@ async def test_rpc_ledstrip_light(
     )
 
     mutate_rpc_device_status(
-        monkeypatch, mock_rpc_device, "ledstrip:0", "brightness", 88
+        monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", "brightness", 88
     )
-    mock_rpc_device.mock_update()
+    mock_ledstrip_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
+    mock_ledstrip_rpc_device.call_rpc.assert_called_once_with(
         "LedStrip.Set", {"id": 0, "on": True, "brightness": 88}
     )
 
@@ -1193,7 +1172,7 @@ async def test_rpc_ledstrip_light(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 224  # 88% of 255
 
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_ledstrip_rpc_device.call_rpc.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -1206,14 +1185,14 @@ async def test_rpc_ledstrip_light(
     )
 
     mutate_rpc_device_status(
-        monkeypatch, mock_rpc_device, "ledstrip:0", "effect", "solid"
+        monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", "effect", "solid"
     )
     mutate_rpc_device_status(
-        monkeypatch, mock_rpc_device, "ledstrip:0", "rgb", [100, 150, 200]
+        monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", "rgb", [100, 150, 200]
     )
-    mock_rpc_device.mock_update()
+    mock_ledstrip_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
+    mock_ledstrip_rpc_device.call_rpc.assert_called_once_with(
         "LedStrip.Set",
         {"id": 0, "on": True, "rgb": [100, 150, 200], "effect": "solid"},
     )
@@ -1223,7 +1202,7 @@ async def test_rpc_ledstrip_light(
     assert state.attributes[ATTR_EFFECT] == "solid"
     assert state.attributes[ATTR_RGB_COLOR] == (100, 150, 200)
 
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_ledstrip_rpc_device.call_rpc.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -1232,14 +1211,37 @@ async def test_rpc_ledstrip_light(
     )
 
     mutate_rpc_device_status(
-        monkeypatch, mock_rpc_device, "ledstrip:0", "effect", "fade"
+        monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", "effect", "fade"
     )
-    mock_rpc_device.mock_update()
+    mock_ledstrip_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
+    mock_ledstrip_rpc_device.call_rpc.assert_called_once_with(
         "LedStrip.Set", {"id": 0, "on": True, "effect": "fade"}
     )
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
     assert state.attributes[ATTR_EFFECT] == "fade"
+
+
+async def test_rpc_ledstrip_light_device_not_initialized(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC LED strip light state update when the device is not initialized."""
+    entity_id = f"{LIGHT_DOMAIN}.test_name_ledstrip_0"
+
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_EFFECT_LIST] == ["solid", "blink", "fade", "rainbow"]
+
+    monkeypatch.setattr(mock_ledstrip_rpc_device, "initialized", False)
+    mock_ledstrip_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes[ATTR_EFFECT_LIST] == []

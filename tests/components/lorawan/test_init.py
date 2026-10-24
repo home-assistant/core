@@ -17,6 +17,7 @@ from lorawan_connection import (
 )
 from lorawan_connection.mock import MockConnection
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lorawan import async_register_connection
 from homeassistant.components.lorawan.connection import DATA_REGISTRY
@@ -29,8 +30,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import RegisterBackend
 from .helpers import DESCRIPTOR
-
-from tests.common import MockConfigEntry
 
 
 async def test_registration_and_reconnect(
@@ -359,7 +358,7 @@ async def test_discovery_matches_connection_stack(
             "network", [replace(DESCRIPTOR, stack=stack_type)]
         )
         assert backend.stack_type == stack_type
-        assert subscribe.call_args.kwargs["brands"] == frozenset({(stack_type, 123)})
+        assert subscribe.call_args.kwargs["brands"] is None
         discover.assert_called_once_with(
             hass,
             stack_type,

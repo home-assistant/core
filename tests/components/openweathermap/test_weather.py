@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openweathermap.const import (
@@ -18,8 +19,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_platform
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "weather.openweathermap"
 

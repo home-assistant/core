@@ -5,14 +5,13 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 import pysaj
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.saj.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("connection_method", ["ethernet", "wifi"], indirect=True)

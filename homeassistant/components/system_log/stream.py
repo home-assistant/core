@@ -15,7 +15,11 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util.hass_dict import HassKey
-from homeassistant.util.logging import HomeAssistantQueueHandler
+from homeassistant.util.logging import (
+    LOG_FORMAT,
+    HomeAssistantLogFormatter,
+    HomeAssistantQueueHandler,
+)
 
 from .const import (
     RAW_BACKLOG_LINES,
@@ -38,10 +42,6 @@ TAIL_BLOCK_SIZE = 64 * 1024
 
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
 
-FALLBACK_FORMAT = (
-    "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
-)
-
 
 def _console_formatter() -> logging.Formatter:
     """Return the formatter of the console log, which may add colors."""
@@ -53,7 +53,7 @@ def _console_formatter() -> logging.Formatter:
                     and listener_handler.formatter
                 ):
                     return listener_handler.formatter
-    return logging.Formatter(FALLBACK_FORMAT)
+    return HomeAssistantLogFormatter(LOG_FORMAT)
 
 
 def _read_log_tail(path: str, lines: int) -> list[str]:

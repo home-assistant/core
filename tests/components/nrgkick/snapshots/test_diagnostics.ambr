@@ -10,6 +10,8 @@
       }),
       'info': dict({
         'cellular': dict({
+          'imei': '**REDACTED**',
+          'imsi': '**REDACTED**',
           'mode': 3,
           'operator': 'Test operator',
           'rssi': -85,
@@ -17,15 +19,14 @@
         'connector': dict({
           'max_current': 32.0,
           'phase_count': 3,
-          'serial_number': 'CONN123',
+          'serial': '**REDACTED**',
           'type': 3,
         }),
         'general': dict({
           'device_name': 'NRGkick Test',
-          'json_api_version': 'v1',
           'model_type': 'NRGkick Gen2 SIM',
           'rated_current': 32.0,
-          'serial_number': 'TEST123456',
+          'serial_number': '**REDACTED**',
         }),
         'gps': dict({
           'accuracy': 1.5,
@@ -38,18 +39,22 @@
           'phases': 7,
           'voltage': 230,
         }),
-        'hardware': dict({
-          'bluetooth_version': '1.2.3',
-          'smartmodule_version': '4.0.0.0',
-        }),
         'network': dict({
-          'ip_address': '192.168.1.100',
-          'mac_address': 'AA:BB:CC:DD:EE:FF',
-          'wifi_rssi': -45,
-          'wifi_ssid': 'TestNetwork',
+          'ip_address': '**REDACTED**',
+          'mac_address': '**REDACTED**',
+          'rssi': -45,
+          'ssid': '**REDACTED**',
         }),
-        'software': dict({
-          'firmware_version': '2.1.0',
+        'versions': dict({
+          'hw_ma': '1.0.0',
+          'hw_sm': '1.0.0.0',
+          'hw_st': '1.0.0',
+          'hw_to': '1.0.0',
+          'sw_cm': '1.0.0',
+          'sw_ma': '1.0.0',
+          'sw_sm': '4.1.0.0',
+          'sw_st': '1.0.0',
+          'sw_to': '1.0.0',
         }),
       }),
       'values': dict({
@@ -116,7 +121,7 @@
       }),
     }),
     'entry_data': dict({
-      'host': '192.168.1.100',
+      'host': '**REDACTED**',
       'password': '**REDACTED**',
       'username': '**REDACTED**',
     }),

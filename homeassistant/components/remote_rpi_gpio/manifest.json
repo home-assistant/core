@@ -1,6 +1,7 @@
 {
   "domain": "remote_rpi_gpio",
   "name": "Raspberry Pi Remote GPIO",
+  "categories": ["diy_makers.boards_hardware"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/remote_rpi_gpio",
   "iot_class": "local_push",

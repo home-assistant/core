@@ -849,6 +849,9 @@
     "no_users_found": {
       "message": "No users found, please check Protect permissions"
     },
+    "not_a_chime": {
+      "message": "{device_name} is not a UniFi Protect chime"
+    },
     "not_authorized": {
       "message": "Not authorized to perform this action on the UniFi Protect controller"
     },
@@ -907,6 +910,10 @@
       },
       "title": "Ubiquiti Cloud Users are not Supported"
     },
+    "doorbell_sensor_deprecated": {
+      "description": "The binary sensor `{entity_id}` is deprecated and will be removed in a future release. Use the event entity `{replacement}` with the **Event received** trigger instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::private_only_entity_deprecated::title%]"
+    },
     "hdr_switch_removed": {
       "description": "The HDR mode switch `{entity_id}` has been removed. It could not represent the auto HDR mode and was replaced by the HDR mode select.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "HDR mode switch removed"
@@ -915,9 +922,17 @@
       "description": "The camera entity `{entity_id}` used plain RTSP, which is no longer available now that streams come from the UniFi Protect public API (RTSPS only). It has been removed; use `{replacement}` instead.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Insecure camera entity removed"
     },
+    "last_event_sensor_deprecated": {
+      "description": "The entity `{entity_id}` is deprecated and will be removed in a future release. Use the event entity `{replacement}` with the **Event received** trigger instead. The event entity's state is the time of the last event Home Assistant received.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::private_only_entity_deprecated::title%]"
+    },
     "package_binary_sensor_removed": {
       "description": "The binary sensor `{entity_id}` for package detection has been removed. Package detection is a momentary smart-detect event, so it is now provided by the package event entity instead.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Package binary sensor removed"
+    },
+    "private_only_entity_deprecated": {
+      "description": "The entity `{entity_id}` is deprecated and will be removed in a future release. It depends on a private API that the integration is phasing out.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Entity deprecated"
     },
     "rtsp_disabled": {
       "fix_flow": {
@@ -946,8 +961,20 @@
       "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same state and can also change it.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Read-only setting entity deprecated"
     },
+    "setting_mirror_deprecated_doorbell_text": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same message and can also change it. Where this entity is unknown because no message is set, it shows the default message instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    },
+    "setting_mirror_deprecated_hdr_mode": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same setting and can also change it. Its states differ: `on` is `auto` or `always`, and `off` is `off`, so update any conditions that compare them.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    },
     "setting_mirror_deprecated_light_mode": {
       "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same setting and can also change it. Its states are named differently: `always` is `when_dark` and `off` is `manual`, so update any conditions that compare them.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    },
+    "setting_mirror_deprecated_mic_level": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same level and can also change it. While the microphone is disabled, `{replacement}` is unavailable, so update any automations and scripts that read the level then.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
     }
   },
@@ -1051,6 +1078,20 @@
         }
       },
       "name": "Set chime paired doorbells"
+    },
+    "trigger_alarm_webhook": {
+      "description": "Fires an Alarm Manager webhook trigger, running the alarms that use it.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The UniFi Protect NVR to send the webhook to.",
+          "name": "NVR"
+        },
+        "trigger_id": {
+          "description": "The ID of the webhook trigger, as shown in the UniFi Protect Alarm Manager.",
+          "name": "Trigger ID"
+        }
+      },
+      "name": "Trigger alarm webhook"
     }
   }
 }

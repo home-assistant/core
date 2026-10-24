@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from uvcclient import camera, nvr
 
 from homeassistant.components.camera import (
@@ -20,8 +21,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(name="mock_remote")

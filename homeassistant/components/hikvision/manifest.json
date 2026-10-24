@@ -1,6 +1,7 @@
 {
   "domain": "hikvision",
   "name": "Hikvision",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@mezz64", "@ptarjan"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hikvision",
