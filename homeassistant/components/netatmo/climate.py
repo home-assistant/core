@@ -35,6 +35,7 @@ from .const import (
     ATTR_SELECTED_SCHEDULE,
     ATTR_SELECTED_SCHEDULE_ID,
     ATTR_TARGET_TEMPERATURE,
+    ATTR_THERM_SETPOINT_MODE,
     ATTR_TIME_PERIOD,
     DOMAIN,
     EVENT_TYPE_CANCEL_SET_POINT,
@@ -269,6 +270,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                     ]
                     if self._attr_native_target_temperature == DEFAULT_MAX_TEMP:
                         self._attr_hvac_mode = HVACMode.HEAT
+                self._attr_extra_state_attributes[ATTR_THERM_SETPOINT_MODE] = room[
+                    "therm_setpoint_mode"
+                ]
                 self.async_write_ha_state()
                 return
 
@@ -399,6 +403,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._attr_preset_mode = NETATMO_MAP_PRESET[therm_setpoint_mode]
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
         self._away = self._attr_hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
+        self._attr_extra_state_attributes[ATTR_THERM_SETPOINT_MODE] = (
+            therm_setpoint_mode
+        )
 
         selected_schedule = self.home.get_selected_schedule()
         self._selected_schedule = getattr(selected_schedule, "name", None)
