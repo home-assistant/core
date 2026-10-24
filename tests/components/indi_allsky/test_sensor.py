@@ -15,9 +15,10 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
 
@@ -356,10 +357,142 @@ async def test_consecutive_sensor_updates_merging(
     assert state.state == "42.0"
 
 
+async def test_hardware_sensor_fahrenheit_units(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test declared Fahrenheit temperature unit prevents double conversion."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="indi_allsky",
+        unique_id=f"{mock_config_entry.entry_id}_cpu_temperature",
+        suggested_object_id="indi_allsky_cpu_temperature",
+        disabled_by=None,
+    )
+
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    fahrenheit_update = SensorData.from_dict(
+        {
+            "temp_unit": "°F",
+            "sensors": {
+                "ambient_temperature": {
+                    "name": "Ambient Temperature",
+                    "value": 68.0,
+                    "unit": "°F",
+                },
+                "dew_point": {
+                    "name": "Dew Point",
+                    "value": 55.4,
+                    "unit": "°F",
+                },
+                "frost_point": {
+                    "name": "Frost Point",
+                    "value": 50.0,
+                    "unit": "°F",
+                },
+                "heat_index": {
+                    "name": "Heat Index",
+                    "value": 70.0,
+                    "unit": "°F",
+                },
+                "sensor_temp_10": {
+                    "name": "CPU Temperature",
+                    "value": 113.0,
+                    "unit": "°F",
+                },
+                "pressure": {
+                    "name": "Pressure",
+                    "value": 14.7,
+                    "unit": "psi",
+                },
+            },
+            "sensor_user": [0, 0, 55.4, 50.0, 0, 70.0],
+            "sensor_temp": [32.0] * 10 + [113.0],
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(fahrenheit_update)
+    await hass.async_block_till_done()
+
+    for entity_id, expected in (
+        ("sensor.indi_allsky_ambient_temperature", "68.0"),
+        ("sensor.indi_allsky_dew_point", "55.4"),
+        ("sensor.indi_allsky_frost_point", "50.0"),
+        ("sensor.indi_allsky_heat_index", "70.0"),
+        ("sensor.indi_allsky_cpu_temperature", "113.0"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected
+        assert (
+            state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
+        )
+
+    pressure_state = hass.states.get("sensor.indi_allsky_pressure")
+    assert pressure_state is not None
+    assert pressure_state.state == "14.7"
+    assert pressure_state.attributes.get("unit_of_measurement") == "psi"
+
+    # Verify partial update without temp_unit preserves the declared °F unit
+    partial_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "humidity": 60.0,
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(partial_update)
+    await hass.async_block_till_done()
+
+    dew_state = hass.states.get("sensor.indi_allsky_dew_point")
+    assert dew_state is not None
+    assert dew_state.state == "55.4"
+    assert (
+        dew_state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
+    )
+
+    # Verify update with per-sensor °C metadata (without top-level temp_unit) switches to °C
+    celsius_metadata_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "dew_point": {
+                    "name": "Dew Point",
+                    "value": 20.0,
+                    "unit": "°C",
+                },
+            },
+            "sensor_user": [0, 0, 20.0],
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(celsius_metadata_update)
+    await hass.async_block_till_done()
+
+    for entity_id, expected in (
+        ("sensor.indi_allsky_dew_point", "68.0"),
+        ("sensor.indi_allsky_frost_point", "50.0"),
+        ("sensor.indi_allsky_heat_index", "70.0"),
+        ("sensor.indi_allsky_cpu_temperature", "113.0"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert float(state.state) == pytest.approx(float(expected), abs=0.05)
+        assert (
+            state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
+        )
+
+
 async def test_dynamic_hardware_sensor_discovery(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test dynamic discovery and metadata inference of custom hardware sensors."""
     with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
@@ -453,6 +586,122 @@ async def test_dynamic_hardware_sensor_discovery(
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("state_class") is None
     assert state.attributes.get("unit_of_measurement") is None
+
+    # Verify subsequent scalar update preserves previously discovered metadata
+    scalar_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": 21.0,
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(scalar_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_sht4x_i2c_sht40_temperature")
+    assert state is not None
+    assert state.state == "21.0"
+    assert state.attributes.get("unit_of_measurement") == "°C"
+    assert state.attributes.get("device_class") == "temperature"
+    assert state.attributes.get("state_class") == "measurement"
+
+    # Verify subsequent value-only dictionary update preserves previously discovered metadata
+    value_only_dict_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": {"value": 22.5},
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(value_only_dict_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_sht4x_i2c_sht40_temperature")
+    assert state is not None
+    assert state.state == "22.5"
+    assert state.attributes.get("unit_of_measurement") == "°C"
+    assert state.attributes.get("device_class") == "temperature"
+    assert state.attributes.get("state_class") == "measurement"
+
+    # Verify unit-only update clears cached value so old reading is not relabeled in new unit
+    unit_only_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": {"unit": "°F"},
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(unit_only_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_sht4x_i2c_sht40_temperature")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("unit_of_measurement") == "°C"
+    assert state.attributes.get("device_class") == "temperature"
+
+    # Verify incompatible unit update clears device_class and refreshes cached user unit options
+    entity_registry.async_update_entity_options(
+        "sensor.indi_allsky_sht4x_i2c_sht40_temperature",
+        "sensor",
+        {"unit_of_measurement": "°C"},
+    )
+    await hass.async_block_till_done()
+
+    incompatible_unit_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": {"value": 100.0, "unit": "rpm"},
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(incompatible_unit_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_sht4x_i2c_sht40_temperature")
+    assert state is not None
+    assert state.state == "100.0"
+    assert state.attributes.get("unit_of_measurement") == "rpm"
+    assert state.attributes.get("device_class") is None
+
+    # Restore °C metadata and verify explicit None value transitions state to unknown
+    restore_celsius_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": {
+                    "value": 22.5,
+                    "unit": "°C",
+                    "device_class": "temperature",
+                },
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(restore_celsius_update)
+    await hass.async_block_till_done()
+
+    # Verify explicit None value in dictionary update transitions state to unknown while retaining metadata
+    null_value_dict_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_a_temperature": {"value": None},
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(null_value_dict_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_sht4x_i2c_sht40_temperature")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("unit_of_measurement") == "°C"
+    assert state.attributes.get("device_class") == "temperature"
+    assert state.attributes.get("state_class") == "measurement"
 
 
 async def test_initial_sensor_fetch_preserved(
