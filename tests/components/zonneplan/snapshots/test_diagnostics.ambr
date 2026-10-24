@@ -187,6 +187,27 @@
         'processing': False,
       }),
     ]),
+    'battery_settings': dict({
+      'day_ahead_arbitrage': list([
+      ]),
+      'home_optimization': list([
+        dict({
+          'max_desired_charge_power_limits': dict({
+            'max_watts': 2500,
+            'min_watts': 100,
+          }),
+          'max_desired_charge_power_watts': 2500,
+          'max_desired_discharge_power_limits': dict({
+            'max_watts': 800,
+            'min_watts': 100,
+          }),
+          'max_desired_discharge_power_watts': 800,
+          'power_preset': None,
+          'power_presets': list([
+          ]),
+        }),
+      ]),
+    }),
     'charge_points': list([
       dict({
         'charge_schedules': list([
