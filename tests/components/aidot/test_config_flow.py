@@ -7,7 +7,12 @@ from aiohttp import ClientError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.aidot.const import DOMAIN
+from homeassistant.components.aidot.const import (
+    CONF_EFFECT_SOURCE,
+    DOMAIN,
+    EFFECT_SOURCE_ALL,
+    EFFECT_SOURCE_RECOMMENDED,
+)
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -44,10 +49,83 @@ async def test_config_flow_cloud_login_success(
         },
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "effect_source"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EFFECT_SOURCE: EFFECT_SOURCE_RECOMMENDED,
+        },
+    )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{TEST_EMAIL} {TEST_COUNTRY}"
     assert result["data"] == TEST_LOGIN_RESP
+    assert result["options"] == {CONF_EFFECT_SOURCE: EFFECT_SOURCE_RECOMMENDED}
     assert result["result"].unique_id == TEST_LOGIN_RESP["id"]
+
+
+async def test_config_flow_effect_source_defaults_to_all(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test effect source defaults to all effects."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_COUNTRY_CODE: TEST_COUNTRY,
+            CONF_USERNAME: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "effect_source"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EFFECT_SOURCE: EFFECT_SOURCE_ALL,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {CONF_EFFECT_SOURCE: EFFECT_SOURCE_ALL}
+    assert result["result"].unique_id == TEST_LOGIN_RESP["id"]
+
+
+async def test_options_flow_updates_effect_source(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test options flow updates the effect source."""
+    coordinator = MagicMock()
+    mock_config_entry.runtime_data = coordinator
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_EFFECT_SOURCE: EFFECT_SOURCE_RECOMMENDED,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_EFFECT_SOURCE: EFFECT_SOURCE_RECOMMENDED}
+    coordinator.update_options.assert_called_once_with(
+        {CONF_EFFECT_SOURCE: EFFECT_SOURCE_RECOMMENDED}
+    )
+    mock_setup_entry.assert_not_called()
 
 
 async def test_dhcp_discovery(hass: HomeAssistant) -> None:
@@ -145,8 +223,19 @@ async def test_config_flow_errors(
             CONF_PASSWORD: TEST_PASSWORD,
         },
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "effect_source"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EFFECT_SOURCE: EFFECT_SOURCE_ALL,
+        },
+    )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == TEST_LOGIN_RESP
+    assert result["options"] == {CONF_EFFECT_SOURCE: EFFECT_SOURCE_ALL}
 
 
 async def test_form_abort_already_configured(
