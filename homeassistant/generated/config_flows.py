@@ -455,6 +455,7 @@ FLOWS = {
         "lg_tv_rs232",
         "libre_hardware_monitor",
         "librenms",
+        "libresync",
         "lichess",
         "lidarr",
         "liebherr",
