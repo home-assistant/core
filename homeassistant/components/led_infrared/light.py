@@ -1,5 +1,6 @@
 """Light platform for LED Infrared integration."""
 
+import asyncio
 from typing import Any, override
 
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
@@ -18,6 +19,8 @@ from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, LEDIrDeviceType
 from .entity import LEDIrBaseEntity
 
 PARALLEL_UPDATES = 1
+
+COMMAND_DELAY = 0.3  # 300ms gap for IR emitter completion + receiver recovery
 
 
 SUPPORTED_EFFECTS = {
@@ -186,6 +189,7 @@ class LEDIrLightEntity(LEDIrBaseEntity, InfraredEmitterConsumerEntity, LightEnti
         self._attr_is_on = True
         effect: str | None = kwargs.get(ATTR_EFFECT)
         if effect and effect in self._attr_effect_list:
+            await asyncio.sleep(COMMAND_DELAY)
             await self._send_command(self._codes[effect.upper()].to_command())
             self._attr_effect = effect
 
