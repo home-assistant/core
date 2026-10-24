@@ -7,17 +7,31 @@ from enum import StrEnum
 import logging
 import random
 from typing import Any, Self, TypedDict, override
+from uuid import UUID
 
-from aiohasupervisor.models import UpdateChannel
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import ContextType, IssueType, Job, UpdateChannel
 from awesomeversion import AwesomeVersion
 import probatio
 
+from homeassistant.config import DATA_UPDATED_AUTOMATICALLY
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import WEEKDAYS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    ATTR_DOMAIN,
+    ATTR_NAME,
+    EVENT_LOGBOOK_ENTRY,
+    WEEKDAYS,
+    __version__ as HA_VERSION,
+)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
@@ -28,6 +42,7 @@ from .const import (
     DEFAULT_CORE_AUTO_UPDATE_DELAY,
     DEFAULT_CORE_AUTO_UPDATE_WINDOW_END,
     DEFAULT_CORE_AUTO_UPDATE_WINDOW_START,
+    DOMAIN,
     JOBS_COORDINATOR,
     OPTION_CORE_AUTO_UPDATE,
     OPTION_CORE_AUTO_UPDATE_DELAY,
@@ -36,18 +51,24 @@ from .const import (
     OPTION_CORE_AUTO_UPDATE_WINDOW_START,
     OPTION_CORE_BACKUP_BEFORE_UPDATE,
 )
-from .coordinator import HassioMainDataUpdateCoordinator
+from .coordinator import HassioMainDataUpdateCoordinator, JobSubscription
+from .handler import get_supervisor_client
 from .update_helper import update_core
 
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = "hassio.auto_update"
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 
 CHECK_INTERVAL = timedelta(minutes=5)
 # Long enough that a check always lands inside the window
 MIN_WINDOW_LENGTH = timedelta(minutes=30)
+
+HISTORY_LENGTH = 10
+
+ISSUE_ROLLED_BACK = "core_auto_update_rolled_back"
+ISSUE_FAILED = "core_auto_update_failed"
 
 # Supervisor jobs that must finish before Home Assistant is updated
 _BUSY_JOB_NAME = "home_assistant_core_update"
@@ -142,6 +163,54 @@ class AutoUpdateSettings:
             weekdays=frozenset(options.get(OPTION_CORE_AUTO_UPDATE_WEEKDAYS, WEEKDAYS)),
         )
 
+    def as_options(self) -> dict[str, Any]:
+        """Return the settings the way they are stored, defaults included."""
+        return {
+            OPTION_CORE_AUTO_UPDATE: self.enabled,
+            OPTION_CORE_AUTO_UPDATE_DELAY: self.delay.days,
+            OPTION_CORE_AUTO_UPDATE_WINDOW_START: self.window_start.isoformat(),
+            OPTION_CORE_AUTO_UPDATE_WINDOW_END: self.window_end.isoformat(),
+            OPTION_CORE_AUTO_UPDATE_WEEKDAYS: [
+                weekday for weekday in WEEKDAYS if weekday in self.weekdays
+            ],
+        }
+
+
+class AutoUpdateResult(StrEnum):
+    """How an automatic update ended."""
+
+    SUCCESS = "success"
+    # Supervisor installed it, but the health check failed and it rolled back
+    ROLLED_BACK = "rolled_back"
+    # The update did not start, like a backup or Supervisor error
+    FAILED = "failed"
+
+
+class PendingUpdate(TypedDict):
+    """An automatic update that Home Assistant restarts in the middle of."""
+
+    from_version: str
+    to_version: str
+    started: str
+
+
+class AutoUpdateHistoryEntry(TypedDict):
+    """A finished automatic update."""
+
+    from_version: str
+    to_version: str
+    started: str
+    finished: str
+    result: AutoUpdateResult
+
+
+@dataclass(frozen=True, kw_only=True)
+class NextUpdate:
+    """The patch release that installs next, and from when."""
+
+    version: str
+    earliest: datetime
+
 
 class AutoUpdateStoreData(TypedDict):
     """Stored data for automatic Home Assistant updates."""
@@ -151,6 +220,8 @@ class AutoUpdateStoreData(TypedDict):
     withdrawn: list[str]
     window_offset: float
     attempted_window: str | None
+    pending: PendingUpdate | None
+    history: list[AutoUpdateHistoryEntry]
 
 
 class _AutoUpdateStore(Store[AutoUpdateStoreData]):
@@ -179,6 +250,10 @@ class _AutoUpdateStore(Store[AutoUpdateStoreData]):
             old_data["window_offset"] = random.random()
             old_data["attempted_window"] = None
             old_data["withdrawn"] = []
+        if old_minor_version < 4:
+            # Version 1.4 adds the update in progress and the past updates
+            old_data["pending"] = None
+            old_data["history"] = []
         return old_data
 
 
@@ -228,6 +303,12 @@ class AutoUpdateManager:
         self._withdrawn: set[str] = set()
         self._window_offset = random.random()
         self._attempted_window: datetime | None = None
+        self._pending: PendingUpdate | None = None
+        # The pending update as found at setup, which Home Assistant restarted in
+        self._restored_pending: PendingUpdate | None = None
+        self._unsub_settling: CALLBACK_TYPE | None = None
+        self._history: list[AutoUpdateHistoryEntry] = []
+        self._listeners: set[CALLBACK_TYPE] = set()
 
     async def async_setup(self) -> None:
         """Load the stored data and start tracking offered versions."""
@@ -241,12 +322,33 @@ class AutoUpdateManager:
             self._window_offset = data["window_offset"]
             if (attempted_window := data["attempted_window"]) is not None:
                 self._attempted_window = datetime.fromisoformat(attempted_window)
+            self._pending = data["pending"]
+            self._history = data["history"]
         else:
             self._async_save()
+
+        # Settled once started: Supervisor rolls back a version that does not
+        # come up, and that has to find the record still there.
+        if self._pending is not None:
+            # Set before Home Assistant has started, so the updated trigger
+            # can tell automations this update was automatic
+            if self._pending["to_version"] == HA_VERSION:
+                self._hass.data[DATA_UPDATED_AUTOMATICALLY] = True
+            self._restored_pending = self._pending
+            self._entry.async_on_unload(
+                async_at_started(self._hass, self._async_start_settling)
+            )
 
         self._async_record_offered_version()
         self._entry.async_on_unload(
             self._coordinator.async_add_listener(self._async_record_offered_version)
+        )
+        # New versions, a changed channel and changed settings change the status
+        self._entry.async_on_unload(
+            self._coordinator.async_add_listener(self._async_notify)
+        )
+        self._entry.async_on_unload(
+            self._entry.add_update_listener(self._async_entry_updated)
         )
         self._entry.async_on_unload(
             async_at_started(self._hass, self._async_start_checking)
@@ -272,10 +374,182 @@ class AutoUpdateManager:
             self._hass, self._async_check(), "hassio automatic update check"
         )
 
+    @callback
+    def _async_start_settling(self, hass: HomeAssistant) -> None:
+        """Settle the restored update now, or once Supervisor is done with it.
+
+        Supervisor can still be busy with it, like after a reload of this
+        integration during the update.
+        """
+        self._unsub_settling = hass.data[JOBS_COORDINATOR].subscribe(
+            JobSubscription(self._async_core_update_job_changed, name=_BUSY_JOB_NAME)
+        )
+        self._entry.async_on_unload(self._async_stop_settling)
+        if not self._async_core_update_running():
+            self._async_schedule_settle()
+
+    @callback
+    def _async_core_update_running(self) -> bool:
+        """Return if Supervisor is updating Home Assistant Core."""
+        return any(
+            job.name == _BUSY_JOB_NAME and job.done is False
+            for job in self._hass.data[JOBS_COORDINATOR].current_jobs
+        )
+
+    @callback
+    def _async_core_update_job_changed(self, job: Job) -> None:
+        """Settle the restored update once Supervisor finished it."""
+        if job.done:
+            self._async_schedule_settle()
+
+    @callback
+    def _async_schedule_settle(self) -> None:
+        """Settle the restored update as a background task."""
+        # Not started right away: a job event calls this while the jobs
+        # coordinator loops over its subscriptions, and settling unsubscribes
+        self._entry.async_create_background_task(
+            self._hass,
+            self._async_settle(),
+            "hassio automatic update result",
+            eager_start=False,
+        )
+
+    @callback
+    def _async_stop_settling(self) -> None:
+        """Stop watching Supervisor for the restored update."""
+        self._restored_pending = None
+        if self._unsub_settling is not None:
+            self._unsub_settling()
+            self._unsub_settling = None
+
+    async def _async_core_rollbacks(self) -> list[UUID]:
+        """Return Supervisor's issues about rolling Core back.
+
+        Asked directly; hassio's own issue list can be empty after a failed
+        refresh, or miss an issue whose suggestions could not be loaded.
+        """
+        info = await get_supervisor_client(self._hass).resolution.info()
+        return [
+            issue.uuid
+            for issue in info.issues
+            if issue.type == IssueType.UPDATE_ROLLBACK
+            and issue.context == ContextType.CORE
+        ]
+
+    async def _async_dismiss_core_rollbacks(self) -> None:
+        """Dismiss Supervisor's issues about earlier Core rollbacks.
+
+        Supervisor keeps a single rollback issue for Core, without a version,
+        and does not raise it again while it is open. Dismissed before an
+        update, any rollback issue afterwards is about that update. Core does
+        not show this issue; our own repair takes its place.
+        """
+        client = get_supervisor_client(self._hass)
+        for issue in await self._async_core_rollbacks():
+            await client.resolution.dismiss_issue(issue)
+
+    async def _async_supervisor_rolled_back(self) -> bool | None:
+        """Return if Supervisor rolled the update back, or None if unknown."""
+        try:
+            return bool(await self._async_core_rollbacks())
+        except SupervisorError as err:
+            _LOGGER.debug("Could not ask Supervisor about a rollback: %s", err)
+            return None
+
+    async def _async_settle(self) -> None:
+        """Find out how the update restored from the record went.
+
+        Supervisor checks the new version and rolls back when it does not
+        come up healthy, and says so. Still running the old version without
+        that means the update never happened. When Supervisor cannot tell
+        yet, the record stays and the next check asks again.
+        """
+        if (pending := self._restored_pending) is None or self._pending is not pending:
+            return
+
+        hass = self._hass
+        to_version = pending["to_version"]
+        if to_version == HA_VERSION:
+            self._pending = None
+            self._async_add_history(pending, AutoUpdateResult.SUCCESS)
+            async_delete_issue(hass, DOMAIN, ISSUE_FAILED)
+            hass.bus.async_fire(
+                EVENT_LOGBOOK_ENTRY,
+                {
+                    ATTR_NAME: "Home Assistant",
+                    "message": (
+                        f"was updated automatically from "
+                        f"{pending['from_version']} to {to_version}"
+                    ),
+                    ATTR_DOMAIN: DOMAIN,
+                },
+            )
+        elif pending["from_version"] == HA_VERSION:
+            rolled_back = await self._async_supervisor_rolled_back()
+            # Settled meanwhile, or Supervisor cannot tell yet
+            if self._pending is not pending or rolled_back is None:
+                return
+
+            if not rolled_back:
+                self._async_stop_settling()
+                self._async_update_failed(to_version)
+                return
+
+            # Never try this version again on our own
+            self._pending = None
+            self._skipped.add(to_version)
+            self._async_add_history(pending, AutoUpdateResult.ROLLED_BACK)
+            async_delete_issue(hass, DOMAIN, ISSUE_FAILED)
+            async_create_issue(
+                hass,
+                DOMAIN,
+                ISSUE_ROLLED_BACK,
+                is_fixable=False,
+                is_persistent=True,
+                severity=IssueSeverity.ERROR,
+                translation_key=ISSUE_ROLLED_BACK,
+                translation_placeholders={"version": to_version},
+            )
+        else:
+            # Someone else changed the version; nothing to tell
+            self._pending = None
+
+        self._async_stop_settling()
+        self._async_save()
+
+    @callback
+    def _async_add_history(
+        self, pending: PendingUpdate, result: AutoUpdateResult
+    ) -> None:
+        """Remember how an automatic update ended."""
+        self._history = [
+            *self._history,
+            AutoUpdateHistoryEntry(
+                from_version=pending["from_version"],
+                to_version=pending["to_version"],
+                started=pending["started"],
+                finished=dt_util.utcnow().isoformat(),
+                result=result,
+            ),
+        ][-HISTORY_LENGTH:]
+
+    @callback
+    def async_get_history(self) -> list[AutoUpdateHistoryEntry]:
+        """Return the recent automatic updates, oldest first."""
+        return list(self._history)
+
     @property
     def settings(self) -> AutoUpdateSettings:
         """Return the current settings."""
         return AutoUpdateSettings.from_options(self._entry.options)
+
+    @callback
+    def async_set_enabled(self, enabled: bool) -> None:
+        """Turn automatic updates on or off."""
+        self._hass.config_entries.async_update_entry(
+            self._entry,
+            options={**self._entry.options, OPTION_CORE_AUTO_UPDATE: enabled},
+        )
 
     @property
     def unavailable_reason(self) -> AutoUpdateUnavailableReason | None:
@@ -319,15 +593,14 @@ class AutoUpdateManager:
         self._async_save()
 
     @callback
-    def async_get_install_candidate(self, now: datetime) -> str | None:
-        """Return the patch release to install automatically, if any.
+    def _async_target_patch(self) -> str | None:
+        """Return the patch release automatic updates aim for, if any.
 
-        That is the newest known patch of the running major, once it waited
-        long enough since it was first seen. Never an older patch while a
-        newer one waits or is skipped; the newer one may fix a regression in
-        it, and the older one may have been pulled. Never newer than what
-        Supervisor offers now, so rolling back the version file stops a
-        pulled release.
+        That is the newest known patch of the running major. Never an older
+        patch while a newer one waits or is skipped; the newer one may fix a
+        regression in it, and the older one may have been pulled. Never newer
+        than what Supervisor offers now, so rolling back the version file
+        stops a pulled release.
         """
         core = self._coordinator.data.core
         if core.version is None or core.version_latest is None:
@@ -342,16 +615,98 @@ class AutoUpdateManager:
             and version not in self._withdrawn
             and running < AwesomeVersion(version) <= offered
         ]
-        if not patches:
-            return None
-
-        newest = str(max(patches))
-        if (
-            newest in self._skipped
-            or self._first_seen[newest] + self.settings.delay > now
-        ):
+        if not patches or (newest := str(max(patches))) in self._skipped:
             return None
         return newest
+
+    @callback
+    def async_get_install_candidate(self, now: datetime) -> str | None:
+        """Return the patch release to install automatically, if any.
+
+        The target patch, once it waited long enough since it was first seen.
+        """
+        if (target := self._async_target_patch()) is None or (
+            self._first_seen[target] + self.settings.delay > now
+        ):
+            return None
+        return target
+
+    @callback
+    def async_get_next_update(self, now: datetime) -> NextUpdate | None:
+        """Return the version that installs next, and from when, if any.
+
+        Follows the same rules as the checks that install it: the wait, the
+        window and its weekdays, this installation's point in the window,
+        and no second attempt in a window that already had one.
+        """
+        if (
+            self.settings.enabled is not True
+            or self.unavailable_reason is not None
+            or self._pending is not None
+            or (version := self._async_target_patch()) is None
+        ):
+            return None
+
+        settings = self.settings
+        earliest = max(now, self._first_seen[version] + settings.delay)
+        length = _window_length(settings.window_start, settings.window_end)
+        spread = max(length - CHECK_INTERVAL, timedelta(0))
+        earliest_local = dt_util.as_local(earliest)
+        # A window started the day before may still be open
+        for days in range(-1, 8):
+            start = datetime.combine(
+                earliest_local.date() + timedelta(days=days),
+                settings.window_start,
+                tzinfo=earliest_local.tzinfo,
+            )
+            if (
+                WEEKDAYS[start.weekday()] not in settings.weekdays
+                or dt_util.as_utc(start) == self._attempted_window
+                or start + length <= earliest
+            ):
+                continue
+            return NextUpdate(
+                version=version,
+                earliest=max(earliest, start + spread * self._window_offset),
+            )
+        return None
+
+    @callback
+    def async_get_status(self, now: datetime) -> dict[str, Any]:
+        """Return the state of automatic updates, for the settings page."""
+        unavailable_reason = self.unavailable_reason
+        next_update = self.async_get_next_update(now)
+        return {
+            "available": unavailable_reason is None,
+            "unavailable_reason": unavailable_reason,
+            "enabled": self.settings.enabled,
+            "next_update": (
+                {
+                    "version": next_update.version,
+                    "earliest": next_update.earliest.isoformat(),
+                }
+                if next_update is not None
+                else None
+            ),
+            "history": self.async_get_history(),
+        }
+
+    @callback
+    def async_add_listener(self, update_callback: CALLBACK_TYPE) -> CALLBACK_TYPE:
+        """Listen for changes that may change the status."""
+        self._listeners.add(update_callback)
+
+        @callback
+        def remove_listener() -> None:
+            self._listeners.discard(update_callback)
+
+        return remove_listener
+
+    @callback
+    def _async_notify(self) -> None:
+        """Tell the listeners the status may have changed."""
+        for update_callback in list(self._listeners):
+            update_callback()
 
     @callback
     def _async_install_time(self, now: datetime) -> datetime | None:
@@ -437,6 +792,13 @@ class AutoUpdateManager:
         Only looks at the current state, so it gives the same answer no
         matter what made it run.
         """
+        # Nothing new before the last update is settled
+        if self._restored_pending is not None:
+            if not self._async_core_update_running():
+                await self._async_settle()
+            if self._restored_pending is not None:
+                return
+
         now = dt_util.now()
         if (window := _window_start(self.settings, now)) is None:
             return
@@ -445,7 +807,7 @@ class AutoUpdateManager:
         # Compared in UTC; a local start in the hour the clocks go back would
         # never match the stored one.
         window = dt_util.as_utc(window)
-        if window == self._attempted_window:
+        if window == self._attempted_window or self._pending is not None:
             return
 
         if (
@@ -459,6 +821,7 @@ class AutoUpdateManager:
         # Stored before the update starts; Home Assistant restarts during it
         self._attempted_window = window
         await self._store.async_save(self._data_to_save())
+        self._async_notify()
 
         backup = async_get_update_options(self._hass, self._entry)[
             OPTION_CORE_BACKUP_BEFORE_UPDATE
@@ -471,7 +834,19 @@ class AutoUpdateManager:
 
                 await backup_core_before_update(self._hass)
 
-            # Checked again, with nothing awaited until the request: the save
+            await self._async_dismiss_core_rollbacks()
+
+            # Stored before asking Supervisor; Home Assistant restarts during
+            # the update and finds out afterwards how it went
+            self._pending = PendingUpdate(
+                from_version=HA_VERSION,
+                to_version=version,
+                started=dt_util.utcnow().isoformat(),
+            )
+            await self._store.async_save(self._data_to_save())
+            self._async_notify()
+
+            # Checked again, with nothing awaited until the request: the saves
             # and the backup let the version be skipped or pulled, the data go
             # stale or another update or backup start. The window only bounds
             # the start, so a long backup may run past its end. After our own
@@ -488,14 +863,47 @@ class AutoUpdateManager:
                     "it is no longer due or safe to install",
                     version,
                 )
+                self._pending = None
+                self._async_save()
                 return
 
             _LOGGER.info("Installing Home Assistant %s automatically", version)
             await update_core(self._hass, version, False)
-        except HomeAssistantError as err:
+        # The backup can raise SupervisorError directly while finding its location
+        except (HomeAssistantError, SupervisorError) as err:
             _LOGGER.error(
                 "Automatic update to Home Assistant %s failed: %s", version, err
             )
+            self._async_update_failed(version)
+
+    @callback
+    def _async_update_failed(self, version: str) -> None:
+        """Tell the user an automatic update did not happen.
+
+        Unlike a rollback, the version itself may be fine, so it is tried
+        again in the next window.
+        """
+        self._async_add_history(
+            self._pending
+            or PendingUpdate(
+                from_version=HA_VERSION,
+                to_version=version,
+                started=dt_util.utcnow().isoformat(),
+            ),
+            AutoUpdateResult.FAILED,
+        )
+        self._pending = None
+        async_create_issue(
+            self._hass,
+            DOMAIN,
+            ISSUE_FAILED,
+            is_fixable=False,
+            is_persistent=True,
+            severity=IssueSeverity.ERROR,
+            translation_key=ISSUE_FAILED,
+            translation_placeholders={"version": version},
+        )
+        self._async_save()
 
     @callback
     def _async_record_offered_version(self) -> None:
@@ -551,6 +959,13 @@ class AutoUpdateManager:
         self._entry.async_create_task(
             self._hass, self._store.async_save(self._data_to_save())
         )
+        self._async_notify()
+
+    async def _async_entry_updated(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Tell the listeners the settings changed."""
+        self._async_notify()
 
     @callback
     def _data_to_save(self) -> AutoUpdateStoreData:
@@ -568,4 +983,6 @@ class AutoUpdateManager:
                 if self._attempted_window is not None
                 else None
             ),
+            "pending": self._pending,
+            "history": self._history,
         }

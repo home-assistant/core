@@ -40,6 +40,8 @@ YAML_CONFIG_FILE = "configuration.yaml"
 VERSION_FILE = ".HA_VERSION"
 # The version that ran before this start, set only when it differs
 DATA_PREVIOUS_VERSION: HassKey[str] = HassKey("previous_version")
+# Set by an integration that updated Home Assistant on its own, like hassio
+DATA_UPDATED_AUTOMATICALLY: HassKey[bool] = HassKey("updated_automatically")
 CONFIG_DIR_NAME = ".homeassistant"
 
 AUTOMATION_CONFIG_PATH = "automations.yaml"

@@ -7,14 +7,30 @@ from datetime import UTC, datetime, time, timedelta
 import os
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
-from uuid import uuid4
+from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import HomeAssistantUpdateOptions, Job, UpdateChannel
+from aiohasupervisor.models import (
+    ContextType,
+    HomeAssistantUpdateOptions,
+    Issue as SupervisorIssue,
+    IssueType,
+    Job,
+    UpdateChannel,
+)
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    CLIENT_ID,
+    MockConfigEntry,
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+)
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.backup import (
     CreateBackupEvent,
@@ -35,9 +51,10 @@ from homeassistant.components.hassio.const import (
     HASSIO_MAIN_UPDATE_INTERVAL,
     MAIN_COORDINATOR,
 )
-from homeassistant.const import WEEKDAYS
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.config import DATA_PREVIOUS_VERSION
+from homeassistant.const import EVENT_LOGBOOK_ENTRY, WEEKDAYS
+from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -64,6 +81,7 @@ def mock_all(
     addon_stats: AsyncMock,
     addon_changelog: AsyncMock,
     resolution_info: AsyncMock,
+    resolution_suggestions_for_issue: AsyncMock,
     jobs_info: AsyncMock,
     host_info: AsyncMock,
     supervisor_root_info: AsyncMock,
@@ -251,6 +269,8 @@ async def test_first_seen_is_set_once(
         "withdrawn": [],
         "window_offset": 0.0,
         "attempted_window": None,
+        "pending": None,
+        "history": [],
     }
 
 
@@ -484,9 +504,14 @@ async def test_skipped_version_after_rename(
 ENABLED = {"core_auto_update": True}
 
 
+# The time zone of the test instance. Fixed here, because parametrize builds
+# times before that instance exists.
+TEST_TIME_ZONE = ZoneInfo("US/Pacific")
+
+
 def _local(day: int, hour: int, minute: int = 0) -> datetime:
     """Return a local time in October 2026; the 19th is a Monday."""
-    return datetime(2026, 10, day, hour, minute, tzinfo=dt_util.get_default_time_zone())
+    return datetime(2026, 10, day, hour, minute, tzinfo=TEST_TIME_ZONE)
 
 
 async def _setup_scheduled(
@@ -1047,6 +1072,364 @@ async def test_skipped_during_backup(
     supervisor_client.homeassistant.update.assert_not_called()
 
 
+def supervisor_rolled_back(resolution_info: AsyncMock) -> UUID:
+    """Let Supervisor report that it rolled back a Core update.
+
+    Returns the ID of the issue Supervisor raises for it.
+    """
+    issue = SupervisorIssue(
+        type=IssueType.UPDATE_ROLLBACK,
+        context=ContextType.CORE,
+        reference=None,
+        uuid=uuid4(),
+        reference_extra=None,
+    )
+    resolution_info.return_value = replace(
+        resolution_info.return_value,
+        issues=[*resolution_info.return_value.issues, issue],
+    )
+    return issue.uuid
+
+
+PENDING = {
+    "from_version": "2026.10.1",
+    "to_version": "2026.10.2",
+    "started": "2026-10-22T10:30:00+00:00",
+}
+
+
+async def _setup_after_update(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    running_version: str,
+    pending: dict[str, Any] | None,
+    history: list[dict[str, Any]] | None = None,
+) -> None:
+    """Set up hassio as if Home Assistant just restarted.
+
+    Supervisor's own rollback issue is mocked separately, with
+    supervisor_rolled_back.
+    """
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 4,
+        "key": STORAGE_KEY,
+        "data": {
+            "first_seen": {},
+            "skipped": [],
+            "withdrawn": [],
+            "window_offset": 0.0,
+            "attempted_window": None,
+            "pending": pending,
+            "history": history or [],
+        },
+    }
+    with patch(
+        "homeassistant.components.hassio.auto_update.HA_VERSION", running_version
+    ):
+        await _setup_hassio(hass, ENABLED)
+
+
+async def test_automatic_update_succeeded(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a successful automatic update is logged and remembered."""
+    logbook_entries = async_capture_events(hass, EVENT_LOGBOOK_ENTRY)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "core_auto_update_failed",
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="core_auto_update_failed",
+        translation_placeholders={"version": "2026.10.2"},
+    )
+
+    await _setup_after_update(hass, hass_storage, "2026.10.2", PENDING)
+    manager = hass.data[DATA_AUTO_UPDATE]
+
+    assert [entry.data for entry in logbook_entries] == [
+        {
+            "name": "Home Assistant",
+            "message": "was updated automatically from 2026.10.1 to 2026.10.2",
+            "domain": DOMAIN,
+        }
+    ]
+    assert [entry["result"] for entry in manager.async_get_history()] == ["success"]
+    assert not manager.async_is_skipped("2026.10.2")
+    assert issue_registry.async_get_issue(DOMAIN, "core_auto_update_failed") is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "core_auto_update_rolled_back") is None
+    )
+    assert hass_storage[STORAGE_KEY]["data"]["pending"] is None
+
+
+async def test_automatic_update_rolled_back(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    resolution_info: AsyncMock,
+) -> None:
+    """Test a rolled back automatic update raises an issue and is not retried."""
+    supervisor_rolled_back(resolution_info)
+    logbook_entries = async_capture_events(hass, EVENT_LOGBOOK_ENTRY)
+
+    await _setup_after_update(hass, hass_storage, "2026.10.1", PENDING)
+    manager = hass.data[DATA_AUTO_UPDATE]
+
+    issue = issue_registry.async_get_issue(DOMAIN, "core_auto_update_rolled_back")
+    assert issue is not None
+    assert issue.translation_placeholders == {"version": "2026.10.2"}
+    assert manager.async_is_skipped("2026.10.2")
+    assert [entry["result"] for entry in manager.async_get_history()] == ["rolled_back"]
+    assert logbook_entries == []
+    assert hass_storage[STORAGE_KEY]["data"]["pending"] is None
+
+
+@pytest.mark.parametrize(
+    ("running_version", "pending"),
+    [
+        pytest.param("2026.10.2", None, id="no_record"),
+        pytest.param("2026.10.3", PENDING, id="other_version"),
+    ],
+)
+async def test_restart_without_automatic_update(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    running_version: str,
+    pending: dict[str, str] | None,
+) -> None:
+    """Test a manual update or plain restart leaves no trace."""
+    logbook_entries = async_capture_events(hass, EVENT_LOGBOOK_ENTRY)
+
+    await _setup_after_update(hass, hass_storage, running_version, pending)
+
+    assert hass.data[DATA_AUTO_UPDATE].async_get_history() == []
+    assert logbook_entries == []
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "core_auto_update_rolled_back") is None
+    )
+    assert hass_storage[STORAGE_KEY]["data"]["pending"] is None
+
+
+async def test_history_keeps_last_ten(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test only the last ten automatic updates are kept."""
+    history = [
+        {**PENDING, "finished": f"2026-10-{day:02}T10:30:00+00:00", "result": "success"}
+        for day in range(1, 11)
+    ]
+
+    await _setup_after_update(hass, hass_storage, "2026.10.2", PENDING, history)
+
+    kept = hass.data[DATA_AUTO_UPDATE].async_get_history()
+    assert len(kept) == 10
+    assert kept[0]["finished"] == "2026-10-02T10:30:00+00:00"
+
+
+async def test_pending_stored_before_update(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test the update is recorded before Supervisor is asked to install it."""
+    pending_at_install: list[Any] = []
+    supervisor_client.homeassistant.update.side_effect = lambda options: (
+        pending_at_install.append(hass_storage[STORAGE_KEY]["data"]["pending"])
+    )
+
+    with patch("homeassistant.components.hassio.auto_update.HA_VERSION", "2026.10.1"):
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 3, 30),
+            first_seen={"2026.10.2": _local(19, 2)},
+        )
+
+    assert pending_at_install == [
+        {
+            "from_version": "2026.10.1",
+            "to_version": "2026.10.2",
+            "started": dt_util.utcnow().isoformat(),
+        }
+    ]
+
+
+async def test_automatic_update_did_not_start(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an update Supervisor refuses raises an issue and is retried later."""
+    supervisor_client.homeassistant.update.side_effect = SupervisorError("Boom")
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+    manager = hass.data[DATA_AUTO_UPDATE]
+
+    issue = issue_registry.async_get_issue(DOMAIN, "core_auto_update_failed")
+    assert issue is not None
+    assert issue.translation_placeholders == {"version": "2026.10.2"}
+    assert not manager.async_is_skipped("2026.10.2")
+    assert [entry["result"] for entry in manager.async_get_history()] == ["failed"]
+    assert hass_storage[STORAGE_KEY]["data"]["pending"] is None
+
+
+async def test_result_settled_once_started(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test the record is kept until Home Assistant has started.
+
+    Supervisor rolls back a version that does not come up; the old version
+    then needs the record to tell the user.
+    """
+    hass.set_state(CoreState.not_running)
+    with patch("homeassistant.components.hassio.auto_update.HA_VERSION", "2026.10.2"):
+        await _setup_after_update(hass, hass_storage, "2026.10.2", PENDING)
+        manager = hass.data[DATA_AUTO_UPDATE]
+
+        assert manager.async_get_history() == []
+
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert [entry["result"] for entry in manager.async_get_history()] == ["success"]
+
+
+async def test_reload_while_update_in_progress(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    jobs_info: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a reload during the update waits for Supervisor to finish it."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+    assert _installed(supervisor_client) == ["2026.10.2"]
+
+    job = _core_update_job(done=False)
+    jobs_info.return_value = replace(jobs_info.return_value, jobs=[job])
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+    manager = hass.data[DATA_AUTO_UPDATE]
+
+    assert manager.async_get_history() == []
+    assert hass_storage[STORAGE_KEY]["data"]["pending"] is not None
+
+    # Supervisor gives up without restarting Home Assistant
+    async_dispatcher_send(
+        hass,
+        EVENT_SUPERVISOR_EVENT,
+        {"event": "job", "data": {**job.to_dict(), "done": True}},
+    )
+    await hass.async_block_till_done()
+
+    assert [entry["result"] for entry in manager.async_get_history()] == ["failed"]
+    assert issue_registry.async_get_issue(DOMAIN, "core_auto_update_failed")
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "core_auto_update_rolled_back") is None
+    )
+    assert not manager.async_is_skipped("2026.10.2")
+
+
+async def test_old_version_without_rollback(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the old version without a Supervisor rollback is not a rollback.
+
+    The update never happened, like when a reload cancelled it before
+    Supervisor was asked. The version may be fine, so it is not skipped.
+    """
+    await _setup_after_update(hass, hass_storage, "2026.10.1", PENDING)
+    manager = hass.data[DATA_AUTO_UPDATE]
+
+    assert [entry["result"] for entry in manager.async_get_history()] == ["failed"]
+    assert issue_registry.async_get_issue(DOMAIN, "core_auto_update_failed")
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "core_auto_update_rolled_back") is None
+    )
+    assert not manager.async_is_skipped("2026.10.2")
+
+
+async def test_rollback_replaces_did_not_start_issue(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    resolution_info: AsyncMock,
+) -> None:
+    """Test the rollback issue persists and replaces an earlier failure."""
+    supervisor_rolled_back(resolution_info)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "core_auto_update_failed",
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="core_auto_update_failed",
+        translation_placeholders={"version": "2026.10.2"},
+    )
+
+    await _setup_after_update(hass, hass_storage, "2026.10.1", PENDING)
+
+    issue = issue_registry.async_get_issue(DOMAIN, "core_auto_update_rolled_back")
+    assert issue is not None
+    assert issue.is_persistent
+    assert issue_registry.async_get_issue(DOMAIN, "core_auto_update_failed") is None
+
+
+async def test_backup_location_error(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a Supervisor error while preparing the backup is reported."""
+    with patch(
+        "homeassistant.components.hassio.backup.backup_core_before_update",
+        side_effect=SupervisorError("Boom"),
+    ):
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 3, 30),
+            first_seen={"2026.10.2": _local(19, 2)},
+            options={**ENABLED, "core_backup_before_update": True},
+        )
+
+    issue = issue_registry.async_get_issue(DOMAIN, "core_auto_update_failed")
+    assert issue is not None
+    assert issue.is_persistent
+    assert [
+        entry["result"] for entry in hass.data[DATA_AUTO_UPDATE].async_get_history()
+    ] == ["failed"]
+    supervisor_client.homeassistant.update.assert_not_called()
+
+
 async def test_data_stale_after_backup(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -1214,6 +1597,144 @@ async def test_turned_off_while_saving(
     supervisor_client.homeassistant.update.assert_not_called()
 
 
+async def test_turned_off_while_saving_pending(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test turning off during the pending save stops the update and clears it."""
+    save = Store.async_save
+
+    async def save_and_turn_off(store: Store, data: Any) -> None:
+        await save(store, data)
+        if store.key == STORAGE_KEY and data["pending"] is not None:
+            entry = hass.config_entries.async_entries(DOMAIN)[0]
+            hass.config_entries.async_update_entry(
+                entry, options={**entry.options, "core_auto_update": False}
+            )
+
+    with patch.object(Store, "async_save", save_and_turn_off):
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 3, 30),
+            first_seen={"2026.10.2": _local(19, 2)},
+        )
+        await hass.async_block_till_done()
+
+    supervisor_client.homeassistant.update.assert_not_called()
+    assert hass_storage[STORAGE_KEY]["data"]["pending"] is None
+
+
+async def test_rollback_asked_again_when_supervisor_cannot_tell(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    resolution_info: AsyncMock,
+) -> None:
+    """Test the record is kept until Supervisor can say whether it rolled back."""
+    resolution_info.side_effect = SupervisorError("Boom")
+    with patch("homeassistant.components.hassio.auto_update.HA_VERSION", "2026.10.1"):
+        await _setup_after_update(hass, hass_storage, "2026.10.1", PENDING)
+        manager = hass.data[DATA_AUTO_UPDATE]
+
+        assert manager.async_get_history() == []
+        assert hass_storage[STORAGE_KEY]["data"]["pending"] == PENDING
+
+        resolution_info.side_effect = None
+        supervisor_rolled_back(resolution_info)
+        freezer.tick(CHECK_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [entry["result"] for entry in manager.async_get_history()] == ["rolled_back"]
+    assert manager.async_is_skipped("2026.10.2")
+    assert issue_registry.async_get_issue(DOMAIN, "core_auto_update_rolled_back")
+
+
+async def test_later_job_events_ignored_once_settled(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    homeassistant_info: AsyncMock,
+) -> None:
+    """Test watching Supervisor's jobs ends with the restored update.
+
+    A later automatic update has its own outcome; its job must not settle
+    it as the restored one.
+    """
+    homeassistant_info.return_value = replace(
+        homeassistant_info.return_value,
+        version="2026.10.2",
+        version_latest="2026.10.3",
+    )
+    freezer.move_to(_local(22, 3, 30))
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 4,
+        "key": STORAGE_KEY,
+        "data": {
+            "first_seen": {"2026.10.3": _local(18, 2).isoformat()},
+            "skipped": [],
+            "withdrawn": [],
+            "window_offset": 0.0,
+            "attempted_window": None,
+            "pending": PENDING,
+            "history": [],
+        },
+    }
+    with patch("homeassistant.components.hassio.auto_update.HA_VERSION", "2026.10.2"):
+        await _setup_hassio(hass, ENABLED)
+        await hass.async_block_till_done()
+        manager = hass.data[DATA_AUTO_UPDATE]
+
+        # The restored update worked, and the next patch is on its way
+        assert [entry["result"] for entry in manager.async_get_history()] == ["success"]
+        assert _installed(supervisor_client) == ["2026.10.3"]
+
+        async_dispatcher_send(
+            hass,
+            EVENT_SUPERVISOR_EVENT,
+            {"event": "job", "data": _core_update_job(done=True).to_dict()},
+        )
+        await hass.async_block_till_done()
+
+    assert [entry["result"] for entry in manager.async_get_history()] == ["success"]
+    assert hass_storage[STORAGE_KEY]["data"]["pending"]["to_version"] == "2026.10.3"
+
+
+async def test_settle_during_job_event(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    jobs_info: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test settling from a job event leaves the other job subscribers alone."""
+    job = _core_update_job(done=False)
+    jobs_info.return_value = replace(jobs_info.return_value, jobs=[job])
+    with patch("homeassistant.components.hassio.auto_update.HA_VERSION", "2026.10.2"):
+        await _setup_after_update(hass, hass_storage, "2026.10.2", PENDING)
+        manager = hass.data[DATA_AUTO_UPDATE]
+
+        assert manager.async_get_history() == []
+        assert hass.states.get(CORE_UPDATE_ENTITY_ID).attributes["in_progress"]
+
+        async_dispatcher_send(
+            hass,
+            EVENT_SUPERVISOR_EVENT,
+            {"event": "job", "data": {**job.to_dict(), "done": True}},
+        )
+        await hass.async_block_till_done()
+
+    assert [entry["result"] for entry in manager.async_get_history()] == ["success"]
+    assert not hass.states.get(CORE_UPDATE_ENTITY_ID).attributes["in_progress"]
+    assert "Set changed size during iteration" not in caplog.text
+
+
 async def test_withdrawn_then_replacement_skipped(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -1246,6 +1767,63 @@ async def test_withdrawn_then_replacement_skipped(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_earlier_rollback_dismissed_before_update(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    resolution_info: AsyncMock,
+) -> None:
+    """Test an earlier rollback issue is dismissed before the update is asked.
+
+    Supervisor keeps one rollback issue for Core and does not raise it again
+    while it is open, so it has to be gone to tell this update's outcome.
+    """
+    earlier = supervisor_rolled_back(resolution_info)
+    calls: list[str] = []
+    supervisor_client.resolution.dismiss_issue.side_effect = lambda issue: calls.append(
+        f"dismiss {issue}"
+    )
+    supervisor_client.homeassistant.update.side_effect = lambda options: calls.append(
+        f"update {options.version}"
+    )
+
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    assert calls == [f"dismiss {earlier}", "update 2026.10.2"]
+
+
+async def test_dismiss_fails(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    resolution_info: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test nothing is asked when an earlier rollback issue cannot be dismissed."""
+    supervisor_rolled_back(resolution_info)
+    supervisor_client.resolution.dismiss_issue.side_effect = SupervisorError("Boom")
+
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    supervisor_client.homeassistant.update.assert_not_called()
+    assert issue_registry.async_get_issue(DOMAIN, "core_auto_update_failed")
+    assert hass_storage[STORAGE_KEY]["data"]["pending"] is None
 
 
 async def _offer(
@@ -1376,3 +1954,485 @@ async def test_other_backup_started_after_ours(
         )
 
     supervisor_client.homeassistant.update.assert_not_called()
+
+
+AUTO_UPDATE_SWITCH = "switch.home_assistant_core_automatic_updates"
+
+
+@pytest.mark.parametrize(
+    ("options", "state"),
+    [
+        pytest.param({}, "off", id="not_chosen"),
+        pytest.param({"core_auto_update": False}, "off", id="off"),
+        pytest.param({"core_auto_update": True}, "on", id="on"),
+    ],
+)
+async def test_switch_state(
+    hass: HomeAssistant, options: dict[str, Any], state: str
+) -> None:
+    """Test the switch shows whether automatic updates are on."""
+    await _setup_hassio(hass, options)
+
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == state
+
+
+async def test_switch_pauses_updates(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test turning the switch off pauses automatic updates, and on resumes."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 2, 50),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": AUTO_UPDATE_SWITCH}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert config_entry.options["core_auto_update"] is False
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == "off"
+
+    freezer.move_to(_local(22, 3, 30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": AUTO_UPDATE_SWITCH}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert config_entry.options["core_auto_update"] is True
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == "on"
+
+    freezer.tick(CHECK_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _installed(supervisor_client) == ["2026.10.2"]
+
+
+async def test_switch_follows_settings(hass: HomeAssistant) -> None:
+    """Test the switch follows the setting changed elsewhere."""
+    config_entry = await _setup_hassio(hass, {"core_auto_update": True})
+
+    hass.config_entries.async_update_entry(
+        config_entry, options={**config_entry.options, "core_auto_update": False}
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == "off"
+
+
+async def test_no_switch_on_container(
+    hass: HomeAssistant, supervisor_root_info: AsyncMock
+) -> None:
+    """Test there is no switch where automatic updates are unavailable."""
+    supervisor_root_info.return_value = replace(
+        supervisor_root_info.return_value, hassos=None
+    )
+    await _setup_hassio(hass, {"core_auto_update": True})
+
+    assert hass.states.get(AUTO_UPDATE_SWITCH) is None
+
+
+async def test_switch_unavailable_on_beta_channel(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    supervisor_info: AsyncMock,
+) -> None:
+    """Test the switch goes unavailable after moving off the stable channel."""
+    await _setup_hassio(hass, {"core_auto_update": True})
+
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, channel=UpdateChannel.BETA
+    )
+    await _refresh_main_coordinator(hass, freezer)
+
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == "unavailable"
+
+
+async def test_switch_available_once_on_stable_channel(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    supervisor_info: AsyncMock,
+) -> None:
+    """Test the switch exists on the beta channel and works once on stable."""
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, channel=UpdateChannel.BETA
+    )
+    await _setup_hassio(hass, {"core_auto_update": True})
+
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == "unavailable"
+
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, channel=UpdateChannel.STABLE
+    )
+    await _refresh_main_coordinator(hass, freezer)
+
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == "on"
+
+
+@pytest.mark.parametrize(
+    ("running_version", "automatic"),
+    [
+        pytest.param("2026.10.2", True, id="updated"),
+        pytest.param("2026.10.1", False, id="rolled_back"),
+    ],
+)
+async def test_updated_trigger_automatic(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    resolution_info: AsyncMock,
+    running_version: str,
+    automatic: bool,
+) -> None:
+    """Test the updated trigger tells automations about an automatic update."""
+    supervisor_rolled_back(resolution_info)
+    calls = async_mock_service(hass, "test", "automation")
+    hass.set_state(CoreState.not_running)
+    hass.data[DATA_PREVIOUS_VERSION] = "2026.10.1"
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {"trigger": "homeassistant.updated"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"automatic": "{{ trigger.automatic }}"},
+                },
+            }
+        },
+    )
+
+    with patch(
+        "homeassistant.components.hassio.auto_update.HA_VERSION", running_version
+    ):
+        await _setup_after_update(hass, hass_storage, running_version, PENDING)
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert [call.data["automatic"] for call in calls] == [automatic]
+
+
+async def test_updated_trigger_manual_update(hass: HomeAssistant) -> None:
+    """Test a manual update is not reported as automatic."""
+    calls = async_mock_service(hass, "test", "automation")
+    hass.set_state(CoreState.not_running)
+    hass.data[DATA_PREVIOUS_VERSION] = "2026.10.1"
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {"trigger": "homeassistant.updated"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"automatic": "{{ trigger.automatic }}"},
+                },
+            }
+        },
+    )
+    await _setup_hassio(hass, ENABLED)
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert [call.data["automatic"] for call in calls] == [False]
+
+
+async def test_websocket_settings(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the automatic update settings can be read and changed."""
+    config_entry = await _setup_hassio(hass)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "hassio/update/config/update",
+            "core_auto_update": True,
+            "core_auto_update_delay": 7,
+            "core_auto_update_window_start": "23:00",
+            "core_auto_update_window_end": "01:00",
+            "core_auto_update_weekdays": ["sat", "sun"],
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    await client.send_json_auto_id({"type": "hassio/update/config/info"})
+    result = (await client.receive_json())["result"]
+
+    assert result == result | {
+        "core_auto_update": True,
+        "core_auto_update_delay": 7,
+        "core_auto_update_window_start": "23:00:00",
+        "core_auto_update_window_end": "01:00:00",
+        "core_auto_update_weekdays": ["sat", "sun"],
+    }
+    assert hass.data[DATA_AUTO_UPDATE].settings.window_start == time(23, 0)
+    assert config_entry.options["core_auto_update_window_start"] == "23:00:00"
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        pytest.param({"core_auto_update_delay": 2}, id="unknown_delay"),
+        pytest.param(
+            {"core_auto_update_window_start": "04:45"},
+            id="too_short_with_stored_end",
+        ),
+        pytest.param({"core_auto_update_weekdays": []}, id="no_weekdays"),
+    ],
+)
+async def test_websocket_settings_invalid(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    changes: dict[str, Any],
+) -> None:
+    """Test invalid settings are rejected and nothing is stored."""
+    config_entry = await _setup_hassio(hass, ENABLED)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "hassio/update/config/update", **changes})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+    assert config_entry.options == ENABLED
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        pytest.param(
+            {"type": "hassio/update/config/update", "core_auto_update": True},
+            id="update",
+        ),
+        pytest.param({"type": "hassio/update/automatic/status"}, id="status"),
+        pytest.param({"type": "hassio/update/automatic/subscribe"}, id="subscribe"),
+    ],
+)
+async def test_websocket_admin_only(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    message: dict[str, Any],
+) -> None:
+    """Test only administrators can change settings or see the status."""
+    await _setup_hassio(hass)
+    hass_admin_user.groups = []
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(message)
+    response = await client.receive_json()
+
+    assert response["error"]["code"] == "unauthorized"
+
+
+async def _ws_client(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> MockHAClientWebSocket:
+    """Connect with a fresh token; these tests move the clock past the fixture's."""
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID
+    )
+    return await hass_ws_client(
+        hass, access_token=hass.auth.async_create_access_token(refresh_token)
+    )
+
+
+async def _status(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> Any:
+    """Return the automatic update status from the WebSocket API."""
+    client = await _ws_client(hass, hass_ws_client, hass_admin_user)
+    await client.send_json_auto_id({"type": "hassio/update/automatic/status"})
+    return (await client.receive_json())["result"]
+
+
+@pytest.mark.parametrize(
+    ("options", "window_offset", "earliest"),
+    [
+        pytest.param(ENABLED, 0.0, _local(25, 3), id="after_the_wait"),
+        pytest.param(
+            {**ENABLED, "core_auto_update_weekdays": ["mon"]},
+            0.0,
+            _local(26, 3),
+            id="allowed_weekday",
+        ),
+        pytest.param(
+            ENABLED,
+            0.5,
+            _local(25, 3, 57) + timedelta(seconds=30),
+            id="point_in_window",
+        ),
+    ],
+)
+async def test_status_next_update(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    options: dict[str, Any],
+    window_offset: float,
+    earliest: datetime,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test the status shows the next update the way the checks install it."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 2, 30),
+        first_seen={"2026.10.2": _local(22, 2)},
+        options=options,
+        window_offset=window_offset,
+    )
+
+    status = await _status(hass, hass_ws_client, hass_admin_user)
+
+    assert status["available"] is True
+    assert status["enabled"] is True
+    assert status["next_update"]["version"] == "2026.10.2"
+    assert dt_util.parse_datetime(status["next_update"]["earliest"]) == earliest
+
+    # The checks install it from that moment on
+    freezer.move_to(earliest)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _installed(supervisor_client) == ["2026.10.2"]
+
+
+async def test_status_after_attempted_window(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test the next update moves to the next window after a failed attempt."""
+    supervisor_client.homeassistant.update.side_effect = SupervisorError("Boom")
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    status = await _status(hass, hass_ws_client, hass_admin_user)
+
+    assert dt_util.parse_datetime(status["next_update"]["earliest"]) == _local(23, 3)
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        pytest.param({}, id="not_chosen"),
+        pytest.param({"core_auto_update": False}, id="off"),
+    ],
+)
+async def test_status_no_next_update_when_off(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    options: dict[str, Any],
+    hass_admin_user: MockUser,
+) -> None:
+    """Test there is no next update when automatic updates are not on."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 2, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+        options=options,
+    )
+
+    status = await _status(hass, hass_ws_client, hass_admin_user)
+
+    assert status["enabled"] is options.get("core_auto_update")
+    assert status["next_update"] is None
+
+
+async def test_status_unavailable(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_root_info: AsyncMock,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test the status says why automatic updates are not available."""
+    supervisor_root_info.return_value = replace(
+        supervisor_root_info.return_value, hassos=None
+    )
+    await _setup_hassio(hass, ENABLED)
+
+    status = await _status(hass, hass_ws_client, hass_admin_user)
+
+    assert status["available"] is False
+    assert status["unavailable_reason"] == "not_home_assistant_os"
+    assert status["next_update"] is None
+
+
+async def test_status_history(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test the status includes the recent automatic updates."""
+    await _setup_after_update(hass, hass_storage, "2026.10.2", PENDING)
+
+    status = await _status(hass, hass_ws_client, hass_admin_user)
+
+    assert [entry["result"] for entry in status["history"]] == ["success"]
+    assert status["history"][0]["to_version"] == "2026.10.2"
+
+
+async def test_subscribe(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test subscribers get the status, and again only when it changes."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 2, 30),
+        first_seen={"2026.10.2": _local(22, 2)},
+    )
+    client = await _ws_client(hass, hass_ws_client, hass_admin_user)
+    await client.send_json_auto_id({"type": "hassio/update/automatic/subscribe"})
+    assert (await client.receive_json())["success"]
+    first = await client.receive_json()
+    assert first["event"]["next_update"]["version"] == "2026.10.2"
+
+    # Nothing changed, nothing is sent
+    await _refresh_main_coordinator(hass, freezer)
+
+    await _call_update_service(hass, "skip")
+    changed = await client.receive_json()
+
+    assert changed["id"] == first["id"]
+    assert changed["event"]["next_update"] is None

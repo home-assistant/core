@@ -19,7 +19,9 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.util import dt as dt_util
 
+from .auto_update import AUTO_UPDATE_OPTIONS_SCHEMA, AutoUpdateSettings
 from .config_entry import async_get_hassio_entry, async_get_update_options
 from .const import (
     ATTR_DATA,
@@ -32,8 +34,14 @@ from .const import (
     ATTR_TIMEOUT,
     ATTR_VERSION,
     ATTR_WS_EVENT,
+    DATA_AUTO_UPDATE,
     DATA_COMPONENT,
     EVENT_SUPERVISOR_EVENT,
+    OPTION_CORE_AUTO_UPDATE,
+    OPTION_CORE_AUTO_UPDATE_DELAY,
+    OPTION_CORE_AUTO_UPDATE_WEEKDAYS,
+    OPTION_CORE_AUTO_UPDATE_WINDOW_END,
+    OPTION_CORE_AUTO_UPDATE_WINDOW_START,
     WS_ID,
     WS_TYPE,
     WS_TYPE_API,
@@ -80,6 +88,8 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_update_core)
     websocket_api.async_register_command(hass, websocket_update_config_info)
     websocket_api.async_register_command(hass, websocket_update_config_update)
+    websocket_api.async_register_command(hass, websocket_update_automatic_status)
+    websocket_api.async_register_command(hass, websocket_update_automatic_subscribe)
 
 
 @callback
@@ -327,8 +337,17 @@ def websocket_update_config_info(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Send the stored backup config."""
-    connection.send_result(msg["id"], async_get_update_options(hass))
+    """Send the stored update config."""
+    entry = async_get_hassio_entry(hass)
+    connection.send_result(
+        msg["id"],
+        {
+            **async_get_update_options(hass, entry),
+            **AutoUpdateSettings.from_options(
+                entry.options if entry is not None else {}
+            ).as_options(),
+        },
+    )
 
 
 @callback
@@ -341,6 +360,11 @@ def websocket_update_config_info(
             int, probatio.Range(min=1)
         ),
         probatio.Optional("core_backup_before_update"): bool,
+        probatio.Optional(OPTION_CORE_AUTO_UPDATE): bool,
+        probatio.Optional(OPTION_CORE_AUTO_UPDATE_DELAY): int,
+        probatio.Optional(OPTION_CORE_AUTO_UPDATE_WINDOW_START): str,
+        probatio.Optional(OPTION_CORE_AUTO_UPDATE_WINDOW_END): str,
+        probatio.Optional(OPTION_CORE_AUTO_UPDATE_WEEKDAYS): [str],
     }
 )
 def websocket_update_config_update(
@@ -348,7 +372,7 @@ def websocket_update_config_update(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Update the stored backup config."""
+    """Update the stored update config."""
     entry = async_get_hassio_entry(hass)
     if entry is None:
         connection.send_error(
@@ -361,12 +385,72 @@ def websocket_update_config_update(
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    hass.config_entries.async_update_entry(
-        entry,
-        options={
-            **entry.options,
-            **async_get_update_options(hass, entry),
-            **changes,
-        },
-    )
+    # Validated as a whole, so a new window start is checked against the
+    # stored end
+    try:
+        options = AUTO_UPDATE_OPTIONS_SCHEMA(
+            {**entry.options, **async_get_update_options(hass, entry), **changes}
+        )
+    except probatio.Invalid as err:
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
+
+    hass.config_entries.async_update_entry(entry, options=options)
     connection.send_result(msg["id"])
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "hassio/update/automatic/status"}
+)
+def websocket_update_automatic_status(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Send the status of automatic Home Assistant updates."""
+    if (auto_update := hass.data.get(DATA_AUTO_UPDATE)) is None:
+        connection.send_error(
+            msg["id"],
+            code=websocket_api.ERR_NOT_FOUND,
+            message="Automatic updates are not set up",
+        )
+        return
+
+    connection.send_result(msg["id"], auto_update.async_get_status(dt_util.utcnow()))
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "hassio/update/automatic/subscribe"}
+)
+def websocket_update_automatic_subscribe(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Send the status of automatic Home Assistant updates, and each change."""
+    if (auto_update := hass.data.get(DATA_AUTO_UPDATE)) is None:
+        connection.send_error(
+            msg["id"],
+            code=websocket_api.ERR_NOT_FOUND,
+            message="Automatic updates are not set up",
+        )
+        return
+
+    last_status = auto_update.async_get_status(dt_util.utcnow())
+
+    @callback
+    def send_status() -> None:
+        """Send the status when it changed."""
+        nonlocal last_status
+        if (status := auto_update.async_get_status(dt_util.utcnow())) == last_status:
+            return
+        last_status = status
+        connection.send_message(websocket_api.event_message(msg["id"], status))
+
+    connection.subscriptions[msg["id"]] = auto_update.async_add_listener(send_status)
+    connection.send_result(msg["id"])
+    connection.send_message(websocket_api.event_message(msg["id"], last_status))
