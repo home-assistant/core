@@ -1,15 +1,21 @@
 """Test the Model Context Protocol config flow."""
 
+import datetime as dt
+from http import HTTPStatus
 import json
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import httpx2
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.components.mcp.auth import AuthenticateHeader
@@ -20,11 +26,13 @@ from homeassistant.components.mcp.const import (
     CONF_TOKEN_URL,
     DOMAIN,
 )
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     AUTH_DOMAIN,
@@ -1351,3 +1359,480 @@ async def test_hassio_discovery_authentication_flow(
     assert result["result"]
     assert result["result"].unique_id == ADDON_DISCOVERY_INFO.uuid
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure flow updates the URL."""
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    response = Mock()
+    response.server_info.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {CONF_URL: MCP_SERVER_URL}
+    assert config_entry.title == TEST_API_NAME
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (httpx2.TimeoutException("Some timeout"), "timeout_connect"),
+        (
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
+            "cannot_connect",
+        ),
+        (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reconfigure_mcp_client_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    config_entry: MockConfigEntry,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test the reconfigure flow handles client errors."""
+    result = await config_entry.start_reconfigure_flow(hass)
+    mock_mcp_client.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    # Reset and retry successfully
+    mock_mcp_client.side_effect = None
+    response = Mock()
+    response.server_info.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {CONF_URL: MCP_SERVER_URL}
+
+
+async def test_reconfigure_invalid_url(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure flow rejects an invalid URL."""
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "not a url"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_URL: "invalid_url"}
+    url_marker = next(
+        key for key in result["data_schema"].schema if key.schema == CONF_URL
+    )
+    assert url_marker.description == {"suggested_value": "not a url"}
+
+    # Retry with a valid URL
+    response = Mock()
+    response.server_info.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {CONF_URL: MCP_SERVER_URL}
+
+
+async def test_reconfigure_missing_capabilities(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure flow aborts when the server lacks capabilities."""
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    response = Mock()
+    response.server_info.name = TEST_API_NAME
+    response.capabilities.tools = None
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_capabilities"
+
+
+async def test_reconfigure_duplicate_url(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure flow aborts when the new URL matches another entry."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title="Other Server",
+    )
+    other_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    response = Mock()
+    response.server_info.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "credential")
+async def test_reconfigure_oauth(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    config_entry_with_auth: MockConfigEntry,
+) -> None:
+    """Test reconfigure keeps the token when the origin is unchanged."""
+    result = await config_entry_with_auth.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    response = Mock()
+    response.server_info.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    # Reconfigure on the same origin with a different path
+    RECONF_URL = "http://1.1.1.1:8080/mcp2"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: RECONF_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    data = {**config_entry_with_auth.data}
+    token = data.pop(CONF_TOKEN)
+    assert data == {
+        "auth_implementation": AUTH_DOMAIN,
+        CONF_URL: RECONF_URL,
+        CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
+        CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+        CONF_SCOPE: ["read", "write"],
+    }
+    token.pop("expires_at")
+    assert token == {
+        CONF_ACCESS_TOKEN: "test-access-token",
+        "refresh_token": "test-refresh-token",
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "credential")
+async def test_reconfigure_oauth_invalid_url(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    config_entry_with_auth: MockConfigEntry,
+) -> None:
+    """Test reconfigure with OAuth rejects an invalid URL without touching the token."""
+    result = await config_entry_with_auth.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "not a url"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_URL: "invalid_url"}
+    assert "auth_implementation" in config_entry_with_auth.data
+    assert CONF_TOKEN in config_entry_with_auth.data
+
+    # Retry with a valid URL
+    response = Mock()
+    response.server_info.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "credential")
+async def test_reconfigure_oauth_different_origin_no_auth(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    config_entry_with_auth: MockConfigEntry,
+) -> None:
+    """Test reconfigure to a different origin drops the stored OAuth fields."""
+    result = await config_entry_with_auth.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    response = Mock()
+    response.server_info.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    # Reconfigure on a different origin
+    RECONF_URL = "http://192.0.2.1:8080/mcp"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: RECONF_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry_with_auth.data == {CONF_URL: RECONF_URL}
+    assert config_entry_with_auth.title == TEST_API_NAME
+
+
+@pytest.mark.usefixtures("credential", "current_request_with_host")
+@respx.mock
+async def test_reconfigure_oauth_different_origin_reauth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    config_entry_with_auth: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test reconfigure to a different origin re-authenticates on 401."""
+    # Reconfigure on a different origin
+    RECONF_URL = "http://192.0.2.1:8080/mcp"
+
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx2.Response(
+            401,
+            headers={
+                "WWW-Authenticate": (
+                    'Bearer resource_metadata="'
+                    "http://192.0.2.1:8080/.well-known/oauth-protected-resource/mcp"
+                    '", scope="read write"'
+                )
+            },
+        ),
+    )
+    respx.get("http://192.0.2.1:8080/.well-known/oauth-protected-resource/mcp").mock(
+        return_value=httpx2.Response(
+            200,
+            json={
+                "resource": RECONF_URL,
+                "authorization_servers": [AUTHORIZATION_SERVER],
+                "scopes_supported": SCOPES_SUPPORTED,
+                "bearer_methods_supported": ["header"],
+            },
+        )
+    )
+    respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await config_entry_with_auth.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: RECONF_URL},
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "pick_implementation"},
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    result = await perform_oauth_flow(
+        hass,
+        aioclient_mock,
+        hass_client_no_auth,
+        result,
+        authorize_url=OAUTH_AUTHORIZE_URL,
+        token_url=OAUTH_TOKEN_URL,
+        scopes=["read", "write"],
+    )
+
+    # The new server accepts the freshly acquired token
+    mock_mcp_client.side_effect = None
+    response = Mock()
+    response.server_info.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    data = {**config_entry_with_auth.data}
+    token = data.pop(CONF_TOKEN)
+    assert data == {
+        "auth_implementation": AUTH_DOMAIN,
+        CONF_URL: RECONF_URL,
+        CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
+        CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+        CONF_SCOPE: ["read", "write"],
+    }
+    token.pop("expires_at")
+    assert token == OAUTH_TOKEN_PAYLOAD
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_oauth_implementation_unavailable(
+    hass: HomeAssistant,
+    config_entry_with_auth: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when the OAuth provider is unavailable."""
+    result = await config_entry_with_auth.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.mcp.async_get_config_entry_implementation",
+        side_effect=ConfigEntryNotReady,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_URL: MCP_SERVER_URL},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth2_implementation_unavailable"
+
+
+async def test_reconfigure_oauth_unknown_implementation(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfigure aborts when the stored implementation no longer exists."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": "removed",
+            CONF_URL: MCP_SERVER_URL,
+            CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
+            CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+        },
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth2_implementation_unavailable"
+
+
+@pytest.mark.usefixtures("credential")
+async def test_reconfigure_oauth_token_refresh_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test reconfigure shows an error when the token cannot be refreshed."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": AUTH_DOMAIN,
+            CONF_URL: MCP_SERVER_URL,
+            CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
+            CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+            CONF_TOKEN: {
+                CONF_ACCESS_TOKEN: "test-access-token",
+                "refresh_token": "test-refresh-token",
+                "expires_at": (dt_util.utcnow() - dt.timedelta(days=1)).timestamp(),
+            },
+            CONF_SCOPE: ["read", "write"],
+        },
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    refresh_responses = iter(
+        [
+            AiohttpClientMockResponse(
+                "post",
+                OAUTH_TOKEN_URL,
+                status=HTTPStatus.BAD_REQUEST,
+                json={"error": "invalid_grant"},
+            ),
+            AiohttpClientMockResponse(
+                "post", OAUTH_TOKEN_URL, json=OAUTH_TOKEN_PAYLOAD
+            ),
+        ]
+    )
+
+    async def refresh_token(
+        method: str, url: URL, data: Any
+    ) -> AiohttpClientMockResponse:
+        return next(refresh_responses)
+
+    aioclient_mock.post(OAUTH_TOKEN_URL, side_effect=refresh_token)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # The token refresh succeeds on retry, so the flow can still finish
+    response = Mock()
+    response.server_info.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

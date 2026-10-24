@@ -11,10 +11,19 @@ import probatio
 from yarl import URL
 
 from homeassistant.components.application_credentials import AuthorizationServer
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, UnknownImplementationError
+from homeassistant.exceptions import (
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    OAuth2TokenRequestReauthError,
+    UnknownImplementationError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2FlowHandler,
@@ -22,7 +31,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from . import async_get_config_entry_implementation
+from . import _create_token_manager, async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
 from .auth import AuthenticateHeader
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
@@ -156,21 +165,39 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.auth_header: AuthenticateHeader | None = None
         self.addon_name: str = ""
 
+    async def _async_validate_input(
+        self,
+        errors: dict[str, str],
+        user_input: dict[str, Any],
+        token_manager: TokenManager | None = None,
+    ) -> dict[str, Any] | None:
+        """Validate the user input, mapping failures to form errors.
+
+        Returns server info on success, None when a form error was set.
+        Flow-move exceptions propagate to the caller.
+        """
+        try:
+            return await validate_input(self.hass, user_input, token_manager)
+        except InvalidUrl:
+            errors[CONF_URL] = "invalid_url"
+        except TimeoutConnectError:
+            errors["base"] = "timeout_connect"
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except OAuth2TokenRequestReauthError:
+            errors["base"] = "invalid_auth"
+        return None
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        info: dict[str, Any] | None = None
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
-            except InvalidUrl:
-                errors[CONF_URL] = "invalid_url"
-            except TimeoutConnectError:
-                errors["base"] = "timeout_connect"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
+                info = await self._async_validate_input(errors, user_input)
             except InvalidAuth as err:
                 self.auth_header = err.metadata
                 self.data[CONF_URL] = user_input[CONF_URL]
@@ -180,7 +207,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-            else:
+            if info is not None:
                 self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
                 return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -390,9 +417,68 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=config_entry_data
             )
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=config_entry_data
+            )
         return self.async_create_entry(
             title=info["title"],
             data=config_entry_data,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the MCP server URL."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        info: dict[str, Any] | None = None
+        origin_changed = False
+        if user_input is not None:
+            try:
+                # A token is only valid for the origin it was issued to.
+                origin_changed = (
+                    "auth_implementation" in entry.data
+                    and URL(user_input[CONF_URL]).origin()
+                    != URL(entry.data[CONF_URL]).origin()
+                )
+                token_manager: TokenManager | None = None
+                if not origin_changed:
+                    token_manager = await _create_token_manager(self.hass, entry)
+                info = await self._async_validate_input(
+                    errors, user_input, token_manager
+                )
+            except InvalidAuth as err:
+                self.auth_header = err.metadata
+                self.data[CONF_URL] = user_input[CONF_URL]
+                return await self.async_step_auth_discovery()
+            except ConfigEntryNotReady, UnknownImplementationError:
+                return self.async_abort(reason="oauth2_implementation_unavailable")
+            except MissingCapabilities:
+                return self.async_abort(reason="missing_capabilities")
+            except ValueError:
+                errors[CONF_URL] = "invalid_url"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            if info is not None:
+                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+                data = (
+                    {CONF_URL: user_input[CONF_URL]}
+                    if origin_changed
+                    else {**entry.data, CONF_URL: user_input[CONF_URL]}
+                )
+                return self.async_update_reload_and_abort(
+                    entry, title=info["title"], data=data
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or entry.data
+            ),
+            errors=errors,
+            description_placeholders={"example_url": EXAMPLE_URL},
         )
 
     async def async_step_reauth(
