@@ -1,5 +1,6 @@
 """The Open Thread Border Router integration."""
 
+from functools import partial
 import logging
 
 import aiohttp
@@ -21,11 +22,18 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from . import homeassistant_hardware, websocket_api
-from .const import DOMAIN
+from .const import API_TIMEOUT, DOMAIN
+from .services import (
+    async_refresh_issues_on_the_mesh,
+    async_schedule_settlement,
+    async_settle_unanswered_migration,
+    async_setup_services,
+)
 from .types import OTBRConfigEntry
 from .util import (
     GetBorderAgentIdNotSupported,
     OTBRData,
+    async_get_dataset_lock,
     update_issues,
     update_unique_id,
 )
@@ -38,6 +46,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Open Thread Border Router component."""
     websocket_api.async_setup(hass)
+    async_setup_services(hass)
 
     async_register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
 
@@ -46,12 +55,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:
     """Set up an Open Thread Border Router config entry."""
-    api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
+    api = python_otbr_api.OTBR(
+        entry.data["url"], async_get_clientsession(hass), API_TIMEOUT
+    )
 
     otbrdata = OTBRData(entry.data["url"], api, entry.entry_id)
     try:
         border_agent_id = await otbrdata.get_border_agent_id()
-        dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
         extended_address = await otbrdata.get_extended_address()
     except GetBorderAgentIdNotSupported as err:
         ir.async_create_issue(
@@ -74,15 +84,51 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None
         TimeoutError,
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
+    # A write this router is handed and never answers is looked at again once
+    # its delay has run out.
+    otbrdata.schedule_settlement = partial(
+        async_schedule_settlement,
+        hass,
+        entry,
+        otbrdata,
+        (border_agent_id.hex(), extended_address.hex()),
+    )
     await update_unique_id(hass, entry, border_agent_id)
-    if dataset_tlvs:
-        await update_issues(hass, otbrdata, dataset_tlvs)
-        await async_add_dataset(
-            hass,
-            DOMAIN,
-            dataset_tlvs.hex(),
-            preferred_border_agent_id=border_agent_id.hex(),
-            preferred_extended_address=extended_address.hex(),
+    # No other writer may land between the dataset read and the store write;
+    # the reads above stay outside, so an unreachable router holds no one up.
+    async with async_get_dataset_lock(hass):
+        try:
+            dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
+        except (
+            HomeAssistantError,
+            aiohttp.ClientError,
+            TimeoutError,
+        ) as err:
+            raise ConfigEntryNotReady("Unable to connect") from err
+        settled = None
+        if dataset_tlvs:
+            # A migration this router never answered is settled first: found
+            # on the target, the preferred pointer follows it here as well.
+            settled = await async_settle_unanswered_migration(
+                hass,
+                entry,
+                otbrdata,
+                dataset_tlvs,
+                (border_agent_id.hex(), extended_address.hex()),
+            )
+            await update_issues(hass, otbrdata, dataset_tlvs)
+            await async_add_dataset(
+                hass,
+                DOMAIN,
+                dataset_tlvs.hex(),
+                preferred_border_agent_id=border_agent_id.hex(),
+                preferred_extended_address=extended_address.hex(),
+            )
+    if settled is not None:
+        # The routers it reached are read outside the lock; their issues are
+        # otherwise only recomputed at their own setup.
+        await async_refresh_issues_on_the_mesh(
+            hass, entry, settled.left, settled.tlvs, moving=False
         )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))

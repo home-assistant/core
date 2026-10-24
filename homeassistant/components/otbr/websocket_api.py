@@ -16,10 +16,13 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.components.thread import async_add_dataset, async_get_dataset
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.translation import async_get_exception_message
 
 from .const import DEFAULT_CHANNEL, DOMAIN
 from .util import (
     OTBRData,
+    async_get_dataset_lock,
+    async_get_propagation_windows,
     compose_default_network_name,
     generate_random_pan_id,
     get_allowed_channel,
@@ -133,6 +136,59 @@ def async_get_otbr_data(
     return async_check_extended_address_func
 
 
+@callback
+def _send_refusal(
+    connection: websocket_api.ActiveConnection, msg: dict, key: str, **placeholders: str
+) -> None:
+    """Send a refusal with its translated message."""
+    connection.send_error(
+        msg["id"],
+        key,
+        async_get_exception_message(DOMAIN, key, placeholders or None),
+        translation_domain=DOMAIN,
+        translation_key=key,
+        translation_placeholders=placeholders or None,
+    )
+
+
+async def _async_refused_mid_change(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    data: OTBRData,
+) -> bool:
+    """Refuse a write while the mesh is mid-change; return whether it did.
+
+    Mid-change: the router holds a pending dataset, a window is open, or a
+    mesh is arriving.
+    """
+    try:
+        pending = await data.get_pending_dataset_tlvs()
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "get_dataset_failed", str(exc))
+        return True
+    if pending is not None:
+        _send_refusal(connection, msg, "pending_dataset_in_place")
+        return True
+
+    try:
+        active = await data.get_active_dataset()
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "get_dataset_failed", str(exc))
+        return True
+    if active is None:
+        return False
+    if not active.extended_pan_id:
+        # No network to check a window for.
+        _send_refusal(connection, msg, "router_dataset_invalid")
+        return True
+    windows = await async_get_propagation_windows(hass)
+    if remaining := windows.seconds_in_flight(active.extended_pan_id.lower()):
+        _send_refusal(connection, msg, "dataset_propagating", remaining=str(remaining))
+        return True
+    return False
+
+
 @websocket_api.websocket_command(
     {
         "type": "otbr/create_network",
@@ -149,54 +205,59 @@ async def websocket_create_network(
     data: OTBRData,
 ) -> None:
     """Create a new Thread network."""
-    channel = await get_allowed_channel(hass, data.url) or DEFAULT_CHANNEL
+    # The channel picked here must not race another writer's change.
+    async with async_get_dataset_lock(hass):
+        if await _async_refused_mid_change(hass, connection, msg, data):
+            return
 
-    try:
-        await data.set_enabled(False)
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "set_enabled_failed", str(exc))
-        return
+        channel = await get_allowed_channel(hass, data.url) or DEFAULT_CHANNEL
 
-    try:
-        await data.factory_reset(hass)
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "factory_reset_failed", str(exc))
-        return
+        try:
+            await data.set_enabled(False)
+        except HomeAssistantError as exc:
+            connection.send_error(msg["id"], "set_enabled_failed", str(exc))
+            return
 
-    pan_id = generate_random_pan_id()
-    try:
-        await data.create_active_dataset(
-            python_otbr_api.ActiveDataSet(
-                channel=channel,
-                network_name=compose_default_network_name(pan_id),
-                pan_id=pan_id,
+        try:
+            await data.factory_reset(hass)
+        except HomeAssistantError as exc:
+            connection.send_error(msg["id"], "factory_reset_failed", str(exc))
+            return
+
+        pan_id = generate_random_pan_id()
+        try:
+            await data.create_active_dataset(
+                python_otbr_api.ActiveDataSet(
+                    channel=channel,
+                    network_name=compose_default_network_name(pan_id),
+                    pan_id=pan_id,
+                )
             )
-        )
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "create_active_dataset_failed", str(exc))
-        return
+        except HomeAssistantError as exc:
+            connection.send_error(msg["id"], "create_active_dataset_failed", str(exc))
+            return
 
-    try:
-        await data.set_enabled(True)
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "set_enabled_failed", str(exc))
-        return
+        try:
+            await data.set_enabled(True)
+        except HomeAssistantError as exc:
+            connection.send_error(msg["id"], "set_enabled_failed", str(exc))
+            return
 
-    try:
-        dataset_tlvs = await data.get_active_dataset_tlvs()
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "get_active_dataset_tlvs_failed", str(exc))
-        return
-    if not dataset_tlvs:
-        connection.send_error(msg["id"], "get_active_dataset_tlvs_empty", "")
-        return
+        try:
+            dataset_tlvs = await data.get_active_dataset_tlvs()
+        except HomeAssistantError as exc:
+            connection.send_error(msg["id"], "get_active_dataset_tlvs_failed", str(exc))
+            return
+        if not dataset_tlvs:
+            connection.send_error(msg["id"], "get_active_dataset_tlvs_empty", "")
+            return
 
-    await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
+        await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
 
-    # Update repair issues
-    await update_issues(hass, data, dataset_tlvs)
+        # Update repair issues
+        await update_issues(hass, data, dataset_tlvs)
 
-    connection.send_result(msg["id"])
+        connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(
@@ -216,55 +277,61 @@ async def websocket_set_network(
     data: OTBRData,
 ) -> None:
     """Set the Thread network to be used by the OTBR."""
-    dataset_tlv = await async_get_dataset(hass, msg["dataset_id"])
+    # A channel change landing between the read and the write would be undone.
+    async with async_get_dataset_lock(hass):
+        dataset_tlv = await async_get_dataset(hass, msg["dataset_id"])
 
-    if not dataset_tlv:
-        connection.send_error(msg["id"], "unknown_dataset", "Unknown dataset")
-        return
-    dataset = tlv_parser.parse_tlv(dataset_tlv)
-    if channel := dataset.get(MeshcopTLVType.CHANNEL):
-        thread_dataset_channel = cast(tlv_parser.Channel, channel).channel
+        if not dataset_tlv:
+            connection.send_error(msg["id"], "unknown_dataset", "Unknown dataset")
+            return
+        dataset = tlv_parser.parse_tlv(dataset_tlv)
+        thread_dataset_channel: int | None = None
+        if channel := dataset.get(MeshcopTLVType.CHANNEL):
+            thread_dataset_channel = cast(tlv_parser.Channel, channel).channel
 
-    allowed_channel = await get_allowed_channel(hass, data.url)
+        allowed_channel = await get_allowed_channel(hass, data.url)
 
-    if allowed_channel and thread_dataset_channel != allowed_channel:
-        connection.send_error(
-            msg["id"],
-            "channel_conflict",
-            f"Can't connect to network on channel {thread_dataset_channel}, ZHA is "
-            f"using channel {allowed_channel}",
-        )
-        return
+        if allowed_channel and thread_dataset_channel != allowed_channel:
+            connection.send_error(
+                msg["id"],
+                "channel_conflict",
+                f"Can't connect to network on channel {thread_dataset_channel}, ZHA is "
+                f"using channel {allowed_channel}",
+            )
+            return
 
-    try:
-        await data.set_enabled(False)
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "set_enabled_failed", str(exc))
-        return
+        if await _async_refused_mid_change(hass, connection, msg, data):
+            return
 
-    try:
-        await data.set_active_dataset_tlvs(bytes.fromhex(dataset_tlv))
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "set_active_dataset_tlvs_failed", str(exc))
-        return
+        try:
+            await data.set_enabled(False)
+        except HomeAssistantError as exc:
+            connection.send_error(msg["id"], "set_enabled_failed", str(exc))
+            return
 
-    try:
-        await data.set_enabled(True)
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "set_enabled_failed", str(exc))
-        return
+        try:
+            await data.set_active_dataset_tlvs(bytes.fromhex(dataset_tlv))
+        except HomeAssistantError as exc:
+            connection.send_error(msg["id"], "set_active_dataset_tlvs_failed", str(exc))
+            return
 
-    # Update repair issues
-    await update_issues(hass, data, bytes.fromhex(dataset_tlv))
+        try:
+            await data.set_enabled(True)
+        except HomeAssistantError as exc:
+            connection.send_error(msg["id"], "set_enabled_failed", str(exc))
+            return
 
-    connection.send_result(msg["id"])
+        # Update repair issues
+        await update_issues(hass, data, bytes.fromhex(dataset_tlv))
+
+        connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(
     {
         "type": "otbr/set_channel",
         probatio.Required("extended_address"): str,
-        probatio.Required("channel"): int,
+        probatio.Required("channel"): probatio.All(int, probatio.Range(min=11, max=26)),
     }
 )
 @websocket_api.require_admin
@@ -288,10 +355,14 @@ async def websocket_set_channel(
     channel: int = msg["channel"]
     delay: float = PENDING_DATASET_DELAY_TIMER / 1000
 
-    try:
-        await data.set_channel(channel)
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "set_channel_failed", str(exc))
-        return
+    async with async_get_dataset_lock(hass):
+        if await _async_refused_mid_change(hass, connection, msg, data):
+            return
 
-    connection.send_result(msg["id"], {"delay": delay})
+        try:
+            await data.set_channel(hass, channel)
+        except HomeAssistantError as exc:
+            connection.send_error(msg["id"], "set_channel_failed", str(exc))
+            return
+
+        connection.send_result(msg["id"], {"delay": delay})
