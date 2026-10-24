@@ -96,26 +96,30 @@ async def async_setup_entry(
         device: OmadaListDevice,
     ) -> None:
         """Create entities for a gateway's ports."""
-        entities: list[Entity] = []
         gateway_coordinator = controller.gateway_coordinator
-        if gateway_coordinator:
-            gateway = gateway_coordinator.data[device.mac]
-            entities.extend(
-                OmadaDevicePortSwitchEntity[
-                    OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus
-                ](gateway_coordinator, gateway, p, str(p.port_number), desc)
-                for p in gateway.port_status
-                for desc in GATEWAY_PORT_STATUS_SWITCHES
-                if desc.exists_func(gateway, p)
-            )
-            entities.extend(
-                OmadaDevicePortSwitchEntity[
-                    OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortConfig
-                ](gateway_coordinator, gateway, p, str(p.port_number), desc)
-                for p in gateway.port_configs
-                for desc in GATEWAY_PORT_CONFIG_SWITCHES
-                if desc.exists_func(gateway, p)
-            )
+        if gateway_coordinator is None:
+            return
+
+        gateway = await controller.async_get_gateway(device.mac)
+        if gateway is None:
+            return
+
+        entities: list[Entity] = [
+            OmadaDevicePortSwitchEntity[
+                OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus
+            ](gateway_coordinator, gateway, p, str(p.port_number), desc)
+            for p in gateway.port_status
+            for desc in GATEWAY_PORT_STATUS_SWITCHES
+            if desc.exists_func(gateway, p)
+        ]
+        entities.extend(
+            OmadaDevicePortSwitchEntity[
+                OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortConfig
+            ](gateway_coordinator, gateway, p, str(p.port_number), desc)
+            for p in gateway.port_configs
+            for desc in GATEWAY_PORT_CONFIG_SWITCHES
+            if desc.exists_func(gateway, p)
+        )
         async_add_entities(entities)
 
     await controller.async_register_device_entities(

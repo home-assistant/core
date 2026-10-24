@@ -1,8 +1,9 @@
 """Generic Omada API coordinator."""
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+import math
 from typing import TYPE_CHECKING, NamedTuple, override
 
 from tplink_omada_client import (
@@ -22,12 +23,15 @@ from tplink_omada_client.devices import (
 from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
+    from .controller import OmadaSiteController
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +42,13 @@ POLL_DEVICES = 300
 POLL_CONTROLLER = 300
 POLL_CONTROLLER_UPDATE = 3600
 POLL_UPGRADE = 60
+
+# Minimum number of consecutive empty device-list updates required before
+# removing device entries, to tolerate transient empty responses from the
+# controller. The window is one hour, scaled up when polling speeds up during
+# a firmware download.
+EMPTY_DEVICE_LIMIT = 12
+EMPTY_DEVICE_WINDOW = 3600
 
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
@@ -191,6 +202,10 @@ class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):
         super().__init__(hass, config_entry, omada_client, "Gateway", POLL_GATEWAY)
         self.mac = mac
 
+    def invalidate(self) -> None:
+        """Drop cached gateway data so a returning gateway is refetched."""
+        self.data = {}
+
     @override
     async def poll_update(self) -> dict[str, OmadaGateway]:
         """Poll a the gateway's current state."""
@@ -209,6 +224,28 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "DeviceList", POLL_CLIENTS)
+        self.consecutive_empty_updates = 0
+        self.empty_since: datetime | None = None
+
+    @override
+    async def _async_update_data(self) -> dict[str, OmadaListDevice]:
+        """Fetch the device list and track consecutive empty responses."""
+        try:
+            devices = await super()._async_update_data()
+        except Exception:
+            # Any failed poll says nothing about the devices, so the empty
+            # counter must not accumulate across it.
+            self.consecutive_empty_updates = 0
+            self.empty_since = None
+            raise
+        if devices:
+            self.consecutive_empty_updates = 0
+            self.empty_since = None
+        else:
+            if self.empty_since is None:
+                self.empty_since = dt_util.utcnow()
+            self.consecutive_empty_updates += 1
+        return devices
 
     @override
     async def poll_update(self) -> dict[str, OmadaListDevice]:
@@ -302,3 +339,68 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         self._config_entry.async_create_background_task(
             self.hass, self.async_request_refresh(), "Omada Firmware Update Refresh"
         )
+
+
+def device_removal_is_confirmed(coordinator: OmadaDevicesCoordinator) -> bool:
+    """Return True when the device list can be trusted for removal decisions."""
+    if not coordinator.last_update_success:
+        return False
+
+    if coordinator.data:
+        return True
+
+    # A successful but empty response is likely a transient controller glitch,
+    # and removal also deletes the device's entities from the registry. Require
+    # both a minimum count and a full window of elapsed time: manual refreshes
+    # and the sweep's own refresh can add empty responses faster than the poll
+    # interval, so a count alone would not prove an hour has passed.
+    if coordinator.empty_since is None:
+        return False
+
+    interval = coordinator.update_interval or timedelta(seconds=POLL_DEVICES)
+    required = max(
+        EMPTY_DEVICE_LIMIT,
+        math.ceil(EMPTY_DEVICE_WINDOW / max(interval.total_seconds(), 1)),
+    )
+    return (
+        coordinator.consecutive_empty_updates >= required
+        and dt_util.utcnow() - coordinator.empty_since
+        >= timedelta(seconds=EMPTY_DEVICE_WINDOW)
+    )
+
+
+async def async_cleanup_devices(
+    hass: HomeAssistant,
+    controller: OmadaSiteController,
+) -> None:
+    """Remove devices from the registry when Omada no longer reports them."""
+    devices_coordinator = controller.devices_coordinator
+    if not device_removal_is_confirmed(devices_coordinator):
+        return
+
+    devices = devices_coordinator.data
+    device_registry = dr.async_get(hass)
+    entry_id = devices_coordinator.config_entry.entry_id
+    known_devices = {dr.format_mac(mac) for mac in devices}
+    # The controller device is not part of the site's device list.
+    controller_mac = dr.format_mac(controller.controller_status_coordinator.data.mac)
+
+    for device_entry in dr.async_entries_for_config_entry(device_registry, entry_id):
+        mac = next(
+            (
+                fmt
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+                and len(fmt := dr.format_mac(identifier[1])) == 17
+                and fmt.count(":") == 5
+            ),
+            None,
+        )
+
+        if mac and mac not in known_devices and mac != controller_mac:
+            _LOGGER.debug(
+                "Removing stale Omada device %s from entry %s",
+                mac,
+                entry_id,
+            )
+            await controller.async_remove_device(mac, device_entry)

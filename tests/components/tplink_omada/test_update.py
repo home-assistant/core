@@ -42,6 +42,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
+from homeassistant.util import dt as dt_util
 
 POLL_INTERVAL = timedelta(seconds=POLL_DEVICES)
 CONTROLLER_POLL_INTERVAL = timedelta(seconds=POLL_CONTROLLER)
@@ -98,20 +99,22 @@ async def test_firmware_download_in_progress(
     """Test update entity when firmware download is in progress."""
     entity_id = "update.test_poe_switch_firmware"
 
-    freezer.tick(POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
     # Rebuild device list with fwDownload set to True for the switch
     updated_devices = await _rebuild_device_list_with_update(
         hass, "54-AF-97-00-00-01", fwDownload=True
     )
     mock_omada_site_client.get_devices.return_value = updated_devices
 
-    # Trigger coordinator update
-    freezer.tick(POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    # Advance to the next device poll so the firmware coordinator's devices
+    # listener requests a debounced refresh of the download state.
+    freezer.tick(timedelta(seconds=POLL_DEVICES + 1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Advance past the debounce cooldown to run the requested refresh.
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN + 1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify update entity shows in progress
     entity = hass.states.get(entity_id)
