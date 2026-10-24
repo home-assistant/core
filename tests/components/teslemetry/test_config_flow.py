@@ -808,7 +808,14 @@ async def _setup_paired_entry(hass: HomeAssistant) -> MockConfigEntry:
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
-        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock()
+        vehicle = AsyncMock()
+        vehicle.listen_vehicle_lock_state = MagicMock()
+        vehicle.listen_charge_port = MagicMock()
+        vehicle.listen_closure_statuses = MagicMock()
+        vehicle.listen_gear = MagicMock()
+        vehicle.listen_tonneau = MagicMock()
+        vehicle.listen_tonneau_percent_open = MagicMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = vehicle
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     return entry
