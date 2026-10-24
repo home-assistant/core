@@ -6,12 +6,17 @@ from collections.abc import (
     Buffer,
     Callable,
     Coroutine,
+    Generator,
     Iterable,
 )
+from contextlib import contextmanager
+from io import StringIO
 from pathlib import Path
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp import ClientResponse
+from aiohttp.test_utils import TestClient
 from pytest_homeassistant.common import mock_platform
 
 from homeassistant.components.backup import (
@@ -22,10 +27,13 @@ from homeassistant.components.backup import (
     BackupAgentPlatformProtocol,
     BackupNotFound,
     Folder,
+    UploadBackupEvent,
+    async_get_manager,
 )
 from homeassistant.components.backup.backup import CoreLocalBackupAgent
 from homeassistant.components.backup.const import BUF_SIZE, DATA_MANAGER
-from homeassistant.core import HomeAssistant
+from homeassistant.components.backup.manager import ManagerStateEvent
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 LOCAL_AGENT_ID = f"{DOMAIN}.local"
@@ -192,7 +200,8 @@ async def setup_backup_integration(
             await setup_backup_platform(hass, domain=TEST_DOMAIN, platform=platform)
 
         assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+        # The config entry is set up from a background discovery flow.
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         if LOCAL_AGENT_ID not in backups or with_hassio:
             return remote_agents_dict
@@ -224,3 +233,51 @@ async def setup_backup_platform(
     mock_platform(hass, f"{domain}.backup", platform)
     assert await async_setup_component(hass, domain, {})
     await hass.async_block_till_done()
+
+
+async def upload_backup_via_http(
+    client: TestClient,
+    agent_id: str,
+    backup: AgentBackup,
+    chunks: Iterable[bytes] = (b"test",),
+) -> ClientResponse:
+    """Upload a backup to an agent through the backup upload view.
+
+    The manager reads the uploaded backup as `backup` and streams it to the
+    agent as `chunks`, one stream chunk per item.
+    """
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=backup,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[*chunks, b""])
+        return await client.post(
+            f"/api/backup/upload?agent_id={agent_id}",
+            data={"file": StringIO("test")},
+        )
+
+
+@contextmanager
+def collect_upload_events(
+    hass: HomeAssistant, agent_id: str
+) -> Generator[list[UploadBackupEvent]]:
+    """Collect the upload events of an agent while the context is active."""
+    events: list[UploadBackupEvent] = []
+
+    @callback
+    def _collect(event: ManagerStateEvent) -> None:
+        if isinstance(event, UploadBackupEvent) and event.agent_id == agent_id:
+            events.append(event)
+
+    unsub = async_get_manager(hass).async_subscribe_events(_collect)
+    try:
+        yield events
+    finally:
+        unsub()
