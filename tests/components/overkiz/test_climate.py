@@ -2693,3 +2693,57 @@ async def test_zone_control_zone_replacement_of_a_failed_write_keeps_its_turn(
 
     replacement_sent.set()
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.parametrize("failure", ["submission", "reported_at_once"])
+async def test_zone_control_zone_failed_preset_is_not_remembered(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    failure: str,
+) -> None:
+    """Test a preset that was not applied does not decide the next temperature."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    if failure == "submission":
+        mock_client.execute_action_group.side_effect = [
+            BaseOverkizError("Server is down"),
+            "exec-2",
+        ]
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "climate",
+                "set_preset_mode",
+                {
+                    ATTR_ENTITY_ID: ZONE_CONTROL_ZONE.entity_id,
+                    ATTR_PRESET_MODE: "schedule",
+                },
+                blocking=True,
+            )
+    else:
+        # The refresh right after the write already reports its failure.
+        mock_client.queue_events(
+            [
+                execution_state_changed_event(
+                    exec_id="exec-1",
+                    new_state=ExecutionState.FAILED,
+                    old_state=ExecutionState.IN_PROGRESS,
+                    failure_type_code=FailureType.PEER_DOWN,
+                    failed_commands=[{"rank": 0}],
+                )
+            ]
+        )
+        await hass.services.async_call(
+            "climate",
+            "set_preset_mode",
+            {ATTR_ENTITY_ID: ZONE_CONTROL_ZONE.entity_id, ATTR_PRESET_MODE: "schedule"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    await _async_set_zone_setpoint(hass, 21.0)
+
+    assert ("setDerogationOnOffState", ["on"]) in _sent_commands(mock_client)[-1]
