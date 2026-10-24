@@ -4,6 +4,7 @@
   "categories": ["diy_makers", "weather_alerts"],
   "codeowners": ["@TN-1"],
   "config_flow": true,
+  "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/indi_allsky",
   "integration_type": "service",
   "iot_class": "local_push",
