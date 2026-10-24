@@ -1,6 +1,7 @@
 """Pair Terrestream using the code on its display."""
 
 from dataclasses import asdict
+import re
 from typing import Any, override
 
 import probatio
@@ -24,7 +25,9 @@ class TerrestreamConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Validate pairing and prevent duplicate sensor entries."""
         errors: dict[str, str] = {}
-        if user_input is not None:
+        if user_input is not None and not re.fullmatch(r"[0-9]{8}", user_input["code"]):
+            errors["base"] = "invalid_auth"
+        elif user_input is not None:
             try:
                 credentials, _client = await pair_device(
                     async_get_clientsession(self.hass),
