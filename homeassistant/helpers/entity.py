@@ -1669,8 +1669,6 @@ class Entity(
         sources = entity_sources(self.hass)
         sources[self.entity_id] = sources.pop(old_entity_id)
         self.platform.async_move_entity(old_entity_id, self.entity_id)
-        # The registry update tracker is keyed on the entity_id it was created for
-        self._async_subscribe_registry_updates()
         if self.__group is not None:
             self.__group.async_entity_id_changed(old_entity_id)
 
@@ -1713,37 +1711,49 @@ class Entity(
         self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Handle entity registry update."""
+        if self._removed_from_registry:
+            # Already handled when a queued update found the entry removed
+            return
         action = event.data["action"]
-        is_remove = action == "remove"
-        self._removed_from_registry = is_remove
-        if action == "update" or is_remove:
-            self.hass.async_create_task_internal(
-                self._async_process_registry_update_or_remove(event), eager_start=True
-            )
+        if action == "update":
+            # Events fired while another event is dispatched are queued, the entry
+            # may have been changed or removed after this event was fired
+            registry_entry = er.async_get(self.hass).async_get(event.data["id"])
+        elif action == "remove":
+            registry_entry = None
+        else:
+            return
+        self._removed_from_registry = registry_entry is None
+        self.hass.async_create_task_internal(
+            self._async_process_registry_update_or_remove(event, registry_entry),
+            eager_start=True,
+        )
 
     async def _async_process_registry_update_or_remove(
-        self, event: Event[er.EventEntityRegistryUpdatedData]
+        self,
+        event: Event[er.EventEntityRegistryUpdatedData],
+        registry_entry: er.RegistryEntry | None,
     ) -> None:
-        """Handle entity registry update or remove."""
-        data = event.data
-        if data["action"] == "remove":
+        """Handle entity registry update or remove.
+
+        registry_entry is the current entry, or None if it has been removed.
+        """
+        if registry_entry is None:
             await self.async_removed_from_registry()
             self.registry_entry = None
             await self.async_remove()
-
-        if data["action"] != "update":
             return
 
-        # Invalidate friendly name cache if relevant fields changed
+        old = self.registry_entry
+        assert old is not None
+        self.registry_entry = registry_entry
+
+        data = event.data
+        if TYPE_CHECKING:
+            assert data["action"] == "update"
         changes = data["changes"]
         if "name" in changes or "has_entity_name" in changes or "device_id" in changes:
             self._cached_friendly_name = None
-
-        ent_reg = er.async_get(self.hass)
-        old = self.registry_entry
-        registry_entry = ent_reg.async_get(data["entity_id"])
-        assert registry_entry is not None
-        self.registry_entry = registry_entry
 
         if "device_id" in changes:
             self._async_subscribe_device_updates()
@@ -1757,7 +1767,6 @@ class Entity(
             await self.async_remove()
             return
 
-        assert old is not None
         if registry_entry.entity_id == old.entity_id:
             self.async_registry_entry_updated()
             self.async_write_ha_state()
@@ -1818,11 +1827,13 @@ class Entity(
 
     @callback
     def _async_subscribe_registry_updates(self) -> None:
-        """Subscribe to entity registry updates for the current entity_id."""
+        """Subscribe to entity registry updates for the registry entry."""
+        if TYPE_CHECKING:
+            assert self.registry_entry is not None
         self._async_unsubscribe_registry_updates()
         self._unsub_registry_updates = async_track_entity_registry_updated_event(
             self.hass,
-            self.entity_id,
+            self.registry_entry.id,
             self._async_registry_updated,
             job_type=HassJobType.Callback,
         )

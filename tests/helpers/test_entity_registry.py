@@ -202,6 +202,7 @@ async def test_get_or_create_returns_same_entry(
     assert update_events[0].data == {
         "action": "create",
         "entity_id": entry.entity_id,
+        "id": entry.id,
     }
 
 
@@ -1912,10 +1913,12 @@ async def test_updating_config_entry_id(
     assert update_events[0].data == {
         "action": "create",
         "entity_id": entry.entity_id,
+        "id": entry.id,
     }
     assert update_events[1].data == {
         "action": "update",
         "entity_id": entry.entity_id,
+        "id": entry.id,
         "changes": {"config_entry_id": "mock-id-1"},
     }
 
@@ -1942,10 +1945,12 @@ async def test_removing_config_entry_id(
     assert update_events[0].data == {
         "action": "create",
         "entity_id": entry.entity_id,
+        "id": entry.id,
     }
     assert update_events[1].data == {
         "action": "remove",
         "entity_id": entry.entity_id,
+        "id": entry.id,
     }
 
 
@@ -2084,10 +2089,12 @@ async def test_removing_config_subentry_id(
     assert update_events[0].data == {
         "action": "create",
         "entity_id": entry.entity_id,
+        "id": entry.id,
     }
     assert update_events[1].data == {
         "action": "remove",
         "entity_id": entry.entity_id,
+        "id": entry.id,
     }
 
 
@@ -3542,6 +3549,7 @@ async def test_update_entity_disabled_by(
     assert update_events[-1].data == {
         "action": "update",
         "entity_id": entry.entity_id,
+        "id": entry.id,
         "changes": {
             "capabilities": {"key1": "value1"},
             "config_entry_id": config_entry_1.entry_id,
@@ -3668,6 +3676,7 @@ async def test_update_entity_disabled_by_2(
     assert update_events[-1].data == {
         "action": "update",
         "entity_id": entry.entity_id,
+        "id": entry.id,
         "changes": {
             "capabilities": {"key1": "value1"},
             "config_entry_id": config_entry.entry_id,
@@ -4612,7 +4621,7 @@ async def test_update_device_race_2(
             entity_registry.async_remove(entry_no_config_entry.entity_id)
 
     async_track_entity_registry_updated_event(
-        hass, entry_same_config_entry.entity_id, on_entity_event
+        hass, entry_same_config_entry.id, on_entity_event
     )
 
     device_registry.async_remove_device(device_entry.id)
@@ -5814,26 +5823,83 @@ async def test_restore_entity(
     assert update_events[0].data == {
         "action": "create",
         "entity_id": "light.suggested_1",
+        "id": entry1.id,
     }
-    assert update_events[1].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[2].data == {"action": "create", "entity_id": "light.hue_abcd"}
+    assert update_events[1].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry2.id,
+    }
+    assert update_events[2].data == {
+        "action": "create",
+        "entity_id": "light.hue_abcd",
+        "id": entry3.id,
+    }
     assert update_events[3].data["action"] == "update"
     assert update_events[4].data["action"] == "update"
-    assert update_events[5].data == {"action": "remove", "entity_id": "light.custom_1"}
-    assert update_events[6].data == {"action": "remove", "entity_id": "light.hue_5678"}
-    assert update_events[7].data == {"action": "remove", "entity_id": "light.hue_abcd"}
+    assert update_events[5].data == {
+        "action": "remove",
+        "entity_id": "light.custom_1",
+        "id": entry1.id,
+    }
+    assert update_events[6].data == {
+        "action": "remove",
+        "entity_id": "light.hue_5678",
+        "id": entry2.id,
+    }
+    assert update_events[7].data == {
+        "action": "remove",
+        "entity_id": "light.hue_abcd",
+        "id": entry3.id,
+    }
     # Restore entities the 1st time
-    assert update_events[8].data == {"action": "create", "entity_id": "light.custom_1"}
-    assert update_events[9].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[10].data == {"action": "create", "entity_id": "light.hue_abcd"}
-    assert update_events[11].data == {"action": "remove", "entity_id": "light.custom_1"}
-    assert update_events[12].data == {"action": "remove", "entity_id": "light.hue_5678"}
+    assert update_events[8].data == {
+        "action": "create",
+        "entity_id": "light.custom_1",
+        "id": entry1.id,
+    }
+    assert update_events[9].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry2.id,
+    }
+    assert update_events[10].data == {
+        "action": "create",
+        "entity_id": "light.hue_abcd",
+        "id": entry3.id,
+    }
+    assert update_events[11].data == {
+        "action": "remove",
+        "entity_id": "light.custom_1",
+        "id": entry1.id,
+    }
+    assert update_events[12].data == {
+        "action": "remove",
+        "entity_id": "light.hue_5678",
+        "id": entry2.id,
+    }
     # Restore entities the 2nd time
-    assert update_events[13].data == {"action": "create", "entity_id": "light.custom_1"}
-    assert update_events[14].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[15].data == {"action": "remove", "entity_id": "light.custom_1"}
+    assert update_events[13].data == {
+        "action": "create",
+        "entity_id": "light.custom_1",
+        "id": entry1.id,
+    }
+    assert update_events[14].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry2_restored.id,
+    }
+    assert update_events[15].data == {
+        "action": "remove",
+        "entity_id": "light.custom_1",
+        "id": entry1.id,
+    }
     # Restore entities the 3rd time
-    assert update_events[16].data == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[16].data == {
+        "action": "create",
+        "entity_id": "light.hue_1234",
+        "id": entry1_restored.id,
+    }
 
 
 @pytest.mark.parametrize(
@@ -5958,9 +6024,21 @@ async def test_restore_migrated_entity_disabled_by(
     # Check the events
     await hass.async_block_till_done()
     assert len(update_events) == 3
-    assert update_events[0].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[1].data == {"action": "remove", "entity_id": "light.hue_5678"}
-    assert update_events[2].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[0].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "remove",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
+    assert update_events[2].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
 
 
 @pytest.mark.parametrize(
@@ -6083,9 +6161,21 @@ async def test_restore_migrated_entity_hidden_by(
     # Check the events
     await hass.async_block_till_done()
     assert len(update_events) == 3
-    assert update_events[0].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[1].data == {"action": "remove", "entity_id": "light.hue_5678"}
-    assert update_events[2].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[0].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "remove",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
+    assert update_events[2].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
 
 
 @pytest.mark.usefixtures("freezer")
@@ -6199,9 +6289,21 @@ async def test_restore_migrated_entity_initial_options(
     # Check the events
     await hass.async_block_till_done()
     assert len(update_events) == 3
-    assert update_events[0].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[1].data == {"action": "remove", "entity_id": "light.hue_5678"}
-    assert update_events[2].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[0].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "remove",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
+    assert update_events[2].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
 
 
 @pytest.mark.parametrize(
@@ -6388,9 +6490,21 @@ async def test_restore_entity_disabled_by(
     # Check the events
     await hass.async_block_till_done()
     assert len(update_events) == 3
-    assert update_events[0].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[1].data == {"action": "remove", "entity_id": "light.hue_5678"}
-    assert update_events[2].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[0].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "remove",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
+    assert update_events[2].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
 
 
 @pytest.mark.parametrize(
@@ -6517,9 +6631,21 @@ async def test_restore_entity_disabled_by_2(
     # Check the events
     await hass.async_block_till_done()
     assert len(update_events) == 3
-    assert update_events[0].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[1].data == {"action": "remove", "entity_id": "light.hue_5678"}
-    assert update_events[2].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[0].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "remove",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
+    assert update_events[2].data == {
+        "action": "create",
+        "entity_id": "light.hue_5678",
+        "id": entry.id,
+    }
 
 
 @pytest.mark.parametrize(

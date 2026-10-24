@@ -46,7 +46,7 @@ def async_setup(hass: HomeAssistant) -> None:
     if async_has_entity_registry_updated_listeners(hass):
         raise HomeAssistantError(
             "The recorder entity registry listener must be installed"
-            " before async_track_entity_registry_updated_event is called"
+            " before entity registry updated events are tracked"
         )
 
     hass.bus.async_listen(
