@@ -1,5 +1,6 @@
 """Component to allow for providing device or service updates."""
 
+from contextlib import suppress
 from datetime import timedelta
 import logging
 from typing import Any, Final
@@ -12,6 +13,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -35,10 +37,11 @@ from .const import (
     UpdateDeviceClass,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
+    UpdateReleaseNotesMessageSeverity,
     UpdateService,
     UpdateServiceArgument,
 )
-from .entity import UpdateEntity, UpdateEntityDescription
+from .entity import UpdateEntity, UpdateEntityDescription, UpdateReleaseNotesMessage
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,6 +50,17 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(minutes=15)
+
+
+RELEASE_NOTES_MESSAGE_BATTERY_POWERED = UpdateReleaseNotesMessage(
+    translation_domain=DOMAIN,
+    translation_key="battery_powered_update",
+)
+RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT = UpdateReleaseNotesMessage(
+    translation_domain=DOMAIN,
+    translation_key="do_not_interrupt",
+    severity=UpdateReleaseNotesMessageSeverity.WARNING,
+)
 
 
 __all__ = [
@@ -66,6 +80,8 @@ __all__ = [
     "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "RELEASE_NOTES_MESSAGE_BATTERY_POWERED",
+    "RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT",
     "SERVICE_INSTALL",
     "SERVICE_SKIP",
     "UpdateDeviceClass",
@@ -73,6 +89,8 @@ __all__ = [
     "UpdateEntityDescription",
     "UpdateEntityFeature",
     "UpdateEntityStateAttribute",
+    "UpdateReleaseNotesMessage",
+    "UpdateReleaseNotesMessageSeverity",
     "UpdateService",
     "UpdateServiceArgument",
 ]
@@ -147,5 +165,74 @@ async def websocket_release_notes(
         return
     connection.send_result(
         msg["id"],
-        await entity.async_release_notes(),
+        await _async_render_release_notes(hass, entity),
     )
+
+
+async def _async_render_release_notes(
+    hass: HomeAssistant, entity: UpdateEntity
+) -> str | None:
+    """Render release notes messages followed by the entity release notes."""
+    release_notes = await entity.async_release_notes()
+    # Like the state, but a skipped version can still be installed
+    if entity.latest_version == entity.installed_version or not entity.has_update:
+        return release_notes
+    release_notes_messages = await _async_render_release_notes_messages(
+        hass, entity.release_notes_messages
+    )
+
+    if release_notes_messages is None:
+        return release_notes
+    if not release_notes:
+        return release_notes_messages
+    return f"{release_notes_messages}\n\n{release_notes}"
+
+
+async def _async_render_release_notes_messages(
+    hass: HomeAssistant, messages: tuple[UpdateReleaseNotesMessage, ...]
+) -> str | None:
+    """Render release notes messages as alert elements."""
+    if not messages:
+        return None
+
+    entity_component_translations = await async_get_translations(
+        hass, hass.config.language, "entity_component", {DOMAIN}
+    )
+    entity_translations = await async_get_translations(
+        hass,
+        hass.config.language,
+        "entity",
+        {
+            message.translation_domain
+            for message in messages
+            if message.translation_domain != DOMAIN
+        },
+    )
+
+    rendered_messages: list[str] = []
+    for message in messages:
+        if message.translation_domain == DOMAIN:
+            translation = entity_component_translations.get(
+                "component.update.entity_component.release_notes_messages."
+                f"{message.translation_key}"
+            )
+        else:
+            translation = entity_translations.get(
+                f"component.{message.translation_domain}.entity.update."
+                f"release_notes_messages.{message.translation_key}"
+            )
+        if translation is None:
+            _LOGGER.warning(
+                "Missing translation for release notes message %s of %s",
+                message.translation_key,
+                message.translation_domain,
+            )
+            continue
+        if message.translation_placeholders is not None:
+            with suppress(KeyError):
+                translation = translation.format(**message.translation_placeholders)
+        rendered_messages.append(
+            f'<ha-alert alert-type="{message.severity}">{translation}</ha-alert>'
+        )
+
+    return "\n\n".join(rendered_messages) or None

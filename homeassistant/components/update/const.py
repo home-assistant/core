@@ -64,6 +64,14 @@ class UpdateDeviceClass(StrEnum):
     FIRMWARE = "firmware"
 
 
+class UpdateReleaseNotesMessageSeverity(StrEnum):
+    """Severity for an update release notes message."""
+
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+
+
 DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(UpdateDeviceClass))
 
 
