@@ -1,0 +1,155 @@
+"""Tests for the aerosmart coordinator."""
+
+from unittest.mock import patch
+
+from freezegun.api import FrozenDateTimeFactory
+from modbus_connection import IllegalDataAddressError, ModbusConnectionError
+from modbus_connection.mock import MockModbusUnit
+from modbus_connection.model import UpdateReport
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
+from homeassistant.components.aerosmart.const import DOMAIN, READINGS_SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import UpdateFailed
+
+
+async def test_all_failed_report_preserves_causes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An all-failed report raises an update failure with its causes."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.readings
+    error = ModbusConnectionError("simulated subsystem failure")
+    report = UpdateReport(failed={"ventilation": error})
+
+    with patch.object(coordinator, "_poll", return_value=report):
+        freezer.tick(READINGS_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is False
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert isinstance(coordinator.last_exception.__cause__, ExceptionGroup)
+    assert coordinator.last_exception.__cause__.exceptions == (error,)
+
+
+async def test_device_info_includes_model_and_software_version(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit_ventilation: MockModbusUnit,
+) -> None:
+    """Device metadata is included when the controller provides it."""
+    mock_modbus_unit_ventilation.holding[5000] = [0, 3]
+    mock_modbus_unit_ventilation.holding[1156] = [0, 42]
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.model == "3"
+    assert device.sw_version == "42"
+
+
+async def test_update_failed_marks_entities_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit_ventilation: MockModbusUnit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A Modbus read failure makes entities unavailable."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    runtime = mock_config_entry.runtime_data
+    coordinator = runtime.readings
+    assert coordinator.last_update_success is True
+
+    mock_modbus_unit_ventilation.fail_requests(
+        ModbusConnectionError("simulated read failure")
+    )
+
+    freezer.tick(READINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is False
+    outside = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
+    assert outside is not None
+    assert outside.state == STATE_UNAVAILABLE
+
+    # The independent settings poll has not been invalidated by this refresh.
+    assert runtime.settings.last_update_success is True
+
+
+async def test_recovers_after_transient_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit_ventilation: MockModbusUnit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A subsequent successful poll clears the failure again."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.readings
+    mock_modbus_unit_ventilation.fail_requests(
+        ModbusConnectionError("simulated read failure")
+    )
+    freezer.tick(READINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert coordinator.last_update_success is False
+
+    mock_modbus_unit_ventilation.fail_requests(None)
+    freezer.tick(READINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is True
+    outside = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
+    assert outside.state == "0.123"
+
+
+async def test_partial_failure_only_marks_its_subsystem_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit_ventilation: MockModbusUnit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """One refused component keeps unrelated fresh data available."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.readings
+    mock_modbus_unit_ventilation.fail_read(230, IllegalDataAddressError())
+
+    freezer.tick(READINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is True
+    assert "carbon_dioxide" in coordinator.data.failed
+
+    co2 = hass.states.get("sensor.aerosmart_co2")
+    outside = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
+    assert co2 is not None
+    assert co2.state == STATE_UNAVAILABLE
+    assert outside is not None
+    assert outside.state == "0.123"

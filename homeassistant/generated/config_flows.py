@@ -34,6 +34,7 @@ FLOWS = {
         "adguard",
         "advantage_air",
         "aemet",
+        "aerosmart",
         "aftership",
         "agent_dvr",
         "aidot",

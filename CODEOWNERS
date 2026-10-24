@@ -65,6 +65,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/advantage_air/ @Bre77
 /homeassistant/components/aemet/ @Noltari
 /tests/components/aemet/ @Noltari
+/homeassistant/components/aerosmart/ @kayloehmann
+/tests/components/aerosmart/ @kayloehmann
 /homeassistant/components/agent_dvr/ @ispysoftware
 /tests/components/agent_dvr/ @ispysoftware
 /homeassistant/components/ai_task/ @home-assistant/core
