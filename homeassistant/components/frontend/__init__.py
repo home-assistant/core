@@ -500,6 +500,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     async_register_built_in_panel(
         hass,
+        "weather",
+        sidebar_icon="mdi:weather-partly-cloudy",
+        sidebar_title="weather",
+        show_in_sidebar=False,
+    )
+    async_register_built_in_panel(
+        hass,
         "home",
         sidebar_icon="mdi:home",
         sidebar_title="home",

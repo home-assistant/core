@@ -1518,3 +1518,13 @@ async def test_panels_config_invalid_storage(
     msg = await client.receive_json()
     assert msg["result"]["light"]["title"] == "light"
     assert msg["result"]["light"]["icon"] == "mdi:lamps"
+
+
+async def test_weather_panel(ws_client: MockHAClientWebSocket) -> None:
+    """Test the weather panel is registered and hidden from the sidebar."""
+    await ws_client.send_json({"id": 1, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert msg["result"]["weather"]["component_name"] == "weather"
+    assert msg["result"]["weather"]["icon"] == "mdi:weather-partly-cloudy"
+    assert msg["result"]["weather"]["title"] == "weather"
+    assert msg["result"]["weather"]["show_in_sidebar"] is False
