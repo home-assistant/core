@@ -25,7 +25,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 VALUES = [17, 20, 15.3]
@@ -40,6 +40,76 @@ MEDIAN = round(statistics.median(VALUES), 2)
 RANGE_1_DIGIT = round(max(VALUES) - min(VALUES), 1)
 RANGE_4_DIGITS = round(max(VALUES) - min(VALUES), 4)
 SUM_VALUE = sum(VALUES)
+
+
+async def test_deprecation_warning(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test deprecated YAML min/max sensor configs create warning issues."""
+    config = {
+        "sensor": [
+            {
+                "platform": "min_max",
+                "type": "min",
+                "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            },
+            {
+                "platform": "min_max",
+                "type": "min",
+                "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+                "unique_id": "my_unique_id",
+            },
+        ]
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    issues = [
+        issue
+        for issue in issue_registry.issues.values()
+        if issue.domain == DOMAIN and issue.translation_key == "yaml_deprecated"
+    ]
+    assert len(issues) == 2
+    assert all(issue.severity == ir.IssueSeverity.WARNING for issue in issues)
+    assert all(issue.breaks_in_ha_version == "2027.5.0" for issue in issues)
+
+
+@pytest.mark.parametrize(
+    ("sensor_type", "ignore_non_numeric"),
+    [
+        pytest.param("max", True, id="max"),
+        pytest.param("sum", False, id="sum"),
+    ],
+)
+async def test_deprecation_yaml_keeps_unavailable_input_behavior(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    sensor_type: str,
+    ignore_non_numeric: bool,
+) -> None:
+    """Test the suggested group YAML handles unavailable inputs like Min/Max."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "type": sensor_type,
+            "entity_ids": ["sensor.test_1", "sensor.test_2"],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    (issue,) = [
+        issue
+        for issue in issue_registry.issues.values()
+        if issue.domain == DOMAIN and issue.translation_key == "yaml_deprecated"
+    ]
+    assert issue.translation_placeholders
+    assert (
+        "ignore_non_numeric: true" in issue.translation_placeholders["yaml_config"]
+    ) is ignore_non_numeric
+    assert "state_class: measurement" in issue.translation_placeholders["yaml_config"]
 
 
 async def test_default_name_sensor(hass: HomeAssistant) -> None:
