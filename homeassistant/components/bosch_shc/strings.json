@@ -90,6 +90,14 @@
       }
     },
     "select": {
+      "actuator_type": {
+        "name": "Actuator type",
+        "state": {
+          "normally_closed": "Normally closed",
+          "normally_open": "Normally open",
+          "unsupported": "Unsupported"
+        }
+      },
       "display_direction": {
         "name": "Display orientation",
         "state": {
