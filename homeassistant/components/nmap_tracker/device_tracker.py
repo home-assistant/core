@@ -61,6 +61,7 @@ class NmapTrackerEntity(ScannerEntity):
         self._nmap_tracker = nmap_tracker
         self._tracked = self._nmap_tracker.devices.tracked
         self._active = active
+        self._attr_name = self._device.name
 
     @property
     def _device(self) -> NmapDevice:
@@ -72,12 +73,6 @@ class NmapTrackerEntity(ScannerEntity):
     def is_connected(self) -> bool:
         """Return device status."""
         return self._active
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return device name."""
-        return self._device.name
 
     @property
     @override
@@ -109,6 +104,7 @@ class NmapTrackerEntity(ScannerEntity):
     def async_process_update(self, online: bool) -> None:
         """Update device."""
         self._active = online
+        self._attr_name = self._device.name
 
     @property
     @override

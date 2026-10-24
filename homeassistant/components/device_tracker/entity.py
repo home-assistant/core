@@ -38,6 +38,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import CalculatedState, Entity, EntityDescription
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import UndefinedType
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.hass_dict import HassKey
 
@@ -660,12 +661,80 @@ class ScannerEntity(
         """Return unique ID of the entity."""
         return self.mac_address
 
+    @callback
+    def _async_tracked_device_connections(self) -> set[tuple[str, str]] | None:
+        """Return the connections of the tracker's device.
+
+        A tracker only has a device once the tracked device is known to any
+        integration.
+        """
+        if (
+            self.unique_id is None
+            or self.platform.config_entry is None
+            or self.mac_address is None
+            or not self._async_mac_address_registered()
+        ):
+            return None
+        return {(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+
+    @callback
+    def _async_has_tracked_device(self) -> bool:
+        """Return if the tracker has a device."""
+        if self.registry_entry is not None:
+            return self.device_entry is not None
+        # The name is read before the platform resolves the device; it may also
+        # be read before the entity is added to a platform at all.
+        return (
+            self.platform is not None
+            and self._async_tracked_device_connections() is not None
+        )
+
+    @callback
+    def _async_own_name(self) -> str | None:
+        """Return the name provided by the integration, else the hostname."""
+        if isinstance(name := super().name, str):
+            return name
+        return self.hostname
+
+    @property
+    @override
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity.
+
+        A tracker with a device is named after it, so the integration's name is
+        only used for a tracker without a device and for naming its device.
+        """
+        # An integration providing its own device info also names the tracker
+        if type(self).device_info is not ScannerEntity.device_info:
+            return super().name
+        if self._async_has_tracked_device():
+            return None
+        return self._async_own_name() or self.mac_address or super().name
+
     @final
     @property
     @override
     def device_info(self) -> DeviceInfo | None:
-        """Device tracker entities should not create device registry entries."""
-        return None
+        """Return the device info of the tracked device.
+
+        It is resolved before the entity registry entry is created, so a new
+        entity ID is derived from the device name.
+        """
+        if (connections := self._async_tracked_device_connections()) is None:
+            return None
+        if (name := self._async_own_name()) is None:
+            if TYPE_CHECKING:
+                assert self.platform.config_entry is not None
+            if dr.async_get(self.hass).async_get_devices(
+                connections=connections,
+                config_entry_id=self.platform.config_entry.entry_id,
+            ):
+                # Keep the name of the existing device
+                return DeviceInfo(connections=connections)
+            name = self.mac_address
+        # Matching the split of a pre-migration composite device prunes the
+        # identifiers and connections copied from the composite.
+        return DeviceInfo(connections=connections, name=name)
 
     @property
     @override
@@ -673,9 +742,7 @@ class ScannerEntity(
         """Return if entity is enabled by default."""
         # If mac_address is None, we can never find a matching device.
         return (
-            # Do not disable if we won't activate our own device registration logic
             self.mac_address is None
-            or self.device_info is not None
             # Disable if the tracked device is not known to any integration
             or self._async_mac_address_registered()
         )
@@ -713,43 +780,6 @@ class ScannerEntity(
                 connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
             )
         )
-
-    @override
-    async def async_internal_added_to_hass(self) -> None:
-        """Handle added to Home Assistant."""
-        # Entities without a unique ID don't have a device
-        if (
-            not self.registry_entry
-            or not self.platform.config_entry
-            or not self.mac_address
-            or not self._async_mac_address_registered()
-            # Entities should not have a device info. We opt them out
-            # of this logic if they do.
-            or self.device_info
-        ):
-            if self.device_info:
-                LOGGER.debug("Entity %s unexpectedly has a device info", self.entity_id)
-            await super().async_internal_added_to_hass()
-            return
-
-        # Register our own device now that the tracked device is known to another
-        # integration; matching the split of a pre-migration composite device prunes
-        # the identifiers and connections copied from the composite.
-        device_entry = dr.async_get(self.hass).async_get_or_create(
-            config_entry_id=self.platform.config_entry.entry_id,
-            config_subentry_id=self.registry_entry.config_subentry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            name=self.hostname or self.mac_address,
-        )
-
-        # Link the entity's registry entry to the device
-        if self.registry_entry.device_id != device_entry.id:
-            self.registry_entry = er.async_get(self.hass).async_update_entity(
-                self.entity_id, device_id=device_entry.id
-            )
-
-        # Do this last or else the entity registry update listener has been installed
-        await super().async_internal_added_to_hass()
 
     # BaseScannerEntity.state_attributes is @final to keep external subclasses
     # from tampering with it; ScannerEntity is an in-tree subclass that

@@ -114,9 +114,3 @@ class SwisscomScannerEntity(
         """Return the IP address of the device."""
         device = self._device
         return device.ip_address if device else None
-
-    @property
-    @override
-    def name(self) -> str | None:
-        """Return the friendly name of the device."""
-        return self.hostname

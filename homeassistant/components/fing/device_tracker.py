@@ -127,7 +127,7 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
             self._attr_icon = get_icon_from_type(updated_device_data.type)
             er.async_get(self.hass).async_update_entity(
                 entity_id=self.entity_id,
-                original_name=self._attr_name,
+                original_name=self.name,
                 original_icon=self._attr_icon,
             )
             self.async_write_ha_state()
