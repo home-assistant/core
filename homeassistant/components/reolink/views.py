@@ -128,6 +128,17 @@ class PlaybackProxyView(HomeAssistantView):
                 request, config_entry_id, channel, stream_res, vod_type, filename, retry
             )
 
+        if reolink_response.status == HTTPStatus.SERVICE_UNAVAILABLE:
+            response_headers = {}
+            if retry_after := reolink_response.headers.get("Retry-After"):
+                response_headers["Retry-After"] = retry_after
+            reolink_response.release()
+            return web.Response(
+                text="Reolink playback service temporarily unavailable",
+                status=HTTPStatus.SERVICE_UNAVAILABLE,
+                headers=response_headers,
+            )
+
         # Reolink typo "apolication/octet-stream" instead of "application/octet-stream"
         if reolink_response.content_type not in [
             "video/mp4",
