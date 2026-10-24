@@ -361,6 +361,7 @@ async def test_agents_upload_network_failure(
     assert "Upload failed for aws_s3" in caplog.text
 
 
+@pytest.mark.usefixtures("freezer")
 @pytest.mark.parametrize(
     "backup_size", [MULTIPART_MIN_PART_SIZE_BYTES * 2], ids=["large"]
 )
