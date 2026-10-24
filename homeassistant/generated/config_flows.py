@@ -749,6 +749,7 @@ FLOWS = {
         "sky_hub",
         "sky_remote",
         "skybell",
+        "skylight",
         "slack",
         "sleep_as_android",
         "sleepiq",

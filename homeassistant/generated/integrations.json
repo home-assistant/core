@@ -10347,6 +10347,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "skylight": {
+      "name": "Skylight",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "slack": {
       "name": "Slack",
       "integration_type": "service",
