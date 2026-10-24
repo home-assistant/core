@@ -1,6 +1,7 @@
 """Support for climate devices through the SmartThings cloud API."""
 
 import asyncio
+import contextlib
 import logging
 from typing import Any, override
 
@@ -124,6 +125,9 @@ HA_MODE_TO_HEAT_PUMP_AC_MODE = {v: k for k, v in HEAT_PUMP_AC_MODE_TO_HA.items()
 
 WIND = "wind"
 FAN = "fan"
+
+# Seconds a mode change waits for an air conditioner to report that it is on
+SWITCH_ON_TIMEOUT = 10
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -425,6 +429,18 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         if self.supports_capability(Capability.FAN_OSCILLATION_MODE):
             self._attr_swing_modes = self._determine_swing_modes()
         self._attr_supported_features = self._determine_supported_features()
+        self._switched_on = asyncio.Event()
+        # Power, mode and setpoint requests run one at a time, so a request
+        # waiting for the device to turn on is not overtaken by a later one
+        self._command_lock = asyncio.Lock()
+
+    @override
+    def _update_attr(self) -> None:
+        """Track whether the device reports that it is on."""
+        if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on":
+            self._switched_on.set()
+        else:
+            self._switched_on.clear()
 
     def _determine_supported_features(self) -> ClimateEntityFeature:
         features = (
@@ -451,13 +467,17 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
+        async with self._command_lock:
+            await self._async_set_hvac_mode(hvac_mode)
+
+    async def _async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set the operation mode, turning the device on or off as needed."""
         if hvac_mode == HVACMode.OFF:
-            await self.async_turn_off()
+            await self.execute_device_command(Capability.SWITCH, Command.OFF)
             return
-        tasks = []
         # Turn on the device if it's off before setting mode.
         if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
-            tasks.append(self.async_turn_on())
+            await self._async_turn_on_and_wait()
 
         mode = STATE_TO_AC_MODE[hvac_mode]
 
@@ -485,55 +505,53 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                     mode = fan_mode
                     break
 
-        tasks.append(
-            self.execute_device_command(
-                Capability.AIR_CONDITIONER_MODE,
-                Command.SET_AIR_CONDITIONER_MODE,
-                argument=mode,
-            )
+        await self.execute_device_command(
+            Capability.AIR_CONDITIONER_MODE,
+            Command.SET_AIR_CONDITIONER_MODE,
+            argument=mode,
         )
-        await asyncio.gather(*tasks)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        tasks = []
-        # operation mode
-        if operation_mode := kwargs.get(ATTR_HVAC_MODE):
-            if operation_mode == HVACMode.OFF:
-                tasks.append(self.async_turn_off())
-            else:
-                if (
-                    self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)
-                    == "off"
-                ):
-                    tasks.append(self.async_turn_on())
-                tasks.append(self.async_set_hvac_mode(operation_mode))
-        # temperature
-        tasks.append(
-            self.execute_device_command(
+        async with self._command_lock:
+            # operation mode, which also turns the device on or off
+            if operation_mode := kwargs.get(ATTR_HVAC_MODE):
+                await self._async_set_hvac_mode(operation_mode)
+            # temperature
+            await self.execute_device_command(
                 Capability.THERMOSTAT_COOLING_SETPOINT,
                 Command.SET_COOLING_SETPOINT,
                 argument=kwargs[ATTR_TEMPERATURE],
             )
-        )
-        await asyncio.gather(*tasks)
 
     @override
     async def async_turn_on(self) -> None:
         """Turn device on."""
-        await self.execute_device_command(
-            Capability.SWITCH,
-            Command.ON,
-        )
+        async with self._command_lock:
+            await self.execute_device_command(
+                Capability.SWITCH,
+                Command.ON,
+            )
 
     @override
     async def async_turn_off(self) -> None:
         """Turn device off."""
-        await self.execute_device_command(
-            Capability.SWITCH,
-            Command.OFF,
-        )
+        async with self._command_lock:
+            await self.execute_device_command(
+                Capability.SWITCH,
+                Command.OFF,
+            )
+
+    async def _async_turn_on_and_wait(self) -> None:
+        """Turn the device on and wait until it reports that it is on.
+
+        A device that is still off ignores a mode command and starts in its last mode.
+        """
+        await self.execute_device_command(Capability.SWITCH, Command.ON)
+        with contextlib.suppress(TimeoutError):
+            async with asyncio.timeout(SWITCH_ON_TIMEOUT):
+                await self._switched_on.wait()
 
     @property
     @override
