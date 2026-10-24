@@ -303,6 +303,8 @@ class SoCoMockFactory:
         mock_soco.avTransport.GetPositionInfo = Mock(
             return_value=self.current_track_info
         )
+        mock_soco.avTransport.GetMediaInfo = Mock(return_value={"CurrentURI": ""})
+        mock_soco.avTransport.SetAVTransportURI = Mock()
         mock_soco.renderingControl = SonosMockRenderingService(ip_address)
         mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology", ip_address)
         mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)

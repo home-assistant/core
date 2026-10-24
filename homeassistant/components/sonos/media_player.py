@@ -646,6 +646,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
             elif enqueue == MediaPlayerEnqueue.REPLACE:
+                # Loading reports STOPPED, which must not release the same media
+                self.media.played_hass_media_uri = None
                 soco.play_uri(media_id, force_radio=is_radio)
         elif media_type == MediaType.PLAYLIST:
             if media_id.startswith("S:"):
