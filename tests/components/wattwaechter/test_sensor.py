@@ -22,6 +22,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
+    async_capture_events,
     async_fire_time_changed,
     async_load_json_object_fixture,
     snapshot_platform,
@@ -538,6 +539,61 @@ async def test_generic_entities_of_previous_medium_removed(
     assert entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id) is None
     assert entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_8-0:1.0.0"
+    )
+
+
+async def test_meter_without_gw_block_keeps_all_media(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a meter reporting gas and water without a gw block keeps both."""
+    mock_client.meter_data.return_value = _parse_meter_data(
+        {
+            "7-0:3.0.0": {"value": 1234.5, "unit": "m³", "name": "Gas"},
+            "8-0:1.0.0": {"value": 321.1, "unit": "m³", "name": "Water"},
+        }
+    )
+    removed = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    for obis_code in ("7-0:3.0.0", "8-0:1.0.0"):
+        assert entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_{obis_code}"
+        )
+    assert not [event for event in removed if event.data["action"] == "remove"]
+
+
+async def test_gw_ignores_codes_of_other_medium(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a gas device creates no entity for a water code it reports."""
+    gas_data = await async_load_json_object_fixture(hass, "meter_data_gas.json", DOMAIN)
+    gas_data["8-0:1.0.0"] = {"value": 321.1, "unit": "m³", "name": "Water"}
+    mock_client.meter_data.return_value = _parse_meter_data(gas_data)
+    mock_client.system_info.return_value = MOCK_SYSTEM_INFO_GAS
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_7-0:3.0.0"
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_8-0:1.0.0"
+        )
+        is None
     )
 
 

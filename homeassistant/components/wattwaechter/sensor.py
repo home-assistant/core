@@ -515,15 +515,20 @@ async def async_setup_entry(
     known_obis_codes: set[str] = set()
 
     @callback
-    def _async_remove_other_medium_entities() -> None:
-        """Remove the entities of the medium a gas/water device no longer meters."""
-        medium = coordinator.data.meter.medium
-        if medium not in GW_OBIS_MEDIA:
-            return
+    def _async_remove_other_medium_entities() -> set[str]:
+        """Remove the entities of the medium a gas/water device no longer meters.
+
+        Returns the OBIS media of the other medium; their codes are not added.
+        """
+        meter = coordinator.data.meter
+        # Only a gas/water device (``gw`` block) switches its medium. A meter
+        # that reports several media keeps the entities of all of them.
+        if meter.gw is None or meter.medium not in GW_OBIS_MEDIA:
+            return set()
         other_media = {
             obis_medium
             for gw_medium, obis_media in GW_OBIS_MEDIA.items()
-            if gw_medium is not medium
+            if gw_medium is not meter.medium
             for obis_medium in obis_media
         }
         prefix = f"{coordinator.device_id}_"
@@ -539,6 +544,7 @@ async def async_setup_entry(
             ):
                 known_obis_codes.discard(obis_code)
                 entity_registry.async_remove(entity_entry.entity_id)
+        return other_media
 
     @callback
     def _async_add_obis_entities() -> None:
@@ -548,10 +554,12 @@ async def async_setup_entry(
         of an electricity meter); only a medium change of a gas/water device
         removes the entities of the previous medium.
         """
-        _async_remove_other_medium_entities()
+        other_media = _async_remove_other_medium_entities()
         entities: list[SensorEntity] = []
         for obis_code, obis_value in coordinator.data.meter.values.items():
             if obis_code in known_obis_codes or obis_code in METADATA_OBIS_CODES:
+                continue
+            if ":" in obis_code and _split_obis(obis_code)[0] in other_media:
                 continue
             known_obis_codes.add(obis_code)
             if obis_code in KNOWN_OBIS_CODES:
