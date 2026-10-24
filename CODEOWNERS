@@ -373,6 +373,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/cync/ @Kinachi249
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
+/homeassistant/components/dali/ @markus-becker-tridonic-com
+/tests/components/dali/ @markus-becker-tridonic-com
 /homeassistant/components/data_grand_lyon/ @Crocmagnon
 /tests/components/data_grand_lyon/ @Crocmagnon
 /homeassistant/components/date/ @home-assistant/core

@@ -1,0 +1,51 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_serial_ports": "No serial ports were found. Connect the Lunatone USB-DALI2 interface, then try again."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "bus_power": {
+        "data": {
+          "bus_power": "Provide DALI bus power"
+        },
+        "data_description": {
+          "bus_power": "The interface can power the DALI bus itself. Enable this only when no separate DALI power supply is connected, otherwise leave it off to avoid two power supplies on the bus."
+        },
+        "description": "This interface has an integrated DALI bus power supply. Switch it on to power the bus?",
+        "title": "DALI bus power"
+      },
+      "usb_confirm": {
+        "title": "USB-DALI2 interface"
+      },
+      "user": {
+        "data": {
+          "device": "Serial port"
+        },
+        "data_description": {
+          "device": "The serial port that the Lunatone USB-DALI2 interface is connected to."
+        },
+        "description": "Select the serial port that the Lunatone USB-DALI2 interface is connected to.",
+        "title": "USB-DALI2 interface"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to the DALI interface"
+    },
+    "communication_error": {
+      "message": "Unable to communicate with the DALI gear"
+    },
+    "connection_lost": {
+      "message": "The connection to the DALI interface was lost"
+    },
+    "update_failed": {
+      "message": "Unable to communicate with the DALI interface"
+    }
+  }
+}
