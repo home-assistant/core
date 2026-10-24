@@ -29,9 +29,10 @@ from .const import (
     MANUFACTURER,
     NETATMO_ALIM_STATUS_ONLINE,
     NETATMO_CREATE_CAMERA,
+    NETATMO_DOORBELLS,
     WEBHOOK_PUSH_TYPE,
 )
-from .coordinator import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
+from .coordinator import EVENT, HOME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
 from .helper import device_type_to_str
 
@@ -40,6 +41,15 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 DEFAULT_QUALITY = "high"
+
+CAMERA_ERRORS = (
+    aiohttp.ClientPayloadError,
+    aiohttp.ContentTypeError,
+    aiohttp.ServerDisconnectedError,
+    aiohttp.ClientConnectorError,
+    NetatmoApiError,
+    TimeoutError,
+)
 
 
 async def async_setup_entry(
@@ -63,12 +73,12 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     """Representation of a Netatmo camera."""
 
     _attr_brand = MANUFACTURER
-    _attr_supported_features = CameraEntityFeature.STREAM
     _attr_configuration_url = CONF_URL_SECURITY
     device: NaModules.Camera
     _quality = DEFAULT_QUALITY
-    _monitoring: bool | None = None
     _attr_name = None
+    _override_connection: bool | None = None
+    _override_on: bool | None = None
 
     def __init__(
         self,
@@ -83,25 +93,26 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         )
         self._light_state = None
 
-        self._publishers.extend(
-            [
-                {
-                    "name": HOME,
-                    "home_id": self.home.entity_id,
-                    SIGNAL_NAME: f"{HOME}-{self.home.entity_id}",
-                },
-                {
-                    "name": EVENT,
-                    "home_id": self.home.entity_id,
-                    SIGNAL_NAME: f"{EVENT}-{self.home.entity_id}",
-                },
-            ]
-        )
-
     @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{HOME}-{self.home.entity_id}",
+                self.async_home_update_callback,
+            )
+        )
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{EVENT}-{self.home.entity_id}",
+                self.async_event_update_callback,
+            )
+        )
 
         for event_type in CAMERA_TRIGGERS:
             self.async_on_remove(
@@ -143,26 +154,37 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 )
                 return
 
-            if event_type in [EVENT_TYPE_DISCONNECTION, EVENT_TYPE_OFF]:
+            if event_type == EVENT_TYPE_DISCONNECTION:
                 _LOGGER.debug(
-                    "Camera %s has received %s event,"
-                    " turning off and idleing streaming",
+                    "Camera %s has received %s event, marking as unavailable",
                     data["camera_id"],
                     event_type,
                 )
-                self._attr_is_streaming = False
-                self._monitoring = False
-            elif event_type in [EVENT_TYPE_CONNECTION, EVENT_TYPE_ON]:
+                self._override_connection = False
+                self._override_on = False
+                self.device.mark_unreachable()
+            elif event_type == EVENT_TYPE_OFF:
                 _LOGGER.debug(
-                    "Camera %s has received %s event,"
-                    " turning on and enabling streaming"
-                    " if applicable",
+                    "Camera %s has received %s event, turning monitoring off",
                     data["camera_id"],
                     event_type,
                 )
-                if self.device_type != "NDB":
-                    self._attr_is_streaming = True
-                self._monitoring = True
+                self._override_on = False
+            elif event_type == EVENT_TYPE_CONNECTION:
+                _LOGGER.debug(
+                    "Camera %s has received %s event, marking as available",
+                    data["camera_id"],
+                    event_type,
+                )
+                self._override_connection = True
+                self._override_on = False
+            elif event_type == EVENT_TYPE_ON:
+                _LOGGER.debug(
+                    "Camera %s has received %s event, turning monitoring on",
+                    data["camera_id"],
+                    event_type,
+                )
+                self._override_on = True
             elif event_type == EVENT_TYPE_LIGHT_MODE:
                 if data.get("sub_type"):
                     self._light_state = data["sub_type"]
@@ -171,12 +193,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                         "Camera %s has received light mode event without sub_type",
                         data["camera_id"],
                     )
-            else:
-                _LOGGER.debug(
-                    "Camera %s has received unexpected event as type %s",
-                    data["camera_id"],
-                    event_type,
-                )
 
             self.async_write_ha_state()
             return
@@ -186,26 +202,52 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
+
         try:
             return cast(bytes, await self.device.async_get_live_snapshot())
-        except (
-            aiohttp.ClientPayloadError,
-            aiohttp.ContentTypeError,
-            aiohttp.ServerDisconnectedError,
-            aiohttp.ClientConnectorError,
-            NetatmoApiError,
-        ) as err:
+        except CAMERA_ERRORS as err:
             _LOGGER.debug("Could not fetch live camera image (%s)", err)
         return None
 
     @property
     @override
+    def available(self) -> bool:
+        """Return whether the camera can currently operate."""
+        if self._override_connection is not None:
+            return super().available and self._override_connection
+        return super().available and self.device.reachable is not False
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if camera is on (monitoring)."""
+        if self.device_type in NETATMO_DOORBELLS:
+            return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+        if self._override_on is not None:
+            return (
+                self._override_on
+                and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+            )
+        return (
+            bool(self.device.monitoring)
+            and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+        )
+
+    @property
+    @override
+    def motion_detection_enabled(self) -> bool:
+        """Return motion detection state derived directly from camera state."""
+        return self.is_on and self.device_type not in NETATMO_DOORBELLS
+
+    @property
+    @override
     def supported_features(self) -> CameraEntityFeature:
         """Return supported features."""
-        supported_features = CameraEntityFeature.ON_OFF
-        if self.device_type != "NDB":
+        if self.device_type not in NETATMO_DOORBELLS:
+            supported_features = CameraEntityFeature.ON_OFF
             supported_features |= CameraEntityFeature.STREAM
-        return supported_features
+            return supported_features
+        return CameraEntityFeature(0)
 
     @property
     @override
@@ -213,7 +255,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         """Return entity specific state attributes."""
         return {
             "id": self.device.entity_id,
-            "monitoring": self._monitoring,
+            "monitoring": self.is_on,
             "sd_status": self.device.sd_status,
             "alim_status": self.device.alim_status,
             "is_local": self.device.is_local,
@@ -225,12 +267,26 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def async_turn_off(self) -> None:
         """Turn off camera."""
-        await self.device.async_monitoring_off()
+        if not self.is_on:
+            return
+        try:
+            await self.device.async_monitoring_off()
+            self._override_on = False
+            self.async_write_ha_state()
+        except CAMERA_ERRORS as err:
+            raise HomeAssistantError(f"Could not turn off camera: {err}") from err
 
     @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
-        await self.device.async_monitoring_on()
+        if self.is_on:
+            return
+        try:
+            await self.device.async_monitoring_on()
+            self._override_on = True
+            self.async_write_ha_state()
+        except CAMERA_ERRORS as err:
+            raise HomeAssistantError(f"Could not turn on camera: {err}") from err
 
     @override
     async def stream_source(self) -> str:
@@ -245,16 +301,25 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @callback
     @override
     def async_update_callback(self) -> None:
-        """Update the entity's state."""
-        self._attr_is_on = self.device.alim_status is not None
-        self._attr_available = self.device.alim_status is not None
+        """Update the entity's state (fallback/default callback)."""
+        self.async_home_update_callback()
 
-        if self.device_type == "NDB":
-            self._monitoring = self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
-        elif self.device.monitoring is not None:
-            self._monitoring = self.device.monitoring
-            self._attr_is_streaming = self.device.monitoring
-            self._attr_motion_detection_enabled = self.device.monitoring
+    @callback
+    def async_home_update_callback(self) -> None:
+        """Update the entity's state from a full HOME poll (/homedata)."""
+
+        self._override_connection = None
+        self._override_on = None
+
+        self.data_handler.events[self.device.entity_id] = self.process_events(
+            self.device.events
+        )
+
+        self.async_write_ha_state()
+
+    @callback
+    def async_event_update_callback(self) -> None:
+        """Update entity state from an EVENT poll (/getevents)."""
 
         self.data_handler.events[self.device.entity_id] = self.process_events(
             self.device.events
