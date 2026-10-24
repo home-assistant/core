@@ -36,9 +36,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EcovacsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EcovacsConfigEntry) -> None:
     """Set up this integration using UI."""
-    controller = EcovacsController(hass, entry.data)
+    controller = EcovacsController(hass, entry)
 
     entry.async_on_unload(controller.teardown)
 
@@ -56,15 +56,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcovacsConfigEntry) -> b
             name=f"{entry.title}_wait_connect_{device.vacuum['did']}",
         )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EcovacsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EcovacsConfigEntry) -> None:
     """Unload config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: EcovacsConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: EcovacsConfigEntry) -> None:
     """Migrate an old entry."""
     if entry.version == 1 and entry.minor_version < 2:
         # Persist the client device ID, which was generated on every start before
@@ -75,5 +74,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: EcovacsConfigEntry) ->
             data=entry.data | {CONF_DEVICE_ID: device_id},
             minor_version=2,
         )
-
-    return True

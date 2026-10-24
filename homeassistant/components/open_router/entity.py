@@ -131,7 +131,11 @@ def _decode_tool_arguments(arguments: str) -> Any:
     try:
         return json.loads(arguments)
     except json.JSONDecodeError as err:
-        raise HomeAssistantError(f"Unexpected tool argument response: {err}") from err
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="tool_args_parse_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
 
 async def _transform_stream(
@@ -211,7 +215,9 @@ async def _transform_stream(
     if not has_choices:
         # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.error("API returned empty choices")
-        raise HomeAssistantError("API returned empty response")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="empty_response"
+        )
 
 
 async def async_prepare_files_for_prompt(
@@ -227,15 +233,20 @@ async def async_prepare_files_for_prompt(
 
         for file_path, mime_type in files:
             if not file_path.exists():
-                raise HomeAssistantError(f"`{file_path}` does not exist")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="file_not_found",
+                    translation_placeholders={"file_path": str(file_path)},
+                )
 
             if mime_type is None:
                 mime_type = guess_file_type(file_path)[0]
 
             if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
                 raise HomeAssistantError(
-                    "Only images and PDF are supported by the OpenRouter API, "
-                    f"`{file_path}` is not an image file or PDF"
+                    translation_domain=DOMAIN,
+                    translation_key="unsupported_file_type",
+                    translation_placeholders={"file_path": str(file_path)},
                 )
 
             base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
@@ -394,7 +405,11 @@ class OpenRouterEntity(Entity):
             except openai.OpenAIError as err:
                 # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error talking to API: %s", err)
-                raise HomeAssistantError("Error talking to API") from err
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
 
             model_args["messages"].extend(
                 [

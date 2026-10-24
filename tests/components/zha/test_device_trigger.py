@@ -4,6 +4,7 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from zha.application.const import ATTR_ENDPOINT_ID, RadioType
 from zha.quirks import DEVICE_REGISTRY
 from zigpy.application import ControllerApplication
@@ -21,8 +22,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 ON = 1
 OFF = 0

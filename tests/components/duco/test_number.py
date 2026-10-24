@@ -11,20 +11,23 @@ from duco_connectivity import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import async_fire_coordinator_update, setup_platform_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 _ZONE_1_ENTITY_ID = "number.living_bypass_target_1"
 _ZONE_2_ENTITY_ID = "number.living_bypass_target_2"
@@ -108,7 +111,7 @@ async def test_successful_write_does_not_recover_failed_coordinator(
 
     state_changed = asyncio.Event()
     remove_listener = async_track_state_change_event(
-        hass, _ZONE_1_ENTITY_ID, lambda _: state_changed.set()
+        hass, _ZONE_1_ENTITY_ID, callback(lambda _: state_changed.set())
     )
     mock_duco_client.async_get_nodes.side_effect = DucoError("Temporary update failure")
     freezer.tick(SCAN_INTERVAL)

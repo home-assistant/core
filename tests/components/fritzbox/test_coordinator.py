@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 from pyfritzhome import LoginError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from requests.exceptions import ConnectionError, HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN
@@ -24,8 +25,6 @@ from . import (
     setup_config_entry,
 )
 from .const import MOCK_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_coordinator_update_after_reboot(

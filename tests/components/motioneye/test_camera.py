@@ -27,11 +27,12 @@ from motioneye_client.const import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.camera import (
-    DATA_COMPONENT,
     async_get_image,
     async_get_mjpeg_stream,
+    get_camera_from_entity_id,
 )
 from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import (
@@ -65,8 +66,6 @@ from . import (
     create_mock_motioneye_config_entry,
     setup_mock_motioneye_config_entry,
 )
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
@@ -265,8 +264,8 @@ async def test_get_still_image_without_camera(hass: HomeAssistant) -> None:
     await setup_mock_motioneye_config_entry(hass, client=client)
     await hass.async_block_till_done()
 
-    camera = hass.data[DATA_COMPONENT].get_entity(TEST_CAMERA_ENTITY_ID)
-    assert camera is not None
+    camera = get_camera_from_entity_id(hass, TEST_CAMERA_ENTITY_ID)
+    # Dropping the camera from the coordinator data would remove the device and entity
     camera._camera = None
 
     assert await camera.async_camera_image() is None

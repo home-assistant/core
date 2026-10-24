@@ -15,7 +15,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+) -> None:
     """Set up platform from a ConfigEntry."""
     # Verify the device is reachable with the given
     # config before setting up the platform
@@ -27,11 +27,10 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

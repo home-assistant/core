@@ -15,6 +15,11 @@ from midealocal.devices.dc import DeviceAttributes as DCAttributes
 from midealocal.devices.e2 import DeviceAttributes as E2Attributes
 from midealocal.exceptions import SocketException
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -26,19 +31,18 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import DummyDevice, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _assert_service_call(
@@ -57,6 +61,11 @@ async def _assert_service_call(
         blocking=True,
     )
     assert device.calls == expected_calls
+
+
+def _set_attribute_calls(device: DummyDevice) -> list[tuple]:
+    """Return the set_attribute calls the fake device recorded."""
+    return [call for call in device.calls if call[0] == "set_attribute"]
 
 
 @pytest.mark.parametrize(
@@ -180,6 +189,8 @@ async def _assert_service_call(
                     E2Attributes.whole_tank_heating: False,
                     E2Attributes.variable_heating: False,
                     E2Attributes.sterilization: False,
+                    E2Attributes.memory: False,
+                    E2Attributes.eplus: False,
                 },
             ),
             id="e2",
@@ -285,6 +296,129 @@ async def test_prompt_tone_switch_services(
     )
     await hass.async_block_till_done()
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("device_type", "entity_id"),
+    [
+        pytest.param(
+            DeviceType.A1, "switch.dehumidifier_prompt_tone", id="dehumidifier"
+        ),
+        pytest.param(
+            DeviceType.AC, "switch.air_conditioner_prompt_tone", id="air_conditioner"
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("last_state", "restored_is_on", "expected_state"),
+    [
+        pytest.param(STATE_OFF, False, STATE_OFF, id="off"),
+        pytest.param(STATE_ON, True, STATE_ON, id="on"),
+        pytest.param(STATE_UNAVAILABLE, False, STATE_OFF, id="off_while_unavailable"),
+    ],
+)
+async def test_prompt_tone_restored(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    device_type: DeviceType,
+    entity_id: str,
+    last_state: str,
+    restored_is_on: bool,
+    expected_state: str,
+) -> None:
+    """Test the prompt tone setting is restored, as the device never reports it."""
+    mock_restore_cache_with_extra_data(
+        hass, [(State(entity_id, last_state), {"is_on": restored_is_on})]
+    )
+    device = DummyDevice(device_type, attributes={"prompt_tone": True})
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    assert _set_attribute_calls(device) == [
+        ("set_attribute", "prompt_tone", restored_is_on)
+    ]
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "extra_data",
+    [
+        pytest.param(None, id="first_setup"),
+        pytest.param({}, id="no_setting"),
+        pytest.param({"is_on": None}, id="unknown_setting"),
+    ],
+)
+async def test_prompt_tone_not_restored(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    extra_data: dict[str, bool | None] | None,
+) -> None:
+    """Test the library default is kept without a usable stored setting."""
+    entity_id = "switch.air_conditioner_prompt_tone"
+    if extra_data is not None:
+        mock_restore_cache_with_extra_data(
+            hass, [(State(entity_id, STATE_OFF), extra_data)]
+        )
+    device = DummyDevice(DeviceType.AC, attributes={"prompt_tone": True})
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    assert _set_attribute_calls(device) == []
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_ON
+
+
+async def test_prompt_tone_restored_after_reload(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test a prompt tone turned off stays off when the entry is reloaded."""
+    entity_id = "switch.air_conditioner_prompt_tone"
+    device = DummyDevice(DeviceType.AC, attributes={"prompt_tone": True})
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+        await _assert_service_call(
+            hass,
+            entity_id,
+            SERVICE_TURN_OFF,
+            [("set_attribute", "prompt_tone", False)],
+            device,
+        )
+
+        # midea-local creates a new device with the prompt tone on.
+        new_device = DummyDevice(DeviceType.AC, attributes={"prompt_tone": True})
+        with patch(
+            "homeassistant.components.midea.device_selector", return_value=new_device
+        ):
+            assert await hass.config_entries.async_reload(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+    assert _set_attribute_calls(new_device) == [("set_attribute", "prompt_tone", False)]
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_OFF
+
+
+async def test_reported_switch_not_restored(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test switches the device reports are not overwritten from stored state."""
+    entity_id = "switch.air_conditioner_auxiliary_heating"
+    mock_restore_cache_with_extra_data(
+        hass, [(State(entity_id, STATE_OFF), {"is_on": False})]
+    )
+    device = DummyDevice(DeviceType.AC, attributes={ACAttributes.aux_heating: True})
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    assert _set_attribute_calls(device) == []
+    assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
 
 
@@ -510,6 +644,8 @@ async def test_a1_pump_not_created_without_capability(
         pytest.param(E2Attributes.whole_tank_heating, id="whole_tank_heating"),
         pytest.param(E2Attributes.variable_heating, id="variable_heating"),
         pytest.param(E2Attributes.sterilization, id="sterilization"),
+        pytest.param(E2Attributes.memory, id="memory"),
+        pytest.param(E2Attributes.eplus, id="eplus"),
     ],
 )
 async def test_e2_switch_services(
@@ -527,6 +663,8 @@ async def test_e2_switch_services(
             E2Attributes.whole_tank_heating: False,
             E2Attributes.variable_heating: False,
             E2Attributes.sterilization: False,
+            E2Attributes.eplus: False,
+            E2Attributes.memory: False,
         },
     )
 

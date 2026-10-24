@@ -53,12 +53,23 @@ class KNXExposeDataModel(TypedDict):
 
 def validate_expose_template_no_coerce(value: str) -> str:
     """Validate an expose template without coercing to Template."""
-    temp = cv.template(value)  # validate template
+    try:
+        temp = cv.template(value)
+    except probatio.Invalid as err:
+        error = str(err.__cause__ or err.error_message)
+        raise probatio.Invalid(
+            err.error_message,
+            translation_key="invalid_template",
+            placeholders={"error": error},
+        ) from err
     if temp.is_static:
         raise probatio.Invalid(
             "Static templates are not supported."
             " Template should start with '{{'"
-            " and end with '}}'"
+            " and end with '}}'",
+            translation_key="static_template",
+            # braces are syntax in translation strings
+            placeholders={"start": "{{", "end": "}}"},
         )
     return value  # return original string for storage and later template creation
 

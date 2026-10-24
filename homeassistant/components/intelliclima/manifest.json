@@ -1,6 +1,7 @@
 {
   "domain": "intelliclima",
   "name": "IntelliClima",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@dvdinth"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/intelliclima",

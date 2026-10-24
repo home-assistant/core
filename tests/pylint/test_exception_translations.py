@@ -22,6 +22,9 @@ _HA_IMPORTS = (
     "from homeassistant.exceptions import ("
     "HomeAssistantError, ServiceValidationError, ConfigEntryAuthFailed)"
 )
+_HA_DOMAIN_IMPORT = (
+    "from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN"
+)
 
 
 @pytest.fixture(name="translations_checker")
@@ -661,3 +664,127 @@ def test_not_integration_ignored(
 
     with assert_no_messages(linter):
         walk_checker(linter, translations_checker, root_node)
+
+
+def _make_other_integration(tmp_path: Path) -> None:
+    """Create a fake homeassistant integration with an exception translation."""
+    other_dir = tmp_path / "homeassistant" / "components" / "homeassistant"
+    other_dir.mkdir(parents=True)
+    (other_dir / "strings.json").write_text(
+        json.dumps({"exceptions": {"other_error": {"message": "Error for {name}"}}})
+    )
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            f"""
+{_HA_IMPORTS}
+{_HA_DOMAIN_IMPORT}
+raise HomeAssistantError(
+    translation_domain=HOMEASSISTANT_DOMAIN,
+    translation_key="other_error",
+    translation_placeholders={{"name": device_name}},
+)
+""",
+            id="imported_domain_constant",
+        ),
+        pytest.param(
+            f"""
+{_HA_IMPORTS}
+OTHER_DOMAIN = "homeassistant"
+raise HomeAssistantError(
+    translation_domain=OTHER_DOMAIN,
+    translation_key="other_error",
+    translation_placeholders={{"name": device_name}},
+)
+""",
+            id="local_domain_constant",
+        ),
+        pytest.param(
+            f"""
+{_HA_IMPORTS}
+raise HomeAssistantError(
+    translation_domain=get_domain(),
+    translation_key="nonexistent_key",
+)
+""",
+            id="uninferable_domain_call",
+        ),
+        pytest.param(
+            f"""
+{_HA_IMPORTS}
+raise HomeAssistantError(
+    translation_domain=unknown_domain,
+    translation_key="nonexistent_key",
+)
+""",
+            id="uninferable_domain_name",
+        ),
+    ],
+)
+def test_other_domain_no_warning(
+    linter: UnittestLinter,
+    translations_checker: ExceptionTranslationsChecker,
+    tmp_path: Path,
+    code: str,
+) -> None:
+    """Test that a domain constant for another integration is resolved."""
+    _make_other_integration(tmp_path)
+    integration_dir = _make_integration(tmp_path)
+    root_node = astroid.parse(code, "homeassistant.components.test_int.coordinator")
+    root_node.file = str(integration_dir / "coordinator.py")
+
+    with assert_no_messages(linter):
+        walk_checker(linter, translations_checker, root_node)
+
+
+@pytest.mark.parametrize(
+    ("code", "msg_id"),
+    [
+        pytest.param(
+            f"""
+{_HA_IMPORTS}
+{_HA_DOMAIN_IMPORT}
+raise HomeAssistantError(
+    translation_domain=HOMEASSISTANT_DOMAIN,
+    translation_key="nonexistent_key",
+)
+""",
+            "home-assistant-exception-translation-key-missing",
+            id="imported_domain_missing_key",
+        ),
+        pytest.param(
+            f"""
+{_HA_IMPORTS}
+{_HA_DOMAIN_IMPORT}
+raise HomeAssistantError(
+    translation_domain=HOMEASSISTANT_DOMAIN,
+    translation_key="other_error",
+    translation_placeholders={{"wrong": device_name}},
+)
+""",
+            "home-assistant-exception-placeholder-mismatch",
+            id="imported_domain_placeholder_mismatch",
+        ),
+    ],
+)
+def test_other_domain_flagged(
+    linter: UnittestLinter,
+    translations_checker: ExceptionTranslationsChecker,
+    tmp_path: Path,
+    code: str,
+    msg_id: str,
+) -> None:
+    """Test that keys and placeholders are validated against another domain."""
+    _make_other_integration(tmp_path)
+    integration_dir = _make_integration(tmp_path)
+    root_node = astroid.parse(code, "homeassistant.components.test_int.coordinator")
+    root_node.file = str(integration_dir / "coordinator.py")
+
+    walk_checker(linter, translations_checker, root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == msg_id

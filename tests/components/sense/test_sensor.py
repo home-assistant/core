@@ -6,6 +6,11 @@ from unittest.mock import MagicMock, PropertyMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from sense_energy import (
     Scale,
     SenseAPIException,
@@ -30,8 +35,6 @@ from .const import (
     DEVICE_2_POWER,
     MONITOR_ID,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

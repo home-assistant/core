@@ -5,12 +5,11 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import chat_session
 from homeassistant.util import dt as dt_util, ulid as ulid_util
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
@@ -94,3 +93,26 @@ async def test_cleanup(
     # It should be cleaned up now and we start a new conversation
     with chat_session.async_get_chat_session(hass, conversation_id) as session:
         assert session.conversation_id != conversation_id
+
+
+async def test_failed_nested_session(hass: HomeAssistant) -> None:
+    """Restore the outer context and clean up sessions after a failure."""
+    cleanup = Mock()
+
+    def fail_task() -> None:
+        with chat_session.async_get_chat_session(hass) as inner:
+            inner.async_on_cleanup(cleanup)
+            raise ValueError("Task failed")
+
+    with chat_session.async_get_chat_session(hass) as outer:
+        with pytest.raises(ValueError, match="Task failed"):
+            fail_task()
+        assert chat_session.current_session.get() is outer
+    assert chat_session.current_session.get() is None
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT + timedelta(seconds=1),
+    )
+    await hass.async_block_till_done()
+    cleanup.assert_called_once_with()
+    assert not hass.data[chat_session.DATA_CHAT_SESSION]

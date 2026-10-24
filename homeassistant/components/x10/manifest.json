@@ -1,6 +1,7 @@
 {
   "domain": "x10",
   "name": "Heyu X10",
+  "categories": ["hubs_protocols", "lighting"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/x10",
   "iot_class": "local_polling",

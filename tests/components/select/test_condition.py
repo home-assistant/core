@@ -5,13 +5,7 @@ from typing import Any
 
 import probatio
 import pytest
-
-from homeassistant.components.select.condition import CONDITIONS, CONF_OPTION
-from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.condition import async_validate_condition_config
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -24,6 +18,11 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.select.condition import CONDITIONS, CONF_OPTION
+from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import async_validate_condition_config
 
 
 @pytest.fixture

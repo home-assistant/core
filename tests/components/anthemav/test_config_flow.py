@@ -4,13 +4,12 @@ from unittest.mock import AsyncMock, patch
 
 from anthemav.device_error import DeviceError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.anthemav.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_with_valid_connection(
@@ -25,7 +24,7 @@ async def test_form_with_valid_connection(
 
     with patch(
         "homeassistant.components.anthemav.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -75,7 +74,7 @@ async def test_form_device_info_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.anthemav.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -115,7 +114,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.anthemav.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

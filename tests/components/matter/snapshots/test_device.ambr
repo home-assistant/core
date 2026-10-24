@@ -1,4 +1,115 @@
 # serializer version: 1
+# name: test_multi_endpoint_device_topology[aqara_light_switch_h2_us_4099]
+  dict({
+    '00000000000004D2-00000000000003F6-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'binary_sensor.aqara_smart_wall_switch_hardware_faults': 'Hardware faults',
+        'button.aqara_smart_wall_switch_identify_1': 'Identify (1)',
+        'button.aqara_smart_wall_switch_identify_4': 'Identify (4)',
+        'button.aqara_smart_wall_switch_identify_5': 'Identify (5)',
+        'event.aqara_smart_wall_switch_button_4': 'Button (4)',
+        'event.aqara_smart_wall_switch_button_5': 'Button (5)',
+        'light.aqara_smart_wall_switch': None,
+        'select.aqara_smart_wall_switch_power_on_behavior': 'Power-on behavior',
+        'sensor.aqara_smart_wall_switch_active_current': 'Active current',
+        'sensor.aqara_smart_wall_switch_boot_reason': 'Boot reason',
+        'sensor.aqara_smart_wall_switch_current_switch_position_4': 'Current switch position (4)',
+        'sensor.aqara_smart_wall_switch_current_switch_position_5': 'Current switch position (5)',
+        'sensor.aqara_smart_wall_switch_energy': 'Energy',
+        'sensor.aqara_smart_wall_switch_power': 'Power',
+        'sensor.aqara_smart_wall_switch_reboot_count': 'Reboot count',
+        'sensor.aqara_smart_wall_switch_thread_channel': 'Thread channel',
+        'sensor.aqara_smart_wall_switch_thread_network_name': 'Thread network name',
+        'sensor.aqara_smart_wall_switch_thread_routing_role': 'Thread routing role',
+        'sensor.aqara_smart_wall_switch_uptime': 'Uptime',
+        'update.aqara_smart_wall_switch_firmware': 'Firmware',
+      }),
+      'name': 'Aqara Smart Wall Switch',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[aqara_light_switch_h2_us_4100]
+  dict({
+    '00000000000004D2-00000000000003F7-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'binary_sensor.aqara_smart_wall_switch_hardware_faults': 'Hardware faults',
+        'button.aqara_smart_wall_switch_identify_1': 'Identify (1)',
+        'button.aqara_smart_wall_switch_identify_2': 'Identify (2)',
+        'button.aqara_smart_wall_switch_identify_4': 'Identify (4)',
+        'button.aqara_smart_wall_switch_identify_5': 'Identify (5)',
+        'event.aqara_smart_wall_switch_button_4': 'Button (4)',
+        'event.aqara_smart_wall_switch_button_5': 'Button (5)',
+        'light.aqara_smart_wall_switch_light_1': 'Light (1)',
+        'light.aqara_smart_wall_switch_light_2': 'Light (2)',
+        'select.aqara_smart_wall_switch_power_on_behavior_1': 'Power-on behavior (1)',
+        'select.aqara_smart_wall_switch_power_on_behavior_2': 'Power-on behavior (2)',
+        'sensor.aqara_smart_wall_switch_active_current': 'Active current',
+        'sensor.aqara_smart_wall_switch_boot_reason': 'Boot reason',
+        'sensor.aqara_smart_wall_switch_current_switch_position_4': 'Current switch position (4)',
+        'sensor.aqara_smart_wall_switch_current_switch_position_5': 'Current switch position (5)',
+        'sensor.aqara_smart_wall_switch_energy': 'Energy',
+        'sensor.aqara_smart_wall_switch_power': 'Power',
+        'sensor.aqara_smart_wall_switch_reboot_count': 'Reboot count',
+        'sensor.aqara_smart_wall_switch_thread_channel': 'Thread channel',
+        'sensor.aqara_smart_wall_switch_thread_network_name': 'Thread network name',
+        'sensor.aqara_smart_wall_switch_thread_routing_role': 'Thread routing role',
+        'sensor.aqara_smart_wall_switch_uptime': 'Uptime',
+        'update.aqara_smart_wall_switch_firmware': 'Firmware',
+      }),
+      'name': 'Aqara Smart Wall Switch',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[aqara_light_switch_h2_us_4101]
+  dict({
+    '00000000000004D2-00000000000003F8-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'binary_sensor.aqara_smart_wall_switch_hardware_faults': 'Hardware faults',
+        'button.aqara_smart_wall_switch_identify_1': 'Identify (1)',
+        'button.aqara_smart_wall_switch_identify_2': 'Identify (2)',
+        'button.aqara_smart_wall_switch_identify_3': 'Identify (3)',
+        'button.aqara_smart_wall_switch_identify_4': 'Identify (4)',
+        'button.aqara_smart_wall_switch_identify_5': 'Identify (5)',
+        'button.aqara_smart_wall_switch_identify_6': 'Identify (6)',
+        'button.aqara_smart_wall_switch_identify_7': 'Identify (7)',
+        'event.aqara_smart_wall_switch_button_4': 'Button (4)',
+        'event.aqara_smart_wall_switch_button_5': 'Button (5)',
+        'event.aqara_smart_wall_switch_button_6': 'Button (6)',
+        'event.aqara_smart_wall_switch_button_7': 'Button (7)',
+        'light.aqara_smart_wall_switch_light_1': 'Light (1)',
+        'light.aqara_smart_wall_switch_light_2': 'Light (2)',
+        'light.aqara_smart_wall_switch_light_3': 'Light (3)',
+        'select.aqara_smart_wall_switch_power_on_behavior_1': 'Power-on behavior (1)',
+        'select.aqara_smart_wall_switch_power_on_behavior_2': 'Power-on behavior (2)',
+        'select.aqara_smart_wall_switch_power_on_behavior_3': 'Power-on behavior (3)',
+        'sensor.aqara_smart_wall_switch_active_current': 'Active current',
+        'sensor.aqara_smart_wall_switch_boot_reason': 'Boot reason',
+        'sensor.aqara_smart_wall_switch_current_switch_position_4': 'Current switch position (4)',
+        'sensor.aqara_smart_wall_switch_current_switch_position_5': 'Current switch position (5)',
+        'sensor.aqara_smart_wall_switch_current_switch_position_6': 'Current switch position (6)',
+        'sensor.aqara_smart_wall_switch_current_switch_position_7': 'Current switch position (7)',
+        'sensor.aqara_smart_wall_switch_energy': 'Energy',
+        'sensor.aqara_smart_wall_switch_power': 'Power',
+        'sensor.aqara_smart_wall_switch_reboot_count': 'Reboot count',
+        'sensor.aqara_smart_wall_switch_thread_channel': 'Thread channel',
+        'sensor.aqara_smart_wall_switch_thread_network_name': 'Thread network name',
+        'sensor.aqara_smart_wall_switch_thread_routing_role': 'Thread routing role',
+        'sensor.aqara_smart_wall_switch_uptime': 'Uptime',
+        'update.aqara_smart_wall_switch_firmware': 'Firmware',
+      }),
+      'name': 'Aqara Smart Wall Switch',
+      'via_device': None,
+    }),
+  })
+# ---
 # name: test_multi_endpoint_device_topology[aqara_shutter_switch_h2]
   dict({
     '00000000000004D2-00000000000000C1-MatterNodeDevice': dict({
@@ -27,9 +138,94 @@
         'sensor.aqara_shutter_switch_h2_eu_thread_routing_role': 'Thread routing role',
         'sensor.aqara_shutter_switch_h2_eu_uptime': 'Uptime',
         'sensor.aqara_shutter_switch_h2_eu_voltage': 'Voltage',
+        'switch.aqara_shutter_switch_h2_eu_reverse_motor_direction': 'Reverse motor direction',
         'update.aqara_shutter_switch_h2_eu_firmware': 'Firmware',
       }),
       'name': 'Aqara Shutter Switch H2 EU',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[cync_keypad_dimmer]
+  dict({
+    '00000000000004D2-000000000000041B-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'button.cync_keypad_dimmer_identify_1': 'Identify (1)',
+        'event.cync_keypad_dimmer_button_2': 'Button (2)',
+        'event.cync_keypad_dimmer_button_3': 'Button (3)',
+        'light.cync_keypad_dimmer': None,
+        'number.cync_keypad_dimmer_on_level': 'On level',
+        'number.cync_keypad_dimmer_power_on_level': 'Power-on level',
+        'select.cync_keypad_dimmer_power_on_behavior': 'Power-on behavior',
+        'sensor.cync_keypad_dimmer_boot_reason': 'Boot reason',
+        'sensor.cync_keypad_dimmer_current_switch_position_2': 'Current switch position (2)',
+        'sensor.cync_keypad_dimmer_current_switch_position_3': 'Current switch position (3)',
+        'sensor.cync_keypad_dimmer_reboot_count': 'Reboot count',
+        'sensor.cync_keypad_dimmer_uptime': 'Uptime',
+        'sensor.cync_keypad_dimmer_wi_fi_rssi': 'Wi-Fi RSSI',
+        'update.cync_keypad_dimmer_firmware': 'Firmware',
+      }),
+      'name': 'Cync Keypad Dimmer',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[dewenwils_3_zone_transformer]
+  dict({
+    '00000000000004D2-0000000000000459-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'select.dewenwils_3_zone_transformer_power_on_behavior_1': 'Power-on behavior (1)',
+        'select.dewenwils_3_zone_transformer_power_on_behavior_2': 'Power-on behavior (2)',
+        'select.dewenwils_3_zone_transformer_power_on_behavior_3': 'Power-on behavior (3)',
+        'sensor.dewenwils_3_zone_transformer_reboot_count': 'Reboot count',
+        'sensor.dewenwils_3_zone_transformer_uptime': 'Uptime',
+        'sensor.dewenwils_3_zone_transformer_wi_fi_rssi': 'Wi-Fi RSSI',
+        'switch.dewenwils_3_zone_transformer_switch_1': 'Switch (1)',
+        'switch.dewenwils_3_zone_transformer_switch_2': 'Switch (2)',
+        'switch.dewenwils_3_zone_transformer_switch_3': 'Switch (3)',
+        'update.dewenwils_3_zone_transformer_firmware': 'Firmware',
+      }),
+      'name': 'DEWENWILS 3 -Zone Transformer',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[ductech_smartwings_levitate]
+  dict({
+    '00000000000004D2-0000000000000057-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'binary_sensor.smartwings_levitate_with_ductech_battery_1': 'Battery (1)',
+        'binary_sensor.smartwings_levitate_with_ductech_battery_2': 'Battery (2)',
+        'binary_sensor.smartwings_levitate_with_ductech_configuration_status_1': 'Configuration status (1)',
+        'binary_sensor.smartwings_levitate_with_ductech_configuration_status_2': 'Configuration status (2)',
+        'button.smartwings_levitate_with_ductech_identify_1': 'Identify (1)',
+        'button.smartwings_levitate_with_ductech_identify_2': 'Identify (2)',
+        'cover.smartwings_levitate_with_ductech': None,
+        'cover.smartwings_levitate_with_ductech_2': None,
+        'sensor.smartwings_levitate_with_ductech_battery_1': 'Battery (1)',
+        'sensor.smartwings_levitate_with_ductech_battery_2': 'Battery (2)',
+        'sensor.smartwings_levitate_with_ductech_battery_charge_state_1': 'Battery charge state (1)',
+        'sensor.smartwings_levitate_with_ductech_battery_charge_state_2': 'Battery charge state (2)',
+        'sensor.smartwings_levitate_with_ductech_boot_reason': 'Boot reason',
+        'sensor.smartwings_levitate_with_ductech_reboot_count': 'Reboot count',
+        'sensor.smartwings_levitate_with_ductech_target_opening_position_1': 'Target opening position (1)',
+        'sensor.smartwings_levitate_with_ductech_target_opening_position_2': 'Target opening position (2)',
+        'sensor.smartwings_levitate_with_ductech_thread_channel': 'Thread channel',
+        'sensor.smartwings_levitate_with_ductech_thread_network_name': 'Thread network name',
+        'sensor.smartwings_levitate_with_ductech_thread_routing_role': 'Thread routing role',
+        'sensor.smartwings_levitate_with_ductech_uptime': 'Uptime',
+        'switch.smartwings_levitate_with_ductech': None,
+        'switch.smartwings_levitate_with_ductech_reverse_motor_direction_1': 'Reverse motor direction (1)',
+        'switch.smartwings_levitate_with_ductech_reverse_motor_direction_2': 'Reverse motor direction (2)',
+        'update.smartwings_levitate_with_ductech_firmware': 'Firmware',
+      }),
+      'name': 'SmartWings Levitate with DUCTECH',
       'via_device': None,
     }),
   })
@@ -153,6 +349,7 @@
         'number.inovelli_on_level_6': 'On level (6)',
         'number.inovelli_on_off_transition_time': 'On/Off transition time',
         'number.inovelli_on_transition_time': 'On transition time',
+        'number.inovelli_power_on_color_temperature': 'Power-on color temperature',
         'number.inovelli_power_on_level_1': 'Power-on level (1)',
         'number.inovelli_power_on_level_6': 'Power-on level (6)',
         'select.inovelli_dimming_edge': 'Dimming Edge',
@@ -175,6 +372,85 @@
         'update.inovelli_firmware': 'Firmware',
       }),
       'name': 'Inovelli',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[lifx_switch_115]
+  dict({
+    '00000000000004D2-0000000000000446-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'button.kitchen_switch_identify_21': 'Identify (21)',
+        'button.kitchen_switch_identify_22': 'Identify (22)',
+        'button.kitchen_switch_identify_23': 'Identify (23)',
+        'button.kitchen_switch_identify_24': 'Identify (24)',
+        'button.kitchen_switch_identify_31': 'Identify (31)',
+        'button.kitchen_switch_identify_32': 'Identify (32)',
+        'button.kitchen_switch_identify_33': 'Identify (33)',
+        'button.kitchen_switch_identify_34': 'Identify (34)',
+        'button.kitchen_switch_identify_41': 'Identify (41)',
+        'button.kitchen_switch_identify_42': 'Identify (42)',
+        'button.kitchen_switch_identify_43': 'Identify (43)',
+        'button.kitchen_switch_identify_44': 'Identify (44)',
+        'event.kitchen_switch_button_31': 'Button (31)',
+        'event.kitchen_switch_button_32': 'Button (32)',
+        'event.kitchen_switch_button_33': 'Button (33)',
+        'event.kitchen_switch_button_34': 'Button (34)',
+        'select.kitchen_switch_power_on_behavior_41': 'Power-on behavior (41)',
+        'select.kitchen_switch_power_on_behavior_42': 'Power-on behavior (42)',
+        'select.kitchen_switch_power_on_behavior_43': 'Power-on behavior (43)',
+        'select.kitchen_switch_power_on_behavior_44': 'Power-on behavior (44)',
+        'sensor.kitchen_switch_boot_reason': 'Boot reason',
+        'sensor.kitchen_switch_current_switch_position_31': 'Current switch position (31)',
+        'sensor.kitchen_switch_current_switch_position_32': 'Current switch position (32)',
+        'sensor.kitchen_switch_current_switch_position_33': 'Current switch position (33)',
+        'sensor.kitchen_switch_current_switch_position_34': 'Current switch position (34)',
+        'sensor.kitchen_switch_reboot_count': 'Reboot count',
+        'sensor.kitchen_switch_uptime': 'Uptime',
+        'sensor.kitchen_switch_wi_fi_rssi': 'Wi-Fi RSSI',
+        'switch.kitchen_switch_switch_41': 'Switch (41)',
+        'switch.kitchen_switch_switch_42': 'Switch (42)',
+        'switch.kitchen_switch_switch_43': 'Switch (43)',
+        'switch.kitchen_switch_switch_44': 'Switch (44)',
+      }),
+      'name': 'Kitchen Switch',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[lifx_switch_89]
+  dict({
+    '00000000000004D2-0000000000000448-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'button.kitchen_identify_21': 'Identify (21)',
+        'button.kitchen_identify_22': 'Identify (22)',
+        'button.kitchen_identify_23': 'Identify (23)',
+        'button.kitchen_identify_24': 'Identify (24)',
+        'button.kitchen_identify_31': 'Identify (31)',
+        'button.kitchen_identify_32': 'Identify (32)',
+        'button.kitchen_identify_33': 'Identify (33)',
+        'button.kitchen_identify_34': 'Identify (34)',
+        'button.kitchen_identify_41': 'Identify (41)',
+        'event.kitchen_button_31': 'Button (31)',
+        'event.kitchen_button_32': 'Button (32)',
+        'event.kitchen_button_33': 'Button (33)',
+        'event.kitchen_button_34': 'Button (34)',
+        'select.kitchen_power_on_behavior': 'Power-on behavior',
+        'sensor.kitchen_boot_reason': 'Boot reason',
+        'sensor.kitchen_current_switch_position_31': 'Current switch position (31)',
+        'sensor.kitchen_current_switch_position_32': 'Current switch position (32)',
+        'sensor.kitchen_current_switch_position_33': 'Current switch position (33)',
+        'sensor.kitchen_current_switch_position_34': 'Current switch position (34)',
+        'sensor.kitchen_reboot_count': 'Reboot count',
+        'sensor.kitchen_uptime': 'Uptime',
+        'sensor.kitchen_wi_fi_rssi': 'Wi-Fi RSSI',
+        'switch.kitchen': None,
+      }),
+      'name': 'Kitchen',
       'via_device': None,
     }),
   })
@@ -246,6 +522,33 @@
     }),
   })
 # ---
+# name: test_multi_endpoint_device_topology[nanoleaf_nl77k1]
+  dict({
+    '00000000000004D2-00000000000003F3-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'button.multicolor_ceiling_light_identify_1': 'Identify (1)',
+        'button.multicolor_ceiling_light_identify_2': 'Identify (2)',
+        'light.multicolor_ceiling_light_light_1': 'Light (1)',
+        'light.multicolor_ceiling_light_light_2': 'Light (2)',
+        'number.multicolor_ceiling_light_on_level_1': 'On level (1)',
+        'number.multicolor_ceiling_light_on_level_2': 'On level (2)',
+        'number.multicolor_ceiling_light_power_on_color_temperature_1': 'Power-on color temperature (1)',
+        'number.multicolor_ceiling_light_power_on_color_temperature_2': 'Power-on color temperature (2)',
+        'number.multicolor_ceiling_light_power_on_level_1': 'Power-on level (1)',
+        'number.multicolor_ceiling_light_power_on_level_2': 'Power-on level (2)',
+        'select.multicolor_ceiling_light_power_on_behavior_1': 'Power-on behavior (1)',
+        'select.multicolor_ceiling_light_power_on_behavior_2': 'Power-on behavior (2)',
+        'sensor.multicolor_ceiling_light_reboot_count': 'Reboot count',
+        'sensor.multicolor_ceiling_light_uptime': 'Uptime',
+        'update.multicolor_ceiling_light_firmware': 'Firmware',
+      }),
+      'name': 'Multicolor Ceiling Light',
+      'via_device': None,
+    }),
+  })
+# ---
 # name: test_multi_endpoint_device_topology[silabs_refrigerator]
   dict({
     '00000000000004D2-000000000000003A-MatterNodeDevice': dict({
@@ -270,6 +573,171 @@
         'update.refrigerator_firmware': 'Firmware',
       }),
       'name': 'Refrigerator',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[tapo_smart_outdoor_plug_in_dimmer]
+  dict({
+    '00000000000004D2-0000000000000438-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'light.smart_outdoor_plug_in_dimmer': None,
+        'number.smart_outdoor_plug_in_dimmer_off_transition_time': 'Off transition time',
+        'number.smart_outdoor_plug_in_dimmer_on_level': 'On level',
+        'number.smart_outdoor_plug_in_dimmer_on_transition_time': 'On transition time',
+        'number.smart_outdoor_plug_in_dimmer_power_on_level': 'Power-on level',
+        'select.smart_outdoor_plug_in_dimmer_power_on_behavior': 'Power-on behavior',
+        'sensor.smart_outdoor_plug_in_dimmer_boot_reason': 'Boot reason',
+        'sensor.smart_outdoor_plug_in_dimmer_effective_current': 'Effective current',
+        'sensor.smart_outdoor_plug_in_dimmer_effective_voltage': 'Effective voltage',
+        'sensor.smart_outdoor_plug_in_dimmer_energy': 'Energy',
+        'sensor.smart_outdoor_plug_in_dimmer_energy_exported': 'Energy exported',
+        'sensor.smart_outdoor_plug_in_dimmer_power': 'Power',
+        'sensor.smart_outdoor_plug_in_dimmer_reboot_count': 'Reboot count',
+        'sensor.smart_outdoor_plug_in_dimmer_uptime': 'Uptime',
+        'update.smart_outdoor_plug_in_dimmer_firmware': 'Firmware',
+      }),
+      'name': 'Smart Outdoor Plug-In Dimmer',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[tapo_smart_wi_fi_outlet]
+  dict({
+    '00000000000004D2-000000000000008A-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'select.tapo_smart_wi_fi_outlet_power_on_behavior_1': 'Power-on behavior (1)',
+        'select.tapo_smart_wi_fi_outlet_power_on_behavior_2': 'Power-on behavior (2)',
+        'sensor.tapo_smart_wi_fi_outlet_boot_reason': 'Boot reason',
+        'sensor.tapo_smart_wi_fi_outlet_reboot_count': 'Reboot count',
+        'sensor.tapo_smart_wi_fi_outlet_uptime': 'Uptime',
+        'switch.tapo_smart_wi_fi_outlet_switch_1': 'Switch (1)',
+        'switch.tapo_smart_wi_fi_outlet_switch_2': 'Switch (2)',
+        'update.tapo_smart_wi_fi_outlet_firmware': 'Firmware',
+      }),
+      'name': 'Tapo Smart Wi-Fi Outlet',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[tapo_smart_wi_fi_plug_265]
+  dict({
+    '00000000000004D2-0000000000000436-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'button.smart_wi_fi_plug_identify': 'Identify',
+        'sensor.smart_wi_fi_plug_boot_reason': 'Boot reason',
+        'sensor.smart_wi_fi_plug_effective_current': 'Effective current',
+        'sensor.smart_wi_fi_plug_effective_voltage': 'Effective voltage',
+        'sensor.smart_wi_fi_plug_energy': 'Energy',
+        'sensor.smart_wi_fi_plug_energy_exported': 'Energy exported',
+        'sensor.smart_wi_fi_plug_power': 'Power',
+        'sensor.smart_wi_fi_plug_reboot_count': 'Reboot count',
+        'sensor.smart_wi_fi_plug_uptime': 'Uptime',
+        'switch.smart_wi_fi_plug': None,
+        'update.smart_wi_fi_plug_firmware': 'Firmware',
+      }),
+      'name': 'Smart Wi-Fi Plug',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[tapo_smart_wi_fi_power_strip]
+  dict({
+    '00000000000004D2-0000000000000437-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'select.smart_wi_fi_power_strip_power_on_behavior_1': 'Power-on behavior (1)',
+        'select.smart_wi_fi_power_strip_power_on_behavior_2': 'Power-on behavior (2)',
+        'select.smart_wi_fi_power_strip_power_on_behavior_3': 'Power-on behavior (3)',
+        'select.smart_wi_fi_power_strip_power_on_behavior_4': 'Power-on behavior (4)',
+        'select.smart_wi_fi_power_strip_power_on_behavior_5': 'Power-on behavior (5)',
+        'select.smart_wi_fi_power_strip_power_on_behavior_6': 'Power-on behavior (6)',
+        'sensor.smart_wi_fi_power_strip_boot_reason': 'Boot reason',
+        'sensor.smart_wi_fi_power_strip_effective_current_10': 'Effective current (10)',
+        'sensor.smart_wi_fi_power_strip_effective_current_11': 'Effective current (11)',
+        'sensor.smart_wi_fi_power_strip_effective_current_12': 'Effective current (12)',
+        'sensor.smart_wi_fi_power_strip_effective_current_7': 'Effective current (7)',
+        'sensor.smart_wi_fi_power_strip_effective_current_8': 'Effective current (8)',
+        'sensor.smart_wi_fi_power_strip_effective_current_9': 'Effective current (9)',
+        'sensor.smart_wi_fi_power_strip_effective_voltage_10': 'Effective voltage (10)',
+        'sensor.smart_wi_fi_power_strip_effective_voltage_11': 'Effective voltage (11)',
+        'sensor.smart_wi_fi_power_strip_effective_voltage_12': 'Effective voltage (12)',
+        'sensor.smart_wi_fi_power_strip_effective_voltage_7': 'Effective voltage (7)',
+        'sensor.smart_wi_fi_power_strip_effective_voltage_8': 'Effective voltage (8)',
+        'sensor.smart_wi_fi_power_strip_effective_voltage_9': 'Effective voltage (9)',
+        'sensor.smart_wi_fi_power_strip_energy_10': 'Energy (10)',
+        'sensor.smart_wi_fi_power_strip_energy_11': 'Energy (11)',
+        'sensor.smart_wi_fi_power_strip_energy_12': 'Energy (12)',
+        'sensor.smart_wi_fi_power_strip_energy_7': 'Energy (7)',
+        'sensor.smart_wi_fi_power_strip_energy_8': 'Energy (8)',
+        'sensor.smart_wi_fi_power_strip_energy_9': 'Energy (9)',
+        'sensor.smart_wi_fi_power_strip_energy_exported_10': 'Energy exported (10)',
+        'sensor.smart_wi_fi_power_strip_energy_exported_11': 'Energy exported (11)',
+        'sensor.smart_wi_fi_power_strip_energy_exported_12': 'Energy exported (12)',
+        'sensor.smart_wi_fi_power_strip_energy_exported_7': 'Energy exported (7)',
+        'sensor.smart_wi_fi_power_strip_energy_exported_8': 'Energy exported (8)',
+        'sensor.smart_wi_fi_power_strip_energy_exported_9': 'Energy exported (9)',
+        'sensor.smart_wi_fi_power_strip_power_10': 'Power (10)',
+        'sensor.smart_wi_fi_power_strip_power_11': 'Power (11)',
+        'sensor.smart_wi_fi_power_strip_power_12': 'Power (12)',
+        'sensor.smart_wi_fi_power_strip_power_7': 'Power (7)',
+        'sensor.smart_wi_fi_power_strip_power_8': 'Power (8)',
+        'sensor.smart_wi_fi_power_strip_power_9': 'Power (9)',
+        'sensor.smart_wi_fi_power_strip_reboot_count': 'Reboot count',
+        'sensor.smart_wi_fi_power_strip_uptime': 'Uptime',
+        'switch.smart_wi_fi_power_strip_switch_1': 'Switch (1)',
+        'switch.smart_wi_fi_power_strip_switch_2': 'Switch (2)',
+        'switch.smart_wi_fi_power_strip_switch_3': 'Switch (3)',
+        'switch.smart_wi_fi_power_strip_switch_4': 'Switch (4)',
+        'switch.smart_wi_fi_power_strip_switch_5': 'Switch (5)',
+        'switch.smart_wi_fi_power_strip_switch_6': 'Switch (6)',
+        'update.smart_wi_fi_power_strip_firmware': 'Firmware',
+      }),
+      'name': 'Smart Wi-Fi Power Strip',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[tp_link_smart_outdoor_plug]
+  dict({
+    '00000000000004D2-000000000000040A-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'sensor.smart_outdoor_plug_boot_reason': 'Boot reason',
+        'sensor.smart_outdoor_plug_reboot_count': 'Reboot count',
+        'sensor.smart_outdoor_plug_uptime': 'Uptime',
+        'switch.smart_outdoor_plug_switch_1': 'Switch (1)',
+        'switch.smart_outdoor_plug_switch_2': 'Switch (2)',
+        'update.smart_outdoor_plug_firmware': 'Firmware',
+      }),
+      'name': 'Smart Outdoor Plug',
+      'via_device': None,
+    }),
+  })
+# ---
+# name: test_multi_endpoint_device_topology[uascent_smart_switch]
+  dict({
+    '00000000000004D2-0000000000000443-MatterNodeDevice': dict({
+      'children': dict({
+      }),
+      'entities': dict({
+        'select.smart_switch_power_on_behavior_1': 'Power-on behavior (1)',
+        'select.smart_switch_power_on_behavior_2': 'Power-on behavior (2)',
+        'sensor.smart_switch_reboot_count': 'Reboot count',
+        'sensor.smart_switch_wi_fi_rssi': 'Wi-Fi RSSI',
+        'switch.smart_switch_switch_1': 'Switch (1)',
+        'switch.smart_switch_switch_2': 'Switch (2)',
+        'update.smart_switch_firmware': 'Firmware',
+      }),
+      'name': 'Smart Switch',
       'via_device': None,
     }),
   })

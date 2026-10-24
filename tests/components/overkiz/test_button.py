@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -16,8 +17,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import assert_command_call, async_deliver_events, device_unavailable_event
-
-from tests.common import snapshot_platform
 
 MY_POSITION = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",

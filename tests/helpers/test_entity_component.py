@@ -1,6 +1,7 @@
 """The tests for the Entity component helper."""
 
 from collections import OrderedDict
+from collections.abc import Generator
 from datetime import timedelta
 import logging
 import re
@@ -9,12 +10,25 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    MockUser,
+    async_fire_time_changed,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 from pytest_unordered import unordered
 
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import (
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import (
     Context,
@@ -29,6 +43,7 @@ from homeassistant.exceptions import HomeAssistantError, PlatformNotReady, Unaut
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
 from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
     async_get_platforms,
 )
@@ -36,17 +51,6 @@ from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    MockPlatform,
-    MockUser,
-    async_fire_time_changed,
-    mock_integration,
-    mock_platform,
-)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -346,7 +350,7 @@ async def test_setup_dependencies_platform(hass: HomeAssistant) -> None:
 
 async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test setup entry calls async_setup_entry on platform."""
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_platform(
         hass,
         "entry_domain.test_domain",
@@ -377,7 +381,7 @@ async def test_setup_entry_platform_not_exist(hass: HomeAssistant) -> None:
 
 async def test_setup_entry_fails_duplicate(hass: HomeAssistant) -> None:
     """Test we don't allow setting up a config entry twice."""
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_platform(
         hass,
         "entry_domain.test_domain",
@@ -401,7 +405,7 @@ async def test_setup_entry_fails_duplicate(hass: HomeAssistant) -> None:
 
 async def test_unload_entry_resets_platform(hass: HomeAssistant) -> None:
     """Test unloading an entry removes all entities."""
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_platform(
         hass,
         "entry_domain.test_domain",
@@ -411,18 +415,19 @@ async def test_unload_entry_resets_platform(hass: HomeAssistant) -> None:
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entry = MockConfigEntry(domain="entry_domain")
 
-    assert await component.async_setup_entry(entry)
-    assert len(mock_setup_entry.mock_calls) == 1
-    add_entities = mock_setup_entry.mock_calls[0][1][2]
-    add_entities([MockEntity()])
-    await hass.async_block_till_done()
+    for _ in range(3):
+        assert await component.async_setup_entry(entry)
+        add_entities = mock_setup_entry.call_args.args[2]
+        add_entities([MockEntity()])
+        await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids()) == 1
-    assert len(async_get_platforms(hass, "entry_domain")) == 1
+        assert len(hass.states.async_entity_ids()) == 1
+        assert len(async_get_platforms(hass, "entry_domain")) == 1
 
-    assert await component.async_unload_entry(entry)
-    assert len(hass.states.async_entity_ids()) == 0
-    assert async_get_platforms(hass, "entry_domain") == []
+        assert await component.async_unload_entry(entry)
+        assert len(hass.states.async_entity_ids()) == 0
+        assert async_get_platforms(hass, "entry_domain") == []
+    assert mock_setup_entry.await_count == 3
 
 
 async def test_unload_entry_tolerates_never_loaded(
@@ -907,3 +912,81 @@ async def test_platforms_shutdown_on_stop(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert mock_async_shutdown.called
+
+
+async def test_reset_preserves_only_component_platform(hass: HomeAssistant) -> None:
+    """Reset releases entry platforms and permits registering them again."""
+    mock_platform(
+        hass,
+        "entry_domain.test_domain",
+        MockPlatform(async_setup_entry=AsyncMock(return_value=None)),
+    )
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entries = [MockConfigEntry(domain="entry_domain") for _ in range(2)]
+    for entry in entries:
+        assert await component.async_setup_entry(entry)
+    assert len(async_get_platforms(hass, "entry_domain")) == 2
+
+    await component._async_reset()
+
+    assert async_get_platforms(hass, "entry_domain") == []
+    assert len(async_get_platforms(hass, DOMAIN)) == 1
+    for entry in entries:
+        assert await component.async_setup_entry(entry)
+        assert await component.async_unload_entry(entry)
+    assert async_get_platforms(hass, "entry_domain") == []
+
+
+class MockFlow(ConfigFlow):
+    """Test flow."""
+
+
+@pytest.fixture
+def mock_test_config_flow(hass: HomeAssistant) -> Generator[None]:
+    """Mock a config flow for the test integration."""
+    mock_platform(hass, "test.config_flow")
+
+    with mock_config_flow("test", MockFlow):
+        yield
+
+
+@pytest.mark.usefixtures("mock_test_config_flow")
+@pytest.mark.parametrize(
+    # image_processing does not support config entries
+    "domain",
+    [platform for platform in Platform if platform is not Platform.IMAGE_PROCESSING],
+)
+async def test_setup_entry_platform_failed(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, domain: Platform
+) -> None:
+    """Test an entity component raises when a forwarded platform fails to set up."""
+    # Some entity components, like conversation, need the core integration
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
+        await hass.config_entries.async_forward_entry_setups(config_entry, [domain])
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        raise RuntimeError("Boom")
+
+    mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry_init))
+    mock_platform(
+        hass,
+        f"test.{domain}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # A failing forwarded platform does not change the state of the entry
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert f"Failed to set up the test {domain} platform" in caplog.text

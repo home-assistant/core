@@ -1,8 +1,7 @@
 """Test configuration for the Brands integration."""
 
 import pytest
-
-from tests.typing import ClientSessionGenerator
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 
 @pytest.fixture

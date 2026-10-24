@@ -1,6 +1,7 @@
 {
   "domain": "foursquare",
   "name": "Foursquare",
+  "categories": ["news_social_media", "presence_location"],
   "codeowners": [],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/foursquare",
