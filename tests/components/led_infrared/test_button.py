@@ -7,6 +7,7 @@ from infrared_protocols.codes.generic.led import (
     BaseGenericLEDCode,
     Generic10KeyCode,
     Generic13KeyCode,
+    Generic21KeyCode,
     Generic24KeyCode,
     Generic40KeyCode,
     Generic44KeyCode,
@@ -45,6 +46,7 @@ def button_only() -> Generator[None]:
     [
         LEDIrDeviceType.GENERIC_10_KEY,
         LEDIrDeviceType.GENERIC_13_KEY,
+        LEDIrDeviceType.GENERIC_21_KEY,
         LEDIrDeviceType.GENERIC_24_KEY,
         LEDIrDeviceType.GENERIC_40_KEY,
         LEDIrDeviceType.GENERIC_44_KEY,
@@ -112,6 +114,14 @@ _BUTTON_PRESSES: dict[LEDIrDeviceType, list[tuple[str, list[BaseGenericLEDCode]]
         ("blue_down", [Generic44KeyCode.BLUE_DOWN]),
         ("quick", [Generic44KeyCode.QUICK]),
         ("slow", [Generic44KeyCode.SLOW]),
+    ],
+    LEDIrDeviceType.GENERIC_21_KEY: [
+        ("brightness_down", [Generic21KeyCode.BRIGHTNESS_DOWN]),
+        ("brightness_up", [Generic21KeyCode.BRIGHTNESS_UP]),
+        ("mode_down", [Generic21KeyCode.MODE_DOWN]),
+        ("mode_up", [Generic21KeyCode.MODE_UP]),
+        ("speed_down", [Generic21KeyCode.SPEED_DOWN]),
+        ("speed_up", [Generic21KeyCode.SPEED_UP]),
     ],
 }
 
