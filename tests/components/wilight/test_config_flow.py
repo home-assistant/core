@@ -158,7 +158,7 @@ async def test_full_ssdp_flow_implementation(hass: HomeAssistant) -> None:
         "components": "light",
     }
 
-    with patch("homeassistant.components.wilight.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.wilight.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )

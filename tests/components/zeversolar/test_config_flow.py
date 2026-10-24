@@ -117,7 +117,7 @@ async def _set_up_zeversolar(
     mock_client.get_data.return_value.serial_number = "test_serial"
     with patch(
         "homeassistant.components.zeversolar.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=flow_id,

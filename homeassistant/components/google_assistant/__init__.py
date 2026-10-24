@@ -138,15 +138,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> No
     config.update(entry.data)
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, config[CONF_PROJECT_ID])},
-            manufacturer="Google",
-            model="Google Assistant",
-            name=config[CONF_PROJECT_ID],
-            entry_type=dr.DeviceEntryType.SERVICE,
-        ),
+        identifiers={(DOMAIN, config[CONF_PROJECT_ID])},
+        manufacturer="Google",
+        model="Google Assistant",
+        name=config[CONF_PROJECT_ID],
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
 
     google_config = GoogleConfig(hass, config)
