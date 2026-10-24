@@ -11238,7 +11238,7 @@
       "categories": [
         "energy"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "tankerkoenig": {
