@@ -270,7 +270,7 @@ class UnifiSwitchEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
 ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     UnifiSwitchEntityDescription[Clients, Client](
         key="Block client",
-        translation_key="block_client",
+        translation_key="network_access",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         allowed_fn=async_block_client_allowed_fn,
