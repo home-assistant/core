@@ -1,5 +1,7 @@
 """The TP-Link Omada integration."""
 
+import asyncio
+from datetime import datetime, timedelta
 import logging
 
 from tplink_omada_client import OmadaSite
@@ -13,9 +15,10 @@ from tplink_omada_client.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import CONF_SITE, create_omada_client
@@ -87,7 +90,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
         controller.controller_status_coordinator.data.mac,
     )
 
+    _refresh_task: asyncio.Task[None] | None = None
+
+    async def _async_refresh_known_clients() -> None:
+        if entry.pref_disable_polling:
+            # Cleanup decisions need fresh data, so skip the run entirely
+            # instead of polling the controller while polling is disabled.
+            return
+        await controller.known_clients_coordinator.async_refresh()
+
+    @callback
+    def _schedule_known_clients_refresh(_now: datetime | None = None) -> None:
+        nonlocal _refresh_task
+        if _refresh_task is not None and not _refresh_task.done():
+            return
+        _refresh_task = entry.async_create_background_task(
+            hass,
+            _async_refresh_known_clients(),
+            "tplink_omada known clients refresh",
+        )
+
+    @callback
+    def _cancel_refresh() -> None:
+        if _refresh_task is not None and not _refresh_task.done():
+            _refresh_task.cancel()
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_on_unload(_cancel_refresh)
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass, _schedule_known_clients_refresh, timedelta(hours=1)
+        )
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> None:
