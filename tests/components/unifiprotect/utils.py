@@ -625,13 +625,6 @@ def make_public_light(
     return public
 
 
-_HDR_DISPLAY_TO_PUBLIC = {
-    "auto": PublicHdrMode.AUTO,
-    "always": PublicHdrMode.ON,
-    "off": PublicHdrMode.OFF,
-}
-
-
 _ALL_OBJECT_TYPES = [t for t in SmartDetectObjectType if t.audio_type is None]
 _ALL_AUDIO_TYPES = list(SmartDetectAudioType)
 
@@ -675,7 +668,7 @@ def make_public_camera(
     ``is_*`` flags back the migrated ``ufp_public_value`` detection paths and the
     ``smart_detect_settings`` types back the per-type ``ufp_public_enabled_fn``
     gates (default: all types enabled). ``state``, ``video_mode``, ``mic_volume``
-    and ``hdr_type`` (derived from the private ``hdr_mode_display``) mirror the
+    and ``hdr_type`` (derived from the private ``hdr_mode``) mirror the
     private camera when not overridden.
 
     ``status_light`` and the ``osd_*`` flags deliberately default to off instead
@@ -748,13 +741,14 @@ def make_public_camera(
     ):
         setattr(public, name, getattr(PublicCamera, name).fget(public))
     public.hdr_type = (
-        _HDR_DISPLAY_TO_PUBLIC[camera.hdr_mode_display]
+        (PublicHdrMode.AUTO if camera.hdr_mode else PublicHdrMode.OFF)
         if hdr_type is None
         else hdr_type
     )
     public.hdr_mode_display = PublicCamera.hdr_mode_display.fget(public)
     flags = camera.feature_flags
-    public.has_package_camera = flags.has_package_camera
+    # The doorbell fixture appends the package channel (id 3).
+    public.has_package_camera = any(c.id == 3 for c in camera.channels)
     # Spec'd so a private-only flag reads as absent.
     public.feature_flags = Mock(spec=PublicCameraFeatureFlags)
     public.feature_flags.support_full_hd_snapshot = False
