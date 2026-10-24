@@ -114,7 +114,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
         await self.send_device_command(
-            clusters.Identify.Commands.Identify(identifyTime=15)
+            clusters.Identify.Commands.Identify(identifyTime=10)
         )
 
     @override
