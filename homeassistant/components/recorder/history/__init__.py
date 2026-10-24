@@ -426,6 +426,7 @@ def _state_changed_during_period_stmt(
 ) -> Select | CompoundSelect:
     stmt = (
         _stmt_and_join_attributes(no_attributes, False, True)
+        .add_columns(States.state_id)
         .filter(
             (
                 (States.last_changed_ts == States.last_updated_ts)
@@ -445,40 +446,35 @@ def _state_changed_during_period_stmt(
         stmt = stmt.limit(limit)
     if descending and limit:
         # Select the newest samples before restoring the converter's ascending order.
-        subquery = stmt.order_by(States.last_updated_ts.desc()).subquery()
-        stmt = _select_from_subquery(subquery, no_attributes, False, True).order_by(
-            subquery.c.last_updated_ts
+        subquery = stmt.order_by(
+            States.last_updated_ts.desc(), States.state_id.desc()
+        ).subquery()
+        stmt = select(subquery).order_by(
+            subquery.c.last_updated_ts, subquery.c.state_id
         )
     else:
-        stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
+        stmt = stmt.order_by(
+            States.metadata_id, States.last_updated_ts, States.state_id
+        )
     if not include_start_time_state or not run_start_ts:
         # If we do not need the start time state or the
         # oldest possible timestamp is newer than the start time
         # we can return the statement as is as there will
         # never be a start time state.
         return stmt
+    start_state = (
+        _get_single_entity_start_time_stmt(
+            start_time_ts, single_metadata_id, no_attributes, False, True
+        )
+        .add_columns(States.state_id)
+        .order_by(States.state_id.desc())
+        .subquery()
+    )
     unioned_subquery = union_all(
-        _select_from_subquery(
-            _get_single_entity_start_time_stmt(
-                start_time_ts,
-                single_metadata_id,
-                no_attributes,
-                False,
-                True,
-            ).subquery(),
-            no_attributes,
-            False,
-            True,
-        ),
-        _select_from_subquery(
-            stmt.subquery(),
-            no_attributes,
-            False,
-            True,
-        ),
+        select(start_state), select(stmt.subquery())
     ).subquery()
     return _select_from_subquery(unioned_subquery, no_attributes, False, True).order_by(
-        unioned_subquery.c.last_updated_ts
+        unioned_subquery.c.last_updated_ts, unioned_subquery.c.state_id
     )
 
 

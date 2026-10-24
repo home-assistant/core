@@ -197,8 +197,16 @@ async def test_state_changes_during_period(
         pytest.param(True, ["0", "1", "2"], ["4", "3", "0"], id="with_start"),
     ],
 )
+@pytest.mark.parametrize(
+    "offsets",
+    [
+        pytest.param([0, 1, 2, 3, 4, 5], id="distinct_timestamps"),
+        pytest.param([0, 1, 1, 1, 1, 5], id="equal_timestamps"),
+    ],
+)
 async def test_state_changes_during_period_limited_order(
     hass: HomeAssistant,
+    offsets: list[int],
     no_attributes: bool,
     include_start_time_state: bool,
     ascending_states: list[str],
@@ -208,8 +216,8 @@ async def test_state_changes_during_period_limited_order(
     entity_id = "sensor.test"
     start = dt_util.utcnow() + timedelta(seconds=1)
     with freeze_time(start) as freezer:
-        for value in range(6):
-            freezer.move_to(start + timedelta(seconds=value))
+        for value, offset in enumerate(offsets):
+            freezer.move_to(start + timedelta(seconds=offset))
             hass.states.async_set(entity_id, str(value), {"unit": "test"})
     await async_wait_recording_done(hass)
 

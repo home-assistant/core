@@ -2413,3 +2413,52 @@ async def test_max_age_purge_coalesce_window_boundary(hass: HomeAssistant) -> No
 
         # The 0 s and 0.9 s samples went together, the 1.1 s one on its own
         assert writes == ["65.0", "100.0"]
+
+
+@pytest.mark.freeze_time("2026-10-24T12:00:00Z")
+@pytest.mark.parametrize(
+    ("sampling_size", "expected"),
+    [
+        pytest.param(100, "2.0", id="all_samples"),
+        pytest.param(2, "1.0", id="latest_samples"),
+    ],
+)
+async def test_initialize_from_database_equal_timestamps(
+    recorder_mock: Recorder, hass: HomeAssistant, sampling_size: int, expected: str
+) -> None:
+    """Test initializing the statistics from the recorder database."""
+    # enable and pre-fill the recorder
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    for value in (1, 2, 3):
+        hass.states.async_set(
+            "sensor.test_monitored",
+            str(value),
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        )
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    # create the statistics component, get filled from database
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "change",
+                    "sampling_size": sampling_size,
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == expected
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
