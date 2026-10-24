@@ -19,6 +19,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 FIXTURES = [
     "air_quality_sensor",
+    "aqara_camera_hub_g350",
     "aqara_door_window_p2",
     "aqara_light_switch_h2_us_4099",
     "aqara_light_switch_h2_us_4100",

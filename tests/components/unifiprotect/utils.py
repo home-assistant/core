@@ -625,13 +625,6 @@ def make_public_light(
     return public
 
 
-_HDR_DISPLAY_TO_PUBLIC = {
-    "auto": PublicHdrMode.AUTO,
-    "always": PublicHdrMode.ON,
-    "off": PublicHdrMode.OFF,
-}
-
-
 _ALL_OBJECT_TYPES = [t for t in SmartDetectObjectType if t.audio_type is None]
 _ALL_AUDIO_TYPES = list(SmartDetectAudioType)
 
@@ -675,7 +668,7 @@ def make_public_camera(
     ``is_*`` flags back the migrated ``ufp_public_value`` detection paths and the
     ``smart_detect_settings`` types back the per-type ``ufp_public_enabled_fn``
     gates (default: all types enabled). ``state``, ``video_mode``, ``mic_volume``
-    and ``hdr_type`` (derived from the private ``hdr_mode_display``) mirror the
+    and ``hdr_type`` (derived from the private ``hdr_mode``) mirror the
     private camera when not overridden.
 
     ``status_light`` and the ``osd_*`` flags deliberately default to off instead
@@ -748,13 +741,14 @@ def make_public_camera(
     ):
         setattr(public, name, getattr(PublicCamera, name).fget(public))
     public.hdr_type = (
-        _HDR_DISPLAY_TO_PUBLIC[camera.hdr_mode_display]
+        (PublicHdrMode.AUTO if camera.hdr_mode else PublicHdrMode.OFF)
         if hdr_type is None
         else hdr_type
     )
     public.hdr_mode_display = PublicCamera.hdr_mode_display.fget(public)
     flags = camera.feature_flags
-    public.has_package_camera = flags.has_package_camera
+    # The doorbell fixture appends the package channel (id 3).
+    public.has_package_camera = any(c.id == 3 for c in camera.channels)
     # Spec'd so a private-only flag reads as absent.
     public.feature_flags = Mock(spec=PublicCameraFeatureFlags)
     public.feature_flags.support_full_hd_snapshot = False
@@ -844,21 +838,23 @@ def setup_public_light(ufp: MockUFPFixture, **mirror_overrides: Any) -> None:
     ufp.api.public_bootstrap = pb
 
 
-def setup_public_camera(ufp: MockUFPFixture) -> None:
+def setup_public_camera(ufp: MockUFPFixture, **public_overrides: Any) -> None:
     """Expose private cameras over the public API via a real ``PublicBootstrap``.
 
     Mirrors ``setup_public_sensor`` for ``ModelType.CAMERA`` so the migrated
-    camera config entities read from the public object.
+    camera config entities read from the public object. Keyword arguments are
+    handed to ``make_public_camera``.
     """
     public_bootstrap = PublicBootstrap()
     pb = make_public_bootstrap(cameras=public_bootstrap.cameras)
+    make = partial(make_public_camera, **public_overrides)
 
     def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
         if (
             model is ModelType.CAMERA
             and (private := ufp.api.bootstrap.cameras.get(obj_id)) is not None
         ):
-            public_bootstrap.cameras[obj_id] = make_public_camera(private)
+            public_bootstrap.cameras[obj_id] = make(private)
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
@@ -897,6 +893,8 @@ def make_public_chime(
         if ring_settings is None
         else ring_settings
     )
+    # The real lookup, over the mock's ring settings.
+    public.get_ring_setting = partial(PublicChime.get_ring_setting, public)
     return public
 
 
@@ -929,10 +927,16 @@ def setup_public_chime(ufp: MockUFPFixture) -> None:
     ufp.api.public_bootstrap = pb
 
 
-def public_device_ws_message(public_obj: Mock) -> Mock:
+def public_device_ws_message(
+    public_obj: Mock,
+    *,
+    action: WSAction = WSAction.UPDATE,
+    changed_data: dict[str, Any] | None = None,
+) -> Mock:
     """Build a public devices WS message carrying a public object."""
     msg = Mock()
-    msg.changed_data = {}
+    msg.action = action
+    msg.changed_data = changed_data or {}
     msg.old_obj = None
     msg.new_obj = public_obj
     return msg
