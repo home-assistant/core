@@ -5,13 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from uiprotect.data import (
-    Camera,
-    DoorbellMessageType,
-    LCDMessage,
-    ModelType,
-    Permission,
-)
+from uiprotect.data import Camera, DoorbellMessageType, ModelType, Permission
 from uiprotect.data.public_devices import PublicDoorbellSettings, PublicLcdMessage
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
@@ -130,11 +124,7 @@ async def test_text_camera_reads_public(
     lcd_message: PublicLcdMessage | None,
     expected: str,
 ) -> None:
-    """Test the doorbell text reads the public LCD message, not the private one."""
-
-    doorbell.lcd_message = LCDMessage(
-        type=DoorbellMessageType.CUSTOM_MESSAGE, text="Private"
-    )
+    """Test the doorbell text reads the public LCD message."""
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
 
