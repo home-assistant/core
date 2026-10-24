@@ -59,6 +59,11 @@ LAMP_CAPABILITY_EXISTS: dict[str, Callable[[FullDevice, ComponentStatus], bool]]
     ),
 }
 
+# Hoods paired with a cooktop reject the samsungce.lamp commands,
+# the lamp can only be controlled through the OCF mode resource of the hood
+COOKTOP_HOOD_MODE_HREF = "/mode/vs/1"
+COOKTOP_HOOD_OPTIONS = "x.com.samsung.da.options"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -312,8 +317,15 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
         )
         # If "off" is in supported levels, the switch doesn't control the lamp
         self._use_switch = "off" not in levels
+        self._use_execute = (
+            component == "hood"
+            and Capability.SAMSUNG_CE_CONNECTION_STATE in device.status[component]
+            and Capability.EXECUTE in device.status[MAIN]
+        )
         color_modes = set()
-        if "off" not in levels or len(levels) > 2:
+        if self._use_execute:
+            color_modes.add(ColorMode.ONOFF)
+        elif "off" not in levels or len(levels) > 2:
             color_modes.add(ColorMode.BRIGHTNESS)
         if not color_modes:
             color_modes.add(ColorMode.ONOFF)
@@ -323,6 +335,9 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the lamp on."""
+        if self._use_execute:
+            await self.async_execute_hood_option("Lamp_On")
+            return
         # Switch/brightness/transition
         if ATTR_BRIGHTNESS in kwargs:
             await self.async_set_level(kwargs[ATTR_BRIGHTNESS])
@@ -336,6 +351,9 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the lamp off."""
+        if self._use_execute:
+            await self.async_execute_hood_option("Lamp_Off")
+            return
         if self._use_switch and self.supports_capability(Capability.SWITCH):
             await self.execute_device_command(Capability.SWITCH, Command.OFF)
             return
@@ -343,6 +361,16 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
             Capability.SAMSUNG_CE_LAMP,
             Command.SET_BRIGHTNESS_LEVEL,
             argument="off",
+        )
+
+    async def async_execute_hood_option(self, option: str) -> None:
+        """Set a hood option through the execute capability of the cooktop."""
+        await self.client.execute_device_command(
+            self.device.device.device_id,
+            Capability.EXECUTE,
+            Command.EXECUTE,
+            MAIN,
+            argument=[COOKTOP_HOOD_MODE_HREF, {COOKTOP_HOOD_OPTIONS: [option]}],
         )
 
     async def async_set_level(self, brightness: int) -> None:
