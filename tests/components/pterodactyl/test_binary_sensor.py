@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+from .const import SERVER_1_IDENTIFIER
 
 
 @pytest.mark.usefixtures("mock_pterodactyl")
@@ -93,7 +94,7 @@ async def test_binary_sensor_suspended_server(
         "client",
         server_list_data_suspended,
     )
-    server_data = {"1": server_1_data_suspended}
+    server_data = {SERVER_1_IDENTIFIER: server_1_data_suspended}
     mock_pterodactyl.client.servers.get_server.side_effect = lambda identifier: (
         server_data[identifier]
     )
@@ -133,7 +134,7 @@ async def test_binary_sensor_suspended_server_transition_runtime(
         "client",
         server_list_data_suspended,
     )
-    server_data = {"1": server_1_data}
+    server_data = {SERVER_1_IDENTIFIER: server_1_data}
     mock_pterodactyl.client.servers.get_server.side_effect = lambda identifier: (
         server_data[identifier]
     )
@@ -150,7 +151,7 @@ async def test_binary_sensor_suspended_server_transition_runtime(
     )
 
     mock_pterodactyl.client.servers.get_server_utilization.reset_mock()
-    server_data["1"] = server_1_data_suspended
+    server_data[SERVER_1_IDENTIFIER] = server_1_data_suspended
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -165,7 +166,7 @@ async def test_binary_sensor_suspended_server_transition_runtime(
     mock_pterodactyl.client.servers.get_server_utilization.assert_not_called()
 
     mock_pterodactyl.client.servers.get_server_utilization.reset_mock()
-    server_data["1"] = server_1_data
+    server_data[SERVER_1_IDENTIFIER] = server_1_data
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
