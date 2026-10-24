@@ -530,11 +530,15 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         # Remembered before the write: the refresh that follows it can already
         # report its failure, which forgets it.
-        self.coordinator.mode_writes[self.device_url] = (mode, monotonic())
+        self.coordinator.mode_writes[self.device_url] = (
+            mode,
+            monotonic(),
+            commands[0],
+        )
         try:
             await self.async_execute_and_refresh_modes(commands)
         except BaseException:
-            self.coordinator.mode_writes.pop(self.device_url, None)
+            self.coordinator.forget_mode_write(self.device_url, commands[0])
             raise
 
     @property

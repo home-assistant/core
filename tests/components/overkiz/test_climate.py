@@ -2806,3 +2806,101 @@ async def test_zone_control_zone_failed_refresh_keeps_the_derogation_written(
     await _async_set_zone_setpoint(hass, 20.0)
 
     assert _sent_commands(mock_client)[-1] == [("setHeatingTargetTemperature", [20.0])]
+
+
+async def _async_select_preset(hass: HomeAssistant, preset_mode: str) -> None:
+    """Select a preset of the zone."""
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {ATTR_ENTITY_ID: ZONE_CONTROL_ZONE.entity_id, ATTR_PRESET_MODE: preset_mode},
+        blocking=True,
+    )
+
+
+async def test_zone_control_zone_older_preset_failure_keeps_the_newer_mode(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the failure of an older preset leaves the mode of a newer one."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    # Manual is running, the schedule waits behind it.
+    await _async_select_preset(hass, "manual")
+    await _async_select_preset(hass, "schedule")
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.PEER_DOWN,
+        [{"rank": 0}],
+    )
+    await _async_set_zone_setpoint(hass, 21.0)
+
+    assert _sent_commands(mock_client)[-1] == [("setHeatingTargetTemperature", [21.0])]
+
+
+async def test_zone_control_zone_replayed_preset_keeps_its_mode(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a preset lost and replayed still decides the next temperature."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    await _async_select_preset(hass, "schedule")
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        [{"rank": 0}],
+    )
+    await _async_end_execution(hass, freezer, mock_client, "exec-2")
+    await _async_set_zone_setpoint(hass, 21.0)
+
+    sent = _sent_commands(mock_client)
+    assert sent[0] == sent[1]
+    assert sent[-1] == [("setHeatingTargetTemperature", [21.0])]
+
+
+async def test_zone_control_zone_preset_replay_that_cannot_be_sent(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a preset whose replay cannot be sent does not decide any more."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+    mock_client.execute_action_group.side_effect = [
+        "exec-1",
+        BaseOverkizError("Server is down"),
+        "exec-3",
+    ]
+
+    await _async_select_preset(hass, "schedule")
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        [{"rank": 0}],
+    )
+    await _async_set_zone_setpoint(hass, 21.0)
+
+    assert ("setDerogationOnOffState", ["on"]) in _sent_commands(mock_client)[-1]

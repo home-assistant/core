@@ -109,7 +109,8 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         # only follow once the refreshes that come after it have run.
         self.derogation_writes: dict[str, tuple[str, float]] = {}
         # Mode of the program a zone was set to, until the device reports it.
-        self.mode_writes: dict[str, tuple[str, float]] = {}
+        # The command that wrote it tells which request the mode belongs to.
+        self.mode_writes: dict[str, tuple[str, float, Command]] = {}
         self._write_lock = asyncio.Lock()
         # Once the config entry unloads, nothing deferred is sent any more.
         self._shutting_down = False
@@ -232,8 +233,15 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """Return the mode a recent write set a device to, if not reported yet."""
         if (write := self.mode_writes.get(device_url)) is None:
             return None
-        mode, written_at = write
+        mode, written_at, _ = write
         return mode if monotonic() - written_at < 120 else None
+
+    def forget_mode_write(self, device_url: str, command: Command) -> None:
+        """Forget the mode a command wrote, unless a newer request replaced it."""
+        if (write := self.mode_writes.get(device_url)) is not None and (
+            write[2] is command
+        ):
+            del self.mode_writes[device_url]
 
     def is_derogation_written_on(self, device_url: str) -> bool:
         """Return whether a recent write turned the derogation of a device on."""
@@ -426,7 +434,7 @@ async def on_execution_state_changed(
     if records is None:
         return
 
-    _track_derogation_writes(coordinator, records, event)
+    _track_derogation_writes(coordinator, records, event, replaying=replaying)
 
     # A setting that went through ends the failure reported for the device.
     if event.new_state == ExecutionState.COMPLETED:
@@ -483,6 +491,8 @@ def _track_derogation_writes(
     coordinator: OverkizDataUpdateCoordinator,
     records: list[dict[str, Any]],
     event: ExecutionStateChangedEvent,
+    *,
+    replaying: bool = False,
 ) -> None:
     """Remember the derogation a finished write left on its device."""
     applied = _applied_commands(records, event)
@@ -496,15 +506,18 @@ def _track_derogation_writes(
         )
 
         # A mode that was not applied is not the one the device will report. A
-        # refresh that fails after it leaves it applied.
-        if any(
-            command.name == OverkizCommand.SET_PASS_APC_HEATING_MODE
-            for command in _written_commands(record)
-        ) and (
-            applied_names is None
-            or OverkizCommand.SET_PASS_APC_HEATING_MODE not in applied_names
-        ):
-            coordinator.mode_writes.pop(device_url, None)
+        # refresh that fails after it leaves it applied, and a replay may still
+        # apply it.
+        for command in _written_commands(record):
+            if (
+                command.name == OverkizCommand.SET_PASS_APC_HEATING_MODE
+                and not replaying
+                and (
+                    applied_names is None
+                    or OverkizCommand.SET_PASS_APC_HEATING_MODE not in applied_names
+                )
+            ):
+                coordinator.forget_mode_write(device_url, command)
 
         for command in _written_commands(record):
             if command.name != OverkizCommand.SET_DEROGATION_ON_OFF_STATE:
@@ -692,9 +705,15 @@ async def _replay_failed_execution(
         if key is not None:
             coordinator.writes_waiting.discard(key)
 
-    # Without a replay running, nothing will send what waits once it ends.
-    if exec_id is None and key is not None:
-        await _send_pending_commands(coordinator, key)
+    if exec_id is None:
+        # Without a replay, the mode it would have written is not applied.
+        for command in _written_commands(record):
+            if command.name == OverkizCommand.SET_PASS_APC_HEATING_MODE:
+                coordinator.forget_mode_write(device_url, command)
+
+        # Without a replay running, nothing will send what waits once it ends.
+        if key is not None:
+            await _send_pending_commands(coordinator, key)
 
 
 def _failed_command_names(
