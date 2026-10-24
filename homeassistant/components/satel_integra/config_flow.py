@@ -61,7 +61,10 @@ CONNECTION_SCHEMA = probatio.Schema(
 OPTIONS_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_CODE): probatio.All(
-            cv.string,
+            selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+            ),
+            probatio.Match(r"^[0-9]+\Z", msg="invalid_code_format"),
             probatio.Length(min=4, max=16, msg="invalid_code_length"),
         ),
     }
