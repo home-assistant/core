@@ -1510,6 +1510,120 @@ async def test_clear_thermostat_preset_active_blocked(
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_clear_thermostat_preset_unknown_preset_mode(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """An unknown preset_mode raises a validation error."""
+    with pytest.raises(ServiceValidationError, match="Unknown preset_mode"):
+        await hass.services.async_call(
+            DOMAIN,
+            "clear_thermostat_preset",
+            {ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID, ATTR_PRESET_MODE: "does_not_exist"},
+            blocking=True,
+        )
+    matter_client.send_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_clear_thermostat_preset_none_not_removable(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """The PRESET_NONE sentinel is not a removable preset."""
+    with pytest.raises(ServiceValidationError, match="not a removable preset"):
+        await hass.services.async_call(
+            DOMAIN,
+            "clear_thermostat_preset",
+            {ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID, ATTR_PRESET_MODE: PRESET_NONE},
+            blocking=True,
+        )
+    matter_client.send_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_clear_thermostat_preset_matter_error(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A low-level MatterError while removing a preset is wrapped."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=MatterError("Unreachable")
+    )
+
+    with pytest.raises(HomeAssistantError, match="Unreachable"):
+        await hass.services.async_call(
+            DOMAIN,
+            "clear_thermostat_preset",
+            {ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID, ATTR_PRESET_MODE: "sleep"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_set_thermostat_preset_none_not_editable(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """The PRESET_NONE sentinel is not an editable preset."""
+    with pytest.raises(ServiceValidationError, match="not an editable preset"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_thermostat_preset",
+            {
+                ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+                ATTR_PRESET_MODE: PRESET_NONE,
+                ATTR_HEATING_SETPOINT: 20.0,
+            },
+            blocking=True,
+        )
+    matter_client.send_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "1/513/72": [
+                {"0": 1, "1": 2, "2": 2},
+                {"0": 2, "1": 1, "2": 2},
+                {"0": 3, "1": 1, "2": 2},
+                {"0": 4, "1": 1, "2": 2},
+                {"0": 5, "1": 1, "2": 2},
+                {"0": 6, "1": 1, "2": 2},
+                {"0": 254, "1": 1, "2": 2},
+            ]
+        }
+    ],
+)
+async def test_set_thermostat_preset_name_conflict(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Adding a preset named like another one of the same scenario is rejected."""
+    _mock_preset_write(matter_client)
+
+    with pytest.raises(ServiceValidationError, match='already named "Home"'):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_thermostat_preset",
+            {
+                ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+                ATTR_PRESET_SCENARIO: "occupied",
+                ATTR_PRESET_NAME: "Home",
+            },
+            blocking=True,
+        )
+    matter_client.write_attribute.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
 async def test_set_thermostat_preset_unknown_preset_mode(
     hass: HomeAssistant,
     matter_client: MagicMock,

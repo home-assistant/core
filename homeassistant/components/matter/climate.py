@@ -385,10 +385,6 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
                 raise ServiceValidationError(
                     f"'{preset_mode}' is not an editable preset"
                 )
-        elif preset_scenario_str is None:
-            raise ServiceValidationError(
-                "preset_scenario is required when adding a new preset"
-            )
         preset_scenario = (
             PRESET_SCENARIO_REVERSE_MAP[preset_scenario_str]
             if preset_scenario_str is not None
