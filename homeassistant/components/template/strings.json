@@ -177,7 +177,7 @@
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]",
-              "supported_speeds": "List of speeds supported by the cover. If set, the actions on open, close and set position receive the requested speed in variable `speed`, which is `none` if no speed was requested."
+              "supported_speeds": "List of speeds supported by the cover. If set, the actions on open, close and set position receive the requested speed in the variable `speed`, which is `none` if no speed or a speed not in this list was requested."
             },
             "name": "[%key:component::template::common::additional_options%]"
           }
