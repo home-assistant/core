@@ -339,6 +339,7 @@ def smart_plug_device(
     enter_duration_seconds: int | None = None,
     state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
     | None = None,
+    led_brightness: int | None = None,
 ) -> SHCSmartPlug:
     """Build a minimal device double for the smart_plugs bucket."""
     device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
@@ -357,6 +358,8 @@ def smart_plug_device(
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
     device.power_threshold = power_threshold
     device.enter_duration_seconds = enter_duration_seconds
+    device.supports_led_brightness = led_brightness is not None
+    device.led_brightness = led_brightness
     device.state_after_power_outage = state_after_power_outage
     return device
 
@@ -370,6 +373,7 @@ def smart_plug_compact_device(
     enter_duration_seconds: int | None = None,
     state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
     | None = None,
+    led_brightness: int | None = None,
 ) -> SHCSmartPlugCompact:
     """Build a minimal device double for the smart_plugs_compact bucket."""
     device = create_autospec(SHCSmartPlugCompact, instance=True, spec_set=True)
@@ -387,6 +391,8 @@ def smart_plug_compact_device(
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
     device.power_threshold = power_threshold
     device.enter_duration_seconds = enter_duration_seconds
+    device.supports_led_brightness = led_brightness is not None
+    device.led_brightness = led_brightness
     device.state_after_power_outage = state_after_power_outage
     return device
 
