@@ -1679,6 +1679,49 @@ async def test_a_challenge_the_fresh_login_meets_too_is_left_to_the_user(
     assert config_entry.runtime_data.api is challenged
 
 
+async def test_a_session_held_by_the_reauth_flow_is_not_replaced(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that polling leaves the session the user is entering a code for.
+
+    The reauth flow takes the account's session to validate the code on. A poll
+    that logged in again would replace it underneath the flow, and the new login
+    could issue a second challenge that makes the code the user is typing wrong.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.authenticate.side_effect = PyiCloud2FARequiredException(
+        USERNAME, Mock(spec=Response)
+    )
+    challenged = MagicMock()
+    challenged.requires_2fa = True
+    challenged.authenticate.side_effect = PyiCloud2FARequiredException(
+        USERNAME, Mock(spec=Response)
+    )
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        return_value=challenged,
+    ) as login:
+        await _poll(hass, freezer)
+        assert login.call_count == 1
+        assert _reauth_flows(hass)
+
+        await _poll(hass, freezer)
+
+    assert login.call_count == 1
+    assert config_entry.runtime_data.api is challenged
+
+
 async def test_a_failed_setup_retry_keeps_the_account_polling(
     hass: HomeAssistant,
     polling_service: tuple[MagicMock, dict],

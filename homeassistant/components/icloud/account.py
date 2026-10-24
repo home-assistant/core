@@ -751,7 +751,10 @@ class IcloudAccount:
             self.api.authenticate()
             self.update_devices()
         except Exception as err:
-            if not _is_auth_failure(err):
+            # While the user is entering a code the reauth flow holds this
+            # session; a new login would replace it and could issue a second
+            # challenge.
+            if not _is_auth_failure(err) or self._reauth_pending():
                 raise
             _LOGGER.debug("iCloud rejected the session, logging in again: %r", err)
             self.api = self._create_service()
