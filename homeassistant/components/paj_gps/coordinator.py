@@ -84,7 +84,9 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
             auth = await self.api.login()
             self._user_id = auth.userID
         except (AuthenticationError, TokenRefreshError) as exc:
-            raise ConfigEntryAuthFailed from exc
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from exc
         except Exception as exc:
             raise ConfigEntryNotReady from exc
 
@@ -97,6 +99,10 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
             devices = {
                 device.id: device for device in device_list if device.id is not None
             }
+        except (AuthenticationError, TokenRefreshError) as exc:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from exc
         except PajGpsApiError as exc:
             raise UpdateFailed(f"Failed to fetch device list: {exc}") from exc
 
@@ -105,6 +111,10 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         if device_ids:
             try:
                 track_points = await self.api.get_all_last_positions(device_ids)
+            except (AuthenticationError, TokenRefreshError) as exc:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                ) from exc
             except PajGpsApiError as exc:
                 raise UpdateFailed(f"Failed to fetch positions: {exc}") from exc
             positions = {
@@ -128,6 +138,10 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
             )
 
             for device_id, result in zip(voltage_device_ids, results, strict=False):
+                if isinstance(result, (AuthenticationError, TokenRefreshError)):
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN, translation_key="invalid_auth"
+                    ) from result
                 if isinstance(result, PajGpsApiError):
                     if device_id not in self._voltage_data_failures:
                         _LOGGER.info(
