@@ -11,6 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
+    CONF_RECOMMENDED,
     CONF_THINKING_LEVEL,
     RECOMMENDED_IMAGE_MODEL,
 )
