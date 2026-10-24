@@ -55,6 +55,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]

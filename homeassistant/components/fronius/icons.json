@@ -22,6 +22,15 @@
         "default": "mdi:battery-lock"
       }
     },
+    "select": {
+      "battery_forced_mode": {
+        "default": "mdi:battery-sync",
+        "state": {
+          "charge": "mdi:battery-charging-high",
+          "discharge": "mdi:battery-arrow-down"
+        }
+      }
+    },
     "sensor": {
       "cash_factor": {
         "default": "mdi:cash-plus"
