@@ -533,6 +533,7 @@ FLOWS = {
         "mullvad",
         "music_assistant",
         "mutesync",
+        "mvglive",
         "my_pv",
         "myneomitis",
         "mysensors",
