@@ -1085,6 +1085,89 @@ async def test_generic_workaround(
         )
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_generic_workaround_refreshes_incomplete_schemes(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test generic camera refreshes schemes when ffmpeg was not initially registered."""
+    camera = init_test_integration
+    provider = camera.webrtc_provider
+    assert isinstance(provider, WebRTCProvider)
+
+    # Simulate startup race where go2rtc only returned initial schemes without ffmpeg
+    initial_schemes = {"http", "https", "rtsp", "tcp"}
+    provider._supported_schemes = set(initial_schemes)
+    assert not provider.async_is_supported("ffmpeg:https://my_stream_url.m3u8")
+
+    image_bytes = load_fixture_bytes("snapshot.jpg", DOMAIN)
+    rest_client.get_jpeg_snapshot.return_value = image_bytes
+    camera.set_stream_source("https://my_stream_url.m3u8")
+
+    # When schemes are re-queried during stream update, return full list including ffmpeg
+    full_schemes = {*initial_schemes, "ffmpeg"}
+    rest_client.schemes.list.return_value = full_schemes
+
+    with patch.object(camera.platform.platform_data, "platform_name", "generic"):
+        image = await async_get_image(hass, camera.entity_id)
+        assert image.content == image_bytes
+
+        identifier = get_camera_identifier(camera)
+        rest_client.streams.add.assert_called_once_with(
+            identifier,
+            [
+                "ffmpeg:https://my_stream_url.m3u8",
+                f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+            ],
+        )
+    # Ensure supported schemes cache was updated
+    assert provider._supported_schemes == full_schemes
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unsupported_scheme_refreshes_and_raises(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test that unsupported schemes trigger a refresh before raising."""
+    camera = init_test_integration
+    provider = camera.webrtc_provider
+    assert isinstance(provider, WebRTCProvider)
+
+    camera.set_stream_source("unknown://my_stream_url")
+    rest_client.schemes.list.reset_mock()
+    rest_client.schemes.list.return_value = {"http", "rtsp", "ffmpeg"}
+
+    with pytest.raises(
+        HomeAssistantError, match="Stream source is not supported by go2rtc"
+    ):
+        await async_get_image(hass, camera.entity_id)
+
+    rest_client.schemes.list.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_scheme_refresh_client_error_suppressed(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test client error during scheme refresh is suppressed and raises unsupported error."""
+    camera = init_test_integration
+    provider = camera.webrtc_provider
+    assert isinstance(provider, WebRTCProvider)
+
+    camera.set_stream_source("unknown://my_stream_url")
+    rest_client.schemes.list.side_effect = Go2RtcClientError("Connection refused")
+
+    with pytest.raises(
+        HomeAssistantError, match="Stream source is not supported by go2rtc"
+    ):
+        await async_get_image(hass, camera.entity_id)
+
+
 async def _test_camera_orientation(
     hass: HomeAssistant,
     camera: MockCamera,
