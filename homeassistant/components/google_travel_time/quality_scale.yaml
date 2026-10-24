@@ -5,7 +5,7 @@ rules:
   brands: done
   common-modules: done
   config-flow: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage: todo
   dependency-transparency: done
   docs-actions: done
   docs-conditions:
@@ -17,7 +17,7 @@ rules:
   docs-triggers:
     status: exempt
     comment: This integration does not provide triggers.
-  entity-event-setup: done
+  entity-event-setup: todo
   entity-unique-id: done
   has-entity-name: todo
   runtime-data:
@@ -74,9 +74,7 @@ rules:
     comment: The sensor relies on the icon provided by its device class.
   reconfiguration-flow: done
   repair-issues: done
-  stale-devices:
-    status: exempt
-    comment: The integration manages a single static service device per config entry.
+  stale-devices: todo
 
   # Platinum
   async-dependency: done
