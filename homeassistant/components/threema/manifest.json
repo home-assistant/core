@@ -8,5 +8,5 @@
   "integration_type": "service",
   "iot_class": "cloud_push",
   "quality_scale": "silver",
-  "requirements": ["aiothreema==0.2.0"]
+  "requirements": ["aiothreema==0.2.0", "segno==1.6.6"]
 }
