@@ -21,6 +21,7 @@ import py
 import pytest
 
 import homeassistant
+from homeassistant.const import ENTITY_MATCH_NONE
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -1658,6 +1659,18 @@ def test_comp_entity_ids() -> None:
     for invalid in (["light.kitchen", "not-entity-id"], "*", ""):
         with pytest.raises(probatio.Invalid):
             schema(invalid)
+
+
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.comp_entity_ids, id="comp_entity_ids"),
+        pytest.param(cv.comp_entity_ids_or_uuids, id="comp_entity_ids_or_uuids"),
+    ],
+)
+def test_comp_entity_ids_none(validator: Callable[[Any], Any]) -> None:
+    """Test None is treated as the 'none' keyword."""
+    assert probatio.Schema(validator)(None) == ENTITY_MATCH_NONE
 
 
 def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
