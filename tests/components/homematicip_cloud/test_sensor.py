@@ -2,12 +2,18 @@
 
 from unittest.mock import patch
 
-from homematicip.base.enums import ValveState, WindowState
+from homematicip.base.enums import UserRole, ValveState, WindowState
 import pytest
-from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homematicip_cloud import DOMAIN
+from homeassistant.components.homematicip_cloud.const import (
+    HMIPC_AUTHTOKEN,
+    HMIPC_CLIENT_ID,
+    HMIPC_HAPID,
+    HMIPC_NAME,
+)
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_CONFIG_PENDING,
     ATTR_DEVICE_OVERHEATED,
@@ -55,7 +61,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
+from .helper import (
+    AUTH_TOKEN,
+    HomeFactory,
+    async_manipulate_test_data,
+    get_and_check_entity_basics,
+)
 
 
 async def test_hmip_accesspoint_status(
@@ -1272,3 +1283,49 @@ def test_simple_sensor_descriptions_no_overlap() -> None:
                 f"{cls_b.__name__} matches both {cls_b.__name__} and "
                 f"{cls_a.__name__}; duplicate entities would be created"
             )
+
+
+async def test_hmip_client_role_sensor(
+    hass: HomeAssistant,
+    mock_connection,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the role of the own client, shown on the access point of the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="3014F711A000000BAD0CAAAA",
+        data={
+            HMIPC_HAPID: "3014F711A000000BAD0CAAAA",
+            HMIPC_AUTHTOKEN: AUTH_TOKEN,
+            HMIPC_NAME: "",
+            HMIPC_CLIENT_ID: "00000000-0000-0000-0000-000000000000",
+        },
+    )
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS", [Platform.SENSOR]
+    ):
+        mock_hap = await HomeFactory(hass, mock_connection, entry).async_get_mock_hap(
+            test_devices=["AP1", "HOME_CONTROL_ACCESS_POINT"], test_groups=[]
+        )
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+    client = mock_hap.home.search_client_by_id("00000000-0000-0000-0000-000000000000")
+    client.userRole = UserRole.USER
+    client.fire_update_event()
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.ap1_client_role").state == "user"
+
+
+async def test_hmip_client_role_sensor_without_client_id(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Entries set up before the client ID was stored get no role sensor."""
+    await default_mock_hap_factory.async_get_mock_hap(test_devices=["AP1"])
+
+    assert not [
+        state.entity_id
+        for state in hass.states.async_all("sensor")
+        if state.entity_id.endswith("_client_role")
+    ]

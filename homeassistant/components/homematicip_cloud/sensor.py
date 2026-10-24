@@ -5,11 +5,12 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, override
 
-from homematicip.base.enums import FunctionalChannelType, ValveState
+from homematicip.base.enums import FunctionalChannelType, UserRole, ValveState
 from homematicip.base.functionalChannels import (
     FloorTerminalBlockMechanicChannel,
     FunctionalChannel,
 )
+from homematicip.client import Client
 from homematicip.device import (
     Device,
     EnergySensorsInterface,
@@ -53,6 +54,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
+    EntityCategory,
     UnitOfDensity,
     UnitOfEnergy,
     UnitOfLength,
@@ -68,6 +70,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import HMIPC_CLIENT_ID, HMIPC_HAPID
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 from .helpers import (
@@ -658,7 +661,49 @@ async def async_setup_entry(
         if getattr(channel, "carbonDioxideConcentration", None) is not None
     )
 
+    if (client_id := config_entry.data.get(HMIPC_CLIENT_ID)) and (
+        client := hap.home.search_client_by_id(client_id)
+    ):
+        entities.extend(
+            HomematicipClientRoleSensor(hap, device, client)
+            for device in hap.home.devices
+            if device.id == config_entry.data[HMIPC_HAPID]
+        )
     async_add_entities(entities)
+
+
+class HomematicipClientRoleSensor(HomematicipGenericEntity, SensorEntity):
+    """Role of the Home Assistant client in the HomematicIP user management."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_options = [role.name.lower() for role in UserRole]
+    _attr_translation_key = "client_role"
+
+    def __init__(self, hap: HomematicipHAP, device: Device, client: Client) -> None:
+        """Initialize the client role sensor."""
+        super().__init__(
+            hap, device, feature_id="client_role", use_description_name=True
+        )
+        self._client = client
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        # a role change updates the client, not the access point
+        self._client.on_update(self._async_device_changed)
+        self.async_on_remove(
+            lambda: self._client.remove_callback(self._async_device_changed)
+        )
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the role of this client."""
+        if self._client.userRole is None:
+            return None
+        return self._client.userRole.name.lower()
 
 
 class HomematicipCarbonDioxideSensor(HomematicipGenericEntity, SensorEntity):

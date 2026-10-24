@@ -61,10 +61,12 @@ async def test_auth_auth_check_and_register(hass: HomeAssistant) -> None:
         patch.object(
             hmip_auth.auth,
             "confirm_auth_token",
+            return_value="client-id",
         ),
     ):
         assert await hmip_auth.async_checkbutton()
         assert await hmip_auth.async_register() == "ABC"
+        assert hmip_auth.client_id == "client-id"
 
 
 async def test_auth_auth_check_and_register_with_exception(hass: HomeAssistant) -> None:

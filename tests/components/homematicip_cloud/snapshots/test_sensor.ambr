@@ -1,4 +1,190 @@
 # serializer version: 1
+# name: test_hmip_client_role_sensor[sensor.ap1_client_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'admin',
+        'user',
+        'restricted_user',
+        'urm_deactivated_fallback',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F711A000000BAD0CAAAA')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ap1_client_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Client role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Client role',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'client_role',
+    'unique_id': '3014F711A000000BAD0CAAAA_1_client_role',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_client_role_sensor[sensor.ap1_client_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_LAN: 'HMIP_LAN'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AP1 Client role',
+      'id': '3014F711A000000BAD0CAAAA',
+      'is_group': False,
+      'model_type': 'HmIP-HAP',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'admin',
+        'user',
+        'restricted_user',
+        'urm_deactivated_fallback',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ap1_client_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'restricted_user',
+  })
+# ---
+# name: test_hmip_client_role_sensor[sensor.ap1_duty_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F711A000000BAD0CAAAA')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ap1_duty_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Duty cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:access-point-network',
+    'original_name': 'Duty cycle',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'duty_cycle',
+    'unique_id': '3014F711A000000BAD0CAAAA_0_duty_cycle',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_hmip_client_role_sensor[sensor.ap1_duty_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_LAN: 'HMIP_LAN'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AP1 Duty cycle',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
+      'id': '3014F711A000000BAD0CAAAA',
+      'is_group': False,
+      'model_type': 'HmIP-HAP',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ap1_duty_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.0',
+  })
+# ---
+# name: test_hmip_client_role_sensor[sensor.home_control_access_point_duty_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F711A000000BAD0C0DED')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_control_access_point_duty_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Duty cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:access-point-network',
+    'original_name': 'Duty cycle',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'duty_cycle',
+    'unique_id': '3014F711A000000BAD0C0DED_0_duty_cycle',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_hmip_client_role_sensor[sensor.home_control_access_point_duty_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_LAN: 'HMIP_LAN'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HOME_CONTROL_ACCESS_POINT Duty cycle',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
+      'id': '3014F711A000000BAD0C0DED',
+      'is_group': False,
+      'model_type': 'HmIP-HAP',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_control_access_point_duty_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.0',
+  })
+# ---
 # name: test_hmip_motion_detector_switch_outdoor_illuminance[sensor.bewegungsmelder_haustur_illuminance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
