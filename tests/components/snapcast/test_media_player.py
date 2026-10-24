@@ -313,7 +313,7 @@ async def test_attributes_group_is_none(
     # Assert accessing state and attributes doesn't throw
     assert state.state == MediaPlayerState.IDLE
 
-    assert "group_members" not in state.attributes
+    assert state.attributes["group_members"] is None
     assert "source" not in state.attributes
     assert "source_list" not in state.attributes
     assert "metadata" not in state.attributes

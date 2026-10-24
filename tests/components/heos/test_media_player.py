@@ -345,11 +345,11 @@ async def test_updates_from_groups_changed(
     # Assert groups changed
     state = hass.states.get("media_player.test_player")
     assert state is not None
-    assert ATTR_GROUP_MEMBERS not in state.attributes
+    assert state.attributes[ATTR_GROUP_MEMBERS] is None
 
     state = hass.states.get("media_player.test_player_2")
     assert state is not None
-    assert ATTR_GROUP_MEMBERS not in state.attributes
+    assert state.attributes[ATTR_GROUP_MEMBERS] is None
 
 
 async def test_clear_playlist(
@@ -1671,7 +1671,7 @@ async def test_media_player_group_members_error(
     assert "Unable to retrieve groups" in caplog.text
     player_entity = hass.states.get("media_player.test_player")
     assert player_entity is not None
-    assert ATTR_GROUP_MEMBERS not in player_entity.attributes
+    assert player_entity.attributes[ATTR_GROUP_MEMBERS] is None
 
 
 @pytest.mark.parametrize(
