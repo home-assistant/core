@@ -53,6 +53,10 @@ _VOLUME_FEATURES = (
 )
 
 
+def _has_speaker(public: PublicDeviceModel) -> bool:
+    return cast(PublicCamera, public).has_speaker
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -83,6 +87,8 @@ async def async_setup_entry(
     @callback
     def _add_new_public_device(device: PublicDeviceModel) -> None:
         # Only public-only mode offers cameras here; hybrid adopts them above.
+        # The signal fires once per mac, so a speaker attached later only gets
+        # an entity after a reload.
         if isinstance(device, PublicCamera) and device.has_speaker:
             async_add_entities([ProtectMediaPlayer(data, device, None)])
 
@@ -131,6 +137,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             # The platform only builds a speaker when at least one side exists.
             assert device is not None
         super().__init__(data, device, _SPEAKER_DESCRIPTION)
+        self._async_get_ufp_public_enabled = _has_speaker
         if private is None:
             self._attr_supported_features = _PLAYBACK_FEATURES
 
@@ -148,18 +155,12 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             self._attr_volume_level = float(volume / 100)
 
         public = cast(PublicCamera | None, self._ufp_public_obj)
-        if public is None:
-            self._attr_state = MediaPlayerState.IDLE
-            return
-        if not public.has_speaker:
-            self._attr_available = False
-        stream = public.talkback_stream
+        stream = public.talkback_stream if public is not None else None
         if stream is not None and stream.is_running:
             self._attr_state = MediaPlayerState.PLAYING
         else:
             self._attr_state = MediaPlayerState.IDLE
 
-    @callback
     def _public_camera(self) -> PublicCamera:
         """Return the public camera, or raise if it vanished mid-command."""
         return cast(PublicCamera, self._ufp_set_target())

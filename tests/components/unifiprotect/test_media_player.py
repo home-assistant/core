@@ -1,5 +1,6 @@
 """Test the UniFi Protect media_player platform."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
@@ -7,7 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
-from uiprotect.data import Camera, ChannelQuality, DeviceState, WSAction
+from uiprotect.data import Camera, ChannelQuality, DeviceState, StateType, WSAction
 from uiprotect.data.devices import Hotplug
 from uiprotect.exceptions import BadRequest, NotAuthorized, StreamError
 
@@ -30,7 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import patch_ufp_method
 from .utils import (
@@ -149,20 +150,36 @@ async def test_media_player_camera_remove(
 
 
 @pytest.mark.parametrize(
-    ("setup_fixture", "features", "volume"),
+    ("setup_fixture", "features", "volume", "model", "sw_version"),
     [
-        pytest.param("setup_hybrid_speaker", _ALL_FEATURES, 1.0, id="hybrid"),
+        # Device info comes from the private camera in hybrid.
         pytest.param(
-            "setup_public_only_speaker", _PLAYBACK_FEATURES, None, id="public_only"
+            "setup_hybrid_speaker",
+            _ALL_FEATURES,
+            1.0,
+            "G4 Instant",
+            "4.47.13",
+            id="hybrid",
+        ),
+        pytest.param(
+            "setup_public_only_speaker",
+            _PLAYBACK_FEATURES,
+            None,
+            "UVC G4 Instant",
+            None,
+            id="public_only",
         ),
     ],
 )
 async def test_media_player_setup(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     speaker: tuple[MockUFPFixture, Mock],
     features: MediaPlayerEntityFeature,
     volume: float | None,
+    model: str,
+    sw_version: str | None,
 ) -> None:
     """Volume features and state exist only with a private camera."""
     _, public = speaker
@@ -171,6 +188,10 @@ async def test_media_player_setup(
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity
     assert entity.unique_id == f"{public.mac}_speaker"
+    device = device_registry.async_get(entity.device_id)
+    assert device
+    assert device.model == model
+    assert device.sw_version == sw_version
 
     state = hass.states.get(ENTITY_ID)
     assert state
@@ -234,44 +255,92 @@ async def test_media_player_public_only_speaker_gate(
     assert_entity_counts(hass, Platform.MEDIA_PLAYER, count, count)
 
 
-async def test_media_player_hybrid_volume(
+async def _set_private_volume(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, volume: int
+) -> Camera:
+    """Push a private camera update with ``volume`` (no ``speaker_volume``)."""
+    new_camera = doorbell.model_copy()
+    new_camera.speaker_settings = doorbell.speaker_settings.model_copy()
+    new_camera.speaker_settings.speaker_volume = None
+    new_camera.speaker_settings.volume = volume
+    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
+    ufp.ws_msg(Mock(changed_data={}, new_obj=new_camera))
+    await hass.async_block_till_done()
+    return new_camera
+
+
+async def test_media_player_hybrid_volume_state(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
     setup_hybrid_speaker: SpeakerSetup,
 ) -> None:
-    """Hybrid volume is read from and written to the private camera."""
+    """Hybrid volume is read from the private camera."""
     await setup_hybrid_speaker()
 
-    new_camera = doorbell.model_copy()
-    new_camera.speaker_settings = doorbell.speaker_settings.model_copy()
-    new_camera.speaker_settings.speaker_volume = None
-    new_camera.speaker_settings.volume = 30
     # Playback state comes from the public camera only.
-    new_camera.talkback_stream = Mock(is_running=True)
-    msg = Mock(changed_data={}, new_obj=new_camera)
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.ws_msg(msg)
-    await hass.async_block_till_done()
+    doorbell.talkback_stream = Mock(is_running=True)
+    await _set_private_volume(hass, ufp, doorbell, 30)
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.3
     assert state.state == STATE_IDLE
 
+
+@pytest.mark.parametrize(
+    ("service", "data", "expected"),
+    [
+        pytest.param("volume_set", {"volume_level": 0.5}, 50, id="volume_set"),
+        # One default step (0.1) up from the private camera's 30.
+        pytest.param("volume_up", {}, 40, id="volume_up"),
+    ],
+)
+async def test_media_player_hybrid_set_volume(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    setup_hybrid_speaker: SpeakerSetup,
+    service: str,
+    data: dict[str, Any],
+    expected: int,
+) -> None:
+    """Hybrid volume is written to the private camera."""
+    await setup_hybrid_speaker()
+    camera = await _set_private_volume(hass, ufp, doorbell, 30)
+
     with patch_ufp_method(
-        new_camera, "set_speaker_volume", new_callable=AsyncMock
+        camera, "set_speaker_volume", new_callable=AsyncMock
     ) as mock_method:
+        await hass.services.async_call(
+            "media_player", service, {ATTR_ENTITY_ID: ENTITY_ID, **data}, blocking=True
+        )
+
+    mock_method.assert_awaited_once_with(expected)
+
+
+async def test_media_player_hybrid_set_volume_error(
+    hass: HomeAssistant, doorbell: Camera, setup_hybrid_speaker: SpeakerSetup
+) -> None:
+    """A rejected volume change surfaces as a translated error."""
+    await setup_hybrid_speaker()
+
+    with (
+        patch_ufp_method(
+            doorbell,
+            "set_speaker_volume",
+            new_callable=AsyncMock,
+            side_effect=BadRequest("volume rejected"),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
         await hass.services.async_call(
             "media_player",
             "volume_set",
             {ATTR_ENTITY_ID: ENTITY_ID, "volume_level": 0.5},
             blocking=True,
         )
-        await hass.services.async_call(
-            "media_player", "volume_up", {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
-        )
 
-    assert [c.args for c in mock_method.await_args_list] == [(50,), (40,)]
+    assert exc_info.value.translation_key == "command_error"
 
 
 @pytest.mark.parametrize(
@@ -296,18 +365,34 @@ async def test_media_player_public_only_no_volume(
         )
 
 
+def _start_stream_on_play(public: Mock) -> None:
+    """Make ``play_audio`` leave a running talkback stream, as the library does."""
+
+    async def _play_audio(*args: Any, **kwargs: Any) -> None:
+        public.talkback_stream = Mock(is_running=True)
+
+    public.play_audio.side_effect = _play_audio
+
+
 @BOTH_MODES
-async def test_media_player_update(
+async def test_media_player_playing_state(
     hass: HomeAssistant, speaker: tuple[MockUFPFixture, Mock]
 ) -> None:
-    """The state follows the public camera's talkback stream."""
-    ufp, public = speaker
+    """The state is playing while the public talkback stream runs."""
+    _, public = speaker
+    _start_stream_on_play(public)
+    states: list[str] = []
 
-    public.talkback_stream = Mock(is_running=True)
-    ufp.devices_ws_subscription(public_device_ws_message(public))
-    await hass.async_block_till_done()
+    async def _wait() -> None:
+        states.append(hass.states.get(ENTITY_ID).state)
+        public.talkback_stream.is_running = False
 
-    assert hass.states.get(ENTITY_ID).state == STATE_PLAYING
+    public.wait_until_audio_completes.side_effect = _wait
+
+    await _play(hass)
+
+    assert states == [STATE_PLAYING]
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
 
 
 @BOTH_MODES
@@ -315,7 +400,7 @@ async def test_media_player_update(
     "mutate",
     [
         pytest.param(
-            lambda public: setattr(public.feature_flags, "has_speaker", False),
+            lambda public: setattr(public, "has_speaker", False),
             id="no_speaker",
         ),
         pytest.param(
@@ -361,16 +446,85 @@ async def test_media_player_hybrid_waits_for_public_mirror(
 
 
 @BOTH_MODES
-@pytest.mark.parametrize(("is_running", "stopped"), [(True, 1), (False, 0)])
-async def test_media_player_stop(
-    hass: HomeAssistant,
-    speaker: tuple[MockUFPFixture, Mock],
-    is_running: bool,
-    stopped: int,
+async def test_media_player_unavailable_when_public_removed(
+    hass: HomeAssistant, speaker: tuple[MockUFPFixture, Mock]
 ) -> None:
-    """Stopping goes to the public camera, only while audio is playing."""
+    """The speaker is unavailable while its public camera is missing."""
+    ufp, public = speaker
+
+    del ufp.api.public_bootstrap.cameras[public.id]
+    msg = public_device_ws_message(public, action=WSAction.REMOVE)
+    msg.new_obj = None
+    msg.old_obj = public
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_media_player_hybrid_ignores_private_connection(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    setup_hybrid_speaker: SpeakerSetup,
+) -> None:
+    """Hybrid availability follows the public camera, not the private one."""
+    await setup_hybrid_speaker()
+
+    new_camera = doorbell.model_copy()
+    new_camera.state = StateType.DISCONNECTED
+    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
+    ufp.ws_msg(Mock(changed_data={}, new_obj=new_camera))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
+
+
+@BOTH_MODES
+async def test_media_player_stop_while_playing(
+    hass: HomeAssistant, speaker: tuple[MockUFPFixture, Mock]
+) -> None:
+    """Stopping running audio goes to the public camera and writes idle."""
     _, public = speaker
-    public.talkback_stream = Mock(is_running=is_running)
+    _start_stream_on_play(public)
+    waiting = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _wait() -> None:
+        waiting.set()
+        await release.wait()
+
+    async def _stop_audio() -> None:
+        public.talkback_stream.is_running = False
+
+    public.wait_until_audio_completes.side_effect = _wait
+    public.stop_audio.side_effect = _stop_audio
+
+    play = hass.async_create_task(_play(hass))
+    await waiting.wait()
+    assert hass.states.get(ENTITY_ID).state == STATE_PLAYING
+
+    await hass.services.async_call(
+        "media_player",
+        "media_stop",
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    # Written by the stop itself; playback is still awaiting completion.
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
+    public.stop_audio.assert_awaited_once()
+
+    release.set()
+    await play
+
+
+@BOTH_MODES
+async def test_media_player_stop_when_idle(
+    hass: HomeAssistant, speaker: tuple[MockUFPFixture, Mock]
+) -> None:
+    """Stopping without running audio does not call the library."""
+    _, public = speaker
+    public.talkback_stream = Mock(is_running=False)
 
     await hass.services.async_call(
         "media_player",
@@ -379,7 +533,7 @@ async def test_media_player_stop(
         blocking=True,
     )
 
-    assert public.stop_audio.await_count == stopped
+    public.stop_audio.assert_not_awaited()
 
 
 @BOTH_MODES
@@ -481,16 +635,13 @@ async def test_media_player_play_wait_error(
 ) -> None:
     """Test a stream error while waiting for playback raises and resets the state."""
     _, public = await setup_hybrid_speaker()
-
-    async def _play_audio(*args: Any, **kwargs: Any) -> None:
-        public.talkback_stream = Mock(is_running=True)
+    _start_stream_on_play(public)
 
     async def _wait_fails() -> None:
         assert hass.states.get(ENTITY_ID).state == STATE_PLAYING
         public.talkback_stream.is_running = False
         raise StreamError("Audio streaming failed")
 
-    public.play_audio.side_effect = _play_audio
     public.wait_until_audio_completes.side_effect = _wait_fails
 
     with pytest.raises(HomeAssistantError) as exc_info:
