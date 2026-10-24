@@ -1,7 +1,7 @@
 """Test the config manager."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import timedelta
 from ipaddress import ip_address
@@ -10853,6 +10853,166 @@ async def test_abort_if_unique_id_mismatch(
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "reason", "expected_reason", "expected_host"),
+    [
+        ("unique", None, "already_configured", "new"),
+        ("unique", "custom_reason", "custom_reason", "new"),
+        ("other", None, "success", "old"),
+    ],
+)
+async def test_set_unique_id_or_abort_configured(
+    hass: HomeAssistant,
+    unique_id: str,
+    reason: str | None,
+    expected_reason: str,
+    expected_host: str,
+) -> None:
+    """Test async_set_unique_id_or_abort aborts when already configured."""
+    entry = MockConfigEntry(domain="test", data={"host": "old"}, unique_id="unique")
+    entry.add_to_hass(hass)
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            await self.async_set_unique_id_or_abort(
+                unique_id, updates={"host": "new"}, reason=reason
+            )
+            return self.async_abort(reason="success")
+
+    with mock_config_flow("test", TestFlow):
+        result = await hass.config_entries.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
+    assert entry.data == {"host": expected_host}
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "reason", "placeholders", "expected_reason"),
+    [
+        ("unique", None, None, "success"),
+        ("new", None, None, "unique_id_mismatch"),
+        ("new", "wrong_account", {"account": "other"}, "wrong_account"),
+    ],
+)
+@pytest.mark.parametrize(
+    "start_flow",
+    [
+        pytest.param(MockConfigEntry.start_reauth_flow, id="reauth"),
+        pytest.param(MockConfigEntry.start_reconfigure_flow, id="reconfigure"),
+    ],
+)
+async def test_set_unique_id_or_abort_mismatch(
+    hass: HomeAssistant,
+    start_flow: Callable[
+        [MockConfigEntry, HomeAssistant], Awaitable[config_entries.ConfigFlowResult]
+    ],
+    unique_id: str,
+    reason: str | None,
+    placeholders: dict[str, str] | None,
+    expected_reason: str,
+) -> None:
+    """Test async_set_unique_id_or_abort checks the entry in reauth and reconfigure."""
+    entry = MockConfigEntry(domain="test", data={"host": "old"}, unique_id="unique")
+    entry.add_to_hass(hass)
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_reauth(self, entry_data):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reconfigure(self, user_input=None):
+            """Test reconfigure step."""
+            return await self._async_step_confirm()
+
+        async def _async_step_confirm(self):
+            """Confirm input."""
+            await self.async_set_unique_id_or_abort(
+                unique_id,
+                updates={"host": "new"},
+                reason=reason,
+                description_placeholders=placeholders,
+            )
+            return self.async_abort(reason="success")
+
+    with mock_config_flow("test", TestFlow):
+        result = await start_flow(entry, hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
+    assert result["description_placeholders"] == placeholders
+    assert entry.data == {"host": "old"}
+
+
+@pytest.mark.parametrize(
+    ("source", "raise_on_progress", "expected_reason"),
+    [
+        (config_entries.SOURCE_USER, None, "success"),
+        (config_entries.SOURCE_USER, True, "already_in_progress"),
+        (config_entries.SOURCE_IMPORT, None, "already_in_progress"),
+        (config_entries.SOURCE_IMPORT, False, "success"),
+    ],
+)
+async def test_set_unique_id_or_abort_raise_on_progress(
+    hass: HomeAssistant,
+    source: str,
+    raise_on_progress: bool | None,
+    expected_reason: str,
+) -> None:
+    """Test user flows take precedence over a discovery flow in progress."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_zeroconf(self, discovery_info):
+            """Test zeroconf step."""
+            await self.async_set_unique_id("unique")
+            return await self.async_step_confirm()
+
+        async def async_step_confirm(self, user_input=None):
+            """Test confirm step."""
+            return self.async_show_form(step_id="confirm")
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return await self._async_step_create()
+
+        async def async_step_import(self, import_data):
+            """Test import step."""
+            return await self._async_step_create()
+
+        async def _async_step_create(self):
+            """Set the unique ID."""
+            await self.async_set_unique_id_or_abort(
+                "unique", raise_on_progress=raise_on_progress
+            )
+            return self.async_abort(reason="success")
+
+    with mock_config_flow("test", TestFlow):
+        await hass.config_entries.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_ZEROCONF}, data={}
+        )
+        result = await hass.config_entries.flow.async_init(
+            "test", context={"source": source}, data={}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
 
 
 def test_state_not_stored_in_storage() -> None:
