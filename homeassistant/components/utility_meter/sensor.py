@@ -30,8 +30,10 @@ from homeassistant.const import (
     EntityStateAttribute,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Event,
     EventStateChangedData,
+    EventStateReportedData,
     HomeAssistant,
     State,
     async_noop,
@@ -48,6 +50,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
+    async_track_state_report_event,
 )
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -449,8 +452,44 @@ class UtilityMeterSensor(RestoreSensor):
         return None
 
     @callback
+    def _async_track_source(self) -> CALLBACK_TYPE:
+        """Start collecting readings from the source sensor."""
+        unsubs = [
+            async_track_state_change_event(
+                self.hass, [self._sensor_source_id], self.async_reading
+            )
+        ]
+        if self._sensor_delta_values:
+            # A delta equal to the previous one only fires a state_reported event
+            unsubs.append(
+                async_track_state_report_event(
+                    self.hass, [self._sensor_source_id], self.async_reading_reported
+                )
+            )
+
+        @callback
+        def _async_unsub() -> None:
+            for unsub in unsubs:
+                unsub()
+
+        return _async_unsub
+
+    @callback
     def async_reading(self, event: Event[EventStateChangedData]) -> None:
         """Handle the sensor state changes."""
+        self._async_handle_reading(event.data["old_state"], event.data["new_state"])
+
+    @callback
+    def async_reading_reported(self, event: Event[EventStateReportedData]) -> None:
+        """Handle the sensor reporting an unchanged state."""
+        new_state = event.data["new_state"]
+        self._async_handle_reading(new_state, new_state)
+
+    @callback
+    def _async_handle_reading(
+        self, old_state: State | None, new_state: State | None
+    ) -> None:
+        """Handle a reading of the source sensor."""
         if (
             source_state := self.hass.states.get(self._sensor_source_id)
         ) is None or source_state.state == STATE_UNAVAILABLE:
@@ -461,8 +500,6 @@ class UtilityMeterSensor(RestoreSensor):
 
         self._attr_available = True
 
-        old_state = event.data["old_state"]
-        new_state = event.data["new_state"]
         if new_state is None:
             return
         new_state_attributes: Mapping[str, Any] = new_state.attributes or {}
@@ -514,9 +551,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     def _change_status(self, tariff: str) -> None:
         if self._tariff == tariff:
-            self._collecting = async_track_state_change_event(
-                self.hass, [self._sensor_source_id], self.async_reading
-            )
+            self._collecting = self._async_track_source()
         else:
             if self._collecting:
                 self._collecting()
@@ -648,9 +683,7 @@ class UtilityMeterSensor(RestoreSensor):
                 self.native_unit_of_measurement,
                 self._sensor_source_id,
             )
-            self._collecting = async_track_state_change_event(
-                self.hass, [self._sensor_source_id], self.async_reading
-            )
+            self._collecting = self._async_track_source()
 
         self.async_on_remove(async_at_started(self.hass, async_source_tracking))
 
