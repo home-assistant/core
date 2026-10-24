@@ -6,6 +6,13 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
 
 from homeassistant import core as ha
 from homeassistant.components import input_boolean, switch
@@ -40,13 +47,6 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_fire_time_changed,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
 from tests.components.switch.common import MockSwitch
 
 ENTITY = "humidifier.test"

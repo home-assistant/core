@@ -4,6 +4,8 @@ import datetime as dt
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.met_eireann.const import DOMAIN
@@ -15,9 +17,6 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def setup_config_entry(hass: HomeAssistant) -> ConfigEntry:

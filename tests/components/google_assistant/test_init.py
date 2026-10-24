@@ -3,6 +3,9 @@
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components import google_assistant as ga
 from homeassistant.components.google_assistant import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,9 +13,6 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .test_http import DUMMY_CONFIG
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_import(hass: HomeAssistant) -> None:

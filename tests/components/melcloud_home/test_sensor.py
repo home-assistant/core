@@ -6,6 +6,12 @@ from unittest.mock import AsyncMock, patch
 from aiomelcloudhome import UserContext
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.melcloud_home.const import DOMAIN
@@ -16,13 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 OPERATION_STATUS_ENTITY_ID = "sensor.heat_pump_operation_status"
 OUTDOOR_TEMPERATURE_ENTITY_ID = "sensor.living_room_ac_outdoor_temperature"

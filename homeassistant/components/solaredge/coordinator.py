@@ -470,7 +470,13 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
     @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint and update statistics."""
-        equipment: dict[str, dict[str, Any]] = await self.api.async_get_equipment()
+        equipment: dict[str, dict[str, Any]] = {
+            equipment_id: equipment_data
+            for equipment_id, equipment_data in (
+                await self.api.async_get_equipment()
+            ).items()
+            if equipment_data.get("type") in ("INVERTER", "STRING", "OPTIMIZER")
+        }
         await self._async_build_legacy_id_map(equipment)
         # We fetch last week's data from the API and refresh
         # every 12h so we overwrite recent statistics. This is

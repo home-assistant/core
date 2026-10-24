@@ -4,12 +4,11 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import MockHAClientWebSocket
 
 from homeassistant.components.websocket_api import ERR_NOT_FOUND
 
 from . import SESSION_ID, async_execute, async_inspect, async_send
-
-from tests.typing import MockHAClientWebSocket
 
 
 @pytest.mark.parametrize(

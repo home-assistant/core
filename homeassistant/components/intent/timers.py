@@ -473,9 +473,7 @@ class TimerManager:
 
     async def _async_run_conversation_command(self, timer: TimerInfo) -> None:
         """Run the delayed command of a finished timer."""
-        from homeassistant.components.conversation import (  # noqa: PLC0415
-            async_converse,
-        )
+        from homeassistant.components.conversation import async_converse  # noqa: PLC0415
 
         assert timer.conversation_command is not None
 

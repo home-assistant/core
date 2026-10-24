@@ -70,7 +70,8 @@ from .const import (
 )
 from .entity import SonosEntity
 from .helpers import UnjoinData, soco_error
-from .speaker import SonosMedia, SonosSpeaker
+from .media import SonosMedia
+from .speaker import SonosSpeaker
 
 if TYPE_CHECKING:
     from .helpers import SonosConfigEntry
@@ -588,9 +589,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         soco = self.coordinator.soco
         if media_id and media_id.startswith(PLEX_URI_SCHEME):
             # Runs in the executor, only load Plex when playing Plex media
-            from homeassistant.components.plex.services import (  # noqa: PLC0415 # pylint: disable=home-assistant-component-root-import
-                process_plex_payload,
-            )
+            from homeassistant.components.plex.services import process_plex_payload  # noqa: PLC0415 # pylint: disable=home-assistant-component-root-import
 
             plex_plugin = self.speaker.plex_plugin
             result = process_plex_payload(

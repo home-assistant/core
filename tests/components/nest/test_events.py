@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -24,8 +25,6 @@ from .common import (
     PlatformSetup,
     create_nest_event,
 )
-
-from tests.common import async_capture_events
 
 DOMAIN = "nest"
 PLATFORM = "camera"

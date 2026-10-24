@@ -81,6 +81,12 @@
       "water_meter_duration": {
         "name": "Water meter duration"
       },
+      "water_meter_negative_duration": {
+        "name": "Water meter negative duration"
+      },
+      "water_meter_negative_volume": {
+        "name": "Water meter negative volume"
+      },
       "water_meter_volume": {
         "name": "Water meter volume"
       },

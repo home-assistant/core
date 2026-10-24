@@ -10,6 +10,7 @@ from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.components.infrared import InfraredDeviceClass
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.radio_frequency import RadioFrequencyDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.components.update import UpdateDeviceClass
@@ -35,6 +36,7 @@ def _generate() -> str:
                 Platform.INFRARED: InfraredDeviceClass,
                 Platform.MEDIA_PLAYER: MediaPlayerDeviceClass,
                 Platform.NUMBER: NumberDeviceClass,
+                Platform.RADIO_FREQUENCY: RadioFrequencyDeviceClass,
                 Platform.SENSOR: SensorDeviceClass,
                 Platform.SWITCH: SwitchDeviceClass,
                 Platform.UPDATE: UpdateDeviceClass,

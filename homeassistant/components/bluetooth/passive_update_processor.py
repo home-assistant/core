@@ -29,9 +29,11 @@ from .update_coordinator import BasePassiveBluetoothCoordinator
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from home_assistant_bluetooth import BluetoothServiceInfoBleak
+
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .models import BluetoothChange, BluetoothServiceInfoBleak
+    from .models import BluetoothChange
 
 STORAGE_KEY = "bluetooth.passive_update_processor"
 STORAGE_VERSION = 1

@@ -4,7 +4,7 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-from pylint_home_assistant.const import ENTITY_COMPONENTS, Module, Platform
+from pylint_home_assistant.const import Module, Platform
 from pylint_home_assistant.helpers.module_info import parse_module
 
 _BASE_ENTITY_MODULES: set[str] = {
@@ -68,6 +68,8 @@ _MODULES: dict[str, set[str]] = {
     Platform.NOTIFY: {"NotifyEntity", "NotifyEntityDescription"},
     Platform.NUMBER: {"NumberEntity", "NumberEntityDescription", "RestoreNumber"},
     Platform.RADIO_FREQUENCY: {
+        "RadioFrequencyReceiverEntity",
+        "RadioFrequencyReceiverEntityDescription",
         "RadioFrequencyTransmitterEntity",
         "RadioFrequencyTransmitterEntityDescription",
     },
@@ -92,7 +94,6 @@ _MODULES: dict[str, set[str]] = {
         "WeatherEntityDescription",
     },
 }
-_ENTITY_COMPONENTS: set[str] = set(ENTITY_COMPONENTS)
 
 
 _MODULE_CLASSES = {
@@ -125,10 +126,7 @@ class HassEnforceClassModule(BaseChecker):
 
         ancestors = list(node.ancestors())
 
-        if (
-            current_module != Module.ENTITY
-            and current_integration not in _ENTITY_COMPONENTS
-        ):
+        if current_module != Module.ENTITY:
             top_level_ancestors = list(node.ancestors(recurs=False))
 
             for ancestor in top_level_ancestors:

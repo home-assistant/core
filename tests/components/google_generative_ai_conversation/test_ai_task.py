@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from google.genai.types import File, FileState, GenerateContentResponse
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.google_generative_ai_conversation.const import (
@@ -17,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
-from tests.common import MockConfigEntry
 from tests.components.conversation import (
     MockChatLog,
     mock_chat_log,  # noqa: F401
