@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 from collections.abc import Callable
+from dataclasses import replace
 import logging
 from typing import override
 
@@ -18,9 +19,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DATA_COMPONENT, DOMAIN
 from .entity import (
@@ -180,6 +183,23 @@ class InfraredEmitterConsumerEntity(InfraredConsumerEntity):
 
     _attr_should_poll = False
     _infrared_emitter_entity_id: str
+
+    @override
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Link the device to the infrared emitter's device."""
+        await super().async_prepare_to_add_to_hass()
+        if (
+            isinstance(device_info := self._attr_device_info, dr.DeviceInfo)
+            and device_info.via_device_id is UNDEFINED
+            # The registry rejects via_device_id next to the deprecated via_device.
+            and device_info.get("via_device", UNDEFINED) is UNDEFINED
+        ):
+            self._attr_device_info = replace(
+                device_info,
+                via_device_id=async_entity_id_to_device_id(
+                    self.hass, self._infrared_emitter_entity_id
+                ),
+            )
 
     @override
     async def async_added_to_hass(self) -> None:
