@@ -758,6 +758,9 @@
       "vin": {
         "default": "mdi:car-electric"
       },
+      "wall_connector_energy": {
+        "default": "mdi:ev-station"
+      },
       "wall_connector_fault_state": {
         "default": "mdi:ev-station"
       },
@@ -769,6 +772,12 @@
       }
     },
     "switch": {
+      "charge_on_solar": {
+        "default": "mdi:solar-power",
+        "state": {
+          "off": "mdi:solar-power-variant-outline"
+        }
+      },
       "charge_state_charging_state": {
         "default": "mdi:ev-station"
       },

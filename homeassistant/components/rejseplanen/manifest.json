@@ -8,6 +8,7 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["py_rejseplan"],
+  "quality_scale": "silver",
   "requirements": ["pyrejseplan==1.0.9"],
   "single_config_entry": true
 }
