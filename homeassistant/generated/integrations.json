@@ -11382,6 +11382,15 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "terrestream": {
+      "name": "Terrestream",
+      "integration_type": "device",
+      "categories": [
+        "sensors.air_quality"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "tesla": {
       "name": "Tesla",
       "integrations": {
