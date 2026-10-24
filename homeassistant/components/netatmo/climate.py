@@ -269,6 +269,14 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                     ]
                     if self._attr_native_target_temperature == DEFAULT_MAX_TEMP:
                         self._attr_hvac_mode = HVACMode.HEAT
+                if (
+                    self.device_type == NA_VALVE
+                    and (heating_power_request := room.get("heating_power_request"))
+                    is not None
+                ):
+                    self._attr_extra_state_attributes[ATTR_HEATING_POWER_REQUEST] = (
+                        heating_power_request
+                    )
                 self.async_write_ha_state()
                 return
 

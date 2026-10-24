@@ -27,6 +27,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.netatmo.climate import PRESET_FROST_GUARD, PRESET_SCHEDULE
 from homeassistant.components.netatmo.const import (
     ATTR_END_DATETIME,
+    ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
     ATTR_TARGET_TEMPERATURE,
     ATTR_TIME_PERIOD,
@@ -1237,3 +1238,44 @@ async def test_webhook_set_point(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "heat"
+
+
+async def test_webhook_set_point_with_heating_power_request(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test heating_power_request attribute is updated via webhook events for valves."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_entrada = "climate.entrada_entrada"
+
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2833524037",
+                    "name": "Entrada",
+                    "type": "lobby",
+                    "therm_setpoint_mode": "manual",
+                    "therm_setpoint_temperature": 22,
+                    "heating_power_request": 100,
+                }
+            ],
+            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
+        },
+        "mode": "manual",
+        "event_type": "set_point",
+        "temperature": 22,
+        "push_type": "display_change",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    state = hass.states.get(climate_entity_entrada)
+    assert state.attributes[ATTR_HEATING_POWER_REQUEST] == 100
