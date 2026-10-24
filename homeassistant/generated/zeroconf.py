@@ -1102,6 +1102,16 @@ ZEROCONF = {
             "domain": "vegehub",
         },
     ],
+    "_victron-energy-meter._udp.local.": [
+        {
+            "domain": "victron_modbus",
+        },
+    ],
+    "_victron-p1link._udp.local.": [
+        {
+            "domain": "victron_modbus",
+        },
+    ],
     "_viziocast._tcp.local.": [
         {
             "domain": "vizio",

@@ -899,6 +899,7 @@ FLOWS = {
         "vicare",
         "victron_ble",
         "victron_gx",
+        "victron_modbus",
         "victron_remote_monitoring",
         "vilfo",
         "vistapool",
