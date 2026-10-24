@@ -7,13 +7,13 @@ import json
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pytest_homeassistant.common import (
     MockConfigEntry,
-    async_load_json_object_fixture,
     async_fire_time_changed,
+    async_load_json_object_fixture,
 )
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
-from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netatmo.const import DOMAIN
@@ -22,7 +22,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockRequest
-
 
 HOME_ID = "91763b24c43d3e344f424e8b"
 
