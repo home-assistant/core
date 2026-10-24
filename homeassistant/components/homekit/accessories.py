@@ -12,16 +12,48 @@ from pyhap.iid_manager import IIDManager
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     ClimateEntityFeature,
 )
-from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
-from homeassistant.components.lawn_mower import LawnMowerEntityFeature
-from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.remote import RemoteEntityFeature
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverDeviceClass,
+    CoverEntityFeature,
+)
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
+from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
+from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
+from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
+from homeassistant.components.lawn_mower import (
+    DOMAIN as LAWN_MOWER_DOMAIN,
+    LawnMowerEntityFeature,
+)
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerDeviceClass,
+)
+from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntityFeature
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchDeviceClass
+from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -254,17 +286,17 @@ def get_accessory(  # noqa: C901
     name = config.get(CONF_NAME, state.name)
     features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
-    if state.domain == "alarm_control_panel":
+    if state.domain == ALARM_CONTROL_PANEL_DOMAIN:
         a_type = "SecuritySystem"
 
-    elif state.domain in ("binary_sensor", "device_tracker", "person"):
+    elif state.domain in (BINARY_SENSOR_DOMAIN, DEVICE_TRACKER_DOMAIN, PERSON_DOMAIN):
         a_type = "BinarySensor"
 
-    elif state.domain == "climate":
+    elif state.domain == CLIMATE_DOMAIN:
         # The type is resolved by the bridge before the accessory is created.
         a_type = CLIMATE_TYPES[config.get(CONF_TYPE, TYPE_THERMOSTAT)]
 
-    elif state.domain == "cover":
+    elif state.domain == COVER_DOMAIN:
         device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
 
         if device_class in (
@@ -293,22 +325,22 @@ def get_accessory(  # noqa: C901
             # and CoverEntityFeature.CLOSE
             a_type = "WindowCovering"
 
-    elif state.domain == "fan":
+    elif state.domain == FAN_DOMAIN:
         if fan_type := config.get(CONF_TYPE):
             a_type = FAN_TYPES[fan_type]
         else:
             a_type = "Fan"
 
-    elif state.domain == "humidifier":
+    elif state.domain == HUMIDIFIER_DOMAIN:
         a_type = "HumidifierDehumidifier"
 
-    elif state.domain == "light":
+    elif state.domain == LIGHT_DOMAIN:
         a_type = "Light"
 
-    elif state.domain == "lock":
+    elif state.domain == LOCK_DOMAIN:
         a_type = "Lock"
 
-    elif state.domain == "media_player":
+    elif state.domain == MEDIA_PLAYER_DOMAIN:
         device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         feature_list = config.get(CONF_FEATURE_LIST, [])
 
@@ -322,7 +354,7 @@ def get_accessory(  # noqa: C901
         elif validate_media_player_features(state, feature_list):
             a_type = "MediaPlayer"
 
-    elif state.domain == "sensor":
+    elif state.domain == SENSOR_DOMAIN:
         device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
@@ -368,7 +400,7 @@ def get_accessory(  # noqa: C901
                 unit,
             )
 
-    elif state.domain == "switch":
+    elif state.domain == SWITCH_DOMAIN:
         if switch_type := config.get(CONF_TYPE):
             a_type = SWITCH_TYPES[switch_type]
         elif (
@@ -379,40 +411,40 @@ def get_accessory(  # noqa: C901
         else:
             a_type = "Switch"
 
-    elif state.domain == "valve":
+    elif state.domain == VALVE_DOMAIN:
         a_type = "Valve"
 
-    elif state.domain == "vacuum":
+    elif state.domain == VACUUM_DOMAIN:
         a_type = "Vacuum"
 
     elif (
-        state.domain == "lawn_mower"
+        state.domain == LAWN_MOWER_DOMAIN
         and features & LawnMowerEntityFeature.DOCK
         and features & LawnMowerEntityFeature.START_MOWING
     ):
         a_type = "LawnMower"
 
-    elif state.domain == "remote" and features & RemoteEntityFeature.ACTIVITY:
+    elif state.domain == REMOTE_DOMAIN and features & RemoteEntityFeature.ACTIVITY:
         a_type = "ActivityRemote"
 
     elif state.domain in (
-        "automation",
-        "button",
-        "input_boolean",
-        "input_button",
-        "remote",
-        "scene",
-        "script",
+        AUTOMATION_DOMAIN,
+        BUTTON_DOMAIN,
+        INPUT_BOOLEAN_DOMAIN,
+        INPUT_BUTTON_DOMAIN,
+        REMOTE_DOMAIN,
+        SCENE_DOMAIN,
+        SCRIPT_DOMAIN,
     ):
         a_type = "Switch"
 
-    elif state.domain in ("input_select", "select"):
+    elif state.domain in (INPUT_SELECT_DOMAIN, SELECT_DOMAIN):
         a_type = "SelectSwitch"
 
-    elif state.domain == "water_heater":
+    elif state.domain == WATER_HEATER_DOMAIN:
         a_type = "WaterHeater"
 
-    elif state.domain == "camera":
+    elif state.domain == CAMERA_DOMAIN:
         a_type = "Camera"
 
     if a_type is None:

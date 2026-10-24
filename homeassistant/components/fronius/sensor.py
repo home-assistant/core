@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final, override
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfTemperature,
 )
@@ -33,10 +34,10 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     DOMAIN,
     INVERTER_ERROR_CODES,
-    SOLAR_NET_DISCOVERY_NEW,
     InverterStatusCodeOption,
     MeterLocationCodeOption,
     OhmPilotStateCodeOption,
+    discovery_signal,
     get_inverter_status_message,
     get_meter_location_description,
     get_ohmpilot_state_message,
@@ -50,6 +51,7 @@ if TYPE_CHECKING:
         FroniusInverterUpdateCoordinator,
         FroniusLoggerUpdateCoordinator,
         FroniusMeterUpdateCoordinator,
+        FroniusModbusInverterUpdateCoordinator,
         FroniusOhmpilotUpdateCoordinator,
         FroniusPowerFlowUpdateCoordinator,
         FroniusStorageUpdateCoordinator,
@@ -57,8 +59,6 @@ if TYPE_CHECKING:
 
 
 PARALLEL_UPDATES = 0
-
-ENERGY_VOLT_AMPERE_REACTIVE_HOUR: Final = "varh"
 
 
 async def async_setup_entry(
@@ -72,6 +72,10 @@ async def async_setup_entry(
     for inverter_coordinator in solar_net.inverter_coordinators:
         inverter_coordinator.add_entities_for_seen_keys(
             async_add_entities, Platform.SENSOR, InverterSensor
+        )
+    for modbus_inverter_coordinator in solar_net.modbus_inverter_coordinators:
+        modbus_inverter_coordinator.add_entities_for_seen_keys(
+            async_add_entities, Platform.SENSOR, ModbusInverterSensor
         )
     if solar_net.logger_coordinator is not None:
         solar_net.logger_coordinator.add_entities_for_seen_keys(
@@ -95,16 +99,23 @@ async def async_setup_entry(
         )
 
     @callback
-    def async_add_new_entities(coordinator: FroniusInverterUpdateCoordinator) -> None:
+    def async_add_new_entities(coordinator: FroniusCoordinatorBase) -> None:
         """Add newly found inverter entities."""
+        if Platform.SENSOR not in coordinator.valid_descriptions:
+            return
+        constructor = (
+            ModbusInverterSensor
+            if coordinator in solar_net.modbus_inverter_coordinators
+            else InverterSensor
+        )
         coordinator.add_entities_for_seen_keys(
-            async_add_entities, Platform.SENSOR, InverterSensor
+            async_add_entities, Platform.SENSOR, constructor
         )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            SOLAR_NET_DISCOVERY_NEW,
+            discovery_signal(config_entry.entry_id),
             async_add_new_entities,
         )
     )
@@ -282,6 +293,81 @@ INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
 ]
 
+
+def _modbus_mppt_descriptions(
+    mppt_no: int,
+) -> list[FroniusSensorEntityDescription]:
+    """Create entity descriptions for one MPPT module of SunSpec model 160."""
+    return [
+        FroniusSensorEntityDescription(
+            key=f"mppt_{mppt_no}_current_dc",
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+            translation_key="modbus_mppt_current_dc",
+            translation_placeholders={"mppt_no": str(mppt_no)},
+        ),
+        FroniusSensorEntityDescription(
+            key=f"mppt_{mppt_no}_voltage_dc",
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+            translation_key="modbus_mppt_voltage_dc",
+            translation_placeholders={"mppt_no": str(mppt_no)},
+        ),
+        FroniusSensorEntityDescription(
+            key=f"mppt_{mppt_no}_power_dc",
+            native_unit_of_measurement=UnitOfPower.WATT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="modbus_mppt_power_dc",
+            translation_placeholders={"mppt_no": str(mppt_no)},
+        ),
+        FroniusSensorEntityDescription(
+            key=f"mppt_{mppt_no}_energy",
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            invalid_when_falsy=True,
+            translation_key="modbus_mppt_energy",
+            translation_placeholders={"mppt_no": str(mppt_no)},
+        ),
+    ]
+
+
+MODBUS_INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+    # Verto Plus exposes 5 modules (3 PV trackers plus storage charge/discharge),
+    # one more leaves headroom for a hybrid with 4 PV trackers
+    *(
+        description
+        for mppt_no in range(1, 7)
+        for description in _modbus_mppt_descriptions(mppt_no)
+    ),
+    FroniusSensorEntityDescription(
+        key="energy_total_pv",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        invalid_when_falsy=True,
+    ),
+    FroniusSensorEntityDescription(
+        key="storage_energy_charged_total",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        invalid_when_falsy=True,
+    ),
+    FroniusSensorEntityDescription(
+        key="storage_energy_discharged_total",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        invalid_when_falsy=True,
+    ),
+]
+
 LOGGER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     FroniusSensorEntityDescription(
         key="co2_factor",
@@ -321,14 +407,14 @@ METER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
     FroniusSensorEntityDescription(
         key="energy_reactive_ac_consumed",
-        native_unit_of_measurement=ENERGY_VOLT_AMPERE_REACTIVE_HOUR,
+        native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
         invalid_when_falsy=True,
     ),
     FroniusSensorEntityDescription(
         key="energy_reactive_ac_produced",
-        native_unit_of_measurement=ENERGY_VOLT_AMPERE_REACTIVE_HOUR,
+        native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
         invalid_when_falsy=True,
@@ -810,6 +896,24 @@ class InverterSensor(_FroniusSensorEntity):
         self._attr_device_info = coordinator.inverter_info.device_info
         self._attr_unique_id = (
             f"{coordinator.inverter_info.unique_id}-{description.key}"
+        )
+
+
+class ModbusInverterSensor(_FroniusSensorEntity):
+    """Defines a Fronius Modbus inverter device sensor entity."""
+
+    def __init__(
+        self,
+        coordinator: FroniusModbusInverterUpdateCoordinator,
+        description: FroniusSensorEntityDescription,
+        solar_net_id: str,
+    ) -> None:
+        """Set up an individual Fronius Modbus inverter sensor."""
+        super().__init__(coordinator, description, solar_net_id)
+        # attach to the same device as the SolarAPI inverter sensors
+        self._attr_device_info = coordinator.inverter_info.device_info
+        self._attr_unique_id = (
+            f"{coordinator.inverter_info.unique_id}-modbus-{description.key}"
         )
 
 

@@ -6,11 +6,11 @@ from datetime import timedelta
 from unittest.mock import _Call, call, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 import pywemo
 from pywemo.exceptions import ActionException, PyWeMoException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
-from homeassistant import runner
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
 from homeassistant.components.wemo.const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 from homeassistant.components.wemo.coordinator import Options, async_get_coordinator
@@ -21,10 +21,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .conftest import MOCK_FIRMWARE_VERSION, MOCK_HOST, MOCK_SERIAL_NUMBER
-
-from tests.common import async_fire_time_changed
-
-asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(True))
 
 
 @pytest.fixture

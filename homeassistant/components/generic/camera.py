@@ -6,8 +6,8 @@ import logging
 import time
 from typing import Any, override
 
-import httpx
-import voluptuous as vol
+import httpx2
+import probatio
 import yarl
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -57,8 +57,8 @@ async def async_setup_entry(
     )
 
 
-def generate_auth(device_info: Mapping[str, Any]) -> httpx.Auth | None:
-    """Generate httpx.Auth object from credentials."""
+def generate_auth(device_info: Mapping[str, Any]) -> httpx2.Auth | None:
+    """Generate httpx2.Auth object from credentials."""
     username: str | None = device_info.get(CONF_USERNAME)
     password: str | None = device_info.get(CONF_PASSWORD)
     if username and password:
@@ -66,8 +66,8 @@ def generate_auth(device_info: Mapping[str, Any]) -> httpx.Auth | None:
             device_info[SECTION_ADVANCED].get(CONF_AUTHENTICATION)
             == HTTP_DIGEST_AUTHENTICATION
         ):
-            return httpx.DigestAuth(username=username, password=password)
-        return httpx.BasicAuth(username=username, password=password)
+            return httpx2.DigestAuth(username=username, password=password)
+        return httpx2.BasicAuth(username=username, password=password)
     return None
 
 
@@ -143,8 +143,8 @@ class GenericCamera(Camera):
             return self._last_image
 
         try:
-            vol.Schema(vol.Url())(url)
-        except vol.Invalid as err:
+            probatio.Schema(probatio.Url())(url)
+        except probatio.Invalid as err:
             _LOGGER.warning("Invalid URL '%s': %s, returning last image", url, err)
             return self._last_image
 
@@ -172,10 +172,10 @@ class GenericCamera(Camera):
                 self._last_image = response.content
                 self._last_update = update_time
 
-            except httpx.TimeoutException:
+            except httpx2.TimeoutException:
                 _LOGGER.error("Timeout getting camera image from %s", self._name)
                 return self._last_image
-            except (httpx.RequestError, httpx.HTTPStatusError) as err:
+            except (httpx2.RequestError, httpx2.HTTPStatusError) as err:
                 _LOGGER.error(
                     "Error getting new camera image from %s: %s", self._name, err
                 )

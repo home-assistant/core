@@ -1,6 +1,6 @@
 """Support for UniFi Protect NVR alarm control panel."""
 
-from typing import override
+from typing import cast, override
 
 from uiprotect.data import NVR, NvrArmModeStatus
 from uiprotect.exceptions import GlobalAlarmManagerError
@@ -52,7 +52,13 @@ async def async_setup_entry(
     if api.public_bootstrap.arm_mode is None:
         return
 
-    nvr = api.bootstrap.nvr
+    # In public-API-only mode there is no private bootstrap; the NVR device is
+    # the public one, whose mac the library backfills during priming. Setup
+    # guarantees it is present (it aborts with ConfigEntryNotReady otherwise).
+    if api.is_public_only:
+        nvr = cast(NVR, api.public_bootstrap.nvr)
+    else:
+        nvr = api.bootstrap.nvr
     async_add_entities([ProtectNVRAlarmControlPanel(data, device=nvr)])
 
 
@@ -81,8 +87,9 @@ class ProtectNVRAlarmControlPanel(ProtectNVREntity, AlarmControlPanelEntity):
             self._attr_alarm_state = None
             return
         # arm_mode is delivered over the public devices websocket, so
-        # availability tracks the public WS health (like relay/siren), not the
-        # private connection the base class would otherwise apply for the NVR.
+        # availability tracks the public WS health, not the private connection
+        # the base class would otherwise apply for the NVR. The NVR carries no
+        # device state, so there is nothing else to gate on.
         self._attr_available = self.data.last_public_update_success
         # Fall back to DISARMED for unknown future status values rather than
         # rendering the entity as ``unknown``.

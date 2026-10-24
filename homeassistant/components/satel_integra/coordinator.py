@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from satel_integra import AlarmState
+from satel_integra import AlarmState, SatelPanelInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -26,6 +26,7 @@ class SatelIntegraData:
     """Data for the satel_integra integration."""
 
     client: SatelClient
+    panel_info: SatelPanelInfo | None
     coordinator_zones: SatelIntegraZonesCoordinator
     coordinator_outputs: SatelIntegraOutputsCoordinator
     coordinator_partitions: SatelIntegraPartitionsCoordinator
@@ -60,8 +61,10 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     def setup(self) -> None:
         """Set up client callbacks for this coordinator."""
-        self.client.controller.add_connection_status_callback(
-            self._async_handle_connection_state_update
+        self.config_entry.async_on_unload(
+            self.client.controller.add_connection_status_callback(
+                self._async_handle_connection_state_update
+            )
         )
 
     @callback
@@ -70,7 +73,7 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         self.async_update_listeners()
 
 
-class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]]):
+class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool | None]]):
     """DataUpdateCoordinator to handle zone updates."""
 
     def __init__(
@@ -81,17 +84,29 @@ class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]])
 
         self.data = {}
 
-    @callback
-    def zones_update_callback(self, status: dict[int, int]) -> None:
-        """Update zone objects as per notification from the alarm."""
-        _LOGGER.debug("Zones callback, status: %s", status)
+    @override
+    def setup(self) -> None:
+        """Set up client callbacks for this coordinator."""
+        super().setup()
+        self.config_entry.async_on_unload(
+            self.client.controller.add_zone_changed_callback(self.zones_update_callback)
+        )
 
-        update_data = {zone: value == 1 for zone, value in status.items()}
+    @callback
+    def zones_update_callback(self) -> None:
+        """Update zone objects as per notification from the alarm."""
+        zone_states = self.client.controller.state.zones
+        update_data = {
+            zone: zone_state.violated for zone, zone_state in zone_states.items()
+        }
+        _LOGGER.debug("Zones callback, status: %s", update_data)
 
         self.async_set_updated_data(update_data)
 
 
-class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]]):
+class SatelIntegraOutputsCoordinator(
+    SatelIntegraBaseCoordinator[dict[int, bool | None]]
+):
     """DataUpdateCoordinator to handle output updates."""
 
     def __init__(
@@ -102,12 +117,25 @@ class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]
 
         self.data = {}
 
-    @callback
-    def outputs_update_callback(self, status: dict[int, int]) -> None:
-        """Update output objects as per notification from the alarm."""
-        _LOGGER.debug("Outputs callback, status: %s", status)
+    @override
+    def setup(self) -> None:
+        """Set up client callbacks for this coordinator."""
+        super().setup()
+        self.config_entry.async_on_unload(
+            self.client.controller.add_output_changed_callback(
+                self.outputs_update_callback
+            )
+        )
 
-        update_data = {output: value == 1 for output, value in status.items()}
+    @callback
+    def outputs_update_callback(self) -> None:
+        """Update output objects as per notification from the alarm."""
+        output_states = self.client.controller.state.outputs
+        update_data = {
+            output: output_state.active
+            for output, output_state in output_states.items()
+        }
+        _LOGGER.debug("Outputs callback, status: %s", update_data)
 
         self.async_set_updated_data(update_data)
 
@@ -132,9 +160,19 @@ class SatelIntegraPartitionsCoordinator(
             immediate=False,
             function=callback(
                 lambda: self.async_set_updated_data(
-                    self.client.controller.partition_states
+                    self.client.controller.state.partition_states
                 )
             ),
+        )
+
+    @override
+    def setup(self) -> None:
+        """Set up client callbacks for this coordinator."""
+        super().setup()
+        self.config_entry.async_on_unload(
+            self.client.controller.add_alarm_status_callback(
+                self.partitions_update_callback
+            )
         )
 
     @callback

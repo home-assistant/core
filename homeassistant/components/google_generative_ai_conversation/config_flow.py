@@ -7,9 +7,10 @@ from typing import Any, cast, override
 
 from google import genai
 from google.genai.errors import APIError, ClientError
+import probatio
 from requests.exceptions import Timeout
-import voluptuous as vol
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -22,6 +23,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
+from homeassistant.helpers.field_visibility import FieldCondition
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -74,9 +76,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_API_DATA_SCHEMA = vol.Schema(
+STEP_API_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
 
@@ -214,12 +216,10 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
 class LLMSubentryFlowHandler(ConfigSubentryFlow):
     """Flow for managing conversation subentries."""
 
-    last_rendered_recommended = False
-
     @property
     def _genai_client(self) -> genai.Client:
         """Return the Google Generative AI client."""
-        return self._get_entry().runtime_data
+        return cast(genai.Client, self._get_entry().runtime_data)
 
     @property
     def _is_new(self) -> bool:
@@ -251,36 +251,27 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
                 # If this is a reconfiguration, we need to copy the existing options
                 # so that we can show the current values in the form.
                 options = self._get_reconfigure_subentry().data.copy()
-
-            self.last_rendered_recommended = cast(
-                bool, options.get(CONF_RECOMMENDED, False)
-            )
-
         else:
-            if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
-                if user_input.get(CONF_LLM_HASS_API) is None:
-                    user_input.pop(CONF_LLM_HASS_API, None)
-                # Don't allow to save options that enable the
-                # Google Search tool with an Assist API
-                if not (
-                    user_input.get(CONF_LLM_HASS_API)
-                    and user_input.get(CONF_USE_GOOGLE_SEARCH_TOOL, False) is True
-                ):
-                    if self._is_new:
-                        return self.async_create_entry(
-                            title=user_input.pop(CONF_NAME),
-                            data=user_input,
-                        )
-
-                    return self.async_update_and_abort(
-                        self._get_entry(),
-                        self._get_reconfigure_subentry(),
+            if user_input.get(CONF_LLM_HASS_API) is None:
+                user_input.pop(CONF_LLM_HASS_API, None)
+            # Don't allow to save options that enable the
+            # Google Search tool with an Assist API
+            if not (
+                user_input.get(CONF_LLM_HASS_API)
+                and user_input.get(CONF_USE_GOOGLE_SEARCH_TOOL, False) is True
+            ):
+                if self._is_new:
+                    return self.async_create_entry(
+                        title=user_input.pop(CONF_NAME),
                         data=user_input,
                     )
-                errors[CONF_USE_GOOGLE_SEARCH_TOOL] = "invalid_google_search_option"
 
-            # Re-render the options again, now with the recommended options shown/hidden
-            self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    self._get_reconfigure_subentry(),
+                    data=user_input,
+                )
+            errors[CONF_USE_GOOGLE_SEARCH_TOOL] = "invalid_google_search_option"
 
             options = user_input
 
@@ -288,7 +279,7 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
             self.hass, self._is_new, self._subentry_type, options, self._genai_client
         )
         return self.async_show_form(
-            step_id="set_options", data_schema=vol.Schema(schema), errors=errors
+            step_id="set_options", data_schema=probatio.Schema(schema), errors=errors
         )
 
     async_step_reconfigure = async_step_set_options
@@ -327,10 +318,10 @@ async def google_generative_ai_config_option_schema(
             default_name = DEFAULT_STT_NAME
         else:
             default_name = DEFAULT_CONVERSATION_NAME
-        schema: dict[vol.Required | vol.Optional, Any] = {
+        schema: dict[probatio.Required | probatio.Optional, Any] = {
             # Name field is no longer allowed in config flow schemas
             # pylint: disable-next=home-assistant-config-flow-name-field
-            vol.Required(CONF_NAME, default=default_name): str,
+            probatio.Required(CONF_NAME, default=default_name): str,
         }
     else:
         schema = {}
@@ -338,7 +329,7 @@ async def google_generative_ai_config_option_schema(
     if subentry_type == "conversation":
         schema.update(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_PROMPT,
                     description={
                         "suggested_value": options.get(
@@ -346,7 +337,7 @@ async def google_generative_ai_config_option_schema(
                         )
                     },
                 ): TemplateSelector(),
-                vol.Optional(
+                probatio.Optional(
                     CONF_LLM_HASS_API,
                     description={"suggested_value": suggested_llm_apis},
                 ): SelectSelector(
@@ -357,7 +348,7 @@ async def google_generative_ai_config_option_schema(
     elif subentry_type == "stt":
         schema.update(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_PROMPT,
                     description={
                         "suggested_value": options.get(CONF_PROMPT, DEFAULT_STT_PROMPT)
@@ -368,24 +359,21 @@ async def google_generative_ai_config_option_schema(
 
     schema.update(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
             ): bool,
         }
     )
 
-    if options.get(CONF_RECOMMENDED):
-        return schema
-
     api_models_pager = await genai_client.aio.models.list(config={"query_base": True})
     api_models = [api_model async for api_model in api_models_pager]
     models = [
         SelectOptionDict(
-            label=api_model.name.lstrip("models/"),
+            label=api_model.name.removeprefix("models/"),
             value=api_model.name,
         )
         for api_model in sorted(
-            api_models, key=lambda x: (x.name or "").lstrip("models/")
+            api_models, key=lambda x: (x.name or "").removeprefix("models/")
         )
         if (
             api_model.name
@@ -427,19 +415,25 @@ async def google_generative_ai_config_option_schema(
     else:
         default_model = RECOMMENDED_CHAT_MODEL
 
+    not_recommended: FieldCondition = {
+        "field": CONF_RECOMMENDED,
+        "value": False,
+    }
     schema.update(
         {
-            vol.Optional(
+            data_entry_flow.Optional(
                 CONF_CHAT_MODEL,
                 description={"suggested_value": options.get(CONF_CHAT_MODEL)},
                 default=default_model,
+                visible=not_recommended,
             ): SelectSelector(
                 SelectSelectorConfig(mode=SelectSelectorMode.DROPDOWN, options=models)
             ),
-            vol.Optional(
+            data_entry_flow.Optional(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=RECOMMENDED_TEMPERATURE,
+                visible=not_recommended,
             ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
         }
     )
@@ -447,37 +441,42 @@ async def google_generative_ai_config_option_schema(
     if subentry_type != "tts":
         schema.update(
             {
-                vol.Optional(
+                data_entry_flow.Optional(
                     CONF_TOP_P,
                     description={"suggested_value": options.get(CONF_TOP_P)},
                     default=RECOMMENDED_TOP_P,
+                    visible=not_recommended,
                 ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-                vol.Optional(
+                data_entry_flow.Optional(
                     CONF_TOP_K,
                     description={"suggested_value": options.get(CONF_TOP_K)},
                     default=RECOMMENDED_TOP_K,
+                    visible=not_recommended,
                 ): int,
-                vol.Optional(
+                data_entry_flow.Optional(
                     CONF_MAX_TOKENS,
                     description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                     default=RECOMMENDED_MAX_TOKENS,
+                    visible=not_recommended,
                 ): int,
-                vol.Optional(
+                data_entry_flow.Optional(
                     CONF_THINKING_BUDGET,
                     description={"suggested_value": options.get(CONF_THINKING_BUDGET)},
                     default=RECOMMENDED_THINKING_BUDGET,
-                ): vol.All(
+                    visible=not_recommended,
+                ): probatio.All(
                     NumberSelector(
                         NumberSelectorConfig(
                             min=-1, max=24576, step=1, mode=NumberSelectorMode.BOX
                         )
                     ),
-                    vol.Coerce(int),
+                    probatio.Coerce(int),
                 ),
-                vol.Optional(
+                data_entry_flow.Optional(
                     CONF_THINKING_LEVEL,
                     description={"suggested_value": options.get(CONF_THINKING_LEVEL)},
                     default=RECOMMENDED_THINKING_LEVEL,
+                    visible=not_recommended,
                 ): SelectSelector(
                     SelectSelectorConfig(
                         mode=SelectSelectorMode.DROPDOWN,
@@ -491,45 +490,50 @@ async def google_generative_ai_config_option_schema(
                         ],
                     )
                 ),
-                vol.Optional(
+                data_entry_flow.Optional(
                     CONF_HARASSMENT_BLOCK_THRESHOLD,
                     description={
                         "suggested_value": options.get(CONF_HARASSMENT_BLOCK_THRESHOLD)
                     },
                     default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                    visible=not_recommended,
                 ): harm_block_thresholds_selector,
-                vol.Optional(
+                data_entry_flow.Optional(
                     CONF_HATE_BLOCK_THRESHOLD,
                     description={
                         "suggested_value": options.get(CONF_HATE_BLOCK_THRESHOLD)
                     },
                     default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                    visible=not_recommended,
                 ): harm_block_thresholds_selector,
-                vol.Optional(
+                data_entry_flow.Optional(
                     CONF_SEXUAL_BLOCK_THRESHOLD,
                     description={
                         "suggested_value": options.get(CONF_SEXUAL_BLOCK_THRESHOLD)
                     },
                     default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                    visible=not_recommended,
                 ): harm_block_thresholds_selector,
-                vol.Optional(
+                data_entry_flow.Optional(
                     CONF_DANGEROUS_BLOCK_THRESHOLD,
                     description={
                         "suggested_value": options.get(CONF_DANGEROUS_BLOCK_THRESHOLD)
                     },
                     default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                    visible=not_recommended,
                 ): harm_block_thresholds_selector,
             }
         )
     if subentry_type == "conversation":
         schema.update(
             {
-                vol.Optional(
+                data_entry_flow.Optional(
                     CONF_USE_GOOGLE_SEARCH_TOOL,
                     description={
                         "suggested_value": options.get(CONF_USE_GOOGLE_SEARCH_TOOL),
                     },
                     default=RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
+                    visible=not_recommended,
                 ): bool,
             }
         )

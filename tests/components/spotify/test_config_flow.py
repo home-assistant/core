@@ -4,6 +4,9 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from spotifyaio import SpotifyConnectionError, SpotifyForbiddenError
 
 from homeassistant.components.spotify.const import DOMAIN
@@ -11,10 +14,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
@@ -77,7 +76,7 @@ async def test_full_flow(
     )
 
     with (
-        patch("homeassistant.components.spotify.async_setup_entry", return_value=True),
+        patch("homeassistant.components.spotify.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -204,6 +203,7 @@ async def test_reauthentication(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"]["account"] == "spotify_1"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -228,7 +228,7 @@ async def test_reauthentication(
     )
 
     with (
-        patch("homeassistant.components.spotify.async_setup_entry", return_value=True),
+        patch("homeassistant.components.spotify.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

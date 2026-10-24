@@ -15,6 +15,7 @@ from pyscorpiontrack import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -27,6 +28,8 @@ type ScorpionTrackConfigEntry = ConfigEntry[ScorpionTrackCoordinator]
 
 class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
     """Coordinate shared-location updates."""
+
+    config_entry: ScorpionTrackConfigEntry
 
     def __init__(
         self,
@@ -68,4 +71,14 @@ class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
             ) from err
         else:
             self.vehicles_by_id = {vehicle.id: vehicle for vehicle in share.vehicles}
+            device_registry = dr.async_get(self.hass)
+            vehicle_identifiers = {
+                (DOMAIN, f"{share.id}_{vehicle_id}")
+                for vehicle_id in self.vehicles_by_id
+            }
+            for device in dr.async_entries_for_config_entry(
+                device_registry, self.config_entry.entry_id
+            ):
+                if device.identifiers.isdisjoint(vehicle_identifiers):
+                    device_registry.async_remove_device(device.id)
             return share

@@ -3,12 +3,13 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
+    SwitchService,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,8 +17,6 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -40,10 +39,10 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(SWITCH_DOMAIN),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_ALL, default=False): cv.boolean,
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(SWITCH_DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_ALL, default=False): cv.boolean,
     }
 )
 
@@ -135,7 +134,7 @@ class SwitchGroup(GroupEntity, SwitchEntity):
 
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             data,
             blocking=True,
             context=self._context,
@@ -147,7 +146,7 @@ class SwitchGroup(GroupEntity, SwitchEntity):
         data = {ATTR_ENTITY_ID: self._entity_ids}
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             data,
             blocking=True,
             context=self._context,

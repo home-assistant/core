@@ -1,0 +1,102 @@
+set_feed_in_limit:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sofar
+    mode:
+      required: true
+      selector:
+        select:
+          translation_key: feedin_limitation_mode
+          options:
+            - disabled
+            - enabled_feed_in_limitation
+            - enabled_3_phase_limit
+    max_power:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100000
+          step: 100
+          unit_of_measurement: W
+          mode: box
+
+set_active_power_limit:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sofar
+    enabled:
+      required: true
+      selector:
+        boolean:
+    limit:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.1
+          unit_of_measurement: "%"
+          mode: box
+
+set_passive_mode_timeout:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sofar
+    timeout:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 65535
+          unit_of_measurement: s
+          mode: box
+    action:
+      required: true
+      selector:
+        select:
+          translation_key: passive_mode_timeout_action
+          options:
+            - force_standby
+            - return_to_previous_mode
+
+set_passive_mode_power:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sofar
+    grid_power:
+      required: true
+      selector:
+        number:
+          min: -100000
+          max: 100000
+          unit_of_measurement: W
+          mode: box
+    battery_power_min:
+      required: true
+      selector:
+        number:
+          min: -100000
+          max: 100000
+          unit_of_measurement: W
+          mode: box
+    battery_power_max:
+      required: true
+      selector:
+        number:
+          min: -100000
+          max: 100000
+          unit_of_measurement: W
+          mode: box

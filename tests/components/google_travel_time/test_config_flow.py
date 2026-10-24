@@ -9,6 +9,7 @@ from google.api_core.exceptions import (
     Unauthorized,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_travel_time.const import (
     ARRIVAL_TIME,
@@ -34,8 +35,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DEFAULT_OPTIONS, MOCK_CONFIG, RECONFIGURE_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def assert_common_reconfigure_steps(

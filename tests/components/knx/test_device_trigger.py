@@ -4,6 +4,7 @@ import logging
 
 from probatio import to_field_list
 import pytest
+from pytest_homeassistant.common import async_get_device_automations
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import (
@@ -17,8 +18,6 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
-
-from tests.common import async_get_device_automations
 
 
 async def test_if_fires_on_telegram(
@@ -425,7 +424,13 @@ async def test_invalid_trigger_configuration(
     )
     # After changing the config in async_attach_trigger, the config is validated again
     # against the integration trigger. This test checks if this validation works.
-    with pytest.raises(InvalidDeviceAutomationConfig):
+    with pytest.raises(
+        InvalidDeviceAutomationConfig,
+        match=(
+            "Invalid KNX telegram trigger configuration: "
+            "invalid boolean value invalid at 'group_value_write'"
+        ),
+    ):
         await device_trigger.async_attach_trigger(
             hass,
             {

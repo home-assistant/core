@@ -3,20 +3,21 @@
 from collections.abc import Generator
 
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry, patch
+from watergate_local_api.models import AutoShutOffState
 
 from homeassistant.components.watergate.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 
 from .const import (
     DEFAULT_DEVICE_STATE,
+    DEFAULT_DEVICE_STATE_V2,
     DEFAULT_NETWORKING_STATE,
     DEFAULT_SERIAL_NUMBER,
     DEFAULT_TELEMETRY_STATE,
     MOCK_CONFIG,
     MOCK_WEBHOOK_ID,
 )
-
-from tests.common import AsyncMock, MockConfigEntry, patch
 
 
 @pytest.fixture
@@ -34,14 +35,24 @@ def mock_watergate_client() -> Generator[AsyncMock]:
     ):
         mock_client_instance = mock_client_main.return_value
 
+        # The config flow reads device state v1, the coordinator prefers v2 and falls back
+        # to v1 on firmware that does not implement it, so both are mocked.
         mock_client_instance.async_get_device_state = AsyncMock(
             return_value=DEFAULT_DEVICE_STATE
+        )
+        mock_client_instance.async_get_device_state_v2 = AsyncMock(
+            return_value=DEFAULT_DEVICE_STATE_V2
         )
         mock_client_instance.async_get_networking = AsyncMock(
             return_value=DEFAULT_NETWORKING_STATE
         )
         mock_client_instance.async_get_telemetry_data = AsyncMock(
             return_value=DEFAULT_TELEMETRY_STATE
+        )
+        # Build a fresh model per test: the switch mutates auto_shut_off.enabled, so a
+        # shared instance would leak state between tests and create order dependencies.
+        mock_client_instance.async_get_auto_shut_off = AsyncMock(
+            return_value=AutoShutOffState(True, 1000, 60)
         )
         yield mock_client_instance
 
@@ -50,7 +61,7 @@ def mock_watergate_client() -> Generator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.watergate.async_setup_entry", return_value=True
+        "homeassistant.components.watergate.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

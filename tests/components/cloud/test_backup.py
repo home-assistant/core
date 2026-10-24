@@ -10,14 +10,20 @@ from hass_nabucasa import CloudError
 from hass_nabucasa.api import CloudApiError, CloudApiNonRetryableError
 from hass_nabucasa.files import FilesError, StorageType
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.backup import (
-    DATA_MANAGER,
     DOMAIN as BACKUP_DOMAIN,
     AddonInfo,
     AgentBackup,
     Folder,
     UploadBackupEvent,
+    async_get_manager,
 )
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.backup import async_register_backup_agents_listener
@@ -26,9 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockStreamReaderChunked
-
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -194,6 +197,7 @@ async def test_agents_list_backups_fail_cloud(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {"cloud.cloud": "Failed to list backups"},
         "backups": [],
         "last_attempted_automatic_backup": None,
@@ -398,7 +402,7 @@ async def test_agents_upload_on_progress(
 
     cloud.files.upload.side_effect = mock_upload
 
-    manager = hass.data[DATA_MANAGER]
+    manager = async_get_manager(hass)
     events: list[UploadBackupEvent] = []
 
     def _collect(event: Any) -> None:
@@ -791,7 +795,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     mock_delete_file.assert_called_once_with(
         filename="462e16810d6841228828d9dd2f9e341e.tar",
         storage_type=StorageType.BACKUP,
@@ -821,7 +825,8 @@ async def test_agents_delete_fail_cloud(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {"cloud.cloud": "Failed to delete backup"}
+        "agent_error_translations": {},
+        "agent_errors": {"cloud.cloud": "Failed to delete backup"},
     }
 
 
@@ -843,7 +848,7 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 @pytest.mark.parametrize("event_type", ["login", "logout"])

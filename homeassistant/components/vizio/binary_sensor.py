@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from vizaio import ChargingStatus
 
@@ -13,12 +13,10 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import VizioConfigEntry, VizioDeviceCoordinator, VizioDeviceData
+from .coordinator import VizioConfigEntry, VizioDeviceData
+from .entity import VizioDescriptionEntity
 
 PARALLEL_UPDATES = 0
 
@@ -57,32 +55,14 @@ async def async_setup_entry(
         return
 
     async_add_entities(
-        VizioBinarySensor(config_entry, coordinator, description)
-        for description in BINARY_SENSORS
+        VizioBinarySensor(config_entry, description) for description in BINARY_SENSORS
     )
 
 
-class VizioBinarySensor(CoordinatorEntity[VizioDeviceCoordinator], BinarySensorEntity):
+class VizioBinarySensor(VizioDescriptionEntity, BinarySensorEntity):
     """Binary sensor entity for battery-powered Vizio SmartCast devices."""
 
-    _attr_has_entity_name = True
     entity_description: VizioBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        config_entry: VizioConfigEntry,
-        coordinator: VizioDeviceCoordinator,
-        description: VizioBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        unique_id = config_entry.unique_id
-        # Guard against config entries missing unique_id, which should never happen
-        if TYPE_CHECKING:
-            assert unique_id is not None
-        self._attr_unique_id = f"{unique_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
 
     @property
     @override

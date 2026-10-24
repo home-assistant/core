@@ -74,8 +74,8 @@ class DemoWaterHeater(WaterHeaterEntity):
             self._attr_supported_features |= WaterHeaterEntityFeature.AWAY_MODE
         if current_operation is not None:
             self._attr_supported_features |= WaterHeaterEntityFeature.OPERATION_MODE
-        self._attr_target_temperature = target_temperature
-        self._attr_temperature_unit = unit_of_measurement
+        self._attr_native_target_temperature = target_temperature
+        self._attr_native_temperature_unit = unit_of_measurement
         self._attr_is_away_mode_on = away
         self._attr_current_operation = current_operation
         self._attr_operation_list = [
@@ -92,7 +92,7 @@ class DemoWaterHeater(WaterHeaterEntity):
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
-        self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        self._attr_native_target_temperature = kwargs.get(ATTR_TEMPERATURE)
         self.schedule_update_ha_state()
 
     @override

@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from pynina import ApiError, Nina
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -89,24 +89,24 @@ def prepare_user_input(
     return user_input
 
 
-def create_schema(regions: dict[str, dict[str, Any]]) -> vol.Schema:
+def create_schema(regions: dict[str, dict[str, Any]]) -> probatio.Schema:
     """Create the schema for the flows."""
     schema_dict: VolDictType = {
         **{
-            vol.Optional(region): cv.multi_select(regions[region])
+            probatio.Optional(region): cv.multi_select(regions[region])
             for region in CONST_REGIONS
         },
-        vol.Required(
+        probatio.Required(
             CONF_MESSAGE_SLOTS,
             default=5,
-        ): vol.All(int, vol.Range(min=1, max=20)),
-        vol.Required(CONF_FILTERS): section(
-            vol.Schema(
+        ): probatio.All(int, probatio.Range(min=1, max=20)),
+        probatio.Required(CONF_FILTERS): section(
+            probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_HEADLINE_FILTER,
                     ): cv.string,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_AREA_FILTER,
                     ): cv.string,
                 }
@@ -114,7 +114,7 @@ def create_schema(regions: dict[str, dict[str, Any]]) -> vol.Schema:
         ),
     }
 
-    return vol.Schema(schema_dict)
+    return probatio.Schema(schema_dict)
 
 
 class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -276,12 +276,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         removed_regions = set(self.data[CONF_REGIONS]) - set(user_input[CONF_REGIONS])
 
         for region in removed_regions:
-            if device := device_registry.async_get_device(
-                identifiers={(DOMAIN, region)}
+            if device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, region), self.config_entry.entry_id
             ):
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_registry.async_remove_device(device.id)
 
     async def remove_unused_entities(self, user_input: dict[str, Any]) -> None:
         """Remove entities which are not used anymore."""

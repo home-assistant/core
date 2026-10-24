@@ -3,8 +3,15 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aio_wattwaechter.models import AliveResponse, _parse_meter_data, _parse_system_info
+from aio_wattwaechter.models import (
+    AliveResponse,
+    OtaCheckResponse,
+    OtaData,
+    _parse_meter_data,
+    _parse_system_info,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.wattwaechter.const import CONF_FW_VERSION, DOMAIN
 from homeassistant.const import (
@@ -15,8 +22,6 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 MOCK_HOST = "192.168.1.100"
 MOCK_TOKEN = "test-token-123"
@@ -49,12 +54,35 @@ MOCK_METER_DATA_MINIMAL = _parse_meter_data(
     load_json_object_fixture("meter_data_minimal.json", DOMAIN)
 )
 
+MOCK_SYSTEM_INFO_GAS = _parse_system_info(
+    load_json_object_fixture("system_info_gas.json", DOMAIN)
+)
+
+MOCK_SYSTEM_INFO_WATER = _parse_system_info(
+    load_json_object_fixture("system_info_water.json", DOMAIN)
+)
+
+MOCK_OTA_CHECK = OtaCheckResponse(
+    ok=True,
+    data=OtaData(
+        update_available=True,
+        version="1.3.0",
+        tag="v1.3.0",
+        release_date="2026-07-01",
+        release_note_de="Fehlerbehebungen und Verbesserungen",
+        release_note_en="Bug fixes and improvements",
+        last_checked=1720000000,
+        url="https://example.com/firmware/1.3.0.bin",
+        md5="0123456789abcdef",
+    ),
+)
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.wattwaechter.async_setup_entry", return_value=True
+        "homeassistant.components.wattwaechter.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -78,6 +106,8 @@ def mock_client() -> Generator[AsyncMock]:
         client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
         client.settings = AsyncMock(return_value=MOCK_SETTINGS)
         client.meter_data = AsyncMock(return_value=MOCK_METER_DATA)
+        client.ota_check = AsyncMock(return_value=MOCK_OTA_CHECK)
+        client.ota_start = AsyncMock(return_value=True)
         yield client
 
 
@@ -89,6 +119,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         title=MOCK_DEVICE_NAME,
         data=MOCK_CONFIG_DATA,
         unique_id=MOCK_DEVICE_ID,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     return entry

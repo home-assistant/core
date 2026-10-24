@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
@@ -18,6 +19,7 @@ from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
@@ -38,8 +40,6 @@ from .common import (
     TAMPER_SENSOR,
     NodeDataType,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _add_door_tilt_state_value(node_state: dict[str, Any]) -> dict[str, Any]:
@@ -147,6 +147,25 @@ def _add_lock_state_notification_states(node_state: dict[str, Any]) -> dict[str,
                     "4": "RF unlock operation",
                 }
             )
+            break
+    return updated_state
+
+
+def _add_glass_break_notification_states(
+    node_state: dict[str, Any],
+) -> dict[str, Any]:
+    """Return a node state with Home Security glass break notification states."""
+    updated_state = copy.deepcopy(node_state)
+    for value_data in updated_state["values"]:
+        if (
+            value_data.get("commandClass") == 113
+            and value_data.get("property") == "Home Security"
+        ):
+            value_data["metadata"]["states"] = {
+                "0": "idle",
+                "5": "Glass breakage detected (location provided)",
+                "6": "Glass breakage detected",
+            }
             break
     return updated_state
 
@@ -327,6 +346,33 @@ async def test_notification_sensor(
 
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+async def test_glass_break_notification_sensor(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469_state: NodeDataType,
+) -> None:
+    """Test the glass break notification sensor device class."""
+    node = Node(
+        client,
+        _add_glass_break_notification_states(lock_schlage_be469_state),
+    )
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    glass_break_states = [
+        state
+        for state in hass.states.async_all(BINARY_SENSOR_DOMAIN)
+        if state.attributes.get(ATTR_DEVICE_CLASS)
+        == BinarySensorDeviceClass.GLASS_BREAK
+    ]
+    assert len(glass_break_states) == 2
+    assert all(state.state == STATE_OFF for state in glass_break_states)
 
 
 @pytest.mark.parametrize(
@@ -1706,3 +1752,23 @@ async def test_legacy_door_open_state_stale_repair_issue_cleaned_up(
         )
         is None
     )
+
+
+ZSE43_VIBRATION_SENSOR = "binary_sensor.tilt_shock_xs_sensor_vibration"
+
+
+@pytest.mark.usefixtures("zooz_zse43", "integration")
+async def test_zooz_zse43_vibration_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the ZSE43 cover-removed notification is exposed as a vibration sensor."""
+    state = hass.states.get(ZSE43_VIBRATION_SENSOR)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.VIBRATION
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Tilt Shock XS Sensor Vibration"
+
+    entity_entry = entity_registry.async_get(ZSE43_VIBRATION_SENSOR)
+    assert entity_entry
+    assert entity_entry.original_name == "Vibration"
+    assert entity_entry.entity_category is None

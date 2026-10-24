@@ -1,6 +1,7 @@
 {
   "domain": "zoneminder",
   "name": "ZoneMinder",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@rohankapoorcom", "@nabbi"],
   "documentation": "https://www.home-assistant.io/integrations/zoneminder",
   "iot_class": "local_polling",

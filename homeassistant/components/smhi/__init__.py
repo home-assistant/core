@@ -18,7 +18,7 @@ from .coordinator import (
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> None:
     """Set up SMHI forecast as config entry."""
 
     # Setting unique id where missing
@@ -36,15 +36,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> bool
     entry.runtime_data = (coordinator, fire_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> None:
     """Migrate old entry."""
 
     if entry.version == 1:
@@ -61,5 +60,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> bo
         new_data = entry.data.copy()
         new_data.pop(CONF_NAME)
         hass.config_entries.async_update_entry(entry, data=new_data, version=3)
-
-    return True

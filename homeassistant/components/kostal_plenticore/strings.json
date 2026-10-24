@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -10,6 +9,14 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "service_code": "[%key:component::kostal_plenticore::config::step::user::data::service_code%]"
+        },
+        "description": "The credentials for the inverter at {host} are no longer valid. Please enter the new credentials.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -24,6 +31,14 @@
           "service_code": "Service code"
         }
       }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed connecting to {host}"
+    },
+    "cannot_connect": {
+      "message": "Error connecting to {host}"
     }
   }
 }

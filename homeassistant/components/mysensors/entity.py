@@ -1,5 +1,4 @@
 """Handle MySensors devices."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from abc import abstractmethod
 import logging
@@ -8,28 +7,15 @@ from typing import Any, override
 from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    CONF_DEVICE,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_DEVICE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    CHILD_CALLBACK,
-    DOMAIN,
-    NODE_CALLBACK,
-    PLATFORM_TYPES,
-    UPDATE_DELAY,
-    DevId,
-    GatewayId,
-)
+from .const import CHILD_CALLBACK, DOMAIN, NODE_CALLBACK, UPDATE_DELAY, DevId, GatewayId
+from .models import MySensorsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +24,6 @@ ATTR_DESCRIPTION = "description"
 ATTR_DEVICE = "device"
 ATTR_NODE_ID = "node_id"
 ATTR_HEARTBEAT = "heartbeat"
-MYSENSORS_PLATFORM_DEVICES = "mysensors_devices_{}"
 
 
 class MySensorNodeEntity(Entity):
@@ -46,12 +31,11 @@ class MySensorNodeEntity(Entity):
 
     hass: HomeAssistant
 
-    def __init__(
-        self, gateway_id: GatewayId, gateway: BaseAsyncGateway, node_id: int
-    ) -> None:
+    def __init__(self, config_entry: MySensorsConfigEntry, node_id: int) -> None:
         """Set up the MySensors node entity."""
-        self.gateway_id: GatewayId = gateway_id
-        self.gateway: BaseAsyncGateway = gateway
+        self.config_entry = config_entry
+        self.gateway_id: GatewayId = config_entry.entry_id
+        self.gateway: BaseAsyncGateway = config_entry.runtime_data.gateway
         self.node_id: int = node_id
         self._debouncer: Debouncer | None = None
 
@@ -136,18 +120,6 @@ class MySensorNodeEntity(Entity):
         self._async_update_callback()
 
 
-def get_mysensors_devices(
-    hass: HomeAssistant, domain: Platform
-) -> dict[DevId, MySensorsChildEntity]:
-    """Return MySensors devices for a hass platform name."""
-    if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
-    devices: dict[DevId, MySensorsChildEntity] = hass.data[DOMAIN][
-        MYSENSORS_PLATFORM_DEVICES.format(domain)
-    ]
-    return devices
-
-
 class MySensorsChildEntity(MySensorNodeEntity):
     """Representation of a MySensors entity."""
 
@@ -155,14 +127,13 @@ class MySensorsChildEntity(MySensorNodeEntity):
 
     def __init__(
         self,
-        gateway_id: GatewayId,
-        gateway: BaseAsyncGateway,
+        config_entry: MySensorsConfigEntry,
         node_id: int,
         child_id: int,
         value_type: int,
     ) -> None:
         """Set up the MySensors child entity."""
-        super().__init__(gateway_id, gateway, node_id)
+        super().__init__(config_entry, node_id)
         self.child_id: int = child_id
         # value_type as int. string variant can be looked up in gateway consts
         self.value_type: int = value_type
@@ -197,17 +168,6 @@ class MySensorsChildEntity(MySensorNodeEntity):
             return str(child.description)
         return f"{self.node_name} {self.child_id}"
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Remove this entity from home assistant."""
-        for platform in PLATFORM_TYPES:
-            platform_str = MYSENSORS_PLATFORM_DEVICES.format(platform)
-            if platform_str in self.hass.data[DOMAIN]:
-                platform_dict = self.hass.data[DOMAIN][platform_str]
-                if self.dev_id in platform_dict:
-                    del platform_dict[self.dev_id]
-                    _LOGGER.debug("Deleted %s from platform %s", self.dev_id, platform)
-
     @property
     @override
     def available(self) -> bool:
@@ -220,8 +180,7 @@ class MySensorsChildEntity(MySensorNodeEntity):
         """Return entity and device specific state attributes."""
         attr = super().extra_state_attributes
 
-        assert self.platform.config_entry
-        attr[ATTR_DEVICE] = self.platform.config_entry.data[CONF_DEVICE]
+        attr[ATTR_DEVICE] = self.config_entry.data[CONF_DEVICE]
 
         attr[ATTR_CHILD_ID] = self.child_id
         attr[ATTR_DESCRIPTION] = self._child.description

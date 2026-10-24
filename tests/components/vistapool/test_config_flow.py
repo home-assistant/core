@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquarite import AquariteError, AuthenticationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.vistapool.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -20,9 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .conftest import MOCK_PASSWORD, MOCK_POOLS, MOCK_USERNAME
-
-from tests.common import MockConfigEntry
+from .conftest import MOCK_PASSWORD, MOCK_POOLS, MOCK_USER_ID, MOCK_USERNAME
 
 _DHCP_INFO = DhcpServiceInfo(
     ip="1.2.3.4",
@@ -35,7 +34,7 @@ _DHCP_INFO = DhcpServiceInfo(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent actual setup during config flow tests."""
     with patch(
-        "homeassistant.components.vistapool.async_setup_entry", return_value=True
+        "homeassistant.components.vistapool.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 
@@ -79,6 +78,7 @@ async def test_user_step(
         CONF_USERNAME: MOCK_USERNAME,
         CONF_PASSWORD: MOCK_PASSWORD,
     }
+    assert result["result"].unique_id == MOCK_USER_ID
 
 
 # ── Error Handling (each path also verifies the flow can recover) ─
@@ -263,6 +263,7 @@ async def test_dhcp_discovery_starts_user_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USERNAME
+    assert result["result"].unique_id == MOCK_USER_ID
 
 
 async def test_dhcp_discovery_aborts_when_configured(
@@ -451,3 +452,49 @@ async def test_credential_update_error_paths(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == success_reason
     assert mock_setup_entry.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "authenticate_error",
+    [
+        pytest.param(None, id="success"),
+        pytest.param(AuthenticationError, id="invalid_auth"),
+        pytest.param(AquariteError, id="cannot_connect"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry", "mock_vistapool_client")
+async def test_user_step_closes_firestore_clients(
+    hass: HomeAssistant,
+    mock_vistapool_auth: MagicMock,
+    authenticate_error: type[Exception] | None,
+) -> None:
+    """Test the user step releases the Firestore channels on every outcome."""
+    mock_vistapool_auth.authenticate.side_effect = authenticate_error
+
+    await _configure(hass)
+
+    mock_vistapool_auth.close.assert_called_once()
+
+
+@pytest.mark.parametrize(("flow_starter", "step_id", "success_reason"), _FLOW_PARAMS)
+@pytest.mark.usefixtures("mock_setup_entry", "mock_vistapool_client")
+async def test_credential_update_closes_firestore_clients(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_auth: MagicMock,
+    flow_starter: Any,
+    step_id: str,
+    success_reason: str,
+) -> None:
+    """Test reauth and reconfigure release the Firestore channels."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await flow_starter(mock_config_entry, hass)
+    assert result["step_id"] == step_id
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: _NEW_PASSWORD}
+    )
+
+    assert result["reason"] == success_reason
+    mock_vistapool_auth.close.assert_called_once()

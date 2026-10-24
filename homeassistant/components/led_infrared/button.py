@@ -42,6 +42,22 @@ SUPPORTED_BUTTONS = {
         "quick",
         "slow",
     ],
+    LEDIrDeviceType.GENERIC_10_KEY: [
+        "brightness_up",
+        "brightness_down",
+        "timer_2h",
+        "timer_4h",
+        "timer_6h",
+        "timer_8h",
+    ],
+    LEDIrDeviceType.GENERIC_21_KEY: [
+        "brightness_down",
+        "brightness_up",
+        "mode_down",
+        "mode_up",
+        "speed_down",
+        "speed_up",
+    ],
 }
 
 

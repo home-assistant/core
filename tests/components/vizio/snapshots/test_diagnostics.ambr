@@ -40,6 +40,8 @@
           'value': 15,
         }),
       }),
+      'battery_level': None,
+      'charging_status': None,
       'current_app_config': None,
       'current_input': 'HDMI',
       'input_list': list([
@@ -68,11 +70,13 @@
           'name': 'AUX',
         }),
       ]),
+      'is_muted': None,
       'is_on': True,
       'sound_mode_list': list([
         'Music',
         'Movie',
       ]),
+      'volume': None,
     }),
     'device_profile': dict({
       'has_apps': True,
@@ -88,10 +92,8 @@
         'device_class': 'tv',
         'host': '**REDACTED**',
         'name': 'Vizio',
-        'volume_step': 1,
       }),
       'options': dict({
-        'volume_step': 1,
       }),
       'unique_id': '**REDACTED**',
     }),

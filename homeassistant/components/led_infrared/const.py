@@ -11,7 +11,9 @@ CONF_DEVICE_TYPE = "device_type"
 class LEDIrDeviceType(StrEnum):
     """LED Infrared device types."""
 
+    GENERIC_10_KEY = "generic_10_key"
     GENERIC_13_KEY = "generic_13_key"
+    GENERIC_21_KEY = "generic_21_key"
     GENERIC_24_KEY = "generic_24_key"
     GENERIC_40_KEY = "generic_40_key"
     GENERIC_44_KEY = "generic_44_key"

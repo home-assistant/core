@@ -97,6 +97,17 @@ async def test_error_handling(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        return_value=[DataSetType.CURRENT_WEATHER],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            EXAMPLE_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unsupported_location(hass: HomeAssistant) -> None:
     """Test we handle when WeatherKit does not support the location."""

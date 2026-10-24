@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from monzopy import AuthorisationExpiredError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -18,8 +19,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import setup_integration
 from .conftest import TEST_ACCOUNTS, TITLE, USER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_config_entry_title_uses_authenticated_owner(
@@ -178,7 +177,7 @@ async def test_api_can_trigger_reauth(
     monzo.user_account.accounts.side_effect = AuthorisationExpiredError()
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     flows = hass.config_entries.flow.async_progress()
 
     assert len(flows) == 1
@@ -222,8 +221,8 @@ async def test_migrate_entry(
             "homeassistant.components.monzo.async_generate_id",
             return_value="generated-webhook-id",
         ),
-        patch("homeassistant.components.monzo.async_setup_entry", return_value=True),
-        patch("homeassistant.components.monzo.async_unload_entry", return_value=True),
+        patch("homeassistant.components.monzo.async_setup_entry", return_value=None),
+        patch("homeassistant.components.monzo.async_unload_entry", return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         assert entry.version == 1

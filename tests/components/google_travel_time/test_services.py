@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock
 
 from google.api_core.exceptions import GoogleAPIError, PermissionDenied
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_travel_time.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_OPTIONS, MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -121,6 +120,8 @@ async def test_service_get_travel_times_empty_response(
             "The Routes API is not enabled for this API key",
         ),
         (GoogleAPIError("test"), "Google API error"),
+        (TimeoutError(), "Timed out getting travel times"),
+        (ValueError("boom"), "Google API error: boom"),
     ],
 )
 async def test_service_get_travel_times_errors(
@@ -229,6 +230,8 @@ async def test_service_get_transit_times_with_all_options(
             "The Routes API is not enabled for this API key",
         ),
         (GoogleAPIError("test"), "Google API error"),
+        (TimeoutError(), "Timed out getting travel times"),
+        (ValueError("boom"), "Google API error: boom"),
     ],
 )
 async def test_service_get_transit_times_errors(

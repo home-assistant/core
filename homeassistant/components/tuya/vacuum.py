@@ -1,5 +1,6 @@
 """Support for Tuya Vacuums."""
 
+from dataclasses import dataclass
 from typing import Any, override
 
 from tuya_device_handlers.definition.vacuum import (
@@ -24,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
 _TUYA_TO_HA_ACTIVITY_MAPPINGS = {
     TuyaVacuumActivity.CLEANING: VacuumActivity.CLEANING,
@@ -35,8 +36,14 @@ _TUYA_TO_HA_ACTIVITY_MAPPINGS = {
     TuyaVacuumActivity.ERROR: VacuumActivity.ERROR,
 }
 
-VACUUMS: dict[DeviceCategory, StateVacuumEntityDescription] = {
-    DeviceCategory.SD: StateVacuumEntityDescription(key=""),
+
+@dataclass(frozen=True)
+class TuyaVacuumEntityDescription(TuyaEntityDescription, StateVacuumEntityDescription):
+    """Describes a Tuya vacuum entity."""
+
+
+VACUUMS: dict[DeviceCategory, TuyaVacuumEntityDescription] = {
+    DeviceCategory.SD: TuyaVacuumEntityDescription(key=""),
 }
 
 
@@ -78,7 +85,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: StateVacuumEntityDescription,
+        description: TuyaVacuumEntityDescription,
         definition: VacuumDefinition,
     ) -> None:
         """Init Tuya vacuum."""

@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from functools import partial
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
@@ -15,12 +15,12 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
 from aiohomeconnect.model.program import Program, ProgramDefinition
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
@@ -51,11 +51,15 @@ PROGRAM_OPTIONS = {
         value,
     )
     for key, value in {
-        OptionKey.BSH_COMMON_DURATION: vol.All(int, vol.Range(min=0)),
-        OptionKey.BSH_COMMON_START_IN_RELATIVE: vol.All(int, vol.Range(min=0)),
-        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: vol.All(int, vol.Range(min=0)),
-        OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY: vol.All(
-            int, vol.Range(min=0)
+        OptionKey.BSH_COMMON_DURATION: probatio.All(int, probatio.Range(min=0)),
+        OptionKey.BSH_COMMON_START_IN_RELATIVE: probatio.All(
+            int, probatio.Range(min=0)
+        ),
+        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: probatio.All(
+            int, probatio.Range(min=0)
+        ),
+        OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY: probatio.All(
+            int, probatio.Range(min=0)
         ),
         OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_MULTIPLE_BEVERAGES: bool,
         OptionKey.DISHCARE_DISHWASHER_INTENSIV_ZONE: bool,
@@ -69,11 +73,13 @@ PROGRAM_OPTIONS = {
         OptionKey.DISHCARE_DISHWASHER_ZEOLITE_DRY: bool,
         (
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
-        ): vol.All(int, vol.Range(min=1, max=100)),
-        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE: vol.Coerce(
+        ): probatio.All(int, probatio.Range(min=1, max=100)),
+        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE: probatio.Coerce(
             float
         ),
-        OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE: vol.All(int, vol.Range(min=0)),
+        OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE: probatio.All(
+            int, probatio.Range(min=0)
+        ),
         OptionKey.COOKING_OVEN_FAST_PRE_HEAT: bool,
         OptionKey.LAUNDRY_CARE_COMMON_SILENT_MODE: bool,
         OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE: bool,
@@ -89,14 +95,14 @@ PROGRAM_OPTIONS = {
 }
 
 
-SERVICE_SETTING_SCHEMA = vol.Schema(
+SERVICE_SETTING_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_KEY): vol.All(
-            vol.Coerce(SettingKey),
-            vol.NotIn([SettingKey.UNKNOWN]),
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_KEY): probatio.All(
+            probatio.Coerce(SettingKey),
+            probatio.NotIn([SettingKey.UNKNOWN]),
         ),
-        vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
+        probatio.Required(ATTR_VALUE): probatio.Any(str, int, bool),
     }
 )
 
@@ -117,19 +123,21 @@ def _require_program_or_at_least_one_option(data: dict) -> dict:
     return data
 
 
-SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = vol.All(
-    vol.Schema(
+SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(ATTR_DEVICE_ID): str,
-            vol.Required(ATTR_AFFECTS_TO): vol.In(
+            probatio.Required(ATTR_DEVICE_ID): str,
+            probatio.Required(ATTR_AFFECTS_TO): probatio.In(
                 [AFFECTS_TO_ACTIVE_PROGRAM, AFFECTS_TO_SELECTED_PROGRAM]
             ),
-            vol.Optional(ATTR_PROGRAM): vol.In(TRANSLATION_KEYS_PROGRAMS_MAP.keys()),
+            probatio.Optional(ATTR_PROGRAM): probatio.In(
+                TRANSLATION_KEYS_PROGRAMS_MAP.keys()
+            ),
         }
     )
     .extend(
         {
-            vol.Optional(translation_key): vol.In(allowed_values.keys())
+            probatio.Optional(translation_key): probatio.In(allowed_values.keys())
             for translation_key, (
                 key,
                 allowed_values,
@@ -138,21 +146,21 @@ SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = vol.All(
     )
     .extend(
         {
-            vol.Optional(translation_key): schema
+            probatio.Optional(translation_key): schema
             for translation_key, (key, schema) in PROGRAM_OPTIONS.items()
         }
     ),
     _require_program_or_at_least_one_option,
 )
 
-SERVICE_START_SELECTED_PROGRAM_SCHEMA = vol.All(
-    vol.Schema(
+SERVICE_START_SELECTED_PROGRAM_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(ATTR_DEVICE_ID): str,
+            probatio.Required(ATTR_DEVICE_ID): str,
         }
     ).extend(
         {
-            vol.Optional(translation_key): schema
+            probatio.Optional(translation_key): schema
             for translation_key, (key, schema) in PROGRAM_OPTIONS.items()
             if key
             in (
@@ -167,38 +175,13 @@ SERVICE_START_SELECTED_PROGRAM_SCHEMA = vol.All(
 async def _get_client_and_ha_id(
     hass: HomeAssistant, device_id: str
 ) -> tuple[HomeConnectClient, str]:
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(device_id)
-    if device_entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_entry_not_found",
-            translation_placeholders={
-                "device_id": device_id,
-            },
-        )
-    entry: HomeConnectConfigEntry | None = None
-    for entry_id in device_entry.config_entries:
-        _entry = hass.config_entries.async_get_entry(entry_id)
-        assert _entry
-        if _entry.domain == DOMAIN:
-            entry = cast(HomeConnectConfigEntry, _entry)
-            break
-    if entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_found",
-            translation_placeholders={
-                "device_id": device_id,
-            },
-        )
+    config_entry: HomeConnectConfigEntry
+    device, config_entry = service.async_get_device_and_config_entry(
+        hass, DOMAIN, device_id
+    )
 
     ha_id = next(
-        (
-            identifier[1]
-            for identifier in device_entry.identifiers
-            if identifier[0] == DOMAIN
-        ),
+        (identifier[1] for identifier in device.identifiers if identifier[0] == DOMAIN),
         None,
     )
     if ha_id is None:
@@ -209,7 +192,7 @@ async def _get_client_and_ha_id(
                 "device_id": device_id,
             },
         )
-    return entry.runtime_data.client, ha_id
+    return config_entry.runtime_data.client, ha_id
 
 
 async def async_service_setting(call: ServiceCall) -> None:

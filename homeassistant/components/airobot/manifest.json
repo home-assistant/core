@@ -1,6 +1,7 @@
 {
   "domain": "airobot",
   "name": "Airobot",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@mettolen"],
   "config_flow": true,
   "dhcp": [
