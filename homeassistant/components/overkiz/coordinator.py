@@ -705,6 +705,11 @@ async def _replay_failed_execution(
         if key is not None:
             coordinator.writes_waiting.discard(key)
 
+    # As after any write: the events of the replay are polled at once, and
+    # quickly until it ends, instead of at the slower idle interval.
+    if exec_id is not None:
+        await coordinator.async_refresh()
+
     if exec_id is None:
         # Without a replay, the mode it would have written is not applied.
         for command in _written_commands(record):
