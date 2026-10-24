@@ -17,6 +17,7 @@ from .const import DOMAIN
 from .coordinator import SteamVRBaseStationConfigEntry, SteamVRBaseStationCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.SELECT,
     Platform.SENSOR,

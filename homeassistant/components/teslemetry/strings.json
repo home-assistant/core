@@ -222,7 +222,7 @@
         "name": "Drive rail"
       },
       "driver_seat_belt": {
-        "name": "Driver seat belt"
+        "name": "Driver seat belt warning"
       },
       "driver_seat_occupied": {
         "name": "Driver seat occupied"
@@ -447,7 +447,7 @@
         "name": "Sunroof"
       },
       "windows": {
-        "name": "Windows"
+        "name": "Vent windows"
       }
     },
     "device_tracker": {
