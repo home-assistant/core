@@ -8,6 +8,7 @@ from bsblan import (
     BSBLANAuthError,
     BSBLANConnectionError,
     BSBLANError,
+    BSBLANMalformedResponseError,
     BSBLANUnsupportedFeatureError,
     BSBLANVersionError,
     State,
@@ -262,6 +263,12 @@ async def test_config_entry_auth_failed_triggers_reauth(
             TimeoutError("Connection timeout"),
             ConfigEntryState.LOADED,
             True,
+        ),
+        (
+            "sensor",
+            BSBLANMalformedResponseError("Malformed response"),
+            ConfigEntryState.SETUP_RETRY,
+            False,
         ),
     ],
 )
@@ -644,6 +651,32 @@ async def test_coordinator_fast_dhw_fails_on_refresh_preserves_state(
 
     # Last known DHW state should be preserved
     assert coordinator.data.dhw is initial_dhw
+
+
+async def test_coordinator_fast_sensor_fails_on_refresh_preserves_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test fast coordinator preserves last sensor data when sensors fail on refresh."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.fast_coordinator
+    initial_sensor = coordinator.data.sensor
+
+    mock_bsblan.sensor.side_effect = BSBLANError(
+        "None of the requested parameters are valid for this section"
+    )
+
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success
+    assert coordinator.data.sensor is initial_sensor
 
 
 async def test_coordinator_fast_state_error_marks_update_failed(
