@@ -1,15 +1,30 @@
 """Test the Teslemetry services."""
 
 from datetime import time
+from typing import Any
 from unittest.mock import patch
 
+from aiopowerwall import (
+    PowerwallCommandError,
+    PowerwallConnectionError,
+    PowerwallError,
+    PowerwallNotSupportedError,
+)
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.teslemetry.const import DOMAIN
+from homeassistant.components.teslemetry.const import (
+    CONF_SITE_ID,
+    DOMAIN,
+    SUBENTRY_TYPE_ENERGY_SITE,
+)
 from homeassistant.components.teslemetry.services import (
     ATTR_DAYS_OF_WEEK,
     ATTR_DEPARTURE_TIME,
+    ATTR_DURATION,
     ATTR_ENABLE,
     ATTR_END_OFF_PEAK_TIME,
     ATTR_END_TIME,
@@ -18,6 +33,7 @@ from homeassistant.components.teslemetry.services import (
     ATTR_OFF_PEAK_CHARGING_WEEKDAYS,
     ATTR_ONE_TIME,
     ATTR_PIN,
+    ATTR_POWER,
     ATTR_PRECONDITION_TIME,
     ATTR_PRECONDITIONING_ENABLED,
     ATTR_PRECONDITIONING_WEEKDAYS,
@@ -25,33 +41,101 @@ from homeassistant.components.teslemetry.services import (
     ATTR_TOU_SETTINGS,
     SERVICE_ADD_CHARGE_SCHEDULE,
     SERVICE_ADD_PRECONDITION_SCHEDULE,
+    SERVICE_DISPATCH_BATTERY_POWER,
     SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
     SERVICE_REMOVE_CHARGE_SCHEDULE,
     SERVICE_REMOVE_PRECONDITION_SCHEDULE,
+    SERVICE_RESUME_BATTERY_OPERATION,
     SERVICE_SET_SCHEDULED_CHARGING,
     SERVICE_SET_SCHEDULED_DEPARTURE,
     SERVICE_SPEED_LIMIT,
     SERVICE_TIME_OF_USE,
     SERVICE_VALET_MODE,
 )
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
     ATTR_ID,
     ATTR_LOCATION,
     ATTR_NAME,
     ATTR_TIME,
     CONF_DEVICE_ID,
+    CONF_HOST,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_PASSWORD,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import setup_platform
+from . import mock_config_entry, setup_platform
 from .const import COMMAND_ERROR, COMMAND_OK
 
 lat = -27.9699373
 lon = 153.3726526
+
+SITE_ID = 123456
+
+# aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
+# that build one need a real (if undersized, for speed) RSA key rather than
+# arbitrary bytes.
+_TEST_RSA_KEY_PEM = rsa.generate_private_key(
+    public_exponent=65537, key_size=1024
+).private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.TraditionalOpenSSL,
+    encryption_algorithm=serialization.NoEncryption(),
+)
+
+LOCAL_BATTERY_SERVICES = [
+    pytest.param(
+        SERVICE_DISPATCH_BATTERY_POWER,
+        {ATTR_POWER: -5000, ATTR_DURATION: 1800},
+        "dispatch_battery_power",
+        id="dispatch_battery_power",
+    ),
+    pytest.param(
+        SERVICE_RESUME_BATTERY_OPERATION,
+        {},
+        "resume_battery_operation",
+        id="resume_battery_operation",
+    ),
+]
+
+
+async def _setup_paired_site(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up an entry whose energy site is paired with its local gateway."""
+    entry = mock_config_entry()
+    entry = MockConfigEntry(
+        domain=entry.domain,
+        version=entry.version,
+        minor_version=entry.minor_version,
+        unique_id=entry.unique_id,
+        data=dict(entry.data),
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_ENERGY_SITE,
+                unique_id=str(SITE_ID),
+                title="Energy Site",
+                data={
+                    CONF_SITE_ID: SITE_ID,
+                    CONF_HOST: "192.168.91.1",
+                    CONF_PASSWORD: "abcde",
+                },
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    return entry
 
 
 async def test_services(
@@ -472,3 +556,152 @@ async def test_service_validation_errors(
             blocking=True,
         )
     assert exc_info.value.translation_key == "service_device_wrong_domain"
+
+
+@pytest.mark.parametrize(
+    ("service", "data", "method", "expected_args"),
+    [
+        pytest.param(
+            SERVICE_DISPATCH_BATTERY_POWER,
+            {ATTR_POWER: -5000, ATTR_DURATION: 1800},
+            "dispatch_battery_power",
+            (-5000, 1800),
+            id="dispatch_battery_power",
+        ),
+        pytest.param(
+            SERVICE_RESUME_BATTERY_OPERATION,
+            {},
+            "resume_battery_operation",
+            (),
+            id="resume_battery_operation",
+        ),
+    ],
+)
+async def test_local_battery_services(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service: str,
+    data: dict[str, Any],
+    method: str,
+    expected_args: tuple[int, ...],
+) -> None:
+    """Test the local battery services call the paired gateway."""
+    entry = await _setup_paired_site(hass)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(SITE_ID)), entry.entry_id
+    )
+    assert device
+
+    with patch(f"aiopowerwall.PowerwallClient.{method}") as mock_method:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {CONF_DEVICE_ID: device.id, **data},
+            blocking=True,
+        )
+    mock_method.assert_awaited_once_with(*expected_args)
+
+
+@pytest.mark.parametrize(("service", "data", "method"), LOCAL_BATTERY_SERVICES)
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            PowerwallNotSupportedError("dispatch_battery_power", 12, ""),
+            "local_command_not_supported",
+            id="not_supported",
+        ),
+        pytest.param(
+            PowerwallCommandError("dispatch_battery_power", 3, "invalid"),
+            "local_command_failed",
+            id="command_error",
+        ),
+        pytest.param(
+            PowerwallConnectionError("unreachable"),
+            "local_command_failed",
+            id="connection_error",
+        ),
+    ],
+)
+async def test_local_battery_services_errors(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service: str,
+    data: dict[str, Any],
+    method: str,
+    error: PowerwallError,
+    translation_key: str,
+) -> None:
+    """Test the local battery services translate gateway errors."""
+    entry = await _setup_paired_site(hass)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(SITE_ID)), entry.entry_id
+    )
+    assert device
+
+    with (
+        patch(f"aiopowerwall.PowerwallClient.{method}", side_effect=error),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {CONF_DEVICE_ID: device.id, **data},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == translation_key
+
+
+@pytest.mark.parametrize(("service", "data", "method"), LOCAL_BATTERY_SERVICES)
+async def test_local_battery_services_not_paired(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service: str,
+    data: dict[str, Any],
+    method: str,
+) -> None:
+    """Test the local battery services reject a site without a local gateway."""
+    entry = await setup_platform(hass, [])
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(SITE_ID)), entry.entry_id
+    )
+    assert device
+
+    with (
+        patch(f"aiopowerwall.PowerwallClient.{method}") as mock_method,
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {CONF_DEVICE_ID: device.id, **data},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "no_local_powerwall"
+    mock_method.assert_not_called()
+
+
+@pytest.mark.parametrize("duration", [0, 86401])
+async def test_dispatch_battery_power_duration_out_of_range(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    duration: int,
+) -> None:
+    """Test a duration outside 1 to 86400 seconds is rejected."""
+    entry = await _setup_paired_site(hass)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(SITE_ID)), entry.entry_id
+    )
+    assert device
+
+    with (
+        patch("aiopowerwall.PowerwallClient.dispatch_battery_power") as mock_method,
+        pytest.raises(probatio.Invalid),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DISPATCH_BATTERY_POWER,
+            {CONF_DEVICE_ID: device.id, ATTR_POWER: 5000, ATTR_DURATION: duration},
+            blocking=True,
+        )
+    mock_method.assert_not_called()

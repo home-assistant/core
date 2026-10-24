@@ -814,6 +814,9 @@
     "add_precondition_schedule": {
       "service": "mdi:hvac"
     },
+    "dispatch_battery_power": {
+      "service": "mdi:home-battery"
+    },
     "navigation_gps_request": {
       "service": "mdi:crosshairs-gps"
     },
@@ -822,6 +825,9 @@
     },
     "remove_precondition_schedule": {
       "service": "mdi:hvac-off"
+    },
+    "resume_battery_operation": {
+      "service": "mdi:home-battery-outline"
     },
     "set_scheduled_charging": {
       "service": "mdi:timeline-clock-outline"
