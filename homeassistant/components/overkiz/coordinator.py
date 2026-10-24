@@ -14,7 +14,6 @@ from pyoverkiz.enums import (
     ExecutionState,
     FailureType,
     OverkizCommand,
-    OverkizCommandParam,
     OverkizState,
     Protocol,
 )
@@ -251,12 +250,12 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         key = (device_url, MODE_WRITE_NAMES)
         return key in self.pending_commands or self.is_execution_running(key)
 
-    def is_derogation_written_on(self, device_url: str) -> bool:
-        """Return whether a recent write turned the derogation of a device on."""
+    def written_derogation(self, device_url: str) -> str | None:
+        """Return the derogation a recent write left on a device, on or off."""
         if (write := self.derogation_writes.get(device_url)) is None:
-            return False
+            return None
         value, written_at = write
-        return value == OverkizCommandParam.ON and monotonic() - written_at < 120
+        return value if monotonic() - written_at < 120 else None
 
     @override
     async def _async_update_data(self) -> dict[str, Device]:
@@ -588,6 +587,12 @@ async def _send_pending_commands(
         # execution will report their failure.
         LOGGER.warning("Sending the waiting Overkiz commands failed", exc_info=True)
         _create_failure_issue(coordinator, key[0], "REQUEST_FAILED")
+        for command in commands:
+            if (
+                command.name == OverkizCommand.SET_PASS_APC_HEATING_MODE
+                and command.parameters
+            ):
+                coordinator.forget_mode_write(key[0], str(command.parameters[0]))
 
 
 def _report_failed_execution(

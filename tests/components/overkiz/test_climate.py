@@ -2922,23 +2922,22 @@ async def test_zone_control_zone_replay_polls_its_events(
 
     await _async_set_zone_setpoint(hass, 19.0)
 
-    with patch.object(
-        coordinator, "async_refresh", wraps=coordinator.async_refresh
-    ) as refresh:
-        await on_execution_state_changed(
-            coordinator,
-            execution_state_changed_event(
-                exec_id="exec-1",
-                new_state=ExecutionState.FAILED,
-                old_state=ExecutionState.IN_PROGRESS,
-                failure_type_code=FailureType.DATA_TRANSPORT_SERVICE_ERROR,
-                failed_commands=[{"rank": 0}],
-            ),
-        )
-        await hass.async_block_till_done()
+    polls = mock_client.fetch_events.await_count
+
+    await on_execution_state_changed(
+        coordinator,
+        execution_state_changed_event(
+            exec_id="exec-1",
+            new_state=ExecutionState.FAILED,
+            old_state=ExecutionState.IN_PROGRESS,
+            failure_type_code=FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+            failed_commands=[{"rank": 0}],
+        ),
+    )
+    await hass.async_block_till_done()
 
     assert mock_client.execute_action_group.await_count == 2
-    refresh.assert_awaited()
+    assert mock_client.fetch_events.await_count > polls
 
 
 async def test_zone_control_zone_reported_mode_keeps_a_newer_preset(
@@ -2995,6 +2994,52 @@ async def test_zone_control_zone_preset_not_applied_is_forgotten(
         FailureType.PEER_DOWN,
         [{"rank": failed_rank}],
     )
+    await _async_set_zone_setpoint(hass, 21.0)
+
+    assert ("setDerogationOnOffState", ["on"]) in _sent_commands(mock_client)[-1]
+
+
+async def test_zone_control_zone_derogation_turned_off_is_started_again(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a derogation the schedule just turned off is started by a new setpoint."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+
+    # The schedule turns the derogation off, the states still report it on.
+    await _async_select_preset(hass, "schedule")
+    await _async_end_execution(hass, freezer, mock_client, "exec-1")
+    await _async_select_preset(hass, "manual")
+    await _async_end_execution(hass, freezer, mock_client, "exec-2")
+    await _async_set_zone_setpoint(hass, 21.0)
+
+    assert ("setDerogationOnOffState", ["on"]) in _sent_commands(mock_client)[-1]
+
+
+async def test_zone_control_zone_deferred_preset_that_cannot_be_sent(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a preset that waited and cannot be sent does not decide any more."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+    mock_client.execute_action_group.side_effect = [
+        "exec-1",
+        BaseOverkizError("Server is down"),
+        "exec-3",
+    ]
+
+    # Manual is running, the schedule waits behind it and cannot be sent.
+    await _async_select_preset(hass, "manual")
+    await _async_select_preset(hass, "schedule")
+    await _async_end_execution(hass, freezer, mock_client, "exec-1")
     await _async_set_zone_setpoint(hass, 21.0)
 
     assert ("setDerogationOnOffState", ["on"]) in _sent_commands(mock_client)[-1]

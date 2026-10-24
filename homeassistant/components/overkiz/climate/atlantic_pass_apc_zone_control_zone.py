@@ -771,11 +771,13 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         # The derogation only has to be started once: sending it again with
         # every step of the slider and refreshing the modes makes each step
         # slower, and a long queue of steps loses commands.
-        if self.device.states.get_value(
-            OverkizState.CORE_DEROGATION_ON_OFF
-        ) == OverkizCommandParam.ON or self.coordinator.is_derogation_written_on(
-            self.device_url
-        ):
+        # A derogation just written, on or off, is only reported later.
+        if (derogation := self.coordinator.written_derogation(self.device_url)) is None:
+            derogation = cast(
+                str | None,
+                self.device.states.get_value(OverkizState.CORE_DEROGATION_ON_OFF),
+            )
+        if derogation == OverkizCommandParam.ON:
             # A derogation over the program shows the applied setpoint, which
             # only changes once it is refreshed. A manual zone shows the one
             # that has just been written.
