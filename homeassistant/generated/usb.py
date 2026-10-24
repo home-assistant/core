@@ -26,6 +26,11 @@ SERIAL_PORT_SELECTOR_INTEGRATIONS = [
 
 USB = [
     {
+        "domain": "easywave",
+        "pid": "1014",
+        "vid": "155A",
+    },
+    {
         "description": "*usb 300*",
         "domain": "enocean",
         "manufacturer": "*enocean*",
