@@ -1587,7 +1587,7 @@ class EntityRegistry(BaseRegistry):
         suggested_object_id: str | UndefinedType | None = UNDEFINED,
         # To disable or hide an entity if it gets created, does not affect
         # existing entities
-        disabled_by: RegistryEntryDisabler | None = None,
+        disabled_by: RegistryEntryDisabler | UndefinedType | None = UNDEFINED,
         hidden_by: RegistryEntryHider | None = None,
         # Function to generate initial entity options if it gets created
         get_initial_options: Callable[[], EntityOptionsType | None] | None = None,
@@ -1666,10 +1666,6 @@ class EntityRegistry(BaseRegistry):
             device_class = deleted_entity.device_class
             if deleted_entity.disabled_by is not UNDEFINED:
                 disabled_by = deleted_entity.disabled_by
-                # A stored derived disabled_by can be stale, so reset it to be
-                # derived again below
-                if disabled_by in _DERIVED_DISABLED_BY:
-                    disabled_by = None
             # Restore entity_id if it's available
             if self._entity_id_available(deleted_entity.entity_id):
                 entity_id = deleted_entity.entity_id
@@ -1723,14 +1719,14 @@ class EntityRegistry(BaseRegistry):
         )
         config_entry = none_if_undefined(config_entry)
 
-        if (
-            disabled_by is None
-            and config_entry is not None
-            and config_entry.pref_disable_new_entities
-        ):
-            disabled_by = RegistryEntryDisabler.INTEGRATION
+        if disabled_by is UNDEFINED:
+            disabled_by = (
+                RegistryEntryDisabler.INTEGRATION
+                if config_entry is not None and config_entry.pref_disable_new_entities
+                else None
+            )
         # Not explicitly disabled, so derive disabled_by
-        if disabled_by is None:
+        if disabled_by in _DERIVED_DISABLED_BY:
             device = (
                 dr.async_get(self.hass).async_get(device_id)
                 if device_id is not None
@@ -1952,7 +1948,7 @@ class EntityRegistry(BaseRegistry):
             disabled_by = _derived_disabled_by(config_entry, device)
             if disabled_by is entity.disabled_by:
                 continue
-            self.async_update_entity(entity.entity_id, disabled_by=disabled_by)
+            self._async_update_entity(entity.entity_id, disabled_by=disabled_by)
 
     @callback
     def _ignore_composite_device_id(
@@ -2228,6 +2224,9 @@ class EntityRegistry(BaseRegistry):
         unit_of_measurement: str | UndefinedType | None = UNDEFINED,
     ) -> RegistryEntry:
         """Update properties of an entity."""
+        # Not explicitly disabled, so derive disabled_by
+        if disabled_by in _DERIVED_DISABLED_BY:
+            disabled_by = None
         return self._async_update_entity(
             entity_id,
             aliases=aliases,
@@ -2813,7 +2812,7 @@ def async_config_entry_disabled_by_changed(
         disabled_by = _derived_disabled_by(config_entry, device)
         if disabled_by is entity.disabled_by:
             continue
-        registry.async_update_entity(entity.entity_id, disabled_by=disabled_by)
+        registry._async_update_entity(entity.entity_id, disabled_by=disabled_by)  # noqa: SLF001
 
 
 @callback
