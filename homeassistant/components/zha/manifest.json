@@ -115,6 +115,12 @@
       "known_devices": ["sonoff zigbee dongle lite mg21"],
       "pid": "EA60",
       "vid": "10C4"
+    },
+    {
+      "description": "*sonoff*max*cc2674p10*",
+      "known_devices": ["SONOFF Dongle Max CC2674P10"],
+      "pid": "4001",
+      "vid": "303A"
     }
   ],
   "zeroconf": [
