@@ -10565,7 +10565,7 @@
         "computers_network.monitoring",
         "presence_location.network_presence"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "snoo": {
