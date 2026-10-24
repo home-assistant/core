@@ -64,8 +64,8 @@ class CoverSpeed(StrEnum):
     # Move faster than the default speed
     FAST = "fast"
 
-    # Move slower and quieter than the default speed, e.g. in a whisper mode
-    SILENT = "silent"
+    # Move slower than the default speed, e.g. to be quieter
+    SLOW = "slow"
 
 
 class CoverState(StrEnum):

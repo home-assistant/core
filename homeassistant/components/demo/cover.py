@@ -36,7 +36,7 @@ async def async_setup_entry(
                 "Living Room Window",
                 70,
                 50,
-                supported_speeds=[CoverSpeed.SILENT, CoverSpeed.DEFAULT],
+                supported_speeds=[CoverSpeed.SLOW, CoverSpeed.DEFAULT],
                 translation_key="living_room_window",
             ),
             DemoCover(
