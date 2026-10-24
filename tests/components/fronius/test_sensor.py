@@ -11,10 +11,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.components.fronius.coordinator import (
     FroniusInverterUpdateCoordinator,
+    FroniusMeterUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -190,6 +191,26 @@ async def test_symo_meter_forged(
     )
 
 
+async def test_symo_meter_gone(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test meter entities when the meter is no longer reported."""
+    mock_responses(aioclient_mock)
+    await setup_fronius_integration(hass)
+    assert hass.states.get("sensor.smart_meter_63a_real_power").state == "5592.57"
+
+    mock_responses(
+        aioclient_mock,
+        override_data={"symo/GetMeterRealtimeData.json": [(["Body", "Data"], {})]},
+    )
+    freezer.tick(FroniusMeterUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.smart_meter_63a_real_power").state == STATE_UNKNOWN
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_symo_power_flow(
     hass: HomeAssistant,
@@ -332,7 +353,7 @@ async def test_gen24_storage(
         (DOMAIN, "12345678"), config_entry.entry_id
     )
     assert inverter_1.manufacturer == "Fronius"
-    assert inverter_1.model == "Gen24"
+    assert inverter_1.model == "GEN24/Tauro/Verto"
     assert inverter_1.name == "Gen24 Storage"
 
     meter = device_registry.async_get_device_by_identifier(

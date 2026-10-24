@@ -55,9 +55,6 @@ PyChromecast==14.0.10
 # homeassistant.components.flume
 PyFlume==0.6.5
 
-# homeassistant.components.fronius
-PyFronius==0.8.2
-
 # homeassistant.components.pyload
 PyLoadAPI==2.1.0
 
@@ -1113,6 +1110,9 @@ fritzconnection[qr]==1.15.1
 
 # homeassistant.components.fronius
 fronius-modbus==0.2.0
+
+# homeassistant.components.fronius
+fronius-solarapi==0.1.0
 
 # homeassistant.components.fumis
 fumis==0.4.2
