@@ -358,7 +358,6 @@ async def test_data_wire_parameters(
 async def test_image_support_without_recommended_settings(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
     model: str,
     expected_image_support: bool,
 ) -> None:
