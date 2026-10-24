@@ -279,11 +279,35 @@ async def test_minute_forecast_service_unit_conversion(
         return_response=True,
     )
     segments = response["weather.home"]["segments"]
-    # 0.5 mm and 0 mm from the fixture, converted to inches.
-    assert segments[0]["precipitation"] == 0.02
+    # 0.5 mm and 0 mm from the fixture, converted to inches without rounding.
+    assert segments[0]["precipitation"] == pytest.approx(0.5 / 25.4)
     assert segments[0]["snowfall_amount"] == 0.0
     assert segments[1]["precipitation"] is None
     assert segments[1]["snowfall_amount"] is None
+
+
+async def test_minute_forecast_service_keeps_small_amounts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test that small per-segment amounts survive conversion to coarser units."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    minute_forecast = mock_google_weather_api.async_get_minute_forecast.return_value
+    minute_forecast.segments[0].qpf.quantity = 0.1
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        GoogleWeatherService.GET_MINUTE_FORECAST,
+        {ATTR_ENTITY_ID: "weather.home"},
+        blocking=True,
+        return_response=True,
+    )
+    amount = response["weather.home"]["segments"][0]["precipitation"]
+    # 0.1 mm is 0.0039 in; rounding to two decimals would have reported 0.0.
+    assert amount > 0
+    assert amount == pytest.approx(0.1 / 25.4)
 
 
 async def test_minute_forecast_service_error(

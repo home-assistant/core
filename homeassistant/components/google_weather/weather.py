@@ -70,9 +70,6 @@ from .entity import GoogleWeatherBaseEntity
 
 PARALLEL_UPDATES = 0
 
-# Same precision the weather platform applies when converting forecast values.
-_PRECIPITATION_ROUNDING_PRECISION = 2
-
 # Maps https://developers.google.com/maps/documentation/weather/weather-condition-icons
 # to https://contributors.home-assistant.io/core/entities/weather/#conditions
 _CONDITION_MAP: dict[WeatherCondition.Type, str | None] = {
@@ -254,17 +251,16 @@ class GoogleWeatherEntity(
 
         The API always reports amounts in millimeters because the client is
         configured for metric units; expose them the same way weather.get_forecasts
-        does, in the unit the weather entity uses.
+        does, in the unit the weather entity uses. The value is not rounded:
+        minute-level segments carry very small amounts that would collapse to
+        zero in coarser units and no longer add up over the forecast.
         """
         if amount is None:
             return None
-        return round(
-            UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
-                amount.quantity,
-                UnitOfPrecipitationDepth.MILLIMETERS,
-                self._precipitation_unit,
-            ),
-            _PRECIPITATION_ROUNDING_PRECISION,
+        return UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
+            amount.quantity,
+            UnitOfPrecipitationDepth.MILLIMETERS,
+            self._precipitation_unit,
         )
 
     @property
