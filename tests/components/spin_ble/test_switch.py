@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Generator
 from dataclasses import replace
-from typing import Literal, override
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -42,22 +41,6 @@ from . import setup_integration, setup_persistent
 from .const import IDLE_STATUS, STATUS
 
 CHARGING_SWITCH = "switch.123456789012_charging"
-
-
-class ContendedLock(asyncio.Lock):
-    """A lock that signals once a second caller has to wait for it."""
-
-    def __init__(self) -> None:
-        """Initialize the lock."""
-        super().__init__()
-        self.contended = asyncio.Event()
-
-    @override
-    async def acquire(self) -> Literal[True]:
-        """Acquire the lock, signalling if someone else holds it."""
-        if self.locked():
-            self.contended.set()
-        return await super().acquire()
 
 
 @pytest.fixture(autouse=True)
@@ -203,14 +186,13 @@ async def test_teardown_waits_for_a_command_in_flight(
 ) -> None:
     """Unloading hands the link back only once a running command is done."""
     await setup_persistent(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
+    started = asyncio.Event()
+    finish = asyncio.Event()
     order: list[str] = []
 
     async def start_charging() -> None:
-        # Let the unload get as far as it can while the command still runs.
-        while not coordinator._shutdown_requested:
-            await asyncio.sleep(0)
-        await asyncio.sleep(0)
+        started.set()
+        await finish.wait()
         order.append("start")
 
     mock_charger.async_start_charging.side_effect = start_charging
@@ -224,28 +206,58 @@ async def test_teardown_waits_for_a_command_in_flight(
             blocking=True,
         )
     )
-    await asyncio.sleep(0)
+    await started.wait()
+    # Unload callbacks run newest first and the shutdown starts eagerly, so a
+    # shutdown that does not wait disconnects before the command resumes.
+    mock_config_entry.async_on_unload(finish.set)
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await command
 
     assert order == ["start", "disconnect"]
 
 
-async def test_a_command_after_teardown_is_refused(
+async def test_a_command_queued_behind_teardown_is_refused(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_charger: AsyncMock
 ) -> None:
     """A command that only gets the link after unloading never reconnects."""
     await setup_persistent(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    started = asyncio.Event()
+    finish = asyncio.Event()
+
+    async def start_charging() -> None:
+        started.set()
+        await finish.wait()
+
+    mock_charger.async_start_charging.side_effect = start_charging
+
+    running = hass.async_create_task(
+        hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: CHARGING_SWITCH},
+            blocking=True,
+        )
+    )
+    await started.wait()
     mock_charger.async_connect.reset_mock()
+    queued = hass.async_create_task(
+        hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: CHARGING_SWITCH},
+            blocking=True,
+        )
+    )
+    mock_config_entry.async_on_unload(finish.set)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await running
 
     with pytest.raises(HomeAssistantError) as err:
-        await coordinator.async_start_charging()
+        await queued
 
     assert err.value.translation_key == "unloading"
     mock_charger.async_connect.assert_not_awaited()
-    mock_charger.async_start_charging.assert_not_awaited()
+    mock_charger.async_stop_charging.assert_not_awaited()
 
 
 async def test_a_poll_waits_for_a_command_holding_the_link(
@@ -256,8 +268,6 @@ async def test_a_poll_waits_for_a_command_holding_the_link(
 ) -> None:
     """A poll arriving mid-command neither reads nor drops the link until it ends."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    coordinator._link = lock = ContendedLock()
     started = asyncio.Event()
     finish = asyncio.Event()
 
@@ -279,16 +289,11 @@ async def test_a_poll_waits_for_a_command_holding_the_link(
     )
     await started.wait()
     freezer.tick(CHARGING_INTERVAL)
+    # The poll starts eagerly, so one that does not wait is already through.
     async_fire_time_changed(hass)
-    # Waits until the second caller is either blocked or, with no lock, already
-    # through, and always lets the first finish, so a missing lock fails the
-    # test rather than hanging it.
+    # Always lets the command finish, so a missing lock fails the test rather
+    # than hanging it.
     try:
-        while not (
-            lock.contended.is_set() or mock_charger.async_get_status.await_count
-        ):
-            await asyncio.sleep(0)
-
         mock_charger.async_get_status.assert_not_awaited()
         mock_charger.async_disconnect.assert_not_awaited()
     finally:
@@ -307,8 +312,6 @@ async def test_a_command_waits_for_a_poll_holding_the_link(
 ) -> None:
     """A command arriving mid-poll neither sends nor drops the link until it ends."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    coordinator._link = lock = ContendedLock()
     started = asyncio.Event()
     finish = asyncio.Event()
 
@@ -323,6 +326,7 @@ async def test_a_command_waits_for_a_poll_holding_the_link(
     freezer.tick(CHARGING_INTERVAL)
     async_fire_time_changed(hass)
     await started.wait()
+    # The command starts eagerly, so one that does not wait is already sent.
     command = hass.async_create_task(
         hass.services.async_call(
             SWITCH_DOMAIN,
@@ -331,15 +335,9 @@ async def test_a_command_waits_for_a_poll_holding_the_link(
             blocking=True,
         )
     )
-    # Waits until the second caller is either blocked or, with no lock, already
-    # through, and always lets the first finish, so a missing lock fails the
-    # test rather than hanging it.
+    # Always lets the poll finish, so a missing lock fails the test rather than
+    # hanging it.
     try:
-        while not (
-            lock.contended.is_set() or mock_charger.async_start_charging.await_count
-        ):
-            await asyncio.sleep(0)
-
         mock_charger.async_start_charging.assert_not_awaited()
         mock_charger.async_disconnect.assert_not_awaited()
     finally:
