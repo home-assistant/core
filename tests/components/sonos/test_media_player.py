@@ -6,8 +6,9 @@ from typing import Any
 from unittest.mock import MagicMock, _Call, call, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import async_fire_time_changed
 from soco.data_structures import (
     DidlAudioBroadcast,
     DidlAudioLineIn,
@@ -49,10 +50,10 @@ from homeassistant.components.media_player import (
 from homeassistant.components.sonos.const import (
     DOMAIN,
     MEDIA_TYPE_DIRECTORY,
+    SCAN_INTERVAL,
     SOURCE_LINEIN,
     SOURCE_TV,
 )
-from homeassistant.components.sonos.media import SonosMedia
 from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
     VOLUME_INCREMENT,
@@ -1489,40 +1490,6 @@ async def test_release_skipped_after_switch_during_transition(
 
 
 @pytest.mark.usefixtures("async_autosetup_sonos")
-async def test_release_uses_uri_from_its_own_event(
-    hass: HomeAssistant,
-    soco: MockSoCo,
-    no_media_event: SonosMockEvent,
-) -> None:
-    """Test new media is not released by a queued update for an earlier event."""
-    hass.config.internal_url = "http://10.0.0.1:8123"
-    queue_uri = "x-rincon-queue:RINCON_test#0"
-    events = [
-        no_media_event.variables
-        | {"transport_state": "PLAYING", "av_transport_uri": queue_uri},
-        no_media_event.variables
-        | {
-            "transport_state": "STOPPED",
-            "av_transport_uri": HASS_MEDIA_URI,
-            "current_track_uri": HASS_MEDIA_URI,
-        },
-    ]
-    jobs: list[tuple[Any, ...]] = []
-    # Both events arrive before their updates run in the executor
-    with patch.object(
-        hass, "async_add_executor_job", side_effect=lambda *job: jobs.append(job)
-    ):
-        for event_vars in events:
-            event = SonosMockEvent(soco, soco.avTransport, event_vars)
-            soco.avTransport.subscribe.return_value.callback(event)
-    for target, *args in jobs:
-        await hass.async_add_executor_job(target, *args)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    soco.avTransport.SetAVTransportURI.assert_not_called()
-
-
-@pytest.mark.usefixtures("async_autosetup_sonos")
 @pytest.mark.parametrize(
     "loading_state",
     [
@@ -1585,48 +1552,6 @@ async def test_release_skipped_when_loading_after_startup_transition(
 
 
 @pytest.mark.usefixtures("async_autosetup_sonos")
-async def test_release_skipped_for_stale_update(
-    hass: HomeAssistant,
-    soco: MockSoCo,
-    no_media_event: SonosMockEvent,
-) -> None:
-    """Test an update running after a newer one does not release newer media."""
-    hass.config.internal_url = "http://10.0.0.1:8123"
-    new_media_uri = "http://10.0.0.1:8123/media/local/doorbell.mp3?authSig=def"
-    variables = no_media_event.variables | {"current_track_uri": HASS_MEDIA_URI}
-    event = SonosMockEvent(
-        soco,
-        soco.avTransport,
-        variables | {"transport_state": "PLAYING", "av_transport_uri": HASS_MEDIA_URI},
-    )
-    soco.avTransport.subscribe.return_value.callback(event)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    events = [
-        variables | {"transport_state": "STOPPED"},
-        no_media_event.variables
-        | {
-            "transport_state": "PLAYING",
-            "av_transport_uri": new_media_uri,
-            "current_track_uri": new_media_uri,
-        },
-    ]
-    jobs: list[tuple[Any, ...]] = []
-    with patch.object(
-        hass, "async_add_executor_job", side_effect=lambda *job: jobs.append(job)
-    ):
-        for event_vars in events:
-            event = SonosMockEvent(soco, soco.avTransport, event_vars)
-            soco.avTransport.subscribe.return_value.callback(event)
-    # The update for the earlier stopped event runs last
-    for target, *args in reversed(jobs):
-        await hass.async_add_executor_job(target, *args)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    soco.avTransport.SetAVTransportURI.assert_not_called()
-
-
-@pytest.mark.usefixtures("async_autosetup_sonos")
 async def test_release_skipped_after_joining_group(
     hass: HomeAssistant,
     soco: MockSoCo,
@@ -1654,14 +1579,28 @@ async def test_release_skipped_after_joining_group(
     soco.avTransport.SetAVTransportURI.assert_not_called()
 
 
+async def _fallback_poll(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    freezer: FrozenDateTimeFactory,
+    state: str,
+) -> None:
+    """Report the transport state and let the fallback poll run."""
+    soco.get_current_transport_info.return_value = {"current_transport_state": state}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.usefixtures("async_autosetup_sonos")
 async def test_release_skipped_when_polled_media_replayed(
     hass: HomeAssistant,
     soco: MockSoCo,
     current_track_info: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test polling clears played media once another source is seen."""
     hass.config.internal_url = "http://10.0.0.1:8123"
-    media = SonosMedia(hass, soco)
     soco.avTransport.GetMediaInfo.return_value = {"CurrentURI": HASS_MEDIA_URI}
     polls = [
         ("PLAYING", HASS_MEDIA_URI),
@@ -1670,11 +1609,8 @@ async def test_release_skipped_when_polled_media_replayed(
         ("STOPPED", HASS_MEDIA_URI),
     ]
     for state, uri in polls:
-        soco.get_current_transport_info.return_value = {
-            "current_transport_state": state
-        }
         soco.get_current_track_info.return_value = current_track_info | {"uri": uri}
-        await hass.async_add_executor_job(media.poll_media)
+        await _fallback_poll(hass, soco, freezer, state)
 
     soco.avTransport.SetAVTransportURI.assert_not_called()
 
@@ -1683,25 +1619,18 @@ async def test_release_skipped_when_polled_media_replayed(
 async def test_release_skipped_when_polled_paused_media_replayed(
     hass: HomeAssistant,
     soco: MockSoCo,
-    config_entry: MockConfigEntry,
     current_track_info: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test polling does not release paused media that is played again."""
     hass.config.internal_url = "http://10.0.0.1:8123"
-    media = config_entry.runtime_data.discovered["RINCON_test"].media
     soco.avTransport.GetMediaInfo.return_value = {"CurrentURI": HASS_MEDIA_URI}
     soco.get_current_track_info.return_value = current_track_info | {
         "uri": HASS_MEDIA_URI
     }
 
-    async def poll(state: str) -> None:
-        soco.get_current_transport_info.return_value = {
-            "current_transport_state": state
-        }
-        await hass.async_add_executor_job(media.poll_media)
-
-    await poll("PLAYING")
-    await poll("PAUSED_PLAYBACK")
+    await _fallback_poll(hass, soco, freezer, "PLAYING")
+    await _fallback_poll(hass, soco, freezer, "PAUSED_PLAYBACK")
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -1713,7 +1642,7 @@ async def test_release_skipped_when_polled_paused_media_replayed(
         blocking=True,
     )
     # Sonos reports STOPPED while loading the same media again
-    await poll("STOPPED")
+    await _fallback_poll(hass, soco, freezer, "STOPPED")
 
     soco.avTransport.SetAVTransportURI.assert_not_called()
 

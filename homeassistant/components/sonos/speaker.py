@@ -113,7 +113,7 @@ class SonosSpeaker:
         self.household_id: str = soco.household_id
         self.media = SonosMedia(hass, soco)
         self._av_transport_uri: str | None = None
-        self._av_transport_uri_set = False
+        self._av_transport_uri_set: bool = False
         self._plex_plugin: PlexPlugin | None = None
         self._share_link_plugin: ShareLinkPlugin | None = None
         self.available: bool = True
@@ -551,9 +551,10 @@ class SonosSpeaker:
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
         """Update information about currently playing media from an event."""
+        av_transport_uri = event.variables.get("av_transport_uri", "")
         # Only included when it changes, which can be in an event skipped below
         if "av_transport_uri" in event.variables:
-            self._av_transport_uri = event.variables["av_transport_uri"]
+            self._av_transport_uri = av_transport_uri
             self._av_transport_uri_set = True
 
         # The new coordinator can be provided in a media update event but
@@ -561,7 +562,6 @@ class SonosSpeaker:
         # state will be incorrect and should be ignored. Switching to the
         # new coordinator will use its media. The regrouping process will
         # be completed during the next ZoneGroupState update.
-        av_transport_uri = event.variables.get("av_transport_uri", "")
         current_track_uri = event.variables.get("current_track_uri", "")
         if av_transport_uri == current_track_uri and av_transport_uri.startswith(
             "x-rincon:"
