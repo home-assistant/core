@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MediaContainer size="3" identifier="com.plexapp.plugins.library">
+<Hub title="Movies" type="movie" hubIdentifier="search.movie" context="search.movie" size="1" more="0">
+<Video ratingKey="1" key="/library/metadata/1" guid="plex://movie/5d776b85594b2b001e6dc641" studio="Studio Entertainment" type="movie" title="Movie 1" librarySectionTitle="Movies" librarySectionID="1" librarySectionKey="/library/sections/1" contentRating="R" summary="Some elaborate summary." rating="9.0" audienceRating="9.5" year="2000" tagline="Witty saying." thumb="/library/metadata/1/thumb/1590245989" art="/library/metadata/1/art/1590245989" duration="9000000" originallyAvailableAt="2000-01-01" addedAt="1377829261" updatedAt="1590245989">
+</Video>
+</Hub>
+<Hub title="TV Shows" type="show" hubIdentifier="search.show" context="search.show" size="1" more="0">
+<Directory ratingKey="30" key="/library/metadata/30/children" guid="plex://show/5d9c07f7e98e47001eb03fc7" type="show" title="TV Show" librarySectionTitle="TV Shows" librarySectionID="2" librarySectionKey="/library/sections/2" contentRating="TV-Y" summary="Elaborate summary." rating="9.0" year="2000" thumb="/library/metadata/30/thumb/1488495292" art="/library/metadata/30/art/1488495292" duration="3000000" originallyAvailableAt="2000-01-01" addedAt="1377827407" updatedAt="1488495292" childCount="5" leafCount="100" viewedLeafCount="0">
+</Directory>
+</Hub>
+<Hub title="Actors" type="actor" hubIdentifier="search.actor" context="search.actor" size="1" more="0">
+<Role id="1" filter="actor=1" tag="Actor 1" thumb="http://4.3.2.1/t/p/original/1.jpg" />
+</Hub>
+</MediaContainer>

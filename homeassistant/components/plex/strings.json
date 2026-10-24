@@ -57,6 +57,17 @@
       }
     }
   },
+  "exceptions": {
+    "library_not_found": {
+      "message": "The Plex library {library} was not found. Choose one of: {libraries}."
+    },
+    "library_required": {
+      "message": "A library name is required to search with filters."
+    },
+    "user_not_found": {
+      "message": "The Plex user {user} was not found."
+    }
+  },
   "options": {
     "step": {
       "plex_mp_settings": {
@@ -71,6 +82,32 @@
     }
   },
   "services": {
+    "on_deck": {
+      "description": "Returns unfinished movies and the next episodes to watch from the Continue Watching list, with the same info as the search service plus watch progress. The results have a signed poster link (thumb_url) that works in dashboard cards and stays valid for a year or until Home Assistant restarts, and the same link without a signature (thumb_path).",
+      "fields": {
+        "library_name": {
+          "description": "Only return items from this Plex library.",
+          "name": "Library name"
+        },
+        "limit": {
+          "description": "Maximum number of items to return.",
+          "name": "Limit"
+        },
+        "media_type": {
+          "description": "Only return movies or episodes.",
+          "name": "Media type"
+        },
+        "server_name": {
+          "description": "Name of a Plex server if multiple Plex servers configured.",
+          "name": "Server name"
+        },
+        "username": {
+          "description": "Plex user to get the list for.",
+          "name": "Username"
+        }
+      },
+      "name": "On deck"
+    },
     "refresh_library": {
       "description": "Refreshes a Plex library to scan for new and updated media.",
       "fields": {
@@ -84,6 +121,88 @@
         }
       },
       "name": "Refresh library"
+    },
+    "search": {
+      "description": "Looks up Plex media and returns info (title, type, guid, rating key, server ID, year, summary, ratings, genres, watch status, and more) for each match. Accepts the same criteria as play media, or a free-text query. The results have a signed poster link (thumb_url) that works in dashboard cards and stays valid for a year or until Home Assistant restarts, and the same link without a signature (thumb_path).",
+      "fields": {
+        "album_name": {
+          "description": "Name of an album (requires a library).",
+          "name": "Album name"
+        },
+        "artist_name": {
+          "description": "Name of an artist (requires a library).",
+          "name": "Artist name"
+        },
+        "episode_name": {
+          "description": "Title of an episode (requires a library).",
+          "name": "Episode name"
+        },
+        "episode_number": {
+          "description": "Episode number within a season (requires a library).",
+          "name": "Episode number"
+        },
+        "filters": {
+          "description": "Additional Plex library filters as key/value pairs (requires a library).",
+          "name": "Filters"
+        },
+        "include_on_deck": {
+          "description": "For shows, include the next on deck episode in an on_deck field. Costs one extra request per show.",
+          "name": "Include on deck"
+        },
+        "library_name": {
+          "description": "Name of the Plex library to search within. If omitted, a query searches the entire server.",
+          "name": "Library name"
+        },
+        "media_type": {
+          "description": "Limit results to a specific media type.",
+          "name": "Media type"
+        },
+        "playlist_name": {
+          "description": "Name of a playlist to look up.",
+          "name": "Playlist name"
+        },
+        "plex_key": {
+          "description": "Plex rating key of an item to look up directly.",
+          "name": "Plex key"
+        },
+        "query": {
+          "description": "Free-text search string.",
+          "name": "Query"
+        },
+        "season_number": {
+          "description": "Season number (requires a library).",
+          "name": "Season number"
+        },
+        "server_name": {
+          "description": "Name of a Plex server if multiple Plex servers configured.",
+          "name": "Server name"
+        },
+        "show_name": {
+          "description": "Title of a TV show (requires a library).",
+          "name": "Show name"
+        },
+        "title": {
+          "description": "Title of the media to find (requires a library).",
+          "name": "Title"
+        },
+        "track_name": {
+          "description": "Title of a track (requires a library).",
+          "name": "Track name"
+        },
+        "track_number": {
+          "description": "Track number within an album (requires a library).",
+          "name": "Track number"
+        },
+        "username": {
+          "description": "Plex user to search as.",
+          "name": "Username"
+        },
+        "year": {
+          "description": "Release year (requires a library).",
+          "name": "Year"
+        }
+      },
+      "name": "Search"
     }
   }
 }
