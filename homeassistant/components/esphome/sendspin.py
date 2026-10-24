@@ -1,0 +1,138 @@
+"""Sendspin pairing support.
+
+Tracks the Sendspin client ids of the connected devices, so a Sendspin server
+(Music Assistant) can learn which of its clients it can pair with the token the
+device hands out over the native API.
+"""
+
+from collections.abc import Callable
+from datetime import datetime
+from functools import partial
+import logging
+from typing import cast
+
+from aioesphomeapi import APIConnectionError
+from aioesphomeapi.model import SendspinFeature
+
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
+
+from .domain_data import DomainData
+from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+
+_LOGGER = logging.getLogger(__name__)
+
+# The client id stays empty until the device's Sendspin client has started, which
+# may be well after the capabilities were fetched on connect, so keep asking.
+CLIENT_ID_RETRY_DELAY = 5
+CLIENT_ID_RETRY_MAX_DELAY = 300
+
+type SendspinClientsCallback = Callable[[list[str]], None]
+
+
+@callback
+def async_sendspin_client_ids(hass: HomeAssistant) -> list[str]:
+    """Return the client ids of the connected devices that hand out a pairing token."""
+    return sorted(DomainData.get(hass).sendspin_client_ids)
+
+
+@callback
+def async_subscribe_sendspin_clients(
+    hass: HomeAssistant, subscriber: SendspinClientsCallback
+) -> CALLBACK_TYPE:
+    """Call the subscriber with the client ids whenever they change."""
+    subscribers = DomainData.get(hass).sendspin_subscribers
+    subscribers.add(subscriber)
+    return partial(subscribers.discard, subscriber)
+
+
+@callback
+def async_sendspin_entry_data(
+    hass: HomeAssistant, client_id: str
+) -> RuntimeEntryData | None:
+    """Return the connected device with this Sendspin client id."""
+    if (entry_id := DomainData.get(hass).sendspin_client_ids.get(client_id)) is None:
+        return None
+    entry = cast(ESPHomeConfigEntry, hass.config_entries.async_get_entry(entry_id))
+    return entry.runtime_data
+
+
+@callback
+def async_sendspin_on_connect(
+    hass: HomeAssistant, entry_data: RuntimeEntryData
+) -> None:
+    """Start tracking the Sendspin client id of a device that just connected."""
+    assert entry_data.device_capabilities is not None
+    sendspin = entry_data.device_capabilities.sendspin
+    if not sendspin.feature_flags & SendspinFeature.PAIRING_TOKEN:
+        return
+    entry_data.disconnect_callbacks.add(
+        partial(_async_forget_client_id, hass, entry_data)
+    )
+    if sendspin.client_id:
+        _async_set_client_id(hass, entry_data, sendspin.client_id)
+    else:
+        _async_schedule_client_id_refresh(hass, entry_data, CLIENT_ID_RETRY_DELAY)
+
+
+@callback
+def _async_set_client_id(
+    hass: HomeAssistant, entry_data: RuntimeEntryData, client_id: str
+) -> None:
+    client_ids = DomainData.get(hass).sendspin_client_ids
+    if client_ids.get(client_id) == entry_data.entry_id:
+        return
+    client_ids[client_id] = entry_data.entry_id
+    _async_notify_subscribers(hass)
+
+
+@callback
+def _async_forget_client_id(hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
+    # the tracked id is the one in the cached capabilities, which outlive the connection
+    assert entry_data.device_capabilities is not None
+    client_id = entry_data.device_capabilities.sendspin.client_id
+    client_ids = DomainData.get(hass).sendspin_client_ids
+    if client_id and client_ids.get(client_id) == entry_data.entry_id:
+        del client_ids[client_id]
+        _async_notify_subscribers(hass)
+
+
+@callback
+def _async_notify_subscribers(hass: HomeAssistant) -> None:
+    client_ids = async_sendspin_client_ids(hass)
+    for subscriber in DomainData.get(hass).sendspin_subscribers.copy():
+        subscriber(client_ids)
+
+
+@callback
+def _async_schedule_client_id_refresh(
+    hass: HomeAssistant, entry_data: RuntimeEntryData, delay: float
+) -> None:
+    """Fetch the capabilities again later, until they carry the client id."""
+
+    async def _async_refresh(_now: datetime) -> None:
+        entry_data.disconnect_callbacks.discard(cancel)
+        assert entry_data.device_info is not None
+        stale = entry_data.device_capabilities
+        try:
+            capabilities = await entry_data.client.device_capabilities_compat(
+                entry_data.device_info
+            )
+        except APIConnectionError as err:
+            # the disconnect that follows starts over on the next connect
+            _LOGGER.debug("%s: capabilities unavailable: %s", entry_data.name, err)
+            return
+        if not entry_data.available or entry_data.device_capabilities is not stale:
+            # the device dropped off, or reconnected and was fetched afresh, meanwhile
+            return
+        entry_data.device_capabilities = capabilities
+        entry_data.async_save_to_store()
+        if client_id := capabilities.sendspin.client_id:
+            _async_set_client_id(hass, entry_data, client_id)
+        else:
+            _async_schedule_client_id_refresh(
+                hass, entry_data, min(delay * 2, CLIENT_ID_RETRY_MAX_DELAY)
+            )
+
+    cancel = async_call_later(hass, delay, _async_refresh)
+    entry_data.disconnect_callbacks.add(cancel)
