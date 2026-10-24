@@ -96,6 +96,9 @@ CONF_PRECISION = "precision"
 CONF_TARGET_TEMP = "target_temp"
 CONF_TEMP_STEP = "target_temp_step"
 
+# Absorbs float rounding at the tolerance limits (15.1 - 0.3 < 14.8)
+TOLERANCE_EPSILON = 1e-6
+
 
 PRESETS_SCHEMA: VolDictType = {
     probatio.Optional(v): probatio.Coerce(float) for v in CONF_PRESETS.values()
@@ -597,8 +600,21 @@ class GenericThermostat(RestoreClimate):
                 return
 
             assert self._cur_temp is not None and self._target_temp is not None
-            too_cold = self._target_temp > self._cur_temp + self._cold_tolerance
-            too_hot = self._target_temp < self._cur_temp - self._hot_tolerance
+            # The epsilon must not make the on and off limits overlap
+            if self._cold_tolerance + self._hot_tolerance > 2 * TOLERANCE_EPSILON:
+                # A band already prevents rapid switching: its limits are inclusive
+                too_cold = (
+                    self._cur_temp
+                    <= self._target_temp - self._cold_tolerance + TOLERANCE_EPSILON
+                )
+                too_hot = (
+                    self._cur_temp
+                    >= self._target_temp + self._hot_tolerance - TOLERANCE_EPSILON
+                )
+            else:
+                # Without a band, a reading equal to the target must not toggle
+                too_cold = self._target_temp > self._cur_temp + self._cold_tolerance
+                too_hot = self._target_temp < self._cur_temp - self._hot_tolerance
             now = dt_util.utcnow()
 
             if self._is_device_active:
