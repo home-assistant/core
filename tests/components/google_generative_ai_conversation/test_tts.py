@@ -128,7 +128,7 @@ async def setup_fixture(
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.fixture(name="config")
