@@ -38,6 +38,34 @@
         }
       },
       "title": "{integration_name} in progress binary sensors are deprecated"
+    },
+    "debug_recording_still_enabled": {
+      "fix_flow": {
+        "abort": {
+          "delete_failed": "[%key:component::assist_pipeline::issues::debug_recordings_left_over::fix_flow::abort::delete_failed%]"
+        },
+        "step": {
+          "confirm": {
+            "description": "Assist has been saving the audio of every voice command for more than 7 days, because `debug_recording_dir` is set in your configuration. {count} recordings ({size} MB) are kept in `{path}`.\n\nTo stop recording, remove `debug_recording_dir` from your configuration and restart Home Assistant. Select **Submit** to delete the recordings now.",
+            "title": "[%key:component::assist_pipeline::issues::debug_recording_still_enabled::title%]"
+          }
+        }
+      },
+      "title": "Voice debug recording is still turned on"
+    },
+    "debug_recordings_left_over": {
+      "fix_flow": {
+        "abort": {
+          "delete_failed": "The debug recordings could not be deleted. Check the log for details and delete them manually."
+        },
+        "step": {
+          "confirm": {
+            "description": "Debug recording for Assist is turned off, but {count} recordings ({size} MB) it saved earlier are still kept in `{path}`.\n\nSelect **Submit** to delete them.",
+            "title": "[%key:component::assist_pipeline::issues::debug_recordings_left_over::title%]"
+          }
+        }
+      },
+      "title": "Voice debug recordings were left behind"
     }
   }
 }
