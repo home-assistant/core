@@ -58,45 +58,29 @@ def _format_short_entry_ids(entries: Iterable[ConfigEntry]) -> dict[str, str]:
 
     result: dict[str, str] = {}
     for (domain, _), group in groups.items():
-        for full_id in group:
-            length = min(_MIN_SHORT_ID_LEN, len(full_id))
-            while length < len(full_id) and any(
-                other_id.endswith(full_id[-length:])
-                for other_id in group
-                if other_id != full_id
-            ):
-                length += 1
-            result[full_id] = f"{domain}:{full_id[-length:]}"
+        length = _MIN_SHORT_ID_LEN
+        while len(group) > 1 and len({eid[-length:] for eid in group}) < len(group):
+            length += 1
+        for eid in group:
+            result[eid] = f"{domain}:{eid[-length:]}"
     return result
 
 
-def _resolve_short_entry_id(
-    hass: HomeAssistant, entry_id: str
-) -> tuple[ConfigEntry, str]:
-    """Resolve a ConfigEntry and its short ID from '<domain>:<suffix>'."""
+def _resolve_short_entry_id(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
+    """Resolve a ConfigEntry from a '<domain>:<suffix>' short ID."""
     domain, sep, suffix = entry_id.partition(":")
     if not sep or not domain or len(suffix) < _MIN_SHORT_ID_LEN:
         raise HomeAssistantError(f"Config entry '{entry_id}' not found.")
 
-    domain_entries = hass.config_entries.async_entries(domain)
     matches = [
-        candidate for candidate in domain_entries if candidate.entry_id.endswith(suffix)
+        candidate
+        for candidate in hass.config_entries.async_entries(domain)
+        if candidate.entry_id.endswith(suffix)
     ]
-    if not matches:
+    if len(matches) != 1:
         raise HomeAssistantError(f"Config entry '{entry_id}' not found.")
 
-    short_ids = _format_short_entry_ids(domain_entries)
-    if len(matches) == 1:
-        match = matches[0]
-        return match, short_ids[match.entry_id]
-
-    options = ", ".join(
-        f"{short_ids[candidate.entry_id]} ({candidate.title!r})"
-        for candidate in matches
-    )
-    raise HomeAssistantError(
-        f"Config entry '{entry_id}' is ambiguous; matches: {options}."
-    )
+    return matches[0]
 
 
 def _resolve_entry_reason(entry: ConfigEntry) -> str | None:
@@ -239,7 +223,7 @@ class ReloadConfigEntryTool(Tool):
         entry_id: str = args["entry_id"]
 
         try:
-            entry, short_id = _resolve_short_entry_id(hass, entry_id)
+            entry = _resolve_short_entry_id(hass, entry_id)
         except HomeAssistantError as err:
             return ToolResult(data={"error": str(err)}, error=True)
 
@@ -247,7 +231,7 @@ class ReloadConfigEntryTool(Tool):
             return ToolResult(
                 data={
                     "error": (
-                        f"Config entry '{short_id}' cannot be reloaded because it is "
+                        f"Config entry '{entry_id}' cannot be reloaded because it is "
                         "disabled."
                     )
                 },
@@ -257,7 +241,7 @@ class ReloadConfigEntryTool(Tool):
             return ToolResult(
                 data={
                     "error": (
-                        f"Config entry '{short_id}' cannot be reloaded because it is "
+                        f"Config entry '{entry_id}' cannot be reloaded because it is "
                         "ignored."
                     )
                 },
@@ -270,7 +254,7 @@ class ReloadConfigEntryTool(Tool):
             return ToolResult(
                 data={
                     "error": (
-                        f"Config entry '{short_id}' cannot be reloaded in state "
+                        f"Config entry '{entry_id}' cannot be reloaded in state "
                         f"'{entry.state.value}'."
                     )
                 },
@@ -278,7 +262,7 @@ class ReloadConfigEntryTool(Tool):
             )
 
         result: JsonObjectType = {
-            "entry_id": short_id,
+            "entry_id": entry_id,
             "state": entry.state.value,
         }
         if (reason := _resolve_entry_reason(entry)) is not None:

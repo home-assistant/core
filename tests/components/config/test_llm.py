@@ -523,12 +523,7 @@ async def test_reload_config_entry_ambiguous_short_id(
         llm_context,
     )
     assert res == llm.ToolResult(
-        data={
-            "error": (
-                "Config entry 'hue:8K2M' is ambiguous; matches: "
-                "hue:A8K2M ('Hue 1'), hue:B8K2M ('Hue 2')."
-            )
-        },
+        data={"error": "Config entry 'hue:8K2M' not found."},
         error=True,
     )
 
