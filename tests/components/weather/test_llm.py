@@ -1,0 +1,984 @@
+"""Tests for the weather LLM tools platform."""
+
+from datetime import timedelta
+
+import pytest
+
+from homeassistant.components import llm
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.weather import (
+    DOMAIN,
+    Forecast,
+    WeatherEntityFeature,
+    llm as weather_llm,
+)
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import llm as llm_helper
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from . import MockWeatherTest, create_entity
+
+ENTITY_ID = "weather.testing"
+
+
+@pytest.fixture(autouse=True)
+async def setup_integrations(hass: HomeAssistant, config_flow_fixture: None) -> None:
+    """Set up Home Assistant, weather, and LLM integrations."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert await async_setup_component(hass, "llm", {})
+
+
+def _llm_context() -> llm_helper.LLMContext:
+    """Return an LLM context for the conversation assistant."""
+    return llm_helper.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+
+
+async def _create_weather_entity(
+    hass: HomeAssistant, supported_features: WeatherEntityFeature
+) -> MockWeatherTest:
+    """Create an exposed weather entity with the requested forecast support."""
+
+    class MockWeatherForecast(MockWeatherTest):
+        """Mock weather entity with a forecast."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            """Return a daily forecast."""
+            return self.forecast_list
+
+        async def async_forecast_hourly(self) -> list[Forecast] | None:
+            """Return an hourly forecast."""
+            return self.forecast_list
+
+        async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+            """Return a twice-daily forecast."""
+            return self.forecast_list
+
+    entity = await create_entity(
+        hass,
+        MockWeatherForecast,
+        None,
+        supported_features=supported_features,
+    )
+    assert isinstance(entity, MockWeatherForecast)
+    async_expose_entity(hass, "conversation", entity.entity_id, True)
+    today = dt_util.start_of_local_day()
+    entity.forecast_list = [{"datetime": today.isoformat(), "condition": "sunny"}]
+    return entity
+
+
+def _tool_args(period: str = "today") -> dict[str, str]:
+    """Return valid forecast tool arguments."""
+    return {"weather": "Testing", "period": period}
+
+
+# The forecast tool always reports these units alongside forecast data so the
+# model knows how to interpret bare numbers like a temperature or pressure.
+FORECAST_UNIT_KEYS = {
+    "temperature_unit",
+    "pressure_unit",
+    "wind_speed_unit",
+    "precipitation_unit",
+}
+
+
+async def test_get_forecast_tool(hass: HomeAssistant) -> None:
+    """Test the exposed weather forecast tool returns forecast data."""
+    await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    context = _llm_context()
+
+    result = await llm.async_get_tools(hass, context, "assist")
+    tools = {tool.name: tool for tool in result.tools}
+    assert "weather__get_forecast" in tools
+
+    tool = tools["weather__get_forecast"]
+    assert tool.title == "Get weather forecast for a time window"
+    assert tool.integration == DOMAIN
+    assert tool.annotations == llm_helper.ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    response = await tool.async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args()),
+        context,
+    )
+    today = dt_util.start_of_local_day()
+    assert response.data["forecast"] == [
+        {
+            "datetime": today.isoformat(),
+            "condition": "sunny",
+            "temperature": None,
+        }
+    ]
+    assert response.data["cadence"] == "daily"
+    assert response.data["units"].keys() == FORECAST_UNIT_KEYS
+
+
+async def test_get_forecast_tool_auto_selects_supported_cadence(
+    hass: HomeAssistant,
+) -> None:
+    """Test the tool picks a supported cadence instead of relying on the model."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    today = dt_util.start_of_local_day()
+    entity.forecast_list = [{"datetime": today.isoformat(), "condition": "sunny"}]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+    tool = result.tools[0]
+
+    # "this_afternoon" would normally prefer hourly, but only daily is supported.
+    response = await tool.async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("this_afternoon")),
+        _llm_context(),
+    )
+    assert response.data["forecast"][0]["condition"] == "sunny"
+    # The model needs this to know the forecast covers the whole day, not
+    # specifically the afternoon, since only a daily cadence was available.
+    assert response.data["cadence"] == "daily"
+
+
+async def test_get_forecast_tool_selects_twice_daily_cadence(
+    hass: HomeAssistant,
+) -> None:
+    """Test twice-daily is a fallback for both partial- and whole-day periods."""
+    entity = await _create_weather_entity(
+        hass, WeatherEntityFeature.FORECAST_TWICE_DAILY
+    )
+    today = dt_util.start_of_local_day()
+    # Anchored at 06:00 rather than midnight so its 12-hour cadence end
+    # (18:00) doesn't land exactly on "this_afternoon"'s start (noon), which
+    # the half-open interval match would otherwise treat as non-overlapping.
+    entity.forecast_list = [
+        {"datetime": today.replace(hour=6).isoformat(), "condition": "sunny"}
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+    tool = result.tools[0]
+
+    # "this_afternoon" (partial-day) would normally prefer hourly, and "today"
+    # (whole-day) would normally prefer daily, but only twice_daily is
+    # supported, so both fall back to it.
+    for period in ("this_afternoon", "today"):
+        response = await tool.async_call(
+            hass,
+            llm_helper.ToolInput("weather__get_forecast", _tool_args(period)),
+            _llm_context(),
+        )
+        assert not response.error
+        assert response.data["forecast"][0]["condition"] == "sunny"
+
+
+async def test_get_forecast_tool_prefers_granular_cadence_for_partial_day(
+    hass: HomeAssistant,
+) -> None:
+    """Test a partial-day period prefers hourly over daily when both are supported."""
+    today = dt_util.start_of_local_day()
+
+    class MockWeatherMultiCadence(MockWeatherTest):
+        """Mock weather entity exposing distinct daily and hourly forecasts."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            return [{"datetime": today.isoformat(), "condition": "cloudy"}]
+
+        async def async_forecast_hourly(self) -> list[Forecast] | None:
+            return [
+                {"datetime": today.replace(hour=13).isoformat(), "condition": "sunny"}
+            ]
+
+    entity = await create_entity(
+        hass,
+        MockWeatherMultiCadence,
+        None,
+        supported_features=WeatherEntityFeature.FORECAST_DAILY
+        | WeatherEntityFeature.FORECAST_HOURLY,
+    )
+    assert isinstance(entity, MockWeatherMultiCadence)
+    async_expose_entity(hass, "conversation", entity.entity_id, True)
+
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("this_afternoon")),
+        _llm_context(),
+    )
+    assert response.data["forecast"][0]["condition"] == "sunny"
+
+
+async def test_get_forecast_tool_unavailable_entity(hass: HomeAssistant) -> None:
+    """Test the tool reports an error instead of raising for an unavailable entity."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+    tool = result.tools[0]
+
+    # An unavailable entity can still be matched by name (matching doesn't
+    # filter by availability), so it must be checked explicitly before
+    # calling the service to retrieve its forecast; otherwise the service
+    # call excludes the unavailable entity from the call entirely, and since
+    # it's the only targeted entity, that leaves nothing to call and raises
+    # instead of returning a response.
+    entity._attr_available = False
+    entity.async_write_ha_state()
+
+    response = await tool.async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+    assert response.error
+    assert response.data == {"error": "Weather entity is unavailable"}
+
+
+async def test_get_forecast_tool_service_call_failure(hass: HomeAssistant) -> None:
+    """Test a generic service failure isn't mislabeled as an unavailable entity."""
+
+    class MockWeatherFailure(MockWeatherTest):
+        """Mock weather entity whose forecast retrieval fails."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            raise HomeAssistantError("Provider request failed")
+
+    entity = await create_entity(
+        hass,
+        MockWeatherFailure,
+        None,
+        supported_features=WeatherEntityFeature.FORECAST_DAILY,
+    )
+    assert isinstance(entity, MockWeatherFailure)
+    async_expose_entity(hass, "conversation", entity.entity_id, True)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+    tool = result.tools[0]
+
+    response = await tool.async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+    assert response.error
+    assert response.data == {"error": "Failed to retrieve weather forecast"}
+
+
+async def test_get_forecast_tool_entity_becomes_unavailable_during_service_call(
+    hass: HomeAssistant,
+) -> None:
+    """Test a race where the entity goes unavailable after the initial check."""
+
+    class MockWeatherRace(MockWeatherTest):
+        """Mock weather entity that goes unavailable mid-service-call."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            # Simulate the entity becoming unavailable between the
+            # availability check in async_call and this forecast request,
+            # which makes the entity-service resolver raise instead of
+            # returning a response for the only targeted entity.
+            self._attr_available = False
+            self.async_write_ha_state()
+            raise HomeAssistantError(
+                "Service call requested response data but did not match any entities"
+            )
+
+    entity = await create_entity(
+        hass,
+        MockWeatherRace,
+        None,
+        supported_features=WeatherEntityFeature.FORECAST_DAILY,
+    )
+    assert isinstance(entity, MockWeatherRace)
+    async_expose_entity(hass, "conversation", entity.entity_id, True)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+    tool = result.tools[0]
+
+    response = await tool.async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+    assert response.error
+    assert response.data == {"error": "Weather entity is unavailable"}
+
+
+async def test_get_forecast_tool_not_offered_without_forecast_support(
+    hass: HomeAssistant,
+) -> None:
+    """Test an entity with no forecast support doesn't produce a tool at all."""
+    hass.states.async_set(
+        ENTITY_ID,
+        "sunny",
+        {"friendly_name": "Testing", "supported_features": 0},
+    )
+    async_expose_entity(hass, "conversation", ENTITY_ID, True)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is None
+
+
+async def test_get_forecast_tool_normalizes_native_datetime(
+    hass: HomeAssistant,
+) -> None:
+    """Test a native datetime entry (e.g. from IPMA) is returned as an ISO string."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    today = dt_util.start_of_local_day()
+    # Some providers put a native datetime object in this field instead of an
+    # ISO string; it must still be parsed and returned as JSON-safe data.
+    entity.forecast_list = [{"datetime": today, "condition": "sunny"}]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+    assert not response.error
+    assert response.data["forecast"][0]["datetime"] == today.isoformat()
+    assert isinstance(response.data["forecast"][0]["datetime"], str)
+
+
+async def test_get_forecast_tool_includes_units(hass: HomeAssistant) -> None:
+    """Test the tool reports the entity's configured units alongside the forecast.
+
+    Bare forecast numbers (e.g. 20 for temperature) are ambiguous without a
+    unit, so the model needs the entity's configured units to interpret them.
+    """
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    weather_state = hass.states.get(entity.entity_id)
+    assert weather_state is not None
+    assert response.data["units"] == {
+        key: weather_state.attributes[key] for key in FORECAST_UNIT_KEYS
+    }
+
+
+async def test_get_forecast_tool_ambiguous_target(hass: HomeAssistant) -> None:
+    """Test the tool reports duplicate weather names instead of choosing one."""
+    await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    hass.states.async_set(
+        "weather.testing_two",
+        "sunny",
+        {"friendly_name": "Testing", "supported_features": 1},
+    )
+    async_expose_entity(hass, "conversation", "weather.testing_two", True)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args()),
+        _llm_context(),
+    )
+    assert response.error
+    assert response.data == {"error": "Weather entity name is ambiguous"}
+
+
+async def test_get_forecast_tool_ignores_non_forecast_name_collision(
+    hass: HomeAssistant,
+) -> None:
+    """Test a same-named, non-forecast-capable entity doesn't block a match."""
+    await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    # Shares the "Testing" name/alias but supports no forecasts, so it is never
+    # advertised to the model and must not make the genuine match ambiguous.
+    hass.states.async_set(
+        "weather.testing_two",
+        "sunny",
+        {"friendly_name": "Testing", "supported_features": 0},
+    )
+    async_expose_entity(hass, "conversation", "weather.testing_two", True)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args()),
+        _llm_context(),
+    )
+    assert not response.error
+    assert response.data["forecast"]
+
+
+async def test_get_forecast_tool_no_forecast_data(hass: HomeAssistant) -> None:
+    """Test the tool returns an empty forecast when data is unavailable."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    entity.forecast_list = None
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args()),
+        _llm_context(),
+    )
+
+    assert response.data["forecast"] == []
+    assert response.data["units"].keys() == FORECAST_UNIT_KEYS
+
+
+async def test_get_forecast_tool_not_offered_without_exposed_forecast(
+    hass: HomeAssistant,
+) -> None:
+    """Test the tool is hidden without an exposed forecast-capable entity."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+
+    # Non-Assist API IDs are rejected even while the entity is still exposed.
+    assert weather_llm.async_get_tools(hass, _llm_context(), "other") is None
+
+    async_expose_entity(hass, "conversation", entity.entity_id, False)
+    assert weather_llm.async_get_tools(hass, _llm_context(), "assist") is None
+
+
+async def test_get_forecast_tool_not_found_after_unexposing(
+    hass: HomeAssistant,
+) -> None:
+    """Test a previously exposed entity cannot be queried after it is hidden."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    async_expose_entity(hass, "conversation", entity.entity_id, False)
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args()),
+        _llm_context(),
+    )
+    assert response.error
+    assert response.data == {"error": "Weather entity not found"}
+
+
+async def test_get_forecast_tool_limits_requested_time_window(
+    hass: HomeAssistant,
+) -> None:
+    """Test only forecast entries within the requested half-open interval are returned."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_HOURLY)
+    today = dt_util.start_of_local_day()
+    entity.forecast_list = [
+        {"datetime": today.replace(hour=11).isoformat(), "condition": "cloudy"},
+        {"datetime": today.replace(hour=12).isoformat(), "condition": "rainy"},
+        {"datetime": today.replace(hour=14).isoformat(), "condition": "sunny"},
+        {"datetime": today.replace(hour=18).isoformat(), "condition": "sunny"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("this_afternoon")),
+        _llm_context(),
+    )
+
+    assert response.data["forecast"] == [
+        {
+            "datetime": today.replace(hour=12).isoformat(),
+            "condition": "rainy",
+            "temperature": None,
+        },
+        {
+            "datetime": today.replace(hour=14).isoformat(),
+            "condition": "sunny",
+            "temperature": None,
+        },
+    ]
+    assert response.data["units"].keys() == FORECAST_UNIT_KEYS
+
+
+async def test_get_forecast_tool_maps_weekday_to_next_occurrence(
+    hass: HomeAssistant,
+) -> None:
+    """Test a weekday period selects that weekday, including 'this Thursday'."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    today = dt_util.start_of_local_day()
+    days_until_thursday = (3 - today.weekday()) % 7
+    thursday = today + timedelta(days=days_until_thursday)
+    entity.forecast_list = [
+        {"datetime": (today - timedelta(days=1)).isoformat()},
+        {"datetime": thursday.isoformat(), "condition": "rainy"},
+        {
+            "datetime": (thursday + timedelta(days=1)).isoformat(),
+            "condition": "sunny",
+        },
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("thursday")),
+        _llm_context(),
+    )
+    assert response.data["forecast"][0]["condition"] == "rainy"
+
+
+async def test_get_forecast_tool_maps_tomorrow(hass: HomeAssistant) -> None:
+    """Test tomorrow selects the next local calendar day."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    today = dt_util.start_of_local_day()
+    tomorrow = today + timedelta(days=1)
+    entity.forecast_list = [
+        {"datetime": today.isoformat(), "condition": "cloudy"},
+        {"datetime": tomorrow.isoformat(), "condition": "rainy"},
+        {
+            "datetime": (tomorrow + timedelta(days=1)).isoformat(),
+            "condition": "sunny",
+        },
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("tomorrow")),
+        _llm_context(),
+    )
+
+    assert response.data["forecast"][0]["condition"] == "rainy"
+
+
+async def test_get_forecast_tool_tonight_window_boundaries(
+    hass: HomeAssistant,
+) -> None:
+    """Test 'tonight' spans 18:00 through the following morning cutoff."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_HOURLY)
+    today = dt_util.start_of_local_day()
+    tomorrow = today + timedelta(days=1)
+    entity.forecast_list = [
+        {"datetime": today.replace(hour=17).isoformat(), "condition": "cloudy"},
+        {"datetime": today.replace(hour=18).isoformat(), "condition": "rainy"},
+        {"datetime": today.replace(hour=23).isoformat(), "condition": "sunny"},
+        {"datetime": tomorrow.replace(hour=2).isoformat(), "condition": "foggy"},
+        {"datetime": tomorrow.replace(hour=6).isoformat(), "condition": "windy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("tonight")),
+        _llm_context(),
+    )
+
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["rainy", "sunny", "foggy"]
+
+
+async def test_get_forecast_tool_twice_daily_window_boundaries(
+    hass: HomeAssistant,
+) -> None:
+    """Test twice-daily entries use the 12-hour overlap, not just a start match."""
+    entity = await _create_weather_entity(
+        hass, WeatherEntityFeature.FORECAST_TWICE_DAILY
+    )
+    today = dt_util.start_of_local_day()
+    tomorrow = today + timedelta(days=1)
+    entity.forecast_list = [
+        {"datetime": (today - timedelta(hours=12)).isoformat(), "condition": "foggy"},
+        {"datetime": today.isoformat(), "condition": "rainy"},
+        {"datetime": today.replace(hour=12).isoformat(), "condition": "sunny"},
+        {"datetime": tomorrow.isoformat(), "condition": "cloudy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["rainy", "sunny"]
+
+
+@pytest.mark.freeze_time("2024-11-03T10:30:00+00:00")
+async def test_get_forecast_tool_preserves_twice_daily_period_across_fall_back_dst(
+    hass: HomeAssistant,
+) -> None:
+    """Test a twice-daily entry's full period is preserved across fall-back DST.
+
+    Twice-daily entries commonly represent local day/night boundaries, whose
+    elapsed length varies across a DST transition: 18:00 EDT to 06:00 EST
+    (the night of 2024-11-02/03 in America/New_York, when clocks fall back)
+    is 13 elapsed hours, not the nominal 12. Capping the entry at a fixed
+    12-hour duration instead of the next entry's own start would wrongly
+    return no forecast for a window beginning in that final hour.
+    """
+    await hass.config.async_set_time_zone("America/New_York")
+    entity = await _create_weather_entity(
+        hass, WeatherEntityFeature.FORECAST_TWICE_DAILY
+    )
+    entity.forecast_list = [
+        {"datetime": "2024-11-02T18:00:00-04:00", "condition": "foggy"},
+        {"datetime": "2024-11-03T06:00:00-05:00", "condition": "sunny"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("next_24_hours")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["foggy", "sunny"]
+
+
+async def test_get_forecast_tool_next_7_days_window_boundaries(
+    hass: HomeAssistant,
+) -> None:
+    """Test 'next_7_days' is a rolling window, including today and excluding day 7."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    today = dt_util.start_of_local_day()
+    entity.forecast_list = [
+        {"datetime": (today - timedelta(days=1)).isoformat(), "condition": "foggy"},
+        {"datetime": today.isoformat(), "condition": "rainy"},
+        {"datetime": (today + timedelta(days=6)).isoformat(), "condition": "sunny"},
+        {"datetime": (today + timedelta(days=7)).isoformat(), "condition": "cloudy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("next_7_days")),
+        _llm_context(),
+    )
+
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["rainy", "sunny"]
+
+
+async def test_get_forecast_tool_caps_interval_at_skipped_entry_gap(
+    hass: HomeAssistant,
+) -> None:
+    """Test a gap left by a skipped entry isn't stretched to cover stale data.
+
+    An entry's interval is normally capped by the next entry's start, but if
+    the provider skips an entry the gap to the next one is wider than a
+    single cadence step. The interval must still be capped at its own
+    cadence-derived end rather than stretched across the whole gap, or a
+    preceding entry's forecast would be wrongly returned for a window with no
+    actual forecast data. Daily forecasts are matched by calendar date rather
+    than this elapsed-time interval logic, so this must use an hourly
+    cadence to actually exercise it.
+    """
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_HOURLY)
+    today = dt_util.start_of_local_day()
+    entity.forecast_list = [
+        {"datetime": today.replace(hour=10).isoformat(), "condition": "rainy"},
+        # Hours 11-19 are skipped entirely by the provider.
+        {"datetime": today.replace(hour=20).isoformat(), "condition": "cloudy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("this_afternoon")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    assert response.data["cadence"] == "hourly"
+    assert response.data["forecast"] == []
+
+
+async def test_get_forecast_tool_matches_daily_entries_by_calendar_date(
+    hass: HomeAssistant,
+) -> None:
+    """Test non-midnight daily entries are matched by calendar date.
+
+    Daily forecast entries aren't guaranteed to start at local midnight
+    (e.g. Google Weather's daily entries start at 07:00 local for the
+    daytime interval), so a day's entry must be matched by its calendar
+    date rather than by treating its timestamp as the literal start of a
+    24-hour coverage interval, or it would bleed into the following day's
+    window.
+    """
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    today = dt_util.start_of_local_day()
+    entity.forecast_list = [
+        {"datetime": today.replace(hour=7).isoformat(), "condition": "rainy"},
+        {
+            "datetime": (today + timedelta(days=1)).replace(hour=7).isoformat(),
+            "condition": "sunny",
+        },
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("tomorrow")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["sunny"]
+
+
+@pytest.mark.freeze_time("2024-01-15T12:00:00+00:00")
+async def test_get_forecast_tool_matches_daily_entries_by_entry_own_timezone(
+    hass: HomeAssistant,
+) -> None:
+    """Test a daily entry's calendar date is derived from its own offset.
+
+    A forecast for a remote location (e.g. via Google Weather) reports its
+    own local date, which can differ from the date that instant falls on in
+    Home Assistant's configured timezone. Re-interpreting the entry's
+    calendar date using Home Assistant's timezone instead of the entry's own
+    offset would assign it to the wrong day, and matching by instant-interval
+    overlap (rather than by date) would wrongly include the adjacent day's
+    entry too.
+    """
+    await hass.config.async_set_time_zone("UTC")
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    entity.forecast_list = [
+        # Local midnight in a remote (JST) location. In Home Assistant's
+        # (UTC) timezone this instant falls on 2024-01-15, but the entry's
+        # own date is 2024-01-16.
+        {"datetime": "2024-01-16T00:00:00+09:00", "condition": "sunny"},
+        # The adjacent day's entry: under UTC interval-overlap math both this
+        # and the entry above would wrongly overlap the UTC "tomorrow"
+        # window, so matching must be restricted to this entry's own date.
+        {"datetime": "2024-01-17T00:00:00+09:00", "condition": "cloudy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("tomorrow")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["sunny"]
+
+
+@pytest.mark.freeze_time("2024-03-10T20:00:00+00:00")
+async def test_get_forecast_tool_matches_daily_entries_across_spring_dst(
+    hass: HomeAssistant,
+) -> None:
+    """Test daily entries are matched by calendar date across a spring DST change.
+
+    2024-03-10 is the day clocks spring forward in America/New_York.
+    Matching by calendar date, rather than a literal 24-hour interval,
+    correctly assigns each entry to its own day regardless of the
+    transition.
+    """
+    await hass.config.async_set_time_zone("America/New_York")
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    entity.forecast_list = [
+        {"datetime": "2024-03-09T00:00:00-05:00", "condition": "cloudy"},
+        {"datetime": "2024-03-10T00:00:00-05:00", "condition": "foggy"},
+        {"datetime": "2024-03-11T00:00:00-04:00", "condition": "sunny"},
+        {"datetime": "2024-03-12T00:00:00-04:00", "condition": "cloudy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("tomorrow")),
+        _llm_context(),
+    )
+
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["sunny"]
+
+
+@pytest.mark.freeze_time("2024-03-10T20:00:00+00:00")
+async def test_get_forecast_tool_matches_final_daily_entry_across_spring_dst(
+    hass: HomeAssistant,
+) -> None:
+    """Test the final daily entry is still matched by calendar date across DST.
+
+    A truncated forecast whose last entry is the DST-shortened 2024-03-10
+    (America/New_York) must not be matched for "tomorrow" (March 11):
+    matching is by the entry's own calendar date, which the spring DST
+    change doesn't affect.
+    """
+    await hass.config.async_set_time_zone("America/New_York")
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    entity.forecast_list = [
+        {"datetime": "2024-03-09T00:00:00-05:00", "condition": "cloudy"},
+        {"datetime": "2024-03-10T00:00:00-05:00", "condition": "foggy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("tomorrow")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    assert response.data["forecast"] == []
+    assert response.data["units"].keys() == FORECAST_UNIT_KEYS
+
+
+@pytest.mark.freeze_time("2024-11-03T06:00:00+00:00")
+async def test_get_forecast_tool_hourly_fallback_uses_utc_across_fall_back_dst(
+    hass: HomeAssistant,
+) -> None:
+    """Test the hourly fallback end doesn't overshoot across the fall DST transition.
+
+    Adding a wall-clock hour to a local ZoneInfo datetime across the November
+    fall-back transition can span two real elapsed hours (the repeated
+    01:00-01:59 local hour), so the fallback must compute the final hourly
+    entry's end in absolute (UTC) time instead, or the entry would be
+    returned for an hour after its actual coverage ends.
+    """
+    await hass.config.async_set_time_zone("America/New_York")
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_HOURLY)
+    # The only entry, so its end is computed via the duration fallback. Its
+    # real coverage ends exactly at the frozen "now" (06:00 UTC == 01:00 EST,
+    # the instant clocks fall back), so "next_24_hours" (starting at "now")
+    # must not include it.
+    entity.forecast_list = [
+        {"datetime": "2024-11-03T01:00:00-04:00", "condition": "foggy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("next_24_hours")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    assert response.data["forecast"] == []
+
+
+@pytest.mark.freeze_time("2024-11-02T06:10:00+00:00")
+async def test_get_forecast_tool_matches_native_zoneinfo_across_fall_back_fold(
+    hass: HomeAssistant,
+) -> None:
+    """Test overlap is compared in absolute time, not shared-tzinfo wall time.
+
+    Comparing (or subtracting) two aware datetimes that share the same
+    tzinfo object -- as native ZoneInfo values parsed from naive provider
+    strings and the window bounds derived from dt_util do -- falls back to a
+    wall-clock field comparison that ignores `fold`. During the repeated
+    01:00-01:59 local hour on the November fall-back date, that can make an
+    entry starting at 01:50 EDT appear to start *after* a window ending at
+    01:10 EST, even though 01:50 EDT (05:50 UTC) is actually earlier than
+    01:10 EST (06:10 UTC).
+    """
+    await hass.config.async_set_time_zone("America/New_York")
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_HOURLY)
+    # A naive string (no UTC offset), like some providers supply, so this
+    # gets tagged with Home Assistant's own ZoneInfo instance -- the same one
+    # used to compute the "next_24_hours" window below.
+    entity.forecast_list = [
+        {"datetime": "2024-11-03T01:50:00", "condition": "foggy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    # "now" is frozen so that "next_24_hours" ends at 2024-11-03T01:10:00 EST
+    # (fold=1), the second pass through the ambiguous hour, while the entry
+    # above falls in the first pass (fold=0, EDT) -- the scenario where wall
+    # time and absolute time disagree on ordering.
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("next_24_hours")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["foggy"]
+
+
+@pytest.mark.freeze_time("2024-11-23T10:00:00+00:00")
+async def test_get_forecast_tool_next_24_hours_window_boundaries(
+    hass: HomeAssistant,
+) -> None:
+    """Test 'next_24_hours' is a rolling window from now, not the calendar day."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_HOURLY)
+    now = dt_util.now()
+    entity.forecast_list = [
+        {"datetime": (now - timedelta(hours=2)).isoformat(), "condition": "foggy"},
+        {"datetime": now.isoformat(), "condition": "rainy"},
+        {
+            "datetime": (now + timedelta(hours=23)).isoformat(),
+            "condition": "sunny",
+        },
+        {
+            "datetime": (now + timedelta(hours=24)).isoformat(),
+            "condition": "cloudy",
+        },
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("next_24_hours")),
+        _llm_context(),
+    )
+
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["rainy", "sunny"]
+
+
+async def test_get_forecast_tool_no_forecast_capable_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test losing all forecast capability is reported consistently.
+
+    Without an explicit empty-state guard, `async_match_targets` would fall
+    back to searching every weather entity in the domain instead of only
+    forecast-capable ones, making the result depend on unrelated entities.
+    """
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    # Shares the "Testing" name/alias but was never forecast-capable, so it
+    # must not be matched as a fallback target.
+    hass.states.async_set(
+        "weather.testing_two",
+        "sunny",
+        {"friendly_name": "Testing", "supported_features": 0},
+    )
+    async_expose_entity(hass, "conversation", "weather.testing_two", True)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+    tool = result.tools[0]
+
+    # Simulate the exposed entity losing forecast support entirely.
+    hass.states.async_set(
+        entity.entity_id,
+        "sunny",
+        {**hass.states.get(entity.entity_id).attributes, "supported_features": 0},
+    )
+
+    response = await tool.async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+    assert response.error
+    assert response.data == {"error": "Weather entity not found"}
