@@ -170,9 +170,12 @@ async def test_user_flow_with_parse_error(hass: HomeAssistant) -> None:
 
 async def test_user_flow_with_timetable_parse_error(hass: HomeAssistant) -> None:
     """Test the user flow handles a timetable parse error."""
-    with patch(
-        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
-    ) as mock_api_class:
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry", return_value=True),
+    ):
         mock_api = _mock_api(
             mock_api_class,
             lines=[SimpleNamespace(id="A", route="Route A")],
