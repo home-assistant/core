@@ -457,30 +457,28 @@ def _state_changed_during_period_stmt(
         # we can return the statement as is as there will
         # never be a start time state.
         return stmt
-    return _select_from_subquery(
-        union_all(
-            _select_from_subquery(
-                _get_single_entity_start_time_stmt(
-                    start_time_ts,
-                    single_metadata_id,
-                    no_attributes,
-                    False,
-                    True,
-                ).subquery(),
+    unioned_subquery = union_all(
+        _select_from_subquery(
+            _get_single_entity_start_time_stmt(
+                start_time_ts,
+                single_metadata_id,
                 no_attributes,
                 False,
                 True,
-            ),
-            _select_from_subquery(
-                stmt.subquery(),
-                no_attributes,
-                False,
-                True,
-            ),
-        ).subquery(),
-        no_attributes,
-        False,
-        True,
+            ).subquery(),
+            no_attributes,
+            False,
+            True,
+        ),
+        _select_from_subquery(
+            stmt.subquery(),
+            no_attributes,
+            False,
+            True,
+        ),
+    ).subquery()
+    return _select_from_subquery(unioned_subquery, no_attributes, False, True).order_by(
+        unioned_subquery.c.last_updated_ts
     )
 
 
