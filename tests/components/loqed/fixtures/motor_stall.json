@@ -1,0 +1,8 @@
+{
+  "requested_state": "UNKNOWN",
+  "requested_state_numeric": 0,
+  "mac_wifi": "**REDACTED**",
+  "mac_ble": "**REDACTED**",
+  "event_type": "MOTOR_STALL",
+  "key_local_id": 1
+}
