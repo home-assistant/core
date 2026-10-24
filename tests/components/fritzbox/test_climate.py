@@ -5,11 +5,11 @@ import re
 from unittest.mock import Mock, _Call, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from requests.exceptions import HTTPError
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -574,7 +574,7 @@ async def test_set_window_open_bad(
     device_entry = device_reg.async_get_device(identifiers={(DOMAIN, device.ain)})
     assert device_entry
 
-    with pytest.raises(vol.error.MultipleInvalid, match=service_data[1]):
+    with pytest.raises(probatio.error.MultipleInvalid, match=service_data[1]):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_WINDOW_OPEN,

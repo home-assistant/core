@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -17,18 +17,18 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_DURATION = "duration"
 
 SERVICE_SET_WINDOW_OPEN = "set_window_open"
-SERVICE_SET_WINDOW_OPEN_SCHEMA = vol.Schema(
+SERVICE_SET_WINDOW_OPEN_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_DURATION): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=24 * 60 * 60)
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_DURATION): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=24 * 60 * 60)
         ),
     }
 )
 SERVICE_SET_WINDOW_CLOSE = "set_window_close"
-SERVICE_SET_WINDOW_CLOSE_SCHEMA = vol.Schema(
+SERVICE_SET_WINDOW_CLOSE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_DEVICE_ID): str,
     }
 )
 SERVICES = {
