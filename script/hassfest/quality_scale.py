@@ -197,7 +197,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "bmw_connected_drive",
     "bond",
     "bosch_shc",
-    "braviatv",
     "broadlink",
     "brottsplatskartan",
     "browser",
