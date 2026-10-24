@@ -448,11 +448,14 @@ def enum(enumClass: type[Enum]) -> probatio.All:
     return probatio.All(probatio.In(enumClass.__members__), enumClass.__getitem__)
 
 
+_WHITESPACE = re.compile(r"\s")
+
+
 def icon(value: Any) -> str:
     """Validate icon."""
-    str_value = str(value)
+    str_value = str(value).strip()
 
-    if ":" in str_value:
+    if ":" in str_value and not _WHITESPACE.search(str_value):
         return str_value
 
     raise probatio.Invalid('Icons should be specified in the form "prefix:name"')
@@ -864,7 +867,7 @@ def url_no_path(value: Any) -> str:
 
 def x10_address(value: str) -> str:
     """Validate an x10 address."""
-    regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$")
+    regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)\Z")
     if not regex.match(value):
         raise probatio.Invalid("Invalid X10 Address")
     return str(value).lower()
