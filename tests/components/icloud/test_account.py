@@ -11,6 +11,7 @@ from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
     PyiCloudAcceptTermsException,
     PyiCloudAPIResponseException,
+    PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
     PyiCloudFailedLoginException,
 )
@@ -1002,7 +1003,7 @@ async def test_rejected_credentials_ask_the_user(
     polling_service: tuple[MagicMock, dict],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a rejected login starts reauth instead of retrying forever."""
+    """Test that credentials iCloud still rejects start reauth, not endless retries."""
     service, _ = polling_service
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
@@ -1014,9 +1015,11 @@ async def test_rejected_credentials_ask_the_user(
 
     service.authenticate.side_effect = PyiCloudFailedLoginException("rejected")
 
-    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        side_effect=PyiCloudFailedLoginException("rejected"),
+    ):
+        await _poll(hass, freezer)
 
     # The user is asked to log in again rather than the session being retried
     # every couple of minutes indefinitely.
@@ -1063,7 +1066,7 @@ async def test_2fa_exception_while_polling_asks_for_a_code(
     polling_service: tuple[MagicMock, dict],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a 2FA challenge raised while polling asks the user to log in.
+    """Test that a 2FA challenge raised while polling, again, asks the user to log in.
 
     authenticate() raises out of the MFA options request before requires_2fa is
     set, so the exception is the only signal that a code is what is missing.
@@ -1093,9 +1096,11 @@ async def test_2fa_exception_while_polling_asks_for_a_code(
         USERNAME, Mock(spec=Response)
     )
 
-    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        side_effect=PyiCloud2FARequiredException(USERNAME, Mock(spec=Response)),
+    ):
+        await _poll(hass, freezer)
 
     flows = [
         flow
@@ -1121,7 +1126,7 @@ async def test_auth_status_while_polling_asks_the_user(
     freezer: FrozenDateTimeFactory,
     status: AppleAuthError,
 ) -> None:
-    """Test that an authentication status while polling starts reauth.
+    """Test that an authentication status a fresh login cannot fix starts reauth.
 
     pyicloud only raises a dedicated exception for a 409 carrying an hsa2 body,
     so every other rejection arrives as a plain PyiCloudAPIResponseException and
@@ -1140,9 +1145,11 @@ async def test_auth_status_while_polling_asks_the_user(
         "Authentication required for Account.", status
     )
 
-    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        side_effect=PyiCloudFailedLoginException("rejected"),
+    ):
+        await _poll(hass, freezer)
 
     assert [
         flow
@@ -1510,6 +1517,209 @@ async def test_auth_status_on_device_refresh_while_polling_asks_the_user(
         if flow["context"]["source"] == "reauth"
     ]
     assert config_entry.runtime_data.api is None
+
+
+def _reauth_flows(hass: HomeAssistant) -> list:
+    """Return the reauth flows waiting on the user."""
+    return [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Let the account's timer fire once."""
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            PyiCloudAPIResponseException(
+                "Authentication required for Account.",
+                AppleAuthError.LOGIN_TOKEN_EXPIRED,
+            ),
+            id="auth-status",
+        ),
+        pytest.param(PyiCloudFailedLoginException("rejected"), id="failed-login"),
+        pytest.param(
+            PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response)),
+            id="auth-required",
+        ),
+        pytest.param(
+            PyiCloud2FARequiredException(USERNAME, Mock(spec=Response)),
+            id="2fa-exception",
+        ),
+        pytest.param(
+            PyiCloudAPIResponseException(
+                "Authentication required for Account.",
+                AppleAuthError.TWO_FACTOR_REQUIRED,
+            ),
+            id="2fa-status",
+        ),
+    ],
+)
+async def test_a_rejected_session_is_replaced_by_a_fresh_login(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+    error: Exception,
+) -> None:
+    """Test that a session iCloud turns down is replaced without asking the user.
+
+    The stored session is usually still valid: it is the forced re-login of the
+    old service that iCloud challenges, and a new service reuses the session
+    instead. So even a challenge recovers on its own, and the devices keep the
+    entities that were built for them.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    account = config_entry.runtime_data
+    (device,) = account.devices.values()
+    assert hass.states.get("sensor.iphone_battery").state == "80"
+
+    fresh_apple_device = FakeAppleDevice(_located_device_status(0.5))
+    fresh = MagicMock()
+    fresh.requires_2fa = False
+    fresh.devices = MockDevicesWithLocation(USER_INFO, [fresh_apple_device])
+    service.authenticate.side_effect = error
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        return_value=fresh,
+    ) as login:
+        await _poll(hass, freezer)
+
+    assert login.call_count == 1
+    assert not _reauth_flows(hass)
+    assert account.api is fresh
+    assert hass.states.get("sensor.iphone_battery").state == "50"
+    assert device.device is fresh_apple_device
+
+
+async def test_a_fresh_login_is_tried_once_before_asking_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a rejection the fresh login cannot fix is left to the user.
+
+    It is one attempt per rejection: once the user has been asked, polling
+    stops retrying under them, as before.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.authenticate.side_effect = PyiCloudFailedLoginException("rejected")
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        side_effect=PyiCloudFailedLoginException("still rejected"),
+    ) as login:
+        await _poll(hass, freezer)
+
+        assert login.call_count == 1
+        assert _reauth_flows(hass)
+        assert config_entry.runtime_data.api is None
+
+        await _poll(hass, freezer)
+
+        assert login.call_count == 1
+
+
+async def test_a_challenge_the_fresh_login_meets_too_is_left_to_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a code is asked for when the fresh login is challenged as well.
+
+    The new session is the one that was challenged, so it is kept for the code
+    to go through.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.authenticate.side_effect = PyiCloud2FARequiredException(
+        USERNAME, Mock(spec=Response)
+    )
+    challenged = MagicMock()
+    challenged.requires_2fa = True
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        return_value=challenged,
+    ) as login:
+        await _poll(hass, freezer)
+
+    assert login.call_count == 1
+    assert _reauth_flows(hass)
+    assert config_entry.runtime_data.api is challenged
+
+
+async def test_a_session_held_by_the_reauth_flow_is_not_replaced(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that polling leaves the session the user is entering a code for.
+
+    The reauth flow takes the account's session to validate the code on. A poll
+    that logged in again would replace it underneath the flow, and the new login
+    could issue a second challenge that makes the code the user is typing wrong.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.authenticate.side_effect = PyiCloud2FARequiredException(
+        USERNAME, Mock(spec=Response)
+    )
+    challenged = MagicMock()
+    challenged.requires_2fa = True
+    challenged.authenticate.side_effect = PyiCloud2FARequiredException(
+        USERNAME, Mock(spec=Response)
+    )
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        return_value=challenged,
+    ) as login:
+        await _poll(hass, freezer)
+        assert login.call_count == 1
+        assert _reauth_flows(hass)
+
+        await _poll(hass, freezer)
+
+    assert login.call_count == 1
+    assert config_entry.runtime_data.api is challenged
 
 
 async def test_a_failed_setup_retry_keeps_the_account_polling(
