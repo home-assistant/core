@@ -32,6 +32,10 @@ _LOGGER = logging.getLogger(__name__)
 # For actions the integration handles locking of concurrent device request
 PARALLEL_UPDATES = 0
 
+# Dimensions of the SD sub-stream; larger still requests use the HD stream
+SD_STREAM_WIDTH = 640
+SD_STREAM_HEIGHT = 360
+
 
 @dataclass(frozen=True, kw_only=True)
 class TPLinkCameraEntityDescription(
@@ -117,9 +121,10 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
         self._video_url = self._camera_module.stream_rtsp_url(
             self._camera_credentials, stream_resolution=StreamResolution.SD
         )
-        self._image: bytes | None = None
+        self._images: dict[
+            tuple[StreamResolution, int | None, int | None], tuple[bytes, float]
+        ] = {}
         self._image_lock = asyncio.Lock()
-        self._last_update: float = 0
         self._can_stream = True
         self._http_mpeg_stream_running = False
 
@@ -168,20 +173,37 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
+        # Use the cheaper SD stream unless a larger image is requested
+        resolution = (
+            StreamResolution.HD
+            if (width and width > SD_STREAM_WIDTH)
+            or (height and height > SD_STREAM_HEIGHT)
+            else StreamResolution.SD
+        )
+        cache_key = (resolution, width, height)
         now = time.monotonic()
 
-        if self._image and now - self._last_update < self.IMAGE_INTERVAL:
-            return self._image
+        cached = self._images.get(cache_key)
+        if cached and now - cached[1] < self.IMAGE_INTERVAL:
+            return cached[0]
 
         # Don't try to capture a new image if a stream is running
         if self._http_mpeg_stream_running:
-            return self._image
+            return cached[0] if cached else None
 
-        if self._can_stream and (video_url := self._video_url):
+        video_url = (
+            self._video_url
+            if resolution is StreamResolution.SD
+            else self._camera_module.stream_rtsp_url(
+                self._camera_credentials, stream_resolution=resolution
+            )
+        )
+        if self._can_stream and video_url:
             # Sometimes the front end makes multiple image requests
             async with self._image_lock:
-                if self._image and (now - self._last_update) < self.IMAGE_INTERVAL:
-                    return self._image
+                cached = self._images.get(cache_key)
+                if cached and (now - cached[1]) < self.IMAGE_INTERVAL:
+                    return cached[0]
 
                 _LOGGER.debug("Updating camera image for %s", self._device.host)
                 image = await ffmpeg.async_get_image(
@@ -191,8 +213,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
                     height=height,
                 )
                 if image:
-                    self._image = image
-                    self._last_update = now
+                    self._images[cache_key] = (image, now)
                     _LOGGER.debug("Updated camera image for %s", self._device.host)
                 # This coroutine is called by camera with an asyncio.timeout
                 # so image could be None whereas an auth issue returns b''
@@ -208,7 +229,8 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
                         "None camera image returned for %s", self._device.host
                     )
 
-        return self._image
+        cached = self._images.get(cache_key)
+        return cached[0] if cached else None
 
     @override
     async def handle_async_mjpeg_stream(
