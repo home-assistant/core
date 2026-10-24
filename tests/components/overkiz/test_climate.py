@@ -2,12 +2,13 @@
 
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any
+from types import SimpleNamespace
+from typing import Any, cast
 from unittest.mock import PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
-from pyoverkiz.models import Event
+from pyoverkiz.models import Event, States
 import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -28,6 +29,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.overkiz.climate.atlantic_pass_apc_zone_control_zone import (
     AtlanticPassAPCZoneControlZone,
+    effective_profile,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -1560,6 +1562,23 @@ async def test_zone_control_zone_derogation_preset_not_selectable(
 
     assert exc_info.value.translation_key == "derogation_preset_not_selectable"
     mock_client.execute_action_group.assert_not_called()
+
+
+def test_effective_profile_keeps_a_profile_it_cannot_resolve() -> None:
+    """Test the profile state is kept when the setpoints cannot tell the profile."""
+    states = {
+        OverkizState.IO_PASS_APC_HEATING_PROFILE: "comfort",
+        OverkizState.CORE_DEROGATION_ON_OFF: "off",
+        OverkizState.CORE_COMFORT_HEATING_TARGET_TEMPERATURE: 20.0,
+        OverkizState.CORE_ECO_HEATING_TARGET_TEMPERATURE: 20.0,
+    }
+
+    assert effective_profile(
+        cast(States, SimpleNamespace(get_value=states.get)),
+        OverkizState.IO_PASS_APC_HEATING_PROFILE,
+        OverkizState.CORE_COMFORT_HEATING_TARGET_TEMPERATURE,
+        OverkizState.CORE_ECO_HEATING_TARGET_TEMPERATURE,
+    ) == ("comfort", False)
 
 
 async def test_zone_control_zone_derogation_preset_already_applied(
