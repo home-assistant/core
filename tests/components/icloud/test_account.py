@@ -692,7 +692,7 @@ async def test_a_poll_with_no_devices_still_schedules_the_next_one(
     schedule.assert_called_once()
 
 
-class FakeAppleDevice:
+class FakeAppleDevice(AppleDevice):
     """A device that reports status through pyicloud's own implementation.
 
     Reusing AppleDevice.status keeps these tests honest about how iCloud data
@@ -706,7 +706,16 @@ class FakeAppleDevice:
 
     def __init__(self, content: dict) -> None:
         """Store the payload iCloud would have returned."""
-        self._content = content
+        super().__init__(
+            content,
+            params={},
+            manager=Mock(is_alive=True),
+            sound_url="",
+            lost_url="",
+            erase_url="",
+            erase_token_url="",
+            message_url="",
+        )
 
     def __getitem__(self, key):
         """Proxy into the raw payload, as AppleDevice does."""
