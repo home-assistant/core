@@ -1,4 +1,4 @@
-"""Tests for the WattWächter Plus sensor platform."""
+"""Tests for the WattWächter sensor platform."""
 
 from __future__ import annotations
 

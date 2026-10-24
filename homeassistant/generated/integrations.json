@@ -12551,7 +12551,7 @@
       "iot_class": "cloud_polling"
     },
     "wattwaechter": {
-      "name": "WattW\u00e4chter Plus",
+      "name": "WattW\u00e4chter",
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"

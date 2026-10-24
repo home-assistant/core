@@ -1,4 +1,4 @@
-"""Sensor platform for the WattWächter Plus integration."""
+"""Sensor platform for the WattWächter integration."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
