@@ -168,6 +168,7 @@ FLOWS = {
         "devolo_home_network",
         "dexcom",
         "dialogflow",
+        "diesel_heater",
         "directv",
         "discogs",
         "discord",
