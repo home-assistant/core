@@ -1116,3 +1116,22 @@ async def test_public_only_number_sense_registry_cleanup(
     await setup_public_only()
 
     assert entity_registry.async_get(stale.entity_id) is None
+
+
+async def test_number_camera_read_only_user(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A read-only local user gets the camera numbers that write publicly."""
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(ufp)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    assert entity_registry.async_get_entity_id(
+        Platform.NUMBER, DOMAIN, f"{doorbell.mac}_mic_level"
+    )
