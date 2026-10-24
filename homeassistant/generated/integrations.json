@@ -1294,6 +1294,9 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "bmx_monitor": {
+      "name": "BM2 battery monitor",
+      "integration_type": "device",
     "bluetti_modbus": {
       "name": "BLUETTI Modbus",
       "integration_type": "device",

@@ -1,0 +1,25 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_chemistry": {
+        "default": "mdi:car-battery"
+      },
+      "battery_status": {
+        "default": "mdi:battery-off",
+        "state": {
+          "charging": "mdi:battery-charging-100",
+          "critical": "mdi:battery-remove-outline",
+          "floating": "mdi:battery-sync",
+          "low": "mdi:battery-arrow-down-outline",
+          "normal": "mdi:battery-check"
+        }
+      },
+      "battery_voltage": {
+        "default": "mdi:current-dc"
+      },
+      "bm2_generation": {
+        "default": "mdi:timeline-clock-outline"
+      }
+    }
+  }
+}
