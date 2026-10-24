@@ -7,6 +7,7 @@
   "online": true,
   "status": {
     "locked": true,
+    "is_locked": true,
     "jammed": false,
     "battery": 85
   }
