@@ -34,8 +34,10 @@ async def async_get_calendar_color(
         str | None,
         await hass.async_add_executor_job(calendar.get_property, ical.CalendarColor()),
     )
-    # Apple Calendar and DAVx5 append an alpha channel
-    return color[:7] if color and len(color) == 9 else color
+    # Apple Calendar, DAVx5 and SOGo append an alpha channel.
+    if color and color.startswith("#") and len(color) == 9:
+        return color[:7]
+    return color
 
 
 def get_attr_value(obj: CalendarObjectResource, attribute: str) -> str | None:

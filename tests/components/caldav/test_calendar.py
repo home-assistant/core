@@ -10,6 +10,9 @@ import zoneinfo
 
 from caldav.calendarobjectresource import Event
 from caldav.elements import ical
+from caldav.elements.base import BaseElement
+from caldav.lib.error import DAVError
+from caldav.lib.http_sync import requests as caldav_requests
 from caldav.lib.url import URL
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -17,7 +20,11 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.caldav.api import async_get_calendars
-from homeassistant.components.calendar import CalendarEntityFeature
+from homeassistant.components.caldav.const import DOMAIN
+from homeassistant.components.calendar import (
+    DOMAIN as CALENDAR_DOMAIN,
+    CalendarEntityFeature,
+)
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -372,7 +379,7 @@ def _local_datetime(hours: int, minutes: int) -> dt.datetime:
 def _mock_calendar(
     name: str,
     supported_components: list[str] | None = None,
-    color: str | None = None,
+    color: str | Exception | None = None,
 ) -> Mock:
     calendar = Mock()
     calendar.client = None
@@ -385,9 +392,15 @@ def _mock_calendar(
     calendar.search = MagicMock(return_value=events)
     calendar.get_display_name = MagicMock(return_value=name)
     calendar.get_supported_components = MagicMock(return_value=supported_components)
-    calendar.get_property = MagicMock(
-        side_effect=lambda prop: color if prop.tag == ical.CalendarColor.tag else None
-    )
+
+    def get_property(prop: BaseElement) -> str | None:
+        if prop.tag != ical.CalendarColor.tag:
+            return None
+        if isinstance(color, Exception):
+            raise color
+        return color
+
+    calendar.get_property = MagicMock(side_effect=get_property)
     return calendar
 
 
@@ -1378,17 +1391,45 @@ async def test_config_entry_supported_components(
         pytest.param(
             [_mock_calendar(CALENDAR_NAME, color="red")],
             {TEST_ENTITY: None},
-            id="name",
+            id="not_hex",
         ),
         pytest.param(
             [_mock_calendar(CALENDAR_NAME)],
             {TEST_ENTITY: None},
-            id="none",
+            id="no_color",
+        ),
+        pytest.param(
+            [_mock_calendar(CALENDAR_NAME, color=DAVError())],
+            {TEST_ENTITY: None},
+            id="dav_error",
+        ),
+        pytest.param(
+            [
+                _mock_calendar(
+                    CALENDAR_NAME, color=caldav_requests.exceptions.ConnectionError()
+                )
+            ],
+            {TEST_ENTITY: None},
+            id="connection_error",
+        ),
+        pytest.param(
+            [_mock_calendar(CALENDAR_NAME, color=caldav_requests.exceptions.Timeout())],
+            {TEST_ENTITY: None},
+            id="timeout",
+        ),
+        pytest.param(
+            [
+                _mock_calendar(
+                    CALENDAR_NAME,
+                    color=caldav_requests.exceptions.ChunkedEncodingError(),
+                )
+            ],
+            {TEST_ENTITY: None},
+            id="chunked_encoding_error",
         ),
         pytest.param(
             [
                 _mock_calendar("First", color="#FF0000"),
-                _mock_calendar("", color="#00FF00"),
                 _mock_calendar("Second", color="#0000FF"),
             ],
             {"calendar.first": "#FF0000", "calendar.second": "#0000FF"},
@@ -1402,16 +1443,25 @@ async def test_config_entry_initial_color(
     entity_registry: er.EntityRegistry,
     expected_colors: dict[str, str | None],
 ) -> None:
-    """Test a new calendar entity takes the calendar color from the server."""
+    """Test a new calendar entity takes the color its calendar has, if it can."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     for entity_id, expected_color in expected_colors.items():
         entity = entity_registry.async_get(entity_id)
         assert entity
-        assert entity.options.get("calendar", {}).get("color") == expected_color
+        assert entity.options.get(CALENDAR_DOMAIN, {}).get("color") == expected_color
 
 
+@pytest.mark.parametrize(
+    "calendars",
+    [
+        [
+            _mock_calendar("Existing", color="#FF0000"),
+            _mock_calendar("New", color="#0000FF"),
+        ]
+    ],
+)
 async def test_config_entry_initial_color_existing_entity(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -1419,28 +1469,32 @@ async def test_config_entry_initial_color_existing_entity(
     calendars: list[Mock],
 ) -> None:
     """Test the color is only read for a calendar that has no entity yet."""
-    existing = _mock_calendar("Existing", color="#FF0000")
-    existing.id = "existing"
-    new = _mock_calendar("New", color="#0000FF")
-    new.id = "new"
-    calendars[:] = [existing, new]
     config_entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
         Platform.CALENDAR,
-        "caldav",
-        f"{config_entry.entry_id}-existing",
+        DOMAIN,
+        f"{config_entry.entry_id}-{calendars[0].id}",
         config_entry=config_entry,
         suggested_object_id="existing",
     )
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    existing.get_property.assert_not_called()
-    entity = entity_registry.async_get("calendar.existing")
-    assert entity
-    assert entity.options.get("calendar", {}).get("color") is None
+    calendars[0].get_property.assert_not_called()
     entity = entity_registry.async_get("calendar.new")
     assert entity
-    assert entity.options.get("calendar", {}).get("color") == "#0000FF"
+    assert entity.options.get(CALENDAR_DOMAIN, {}).get("color") == "#0000FF"
+
+
+async def test_yaml_calendar_skips_color(
+    hass: HomeAssistant,
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+) -> None:
+    """Test a calendar set up from YAML doesn't read the color, having no unique id."""
+    await setup_platform_cb()
+
+    assert hass.states.get(TEST_ENTITY)
+    calendars[0].get_property.assert_not_called()
 
 
 def _ics_event(uid: str, dates: str) -> str:
