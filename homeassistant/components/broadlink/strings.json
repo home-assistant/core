@@ -42,6 +42,11 @@
     }
   },
   "entity": {
+    "button": {
+      "sync_time": {
+        "name": "Sync time"
+      }
+    },
     "infrared": {
       "infrared_emitter": {
         "name": "IR emitter"
@@ -50,20 +55,6 @@
     "radio_frequency": {
       "rf_transmitter": {
         "name": "RF transmitter"
-      }
-    },
-    "select": {
-      "day_of_week": {
-        "name": "Day of week",
-        "state": {
-          "friday": "[%key:common::time::friday%]",
-          "monday": "[%key:common::time::monday%]",
-          "saturday": "[%key:common::time::saturday%]",
-          "sunday": "[%key:common::time::sunday%]",
-          "thursday": "[%key:common::time::thursday%]",
-          "tuesday": "[%key:common::time::tuesday%]",
-          "wednesday": "[%key:common::time::wednesday%]"
-        }
       }
     },
     "sensor": {
@@ -115,11 +106,26 @@
     "setup_failed": {
       "message": "Failed to set up the device at {host}"
     },
+    "sync_time_failed": {
+      "message": "Failed to set the time on the device: {error}"
+    },
     "transmit_failed": {
       "message": "Failed to transmit RF command: {error}"
     },
     "unload_failed": {
       "message": "Failed to unload the device"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "auto_sync_time": "Keep the clock in sync"
+        },
+        "data_description": {
+          "auto_sync_time": "Set the thermostat clock to the Home Assistant time every 30 minutes and when daylight saving time changes. The thermostat runs its schedule on its own clock, which drifts and does not follow daylight saving time."
+        }
+      }
     }
   }
 }
