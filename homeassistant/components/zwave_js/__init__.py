@@ -437,6 +437,7 @@ class DriverEvents:
                 self.hass,
                 DOMAIN,
                 f"migrate_unique_id.{self.config_entry.entry_id}",
+                config_entry_id=self.config_entry.entry_id,
                 data={
                     "config_entry_id": self.config_entry.entry_id,
                     "config_entry_title": self.config_entry.title,
@@ -756,19 +757,15 @@ class ControllerEvents:
         else:
             ids = {device_id}
 
-        device = self.dev_reg.async_get_or_create_device(
+        device = self.dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers=ids,
-                sw_version=node.firmware_version,
-                name=node.name
-                or node.device_config.description
-                or f"Node {node.node_id}",
-                model=node.device_config.label,
-                manufacturer=node.device_config.manufacturer,
-                suggested_area=node.location or UNDEFINED,
-                via_device_id=via_device_id,
-            ),
+            identifiers=ids,
+            sw_version=node.firmware_version,
+            name=node.name or node.device_config.description or f"Node {node.node_id}",
+            model=node.device_config.label,
+            manufacturer=node.device_config.manufacturer,
+            suggested_area=node.location or UNDEFINED,
+            via_device_id=via_device_id,
         )
 
         async_dispatcher_send(self.hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
@@ -881,6 +878,7 @@ class NodeEvents:
                     self.hass,
                     DOMAIN,
                     issue_id,
+                    config_entry_id=self.config_entry.entry_id,
                     data={"device_id": device.id, "device_name": device_name},
                     is_fixable=True,
                     is_persistent=False,

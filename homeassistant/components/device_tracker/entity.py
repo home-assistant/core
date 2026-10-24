@@ -36,7 +36,7 @@ from homeassistant.helpers.device_registry import (
     EventDeviceRegistryUpdatedData,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import CalculatedState, Entity, EntityDescription
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.hass_dict import HassKey
@@ -361,6 +361,19 @@ class TrackerEntity(
     @callback
     @override
     def _async_write_ha_state(self) -> None:
+        """Calculate active zones and write the state."""
+        self._async_update_zones()
+        super()._async_write_ha_state()
+
+    @callback
+    @override
+    def _async_calculate_state(self) -> CalculatedState:
+        """Calculate active zones for state previews."""
+        self._async_update_zones()
+        return super()._async_calculate_state()
+
+    @callback
+    def _async_update_zones(self) -> None:
         """Calculate active zones."""
         if (zones := self.in_zones) is not None:
             zone_states = sorted(
@@ -389,7 +402,6 @@ class TrackerEntity(
         else:
             self.__active_zone = None
             self.__in_zones = None
-        super()._async_write_ha_state()
 
     @property
     @override
@@ -723,13 +735,11 @@ class ScannerEntity(
         # Register our own device now that the tracked device is known to another
         # integration; matching the split of a pre-migration composite device prunes
         # the identifiers and connections copied from the composite.
-        device_entry = dr.async_get(self.hass).async_get_or_create_device(
+        device_entry = dr.async_get(self.hass).async_get_or_create(
             config_entry_id=self.platform.config_entry.entry_id,
             config_subentry_id=self.registry_entry.config_subentry_id,
-            device_info=dr.DeviceInfo(
-                connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-                name=self.hostname or self.mac_address,
-            ),
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            name=self.hostname or self.mac_address,
         )
 
         # Link the entity's registry entry to the device

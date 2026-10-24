@@ -1133,6 +1133,30 @@ async def test_get_icons_for_integrations(ws_client: MockHAClientWebSocket) -> N
     assert set(msg["result"]["resources"]) == {"frontend", "http"}
 
 
+async def test_get_icons_for_integration_categories(
+    ws_client: MockHAClientWebSocket,
+) -> None:
+    """Test get_icons gives the icons of the integration categories."""
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "frontend/get_icons",
+            "integration": "homeassistant",
+            "category": "integration_category",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    energy = msg["result"]["resources"]["homeassistant"]["energy"]
+    assert energy["default"] == "mdi:lightning-bolt"
+    assert energy["subcategory"]["solar_batteries"] == {
+        "default": "mdi:solar-power-variant"
+    }
+
+
 async def test_get_icons_for_single_integration(
     ws_client: MockHAClientWebSocket,
 ) -> None:
