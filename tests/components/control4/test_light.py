@@ -25,6 +25,7 @@ LIGHT_ITEMS = [
     {
         "id": 678,
         "name": "Kitchen Light",
+        "type": 6,
         "manufacturer": "Control4",
         "model": "C4-SW120277",
         "categories": ["lights"],
