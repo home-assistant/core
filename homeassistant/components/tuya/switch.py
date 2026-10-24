@@ -10,16 +10,22 @@ from tuya_device_handlers.definition.switch import (
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
@@ -65,6 +71,14 @@ class TuyaSwitchEntityDescription(TuyaEntityDescription, SwitchEntityDescription
     """Describes a Tuya switch entity."""
 
 
+@dataclass(frozen=True, kw_only=True)
+class TuyaDeprecatedSwitchEntityDescription(TuyaSwitchEntityDescription):
+    """Describes a deprecated Tuya switch entity."""
+
+    deprecated: str
+    breaks_in_ha_version: str
+
+
 SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
     DeviceCategory.BH: (
         TuyaSwitchEntityDescription(
@@ -101,28 +115,7 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    DeviceCategory.CJKG: (
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "1"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "2"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_3,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "3"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_4,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "4"},
-        ),
-    ),
+    DeviceCategory.CJKG: _channel_switches(4, translation_key="switch"),
     DeviceCategory.CL: (
         TuyaSwitchEntityDescription(
             key=DPCode.CONTROL_BACK,
@@ -201,6 +194,118 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
         TuyaSwitchEntityDescription(
             key=DPCode.UV,
             translation_key="uv_sterilization",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.CZ: (
+        TuyaSwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        *_channel_switches(
+            6, translation_key="socket", device_class=SwitchDeviceClass.OUTLET
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_USB1,
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "1"},
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_USB2,
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "2"},
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_USB3,
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "3"},
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_USB4,
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "4"},
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_USB5,
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "5"},
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH_USB6,
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "6"},
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="socket",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+    ),
+    DeviceCategory.DGHSXJ: (
+        TuyaSwitchEntityDescription(
+            key=DPCode.WIRELESS_BATTERYLOCK,
+            translation_key="battery_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.CRY_DETECTION_SWITCH,
+            translation_key="cry_detection",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.DECIBEL_SWITCH,
+            translation_key="sound_detection",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.RECORD_SWITCH,
+            translation_key="video_recording",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MOTION_RECORD,
+            translation_key="motion_recording",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.BASIC_PRIVATE,
+            translation_key="privacy_mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.BASIC_FLIP,
+            translation_key="flip",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.BASIC_OSD,
+            translation_key="time_watermark",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.BASIC_WDR,
+            translation_key="wide_dynamic_range",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MOTION_TRACKING,
+            translation_key="motion_tracking",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MOTION_SWITCH,
+            translation_key="motion_alarm",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MOTION_AREA_SWITCH,
+            translation_key="motion_detection_zone",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.IPC_AUTO_SIREN,
+            translation_key="auto_siren",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -301,47 +406,15 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    DeviceCategory.GGQ: (
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_1,
+    DeviceCategory.GGQ: tuple(
+        TuyaDeprecatedSwitchEntityDescription(
+            key=f"switch_{index}",
             translation_key="indexed_switch",
-            translation_placeholders={"index": "1"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "2"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_3,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "3"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_4,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "4"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_5,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "5"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_6,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "6"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_7,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "7"},
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_8,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "8"},
-        ),
+            translation_placeholders={"index": str(index)},
+            deprecated="deprecated_entity_new_valve",
+            breaks_in_ha_version="2027.5.0",
+        )
+        for index in range(1, 9)
     ),
     DeviceCategory.HXD: (
         TuyaSwitchEntityDescription(
@@ -540,41 +613,8 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="indexed_socket",
-            translation_placeholders={"index": "1"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="indexed_socket",
-            translation_placeholders={"index": "2"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_3,
-            translation_key="indexed_socket",
-            translation_placeholders={"index": "3"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_4,
-            translation_key="indexed_socket",
-            translation_placeholders={"index": "4"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_5,
-            translation_key="indexed_socket",
-            translation_placeholders={"index": "5"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_6,
-            translation_key="indexed_socket",
-            translation_placeholders={"index": "6"},
-            device_class=SwitchDeviceClass.OUTLET,
+        *_channel_switches(
+            6, translation_key="socket", device_class=SwitchDeviceClass.OUTLET
         ),
         TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
@@ -947,12 +987,6 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
     ),
 }
 
-# Socket (duplicate of `pc`)
-SWITCHES[DeviceCategory.CZ] = SWITCHES[DeviceCategory.PC]
-
-# Smart Camera - Low power consumption camera (duplicate of `sp`)
-SWITCHES[DeviceCategory.DGHSXJ] = SWITCHES[DeviceCategory.SP]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -961,6 +995,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
     manager = entry.runtime_data.manager
+    entity_registry = er.async_get(hass)
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
@@ -984,6 +1019,7 @@ async def async_setup_entry(
                     )
                     for description in descriptions
                     if (definition := get_default_definition(device, description.key))
+                    and _check_deprecation(hass, device, description, entity_registry)
                 )
 
         async_add_entities(entities)
@@ -993,6 +1029,49 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
     )
+
+
+def _check_deprecation(
+    hass: HomeAssistant,
+    device: CustomerDevice,
+    description: TuyaSwitchEntityDescription,
+    entity_registry: er.EntityRegistry,
+) -> bool:
+    """Check entity deprecation.
+
+    Returns:
+        `True` if the entity should be created, `False` otherwise.
+    """
+    if not isinstance(description, TuyaDeprecatedSwitchEntityDescription):
+        return True
+
+    unique_id = f"tuya.{device.id}{description.key}"
+    entity_id = entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, unique_id)
+
+    if not entity_id or not (entity_entry := entity_registry.async_get(entity_id)):
+        async_delete_issue(hass, DOMAIN, f"deprecated_entity_{unique_id}")
+        return False
+
+    if entity_entry.disabled:
+        entity_registry.async_remove(entity_id)
+        async_delete_issue(hass, DOMAIN, f"deprecated_entity_{unique_id}")
+        return False
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_entity_{unique_id}",
+        breaks_in_ha_version=description.breaks_in_ha_version,
+        config_entry_id=entity_entry.config_entry_id,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key=description.deprecated,
+        translation_placeholders={
+            "name": f"{device.name} {entity_entry.name or entity_entry.original_name}",
+            "entity": entity_id,
+        },
+    )
+    return True
 
 
 class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
