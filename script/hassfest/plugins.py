@@ -8,6 +8,7 @@ from .model import Config
 INTEGRATION_PLUGINS = [
     "application_credentials",
     "bluetooth",
+    "brand_images",
     "codeowners",
     "conditions",
     "config_schema",
