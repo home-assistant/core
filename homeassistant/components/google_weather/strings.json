@@ -104,8 +104,17 @@
     "auth_error": {
       "message": "Authentication failed: {error}"
     },
+    "minute_forecast_error": {
+      "message": "Error fetching minute forecast: {error}"
+    },
     "update_error": {
       "message": "Error fetching weather data: {error}"
+    }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "description": "Retrieves the precipitation forecast (nowcast) for up to 6 hours. Amounts are returned in the weather entity's precipitation unit; the snowfall amount is the liquid-water equivalent, not the snow depth. Unlike the cached forecasts, every call makes a live request to the Google Weather API and counts toward your quota.",
+      "name": "Get minute forecast"
     }
   }
 }

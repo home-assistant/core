@@ -123,6 +123,34 @@
     }),
   ])
 # ---
+# name: test_minute_forecast_service
+  dict({
+    'weather.home': dict({
+      'end_time': '2025-06-01T06:00:00Z',
+      'segments': list([
+        dict({
+          'end_time': '2025-06-01T00:02:00Z',
+          'intensity': 'moderate',
+          'precipitation': 0.5,
+          'precipitation_probability': 62,
+          'precipitation_type': 'rain',
+          'snowfall_amount': 0.0,
+          'start_time': '2025-06-01T00:00:00Z',
+        }),
+        dict({
+          'end_time': '2025-06-01T00:04:00Z',
+          'intensity': 'none',
+          'precipitation': None,
+          'precipitation_probability': 0,
+          'precipitation_type': 'none',
+          'snowfall_amount': None,
+          'start_time': '2025-06-01T00:02:00Z',
+        }),
+      ]),
+      'start_time': '2025-06-01T00:00:00Z',
+    }),
+  })
+# ---
 # name: test_weather[weather.home-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
