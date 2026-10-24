@@ -80,13 +80,13 @@ async def test_shutdown_release(
         pytest.param(ClientError("offline"), id="release-fails"),
     ],
 )
-async def test_unload_releases_lease(
+async def test_unload_attempts_release(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_client: MagicMock,
     release_error: ClientError | None,
 ) -> None:
-    """Unload the sensors even if the device cannot acknowledge lease release."""
+    """Attempt lease release without blocking unload when the device is offline."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
