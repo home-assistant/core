@@ -104,6 +104,7 @@ FLOWS = {
         "balboa",
         "bang_olufsen",
         "bayesian",
+        "beatbot",
         "besen",
         "bitcoin",
         "bitvis",
