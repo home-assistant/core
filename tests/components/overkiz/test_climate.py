@@ -2515,3 +2515,55 @@ async def test_zone_control_zone_value_waiting_for_a_cancelled_write_is_sent(
     await hass.async_block_till_done()
 
     assert _sent_commands(mock_client) == [[("setHeatingTargetTemperature", [20.0])]]
+
+
+@pytest.mark.parametrize(
+    ("after_preset", "commands"),
+    [
+        # The schedule just selected: the setpoint is only stored.
+        (None, [("setHeatingTargetTemperature", [21.0])]),
+        # The device reports manual again: the setpoint starts a derogation.
+        ("report_manual", None),
+        # The preset was not applied: the zone is still manual.
+        ("fail", None),
+    ],
+)
+async def test_zone_control_zone_temperature_follows_the_preset_just_set(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    after_preset: str | None,
+    commands: list[tuple[str, list[Any]]] | None,
+) -> None:
+    """Test a temperature set right after a preset follows that preset."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {ATTR_ENTITY_ID: ZONE_CONTROL_ZONE.entity_id, ATTR_PRESET_MODE: "schedule"},
+        blocking=True,
+    )
+    if after_preset == "report_manual":
+        await _async_set_zone_program(hass, freezer, mock_client, "manu", "off")
+    elif after_preset == "fail":
+        await _async_end_execution(
+            hass,
+            freezer,
+            mock_client,
+            "exec-1",
+            ExecutionState.FAILED,
+            FailureType.PEER_DOWN,
+            [{"rank": 0}],
+        )
+
+    await _async_set_zone_setpoint(hass, 21.0)
+
+    sent = _sent_commands(mock_client)[-1]
+    if commands is not None:
+        assert sent == commands
+    else:
+        assert ("setDerogationOnOffState", ["on"]) in sent

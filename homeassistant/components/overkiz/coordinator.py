@@ -108,6 +108,8 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         # Derogation state the last write that changed it left, as the states
         # only follow once the refreshes that come after it have run.
         self.derogation_writes: dict[str, tuple[str, float]] = {}
+        # Mode of the program a zone was set to, until the device reports it.
+        self.mode_writes: dict[str, tuple[str, float]] = {}
         self._write_lock = asyncio.Lock()
         self._last_write_at: float | None = None
         self.areas = self._places_to_area(places) if places else None
@@ -207,6 +209,13 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         return values(sent) == values(commands)
 
+    def written_mode(self, device_url: str) -> str | None:
+        """Return the mode a recent write set a device to, if not reported yet."""
+        if (write := self.mode_writes.get(device_url)) is None:
+            return None
+        mode, written_at = write
+        return mode if monotonic() - written_at < 120 else None
+
     def is_derogation_written_on(self, device_url: str) -> bool:
         """Return whether a recent write turned the derogation of a device on."""
         if (write := self.derogation_writes.get(device_url)) is None:
@@ -255,6 +264,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             # The states have just been fetched again: the derogation they
             # report replaces the one a write left.
             self.derogation_writes.clear()
+            self.mode_writes.clear()
 
             # What waited for a running write, which is forgotten now, is sent.
             for key in list(self.pending_commands):
@@ -339,9 +349,15 @@ async def on_device_state_changed(
         device = coordinator.devices[event.device_url]
         device.states[state.name] = state
 
-        # The derogation the device reports replaces the one a write left.
+        # The derogation and the mode the device reports replace the ones a
+        # write left.
         if state.name == OverkizState.CORE_DEROGATION_ON_OFF:
             coordinator.derogation_writes.pop(event.device_url, None)
+        elif state.name in (
+            OverkizState.IO_PASS_APC_HEATING_MODE,
+            OverkizState.IO_PASS_APC_COOLING_MODE,
+        ):
+            coordinator.mode_writes.pop(event.device_url, None)
 
 
 @EVENT_HANDLERS.register(EventName.DEVICE_REMOVED)
@@ -429,6 +445,13 @@ def _track_derogation_writes(
 ) -> None:
     """Remember the derogation a finished write left on its device."""
     for record in records:
+        # A mode that was not written is not the one the device will report.
+        if new_state == ExecutionState.FAILED and any(
+            command.name == OverkizCommand.SET_PASS_APC_HEATING_MODE
+            for command in _written_commands(record)
+        ):
+            coordinator.mode_writes.pop(record["device_url"], None)
+
         for command in _written_commands(record):
             if command.name != OverkizCommand.SET_DEROGATION_ON_OFF_STATE:
                 continue

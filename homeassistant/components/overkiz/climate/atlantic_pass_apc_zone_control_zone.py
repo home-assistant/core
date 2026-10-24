@@ -1,6 +1,7 @@
 """Support for Atlantic Pass APC Heating Control."""
 
 from dataclasses import dataclass
+from time import monotonic
 from typing import Any, cast, override
 
 from propcache.api import cached_property
@@ -334,6 +335,21 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         return program_setpoints
 
+    def _follows_program_once_written(self) -> bool:
+        """Return whether the zone follows its program once the last writes apply.
+
+        A mode just written is only reported later: a temperature set right
+        after a preset must follow that preset, not the previous mode.
+        """
+
+        if (mode := self.coordinator.written_mode(self.device_url)) is not None:
+            return (
+                self.active_program_setpoints is not None
+                and mode == OverkizCommandParam.INTERNAL_SCHEDULING
+            )
+
+        return self.program_setpoints is not None
+
     @property
     @override
     def supported_features(self) -> ClimateEntityFeature:
@@ -513,6 +529,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             )
 
         await self.async_execute_and_refresh_modes(commands)
+        self.coordinator.mode_writes[self.device_url] = (mode, monotonic())
 
     @property
     @override
@@ -669,7 +686,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
             # While following the program, a single setpoint is only kept as the
             # manual one, which applies once the zone is switched to manual.
-            if self.program_setpoints is not None:
+            if self._follows_program_once_written():
                 if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
                     await self.async_execute_and_refresh_modes(
                         [
