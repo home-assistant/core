@@ -518,12 +518,15 @@ async def test_set_window_open_good(
     """Test set_window_open action with valid durations."""
     device = FritzDeviceClimateMock()
 
-    assert await setup_config_entry(
+    entry = await setup_config_entry(
         hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
+    assert entry
     assert fritz().update_devices.call_count == 1
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, device.ain)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.ain), entry.entry_id
+    )
     assert device_entry
 
     await hass.services.async_call(
@@ -545,15 +548,11 @@ async def test_set_window_open_good(
     [
         (
             {ATTR_DURATION: 0},
-            re.escape(
-                "value must be at least 1 for dictionary value @ data['duration']"
-            ),
+            re.escape("value must be at least 1 at 'duration'"),
         ),
         (
             {ATTR_DURATION: 86401},
-            re.escape(
-                "value must be at most 86400 for dictionary value @ data['duration']"
-            ),
+            re.escape("value must be at most 86400 at 'duration'"),
         ),
     ],
 )
@@ -566,12 +565,15 @@ async def test_set_window_open_bad(
     """Test set_window_open action with invalid durations."""
     device = FritzDeviceClimateMock()
 
-    assert await setup_config_entry(
+    entry = await setup_config_entry(
         hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
+    assert entry
     assert fritz().update_devices.call_count == 1
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, device.ain)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.ain), entry.entry_id
+    )
     assert device_entry
 
     with pytest.raises(probatio.error.MultipleInvalid, match=service_data[1]):
@@ -591,12 +593,15 @@ async def test_set_window_close(
     """Test set_window_close action."""
     device = FritzDeviceClimateMock()
 
-    assert await setup_config_entry(
+    entry = await setup_config_entry(
         hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
+    assert entry
     assert fritz().update_devices.call_count == 1
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, device.ain)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.ain), entry.entry_id
+    )
     assert device_entry
 
     await hass.services.async_call(
