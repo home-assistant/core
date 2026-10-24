@@ -293,6 +293,7 @@ FLOWS = {
         "ghost",
         "gios",
         "github",
+        "gkp",
         "glances",
         "goalzero",
         "gogogate2",

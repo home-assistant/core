@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "defrost": "mdi:snowflake"
+            }
+          }
+        }
+      }
+    }
+  }
+}

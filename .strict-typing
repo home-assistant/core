@@ -251,6 +251,7 @@ homeassistant.components.geocaching.*
 homeassistant.components.ghost.*
 homeassistant.components.gios.*
 homeassistant.components.github.*
+homeassistant.components.gkp.*
 homeassistant.components.glances.*
 homeassistant.components.go2rtc.*
 homeassistant.components.goalzero.*

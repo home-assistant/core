@@ -12,6 +12,7 @@ APPLICATION_CREDENTIALS = [
     "fitbit",
     "gentex_homelink",
     "geocaching",
+    "gkp",
     "google",
     "google_assistant_sdk",
     "google_drive",

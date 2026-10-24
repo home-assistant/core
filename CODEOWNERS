@@ -689,6 +689,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/gios/ @bieniu
 /homeassistant/components/github/ @timmo001 @ludeeus
 /tests/components/github/ @timmo001 @ludeeus
+/homeassistant/components/gkp/ @theobld-ww @AnthonyPerrier-FRRO
+/tests/components/gkp/ @theobld-ww @AnthonyPerrier-FRRO
 /homeassistant/components/glances/ @engrbm87
 /tests/components/glances/ @engrbm87
 /homeassistant/components/go2rtc/ @home-assistant/core
