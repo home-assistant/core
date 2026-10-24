@@ -224,8 +224,8 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="has_mic",
-        ufp_value="mic_volume",
-        ufp_enabled="feature_flags.has_mic",
+        ufp_public_value="mic_volume",
+        ufp_public_enabled_fn=operator.attrgetter("feature_flags.has_mic"),
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -248,7 +248,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         translation_key="doorbell_text",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_lcd_screen",
-        ufp_value="lcd_message.text",
+        ufp_public_value="lcd_message_text",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
