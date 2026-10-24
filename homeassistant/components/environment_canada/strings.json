@@ -14,8 +14,7 @@
       "user": {
         "data": {
           "language": "Weather information language",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "location": "[%key:common::config_flow::data::location%]",
           "station": "Weather station"
         },
         "description": "Select a weather station from the dropdown, or specify coordinates to use the closest station. The default coordinates are from your Home Assistant installation. Weather information can be retrieved in English or French.",
