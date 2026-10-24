@@ -183,8 +183,7 @@
           "state": {
             "default": "Default",
             "fast": "Fast",
-            "silent": "Silent",
-            "slow": "Slow"
+            "silent": "Silent"
           }
         }
       }
