@@ -68,6 +68,13 @@
       "samsungtv.turn_on": "Device is requested to turn on"
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "art_mode": {
+        "name": "Art mode"
+      }
+    }
+  },
   "exceptions": {
     "encrypted_mode_auth_failed": {
       "message": "Token and session ID are required in encrypted mode."
