@@ -156,6 +156,19 @@
           "switch": "Rocker switch"
         }
       },
+      "terminal_type": {
+        "name": "Sensor connection",
+        "state": {
+          "floor_sensor_connected": "Floor sensor connected",
+          "floor_sensor_displayed": "Cable temperature sensor (without regulation)",
+          "floor_sensor_displayed_and_used_for_regulation": "Cable temperature sensor (with regulation)",
+          "floor_sensor_used_for_regulation": "Floor sensor used for regulation",
+          "not_connected": "Not used",
+          "outdoor_sensor_connected": "Outdoor temperature sensor",
+          "volt_free_sensor_connected": "Volt-free sensor connected",
+          "volt_free_sensor_connected_and_used_for_operation": "Potential-free contact"
+        }
+      },
       "valve_type": {
         "name": "Valve type",
         "state": {
