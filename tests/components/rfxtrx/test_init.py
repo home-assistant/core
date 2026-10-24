@@ -1,5 +1,7 @@
 """The tests for the Rfxtrx component."""
 
+from collections.abc import Generator
+from datetime import timedelta
 from types import MappingProxyType
 from unittest.mock import ANY, Mock, call, patch
 
@@ -30,11 +32,28 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import ENTRY_VERSION
 from .conftest import get_device_identifier, setup_rfx_test_cfg
 
 SOME_PROTOCOLS = ["ac", "arc"]
+RELOAD_COOLDOWN = 10
+
+
+@pytest.fixture
+def reload_cooldown() -> Generator[None]:
+    """Keep subentry triggered reloads pending until time is advanced."""
+    with patch(
+        "homeassistant.components.rfxtrx.RELOAD_DEBOUNCE_COOLDOWN", RELOAD_COOLDOWN
+    ):
+        yield
+
+
+async def _async_run_pending_reload(hass: HomeAssistant) -> None:
+    """Advance time so the debounced reload runs."""
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=RELOAD_COOLDOWN))
+    await hass.async_block_till_done()
 
 
 async def test_fire_event(
@@ -202,36 +221,34 @@ async def test_rediscover_removed_device(
     mock_setup_entry.assert_not_called()
 
 
+@pytest.mark.usefixtures("reload_cooldown")
 async def test_automatic_add_syncs_device_lookup_before_subentry_creation(
     hass: HomeAssistant, rfxtrx: Mock
 ) -> None:
-    """Test a packet for a device just saved by a flow doesn't duplicate-add it.
-
-    The device lookup used for automatic discovery is cached and only
-    refreshed by a reload, so it must be re-synced against the entry's
-    current subentries before deciding a device is new - otherwise a
-    packet arriving before the flow's debounced reload runs would try to
-    add a subentry that already exists.
-    """
+    """Test a packet for a device just saved by a flow doesn't duplicate-add it."""
     mock_entry = await setup_rfx_test_cfg(hass, automatic_add=True, devices={})
 
-    with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
-        hass.config_entries.async_add_subentry(
-            mock_entry,
-            ConfigSubentry(
-                data=MappingProxyType({"event_code": ["0b1100100118cdea02010f70"]}),
-                subentry_type=SUBENTRY_TYPE_DEVICE,
-                title="AC 118cdea:2",
-                unique_id="11_0_118cdea:2",
-            ),
-        )
-        await hass.async_block_till_done()
+    hass.config_entries.async_add_subentry(
+        mock_entry,
+        ConfigSubentry(
+            data=MappingProxyType({"event_code": ["0b1100100118cdea02010f70"]}),
+            subentry_type=SUBENTRY_TYPE_DEVICE,
+            title="AC 118cdea:2",
+            unique_id="11_0_118cdea:2",
+        ),
+    )
+    await hass.async_block_till_done()
 
-        await rfxtrx.signal("0b1100100118cdea02010f70")
-
+    await rfxtrx.signal("0b1100100118cdea02010f70")
     assert len(mock_entry.subentries) == 1
 
+    await _async_run_pending_reload(hass)
+    assert mock_entry.state is ConfigEntryState.LOADED
+    assert len(mock_entry.subentries) == 1
+    assert hass.states.get("binary_sensor.ac_118cdea_2")
 
+
+@pytest.mark.usefixtures("reload_cooldown")
 async def test_automatic_add_syncs_device_lookup_after_reconfigure(
     hass: HomeAssistant, rfxtrx: Mock
 ) -> None:
@@ -243,28 +260,34 @@ async def test_automatic_add_syncs_device_lookup_after_reconfigure(
     )
     subentry = next(iter(mock_entry.subentries.values()))
 
-    with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
-        hass.config_entries.async_update_subentry(
-            mock_entry,
-            subentry,
-            data=MappingProxyType({"event_code": ["0b1100100118cdea02010f70"]}),
-            unique_id="11_0_118cdea:2",
-        )
-        await hass.async_block_till_done()
+    hass.config_entries.async_update_subentry(
+        mock_entry,
+        subentry,
+        data=MappingProxyType({"event_code": ["0b1100100118cdea02010f70"]}),
+        unique_id="11_0_118cdea:2",
+    )
+    await hass.async_block_till_done()
 
-        # A packet for the replacement address doesn't duplicate-add it.
-        await rfxtrx.signal("0b1100100118cdea02010f70")
-        assert len(mock_entry.subentries) == 1
+    # A packet for the replacement address doesn't duplicate-add it.
+    await rfxtrx.signal("0b1100100118cdea02010f70")
+    assert len(mock_entry.subentries) == 1
 
-        # A packet for the old address is a new, independent device,
-        # not merged into the reconfigured subentry.
-        await rfxtrx.signal("0b1100cd0213c7f230010f71")
-        assert len(mock_entry.subentries) == 2
+    # A packet for the old address is a new, independent device,
+    # not merged into the reconfigured subentry.
+    await rfxtrx.signal("0b1100cd0213c7f230010f71")
+    assert len(mock_entry.subentries) == 2
 
+    await _async_run_pending_reload(hass)
+    assert mock_entry.state is ConfigEntryState.LOADED
+    assert len(mock_entry.subentries) == 2
     updated_subentry = mock_entry.subentries[subentry.subentry_id]
     assert updated_subentry.data["event_code"] == ["0b1100100118cdea02010f70"]
+    # The reconfigured device keeps its entity ids.
+    assert hass.states.get("binary_sensor.ac_213c7f2_48")
+    assert hass.states.get("binary_sensor.ac_213c7f2_48_2")
 
 
+@pytest.mark.usefixtures("reload_cooldown")
 async def test_device_lookup_syncs_after_remove_and_re_add(
     hass: HomeAssistant, rfxtrx: Mock
 ) -> None:
@@ -276,24 +299,27 @@ async def test_device_lookup_syncs_after_remove_and_re_add(
     )
     old_subentry = next(iter(mock_entry.subentries.values()))
 
-    with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
-        hass.config_entries.async_remove_subentry(mock_entry, old_subentry.subentry_id)
-        new_subentry = ConfigSubentry(
-            data=MappingProxyType({"event_code": ["08200300a109000070"]}),
-            subentry_type=SUBENTRY_TYPE_DEVICE,
-            title=old_subentry.title,
-            unique_id=old_subentry.unique_id,
-        )
-        hass.config_entries.async_add_subentry(mock_entry, new_subentry)
-        await hass.async_block_till_done()
+    hass.config_entries.async_remove_subentry(mock_entry, old_subentry.subentry_id)
+    new_subentry = ConfigSubentry(
+        data=MappingProxyType({"event_code": ["08200300a109000070"]}),
+        subentry_type=SUBENTRY_TYPE_DEVICE,
+        title=old_subentry.title,
+        unique_id=old_subentry.unique_id,
+    )
+    hass.config_entries.async_add_subentry(mock_entry, new_subentry)
+    await hass.async_block_till_done()
 
-        await rfxtrx.signal("08200300a109000670")
+    await rfxtrx.signal("08200300a109000670")
 
+    await _async_run_pending_reload(hass)
+    assert mock_entry.state is ConfigEntryState.LOADED
     assert list(mock_entry.subentries) == [new_subentry.subentry_id]
     assert mock_entry.subentries[new_subentry.subentry_id].data["event_code"] == [
         "08200300a109000070",
         "08200300a109000670",
     ]
+    assert hass.states.get("binary_sensor.kd101_smoke_detector_a10900_32")
+    assert hass.states.get("siren.kd101_smoke_detector_a10900_32")
 
 
 @pytest.mark.parametrize("automatic_add", [True, False])
