@@ -1,0 +1,94 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Only standard light actions are provided.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No integration-specific actions are provided.
+  docs-conditions:
+    status: exempt
+    comment: No integration-specific conditions are provided.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: No integration-specific triggers are provided.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not provide an options flow.
+  docs-installation-parameters:
+    status: exempt
+    comment: Setup only requires confirming the discovered controller.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: The controller does not require authentication.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery: done
+  discovery-update-info: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: This integration manages one fixed device per config entry.
+  entity-category:
+    status: exempt
+    comment: The light entity provides the main device function.
+  entity-device-class:
+    status: exempt
+    comment: Light entities do not support device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration only provides a primary light entity.
+  entity-translations:
+    status: exempt
+    comment: The light entity uses the device name.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The light entity uses the default platform icon.
+  reconfiguration-flow:
+    status: exempt
+    comment: The config flow has no user-configurable settings.
+  repair-issues:
+    status: exempt
+    comment: This integration has no known issues that require repair.
+  stale-devices:
+    status: exempt
+    comment: This integration manages one fixed device per config entry.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
