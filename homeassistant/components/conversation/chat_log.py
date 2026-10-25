@@ -721,6 +721,9 @@ class ChatLog:
             llm_context.context.user_id if llm_context.context else None,
             # The prompt and tools depend on the area and timer support.
             llm_context.device_id,
+            tuple(user_llm_hass_api)
+            if isinstance(user_llm_hass_api, list)
+            else user_llm_hass_api,
         )
 
         if (

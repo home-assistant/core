@@ -127,19 +127,67 @@ class CountingAPI(llm.API):
 
 
 @pytest.mark.parametrize(
-    ("agent_id", "user_id", "device_id", "extra_system_prompt", "instances"),
+    (
+        "agent_id",
+        "user_id",
+        "device_id",
+        "llm_hass_api",
+        "extra_system_prompt",
+        "instances",
+    ),
     [
-        pytest.param("mock-agent-id", None, None, None, 1, id="same_agent"),
         pytest.param(
-            "mock-agent-id", None, None, "Be brief", 1, id="same_extra_prompt"
+            "mock-agent-id", None, None, ["counting"], None, 1, id="same_agent"
         ),
-        pytest.param("other-agent-id", None, None, None, 2, id="other_agent"),
-        pytest.param("mock-agent-id", "other-user-id", None, None, 2, id="other_user"),
         pytest.param(
-            "mock-agent-id", None, "other-device-id", None, 2, id="other_device"
+            "mock-agent-id",
+            None,
+            None,
+            ["counting"],
+            "Be brief",
+            1,
+            id="same_extra_prompt",
         ),
-        pytest.param("mock-agent-id", None, None, "Be long", 2, id="new_extra_prompt"),
-        pytest.param(None, None, None, None, 2, id="no_agent"),
+        pytest.param(
+            "other-agent-id", None, None, ["counting"], None, 2, id="other_agent"
+        ),
+        pytest.param(
+            "mock-agent-id",
+            "other-user-id",
+            None,
+            ["counting"],
+            None,
+            2,
+            id="other_user",
+        ),
+        pytest.param(
+            "mock-agent-id",
+            None,
+            "other-device-id",
+            ["counting"],
+            None,
+            2,
+            id="other_device",
+        ),
+        pytest.param(
+            "mock-agent-id",
+            None,
+            None,
+            ["counting", "assist"],
+            None,
+            2,
+            id="other_apis",
+        ),
+        pytest.param(
+            "mock-agent-id",
+            None,
+            None,
+            ["counting"],
+            "Be long",
+            2,
+            id="new_extra_prompt",
+        ),
+        pytest.param(None, None, None, ["counting"], None, 2, id="no_agent"),
     ],
 )
 async def test_llm_api_reuse(
@@ -148,6 +196,7 @@ async def test_llm_api_reuse(
     agent_id: str | None,
     user_id: str | None,
     device_id: str | None,
+    llm_hass_api: list[str],
     extra_system_prompt: str | None,
     instances: int,
 ) -> None:
@@ -174,7 +223,7 @@ async def test_llm_api_reuse(
         with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
             await chat_log.async_provide_llm_data(
                 llm_context,
-                user_llm_hass_api=["counting"],
+                user_llm_hass_api=llm_hass_api,
                 user_extra_system_prompt=extra_system_prompt,
             )
 
