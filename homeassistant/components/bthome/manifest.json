@@ -22,5 +22,5 @@
   "documentation": "https://www.home-assistant.io/integrations/bthome",
   "iot_class": "local_push",
   "loggers": ["bthome_ble"],
-  "requirements": ["bthome-ble==3.23.4"]
+  "requirements": ["bthome-ble==3.24.0"]
 }
