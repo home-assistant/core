@@ -2,6 +2,7 @@
 
 from typing import override
 
+from homeassistant.components.frontend import async_get_version
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.llm import (
@@ -13,21 +14,9 @@ from homeassistant.helpers.llm import (
     ToolResult,
 )
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.loader import async_get_integration
 from homeassistant.util.json import JsonObjectType
 
 from . import DOMAIN
-
-_FRONTEND_REQUIREMENT = "home-assistant-frontend=="
-
-
-async def _async_get_frontend_version(hass: HomeAssistant) -> str | None:
-    """Return the version of the frontend package that Home Assistant requires."""
-    integration = await async_get_integration(hass, "frontend")
-    for requirement in integration.requirements:
-        if requirement.startswith(_FRONTEND_REQUIREMENT):
-            return requirement.removeprefix(_FRONTEND_REQUIREMENT)
-    return None
 
 
 class GetSystemInfoTool(Tool):
@@ -36,9 +25,9 @@ class GetSystemInfoTool(Tool):
     name = "system_health__get_system_info"
     title = "Get system info"
     description = (
-        "Get the installation type of Home Assistant and the versions of Home "
-        "Assistant Core, the frontend, Python, the operating system, and the "
-        "Supervisor. Use this for example to fill in a bug report."
+        "Get the installation type of Home Assistant, the time zone, and the "
+        "versions of Home Assistant Core, the frontend, Python, the operating "
+        "system, and the Supervisor. Use this for example to fill in a bug report."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -54,11 +43,12 @@ class GetSystemInfoTool(Tool):
         result: JsonObjectType = {
             "installation_type": info["installation_type"],
             "core_version": info["version"],
-            "frontend_version": await _async_get_frontend_version(hass),
+            "frontend_version": await async_get_version(hass),
             "python_version": info["python_version"],
             "os_name": info["os_name"],
             "os_version": info["os_version"],
             "arch": info["arch"],
+            "timezone": info["timezone"],
         }
         # Only set on installations with a Supervisor
         if supervisor_version := info.get("supervisor"):

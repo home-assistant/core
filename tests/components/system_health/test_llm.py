@@ -35,6 +35,7 @@ BASE_RESULT = {
     "os_name": "Linux",
     "os_version": "6.12.0",
     "arch": "x86_64",
+    "timezone": "Europe/Amsterdam",
 }
 
 
