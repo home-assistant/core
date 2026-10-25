@@ -223,19 +223,26 @@ class EsphomeAssistSatelliteWakeWordSelect(
 
         option = self._attr_current_option
 
-        if (
-            (self._wake_word_index == 0)
-            and (len(config.active_wake_words) == 1)
-            and (option in (None, NO_WAKE_WORD))
+        if (option in (None, NO_WAKE_WORD)) and (
+            self._wake_word_index < len(config.active_wake_words)
         ):
-            option = next(
-                (
-                    wake_word
-                    for wake_word, wake_word_id in self._wake_words.items()
-                    if wake_word_id == config.active_wake_words[0]
-                ),
-                None,
-            )
+            # Adopt the wake word the device reports for this slot, unless another
+            # slot already uses it.
+            active_wake_word_id = config.active_wake_words[self._wake_word_index]
+            taken_wake_word_ids = {
+                wake_word_id
+                for index, wake_word_id in self._entry_data.assist_satellite_wake_words.items()
+                if index != self._wake_word_index
+            }
+            if active_wake_word_id not in taken_wake_word_ids:
+                option = next(
+                    (
+                        wake_word
+                        for wake_word, wake_word_id in self._wake_words.items()
+                        if wake_word_id == active_wake_word_id
+                    ),
+                    None,
+                )
 
         if (
             (option is None)

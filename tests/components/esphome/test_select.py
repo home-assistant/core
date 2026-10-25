@@ -482,3 +482,40 @@ async def test_wake_word_select_first_active_wake_word(
     state_2 = hass.states.get("select.test_wake_word_2")
     assert state_2 is not None
     assert state_2.state == NO_WAKE_WORD
+
+
+async def test_wake_word_select_multiple_active_wake_words(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test each wake word select uses the active wake word of its own slot."""
+    device_config = AssistSatelliteConfiguration(
+        available_wake_words=[
+            AssistSatelliteWakeWord("okay_nabu", "Okay Nabu", ["en"]),
+            AssistSatelliteWakeWord("hey_jarvis", "Hey Jarvis", ["en"]),
+        ],
+        active_wake_words=["okay_nabu", "hey_jarvis"],
+        max_active_wake_words=2,
+    )
+    mock_client.get_voice_assistant_configuration.return_value = device_config
+
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.ANNOUNCE
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    state = hass.states.get("select.test_wake_word")
+    assert state is not None
+    assert state.state == "Okay Nabu"
+
+    state_2 = hass.states.get("select.test_wake_word_2")
+    assert state_2 is not None
+    assert state_2.state == "Hey Jarvis"
