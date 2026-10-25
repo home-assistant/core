@@ -35,7 +35,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -225,6 +225,42 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         """Return the active child's attributes."""
         active_child = self._child_state
         return active_child.attributes.get(attr_name) if active_child else None
+
+    def _universal_players(self) -> list[UniversalMediaPlayer]:
+        """Return all universal media players."""
+        component: EntityComponent[MediaPlayerEntity] = self.hass.data[
+            MEDIA_PLAYER_DOMAIN
+        ]
+        return [
+            entity
+            for entity in component.entities
+            if isinstance(entity, UniversalMediaPlayer)
+        ]
+
+    def _universal_entity_id(self, entity_id: str) -> str:
+        """Return the universal player whose active child is entity_id, if any."""
+        if self._child_state and entity_id == self._child_state.entity_id:
+            return self.entity_id
+        for player in self._universal_players():
+            if player.extra_state_attributes.get(ATTR_ACTIVE_CHILD) == entity_id:
+                return player.entity_id
+        return entity_id
+
+    def _controlled_entity_id(self, entity_id: str) -> str:
+        """Return the media player controlled by a (nested) universal player."""
+        players = {player.entity_id: player for player in self._universal_players()}
+        seen: set[str] = set()
+        while (player := players.get(entity_id)) is not None and entity_id not in seen:
+            seen.add(entity_id)
+            active_child = player.extra_state_attributes.get(ATTR_ACTIVE_CHILD)
+            if active_child is None:
+                raise HomeAssistantError(
+                    translation_domain="universal",
+                    translation_key="no_active_child",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            entity_id = active_child
+        return entity_id
 
     async def _async_call_service(
         self, service_name, service_data=None, allow_override=False
@@ -470,6 +506,15 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     @property
     @override
+    def group_members(self) -> list[str] | None:
+        """List of players grouped with the active child, as universal players."""
+        members = self._child_attr(MediaPlayerEntityStateAttribute.GROUP_MEMBERS)
+        if members is None:
+            return None
+        return list(dict.fromkeys(map(self._universal_entity_id, members)))
+
+    @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         flags: MediaPlayerEntityFeature = self._child_attr(
@@ -706,6 +751,21 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         await self._async_call_service(
             MediaPlayerService.REPEAT_SET, data, allow_override=True
         )
+
+    @override
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join the players controlled by group_members with the active child."""
+        data = {
+            MediaPlayerServiceArgument.GROUP_MEMBERS: [
+                self._controlled_entity_id(entity_id) for entity_id in group_members
+            ]
+        }
+        await self._async_call_service(MediaPlayerService.JOIN, data)
+
+    @override
+    async def async_unjoin_player(self) -> None:
+        """Remove the active child from its group."""
+        await self._async_call_service(MediaPlayerService.UNJOIN)
 
     @override
     async def async_toggle(self) -> None:
