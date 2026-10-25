@@ -20,6 +20,7 @@ from homeassistant.helpers.llm import (
     ToolInput,
     ToolResult,
 )
+from homeassistant.loader import Integration, async_get_integrations
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import DOMAIN
@@ -102,7 +103,9 @@ def _error_result(error: str) -> ToolResult:
     return ToolResult(data={"error": error}, error=True)
 
 
-def _format_config_entry(entry: ConfigEntry, short_id: str) -> JsonObjectType:
+def _format_config_entry(
+    entry: ConfigEntry, short_id: str, integration: Integration | Exception
+) -> JsonObjectType:
     """Format a ConfigEntry into a compact dictionary for LLM consumption."""
     result: JsonObjectType = {
         "entry_id": short_id,
@@ -116,6 +119,13 @@ def _format_config_entry(entry: ConfigEntry, short_id: str) -> JsonObjectType:
         result["source"] = entry.source
     if (reason := _resolve_entry_reason(entry)) is not None:
         result["reason"] = reason
+    # Only custom integrations get these, to keep the output short.
+    if isinstance(integration, Integration) and not integration.is_built_in:
+        result["custom_integration"] = True
+        if integration.version is not None:
+            result["integration_version"] = str(integration.version)
+        if integration.issue_tracker is not None:
+            result["issue_tracker"] = integration.issue_tracker
     return result
 
 
@@ -127,7 +137,10 @@ class GetConfigEntriesTool(Tool):
     description = (
         "Retrieve installed Home Assistant config entries (configured integrations "
         "and helpers). Use this to inspect which integrations are set up, check their "
-        "status ('loaded', 'error', 'not_loaded'), and see translated error reasons."
+        "status ('loaded', 'error', 'not_loaded'), and see translated error reasons. "
+        "Entries of custom integrations have 'custom_integration' set. Custom "
+        "integrations are not part of Home Assistant: report their issues to "
+        "their 'issue_tracker'."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -186,10 +199,16 @@ class GetConfigEntriesTool(Tool):
             allowed_states = _STATUS_STATES[status_filter]
             entries = [entry for entry in entries if entry.state in allowed_states]
 
+        integrations = await async_get_integrations(
+            hass, {entry.domain for entry in entries}
+        )
+
         return ToolResult(
             data={
                 "result": list[JsonValueType](
-                    _format_config_entry(entry, short_ids[entry.entry_id])
+                    _format_config_entry(
+                        entry, short_ids[entry.entry_id], integrations[entry.domain]
+                    )
                     for entry in entries
                 )
             }
