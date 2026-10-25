@@ -565,6 +565,11 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_haven._tcp.local.": [
+        {
+            "domain": "haven_iaq",
+        },
+    ],
     "_heos-audio._tcp.local.": [
         {
             "domain": "heos",
@@ -734,6 +739,11 @@ ZEROCONF = {
     "_hwenergy._tcp.local.": [
         {
             "domain": "homewizard",
+        },
+    ],
+    "_indi-allsky._tcp.local.": [
+        {
+            "domain": "indi_allsky",
         },
     ],
     "_iometer._tcp.local.": [

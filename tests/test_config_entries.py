@@ -14,6 +14,20 @@ from aiohttp import RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    async_capture_events,
+    async_fire_time_changed,
+    flush_store,
+    help_test_all,
+    import_and_test_deprecated_constant,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow, loader
@@ -62,21 +76,6 @@ from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_comp
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
-
-from .common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    MockPlatform,
-    async_capture_events,
-    async_fire_time_changed,
-    flush_store,
-    help_test_all,
-    import_and_test_deprecated_constant,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 
 def _get_flow_context(
@@ -159,22 +158,20 @@ async def test_setup_race_only_setup_once(hass: HomeAssistant) -> None:
         await slow_setup_future
         return True
 
-    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setup entry."""
         slow = entry.data["slow"]
         if slow:
             await slow_config_entry_setup_future
-            return True
+            return
         nonlocal attempts
         attempts += 1
         if attempts == 1:
             raise ConfigEntryNotReady
         await fast_config_entry_setup_future
-        return True
 
-    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock unload entry."""
-        return True
 
     mock_integration(
         hass,
@@ -236,8 +233,8 @@ async def test_call_setup_entry(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
-    mock_setup_entry = AsyncMock(return_value=True)
-    mock_migrate_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
+    mock_migrate_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -265,8 +262,8 @@ async def test_call_setup_entry_without_reload_support(hass: HomeAssistant) -> N
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
-    mock_setup_entry = AsyncMock(return_value=True)
-    mock_migrate_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
+    mock_migrate_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -288,13 +285,11 @@ async def test_call_setup_entry_without_reload_support(hass: HomeAssistant) -> N
     assert not entry.supports_unload
 
 
-@pytest.mark.parametrize("return_value", [True, None])
 @pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
 async def test_call_async_migrate_entry(
     hass: HomeAssistant,
     major_version: int,
     minor_version: int,
-    return_value: bool | None,
 ) -> None:
     """Test we call <component>.async_migrate_entry when version mismatch."""
     entry = MockConfigEntry(
@@ -304,8 +299,8 @@ async def test_call_async_migrate_entry(
 
     entry.add_to_hass(hass)
 
-    mock_migrate_entry = AsyncMock(return_value=return_value)
-    mock_setup_entry = AsyncMock(return_value=return_value)
+    mock_migrate_entry = AsyncMock(return_value=None)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -353,7 +348,7 @@ async def test_call_async_migrate_entry_failure(
     assert not entry.supports_unload
 
     mock_migrate_entry = AsyncMock(return_value=migrate_result)
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -396,7 +391,7 @@ async def test_call_async_migrate_entry_failure_exception(
     assert not entry.supports_unload
 
     mock_migrate_entry = AsyncMock(side_effect=Exception)
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -435,8 +430,8 @@ async def test_migrate_from_higher_version_not_supported(
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
-    mock_migrate_entry = AsyncMock(return_value=True)
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_migrate_entry = AsyncMock(return_value=None)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -529,15 +524,6 @@ async def test_migrate_from_higher_version_not_supported(
             id="Other exceptions",
         ),
         pytest.param(
-            AsyncMock(return_value=False),
-            config_entries.ConfigEntryState.MIGRATION_ERROR,
-            "Error migrating entry Mock Title for comp",
-            False,  # No logging
-            None,
-            None,
-            id="Returns False",
-        ),
-        pytest.param(
             AsyncMock(
                 side_effect=OAuth2TokenRequestReauthError(
                     domain="comp",
@@ -573,7 +559,7 @@ async def test_migrate_handle_exceptions(
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -617,10 +603,10 @@ async def test_migrate_raise_configentrynotready(
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_migrate_entry = AsyncMock(
-        side_effect=[ConfigEntryNotReady("Migration not ready yet"), True]
+        side_effect=[ConfigEntryNotReady("Migration not ready yet"), None]
     )
 
     mock_integration(
@@ -672,7 +658,7 @@ async def test_call_async_migrate_entry_failure_not_supported(
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
@@ -695,7 +681,7 @@ async def test_call_async_migrate_entry_not_supported_minor_version(
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
@@ -716,18 +702,15 @@ async def test_remove_entry(
 
     async def mock_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock setting up entry."""
         await hass.config_entries.async_forward_entry_setups(entry, ["light"])
-        return True
 
     async def mock_unload_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock unloading an entry."""
-        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
-        assert result
-        return result
+        await hass.config_entries.async_unload_platforms_or_raise(entry, ["light"])
 
     remove_entry_calls = []
 
@@ -822,10 +805,9 @@ async def test_remove_subentry(
 
     async def mock_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock setting up entry."""
         await hass.config_entries.async_forward_entry_setups(entry, ["light"])
-        return True
 
     mock_remove_entry = AsyncMock(return_value=None)
 
@@ -1015,7 +997,7 @@ async def test_reload_entry_cancels_reauth(
     issue_id = f"config_entry_reauth_test_{entry.entry_id}"
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
 
-    mock_setup_entry.return_value = True
+    mock_setup_entry.return_value = None
     mock_setup_entry.side_effect = None
     await manager.async_reload(entry.entry_id)
 
@@ -1028,8 +1010,8 @@ async def test_remove_entry_handles_callback_error(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that exceptions in the remove callback are handled."""
-    mock_setup_entry = AsyncMock(return_value=True)
-    mock_unload_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
+    mock_unload_entry = AsyncMock(return_value=None)
     mock_remove_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
@@ -1064,7 +1046,7 @@ async def test_remove_entry_raises(
 ) -> None:
     """Test if a component raises while removing entry."""
 
-    async def mock_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def mock_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock unload entry function."""
         raise Exception("BROKEN")  # noqa: TRY002
 
@@ -1092,7 +1074,7 @@ async def test_remove_entry_if_not_loaded(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that we can remove an entry that is not loaded."""
-    mock_unload_entry = AsyncMock(return_value=True)
+    mock_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("comp", async_unload_entry=mock_unload_entry))
 
@@ -1118,7 +1100,7 @@ async def test_remove_entry_if_integration_deleted(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that we can remove an entry when the integration is deleted."""
-    mock_unload_entry = AsyncMock(return_value=True)
+    mock_unload_entry = AsyncMock(return_value=None)
 
     MockConfigEntry(domain="test", entry_id="test1").add_to_manager(manager)
     MockConfigEntry(domain="comp", entry_id="test2").add_to_manager(manager)
@@ -1142,7 +1124,7 @@ async def test_add_entry_calls_setup_entry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test we call setup_config_entry."""
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
@@ -1333,7 +1315,7 @@ async def test_saving_and_loading(
     """Test that we're saving and loading correctly."""
     mock_integration(
         hass,
-        MockModule("test", async_setup_entry=AsyncMock(return_value=True)),
+        MockModule("test", async_setup_entry=AsyncMock(return_value=None)),
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -1588,12 +1570,12 @@ async def test_forward_entry_sets_up_component(hass: HomeAssistant) -> None:
         domain="original", state=config_entries.ConfigEntryState.LOADED
     )
 
-    mock_original_setup_entry = AsyncMock(return_value=True)
+    mock_original_setup_entry = AsyncMock(return_value=None)
     integration = mock_integration(
         hass, MockModule("original", async_setup_entry=mock_original_setup_entry)
     )
 
-    mock_forwarded_setup_entry = AsyncMock(return_value=True)
+    mock_forwarded_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass, MockModule("forwarded", async_setup_entry=mock_forwarded_setup_entry)
     )
@@ -1614,7 +1596,7 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(
         domain="original", state=config_entries.ConfigEntryState.LOADED
     )
 
-    mock_original_setup_entry = AsyncMock(return_value=True)
+    mock_original_setup_entry = AsyncMock(return_value=None)
     integration = mock_integration(
         hass, MockModule("original", async_setup_entry=mock_original_setup_entry)
     )
@@ -1960,7 +1942,7 @@ async def test_setup_raise_not_ready(
     assert entry.reason == "The internet connection is offline"
 
     mock_setup_entry.side_effect = None
-    mock_setup_entry.return_value = True
+    mock_setup_entry.return_value = None
 
     hass.async_run_hass_job(p_setup, None)
     await hass.async_block_till_done()
@@ -2023,7 +2005,7 @@ async def test_setup_not_ready_exponential_backoff(
 
     attempts = 0
 
-    async def _mock_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def _mock_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         nonlocal attempts
         attempts += 1
         raise ConfigEntryNotReady
@@ -2193,7 +2175,7 @@ async def test_reload_during_setup_retrying_waits(hass: HomeAssistant) -> None:
     load_attempts = []
     sleep_duration = 0
 
-    async def _mock_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def _mock_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setup entry."""
         nonlocal sleep_duration
         await asyncio.sleep(sleep_duration)
@@ -2242,7 +2224,7 @@ async def test_create_entry_next_flow(
         """Mock setup."""
         return True
 
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -2356,7 +2338,7 @@ async def test_create_entry_next_flow_invalid(
         """Mock setup."""
         return True
 
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -2420,7 +2402,7 @@ async def test_create_entry_options(
         )
         return True
 
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -2465,7 +2447,7 @@ async def test_on_create_entry_with_subentry_flow(
         """Mock setup."""
         return True
 
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -2589,7 +2571,7 @@ async def test_on_create_entry_with_options_flow(
         """Mock setup."""
         return True
 
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -2723,7 +2705,7 @@ async def test_next_flow_with_unsupported_flow_type(
         """Mock setup."""
         return True
 
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -2788,7 +2770,7 @@ async def test_invalid_on_create_entry(
         """Mock setup."""
         return True
 
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -2960,7 +2942,7 @@ async def test_create_entry_subentries(
         )
         return True
 
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -3390,11 +3372,9 @@ async def test_entry_subentry_unsupported(
         )
 
 
-@pytest.mark.parametrize("setup_result", [True, None])
 async def test_entry_setup_succeed(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
-    setup_result: bool | None,
 ) -> None:
     """Test that we can setup an entry."""
     entry = MockConfigEntry(
@@ -3403,7 +3383,7 @@ async def test_entry_setup_succeed(
     entry.add_to_hass(hass)
 
     mock_setup = AsyncMock(return_value=True)
-    mock_setup_entry = AsyncMock(return_value=setup_result)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -3417,23 +3397,318 @@ async def test_entry_setup_succeed(
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize("setup_result", [False, "foo"])
-async def test_entry_setup_failure(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries, setup_result: Any
+@pytest.mark.parametrize(
+    (
+        "built_in",
+        "setup_result",
+        "state",
+        "translation_key",
+        "reported",
+        "unsupported_logs",
+    ),
+    [
+        pytest.param(
+            True,
+            True,
+            config_entries.ConfigEntryState.SETUP_ERROR,
+            None,
+            True,
+            [],
+            id="core_true",
+        ),
+        pytest.param(
+            True,
+            False,
+            config_entries.ConfigEntryState.SETUP_ERROR,
+            None,
+            True,
+            [],
+            id="core_false",
+        ),
+        pytest.param(
+            True,
+            "foo",
+            config_entries.ConfigEntryState.SETUP_ERROR,
+            "async_setup_entry_failed",
+            False,
+            ["comp.async_setup_entry returned 'foo', which is not supported"],
+            id="core_not_bool",
+        ),
+        pytest.param(
+            False,
+            True,
+            config_entries.ConfigEntryState.LOADED,
+            None,
+            False,
+            [],
+            id="custom_true",
+        ),
+        pytest.param(
+            False,
+            False,
+            config_entries.ConfigEntryState.SETUP_ERROR,
+            "async_setup_entry_failed",
+            False,
+            [],
+            id="custom_false",
+        ),
+        pytest.param(
+            False,
+            "foo",
+            config_entries.ConfigEntryState.SETUP_ERROR,
+            "async_setup_entry_failed",
+            False,
+            ["comp.async_setup_entry returned 'foo', which is not supported"],
+            id="custom_not_bool",
+        ),
+    ],
+)
+async def test_entry_setup_return_value(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+    built_in: bool,
+    setup_result: Any,
+    state: config_entries.ConfigEntryState,
+    translation_key: str | None,
+    reported: bool,
+    unsupported_logs: list[str],
 ) -> None:
-    """Test setup fails if async_setup_entry returns False or a non-boolean."""
+    """Test how the return value of async_setup_entry is handled."""
     entry = MockConfigEntry(
         domain="comp", state=config_entries.ConfigEntryState.NOT_LOADED
     )
     entry.add_to_hass(hass)
 
     mock_setup_entry = AsyncMock(return_value=setup_result)
-    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_integration(
+        hass, MockModule("comp", async_setup_entry=mock_setup_entry), built_in=built_in
+    )
     mock_platform(hass, "comp.config_flow", None)
 
-    assert not await manager.async_setup(entry.entry_id)
+    await manager.async_setup(entry.entry_id)
     assert len(mock_setup_entry.mock_calls) == 1
-    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.state is state
+    assert entry.error_reason_translation_key == translation_key
+    assert (
+        "returns a boolean from async_setup_entry, which should return None"
+        in caplog.text
+    ) is reported
+    for message in unsupported_logs:
+        assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "built_in",
+        "unload_result",
+        "state",
+        "translation_key",
+        "reported",
+        "unsupported_logs",
+    ),
+    [
+        pytest.param(
+            True,
+            True,
+            config_entries.ConfigEntryState.FAILED_UNLOAD,
+            None,
+            True,
+            [],
+            id="core_true",
+        ),
+        pytest.param(
+            True,
+            False,
+            config_entries.ConfigEntryState.FAILED_UNLOAD,
+            None,
+            True,
+            [],
+            id="core_false",
+        ),
+        pytest.param(
+            True,
+            "foo",
+            config_entries.ConfigEntryState.FAILED_UNLOAD,
+            "async_unload_entry_failed",
+            False,
+            ["comp.async_unload_entry returned 'foo', which is not supported"],
+            id="core_not_bool",
+        ),
+        pytest.param(
+            False,
+            True,
+            config_entries.ConfigEntryState.NOT_LOADED,
+            None,
+            False,
+            [],
+            id="custom_true",
+        ),
+        pytest.param(
+            False,
+            False,
+            config_entries.ConfigEntryState.FAILED_UNLOAD,
+            "async_unload_entry_failed",
+            False,
+            [],
+            id="custom_false",
+        ),
+        pytest.param(
+            False,
+            "foo",
+            config_entries.ConfigEntryState.FAILED_UNLOAD,
+            "async_unload_entry_failed",
+            False,
+            ["comp.async_unload_entry returned 'foo', which is not supported"],
+            id="custom_not_bool",
+        ),
+    ],
+)
+async def test_entry_unload_return_value(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+    built_in: bool,
+    unload_result: Any,
+    state: config_entries.ConfigEntryState,
+    translation_key: str | None,
+    reported: bool,
+    unsupported_logs: list[str],
+) -> None:
+    """Test how the return value of async_unload_entry is handled."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+
+    mock_unload_entry = AsyncMock(return_value=unload_result)
+    mock_integration(
+        hass,
+        MockModule("comp", async_unload_entry=mock_unload_entry),
+        built_in=built_in,
+    )
+
+    assert await manager.async_unload(entry.entry_id) is (
+        state is config_entries.ConfigEntryState.NOT_LOADED
+    )
+    assert len(mock_unload_entry.mock_calls) == 1
+    assert entry.state is state
+    assert entry.error_reason_translation_key == translation_key
+    assert (
+        "returns a boolean from async_unload_entry, which should return None"
+        in caplog.text
+    ) is reported
+    for message in unsupported_logs:
+        assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "built_in",
+        "migrate_result",
+        "state",
+        "translation_key",
+        "reported",
+        "unsupported_logs",
+    ),
+    [
+        pytest.param(
+            True,
+            True,
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            None,
+            True,
+            [],
+            id="core_true",
+        ),
+        pytest.param(
+            True,
+            False,
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            None,
+            True,
+            [],
+            id="core_false",
+        ),
+        pytest.param(
+            True,
+            "foo",
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            "async_migrate_entry_failed",
+            False,
+            ["comp.async_migrate_entry returned 'foo', which is not supported"],
+            id="core_not_bool",
+        ),
+        pytest.param(
+            False,
+            True,
+            config_entries.ConfigEntryState.LOADED,
+            None,
+            False,
+            [],
+            id="custom_true",
+        ),
+        pytest.param(
+            False,
+            False,
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            "async_migrate_entry_failed",
+            False,
+            [],
+            id="custom_false",
+        ),
+        pytest.param(
+            False,
+            "foo",
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            "async_migrate_entry_failed",
+            False,
+            ["comp.async_migrate_entry returned 'foo', which is not supported"],
+            id="custom_not_bool",
+        ),
+    ],
+)
+async def test_entry_migrate_return_value(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+    built_in: bool,
+    migrate_result: Any,
+    state: config_entries.ConfigEntryState,
+    translation_key: str | None,
+    reported: bool,
+    unsupported_logs: list[str],
+) -> None:
+    """Test how the return value of async_migrate_entry is handled."""
+    entry = MockConfigEntry(domain="comp", version=1)
+    entry.add_to_hass(hass)
+
+    mock_migrate_entry = AsyncMock(return_value=migrate_result)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=AsyncMock(return_value=None),
+            async_migrate_entry=mock_migrate_entry,
+        ),
+        built_in=built_in,
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 2
+
+    with mock_config_flow("comp", TestFlow):
+        await manager.async_setup(entry.entry_id)
+    assert len(mock_migrate_entry.mock_calls) == 1
+    assert entry.state is state
+    assert entry.error_reason_translation_key == translation_key
+    assert (
+        "returns a boolean from async_migrate_entry, which should return None"
+        in caplog.text
+    ) is reported
+    for message in unsupported_logs:
+        assert message in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -3456,7 +3731,7 @@ async def test_entry_setup_invalid_state(
     entry.add_to_hass(hass)
 
     mock_setup = AsyncMock(return_value=True)
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -3472,17 +3747,21 @@ async def test_entry_setup_invalid_state(
 
 
 @pytest.mark.parametrize(
-    ("unload_result", "expected_result", "expected_state", "has_runtime_data"),
+    ("unload_error", "expected_result", "expected_state", "has_runtime_data"),
     [
-        (True, True, config_entries.ConfigEntryState.NOT_LOADED, False),
         (None, True, config_entries.ConfigEntryState.NOT_LOADED, False),
-        (False, False, config_entries.ConfigEntryState.FAILED_UNLOAD, True),
+        (
+            ConfigEntryError("Unload failed"),
+            False,
+            config_entries.ConfigEntryState.FAILED_UNLOAD,
+            True,
+        ),
     ],
 )
 async def test_entry_unload(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
-    unload_result: bool | None,
+    unload_error: ConfigEntryError | None,
     expected_result: bool,
     expected_state: config_entries.ConfigEntryState,
     has_runtime_data: bool,
@@ -3497,12 +3776,13 @@ async def test_entry_unload(
 
     async def async_unload_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool | None:
+    ) -> None:
         """Mock unload entry."""
         unload_entry_calls.append(None)
         verify_runtime_data()
         assert entry.state is config_entries.ConfigEntryState.UNLOAD_IN_PROGRESS
-        return unload_result
+        if unload_error:
+            raise unload_error
 
     entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
@@ -3588,7 +3868,7 @@ async def test_entry_unload_failed_to_load(
     entry = MockConfigEntry(domain="comp", state=state)
     entry.add_to_hass(hass)
 
-    async_unload_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
 
@@ -3613,7 +3893,7 @@ async def test_entry_unload_invalid_state(
     entry = MockConfigEntry(domain="comp", state=state)
     entry.add_to_hass(hass)
 
-    async_unload_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
 
@@ -3634,8 +3914,8 @@ async def test_entry_reload_succeed(
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    async_setup_entry = AsyncMock(return_value=True)
-    async_unload_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -3669,8 +3949,8 @@ async def test_entry_cannot_be_loaded_twice(
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    async_setup_entry = AsyncMock(return_value=True)
-    async_unload_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -3698,8 +3978,8 @@ async def test_entry_setup_without_lock_raises(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    async_setup_entry = AsyncMock(return_value=True)
-    async_unload_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -3728,8 +4008,8 @@ async def test_entry_unload_without_lock_raises(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    async_setup_entry = AsyncMock(return_value=True)
-    async_unload_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -3758,8 +4038,8 @@ async def test_entry_remove_without_lock_raises(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    async_setup_entry = AsyncMock(return_value=True)
-    async_unload_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -3800,8 +4080,8 @@ async def test_entry_reload_not_loaded(
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    async_setup_entry = AsyncMock(return_value=True)
-    async_unload_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -3830,9 +4110,11 @@ async def test_async_retry_migration(
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    async_setup_entry = AsyncMock(return_value=True)
-    async_unload_entry = AsyncMock(return_value=True)
-    async_migrate_entry = AsyncMock(side_effect=[False, False, True])
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
+    async_migrate_entry = AsyncMock(
+        side_effect=[ConfigEntryError, ConfigEntryError, None]
+    )
 
     mock_integration(
         hass,
@@ -3924,9 +4206,9 @@ async def test_async_retry_migration_on_disabled_entry(
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    async_setup_entry = AsyncMock(return_value=True)
-    async_unload_entry = AsyncMock(return_value=True)
-    async_migrate_entry = AsyncMock(side_effect=[False, True])
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
+    async_migrate_entry = AsyncMock(side_effect=[ConfigEntryError, None])
 
     mock_integration(
         hass,
@@ -4002,8 +4284,8 @@ async def test_entry_reload_error(
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    async_setup_entry = AsyncMock(return_value=True)
-    async_unload_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -4035,8 +4317,8 @@ async def test_entry_disable_succeed(
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    async_setup_entry = AsyncMock(return_value=True)
-    async_unload_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -4082,15 +4364,14 @@ async def test_entry_disable_hides_issues(
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
     events_on_unload: list[int] = []
 
-    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         events_on_unload.append(len(events))
-        return True
 
     mock_integration(
         hass,
         MockModule(
             "comp",
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
             async_unload_entry=async_unload_entry,
         ),
     )
@@ -4148,16 +4429,15 @@ async def test_entry_disable_entity_state(
 
     async def mock_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock setting up entry."""
         await hass.config_entries.async_forward_entry_setups(entry, ["light"])
-        return True
 
     async def mock_unload_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock unloading an entry."""
-        return await hass.config_entries.async_unload_platforms(entry, ["light"])
+        await hass.config_entries.async_unload_platforms_or_raise(entry, ["light"])
 
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
@@ -4218,7 +4498,7 @@ async def test_entry_disable_without_reload_support(
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -4260,7 +4540,7 @@ async def test_entry_enable_without_reload_support(
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -4364,8 +4644,8 @@ async def test_reload_entry_entity_registry_works(
     )
     config_entry.supports_unload = True
     config_entry.add_to_hass(hass)
-    mock_setup_entry = AsyncMock(return_value=True)
-    mock_unload_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
+    mock_unload_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -4433,12 +4713,12 @@ async def test_reload_entry_entity_registry_removed_entry(
         )
         config_entry.supports_unload = True
         config_entry.add_to_hass(hass)
-        unload_entry_mocks[domain] = AsyncMock(return_value=True)
+        unload_entry_mocks[domain] = AsyncMock(return_value=None)
         mock_integration(
             hass,
             MockModule(
                 domain,
-                async_setup_entry=AsyncMock(return_value=True),
+                async_setup_entry=AsyncMock(return_value=None),
                 async_unload_entry=unload_entry_mocks[domain],
             ),
         )
@@ -4505,7 +4785,7 @@ async def test_unique_id_persisted(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that a unique ID is stored in the config entry."""
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
@@ -4543,8 +4823,8 @@ async def test_unique_id_existing_entry(
         unique_id="mock-unique-id",
     ).add_to_hass(hass)
 
-    async_setup_entry = AsyncMock(return_value=True)
-    async_unload_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
     async_remove_entry = AsyncMock(return_value=True)
 
     mock_integration(
@@ -4977,7 +5257,7 @@ async def test_finish_flow_aborts_progress(
     """Test finishing a flow aborts other in-progress flows."""
     mock_integration(
         hass,
-        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=None)),
     )
     mock_platform(hass, "comp.config_flow", None)
 
@@ -5035,7 +5315,7 @@ async def test_unique_id_ignore(
     expected_entry_discovery_keys: dict,
 ) -> None:
     """Test that we can ignore flows that are in progress and have a unique ID."""
-    async_setup_entry = AsyncMock(return_value=False)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
 
@@ -5143,7 +5423,7 @@ async def test_manual_add_overrides_ignored_entry_singleton(
     )
     entry.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
@@ -5432,7 +5712,7 @@ async def test_async_current_entries_does_not_skip_ignore_non_user(
     )
     entry.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
@@ -5469,7 +5749,7 @@ async def test_async_current_entries_explicit_skip_ignore(
     )
     entry.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
@@ -5510,7 +5790,7 @@ async def test_async_current_entries_explicit_include_ignore(
     )
     entry.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
@@ -5539,7 +5819,7 @@ async def test_partial_flows_hidden(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test flows without cur_step that haven't finished init."""
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
 
@@ -5609,7 +5889,7 @@ async def test_async_setup_init_entry(
         )
         return True
 
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -5656,7 +5936,7 @@ async def test_async_setup_init_entry_completes_before_loaded_event_fires(
         )
         return True
 
-    async_setup_entry = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -5714,10 +5994,9 @@ async def test_async_setup_update_entry(hass: HomeAssistant) -> None:
         )
         return True
 
-    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setting up an entry."""
         assert entry.data["value"] == "updated"
-        return True
 
     mock_integration(
         hass,
@@ -5777,7 +6056,7 @@ async def test_flow_with_default_discovery(
     """Test finishing a discovery flow removes the unique ID."""
     mock_integration(
         hass,
-        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=None)),
     )
     mock_platform(hass, "comp.config_flow", None)
 
@@ -6022,7 +6301,7 @@ async def test_flow_same_device_multiple_sources(
     """Test discovery of the same devices from multiple discovery sources."""
     mock_integration(
         hass,
-        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=None)),
     )
     mock_platform(hass, "comp.config_flow", None)
 
@@ -6134,8 +6413,8 @@ async def test_entry_reload_calls_on_unload_listeners(
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
-    mock_setup_entry = AsyncMock(return_value=True)
-    async_unload_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
+    async_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -6208,8 +6487,8 @@ async def test_entry_state_change_calls_listener(
         MockModule(
             "comp",
             async_setup=AsyncMock(return_value=True),
-            async_setup_entry=AsyncMock(return_value=True),
-            async_unload_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
+            async_unload_entry=AsyncMock(return_value=None),
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
@@ -6270,8 +6549,8 @@ async def test_entry_state_change_wrapped_in_on_unload(
         MockModule(
             "comp",
             async_setup=AsyncMock(return_value=True),
-            async_setup_entry=AsyncMock(return_value=True),
-            async_unload_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
+            async_unload_entry=AsyncMock(return_value=None),
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
@@ -6302,8 +6581,8 @@ async def test_entry_state_change_listener_removed(
         MockModule(
             "comp",
             async_setup=AsyncMock(return_value=True),
-            async_setup_entry=AsyncMock(return_value=True),
-            async_unload_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
+            async_unload_entry=AsyncMock(return_value=None),
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
@@ -6342,8 +6621,8 @@ async def test_entry_state_change_error_does_not_block_transition(
         MockModule(
             "comp",
             async_setup=AsyncMock(return_value=True),
-            async_setup_entry=AsyncMock(return_value=True),
-            async_unload_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
+            async_unload_entry=AsyncMock(return_value=None),
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
@@ -6395,7 +6674,7 @@ async def test_setup_raise_entry_error_from_first_coordinator_update(
     entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
 
-    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setup entry with a simple coordinator."""
 
         async def _async_update_data():
@@ -6411,7 +6690,6 @@ async def test_setup_raise_entry_error_from_first_coordinator_update(
         )
 
         await coordinator.async_config_entry_first_refresh()
-        return True
 
     mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
     mock_platform(hass, "test.config_flow", None)
@@ -6436,7 +6714,7 @@ async def test_setup_not_raise_entry_error_from_future_coordinator_update(
     entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
 
-    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setup entry with a simple coordinator."""
 
         async def _async_update_data():
@@ -6452,7 +6730,6 @@ async def test_setup_not_raise_entry_error_from_future_coordinator_update(
         )
 
         await coordinator.async_refresh()
-        return True
 
     mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
     mock_platform(hass, "test.config_flow", None)
@@ -6516,7 +6793,7 @@ async def test_setup_raise_auth_failed_from_first_coordinator_update(
     entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
 
-    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setup entry with a simple coordinator."""
 
         async def _async_update_data():
@@ -6532,7 +6809,6 @@ async def test_setup_raise_auth_failed_from_first_coordinator_update(
         )
 
         await coordinator.async_config_entry_first_refresh()
-        return True
 
     mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
     mock_platform(hass, "test.config_flow", None)
@@ -6569,7 +6845,7 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(
     entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
 
-    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setup entry with a simple coordinator."""
 
         async def _async_update_data():
@@ -6585,7 +6861,6 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(
         )
 
         await coordinator.async_refresh()
-        return True
 
     mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
     mock_platform(hass, "test.config_flow", None)
@@ -6709,7 +6984,7 @@ async def test_scheduling_reload_cancels_setup_retry(
     assert len(cancel_mock.mock_calls) == 0
 
     mock_setup_entry.side_effect = None
-    mock_setup_entry.return_value = True
+    mock_setup_entry.return_value = None
     hass.config_entries.async_schedule_reload(entry.entry_id)
 
     assert len(cancel_mock.mock_calls) == 1
@@ -6781,7 +7056,7 @@ async def test_async_abort_entries_match(
         options={"vendor": "options"},
     ).add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
@@ -6837,7 +7112,7 @@ async def test_async_abort_entries_match_context(
     )
     entry.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
 
@@ -6926,7 +7201,7 @@ async def test_async_abort_entries_match_options_flow(
     original_entry = MockConfigEntry(domain="test_abort", data={})
     original_entry.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("test_abort", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "test_abort.config_flow", None)
@@ -7078,17 +7353,19 @@ async def test_entry_reload_concurrency(
     async_setup = AsyncMock(return_value=True)
     loaded = 1
 
-    async def _async_setup_entry(*args, **kwargs):
+    async def _async_setup_entry(*args: Any, **kwargs: Any) -> None:
         await asyncio.sleep(0)
         nonlocal loaded
         loaded += 1
-        return loaded == 1
+        if loaded != 1:
+            raise ConfigEntryError
 
-    async def _async_unload_entry(*args, **kwargs):
+    async def _async_unload_entry(*args: Any, **kwargs: Any) -> None:
         await asyncio.sleep(0)
         nonlocal loaded
         loaded -= 1
-        return loaded == 0
+        if loaded != 0:
+            raise ConfigEntryError
 
     mock_integration(
         hass,
@@ -7121,17 +7398,19 @@ async def test_entry_reload_concurrency_not_setup_setup(
     async_setup = AsyncMock(return_value=True)
     loaded = 0
 
-    async def _async_setup_entry(*args, **kwargs):
+    async def _async_setup_entry(*args: Any, **kwargs: Any) -> None:
         await asyncio.sleep(0)
         nonlocal loaded
         loaded += 1
-        return loaded == 1
+        if loaded != 1:
+            raise ConfigEntryError
 
-    async def _async_unload_entry(*args, **kwargs):
+    async def _async_unload_entry(*args: Any, **kwargs: Any) -> None:
         await asyncio.sleep(0)
         nonlocal loaded
         loaded -= 1
-        return loaded == 0
+        if loaded != 0:
+            raise ConfigEntryError
 
     mock_integration(
         hass,
@@ -7156,14 +7435,12 @@ async def test_unique_id_update_while_setup_in_progress(
 ) -> None:
     """Test config entry updated while setup is in progress."""
 
-    async def mock_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def mock_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setting up entry."""
         await asyncio.sleep(0.1)
-        return True
 
-    async def mock_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def mock_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock unloading an entry."""
-        return True
 
     hass.config.components.add("comp")
     entry = MockConfigEntry(
@@ -7251,7 +7528,7 @@ async def test_reauth(
     entry2 = MockConfigEntry(title="test_title", domain="test")
     entry2.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "test.config_flow", None)
 
@@ -7321,7 +7598,7 @@ async def test_reauth_reconfigure_missing_entry(
     entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "test.config_flow", None)
 
@@ -7352,7 +7629,7 @@ async def test_reauth_reconfigure_missing_entry_component(
     entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "test.config_flow", None)
 
@@ -7384,7 +7661,7 @@ async def test_reconfigure(
     entry2 = MockConfigEntry(title="test_title", domain="test")
     entry2.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "test.config_flow", None)
 
@@ -7474,7 +7751,7 @@ async def test_get_active_flows(
     """Test the async_get_active_flows helper."""
     entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "test.config_flow", None)
 
@@ -7507,7 +7784,7 @@ async def test_async_wait_component_dynamic(hass: HomeAssistant) -> None:
     """Test async_wait_component for a config entry which is dynamically loaded."""
     entry = MockConfigEntry(title="test_title", domain="test")
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "test.config_flow", None)
 
@@ -7535,7 +7812,7 @@ async def test_async_wait_component_startup(hass: HomeAssistant) -> None:
         await setup_stall.wait()
         return True
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule("test", async_setup=mock_setup, async_setup_entry=mock_setup_entry),
@@ -7938,8 +8215,8 @@ async def test_update_entry_and_reload(
 
     comp = MockModule(
         "comp",
-        async_setup_entry=AsyncMock(return_value=True),
-        async_unload_entry=AsyncMock(return_value=True),
+        async_setup_entry=AsyncMock(return_value=None),
+        async_unload_entry=AsyncMock(return_value=None),
     )
     mock_integration(hass, comp)
     mock_platform(hass, "comp.config_flow", None)
@@ -8028,8 +8305,8 @@ async def test_update_entry_and_reload_with_listener_logs(
 
     comp = MockModule(
         "comp",
-        async_setup_entry=AsyncMock(return_value=True),
-        async_unload_entry=AsyncMock(return_value=True),
+        async_setup_entry=AsyncMock(return_value=None),
+        async_unload_entry=AsyncMock(return_value=None),
     )
     mock_integration(hass, comp)
     mock_platform(hass, "comp.config_flow", None)
@@ -8107,8 +8384,8 @@ async def test_update_entry_without_reload(
 
     comp = MockModule(
         "comp",
-        async_setup_entry=AsyncMock(return_value=True),
-        async_unload_entry=AsyncMock(return_value=True),
+        async_setup_entry=AsyncMock(return_value=None),
+        async_unload_entry=AsyncMock(return_value=None),
     )
     mock_integration(hass, comp)
     mock_platform(hass, "comp.config_flow", None)
@@ -8186,8 +8463,8 @@ async def test_update_entry_and_abort_with_custom_reason(
 
     comp = MockModule(
         "comp",
-        async_setup_entry=AsyncMock(return_value=True),
-        async_unload_entry=AsyncMock(return_value=True),
+        async_setup_entry=AsyncMock(return_value=None),
+        async_unload_entry=AsyncMock(return_value=None),
     )
     mock_integration(hass, comp)
     mock_platform(hass, "comp.config_flow", None)
@@ -8595,12 +8872,12 @@ async def test_update_subentry_reload_and_abort(
     entry.add_to_hass(hass)
     subentry = entry.subentries[subentry_id]
 
-    setup_entry = AsyncMock(return_value=True)
+    setup_entry = AsyncMock(return_value=None)
 
     comp = MockModule(
         "comp",
         async_setup_entry=setup_entry,
-        async_unload_entry=AsyncMock(return_value=True),
+        async_unload_entry=AsyncMock(return_value=None),
     )
     mock_integration(hass, comp)
     mock_platform(hass, "comp.config_flow", None)
@@ -8659,12 +8936,12 @@ async def test_update_subentry_reload_with_listener(hass: HomeAssistant) -> None
     entry.add_to_hass(hass)
     entry.add_update_listener(AsyncMock())
 
-    setup_entry = AsyncMock(return_value=True)
+    setup_entry = AsyncMock(return_value=None)
 
     comp = MockModule(
         "comp",
         async_setup_entry=setup_entry,
-        async_unload_entry=AsyncMock(return_value=True),
+        async_unload_entry=AsyncMock(return_value=None),
     )
     mock_integration(hass, comp)
     mock_platform(hass, "comp.config_flow", None)
@@ -9367,7 +9644,7 @@ async def test_reload_during_setup(hass: HomeAssistant) -> None:
     in_setup = False
     setup_calls = 0
 
-    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setting up an entry."""
         nonlocal in_setup
         nonlocal setup_calls
@@ -9377,14 +9654,13 @@ async def test_reload_during_setup(hass: HomeAssistant) -> None:
         setup_start_future.set_result(None)
         await setup_finish_future
         in_setup = False
-        return True
 
     mock_integration(
         hass,
         MockModule(
             "comp",
             async_setup_entry=mock_async_setup_entry,
-            async_unload_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=None),
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
@@ -9420,18 +9696,15 @@ async def test_raise_wrong_exception_in_forwarded_platform(
 
     async def mock_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock setting up entry."""
         await hass.config_entries.async_forward_entry_setups(entry, ["light"])
-        return True
 
     async def mock_unload_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock unloading an entry."""
-        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
-        assert result
-        return result
+        await hass.config_entries.async_unload_platforms_or_raise(entry, ["light"])
 
     mock_remove_entry = AsyncMock(return_value=None)
 
@@ -9485,7 +9758,7 @@ async def test_config_entry_unloaded_during_platform_setups(
 
     async def mock_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock setting up entry."""
 
         # Call async_forward_entry_setups in a non-tracked task
@@ -9497,15 +9770,12 @@ async def test_config_entry_unloaded_during_platform_setups(
             )
 
         hass.loop.call_soon(_late_setup)
-        return True
 
     async def mock_unload_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock unloading an entry."""
-        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
-        assert result
-        return result
+        await hass.config_entries.async_unload_platforms_or_raise(entry, ["light"])
 
     mock_remove_entry = AsyncMock(return_value=None)
 
@@ -9561,7 +9831,7 @@ async def test_non_awaited_async_forward_entry_setups(
 
     async def mock_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock setting up entry."""
         # Call async_forward_entry_setups without awaiting it
         # This is not allowed and will raise a warning
@@ -9569,15 +9839,12 @@ async def test_non_awaited_async_forward_entry_setups(
         task = create_eager_task(
             hass.config_entries.async_forward_entry_setups(entry, ["light"])
         )
-        return True
 
     async def mock_unload_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock unloading an entry."""
-        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
-        assert result
-        return result
+        await hass.config_entries.async_unload_platforms_or_raise(entry, ["light"])
 
     mock_remove_entry = AsyncMock(return_value=None)
 
@@ -9632,7 +9899,7 @@ async def test_config_entry_unloaded_during_platform_setup(
 
     async def mock_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock setting up entry."""
 
         # Call async_forward_entry_setup in a non-tracked task
@@ -9644,15 +9911,12 @@ async def test_config_entry_unloaded_during_platform_setup(
             )
 
         hass.loop.call_soon(_late_setup)
-        return True
 
     async def mock_unload_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock unloading an entry."""
-        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
-        assert result
-        return result
+        await hass.config_entries.async_unload_platforms_or_raise(entry, ["light"])
 
     mock_remove_entry = AsyncMock(return_value=None)
 
@@ -9707,7 +9971,7 @@ async def test_config_entry_late_platform_setup(
 
     async def mock_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock setting up entry."""
 
         # Call async_forward_entry_setup in a non-tracked task
@@ -9719,15 +9983,12 @@ async def test_config_entry_late_platform_setup(
             )
 
         hass.loop.call_soon(_late_setup)
-        return True
 
     async def mock_unload_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Mock unloading an entry."""
-        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
-        assert result
-        return result
+        await hass.config_entries.async_unload_platforms_or_raise(entry, ["light"])
 
     mock_remove_entry = AsyncMock(return_value=None)
 
@@ -9989,8 +10250,8 @@ async def test_async_loaded_entries(
     entry3.add_to_hass(hass)
 
     mock_setup = AsyncMock(return_value=True)
-    mock_setup_entry = AsyncMock(return_value=True)
-    mock_unload_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
+    mock_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -10558,7 +10819,7 @@ async def test_abort_if_unique_id_mismatch(
     )
     entry.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "test.config_flow", None)
@@ -10830,7 +11091,7 @@ async def test_create_entry_reauth_reconfigure_fails(
     )
     entry.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "test.config_flow", None)
@@ -10915,7 +11176,7 @@ async def test_unique_id_collision_issues(
     """Test issue registry issues are created and remove on unique id collision."""
     assert len(issue_registry.issues) == 0
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     for i in range(3):
         mock_integration(
             hass, MockModule(f"test{i + 1}", async_setup_entry=mock_setup_entry)
@@ -10991,6 +11252,39 @@ async def test_unique_id_collision_issues(
     assert not issue_registry.issues
 
 
+async def test_unique_id_collision_issue_keeps_ignore(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored unique id collision issue is kept while the collision persists."""
+    issue_id = "config_entry_unique_id_collision_test1_not_unique"
+    mock_integration(
+        hass, MockModule("test1", async_setup_entry=AsyncMock(return_value=None))
+    )
+    mock_platform(hass, "test1.config_flow", None)
+    entries = [
+        MockConfigEntry(domain="test1", unique_id="not_unique") for _ in range(3)
+    ]
+    for entry in entries:
+        await manager.async_add(entry)
+    ir.async_ignore_issue(hass, HOMEASSISTANT_DOMAIN, issue_id, True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    await manager.async_remove(entries[0].entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    # The issue is updated with the new entry count, not removed and created again
+    assert [event.data["action"] for event in events] == ["update"]
+
+    await manager.async_remove(entries[1].entry_id)
+
+    assert not issue_registry.issues
+
+
 async def test_context_no_leak(hass: HomeAssistant) -> None:
     """Test ensure that config entry context does not leak.
 
@@ -11000,7 +11294,7 @@ async def test_context_no_leak(hass: HomeAssistant) -> None:
     connected_future = asyncio.Future()
     bg_tasks = []
 
-    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setup entry."""
 
         async def _async_set_runtime_data():
@@ -11010,11 +11304,8 @@ async def test_context_no_leak(hass: HomeAssistant) -> None:
 
         bg_tasks.append(hass.loop.create_task(_async_set_runtime_data()))
 
-        return True
-
-    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock unload entry."""
-        return True
 
     mock_integration(
         hass,
@@ -11067,7 +11358,7 @@ async def test_options_flow_config_entry(
     original_entry = MockConfigEntry(domain="test", data={})
     original_entry.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "test.config_flow", None)
@@ -11195,13 +11486,12 @@ async def test_options_flow_automatic_reload(
     )
     original_entry.add_to_hass(hass)
 
-    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setup entry."""
         for _ in range(number_of_update_listeners):
             entry.add_update_listener(Mock())
-        return True
 
-    unload_entry_mock = AsyncMock(return_value=True)
+    unload_entry_mock = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -11259,7 +11549,7 @@ async def test_options_flow_set_config_entry_fails(
     original_entry = MockConfigEntry(domain="my_integration", data={})
     original_entry.add_to_hass(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass, MockModule("my_integration", async_setup_entry=mock_setup_entry)
@@ -11387,7 +11677,7 @@ async def test_create_entry_existing_unique_id(
 
     assert len(hass.config_entries.async_entries(domain)) == 1
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
 
     mock_integration(hass, MockModule(domain, async_setup_entry=mock_setup_entry))
     mock_platform(hass, f"{domain}.config_flow", None)
@@ -11640,7 +11930,7 @@ async def test_config_flow_create_entry_with_next_flow(hass: HomeAssistant) -> N
             )
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
     mock_integration(hass, MockModule("test2"))
@@ -11670,10 +11960,9 @@ async def test_canceled_exceptions_are_propagated(
     start = asyncio.Event()
     abort = asyncio.Event()
 
-    async def _setup(_: HomeAssistant, __: ConfigEntry) -> bool:
+    async def _setup(_: HomeAssistant, __: ConfigEntry) -> None:
         start.set()
         await abort.wait()
-        return True
 
     mock_integration(hass, MockModule("test", async_setup_entry=_setup))
     mock_platform(hass, "test.config_flow", None)
@@ -11697,7 +11986,7 @@ async def test_discovery_flow_dismiss_protected_on_configure(
     """Test that discovery flows are marked dismiss protected when user configures."""
     mock_integration(
         hass,
-        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=None)),
     )
     mock_platform(hass, "comp.config_flow", None)
 
@@ -11759,7 +12048,7 @@ async def test_async_dismiss_discovery_flows(
     """Test dismissing discovery flows skips the ones the user is working through."""
     mock_integration(
         hass,
-        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=None)),
     )
     mock_platform(hass, "comp.config_flow", None)
 
@@ -11826,7 +12115,7 @@ async def test_user_flow_not_dismiss_protected_on_configure(
     """Test that user flows are not marked dismiss protected when configured."""
     mock_integration(
         hass,
-        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=None)),
     )
     mock_platform(hass, "comp.config_flow", None)
 
@@ -12042,7 +12331,7 @@ async def test_unload_platforms_or_raise(
         hass,
         MockModule(
             "test",
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
             async_unload_entry=mock_unload_entry,
         ),
     )

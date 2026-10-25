@@ -10,7 +10,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import UpdateEntity
+    from .entity import UpdateEntity
 
 DOMAIN: Final = "update"
 DATA_COMPONENT: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)
@@ -65,3 +65,18 @@ class UpdateDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(UpdateDeviceClass))
+
+
+class UpdateService(StrEnum):
+    """Store keys for update services."""
+
+    CLEAR_SKIPPED = "clear_skipped"
+    INSTALL = "install"
+    SKIP = "skip"
+
+
+class UpdateServiceArgument(StrEnum):
+    """Store keys for update service arguments."""
+
+    BACKUP = "backup"
+    VERSION = "version"

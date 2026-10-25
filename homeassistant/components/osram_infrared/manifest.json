@@ -1,6 +1,7 @@
 {
   "domain": "osram_infrared",
   "name": "OSRAM Infrared",
+  "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@freeDom-"],
   "config_flow": true,
   "dependencies": ["infrared"],

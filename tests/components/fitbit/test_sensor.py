@@ -5,6 +5,8 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests_mock.mocker import Mocker
 from syrupy.assertion import SnapshotAssertion
@@ -27,9 +29,6 @@ from .conftest import (
     TIMESERIES_API_URL_FORMAT,
     timeseries_response,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEVICE_RESPONSE_CHARGE_2 = {
     "battery": "Medium",

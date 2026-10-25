@@ -17,6 +17,7 @@ from midealocal.devices.ea import DeviceAttributes as EAAttributes, MideaEADevic
 from midealocal.devices.ec import DeviceAttributes as ECAttributes, MideaECDevice
 from midealocal.devices.ed import DeviceAttributes as EDAttributes
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.midea.sensor import SENSOR_ENTITIES
@@ -27,8 +28,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DummyDevice, SetDeviceAttribute, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(

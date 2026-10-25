@@ -13,7 +13,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '1.0.0.0',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -29,7 +29,7 @@
     'name': 'NRGkick Test',
     'name_by_user': None,
     'serial_number': 'TEST123456',
-    'sw_version': None,
+    'sw_version': '4.1.0.0',
     'via_device_id': None,
   })
 # ---

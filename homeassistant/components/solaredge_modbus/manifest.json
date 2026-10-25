@@ -1,6 +1,7 @@
 {
   "domain": "solaredge_modbus",
   "name": "SolarEdge Modbus",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "dependencies": ["modbus", "usb"],

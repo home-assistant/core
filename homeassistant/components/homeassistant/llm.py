@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -25,12 +26,14 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.llm import (
     LLM_API_ASSIST,
+    LLM_API_HOME_ASSISTANT,
     LLMContext,
     Tool,
     ToolAnnotations,
     ToolInput,
     ToolResult,
 )
+from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from .const import DOMAIN
@@ -39,6 +42,9 @@ from .exposed_entities import async_should_expose
 # Domains bucketed out of the exposed-entity overview.
 CALENDAR_DOMAIN = "calendar"
 SCRIPT_DOMAIN = "script"
+
+TEMPLATE_RENDER_TIMEOUT = 3
+TEMPLATE_MAX_OUTPUT = 16 * 1024
 
 NO_ENTITIES_PROMPT = (
     "Only if the user wants to control a device, tell them to expose entities "
@@ -334,11 +340,78 @@ class GetLiveContextTool(Tool):
         return ToolResult(data={"result": "\n".join(prompt)})
 
 
+class RenderTemplateTool(Tool):
+    """Tool for rendering a template."""
+
+    name = "homeassistant__render_template"
+    title = "Render template"
+    description = (
+        "Render a Home Assistant Jinja2 template and return the output as a string. "
+        "Templates can read the state and attributes of all entities and use "
+        "Home Assistant template functions, for example for areas, devices, "
+        "labels, and time."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required(
+                "template", description="The Jinja2 template to render."
+            ): cv.string,
+            probatio.Optional(
+                "variables",
+                description=(
+                    "Variables available to the template, for example sample "
+                    "trigger data: {'trigger': {'to_state': {'state': 'on'}}}."
+                ),
+            ): dict,
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Render the template."""
+        args = self.parameters(tool_input.tool_args)
+        variables = args.get("variables")
+        template = Template(args["template"], hass)
+        try:
+            # Renders in a thread first, so a slow template cannot block the event loop.
+            if await template.async_render_will_timeout(
+                TEMPLATE_RENDER_TIMEOUT, variables, strict=True
+            ):
+                return ToolResult(
+                    data={
+                        "error": "Template rendering exceeded the maximum time of "
+                        f"{TEMPLATE_RENDER_TIMEOUT} seconds"
+                    },
+                    error=True,
+                )
+            result = template.async_render(variables, parse_result=False, strict=True)
+        except TemplateError as err:
+            return ToolResult(data={"error": str(err)}, error=True)
+        if len(result) > TEMPLATE_MAX_OUTPUT:
+            return ToolResult(
+                data={
+                    "error": f"Template output of {len(result)} characters exceeded "
+                    f"the maximum of {TEMPLATE_MAX_OUTPUT} characters"
+                },
+                error=True,
+            )
+        return ToolResult(data={"result": result})
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
 ) -> LLMTools | None:
-    """Return the GetLiveContext tool and the smart home context prompt."""
+    """Return the homeassistant LLM tools for the given API."""
+    if api_id == LLM_API_HOME_ASSISTANT:
+        return LLMTools(tools=[RenderTemplateTool()])
+
     if api_id != LLM_API_ASSIST:
         return None
 

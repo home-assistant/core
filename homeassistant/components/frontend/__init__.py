@@ -17,11 +17,10 @@ from yarl import URL
 from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, StaticPathConfig
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, ActiveConnection
-from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_PANELS_UPDATED
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.const import EVENT_PANELS_UPDATED
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
@@ -29,8 +28,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
+from .const import DOMAIN
 from .helpers import (
-    CONF_NAME_DARK,
     CONF_THEMES,
     DATA_DEFAULT_DARK_THEME,
     DATA_DEFAULT_THEME,
@@ -38,13 +37,11 @@ from .helpers import (
     DATA_THEMES_STORE,
     DEFAULT_THEME,
     MANIFEST_JSON,
-    THEMES_SAVE_DELAY,
     VALUE_NO_THEME,
-    async_update_theme_and_fire_event,
-    validate_selected_theme,
     validate_themes,
 )
 from .pr_download import download_pr_artifact
+from .services import async_setup_services
 from .storage import (
     async_setup_frontend_storage,
     async_system_store as async_system_store,
@@ -52,7 +49,6 @@ from .storage import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "frontend"
 CONF_EXTRA_HTML_URL = "extra_html_url"
 CONF_EXTRA_HTML_URL_ES5 = "extra_html_url_es5"
 CONF_EXTRA_MODULE_URL = "extra_module_url"
@@ -115,8 +111,23 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-SERVICE_SET_THEME = "set_theme"
-SERVICE_RELOAD_THEMES = "reload_themes"
+__all__ = [
+    "CONF_THEMES",
+    "DEFAULT_THEME",
+    "DOMAIN",
+    "MANIFEST_JSON",
+    "VALUE_NO_THEME",
+    "IndexView",
+    "UrlManager",
+    "add_extra_js_url",
+    "add_manifest_json_key",
+    "async_get_theme_names",
+    "async_panel_exists",
+    "async_register_built_in_panel",
+    "async_remove_panel",
+    "async_system_store",
+    "remove_extra_js_url",
+]
 
 
 class UrlManager:
@@ -288,6 +299,12 @@ def async_remove_panel(
 def async_panel_exists(hass: HomeAssistant, frontend_url_path: str) -> bool:
     """Return if a panel is registered for the given frontend URL path."""
     return frontend_url_path in hass.data.get(DATA_PANELS, {})
+
+
+@callback
+def async_get_theme_names(hass: HomeAssistant) -> list[str]:
+    """Return the sorted names of the user-defined themes."""
+    return sorted(hass.data.get(DATA_THEMES, {}).keys())
 
 
 def add_extra_js_url(hass: HomeAssistant, url: str, es5: bool = False) -> None:
@@ -522,6 +539,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_WS_SUBSCRIBERS] = set()
 
     await _async_setup_themes(hass, conf.get(CONF_THEMES))
+    async_setup_services(hass)
 
     return True
 
@@ -529,7 +547,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def _async_setup_themes(
     hass: HomeAssistant, themes: dict[str, Any] | None
 ) -> None:
-    """Set up themes data and services."""
+    """Set up themes data."""
     hass.data[DATA_THEMES] = themes or {}
 
     store = hass.data[DATA_THEMES_STORE] = Store(
@@ -548,90 +566,6 @@ async def _async_setup_themes(
 
     if dark_theme_name == DEFAULT_THEME or dark_theme_name in hass.data[DATA_THEMES]:
         hass.data[DATA_DEFAULT_DARK_THEME] = dark_theme_name
-
-    @callback
-    def set_theme(call: ServiceCall) -> None:
-        """Set backend-preferred theme."""
-
-        def _update_hass_theme(theme: str, light: bool) -> None:
-            theme_key = DATA_DEFAULT_THEME if light else DATA_DEFAULT_DARK_THEME
-            if theme == VALUE_NO_THEME:
-                to_set = DEFAULT_THEME if light else None
-            else:
-                _LOGGER.info(
-                    "Theme %s set as default %s theme",
-                    theme,
-                    "light" if light else "dark",
-                )
-                to_set = theme
-            hass.data[theme_key] = to_set
-
-        name = call.data.get(CONF_NAME)
-        if name is not None and CONF_MODE in call.data:
-            mode = call.data.get("mode", "light")
-            light_mode = mode == "light"
-            _update_hass_theme(name, light_mode)
-        else:
-            name_dark = call.data.get(CONF_NAME_DARK)
-            if name:
-                _update_hass_theme(name, True)
-            if name_dark:
-                _update_hass_theme(name_dark, False)
-
-        store.async_delay_save(
-            lambda: {
-                DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
-                DATA_DEFAULT_DARK_THEME: hass.data.get(DATA_DEFAULT_DARK_THEME),
-            },
-            THEMES_SAVE_DELAY,
-        )
-        async_update_theme_and_fire_event(hass)
-
-    async def reload_themes(_: ServiceCall) -> None:
-        """Reload themes."""
-        config = await async_hass_config_yaml(hass)
-        new_themes = config.get(DOMAIN, {}).get(CONF_THEMES, {})
-
-        try:
-            new_themes = validate_themes(new_themes)
-        except probatio.Invalid as err:
-            raise HomeAssistantError(f"Failed to reload themes: {err}") from err
-
-        hass.data[DATA_THEMES] = new_themes
-        if hass.data[DATA_DEFAULT_THEME] not in new_themes:
-            hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
-        if (
-            hass.data.get(DATA_DEFAULT_DARK_THEME)
-            and hass.data.get(DATA_DEFAULT_DARK_THEME) not in new_themes
-        ):
-            hass.data[DATA_DEFAULT_DARK_THEME] = None
-        async_update_theme_and_fire_event(hass)
-
-    # Should be adjusted to register actions in async_setup_services in services.py
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_SET_THEME,
-        set_theme,
-        probatio.All(
-            {
-                probatio.Optional(CONF_NAME): validate_selected_theme,
-                probatio.Exclusive(
-                    CONF_NAME_DARK, "dark_modes"
-                ): validate_selected_theme,
-                probatio.Exclusive(CONF_MODE, "dark_modes"): probatio.Any(
-                    "dark", "light"
-                ),
-            },
-            probatio.AtLeastOne(CONF_NAME, CONF_NAME_DARK),
-        ),
-    )
-
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    service.async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD_THEMES, reload_themes
-    )
 
 
 @callback
@@ -787,7 +721,14 @@ class ManifestJSONView(HomeAssistantView):
     {
         "type": "frontend/get_icons",
         probatio.Required("category"): probatio.In(
-            {"conditions", "entity", "entity_component", "services", "triggers"}
+            {
+                "conditions",
+                "entity",
+                "entity_component",
+                "integration_category",
+                "services",
+                "triggers",
+            }
         ),
         probatio.Optional("integration"): probatio.All(probatio.EnsureList(), [str]),
     }

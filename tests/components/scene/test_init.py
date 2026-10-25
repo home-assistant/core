@@ -4,6 +4,11 @@ import io
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    async_mock_service,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
 
 from homeassistant.components import light, scene
 from homeassistant.components.scene import DOMAIN
@@ -19,11 +24,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.common import (
-    async_mock_service,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
 from tests.components.light.common import MockLight
 
 

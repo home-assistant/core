@@ -36,7 +36,7 @@ class NovyCookerHoodLight(NovyCookerHoodEntity, LightEntity, RestoreEntity):
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the light."""
         super().__init__(entry)
-        self._rf_transmitter_entity_id_or_uuid = entry.data[CONF_TRANSMITTER]
+        self._rf_transmitter_entity_id = entry.data[CONF_TRANSMITTER]
         self._code = entry.data[CONF_CODE]
         self._attr_unique_id = entry.entry_id
 

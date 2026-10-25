@@ -2,6 +2,7 @@
   "domain": "ovhcloud_ai_endpoints",
   "name": "OVHcloud AI Endpoints",
   "after_dependencies": ["assist_pipeline", "intent"],
+  "categories": ["ai_voice.ai_models"],
   "codeowners": ["@Crocmagnon"],
   "config_flow": true,
   "dependencies": ["conversation"],

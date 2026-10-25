@@ -28,13 +28,16 @@ from habiticalib import (
     TooManyRequestsError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_fixture,
+    load_fixture,
+)
 
 from homeassistant.components.habitica.const import CONF_API_USER, DEFAULT_URL, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_fixture, load_fixture
 
 ERROR_RESPONSE = HabiticaErrorResponse(success=False, error="error", message="reason")
 ERROR_NOT_AUTHORIZED = NotAuthorizedError(error=ERROR_RESPONSE, headers={})
@@ -191,7 +194,7 @@ async def mock_habiticalib(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.habitica.async_setup_entry", return_value=True
+        "homeassistant.components.habitica.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

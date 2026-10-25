@@ -1,6 +1,7 @@
 {
   "domain": "touchline_sl",
   "name": "Roth Touchline SL",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@jnsgruk"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/touchline_sl",
