@@ -175,7 +175,7 @@ aio-georss-gdacs==0.10
 aio-ownet==0.1.0
 
 # homeassistant.components.wattwaechter
-aio-wattwaechter==1.2.0
+aio-wattwaechter==1.3.0
 
 # homeassistant.components.acaia
 aioacaia==0.2.2
@@ -444,6 +444,9 @@ aiorussound==5.0.2
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
 
+# homeassistant.components.saj
+aiosaj==0.2.2
+
 # homeassistant.components.shelly
 aioshelly==14.0.1
 
@@ -577,7 +580,7 @@ anyio==4.15.1
 apple_weatherkit==1.1.3
 
 # homeassistant.components.apprise
-apprise==1.11.0
+apprise==2.1.0
 
 # homeassistant.components.aprs
 aprslib==0.7.2
@@ -768,7 +771,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.23.4
+bthome-ble==3.24.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1625,7 +1628,7 @@ matrix-nio==0.26.0
 matter-ble-proxy==0.7.1
 
 # homeassistant.components.matter
-matter-python-client==1.5.4
+matter-python-client==1.5.5
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -1963,7 +1966,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.14.7
+plugwise==1.14.8
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2451,7 +2454,7 @@ pylitejet==0.6.3
 pylitterbot==2025.7.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.29.0
+pylutron-caseta==0.30.0
 
 # homeassistant.components.lutron
 pylutron==0.4.4
@@ -2558,7 +2561,7 @@ pyotgw==2.2.3
 pyotp==2.10.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.2.2
+pyoverkiz[nexity]==2.3.0
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -2637,9 +2640,6 @@ pyrympro==0.0.9
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1
-
-# homeassistant.components.saj
-pysaj==0.0.16
 
 # homeassistant.components.saunum
 pysaunum==0.7.0
@@ -3398,7 +3398,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==23.9.0
+uiprotect==24.0.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3541,7 +3541,7 @@ wsdot==0.0.1
 wyoming==1.10.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.21.1
+xiaomi-ble==1.21.2
 
 # homeassistant.components.xiaomi_weather
 xiaomi-weather==0.1.0
