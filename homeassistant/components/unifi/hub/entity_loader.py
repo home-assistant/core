@@ -24,7 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from ..const import CLIENT_RESTORE_MAX_AGE, DOMAIN, LOGGER, UNIFI_WIRELESS_CLIENTS
+from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..coordinator import UPDATE_TIMEOUT, UnifiDataUpdateCoordinator
 from ..entity import UnifiEntity, UnifiEntityDescription
 from .connection import ACCOUNT_ERRORS, LOGIN_ERRORS, NOT_READY_ERRORS, REQUEST_TIMEOUT
@@ -83,7 +83,6 @@ class UnifiEntityLoader:
                 type[UnifiEntity],
                 tuple[UnifiEntityDescription, ...],
                 bool,
-                Platform | None,
             ]
         ] = []
 
@@ -238,16 +237,10 @@ class UnifiEntityLoader:
         entity_class: type[UnifiEntity],
         descriptions: tuple[UnifiEntityDescription, ...],
         requires_admin: bool = False,
-        *,
-        domain: Platform | None = None,
     ) -> None:
         """Register UniFi entity platforms."""
-        if domain is None and any(
-            description.discovery_fn is not None for description in descriptions
-        ):
-            raise ValueError("Telemetry discovery requires a platform domain")
         self.platforms.append(
-            (async_add_entities, entity_class, descriptions, requires_admin, domain)
+            (async_add_entities, entity_class, descriptions, requires_admin)
         )
 
     @callback
@@ -258,46 +251,21 @@ class UnifiEntityLoader:
             entity_class,
             descriptions,
             requires_admin,
-            domain,
         ) in self.platforms:
             if requires_admin and not self.hub.is_admin:
                 continue
-            self._load_entities(entity_class, descriptions, async_add_entities, domain)
+            self._load_entities(entity_class, descriptions, async_add_entities)
 
     @callback
     def _should_add_entity(
-        self,
-        description: UnifiEntityDescription,
-        obj_id: str,
-        domain: Platform | None,
+        self, description: UnifiEntityDescription, obj_id: str
     ) -> bool:
         """Validate if entity is allowed and supported before creating it."""
-        if not description.allowed_fn(self.hub, obj_id):
-            return False
-        supported = description.supported_fn(self.hub, obj_id)
-        if (description.key, obj_id) in self.known_objects and (
-            supported or description.discovery_fn is None
-        ):
-            return False
-        if description.discovery_fn is None:
-            return supported
-        if supported and description.discovery_fn(self.hub, obj_id):
-            return True
-        assert domain is not None
-        registry = er.async_get(self.hub.hass)
-        entity_id = registry.async_get_entity_id(
-            domain, DOMAIN, description.unique_id_fn(self.hub, obj_id)
+        return bool(
+            (description.key, obj_id) not in self.known_objects
+            and description.allowed_fn(self.hub, obj_id)
+            and description.supported_fn(self.hub, obj_id)
         )
-        if (
-            entity_id is None
-            or registry.entities[entity_id].config_entry_id
-            != self.hub.config.entry.entry_id
-        ):
-            return False
-        if not supported:
-            registry.async_remove(entity_id)
-            self.known_objects.discard((description.key, obj_id))
-        return supported
 
     @callback
     def get_data_update_coordinator[HandlerT: APIHandler[ApiItem]](
@@ -314,7 +282,6 @@ class UnifiEntityLoader:
         unifi_platform_entity: type[UnifiEntity],
         descriptions: tuple[UnifiEntityDescription, ...],
         async_add_entities: AddEntitiesCallback,
-        domain: Platform | None,
     ) -> None:
         """Load entities and subscribe for future entities."""
 
@@ -325,7 +292,7 @@ class UnifiEntityLoader:
                 unifi_platform_entity(obj_id, self.hub, description)
                 for description in descriptions
                 for obj_id in description.api_handler_fn(self.hub.api)
-                if self._should_add_entity(description, obj_id, domain)
+                if self._should_add_entity(description, obj_id)
             )
 
         add_unifi_entities()
@@ -345,17 +312,12 @@ class UnifiEntityLoader:
             description: UnifiEntityDescription, event: ItemEvent, obj_id: str
         ) -> None:
             """Create new UniFi entity on event."""
-            if self._should_add_entity(description, obj_id, domain):
+            if self._should_add_entity(description, obj_id):
                 async_add_entities(
                     [unifi_platform_entity(obj_id, self.hub, description)]
                 )
 
         for description in descriptions:
-            self.hub.config.entry.async_on_unload(
-                description.api_handler_fn(self.hub.api).subscribe(
-                    partial(create_unifi_entity, description),
-                    (ItemEvent.ADDED, ItemEvent.CHANGED)
-                    if description.discovery_fn is not None
-                    else ItemEvent.ADDED,
-                )
+            description.api_handler_fn(self.hub.api).subscribe(
+                partial(create_unifi_entity, description), ItemEvent.ADDED
             )

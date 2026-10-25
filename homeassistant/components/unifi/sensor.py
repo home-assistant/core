@@ -47,13 +47,14 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util, slugify
 
 from . import UnifiConfigEntry
-from .const import DEVICE_STATES
+from .const import DEVICE_STATES, DOMAIN
 from .device_tracker import async_client_allowed_fn
 from .entity import (
     UnifiEntity,
@@ -447,6 +448,8 @@ class UnifiSensorEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     value_fn: Callable[[UnifiHub, ApiItemT], datetime | float | int | str | None]
 
     # Optional
+    discovery_fn: Callable[[UnifiHub, str], bool] | None = None
+    """Require telemetry evidence for first discovery, not continued support."""
     is_connected_fn: Callable[[UnifiHub, str], bool] | None = None
     """Calculate if source is connected."""
     value_changed_fn: Callable[
@@ -900,18 +903,77 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
 ENTITY_DESCRIPTIONS += make_wan_latency_sensors() + make_device_temperatur_sensors()
 
 
+@callback
+def _async_should_add_sensor(
+    hub: UnifiHub, description: UnifiSensorEntityDescription, obj_id: str
+) -> bool:
+    """Check sensor eligibility and prune unsupported telemetry sensors."""
+    if not description.allowed_fn(hub, obj_id):
+        return False
+    supported = description.supported_fn(hub, obj_id)
+    if (description.key, obj_id) in hub.entity_loader.known_objects and (
+        supported or description.discovery_fn is None
+    ):
+        return False
+    if description.discovery_fn is None:
+        return supported
+    if supported and description.discovery_fn(hub, obj_id):
+        return True
+    registry = er.async_get(hub.hass)
+    entity_id = registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, description.unique_id_fn(hub, obj_id)
+    )
+    if (
+        entity_id is None
+        or registry.entities[entity_id].config_entry_id != hub.config.entry.entry_id
+    ):
+        return False
+    if not supported:
+        registry.async_remove(entity_id)
+        hub.entity_loader.known_objects.discard((description.key, obj_id))
+    return supported
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Network integration."""
-    config_entry.runtime_data.entity_loader.register_platform(
-        async_add_entities,
-        UnifiSensorEntity,
-        ENTITY_DESCRIPTIONS,
-        domain=Platform.SENSOR,
+    hub = config_entry.runtime_data
+
+    @callback
+    def add_sensors() -> None:
+        """Discover sensors and restore registered sensors during telemetry gaps."""
+        async_add_entities(
+            UnifiSensorEntity(obj_id, hub, description)
+            for description in ENTITY_DESCRIPTIONS
+            for obj_id in description.api_handler_fn(hub.api)
+            if _async_should_add_sensor(hub, description, obj_id)
+        )
+
+    add_sensors()
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, hub.signal_options_update, add_sensors)
     )
+
+    @callback
+    def create_sensor(
+        description: UnifiSensorEntityDescription, event: ItemEvent, obj_id: str
+    ) -> None:
+        """Discover sensors on updates and remove lost telemetry capabilities."""
+        if _async_should_add_sensor(hub, description, obj_id):
+            async_add_entities([UnifiSensorEntity(obj_id, hub, description)])
+
+    for description in ENTITY_DESCRIPTIONS:
+        config_entry.async_on_unload(
+            description.api_handler_fn(hub.api).subscribe(
+                partial(create_sensor, description),
+                (ItemEvent.ADDED, ItemEvent.CHANGED)
+                if description.discovery_fn is not None
+                else ItemEvent.ADDED,
+            )
+        )
 
 
 class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
