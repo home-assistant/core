@@ -210,10 +210,20 @@ async def test_go_to_alias_button_unique_id_migration(
     mock_client.login.assert_any_await(register_event_listener=False)
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(ClientError("Connection error"), id="client_error"),
+        pytest.param(
+            SomfyServiceError("Somfy token refresh failed"), id="somfy_service_error"
+        ),
+    ],
+)
 async def test_go_to_alias_button_migration_connection_error(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_client: MockOverkizClient,
+    exception: Exception,
 ) -> None:
     """Test the migration is retried when it cannot reach the API."""
     mock_entry = MockConfigEntry(
@@ -231,7 +241,7 @@ async def test_go_to_alias_button_migration_connection_error(
         config_entry=mock_entry,
     )
 
-    mock_client.get_setup.side_effect = ClientError("Connection error")
+    mock_client.get_setup.side_effect = exception
 
     with patch(
         "homeassistant.components.overkiz.create_cloud_client",

@@ -127,8 +127,8 @@ async def create_client(
         return await create_rexel_client(hass, entry)
 
     # Somfy multi-account Cloud API (resumable token)
-    elif entry.data.get(CONF_HUB) == Server.SOMFY:
-        client = await create_somfy_client(hass, entry)
+    if entry.data.get(CONF_HUB) == Server.SOMFY:
+        return await create_somfy_client(hass, entry)
 
     # Overkiz Cloud API
     return create_cloud_client(
@@ -306,6 +306,7 @@ async def async_migrate_entry(
                 ClientError,
                 MaintenanceError,
                 ServiceUnavailableError,
+                SomfyServiceError,
             ) as exception:
                 raise ConfigEntryNotReady(
                     "Failed to fetch devices for migration"
