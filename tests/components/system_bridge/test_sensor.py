@@ -13,6 +13,7 @@ from systembridgeconnector.models.modules import Module
 from systembridgeconnector.models.modules.networks import (
     Network,
     NetworkIO,
+    Networks,
     NetworkStats,
     NetworkWifi,
 )
@@ -104,6 +105,52 @@ async def test_sensor_memory_free_uses_available(
 
     assert (state := hass.states.get("sensor.hostname_memory_free"))
     assert state.state == "73.0"
+
+
+@pytest.mark.usefixtures("mock_version", "entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "networks",
+    [
+        pytest.param(None, id="no_network_data"),
+        pytest.param(
+            replace(
+                FIXTURE_NETWORKS,
+                io=None,
+                networks=[Network(name="name", stats=NetworkStats(flags=["up"]))],
+            ),
+            id="no_io_or_wifi_data",
+        ),
+    ],
+)
+async def test_sensor_network_data_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    networks: Networks | None,
+) -> None:
+    """Test network sensors are unknown when their data goes missing."""
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await mock_config_entry.runtime_data.async_handle_module(Module.NETWORKS, networks)
+    await hass.async_block_till_done()
+
+    for entity_id in (
+        "sensor.hostname_network_download_rate",
+        "sensor.hostname_network_upload_rate",
+        "sensor.hostname_name_download_rate",
+        "sensor.hostname_name_upload_rate",
+        "sensor.hostname_name_ssid",
+        "sensor.hostname_name_signal_strength",
+        "sensor.hostname_name_link_rate",
+    ):
+        assert (state := hass.states.get(entity_id)), entity_id
+        assert state.state == STATE_UNKNOWN, entity_id
 
 
 @pytest.mark.usefixtures("mock_version", "entity_registry_enabled_by_default")
