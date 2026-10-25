@@ -79,7 +79,7 @@ async def test_offline_app_setup_retries(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.reason == "The Music Assistant app is not running yet"
+    assert mock_config_entry.reason == "The Music Assistant app is not ready"
     music_assistant_client.start_listening.assert_not_called()
 
 
