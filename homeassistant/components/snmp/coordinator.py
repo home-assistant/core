@@ -2,7 +2,6 @@
 
 import binascii
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 from typing import override
 
@@ -15,13 +14,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .client import SnmpClient, SnmpWalkError
-from .const import (
-    CONF_BASEOID,
-    CONF_INTERVAL_SECONDS,
-    DEFAULT_INTERVAL_SECONDS,
-    DOMAIN,
-    IP_INDEXED_MAC_OIDS,
-)
+from .const import CONF_BASEOID, DEFAULT_SCAN_INTERVAL, DOMAIN, IP_INDEXED_MAC_OIDS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,13 +82,12 @@ class SnmpDeviceTrackerCoordinator(DataUpdateCoordinator[dict[str, str | None]])
         client: SnmpClient,
     ) -> None:
         """Initialize the coordinator."""
-        interval = subentry.data.get(CONF_INTERVAL_SECONDS, DEFAULT_INTERVAL_SECONDS)
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN} {subentry.title}",
-            update_interval=timedelta(seconds=interval),
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.subentry_id = subentry.subentry_id
         self._baseoid: str = subentry.data[CONF_BASEOID]
@@ -115,7 +107,7 @@ class SnmpDeviceTrackerCoordinator(DataUpdateCoordinator[dict[str, str | None]])
                 or self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES
             ):
                 raise
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Transient SNMP failure (%s/%s), keeping the previous data: %s",
                 self._consecutive_failures,
                 MAX_CONSECUTIVE_FAILURES,

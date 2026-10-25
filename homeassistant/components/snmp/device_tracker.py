@@ -259,10 +259,12 @@ def _async_setup_subentry(
 
     # Ensure previously known MACs show up as 'not_home' instead of disappearing
     # if missing from the current poll.
+    unique_id_prefix = f"{subentry_id}_"
     initial_macs = {
-        reg_entry.unique_id
+        reg_entry.unique_id.removeprefix(unique_id_prefix)
         for reg_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id)
         if reg_entry.unique_id
+        and reg_entry.unique_id.startswith(unique_id_prefix)
         and reg_entry.config_subentry_id == subentry_id
         and reg_entry.domain == DEVICE_TRACKER_DOMAIN
         and reg_entry.platform == DOMAIN
@@ -306,9 +308,20 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpDeviceTrackerCoordinator], Scanner
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.subentry_id}_{mac}"
         self._attr_mac_address = mac
         self._attr_name = mac
         self._attr_ip_address = coordinator.data.get(mac) if coordinator.data else None
+
+    @property
+    @override
+    def unique_id(self) -> str | None:
+        """Return the unique ID of the entity.
+
+        ScannerEntity derives the unique ID from the MAC address, which would
+        collide between subentries tracking the same device.
+        """
+        return self._attr_unique_id
 
     @property
     @override

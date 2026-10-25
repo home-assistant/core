@@ -16,6 +16,10 @@
       "usm_wrong_digests": "Invalid authentication credentials or protocols"
     },
     "step": {
+      "reauth_confirm": {
+        "description": "The SNMP device {name} rejected the stored credentials. Re-enter its credentials to continue.",
+        "title": "Reauthenticate SNMP device"
+      },
       "reconfigure": {
         "data": {
           "host": "Host",
@@ -74,7 +78,7 @@
   "config_subentries": {
     "device_tracker": {
       "abort": {
-        "already_configured": "A device tracker is already configured for this device"
+        "already_configured": "This table is already tracked for this device"
       },
       "entry_type": "Device tracker",
       "error": {
@@ -88,23 +92,19 @@
       "step": {
         "reconfigure": {
           "data": {
-            "baseoid": "Base OID",
-            "interval_seconds": "Update interval"
+            "baseoid": "Base OID"
           },
           "data_description": {
-            "baseoid": "The OID of the table which lists the connected devices, for example the MAC column of the ARP table (1.3.6.1.2.1.4.22.1.2).",
-            "interval_seconds": "How often the device is polled, in seconds."
+            "baseoid": "The OID of the table which lists the connected devices, for example the MAC column of the ARP table (1.3.6.1.2.1.4.22.1.2)."
           },
           "title": "Configure device tracker"
         },
         "user": {
           "data": {
-            "baseoid": "Base OID",
-            "interval_seconds": "Update interval"
+            "baseoid": "Base OID"
           },
           "data_description": {
-            "baseoid": "The OID of the table which lists the connected devices, for example the MAC column of the ARP table (1.3.6.1.2.1.4.22.1.2).",
-            "interval_seconds": "How often the device is polled, in seconds."
+            "baseoid": "The OID of the table which lists the connected devices, for example the MAC column of the ARP table (1.3.6.1.2.1.4.22.1.2)."
           },
           "title": "Configure device tracker"
         }

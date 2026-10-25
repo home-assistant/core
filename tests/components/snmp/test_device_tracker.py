@@ -95,6 +95,16 @@ def enable_tracker(
     return _enable
 
 
+def _tracker_entity_id(
+    ent_reg: er.EntityRegistry, entry: MockConfigEntry, mac: str
+) -> str | None:
+    """Return the entity id of a tracker of the entry's only subentry."""
+    subentry_id = next(iter(entry.subentries))
+    return ent_reg.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, f"{subentry_id}_{mac}"
+    )
+
+
 @pytest.fixture
 def mock_coordinator_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a mock SNMP config entry for coordinator tests."""
@@ -150,7 +160,7 @@ async def test_device_tracker_new_entity_disabled_by_default(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+    entity_id = _tracker_entity_id(entity_registry, entry, MAC)
 
     assert entity_id is not None
 
@@ -195,9 +205,7 @@ async def test_device_tracker_update(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id_1 = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, mac1_str
-    )
+    entity_id_1 = _tracker_entity_id(entity_registry, entry, mac1_str)
     assert entity_id_1 is not None
     assert hass.states.get(entity_id_1).state == STATE_HOME
     assert hass.states.get(entity_id_1).attributes["ip"] == "192.168.1.1"
@@ -209,9 +217,7 @@ async def test_device_tracker_update(
     await hass.async_block_till_done()
 
     # mac2 is a new device, so its entity is disabled
-    entity_id_2 = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, mac2_str
-    )
+    entity_id_2 = _tracker_entity_id(entity_registry, entry, mac2_str)
     assert entity_id_2 is not None
 
     entry2 = entity_registry.async_get(entity_id_2)
@@ -247,7 +253,7 @@ async def test_device_tracker_device_registry_linking(
         is None
     )
 
-    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
+    entity_id = _tracker_entity_id(entity_registry, entry, mac)
     reg_entry = entity_registry.async_get(entity_id)
     assert reg_entry is not None
     assert reg_entry.device_id is None
@@ -268,7 +274,7 @@ async def test_device_tracker_name_resolves_to_mac_address(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+    entity_id = _tracker_entity_id(entity_registry, entry, MAC)
     assert entity_id is not None
 
     state = hass.states.get(entity_id)
@@ -300,7 +306,7 @@ async def test_device_tracker_enabled_if_device_exists(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+    entity_id = _tracker_entity_id(entity_registry, entry, MAC)
     assert entity_id is not None
 
     reg_entry = entity_registry.async_get(entity_id)
@@ -320,7 +326,7 @@ async def test_device_tracker_initial_macs(
     entity_registry.async_get_or_create(
         DEVICE_TRACKER_DOMAIN,
         DOMAIN,
-        MAC,
+        f"{subentry_id}_{MAC}",
         config_entry=entry,
         config_subentry_id=subentry_id,
     )
@@ -335,7 +341,7 @@ async def test_device_tracker_initial_macs(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+    entity_id = _tracker_entity_id(entity_registry, entry, MAC)
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state is not None
@@ -378,7 +384,7 @@ async def test_device_tracker_update_empty_data(
     coordinator = next(iter(entry.runtime_data.coordinators.values()))
     assert coordinator.last_update_success
 
-    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+    entity_id = _tracker_entity_id(entity_registry, entry, MAC)
     assert entity_id is not None
 
 
@@ -419,8 +425,8 @@ async def test_mac_normalization(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, expected_mac
+    entity_id = _tracker_entity_id(
+        entity_registry, mock_coordinator_entry, expected_mac
     )
     assert entity_id is not None
 
@@ -475,9 +481,7 @@ async def test_ip_extraction(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, mac_str
-    )
+    entity_id = _tracker_entity_id(entity_registry, mock_coordinator_entry, mac_str)
     assert entity_id is not None
 
     state = hass.states.get(entity_id)
@@ -510,7 +514,7 @@ async def test_ip_extraction_oid_too_short(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+    entity_id = _tracker_entity_id(entity_registry, mock_coordinator_entry, MAC)
     assert entity_id is not None
 
     state = hass.states.get(entity_id)
@@ -561,9 +565,7 @@ async def test_walk_errindication(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_id = entity_registry.async_get_entity_id(
-            DEVICE_TRACKER_DOMAIN, DOMAIN, MAC
-        )
+        entity_id = _tracker_entity_id(entity_registry, mock_coordinator_entry, MAC)
         assert entity_id is not None
         state = hass.states.get(entity_id)
         assert state is not None
@@ -670,17 +672,15 @@ async def test_walk_end_of_mib(
         await hass.async_block_till_done()
 
     # First MAC should have been processed (is_end_of_mib returned False)
-    entity_id_1 = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC
-    )
+    entity_id_1 = _tracker_entity_id(entity_registry, mock_coordinator_entry, MAC)
     assert entity_id_1 is not None
     state = hass.states.get(entity_id_1)
     assert state is not None
     assert state.state == STATE_HOME
 
     # Second MAC should NOT have been processed (is_end_of_mib returned True)
-    entity_id_2 = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, "aa:bb:cc:dd:ee:ff"
+    entity_id_2 = _tracker_entity_id(
+        entity_registry, mock_coordinator_entry, "aa:bb:cc:dd:ee:ff"
     )
     assert entity_id_2 is None
 

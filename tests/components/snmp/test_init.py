@@ -1,7 +1,6 @@
 """SNMP tests."""
 
 import binascii
-from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from pysnmp.error import PySnmpError
@@ -17,7 +16,6 @@ from homeassistant.components import snmp
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.snmp.const import (
     CONF_BASEOID,
-    CONF_INTERVAL_SECONDS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SUBENTRY_TYPE_DEVICE_TRACKER,
@@ -42,9 +40,11 @@ async def _async_mock_walk_with_mac(*args, **kwargs):
     yield None, None, None, [(oid, OctetString(binascii.unhexlify("001122334455")))]
 
 
-def _async_mac_entity_id(hass: HomeAssistant) -> str | None:
+def _async_mac_entity_id(hass: HomeAssistant, subentry_id: str) -> str | None:
     """Return the registry entity id of the MAC the tests walk."""
-    return er.async_get(hass).async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+    return er.async_get(hass).async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, f"{subentry_id}_{MAC}"
+    )
 
 
 async def _async_mock_walk(*args, **kwargs):
@@ -360,7 +360,9 @@ async def test_async_setup_entry_unload(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_subentry_added_after_setup(hass: HomeAssistant) -> None:
+async def test_subentry_added_after_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that a device tracker added after setup loads its entity."""
     entry = mock_entry(baseoid=None)
     entry.add_to_hass(hass)
@@ -372,7 +374,7 @@ async def test_subentry_added_after_setup(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert not entry.runtime_data.coordinators
-        assert _async_mac_entity_id(hass) is None
+        assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
         subentry = ConfigSubentry(
             data={CONF_BASEOID: ARP_TABLE_MAC_OID},
@@ -385,7 +387,7 @@ async def test_subentry_added_after_setup(hass: HomeAssistant) -> None:
 
     assert set(entry.runtime_data.coordinators) == {subentry.subentry_id}
     assert set(entry.runtime_data.coordinators[subentry.subentry_id].data) == {MAC}
-    assert _async_mac_entity_id(hass) is not None
+    assert _async_mac_entity_id(hass, subentry.subentry_id) is not None
 
 
 async def test_subentry_removed_after_setup(hass: HomeAssistant) -> None:
@@ -400,13 +402,13 @@ async def test_subentry_removed_after_setup(hass: HomeAssistant) -> None:
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert _async_mac_entity_id(hass) is not None
+        assert _async_mac_entity_id(hass, subentry_id) is not None
 
         assert hass.config_entries.async_remove_subentry(entry, subentry_id)
         await hass.async_block_till_done()
 
     assert not entry.runtime_data.coordinators
-    assert _async_mac_entity_id(hass) is None
+    assert _async_mac_entity_id(hass, subentry_id) is None
 
 
 async def test_subentry_reconfigure_reloads_coordinator(hass: HomeAssistant) -> None:
@@ -428,17 +430,13 @@ async def test_subentry_reconfigure_reloads_coordinator(hass: HomeAssistant) -> 
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            {
-                CONF_BASEOID: ARP_TABLE_MAC_OID,
-                CONF_INTERVAL_SECONDS: 60,
-            },
+            {CONF_BASEOID: ARP_TABLE_MAC_OID},
         )
         await hass.async_block_till_done()
 
     assert result["reason"] == "reconfigure_successful"
-    assert entry.subentries[subentry_id].data[CONF_INTERVAL_SECONDS] == 60
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.runtime_data.coordinators[subentry_id].update_interval == timedelta(
-        seconds=60
+    assert entry.runtime_data.coordinators[subentry_id].update_interval == (
+        DEFAULT_SCAN_INTERVAL
     )
-    assert _async_mac_entity_id(hass) is not None
+    assert _async_mac_entity_id(hass, subentry_id) is not None

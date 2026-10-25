@@ -14,7 +14,6 @@ CONF_BASEOID = "baseoid"
 CONF_COMMUNITY = "community"
 CONF_CONTEXT_NAME = "context_name"
 CONF_DEFAULT_VALUE = "default_value"
-CONF_INTERVAL_SECONDS = "interval_seconds"
 CONF_PRIV_KEY = "priv_key"
 CONF_PRIV_PROTOCOL = "priv_protocol"
 CONF_VERSION = "version"
@@ -22,7 +21,6 @@ CONF_VARTYPE = "vartype"
 
 # Subentry types, one per capability of an SNMP device
 SUBENTRY_TYPE_DEVICE_TRACKER = "device_tracker"
-DEVICE_TRACKER_SUBENTRY_TITLE = "Device tracker"
 
 DEFAULT_AUTH_PROTOCOL = "none"
 DEFAULT_COMMUNITY = "public"

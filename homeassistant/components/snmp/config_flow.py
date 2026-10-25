@@ -13,16 +13,18 @@ from pysnmp.smi.error import WrongValueError
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
+    SOURCE_USER,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
+    FlowType,
+    SubentryFlowContext,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -39,18 +41,15 @@ from .const import (
     CONF_BASEOID,
     CONF_COMMUNITY,
     CONF_CONTEXT_NAME,
-    CONF_INTERVAL_SECONDS,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
     CONF_VERSION,
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
-    DEFAULT_INTERVAL_SECONDS,
     DEFAULT_PORT,
     DEFAULT_PRIV_PROTOCOL,
     DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
-    DEVICE_TRACKER_SUBENTRY_TITLE,
     DOMAIN,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
@@ -97,6 +96,12 @@ STEP_V1_V2C_DATA_SCHEMA = probatio.Schema(
     }
 )
 
+REAUTH_V1_V2C_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_COMMUNITY): PASSWORD_SELECTOR,
+    }
+)
+
 STEP_V3_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
@@ -115,9 +120,6 @@ STEP_V3_DATA_SCHEMA = probatio.Schema(
 DEVICE_TRACKER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_BASEOID): str,
-        probatio.Optional(
-            CONF_INTERVAL_SECONDS, default=DEFAULT_INTERVAL_SECONDS
-        ): cv.positive_int,
     }
 )
 
@@ -267,9 +269,21 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
-        """Handle the credentials of a request which failed to authenticate."""
+        """Handle a request which failed to authenticate."""
         self._user_data = dict(entry_data)
-        return await self._async_step_credentials()
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask the user to confirm before re-entering credentials."""
+        if user_input is not None:
+            return await self._async_step_credentials()
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            description_placeholders={"name": self._get_reauth_entry().title},
+        )
 
     async def _async_step_credentials(
         self, user_input: dict[str, Any] | None = None
@@ -301,11 +315,18 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             suggestions = self._user_data
 
+        if is_v3:
+            data_schema = STEP_V3_DATA_SCHEMA
+        elif self.source == SOURCE_REAUTH:
+            # Do not prefill the default community when reauthenticating
+            data_schema = REAUTH_V1_V2C_DATA_SCHEMA
+        else:
+            data_schema = STEP_V1_V2C_DATA_SCHEMA
+
         return self.async_show_form(
             step_id="v3" if is_v3 else "v1_v2c",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_V3_DATA_SCHEMA if is_v3 else STEP_V1_V2C_DATA_SCHEMA,
-                _suggested_credentials(suggestions) or None,
+                data_schema, _suggested_credentials(suggestions) or None
             ),
             errors=errors,
         )
@@ -401,6 +422,19 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(entry, title=title, data=data)
         return None
 
+    @override
+    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
+        """Start the first device tracker subentry after creating the entry."""
+        subentry_result = await self.hass.config_entries.subentries.async_init(
+            (result["result"].entry_id, SUBENTRY_TYPE_DEVICE_TRACKER),
+            context=SubentryFlowContext(source=SOURCE_USER),
+        )
+        result["next_flow"] = (
+            FlowType.CONFIG_SUBENTRIES_FLOW,
+            subentry_result["flow_id"],
+        )
+        return result
+
 
 class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
     """Handle the device tracker subentry of an SNMP device."""
@@ -409,18 +443,23 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Add a device tracker to the SNMP device."""
-        if self._get_entry().get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER):
-            return self.async_abort(reason="already_configured")
-
         errors: dict[str, str] = {}
         if user_input is not None:
+            if any(
+                subentry.data.get(CONF_BASEOID) == user_input[CONF_BASEOID]
+                for subentry in self._get_entry().get_subentries_of_type(
+                    SUBENTRY_TYPE_DEVICE_TRACKER
+                )
+            ):
+                return self.async_abort(reason="already_configured")
+
             if error := await self._async_validate_baseoid(user_input[CONF_BASEOID]):
-                errors[CONF_BASEOID] = error
+                errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
             else:
                 return self.async_create_entry(
-                    title=DEVICE_TRACKER_SUBENTRY_TITLE,
+                    title=user_input[CONF_BASEOID],
                     data=user_input,
-                    unique_id=SUBENTRY_TYPE_DEVICE_TRACKER,
+                    unique_id=user_input[CONF_BASEOID],
                 )
 
         return self.async_show_form(
@@ -438,10 +477,14 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
         errors: dict[str, str] = {}
         if user_input is not None:
             if error := await self._async_validate_baseoid(user_input[CONF_BASEOID]):
-                errors[CONF_BASEOID] = error
+                errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
             else:
                 return self.async_update_and_abort(
-                    self._get_entry(), subentry, data=user_input
+                    self._get_entry(),
+                    subentry,
+                    title=user_input[CONF_BASEOID],
+                    data=user_input,
+                    unique_id=user_input[CONF_BASEOID],
                 )
 
         return self.async_show_form(

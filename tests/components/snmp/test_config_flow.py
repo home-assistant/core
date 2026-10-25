@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.selector import SelectSelector
 
-from . import mock_entry
+from . import ARP_TABLE_MAC_OID, mock_entry
 
 
 @pytest.fixture
@@ -375,16 +375,32 @@ async def test_subentry_flow_user(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"baseoid": "1.3.6.1.2.1.4.22.1.2", "interval_seconds": 60},
+        {"baseoid": "1.3.6.1.2.1.4.22.1.2"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
     assert len(subentries) == 1
-    assert subentries[0].data == {
-        "baseoid": "1.3.6.1.2.1.4.22.1.2",
-        "interval_seconds": 60,
-    }
+    assert subentries[0].data == {"baseoid": "1.3.6.1.2.1.4.22.1.2"}
+    assert subentries[0].title == "1.3.6.1.2.1.4.22.1.2"
+    assert subentries[0].unique_id == "1.3.6.1.2.1.4.22.1.2"
+
+
+@pytest.mark.usefixtures("mock_walk_empty")
+async def test_subentry_flow_multiple_trackers(hass: HomeAssistant) -> None:
+    """Test that a device can track several tables."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+
+    result = await _async_start_subentry_flow(hass, entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"baseoid": "1.3.6.1.2.1.17.4.3.1.1"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
+    assert len(subentries) == 2
 
 
 @pytest.mark.usefixtures("mock_walk_empty")
@@ -413,16 +429,18 @@ async def test_subentry_flow_invalid_oid(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_walk_empty")
 @pytest.mark.parametrize(
-    ("errindication", "expected_error"),
+    ("errindication", "expected_errors"),
     [
-        pytest.param(errind.wrongDigest, "invalid_auth", id="auth_error"),
-        pytest.param(PySnmpError("walk failed"), "cannot_connect", id="walk_error"),
+        pytest.param(errind.wrongDigest, {"base": "invalid_auth"}, id="auth_error"),
+        pytest.param(
+            PySnmpError("walk failed"), {"baseoid": "cannot_connect"}, id="walk_error"
+        ),
     ],
 )
 async def test_subentry_flow_unreadable_oid(
     hass: HomeAssistant,
     errindication: errind.ErrorIndication | PySnmpError,
-    expected_error: str,
+    expected_errors: dict[str, str],
 ) -> None:
     """Test that an OID the device cannot read is rejected."""
     entry = mock_entry(baseoid=None)
@@ -442,7 +460,7 @@ async def test_subentry_flow_unreadable_oid(
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"baseoid": expected_error}
+    assert result["errors"] == expected_errors
 
     # Retry with a readable OID finishes the flow
     result = await hass.config_entries.subentries.async_configure(
@@ -454,11 +472,16 @@ async def test_subentry_flow_unreadable_oid(
 
 
 async def test_subentry_flow_already_configured(hass: HomeAssistant) -> None:
-    """Test that a device can only have one device tracker."""
+    """Test that the same table cannot be tracked twice."""
     entry = mock_entry()
     entry.add_to_hass(hass)
 
     result = await _async_start_subentry_flow(hass, entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"baseoid": ARP_TABLE_MAC_OID},
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -481,7 +504,10 @@ async def test_subentry_flow_reconfigure(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.subentries[subentry_id].data["baseoid"] == "1.3.6.1.2.1.17.4.3.1.1"
+    subentry = entry.subentries[subentry_id]
+    assert subentry.data["baseoid"] == "1.3.6.1.2.1.17.4.3.1.1"
+    assert subentry.title == "1.3.6.1.2.1.17.4.3.1.1"
+    assert subentry.unique_id == "1.3.6.1.2.1.17.4.3.1.1"
 
 
 async def test_user_flow_v1_v2c_invalid_auth(
@@ -1199,6 +1225,11 @@ async def test_reauth_flow_updates_credentials(
 
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {"name": entry.title}
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
     data_schema = result["data_schema"].schema
     assert get_schema_suggested_value(data_schema, "username") == "user"
@@ -1218,6 +1249,47 @@ async def test_reauth_flow_updates_credentials(
     assert result["reason"] == "reauth_successful"
     assert entry.data["auth_key"] == "new-key"
     assert entry.data["host"] == "192.168.1.1"
+    assert mock_setup_entry.called
+
+
+async def test_reauth_flow_v1_v2c_does_not_suggest_community(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
+    """Test that reauthenticating v1/v2c does not prefill the stored community."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.1.1",
+        data={
+            "host": "192.168.1.1",
+            CONF_PORT: 161,
+            "version": "1",
+            "community": "old-community",
+            "context_name": "",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "v1_v2c"
+    assert get_schema_suggested_value(result["data_schema"].schema, "community") is None
+
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"community": "new-community"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data["community"] == "new-community"
     assert mock_setup_entry.called
 
 
@@ -1242,6 +1314,10 @@ async def test_reauth_flow_drops_removed_privacy_key(
     entry.add_to_hass(hass)
 
     result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
 
@@ -1290,6 +1366,10 @@ async def test_reauth_flow_reloads_when_credentials_are_unchanged(
     entry.add_update_listener(listener)
 
     result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
 
