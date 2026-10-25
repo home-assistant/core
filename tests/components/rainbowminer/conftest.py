@@ -5,8 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
-from tests.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 TEST_HOST = "1.1.1.1"
 TEST_PORT = 4000

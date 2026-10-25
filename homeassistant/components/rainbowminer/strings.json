@@ -48,9 +48,6 @@
       "hourly_earnings_mbtc": {
         "name": "Hourly earnings (mBTC)"
       },
-      "power": {
-        "name": "Power"
-      },
       "total_earnings": {
         "name": "Total earnings"
       },

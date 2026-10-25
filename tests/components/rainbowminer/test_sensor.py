@@ -5,6 +5,8 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.rainbowminer.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -23,9 +25,6 @@ from .conftest import (
     VALID_VERSION,
     mock_rainbowminer_endpoints,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 def _register_all(

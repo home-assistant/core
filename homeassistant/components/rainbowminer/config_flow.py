@@ -2,27 +2,27 @@
 
 from typing import Any, override
 
+import probatio
 from rainbowminer_api_client import (
     RainbowMinerAuthError,
     RainbowMinerClient,
     RainbowMinerError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 
 from .const import DEFAULT_PORT, DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Optional(CONF_USERNAME): str,
+        probatio.Optional(CONF_PASSWORD): str,
     }
 )
 

@@ -148,7 +148,6 @@ ALWAYS_SENSORS: tuple[RainbowMinerSensorEntityDescription, ...] = (
     ),
     RainbowMinerSensorEntityDescription(
         key="power",
-        translation_key="power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
