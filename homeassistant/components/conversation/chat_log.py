@@ -137,7 +137,7 @@ def async_get_chat_log(
         yield chat_log
     finally:
         active_chat_logs.discard(session.conversation_id)
-    current_chat_log.reset(token)
+        current_chat_log.reset(token)
 
     if chat_log.content[-1] is last_message:
         LOGGER.debug(
