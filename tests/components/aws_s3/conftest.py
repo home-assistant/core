@@ -22,7 +22,19 @@ def backup_size() -> int:
 
 
 @pytest.fixture
-def mock_agent_backup(backup_size: int) -> AgentBackup:
+def backup_data() -> bytes:
+    """Backup data, override in tests to change defaults."""
+    return b"backup data"
+
+
+@pytest.fixture
+def backup_protected() -> bool:
+    """Backup protected, override in tests to change defaults."""
+    return False
+
+
+@pytest.fixture
+def mock_agent_backup(backup_size: int, backup_protected: bool) -> AgentBackup:
     """Test backup fixture."""
     return AgentBackup(
         addons=[],
@@ -34,13 +46,15 @@ def mock_agent_backup(backup_size: int) -> AgentBackup:
         homeassistant_included=True,
         homeassistant_version="2024.12.0.dev0",
         name="Core 2024.12.0.dev0",
-        protected=False,
+        protected=backup_protected,
         size=backup_size,
     )
 
 
 @pytest.fixture(autouse=True)
-def mock_client(mock_agent_backup: AgentBackup) -> Generator[AsyncMock]:
+def mock_client(
+    mock_agent_backup: AgentBackup, backup_data: bytes
+) -> Generator[AsyncMock]:
     """Mock the S3 client."""
     with patch(
         "aiobotocore.session.AioSession.create_client",
@@ -62,7 +76,7 @@ def mock_client(mock_agent_backup: AgentBackup) -> Generator[AsyncMock]:
         client.upload_part.return_value = {"ETag": "etag"}
 
         objects = {
-            tar_file: b"backup data",
+            tar_file: backup_data,
             metadata_file: json.dumps(mock_agent_backup.as_dict()).encode(),
         }
         client.get_object.side_effect = lambda **kwargs: {
