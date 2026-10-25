@@ -138,9 +138,7 @@ class GetConfigEntriesTool(Tool):
         "Retrieve installed Home Assistant config entries (configured integrations "
         "and helpers). Use this to inspect which integrations are set up, check their "
         "status ('loaded', 'error', 'not_loaded'), and see translated error reasons. "
-        "Entries of custom integrations have 'custom_integration' set. Custom "
-        "integrations are not part of Home Assistant: report their issues to "
-        "their 'issue_tracker'."
+        "Entries of custom integrations have 'custom_integration' set."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
