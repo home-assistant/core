@@ -4,16 +4,16 @@ from pyheltycloud import HeltyCloud, HeltyCloudAuthError, HeltyCloudError
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import HeltyCloudConfigEntry, HeltyCloudDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.FAN]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.FAN, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -> None:
     """Set up Helty Flow Cloud from a config entry."""
     client = HeltyCloud(
         entry.data[CONF_EMAIL],
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -
     try:
         devices = await client.get_devices()
     except HeltyCloudAuthError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
     except HeltyCloudError as err:
@@ -46,9 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

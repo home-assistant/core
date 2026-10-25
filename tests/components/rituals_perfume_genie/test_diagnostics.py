@@ -44,10 +44,15 @@ async def test_diagnostics_diffuser_added(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # The first update of its sensors waits a moment for all its entities.
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
     )
 
     assert len(diagnostics["diffusers"]) == 2
     assert diagnostics["diffusers"][0]["sensors"] is not None
-    assert diagnostics["diffusers"][1]["sensors"] is None
+    assert diagnostics["diffusers"][1]["sensors"] is not None

@@ -5,17 +5,16 @@ from typing import TYPE_CHECKING, Any
 
 import probatio
 
-from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    ATTR_BRIGHTNESS,
-    ATTR_WHITE,
     DATA_COMPONENT,
     LIGHT_TURN_OFF_SCHEMA,
     LIGHT_TURN_ON_SCHEMA,
+    LightService,
+    LightServiceArgument,
 )
 from .helper import (
     filter_turn_off_params,
@@ -49,7 +48,10 @@ async def _async_handle_light_on_service(light: LightEntity, call: ServiceCall) 
     """
     params = process_turn_on_params(light.hass, light, call.data["params"])
 
-    if params.get(ATTR_BRIGHTNESS) == 0 or params.get(ATTR_WHITE) == 0:
+    if (
+        params.get(LightServiceArgument.BRIGHTNESS) == 0
+        or params.get(LightServiceArgument.WHITE) == 0
+    ):
         await _async_handle_light_off_service(light, call)
     else:
         await light.async_turn_on(**filter_turn_on_params(light, params))
@@ -75,7 +77,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         probatio.All(
             cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA),
             partial(_preprocess_data, hass),
@@ -84,7 +86,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     component.async_register_entity_service(
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         probatio.All(
             cv.make_entity_service_schema(LIGHT_TURN_OFF_SCHEMA),
             partial(_preprocess_data, hass),
@@ -93,7 +95,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE,
+        LightService.TOGGLE,
         probatio.All(
             cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA),
             partial(_preprocess_data, hass),

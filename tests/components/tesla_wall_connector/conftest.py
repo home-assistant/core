@@ -34,7 +34,7 @@ async def mock_wall_connector_setup():
     """Mock component setup."""
     with patch(
         "homeassistant.components.tesla_wall_connector.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

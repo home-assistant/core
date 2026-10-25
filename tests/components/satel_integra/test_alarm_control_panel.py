@@ -35,7 +35,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from . import (
     MOCK_CODE,
     MOCK_ENTRY_ID,
-    get_monitor_callbacks,
+    get_alarm_status_callback,
     setup_integration,
     trigger_connection_status_update,
 )
@@ -78,7 +78,7 @@ async def test_alarm_control_panel_initial_state(
     mock_config_entry_with_subentries: MockConfigEntry,
 ) -> None:
     """Test alarm control panel has a correct initial state after initialization."""
-    mock_satel.partition_states = {AlarmState.ARMED_MODE0: [1]}
+    mock_satel.state.partition_states = {AlarmState.ARMED_MODE0: [1]}
 
     await setup_integration(hass, mock_config_entry_with_subentries)
 
@@ -117,9 +117,9 @@ async def test_alarm_status_callback(
         == AlarmControlPanelState.DISARMED
     )
 
-    alarm_panel_update_method, _, _ = get_monitor_callbacks(mock_satel)
+    alarm_panel_update_method = get_alarm_status_callback(mock_satel)
 
-    mock_satel.partition_states = {source_state: [1]}
+    mock_satel.state.partition_states = {source_state: [1]}
 
     alarm_panel_update_method()
 
@@ -142,19 +142,19 @@ async def test_alarm_status_callback_debounce(
         == AlarmControlPanelState.DISARMED
     )
 
-    alarm_panel_update_method, _, _ = get_monitor_callbacks(mock_satel)
+    alarm_panel_update_method = get_alarm_status_callback(mock_satel)
 
     # Simulate rapid state changes from the alarm panel
-    mock_satel.partition_states = {AlarmState.EXIT_COUNTDOWN_OVER_10: [1]}
+    mock_satel.state.partition_states = {AlarmState.EXIT_COUNTDOWN_OVER_10: [1]}
     alarm_panel_update_method()
 
-    mock_satel.partition_states = {AlarmState.EXIT_COUNTDOWN_UNDER_10: [1]}
+    mock_satel.state.partition_states = {AlarmState.EXIT_COUNTDOWN_UNDER_10: [1]}
     alarm_panel_update_method()
 
-    mock_satel.partition_states = {AlarmState.ARMED_MODE0: [1]}
+    mock_satel.state.partition_states = {AlarmState.ARMED_MODE0: [1]}
     alarm_panel_update_method()
 
-    mock_satel.partition_states = {AlarmState.ARMED_MODE1: [1]}
+    mock_satel.state.partition_states = {AlarmState.ARMED_MODE1: [1]}
     alarm_panel_update_method()
 
     # State should still be DISARMED because updates are debounced
@@ -209,7 +209,7 @@ async def test_alarm_control_panel_disarming(
     mock_config_entry_with_subentries: MockConfigEntry,
 ) -> None:
     """Test alarm panel correctly disarms and dismisses alarm."""
-    mock_satel.partition_states = {AlarmState.TRIGGERED: [1]}
+    mock_satel.state.partition_states = {AlarmState.TRIGGERED: [1]}
 
     await setup_integration(hass, mock_config_entry_with_subentries)
 
@@ -262,7 +262,7 @@ async def test_alarm_panel_last_reported(
     assert len(events) == 1
 
     # Run callbacks with same payload
-    alarm_panel_update_method, _, _ = get_monitor_callbacks(mock_satel)
+    alarm_panel_update_method = get_alarm_status_callback(mock_satel)
     alarm_panel_update_method()
 
     # Trigger coordinator debounce

@@ -5,16 +5,10 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant, State
 
-from .const import DOMAIN
+from .const import DOMAIN, RemoteService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,9 +40,9 @@ async def _async_reproduce_state(
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     if state.state == STATE_ON:
-        service = SERVICE_TURN_ON
+        service = RemoteService.TURN_ON
     elif state.state == STATE_OFF:
-        service = SERVICE_TURN_OFF
+        service = RemoteService.TURN_OFF
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True

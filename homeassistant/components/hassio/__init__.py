@@ -106,6 +106,7 @@ from .websocket_api import async_load_websocket_api
 # All references to addons will eventually be refactored and deprecated
 get_apps_list = get_addons_list
 __all__ = [
+    "DOMAIN",
     "AddonError",
     "AddonInfo",
     "AddonManager",

@@ -8,11 +8,11 @@ from ritualsgenie import Attribute, RitualsGenie, RitualsGenieHub, RoomSize
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfArea
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RitualsConfigEntry, RitualsHubsCoordinator
-from .entity import DiffuserEntity, rituals_action
+from .entity import DiffuserEntity, async_add_diffusers, rituals_action
 
 PARALLEL_UPDATES = 1
 
@@ -67,11 +67,15 @@ async def async_setup_entry(
     """Set up the diffuser select entities."""
     hubs = config_entry.runtime_data.hubs
 
-    async_add_entities(
-        RitualsSelectEntity(hubs, hublot, description)
-        for hublot in hubs.data
-        for description in ENTITY_DESCRIPTIONS
-    )
+    @callback
+    def add_diffusers(hublots: list[str]) -> None:
+        async_add_entities(
+            RitualsSelectEntity(hubs, hublot, description)
+            for hublot in hublots
+            for description in ENTITY_DESCRIPTIONS
+        )
+
+    async_add_diffusers(config_entry, add_diffusers)
 
 
 class RitualsSelectEntity(DiffuserEntity, SelectEntity):

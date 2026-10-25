@@ -247,6 +247,9 @@
           "ternary": "Ternary"
         }
       },
+      "bat_config_charge_cutoff_soc": {
+        "name": "Charge cut-off state of charge"
+      },
       "bat_config_charging_voltage": {
         "name": "Battery config charging voltage"
       },
@@ -408,6 +411,12 @@
       "module_temperature_2": {
         "name": "Module temperature 2"
       },
+      "off_grid_discharge_cutoff_soc": {
+        "name": "Off-grid discharge cut-off state of charge"
+      },
+      "off_grid_recovery_soc": {
+        "name": "Off-grid discharge recovery state of charge"
+      },
       "offgrid_active_power_output": {
         "name": "Off-grid active power output"
       },
@@ -500,6 +509,9 @@
       },
       "offgrid_voltage_output_l2n": {
         "name": "Off-grid voltage output L2N"
+      },
+      "on_grid_discharge_cutoff_soc": {
+        "name": "On-grid discharge cut-off state of charge"
       },
       "passive_eps_wait_time": {
         "name": "EPS wait time"
