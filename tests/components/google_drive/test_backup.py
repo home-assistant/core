@@ -1,12 +1,12 @@
 """Test the Google Drive backup platform."""
 
-from collections.abc import AsyncIterator
 from io import StringIO
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import ClientResponse
+from freezegun.api import FrozenDateTimeFactory
 from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -20,11 +20,16 @@ from homeassistant.components.backup import (
     AgentBackup,
 )
 from homeassistant.components.google_drive import DOMAIN
-from homeassistant.components.google_drive.backup import GoogleDriveBackupAgent
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import CONFIG_ENTRY_TITLE, TEST_AGENT_ID
+
+from tests.components.backup.common import (
+    collect_upload_events,
+    flush_upload_progress,
+    upload_backup_via_http,
+)
 
 FOLDER_ID = "google-folder-id"
 TEST_AGENT_BACKUP = AgentBackup(
@@ -72,23 +77,6 @@ async def consume_stream(
         pass
 
 
-async def consume_stream_twice(
-    file_metadata: Any,
-    open_stream: Any,
-    *args: Any,
-    **kwargs: Any,
-) -> None:
-    """Consume the stream twice, like a resumable upload that had to retry.
-
-    A retried upload reopens the stream from the beginning and skips whatever
-    the server already received.
-    """
-    for _ in range(2):
-        stream = await open_stream()
-        async for _ in stream:
-            pass
-
-
 @pytest.fixture(autouse=True)
 async def setup_integration(
     hass: HomeAssistant,
@@ -109,7 +97,7 @@ async def test_agents_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test backup agent info."""
+    """Test backup agent info following config entry unload and setup."""
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
@@ -133,6 +121,20 @@ async def test_agents_info(
     assert response["success"]
     assert response["result"] == {
         "agents": [{"agent_id": "backup.local", "name": "local"}]
+    }
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agents": [
+            {"agent_id": "backup.local", "name": "local"},
+            {"agent_id": TEST_AGENT_ID, "name": CONFIG_ENTRY_TITLE},
+        ],
     }
 
 
@@ -466,66 +468,51 @@ async def test_agents_upload_create_folder_if_missing(
     assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
 
 
+@pytest.mark.parametrize(
+    ("upload_attempts", "chunks"),
+    [
+        pytest.param(1, [b"chunk1", b"chunk2"], id="single_attempt"),
+        # A retried upload reopens and re-reads the backup file.
+        pytest.param(
+            2, [b"chunk1", b"chunk2", b"", b"chunk1", b"chunk2"], id="retried"
+        ),
+    ],
+)
 async def test_agents_upload_progress(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     mock_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    upload_attempts: int,
+    chunks: list[bytes],
 ) -> None:
-    """Test agent upload reports progress."""
-    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream)
+    """Test upload progress is reported per chunk and never goes backwards."""
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    agent = GoogleDriveBackupAgent(entries[0])
+    async def resumable_upload_file(
+        file_metadata: Any, open_stream: Any, *args: Any, **kwargs: Any
+    ) -> None:
+        # A retried resumable upload reopens the stream from the beginning.
+        for _ in range(upload_attempts):
+            stream = await open_stream()
+            async for _ in stream:
+                # Report each chunk's progress in its own event
+                flush_upload_progress(hass, freezer)
 
-    progress_calls = []
+    mock_api.resumable_upload_file = AsyncMock(side_effect=resumable_upload_file)
 
-    def on_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
-        progress_calls.append(bytes_uploaded)
+    with collect_upload_events(hass, TEST_AGENT_ID) as events:
+        resp = await upload_backup_via_http(
+            await hass_client(), TEST_AGENT_ID, TEST_AGENT_BACKUP, chunks
+        )
 
-    async def open_stream() -> AsyncIterator[bytes]:
-        async def stream() -> AsyncIterator[bytes]:
-            yield b"chunk1"
-            yield b"chunk2"
-
-        return stream()
-
-    await agent.async_upload_backup(
-        open_stream=open_stream,
-        backup=TEST_AGENT_BACKUP,
-        on_progress=on_progress,
-    )
-
-    assert progress_calls == [6, 12]
-
-
-async def test_agents_upload_progress_does_not_go_backwards_on_retry(
-    hass: HomeAssistant,
-    mock_api: MagicMock,
-) -> None:
-    """Test agent upload progress is not reported twice when the upload retries."""
-    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream_twice)
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    agent = GoogleDriveBackupAgent(entries[0])
-
-    progress_calls = []
-
-    def on_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
-        progress_calls.append(bytes_uploaded)
-
-    async def open_stream() -> AsyncIterator[bytes]:
-        async def stream() -> AsyncIterator[bytes]:
-            yield b"chunk1"
-            yield b"chunk2"
-
-        return stream()
-
-    await agent.async_upload_backup(
-        open_stream=open_stream,
-        backup=TEST_AGENT_BACKUP,
-        on_progress=on_progress,
-    )
-
-    assert progress_calls == [6, 12]
+    assert resp.status == 201
+    # The manager emits the first (0) and last (backup size) events
+    assert [event.uploaded_bytes for event in events] == [
+        0,
+        6,
+        12,
+        TEST_AGENT_BACKUP.size,
+    ]
 
 
 async def test_agents_upload_fail(
