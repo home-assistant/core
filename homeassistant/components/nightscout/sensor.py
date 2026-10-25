@@ -1,6 +1,6 @@
 """Support for Nightscout sensors."""
 
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import ATTR_DATE, UnitOfBloodGlucoseConcentration
@@ -15,6 +15,16 @@ from .coordinator import NightscoutConfigEntry, NightscoutGlucoseCoordinator
 PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "Blood Glucose"
+
+TREND_ICONS = {
+    "Flat": "mdi:arrow-right",
+    "SingleDown": "mdi:arrow-down",
+    "FortyFiveDown": "mdi:arrow-bottom-right",
+    "DoubleDown": "mdi:chevron-triple-down",
+    "SingleUp": "mdi:arrow-up",
+    "FortyFiveUp": "mdi:arrow-top-right",
+    "DoubleUp": "mdi:chevron-triple-up",
+}
 
 
 async def async_setup_entry(
@@ -48,51 +58,23 @@ class NightscoutSensor(CoordinatorEntity[NightscoutGlucoseCoordinator], SensorEn
 
     @property
     @override
-    def available(self) -> bool:
-        """Return if a glucose reading is available."""
-        return super().available and self.coordinator.data is not None
-
-    @property
-    @override
     def native_value(self) -> int:
         """Return the latest glucose value."""
-        value = self.coordinator.data
-        if TYPE_CHECKING:
-            assert value is not None
-        sgv: int = value.sgv
-        return sgv
+        return int(self.coordinator.data.sgv)
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes of the latest glucose reading."""
-        value = self.coordinator.data
-        if TYPE_CHECKING:
-            assert value is not None
         return {
-            ATTR_DEVICE: value.device,
-            ATTR_DATE: value.date,
-            ATTR_DELTA: value.delta,
-            ATTR_DIRECTION: value.direction,
+            ATTR_DEVICE: self.coordinator.data.device,
+            ATTR_DATE: self.coordinator.data.date,
+            ATTR_DELTA: self.coordinator.data.delta,
+            ATTR_DIRECTION: self.coordinator.data.direction,
         }
 
     @property
     @override
     def icon(self) -> str:
         """Return an icon matching the trend direction."""
-        if (value := self.coordinator.data) is None:
-            return "mdi:cloud-question"
-        return self._parse_icon(value.direction)
-
-    def _parse_icon(self, direction: str) -> str:
-        """Update the icon based on the direction attribute."""
-        switcher = {
-            "Flat": "mdi:arrow-right",
-            "SingleDown": "mdi:arrow-down",
-            "FortyFiveDown": "mdi:arrow-bottom-right",
-            "DoubleDown": "mdi:chevron-triple-down",
-            "SingleUp": "mdi:arrow-up",
-            "FortyFiveUp": "mdi:arrow-top-right",
-            "DoubleUp": "mdi:chevron-triple-up",
-        }
-        return switcher.get(direction, "mdi:cloud-question")
+        return TREND_ICONS.get(self.coordinator.data.direction, "mdi:cloud-question")

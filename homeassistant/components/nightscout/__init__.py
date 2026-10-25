@@ -26,7 +26,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -
     try:
         status = await api.get_server_status()
     except (ClientError, TimeoutError, OSError) as error:
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="update_error",
+            translation_placeholders={"error": str(error)},
+        ) from error
 
     coordinator = NightscoutGlucoseCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()

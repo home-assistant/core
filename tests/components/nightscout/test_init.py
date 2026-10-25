@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
-from . import SERVER_STATUS, init_integration
+from . import SERVER_STATUS, init_integration, init_integration_empty_response
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -40,6 +40,13 @@ async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant) -> None:
         side_effect=ClientError(),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_no_readings_raises_entry_not_ready(hass: HomeAssistant) -> None:
+    """Test setup is retried when the server returns no glucose readings."""
+    config_entry = await init_integration_empty_response(hass)
+
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
