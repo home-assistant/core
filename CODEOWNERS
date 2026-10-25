@@ -886,8 +886,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/iammeter/ @lewei50 @IAMMETER @miwyf
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
-/homeassistant/components/icloud/ @Quentame @nzapponi
-/tests/components/icloud/ @Quentame @nzapponi
+/homeassistant/components/icloud/ @Quentame @nzapponi @timlaing
+/tests/components/icloud/ @Quentame @nzapponi @timlaing
 /homeassistant/components/idasen_desk/ @abmantis
 /tests/components/idasen_desk/ @abmantis
 /homeassistant/components/idrive_e2/ @patrickvorgers

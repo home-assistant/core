@@ -348,17 +348,17 @@ class R2BackupAgent(BackupAgent):
         backups = {}
         # Only pass Prefix if a prefix is configured; some S3-compatible APIs
         # (and type checkers) do not like Prefix=None.
-        list_kwargs = {"Bucket": self._bucket}
+        list_kwargs: dict[str, Any] = {"Bucket": self._bucket}
         if self._prefix:
             list_kwargs["Prefix"] = self._prefix + "/"
-        response = await self._client.list_objects_v2(**list_kwargs)
-
-        # Filter for metadata files only
-        metadata_files = [
-            obj
-            for obj in response.get("Contents", [])
-            if obj["Key"].endswith(".metadata.json")
-        ]
+        paginator = self._client.get_paginator("list_objects_v2")
+        metadata_files: list[dict[str, Any]] = []
+        async for page in paginator.paginate(**list_kwargs):
+            metadata_files.extend(
+                obj
+                for obj in page.get("Contents", [])
+                if obj["Key"].endswith(".metadata.json")
+            )
 
         for metadata_file in metadata_files:
             try:
