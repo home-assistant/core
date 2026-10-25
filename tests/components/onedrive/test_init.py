@@ -374,11 +374,25 @@ async def test_migration_guard_against_major_downgrade(
     assert old_config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
+@pytest.mark.parametrize(
+    ("stale_agents", "stale_agent_ids"),
+    [
+        pytest.param({}, [], id="no_stale_settings"),
+        # Left behind by a removed config entry that had the uppercase drive ID
+        pytest.param(
+            {f"{DOMAIN}.MOCK_DRIVE_ID": {"protected": True}},
+            [f"{DOMAIN}.MOCK_DRIVE_ID"],
+            id="stale_settings",
+        ),
+    ],
+)
 async def test_1_2_to_1_3_migration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    stale_agents: dict[str, dict[str, bool]],
+    stale_agent_ids: list[str],
 ) -> None:
     """Test migration from 1.2 to 1.3 uppercases the drive ID."""
     old_config_entry = MockConfigEntry(
@@ -411,8 +425,8 @@ async def test_1_2_to_1_3_migration(
 
     assert await async_setup_component(hass, BACKUP_DOMAIN, {})
     async_get_manager(hass).config.update(
-        agents={f"{DOMAIN}.mock_drive_id": {"protected": False}},
-        create_backup={"agent_ids": [f"{DOMAIN}.mock_drive_id"]},
+        agents={f"{DOMAIN}.mock_drive_id": {"protected": False}, **stale_agents},
+        create_backup={"agent_ids": [f"{DOMAIN}.mock_drive_id", *stale_agent_ids]},
     )
 
     await setup_integration(hass, old_config_entry)
@@ -434,6 +448,7 @@ async def test_1_2_to_1_3_migration(
     backup_config = async_get_manager(hass).config.data
     assert backup_config.create_backup.agent_ids == [f"{DOMAIN}.MOCK_DRIVE_ID"]
     assert list(backup_config.agents) == [f"{DOMAIN}.MOCK_DRIVE_ID"]
+    assert backup_config.agents[f"{DOMAIN}.MOCK_DRIVE_ID"].protected is False
 
 
 @pytest.mark.parametrize(
