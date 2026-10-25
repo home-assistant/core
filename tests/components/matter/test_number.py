@@ -27,6 +27,12 @@ POWER_ON_COLOR_TEMPERATURE_ENTITY_ID = (
 )
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.NUMBER
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_numbers(
     hass: HomeAssistant,

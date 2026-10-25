@@ -3,10 +3,20 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "mfa_required": "Multi-factor authentication is required for this account and is not supported",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_code": "The one-time code is wrong. Check your authenticator app and try again."
     },
     "step": {
+      "mfa": {
+        "data": {
+          "code": "One-time code"
+        },
+        "data_description": {
+          "code": "The current six-digit code from your authenticator app."
+        },
+        "description": "Your account requires two-factor authentication. Enter the one-time code from your authenticator app.",
+        "title": "Two-factor authentication"
+      },
       "user": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
@@ -16,7 +26,7 @@
           "email": "The email address of your Mijn Farmad Apotheek account.",
           "password": "The password of your Mijn Farmad Apotheek account."
         },
-        "description": "Enter the credentials of your Mijn Farmad Apotheek account. Accounts that require multi-factor authentication are not supported.",
+        "description": "Enter the credentials of your Mijn Farmad Apotheek account.",
         "title": "Connect to Mijn Farmad Apotheek"
       }
     }
