@@ -72,7 +72,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MAP_LANGUAGES = {"en": "english", "fr": "erench"}
+MAP_LANGUAGES = {"en": "english", "fr": "french"}
 
 
 async def validate_input(data):
