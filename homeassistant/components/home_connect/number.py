@@ -256,7 +256,7 @@ class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return HomeConnectEntity.available.fget(self) and (
+        return super(HomeConnectOptionEntity, self).available and (
             self.bsh_key in self.appliance.options
         )
 
