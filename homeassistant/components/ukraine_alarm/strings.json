@@ -34,6 +34,12 @@
       "air": {
         "name": "Air"
       },
+      "air_red": {
+        "name": "Air (red)"
+      },
+      "air_yellow": {
+        "name": "Air (yellow)"
+      },
       "artillery": {
         "name": "Artillery"
       },
@@ -49,6 +55,14 @@
       "urban_fights": {
         "name": "Urban fights"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to fetch the regions from the Ukraine Alarm API"
+    },
+    "deprecated_state_region": {
+      "message": "The region {region_name} is a state-level region, which is no longer supported. Remove this integration entry and add it again, selecting a district or community."
     }
   },
   "issues": {

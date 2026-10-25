@@ -2,13 +2,14 @@
 
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -48,7 +49,7 @@ EVENT_TYPES_BY_EVENT_CLASS = {
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
+    {probatio.Required(CONF_TYPE): str, probatio.Required(CONF_SUBTYPE): str}
 )
 
 
@@ -131,9 +132,9 @@ async def async_attach_trigger(
         hass,
         event_trigger.TRIGGER_SCHEMA(
             {
-                event_trigger.CONF_PLATFORM: CONF_EVENT,
-                event_trigger.CONF_EVENT_TYPE: BTHOME_BLE_EVENT,
-                event_trigger.CONF_EVENT_DATA: {
+                EventTriggerArgument.PLATFORM: CONF_EVENT,
+                EventTriggerArgument.EVENT_TYPE: BTHOME_BLE_EVENT,
+                EventTriggerArgument.EVENT_DATA: {
                     CONF_DEVICE_ID: config[CONF_DEVICE_ID],
                     EVENT_CLASS: config[CONF_TYPE],
                     EVENT_TYPE: config[CONF_SUBTYPE],

@@ -10,7 +10,7 @@ import sys
 from typing import Any, overload
 
 from aiousbwatcher import AIOUSBWatcher, InotifyNotAvailableError
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
@@ -20,14 +20,16 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
     HomeAssistant,
+    async_noop,
     callback as hass_callback,
 )
+from homeassistant.generated.usb import SERIAL_PORT_SELECTOR_INTEGRATIONS
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import USBMatcher, async_get_usb
+from homeassistant.loader import USBMatcher, async_get_custom_components, async_get_usb
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -38,6 +40,7 @@ from .utils import (
     scan_serial_ports,
     usb_device_from_path,
     usb_device_matches_matcher,
+    usb_serial_device_from_port,
     usb_service_info_from_device,
     usb_unique_id_from_service_info,
 )
@@ -53,11 +56,14 @@ REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
 ADD_REMOVE_SCAN_COOLDOWN = 5  # 5 second cooldown to give devices a chance to register
 
 __all__ = [
+    "DOMAIN",
     "SerialDevice",
     "SerialPortConsumer",
     "USBCallbackMatcher",
     "USBDevice",
     "async_get_serial_port_consumers",
+    "async_is_serial_port_present",
+    "async_notify_serial_ports_changed",
     "async_register_port_event_callback",
     "async_register_scan_request_callback",
     "async_register_serial_port_scanner",
@@ -65,6 +71,7 @@ __all__ = [
     "scan_serial_ports",
     "usb_device_from_path",
     "usb_device_matches_matcher",
+    "usb_serial_device_from_port",
     "usb_service_info_from_device",
     "usb_unique_id_from_service_info",
 ]
@@ -108,6 +115,24 @@ async def async_scan_serial_ports(
 ) -> Sequence[USBDevice | SerialDevice]:
     """Scan serial ports and return USB and other serial devices."""
     return await hass.data[_USB_DATA].async_scan_serial_ports()
+
+
+async def async_is_serial_port_present(hass: HomeAssistant, device_path: str) -> bool:
+    """Return whether a port with this device path is currently present."""
+    if "://" not in device_path:
+        return await hass.async_add_executor_job(os.path.exists, device_path)
+
+    # Ports contributed by a scanner, such as ESPHome serial proxies, are named by URLs
+    return any(
+        port.device == device_path for port in await async_scan_serial_ports(hass)
+    )
+
+
+@hass_callback
+def async_notify_serial_ports_changed(hass: HomeAssistant) -> None:
+    """Rescan after ports a scanner contributes appeared or disappeared."""
+    # Unlike `async_request_scan`, this also rescans while the udev watcher is running
+    hass.data[_USB_DATA].async_delayed_add_remove_scan()
 
 
 @hass_callback
@@ -187,6 +212,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[_USB_DATA] = usb_discovery
     websocket_api.async_register_command(hass, websocket_usb_scan)
     websocket_api.async_register_command(hass, websocket_usb_list_serial_ports)
+    websocket_api.async_register_command(hass, websocket_usb_list_serial_integrations)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, register_serialx_transport())
 
@@ -272,7 +298,7 @@ class USBDiscovery:
 
         @hass_callback
         def _usb_change_callback() -> None:
-            self._async_delayed_add_remove_scan()
+            self.async_delayed_add_remove_scan()
 
         watcher = AIOUSBWatcher()
         watcher.async_register_callback(_usb_change_callback)
@@ -308,7 +334,7 @@ class USBDiscovery:
         """Register an initial scan callback."""
         if self.initial_scan_done:
             callback()
-            return lambda: None
+            return async_noop
 
         self._initial_scan_callbacks.append(callback)
 
@@ -476,7 +502,7 @@ class USBDiscovery:
             await self._async_process_discovered_usb_device(usb_device)
 
     @hass_callback
-    def _async_delayed_add_remove_scan(self) -> None:
+    def async_delayed_add_remove_scan(self) -> None:
         """Request a serial scan after a debouncer delay."""
         if not self._add_remove_debouncer:
             self._add_remove_debouncer = Debouncer(
@@ -529,7 +555,7 @@ class USBDiscovery:
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "usb/scan"})
+@websocket_api.websocket_command({probatio.Required("type"): "usb/scan"})
 @websocket_api.async_response
 async def websocket_usb_scan(
     hass: HomeAssistant,
@@ -598,8 +624,8 @@ def _serialize_consumer(consumer: SerialPortConsumer) -> dict[str, Any]:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "usb/list_serial_ports",
-        vol.Optional("include_usage", default=False): bool,
+        probatio.Required("type"): "usb/list_serial_ports",
+        probatio.Optional("include_usage", default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -649,3 +675,25 @@ async def websocket_usb_list_serial_ports(
         entry["discovery_flows"] = _async_get_discovery_flows(hass, device)
 
     connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "usb/list_serial_integrations"}
+)
+@websocket_api.async_response
+async def websocket_usb_list_serial_integrations(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List the core integrations whose config flow uses SerialPortSelector."""
+    custom_components = await async_get_custom_components(hass)
+    connection.send_result(
+        msg["id"],
+        [
+            domain
+            for domain in SERIAL_PORT_SELECTOR_INTEGRATIONS
+            if domain not in custom_components
+        ],
+    )

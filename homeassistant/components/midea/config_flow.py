@@ -1,6 +1,5 @@
 """Config flow for Midea."""
 
-from functools import partial
 from operator import itemgetter
 from typing import Any, override
 
@@ -15,7 +14,7 @@ from midealocal.device import MideaDevice
 from midealocal.devices import device_selector
 from midealocal.discover import discover
 from midealocal.exceptions import MideaCloudError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -33,7 +32,13 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
@@ -53,15 +58,7 @@ LOGIN_MODE_PRESET = "preset"
 LOGIN_MODE_ACCOUNT = "account"
 
 
-def _connect_and_close(dm: MideaDevice) -> bool:
-    """Connect to the device, always closing the socket afterwards."""
-    try:
-        return dm.connect(check_protocol=True)
-    finally:
-        dm.close_socket()
-
-
-def _select_and_connect(
+async def _async_select_and_connect(
     *,
     device_id: int,
     device_type: int,
@@ -73,11 +70,11 @@ def _select_and_connect(
     model: str,
     subtype: int,
 ) -> bool | None:
-    """Select the device implementation and connect to it in a single executor job.
+    """Select the device implementation and connect to it.
 
     Returns None if there is no device implementation for device_type.
     """
-    dm = device_selector(
+    dm: MideaDevice | None = device_selector(
         "",
         device_id,
         device_type,
@@ -92,7 +89,10 @@ def _select_and_connect(
     )
     if dm is None:
         return None
-    return _connect_and_close(dm)
+    try:
+        return await dm.connect(check_protocol=True)
+    finally:
+        await dm.close_socket()
 
 
 class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -241,11 +241,17 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         error: str | None = None,
     ) -> ConfigFlowResult:
         """Show the login form, retaining any previously entered values."""
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_ACCOUNT): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(
+                probatio.Required(CONF_ACCOUNT): TextSelector(
+                    TextSelectorConfig(autocomplete="username")
+                ),
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
+                probatio.Required(
                     CONF_SERVER,
                     default=default_server,
                 ): SelectSelector(
@@ -292,9 +298,9 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_method",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "login_mode",
                         default=LOGIN_MODE_PRESET,
                     ): SelectSelector(
@@ -321,7 +327,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_user()
 
         # get all devices list
-        all_devices = await self.hass.async_add_executor_job(discover)
+        all_devices = await discover()
         # available devices exist
         if len(all_devices) > 0:
             table = (
@@ -360,8 +366,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 ip_address = user_input[CONF_IP_ADDRESS]
             # use midea-local discover() to get devices list with ip_address
-            self.devices = await self.hass.async_add_executor_job(
-                lambda: discover(list(self.supports.keys()), ip_address=ip_address),
+            self.devices = await discover(
+                list(self.supports.keys()), ip_address=ip_address
             )
             self.available_device = {}
             for device_id, device in self.devices.items():
@@ -381,8 +387,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         # show discovery device input form with auto or ip address in web UI
         return self.async_show_form(
             step_id="search",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_IP_ADDRESS, default="auto"): str},
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_IP_ADDRESS, default="auto"): TextSelector()},
             ),
             errors={"base": error} if error else None,
         )
@@ -463,19 +469,16 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         error = "connect_error"
         # use token/key to connect device and confirm token result
         for k, value in keys.items():
-            connected = await self.hass.async_add_executor_job(
-                partial(
-                    _select_and_connect,
-                    device_id=appliance_id,
-                    device_type=device.get(CONF_TYPE),
-                    ip_address=device.get(CONF_IP_ADDRESS),
-                    port=device.get(CONF_PORT),
-                    token=value["token"],
-                    key=value["key"],
-                    device_protocol=ProtocolVersion.V3,
-                    model=device.get(CONF_MODEL),
-                    subtype=device.get(CONF_SUBTYPE, 0),
-                ),
+            connected = await _async_select_and_connect(
+                device_id=appliance_id,
+                device_type=device.get(CONF_TYPE),
+                ip_address=device.get(CONF_IP_ADDRESS),
+                port=device.get(CONF_PORT),
+                token=value["token"],
+                key=value["key"],
+                device_protocol=ProtocolVersion.V3,
+                model=device.get(CONF_MODEL),
+                subtype=device.get(CONF_SUBTYPE, 0),
             )
             if connected is None:
                 LOGGER.debug(
@@ -592,12 +595,12 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         # show available device list in UI
         return self.async_show_form(
             step_id="auto",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_DEVICE,
                         default=next(iter(self.available_device.keys())),
-                    ): vol.In(self.available_device),
+                    ): probatio.In(self.available_device),
                 },
             ),
             **self._form_error(error),
@@ -632,19 +635,16 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(str(device_id))
         self._abort_if_unique_id_configured()
 
-        connected = await self.hass.async_add_executor_job(
-            partial(
-                _select_and_connect,
-                device_id=device_id,
-                device_type=user_input[CONF_TYPE],
-                ip_address=user_input[CONF_IP_ADDRESS],
-                port=user_input[CONF_PORT],
-                token=user_input[CONF_TOKEN],
-                key=user_input[CONF_KEY],
-                device_protocol=user_input[CONF_PROTOCOL],
-                model=user_input[CONF_MODEL],
-                subtype=user_input[CONF_SUBTYPE],
-            ),
+        connected = await _async_select_and_connect(
+            device_id=device_id,
+            device_type=user_input[CONF_TYPE],
+            ip_address=user_input[CONF_IP_ADDRESS],
+            port=user_input[CONF_PORT],
+            token=user_input[CONF_TOKEN],
+            key=user_input[CONF_KEY],
+            device_protocol=user_input[CONF_PROTOCOL],
+            model=user_input[CONF_MODEL],
+            subtype=user_input[CONF_SUBTYPE],
         )
         if connected:
             device_type = user_input[CONF_TYPE]
@@ -695,9 +695,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             if device_id not in self.devices:
                 ip = user_input[CONF_IP_ADDRESS]
                 # discover device
-                self.devices = await self.hass.async_add_executor_job(
-                    lambda: discover(list(self.supports.keys()), ip_address=ip),
-                )
+                self.devices = await discover(list(self.supports.keys()), ip_address=ip)
                 # discover result MUST exist
                 if len(self.devices) != 1:
                     return self._show_manually_form(
@@ -786,10 +784,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         error = None
         if user_input is not None:
-            devices = await self.hass.async_add_executor_job(
-                lambda: discover(
-                    list(self.supports.keys()), ip_address=user_input[CONF_IP_ADDRESS]
-                ),
+            devices = await discover(
+                list(self.supports.keys()), ip_address=user_input[CONF_IP_ADDRESS]
             )
             entry_device_id = entry.data[CONF_DEVICE_ID]
             device = devices.get(entry_device_id)
@@ -804,12 +800,12 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_IP_ADDRESS,
                         default=(user_input or entry.data)[CONF_IP_ADDRESS],
-                    ): str
+                    ): TextSelector()
                 }
             ),
             errors={"base": error} if error else None,
@@ -822,46 +818,46 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show the manual step form, retaining any previously entered values."""
         protocol = self.found_device.get(CONF_PROTOCOL)
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_DEVICE_ID,
                     default=self.found_device.get(CONF_DEVICE_ID),
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_TYPE,
                     default=(self.found_device.get(CONF_TYPE) or DeviceType.AC),
-                ): vol.In(self.supports),
-                vol.Required(
+                ): probatio.In(self.supports),
+                probatio.Required(
                     CONF_IP_ADDRESS,
                     default=self.found_device.get(CONF_IP_ADDRESS),
-                ): str,
-                vol.Required(
+                ): TextSelector(),
+                probatio.Required(
                     CONF_PORT,
                     default=(self.found_device.get(CONF_PORT) or 6444),
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_PROTOCOL,
                     default=(protocol or ProtocolVersion.V3),
-                ): vol.In(
+                ): probatio.In(
                     [protocol] if protocol else ProtocolVersion,
                 ),
-                vol.Required(
+                probatio.Required(
                     CONF_MODEL,
                     default=(self.found_device.get(CONF_MODEL) or "Unknown"),
-                ): str,
-                vol.Required(
+                ): TextSelector(),
+                probatio.Required(
                     CONF_SUBTYPE,
                     default=(self.found_device.get(CONF_SUBTYPE) or 0),
                 ): int,
-                vol.Optional(
-                    CONF_TOKEN,
+                probatio.Optional(
+                    probatio.Secret(CONF_TOKEN),
                     default=(self.found_device.get(CONF_TOKEN) or ""),
-                ): str,
-                vol.Optional(
-                    CONF_KEY,
+                ): TextSelector(),
+                probatio.Optional(
+                    probatio.Secret(CONF_KEY),
                     default=(self.found_device.get(CONF_KEY) or ""),
-                ): str,
+                ): TextSelector(),
             },
         )
         if user_input is not None:

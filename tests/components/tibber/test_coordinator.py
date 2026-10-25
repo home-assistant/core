@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import tibber
 
 from homeassistant.components.recorder import Recorder
@@ -15,8 +16,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import create_tibber_device, create_tibber_home
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _prices_for_days(*days: str) -> dict[str, float]:
@@ -59,7 +58,7 @@ async def _async_setup_data_api_sensor(
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "external-id_storage.stateOfCharge"
+        "sensor", DOMAIN, "device-id_storage.stateOfCharge"
     )
     assert entity_id is not None
     assert hass.states.get(entity_id) is not None

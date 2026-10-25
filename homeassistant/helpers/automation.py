@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Final, Self
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, split_entity_id
@@ -78,7 +78,7 @@ def get_relative_description_key(domain: str, key: str) -> str:
 
 
 def move_top_level_schema_fields_to_options(
-    config: ConfigType, options_schema_dict: dict[vol.Marker, Any]
+    config: ConfigType, options_schema_dict: dict[probatio.Marker, Any]
 ) -> ConfigType:
     """Move top-level fields to options.
 
@@ -102,7 +102,7 @@ def move_top_level_schema_fields_to_options(
 
 
 def move_options_fields_to_top_level(
-    config: ConfigType, base_schema: vol.Schema
+    config: ConfigType, base_schema: probatio.Schema
 ) -> ConfigType:
     """Move options fields to top-level.
 
@@ -128,7 +128,7 @@ def move_options_fields_to_top_level(
 
     try:
         new_config = base_schema(new_config)
-    except vol.Invalid:
+    except probatio.Invalid:
         return config
 
     new_config.update(options)

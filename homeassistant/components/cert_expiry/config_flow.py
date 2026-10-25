@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -80,10 +80,10 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                    vol.Required(
+                    probatio.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                    probatio.Required(
                         CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
                     ): int,
                 }
@@ -119,10 +119,10 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
-                        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
                     }
                 ),
                 user_input or reconfigure_entry.data,

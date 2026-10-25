@@ -32,6 +32,9 @@
     },
     "invalid_response": {
       "message": "Received an invalid response from the Toon device."
+    },
+    "setup_required": {
+      "message": "This configuration entry is no longer supported, complete the new Toon setup to replace it."
     }
   }
 }

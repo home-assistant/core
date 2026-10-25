@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import number
 from homeassistant.components.number import (
@@ -77,37 +77,39 @@ def validate_config(config: ConfigType) -> ConfigType:
         config[CONF_UNIT_OF_MEASUREMENT] = AMBIGUOUS_UNITS[unit_of_measurement]
 
     if config[CONF_MIN] > config[CONF_MAX]:
-        raise vol.Invalid(f"{CONF_MAX} must be >= {CONF_MIN}")
+        raise probatio.Invalid(f"{CONF_MAX} must be >= {CONF_MIN}")
 
     return config
 
 
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEVICE_CLASS): vol.Any(
-            vol.All(vol.Lower, vol.Coerce(NumberDeviceClass)), None
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DEVICE_CLASS): probatio.Any(
+            probatio.All(probatio.Lower, probatio.Coerce(NumberDeviceClass)), None
         ),
-        vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
-        vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
-        vol.Optional(CONF_MODE, default=NumberMode.AUTO): vol.Coerce(NumberMode),
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
-        vol.Optional(CONF_STEP, default=DEFAULT_STEP): vol.All(
-            vol.Coerce(float), vol.Range(min=1e-3)
+        probatio.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): probatio.Coerce(float),
+        probatio.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): probatio.Coerce(float),
+        probatio.Optional(CONF_MODE, default=NumberMode.AUTO): probatio.Coerce(
+            NumberMode
         ),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
+        probatio.Optional(CONF_STEP, default=DEFAULT_STEP): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=1e-3)
+        ),
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(
+PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,
     validate_config,
 )
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
     validate_config,
 )
 

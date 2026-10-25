@@ -2,8 +2,9 @@
 
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
 from zwave_js_server.const import SecurityClass
 from zwave_js_server.model.controller import ProvisioningEntry
 
@@ -18,8 +19,6 @@ from homeassistant.components.zwave_js.helpers import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, device_registry as dr
-
-from tests.common import MockConfigEntry
 
 CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 
@@ -82,7 +81,7 @@ async def test_get_value_state_schema_boolean_config_value(
     schema_validator = get_value_state_schema(
         aeon_smart_switch_6.values["102-112-0-255"]
     )
-    assert isinstance(schema_validator, vol.Coerce)
+    assert isinstance(schema_validator, probatio.Coerce)
     assert schema_validator.type is bool
 
 

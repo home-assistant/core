@@ -1,6 +1,5 @@
 """Models for AVM FRITZ!Box."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from typing import NotRequired, TypedDict
@@ -164,17 +163,6 @@ class FritzDevice:
     def wan_access(self, allowed: bool) -> None:
         """Set device wan access."""
         self._wan_access = allowed
-
-
-class SwitchInfo(TypedDict):
-    """FRITZ!Box switch info class."""
-
-    description: str
-    icon: str
-    type: str
-    callback_update: Callable
-    callback_switch: Callable
-    init_state: bool
 
 
 @dataclass

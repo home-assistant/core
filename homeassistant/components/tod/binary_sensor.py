@@ -5,7 +5,7 @@ from datetime import datetime, time, timedelta
 import logging
 from typing import Any, Literal, TypeGuard, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -47,12 +47,16 @@ ATTR_NEXT_UPDATE = "next_update"
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_AFTER): vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event)),
-        vol.Required(CONF_BEFORE): vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event)),
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
-        vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_AFTER): probatio.Any(
+            cv.time, probatio.All(probatio.Lower, cv.sun_event)
+        ),
+        probatio.Required(CONF_BEFORE): probatio.Any(
+            cv.time, probatio.All(probatio.Lower, cv.sun_event)
+        ),
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
+        probatio.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 

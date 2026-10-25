@@ -4,7 +4,7 @@ from datetime import timedelta
 from functools import partial
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -49,22 +49,22 @@ DEFAULT_LIGHT_PROFILE = "relax"
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_DEVICE_GROUP): cv.entity_id,
-                vol.Optional(
+                probatio.Optional(CONF_DEVICE_GROUP): cv.entity_id,
+                probatio.Optional(
                     CONF_DISABLE_TURN_OFF, default=DEFAULT_DISABLE_TURN_OFF
                 ): cv.boolean,
-                vol.Optional(CONF_LIGHT_GROUP): cv.string,
-                vol.Optional(
+                probatio.Optional(CONF_LIGHT_GROUP): cv.string,
+                probatio.Optional(
                     CONF_LIGHT_PROFILE, default=DEFAULT_LIGHT_PROFILE
                 ): cv.string,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

@@ -1,0 +1,11 @@
+{
+  "id": 999999999,
+  "full_name": "test/test",
+  "fork": false,
+  "description": "Sample description for repository.",
+  "stargazers_count": 999,
+  "archived": false,
+  "topics": ["topic1", "topic2"],
+  "default_branch": "main",
+  "last_commit": "12345678"
+}

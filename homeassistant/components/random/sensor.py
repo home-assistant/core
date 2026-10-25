@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from random import randrange
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -36,10 +36,10 @@ DEFAULT_NAME = "Random sensor"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): cv.positive_int,
-        vol.Optional(CONF_MINIMUM, default=DEFAULT_MIN): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): cv.positive_int,
+        probatio.Optional(CONF_MINIMUM, default=DEFAULT_MIN): cv.positive_int,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 

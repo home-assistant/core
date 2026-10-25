@@ -300,7 +300,7 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         # NotificationType 7: Home Security - State Id's 5, 6 (glass breakage)
         key=NOTIFICATION_HOME_SECURITY,
         states={5, 6},
-        device_class=BinarySensorDeviceClass.SAFETY,
+        device_class=BinarySensorDeviceClass.GLASS_BREAK,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 7: Home Security - State Id's 7, 8 (motion)
@@ -491,6 +491,7 @@ def _async_check_legacy_entity_repair(
             hass,
             DOMAIN,
             f"{repair_description.issue_translation_key}.{entity_id}",
+            config_entry_id=entity_entry.config_entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=IssueSeverity.WARNING,

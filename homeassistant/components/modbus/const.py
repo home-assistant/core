@@ -155,7 +155,7 @@ SERVICE_WRITE_REGISTER = "write_register"
 SERVICE_STOP = "stop"
 
 # dispatcher signals
-SIGNAL_STOP_ENTITY = "modbus.stop"
+SIGNAL_STOP_ENTITY = "modbus.stop_{}"
 
 # integration names
 DEFAULT_HUB = "modbus_hub"
