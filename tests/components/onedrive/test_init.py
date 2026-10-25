@@ -26,7 +26,11 @@ from homeassistant.components.onedrive.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -297,7 +301,7 @@ async def test_1_1_to_1_2_migration(
     await setup_integration(hass, old_config_entry)
     assert old_config_entry.data[CONF_FOLDER_ID] == mock_folder.id
     assert old_config_entry.data[CONF_FOLDER_NAME] == mock_folder.name
-    assert old_config_entry.minor_version == 2
+    assert old_config_entry.minor_version == 3
 
 
 @pytest.mark.parametrize(
@@ -381,3 +385,65 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_migrate_drive_id_casing(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_onedrive_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration normalizes drive ID casing and merges duplicate devices.
+
+    Regression test for https://github.com/home-assistant/core/issues/188423 .
+    """
+    entry = MockConfigEntry(
+        title="John Doe's OneDrive",
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        unique_id="MOCK_DRIVE_ID",
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    old_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "MOCK_DRIVE_ID")},
+    )
+    canonical_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "mock_drive_id")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "MOCK_DRIVE_ID_drive_state",
+        config_entry=entry,
+        device_id=old_device.id,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.unique_id == "mock_drive_id"
+    assert entry.minor_version == 3
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "MOCK_DRIVE_ID_drive_state"
+        )
+        is None
+    )
+    migrated_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "mock_drive_id_drive_state"
+    )
+    assert migrated_entity_id is not None
+    assert (
+        entity_registry.async_get(migrated_entity_id).device_id == canonical_device.id
+    )
+
+    assert device_registry.async_get(old_device.id) is None
+    assert device_registry.async_get(canonical_device.id).identifiers == {
+        (DOMAIN, "mock_drive_id")
+    }

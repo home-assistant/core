@@ -101,11 +101,14 @@ class OneDriveDriveStateSensor(
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_translation_key = description.key
-        self._attr_unique_id = f"{coordinator.data.id}_{description.key}"
+        # Graph does not return the drive ID in a consistent case; normalize
+        # it or the registries end up with duplicate devices/entities.
+        drive_id = coordinator.data.id.lower()
+        self._attr_unique_id = f"{drive_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             name=coordinator.data.name or coordinator.config_entry.title,
-            identifiers={(DOMAIN, coordinator.data.id)},
+            identifiers={(DOMAIN, drive_id)},
             manufacturer="Microsoft",
             model=f"OneDrive {coordinator.data.drive_type.value.capitalize()}",
             configuration_url=f"https://onedrive.live.com/?id=root&cid={coordinator.data.id}",

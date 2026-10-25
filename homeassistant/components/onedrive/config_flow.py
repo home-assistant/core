@@ -38,7 +38,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle OneDrive OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     client: OneDriveClient
     approot: AppRoot
@@ -92,7 +92,8 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.logger.exception("Unknown error")
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(self.approot.parent_reference.drive_id)
+        # Graph does not return the drive ID in a consistent case; normalize it.
+        await self.async_set_unique_id(self.approot.parent_reference.drive_id.lower())
 
         if self.source != SOURCE_USER:
             self._abort_if_unique_id_mismatch(

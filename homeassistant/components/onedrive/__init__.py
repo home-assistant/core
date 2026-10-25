@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from html import unescape
 from json import dumps, loads
 import logging
-from typing import cast
+from typing import Any, cast
 
 from onedrive_personal_sdk import OneDriveClient
 from onedrive_personal_sdk.exceptions import (
@@ -20,7 +20,11 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -167,6 +171,70 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
             minor_version=2,
         )
         _LOGGER.debug("Migration to version 1.2 successful")
+
+    if entry.version == 1 and entry.minor_version == 2:
+        # Graph does not return the drive ID in a consistent case, which used
+        # to create duplicate devices and "_2" entities. Normalize identifiers
+        # to lower case and merge any devices already duplicated.
+        entity_reg = er.async_get(hass)
+        device_reg = dr.async_get(hass)
+
+        def _migrate_unique_id(
+            entity_entry: er.RegistryEntry,
+        ) -> dict[str, Any] | None:
+            prefix, sep, suffix = entity_entry.unique_id.partition("_")
+            if not sep or prefix == prefix.lower():
+                return None
+            new_unique_id = f"{prefix.lower()}_{suffix}"
+            if entity_reg.async_get_entity_id(
+                entity_entry.domain, DOMAIN, new_unique_id
+            ):
+                # A different entity already holds the normalized unique ID;
+                # leave the stale entry as-is.
+                return None
+            return {"new_unique_id": new_unique_id}
+
+        await er.async_migrate_entries(hass, entry.entry_id, _migrate_unique_id)
+
+        devices = dr.async_entries_for_config_entry(device_reg, entry.entry_id)
+        canonical_devices: dict[str, list[dr.DeviceEntry]] = {}
+        for device in devices:
+            for domain, identifier in device.identifiers:
+                if domain == DOMAIN:
+                    canonical_devices.setdefault(identifier.lower(), []).append(device)
+
+        for canonical, grouped in canonical_devices.items():
+            target = next(
+                (
+                    device
+                    for device in grouped
+                    if (DOMAIN, canonical) in device.identifiers
+                ),
+                grouped[0],
+            )
+            for device in grouped:
+                if device is target:
+                    continue
+                for entity_entry in er.async_entries_for_device(entity_reg, device.id):
+                    entity_reg.async_update_entity(
+                        entity_entry.entity_id, device_id=target.id
+                    )
+                device_reg.async_remove_device(device.id)
+            if not all(
+                identifier == canonical
+                for domain, identifier in target.identifiers
+                if domain == DOMAIN
+            ):
+                device_reg.async_update_device(
+                    target.id, new_identifiers={(DOMAIN, canonical)}
+                )
+
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=entry.unique_id.lower() if entry.unique_id else None,
+            minor_version=3,
+        )
+        _LOGGER.debug("Migration to version 1.3 successful")
 
 
 async def _get_onedrive_client(
