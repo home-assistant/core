@@ -637,10 +637,18 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         options.update(await self.get_options_definitions(resolved_program_key))
 
         # Drop events for options that are no longer part of the program.
+        pruned: list[EventKey] = []
         for event_key in tuple(events):
+            if event_key is EventKey.BSH_COMMON_OPTION_BASE_PROGRAM:
+                continue
             with contextlib.suppress(ValueError):
-                if OptionKey(event_key.value) not in options:
+                option_key = OptionKey(event_key.value)
+                if option_key is not OptionKey.UNKNOWN and option_key not in options:
                     del events[event_key]
+                    pruned.append(event_key)
+        for event_key in pruned:
+            for listener in self._get_listeners_for_event_key(event_key):
+                listener()
 
         for option in options.values():
             option_event_key = EventKey(option.key)

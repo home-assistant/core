@@ -252,6 +252,14 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
 class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
     """Number option class for Home Connect."""
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return HomeConnectEntity.available.fget(self) and (
+            self.bsh_key in self.appliance.options
+        )
+
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the native value of the entity."""
