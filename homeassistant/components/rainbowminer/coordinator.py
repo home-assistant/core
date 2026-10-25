@@ -14,7 +14,6 @@ from rainbowminer_api_client import (
     RainbowMinerAuthError,
     RainbowMinerClient,
     RainbowMinerError,
-    Status,
     Uptime,
     Version,
 )
@@ -33,7 +32,6 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 class RainbowMinerData:
     """Data class to hold all RainbowMiner state."""
 
-    status: Status
     current_profit: CurrentProfit
     uptime: Uptime
     active_miners: list[ActiveMiner]
@@ -81,13 +79,11 @@ class RainbowMinerCoordinator(DataUpdateCoordinator[RainbowMinerData]):
         """Fetch the latest data from the RainbowMiner API."""
         try:
             (
-                status,
                 current_profit,
                 uptime,
                 active_miners,
                 balances,
             ) = await asyncio.gather(
-                self.api.get_status(),
                 self.api.get_current_profit(),
                 self.api.get_uptime(),
                 self.api.get_active_miners(),
@@ -100,7 +96,6 @@ class RainbowMinerCoordinator(DataUpdateCoordinator[RainbowMinerData]):
         if isinstance(balances, BinaryResponse):
             raise UpdateFailed("Unexpected binary response from balances endpoint")
         return RainbowMinerData(
-            status,
             current_profit,
             uptime,
             active_miners,

@@ -20,7 +20,6 @@ from .conftest import (
     VALID_ACTIVE_MINERS,
     VALID_BALANCES,
     VALID_CURRENT_PROFIT,
-    VALID_STATUS,
     VALID_UPTIME,
     VALID_VERSION,
     mock_rainbowminer_endpoints,
@@ -37,7 +36,6 @@ def _register_all(
     """Register canned responses for all endpoints."""
     mock_rainbowminer_endpoints(
         aioclient_mock,
-        status=VALID_STATUS,
         current_profit=current_profit
         if current_profit is not None
         else VALID_CURRENT_PROFIT,

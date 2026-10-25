@@ -15,7 +15,6 @@ from .conftest import (
     VALID_ACTIVE_MINERS,
     VALID_BALANCES,
     VALID_CURRENT_PROFIT,
-    VALID_STATUS,
     VALID_UPTIME,
     VALID_VERSION,
     mock_rainbowminer_endpoints,
@@ -34,7 +33,6 @@ def _register_all(aioclient_mock: AiohttpClientMocker) -> None:
     """Register canned responses for all polled endpoints."""
     mock_rainbowminer_endpoints(
         aioclient_mock,
-        status=VALID_STATUS,
         current_profit=VALID_CURRENT_PROFIT,
         uptime=VALID_UPTIME,
         active_miners=VALID_ACTIVE_MINERS,
@@ -88,13 +86,6 @@ async def test_setup_retry_on_connection_error(
 ) -> None:
     """Test setup retries when the version endpoint fails."""
     aioclient_mock.get(f"{TEST_BASE_URL}/version", exc=TimeoutError())
-    mock_rainbowminer_endpoints(
-        aioclient_mock,
-        status=VALID_STATUS,
-        current_profit=VALID_CURRENT_PROFIT,
-        uptime=VALID_UPTIME,
-        active_miners=VALID_ACTIVE_MINERS,
-    )
     entry = _create_entry()
     entry.add_to_hass(hass)
 
