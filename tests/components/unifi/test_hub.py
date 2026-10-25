@@ -146,53 +146,14 @@ async def test_polling_coordinator_refreshes_after_interval(
     assert mock_update.call_count >= 1
 
 
-async def test_endpoint_not_found_disables_object_oriented_network_config_polling(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    config_entry_setup: MockConfigEntry,
-) -> None:
-    """Ensure an unavailable optional endpoint stops polling after one warning."""
-    loader = config_entry_setup.runtime_data.entity_loader
-    api = config_entry_setup.runtime_data.api
-    coordinator = loader.get_data_update_coordinator(
-        api.object_oriented_network_configs
-    )
-    traffic_rules_coordinator = loader.get_data_update_coordinator(api.traffic_rules)
-
-    with patch.object(
-        coordinator.handler,
-        "update",
-        side_effect=EndpointNotFound("endpoint not found"),
-    ) as mock_update:
-        async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        assert coordinator.update_interval is None
-        assert coordinator.last_update_success is False
-        assert mock_update.call_count == 1
-
-        async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
-        await hass.async_block_till_done()
-
-        assert mock_update.call_count == 1
-
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
-
-    assert mock_update.call_count == 2
-    assert traffic_rules_coordinator.update_interval == IDLE_POLL_INTERVAL
-    assert (
-        caplog.text.count(
-            "UniFi ObjectOrientedNetworkConfigs endpoint is unavailable; disabling polling"
-        )
-        == 1
-    )
-
-
 @pytest.mark.parametrize(
     ("handler_name", "unaffected_handler_name"),
     [
+        pytest.param(
+            "object_oriented_network_configs",
+            "firewall_policies",
+            id="object_oriented_network_configs",
+        ),
         pytest.param("firewall_policies", "traffic_rules", id="firewall_policies"),
         pytest.param("traffic_rules", "firewall_policies", id="traffic_rules"),
         pytest.param("traffic_routes", "firewall_policies", id="traffic_routes"),
