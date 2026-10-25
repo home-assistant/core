@@ -568,6 +568,12 @@ def thermostat_gen2_device(
         device.terminal_temperature = terminal_temperature
     device.display_brightness = display_brightness
     device.display_on_time = display_on_time
+    device.display_brightness_min = 0
+    device.display_brightness_max = 100
+    device.display_brightness_step_size = 1
+    device.display_on_time_min = 0
+    device.display_on_time_max = 3600
+    device.display_on_time_step_size = 1
     return device
 
 
