@@ -349,6 +349,9 @@ async def test_user_flow_with_timetable_connection_error(hass: HomeAssistant) ->
             "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
         ) as mock_api_class,
         patch(
+            "homeassistant.components.bizkaibus.BizkaibusAPI"
+        ) as mock_setup_api_class,
+        patch(
             "homeassistant.components.bizkaibus.async_setup_entry", return_value=True
         ),
     ):
@@ -356,6 +359,7 @@ async def test_user_flow_with_timetable_connection_error(hass: HomeAssistant) ->
             mock_api_class,
             lines=[SimpleNamespace(id="A", route="Route A")],
         )
+        _mock_api(mock_setup_api_class, timetable=None)
         mock_api.get_timetable = AsyncMock(
             side_effect=[
                 BizkaibusConnectionError(),
