@@ -75,12 +75,35 @@ from .helpers import SetupIntegration, create_mock_config_entry
         pytest.param(DeviceType.CLOUD, True, None, False, id="cloud"),
     ],
 )
+@pytest.mark.parametrize(
+    ("armcode", "expected_state"),
+    [
+        pytest.param(
+            AlarmPanelStatus.ARMED_AWAY, AlarmControlPanelState.ARMED_AWAY, id="armed"
+        ),
+        pytest.param(
+            AlarmPanelStatus.ENTRY_DELAY, AlarmControlPanelState.PENDING, id="pending"
+        ),
+        pytest.param(
+            AlarmPanelStatus.ENTRY_DELAY_INSTANT,
+            AlarmControlPanelState.PENDING,
+            id="pending-instant",
+        ),
+        pytest.param(
+            AlarmPanelStatus.TRIGGERED,
+            AlarmControlPanelState.TRIGGERED,
+            id="triggered",
+        ),
+    ],
+)
 async def test_initial_entity_state(
     hass: HomeAssistant,
     device_type: DeviceType,
     powerlink: bool,
     code_format: CodeFormat | None,
     code_arm_required: bool,
+    armcode: AlarmPanelStatus,
+    expected_state: AlarmControlPanelState,
 ) -> None:
     """Publish the existing snapshot before any subsequent panel update or poll."""
     entry = create_mock_config_entry(
@@ -91,7 +114,7 @@ async def test_initial_entity_state(
     snapshot = VisonicCoordinatorData(
         connected=True,
         achieved_powerlink=powerlink,
-        armcode=AlarmPanelStatus.ARMED_AWAY,
+        armcode=armcode,
         statusdict={"panel_test_attribute": "initial snapshot"},
     )
     with (
@@ -106,7 +129,7 @@ async def test_initial_entity_state(
         await hass.async_block_till_done()
         state = hass.states.get("alarm_control_panel.visonic_alarm_p1")
         assert state is not None
-        assert state.state == AlarmControlPanelState.ARMED_AWAY
+        assert state.state == expected_state
         assert state.attributes["supported_features"] == (
             AlarmControlPanelEntityFeature.ARM_HOME
             | AlarmControlPanelEntityFeature.ARM_AWAY

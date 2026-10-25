@@ -83,9 +83,8 @@ class AlarmCommandStatus(VisonicIntEnum):
     FAIL_INVALID_PROCESS_TOKEN = 200
 
 
-# The set of panel states, in order of importance for multiple partitions
 class AlarmPanelStatus(VisonicIntEnum):
-    """Enumeration of panel status states, ordered by importance for multiple partitions."""
+    """Panel status values compatible with the direct library."""
 
     UNKNOWN = 1
     DISARMED = 2

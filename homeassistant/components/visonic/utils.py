@@ -1,10 +1,48 @@
 """Simple Utility Functions."""
 
+from collections.abc import Iterable
 from datetime import datetime
 
 from homeassistant.util import dt as dt_util
 
 from .const import VISONIC_ALARM
+from .visonic_types import AlarmPanelStatus
+
+_PARTITION_STATUS_PRIORITY = {
+    status: priority
+    for priority, status in enumerate(
+        (
+            AlarmPanelStatus.UNKNOWN,
+            AlarmPanelStatus.DISARMED,
+            AlarmPanelStatus.ARMING_HOME,
+            AlarmPanelStatus.ARMING_AWAY,
+            AlarmPanelStatus.ARMED_HOME,
+            AlarmPanelStatus.ARMED_AWAY,
+            AlarmPanelStatus.ARMED_HOME_BYPASS,
+            AlarmPanelStatus.ARMED_AWAY_BYPASS,
+            AlarmPanelStatus.ARMED_HOME_INSTANT,
+            AlarmPanelStatus.ARMED_AWAY_INSTANT,
+            AlarmPanelStatus.ENTRY_DELAY,
+            AlarmPanelStatus.ENTRY_DELAY_INSTANT,
+            AlarmPanelStatus.USER_TEST,
+            AlarmPanelStatus.DOWNLOADING,
+            AlarmPanelStatus.INSTALLER,
+            AlarmPanelStatus.TRIGGERED,
+        )
+    )
+}
+
+
+def combine_partition_statuses(
+    statuses: Iterable[AlarmPanelStatus],
+) -> AlarmPanelStatus:
+    """Combine partitions without hiding entry delays behind steady armed states."""
+    return max(
+        statuses,
+        key=_PARTITION_STATUS_PRIORITY.__getitem__,
+        default=AlarmPanelStatus.UNKNOWN,
+    )
+
 
 ###################################################################################
 #################  General Utility Functions ######################################

@@ -19,6 +19,7 @@ from .connection import (
     VisonicPanelMetadata,
 )
 from .const import CLIENT_VERSION, LOGGER, PIN_REGEX, TEXT_CLIENT_VERSION
+from .utils import combine_partition_statuses
 from .visonic_data_types import VisonicCoordinatorData
 from .visonic_entity_types import PanelState
 from .visonic_types import (
@@ -177,7 +178,7 @@ class VisonicDirectConnection(VisonicConnection):
         if not self._client.is_panel_connected():
             return VisonicCoordinatorData(connected=False)
         partitions = self._client.get_partitions_in_use() or {0}
-        armcode = max(
+        armcode = combine_partition_statuses(
             AlarmPanelStatus(self._client.get_partition_status(partition).value)
             for partition in partitions
         )

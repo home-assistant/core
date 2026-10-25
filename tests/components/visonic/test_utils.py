@@ -8,11 +8,81 @@ import pytest
 from homeassistant.components.visonic.const import VISONIC_ALARM
 from homeassistant.components.visonic.utils import (
     capitalize,
+    combine_partition_statuses,
     get_alarm_panel_unique_ident,
     get_utc_time,
     to_bool,
 )
+from homeassistant.components.visonic.visonic_types import AlarmPanelStatus
 from homeassistant.util import dt as dt_util
+
+
+@pytest.mark.parametrize(
+    "order",
+    [pytest.param((0, 1), id="forward"), pytest.param((1, 0), id="reverse")],
+)
+@pytest.mark.parametrize(
+    ("statuses", "expected"),
+    [
+        pytest.param(
+            (AlarmPanelStatus.ENTRY_DELAY, AlarmPanelStatus.ARMED_AWAY),
+            AlarmPanelStatus.ENTRY_DELAY,
+            id="entry-delay-over-away",
+        ),
+        pytest.param(
+            (AlarmPanelStatus.ENTRY_DELAY, AlarmPanelStatus.ARMED_AWAY_INSTANT),
+            AlarmPanelStatus.ENTRY_DELAY,
+            id="entry-delay-over-instant-away",
+        ),
+        pytest.param(
+            (AlarmPanelStatus.ENTRY_DELAY_INSTANT, AlarmPanelStatus.ARMING_AWAY),
+            AlarmPanelStatus.ENTRY_DELAY_INSTANT,
+            id="instant-entry-delay-over-arming",
+        ),
+        pytest.param(
+            (AlarmPanelStatus.ENTRY_DELAY, AlarmPanelStatus.ENTRY_DELAY_INSTANT),
+            AlarmPanelStatus.ENTRY_DELAY_INSTANT,
+            id="both-entry-delays",
+        ),
+        pytest.param(
+            (AlarmPanelStatus.ENTRY_DELAY, AlarmPanelStatus.TRIGGERED),
+            AlarmPanelStatus.TRIGGERED,
+            id="triggered-over-entry-delay",
+        ),
+        pytest.param(
+            (AlarmPanelStatus.DISARMED, AlarmPanelStatus.ARMED_HOME),
+            AlarmPanelStatus.ARMED_HOME,
+            id="home-over-disarmed",
+        ),
+        pytest.param(
+            (AlarmPanelStatus.ARMED_AWAY, AlarmPanelStatus.ARMED_HOME_BYPASS),
+            AlarmPanelStatus.ARMED_HOME_BYPASS,
+            id="preserve-armed-variants",
+        ),
+        pytest.param(
+            (AlarmPanelStatus.ENTRY_DELAY, AlarmPanelStatus.DOWNLOADING),
+            AlarmPanelStatus.DOWNLOADING,
+            id="preserve-downloading",
+        ),
+        pytest.param(
+            (AlarmPanelStatus.INSTALLER, AlarmPanelStatus.TRIGGERED),
+            AlarmPanelStatus.TRIGGERED,
+            id="triggered-over-maintenance",
+        ),
+    ],
+)
+def test_combine_partition_statuses(
+    statuses: tuple[AlarmPanelStatus, AlarmPanelStatus],
+    expected: AlarmPanelStatus,
+    order: tuple[int, int],
+) -> None:
+    """Combine partition states consistently regardless of iteration order."""
+    assert combine_partition_statuses(statuses[index] for index in order) is expected
+
+
+def test_combine_no_partition_statuses() -> None:
+    """A panel without active partitions has an unknown state."""
+    assert combine_partition_statuses([]) is AlarmPanelStatus.UNKNOWN
 
 
 def test_to_bool() -> None:

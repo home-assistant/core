@@ -177,11 +177,9 @@ async def test_snapshot_finishes_before_overlapping_reauthentication(
         login.assert_not_awaited()
         response.set()
         first_snapshot, second_snapshot = await asyncio.gather(first, second)
-        recovered = await cloud.create_state_snapshot()
 
     assert first_snapshot.connected
-    assert not second_snapshot.connected
-    assert recovered.connected
+    assert second_snapshot.connected
     assert cloud.cloud_alarm is replacement
     original.panel_logout.assert_awaited_once_with()
     login.assert_awaited_once_with()
@@ -212,13 +210,13 @@ async def test_overlapping_snapshots_share_reauthenticated_session(
         assert not second.done()
         original.get_status.assert_awaited_once_with()
         response.set()
-        expired, recovered = await asyncio.gather(first, second)
+        renewed, queued = await asyncio.gather(first, second)
 
-    assert not expired.connected
-    assert recovered.connected
+    assert renewed.connected
+    assert queued.connected
     login.assert_awaited_once_with()
     original.panel_logout.assert_awaited_once_with()
-    replacement.get_status.assert_awaited_once_with()
+    assert replacement.get_status.await_count == 2
 
 
 async def test_command_confirmation_finishes_before_snapshot(
@@ -469,6 +467,42 @@ def test_process_devices_recovers_from_invalid_device(
             True,
             id="intrusion-in-disarmed-partition",
         ),
+        pytest.param(
+            [{"id": 1, "active": True}, {"id": 2, "active": True}],
+            [
+                {"id": 1, "state": "ENTRY_DELAY", "status": "", "ready": True},
+                {"id": 2, "state": "AWAY", "status": "", "ready": True},
+            ],
+            [],
+            AlarmPanelStatus.ENTRY_DELAY,
+            False,
+            True,
+            id="entry-delay-first",
+        ),
+        pytest.param(
+            [{"id": 1, "active": True}, {"id": 2, "active": True}],
+            [
+                {"id": 1, "state": "AWAY", "status": "", "ready": True},
+                {"id": 2, "state": "ENTRYDELAY", "status": "", "ready": True},
+            ],
+            [],
+            AlarmPanelStatus.ENTRY_DELAY,
+            False,
+            True,
+            id="entry-delay-last",
+        ),
+        pytest.param(
+            [{"id": 1, "active": True}, {"id": 2, "active": True}],
+            [
+                {"id": 1, "state": "ENTRY_DELAY", "status": "", "ready": True},
+                {"id": 2, "state": "ALARM", "status": "", "ready": True},
+            ],
+            [],
+            AlarmPanelStatus.TRIGGERED,
+            False,
+            True,
+            id="triggered-over-entry-delay",
+        ),
     ],
 )
 async def test_connected_state_snapshot(
@@ -695,13 +729,17 @@ async def test_snapshot_stays_disconnected_after_reconnect(
         pytest.param(SessionTokenError(), id="session-token"),
     ],
 )
+@pytest.mark.parametrize(
+    "method", ["get_status", "get_panel_info", "get_devices", "get_alarms"]
+)
 async def test_snapshot_reauthenticates_after_expired_session(
     cloud: VisonicCloudConnection,
     error: Error,
+    method: str,
 ) -> None:
-    """Replace an expired session and fetch the next snapshot using its replacement."""
+    """Renew an expired session and read its replacement in the same refresh."""
     original = connected_cloud_alarm()
-    original.get_status.side_effect = error
+    getattr(original, method).side_effect = error
     replacement = connected_cloud_alarm()
     cloud.cloud_alarm = original
 
@@ -712,10 +750,8 @@ async def test_snapshot_reauthenticates_after_expired_session(
 
     with patch.object(cloud, "_async_panel_connect", side_effect=connect) as login:
         snapshot = await cloud.create_state_snapshot()
-        recovered = await cloud.create_state_snapshot()
 
-    assert not snapshot.connected
-    assert recovered.connected
+    assert snapshot.connected
     assert cloud.cloud_alarm is replacement
     original.panel_logout.assert_awaited_once_with()
     login.assert_awaited_once_with()
@@ -742,6 +778,66 @@ async def test_expired_session_preserves_rejected_credentials(
         await cloud.create_state_snapshot()
 
     assert raised.value.__cause__ is error
+
+
+@pytest.mark.parametrize(
+    ("error", "exception_type"),
+    [
+        pytest.param(SessionTokenError(), UpdateFailed, id="session-expired-again"),
+        pytest.param(
+            UnauthorizedError(), VisonicAuthException, id="unauthorized-again"
+        ),
+        pytest.param(
+            WrongUsernameOrPasswordError(), VisonicAuthException, id="credentials"
+        ),
+        pytest.param(OSError("connection lost"), UpdateFailed, id="transport"),
+    ],
+)
+async def test_snapshot_retry_failure_is_bounded(
+    cloud: VisonicCloudConnection,
+    error: Exception,
+    exception_type: type[HomeAssistantError],
+) -> None:
+    """A failed replacement session does not start another reconnect loop."""
+    original = connected_cloud_alarm()
+    original.get_status.side_effect = SessionTokenError()
+    replacement = connected_cloud_alarm()
+    replacement.get_status.side_effect = error
+    cloud.cloud_alarm = original
+
+    async def connect() -> bool:
+        cloud.cloud_alarm = replacement
+        cloud.login_success = True
+        return True
+
+    with (
+        patch.object(cloud, "_async_panel_connect", side_effect=connect) as login,
+        pytest.raises(exception_type) as raised,
+    ):
+        await cloud.create_state_snapshot()
+
+    assert raised.value.__cause__ is error
+    login.assert_awaited_once_with()
+    original.get_status.assert_awaited_once_with()
+    original.panel_logout.assert_awaited_once_with()
+    replacement.get_status.assert_awaited_once_with()
+
+
+async def test_session_renewal_communication_failure(
+    cloud: VisonicCloudConnection,
+) -> None:
+    """A reconnect failure remains an update error without retrying the read."""
+    cloud.cloud_alarm.get_status.side_effect = SessionTokenError()
+    error = VisonicException("Cloud connection failed")
+    with (
+        patch.object(cloud, "_async_panel_reconnect", side_effect=error) as reconnect,
+        pytest.raises(UpdateFailed) as raised,
+    ):
+        await cloud.create_state_snapshot()
+
+    assert raised.value.__cause__ is error
+    reconnect.assert_awaited_once_with()
+    cloud.cloud_alarm.get_status.assert_awaited_once_with()
 
 
 async def test_snapshot_wraps_unexpected_cloud_error(
@@ -1492,29 +1588,29 @@ async def test_determine_most_recent(
 @pytest.mark.parametrize(
     ("alarms", "expected"),
     [
-        # First alarm has no date, second has a date.
-        (
+        pytest.param(
             [
                 make_alarm(None),
                 make_alarm("2026-09-21T10:00:00"),
             ],
-            0,
+            1,
+            id="undated-first",
         ),
-        # First alarm has a date, second has no date.
-        (
+        pytest.param(
             [
                 make_alarm("2026-09-21T10:00:00"),
                 make_alarm(None),
             ],
             0,
+            id="dated-first",
         ),
-        # Both have no date.
-        (
+        pytest.param(
             [
                 make_alarm(None),
                 make_alarm(None),
             ],
             0,
+            id="both-undated",
         ),
     ],
 )
@@ -1529,3 +1625,51 @@ async def test_determine_most_recent_missing_dates(
     result = coordinator._determine_most_recent(alarms)
 
     assert result is alarms[expected]
+
+
+@pytest.mark.parametrize(
+    "alarms",
+    [
+        pytest.param(
+            [
+                Alarm({"partitions": [1]}),
+                Alarm(
+                    {
+                        "partitions": [1],
+                        "datetime": "2026-09-21T10:00:00",
+                        "alarm_type": "FIRE",
+                    }
+                ),
+            ],
+            id="undated-first",
+        ),
+        pytest.param(
+            [
+                Alarm(
+                    {
+                        "partitions": [1],
+                        "datetime": "2026-09-21T10:00:00",
+                        "alarm_type": "FIRE",
+                    }
+                ),
+                Alarm({"partitions": [1]}),
+            ],
+            id="dated-first",
+        ),
+    ],
+)
+async def test_dated_fire_alarm_survives_undated_record(
+    cloud: VisonicCloudConnection, alarms: list[Alarm]
+) -> None:
+    """An undated record cannot hide a fire alarm on a disarmed partition."""
+    cloud.cloud_alarm = connected_cloud_alarm()
+    cloud.cloud_alarm.get_panel_info.return_value = PanelInfo(
+        {"partitions": [{"id": 1, "active": True}, {"id": 2, "active": True}]}
+    )
+    cloud.cloud_alarm.get_alarms.return_value = alarms
+
+    snapshot = await cloud.create_state_snapshot()
+
+    assert snapshot.connected
+    assert snapshot.armcode is AlarmPanelStatus.DISARMED
+    assert snapshot.siren_active

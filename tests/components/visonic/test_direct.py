@@ -521,6 +521,34 @@ async def test_create_state_snapshot_disconnected(
             AlarmPanelStatus.ARMED_HOME,
             id="active-siren",
         ),
+        pytest.param(
+            {0, 1},
+            {0: AlPanelStatus.ENTRY_DELAY, 1: AlPanelStatus.ARMED_AWAY},
+            False,
+            AlarmPanelStatus.ENTRY_DELAY,
+            id="entry-delay-first",
+        ),
+        pytest.param(
+            {0, 1},
+            {0: AlPanelStatus.ARMED_AWAY, 1: AlPanelStatus.ENTRY_DELAY},
+            False,
+            AlarmPanelStatus.ENTRY_DELAY,
+            id="entry-delay-last",
+        ),
+        pytest.param(
+            {0, 1},
+            {0: AlPanelStatus.ENTRY_DELAY_INSTANT, 1: AlPanelStatus.ARMED_AWAY},
+            False,
+            AlarmPanelStatus.ENTRY_DELAY_INSTANT,
+            id="instant-entry-delay",
+        ),
+        pytest.param(
+            {0, 1},
+            {0: AlPanelStatus.ENTRY_DELAY, 1: AlPanelStatus.TRIGGERED},
+            False,
+            AlarmPanelStatus.TRIGGERED,
+            id="triggered-over-entry-delay",
+        ),
     ],
 )
 async def test_create_state_snapshot_connected(

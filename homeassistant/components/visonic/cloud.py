@@ -27,7 +27,7 @@ from .connection import (
 from .connection_test import CLOUD_AUTH_ERRORS
 from .const import CONF_PANEL_SERIAL, LOGGER, PIN_REGEX, TEXT_PANEL_MODEL
 from .exceptions import VisonicAuthException, VisonicException
-from .utils import get_utc_time, to_bool
+from .utils import combine_partition_statuses, get_utc_time, to_bool
 from .visonic_data_types import VisonicCoordinatorData
 from .visonic_entity_types import PanelState
 from .visonic_types import (
@@ -371,9 +371,8 @@ class VisonicCloudConnection(VisonicConnection):
             ):
                 continue
             if retval is None or (
-                retval.date_time is not None
-                and alarm.date_time is not None
-                and retval.date_time < alarm.date_time
+                alarm.date_time is not None
+                and (retval.date_time is None or retval.date_time < alarm.date_time)
             ):
                 retval = alarm
         return retval
@@ -385,144 +384,14 @@ class VisonicCloudConnection(VisonicConnection):
             return await self._async_create_state_snapshot()
 
     async def _async_create_state_snapshot(self) -> VisonicCoordinatorData:
-        """Collect one snapshot and recover its session while holding the lock."""
-
-        # The connected bool inside VisonicCoordinatorData can only be true when 3 conditions are true
-        #    1. We are connected to the visonic cloud server (authenticated)
-        #    2. The visonic cloud server is logged in to the alarm panel
-        #    3. The alarm panel is responsive to the command & status requests
+        """Renew an expired session once and read its replacement while locked."""
         try:
-            if not self.login_success or self.cloud_alarm is None:
-                # We are not connected to the cloud server, so try to reconnect
-                LOGGER.debug("Updating data - Cloud connection has not been made")
-                await self._async_panel_reconnect()
-
-            if not self.login_success or self.cloud_alarm is None:
-                # We are still not connected to the cloud server (having tried reconnect)
-                self._last_snapshot = VisonicCoordinatorData(
-                    connected=False,
-                    ispowermaster=True,
-                    mode="cloud",
-                    achieved_powerlink=True,
-                    model=self.settings.panel_name,
-                )
-                return self._last_snapshot
-
-            # We're connected to the visonic cloud server and we are logged in
-
-            timenow: datetime = get_utc_time()
-            # Attempt to get status using current session (is the panel responsive)
-            status: Status | None = await self.cloud_alarm.get_status()
-
-            if status is None:
-                status = Status({"connected": False})
-
-            if not status.connected:
-                # The panel is not responsive so try to reconnect
-                #  This may be a temporary thing though so have timeouts
-                timeout: float = min(60, 2.5 * self.settings.update_interval)
-                delta_time: timedelta = timenow - self.last_connected_timestamp
-                if self.never_connected or delta_time >= timedelta(seconds=timeout):
-                    # not less than 60 seconds, but allow 2 tries at updating before it's considered a timeout
-                    timeout = min(90, 4.5 * self.settings.update_interval)
-                    if delta_time > timedelta(seconds=timeout):
-                        # not less than 90 seconds, but allow 4 tries at updating before it's considered a reconnect
-                        LOGGER.debug("Updating data - re-connection to cloud server")
-                        self.last_connected_timestamp = timenow
-                        await self._async_panel_reconnect()
-                    LOGGER.debug(
-                        "Updating data - panel is not connected to the cloud, no access!"
-                    )
-                    self._last_snapshot = VisonicCoordinatorData(
-                        connected=False,
-                        ispowermaster=True,
-                        mode="cloud",
-                        achieved_powerlink=True,
-                        model=self.settings.panel_name,  # .panel_model,
-                    )
-                    return self._last_snapshot
-                # Here when it's disconnected but within the timeout so return last times data i.e. we have been connected
-                # The frozen snapshot may contain read-only mappings that cannot be deep-copied.
-                d: VisonicCoordinatorData = copy(self._last_snapshot)
-                LOGGER.debug(
-                    "Updating data - returning copy of existing data, connected set to %s",
-                    str(d.connected),
-                )
-                return d
-
-            # The visonic cloud server is currently connected to the panel and the panel is responding
-            self.last_connected_timestamp = timenow
-            self.never_connected = False
-            panel_info: PanelInfo | None = await self.cloud_alarm.get_panel_info()
-            partitions = status.partitions
-            if panel_info is not None:
-                if panel_info.multi_partitions:
-                    active_ids = {
-                        part.id for part in panel_info.partitions if part.active
-                    }
-                    partitions = [part for part in partitions if part.id in active_ids]
-                else:
-                    partitions = partitions[:1]
-            # Get the "highest" armed state across all partitions
-            armcode = max(
-                (self._determine_armcode(part) for part in partitions),
-                default=AlarmPanelStatus.UNKNOWN,
-            )
-            devices: list[Device] = await self.cloud_alarm.get_devices()
-            # Process the panel device
-            panelstate = self.process_devices(devices)
-            panelstate.attributes["ready"] = bool(partitions) and all(
-                part.ready for part in partitions
-            )
-            alarms: list[Alarm] = await self.cloud_alarm.get_alarms()
-            siren_active = False
-            for part in partitions:
-                most_recent_alarm = self._determine_most_recent(
-                    alarms,
-                    part.id
-                    if panel_info is not None and panel_info.multi_partitions
-                    else None,
-                )
-                if most_recent_alarm is None or most_recent_alarm.alarm_type is None:
-                    continue
-                alarm_type = MAP_ALARM_TYPE.get(
-                    most_recent_alarm.alarm_type, TriggerAlarmType.NONE
-                )
-                zone = (
-                    most_recent_alarm.zone if most_recent_alarm.zone is not None else -1
-                )
-                if self._determine_siren_state(
-                    self._determine_armcode(part), alarm_type, zone
-                )[0]:
-                    siren_active = True
-                    break
-
-            new_data = VisonicCoordinatorData(
-                connected=True,
-                ispowermaster=True,
-                mode="cloud",
-                achieved_powerlink=True,
-                model=self.settings.panel_name,  # .panel_model,
-                disconnection_count=self.disconnection_counter,
-                panelstate=panelstate,
-                armcode=armcode,
-                siren_active=siren_active,
-            )
-            self._last_snapshot = new_data
-            return new_data  # noqa: TRY300
-
-        except UnauthorizedError, SessionTokenError:
-            # Session expired, attempt to re-authenticate
-            LOGGER.debug("Visonic session expired, re-authenticating")
             try:
+                return await self._async_read_state_snapshot()
+            except UnauthorizedError, SessionTokenError:
+                LOGGER.debug("Visonic session expired, re-authenticating")
                 await self._async_panel_reconnect()
-            except VisonicAuthException:
-                raise
-            except VisonicException as err:
-                raise UpdateFailed(
-                    f"Error communicating with Visonic Cloud: {err}"
-                ) from err
-
+                return await self._async_read_state_snapshot()
         except VisonicAuthException:
             raise
         except CLOUD_AUTH_ERRORS as err:
@@ -532,14 +401,120 @@ class VisonicCloudConnection(VisonicConnection):
                 f"Error communicating with Visonic Cloud: {err}"
             ) from err
 
-        self._last_snapshot = VisonicCoordinatorData(
-            connected=False,
+    async def _async_read_state_snapshot(self) -> VisonicCoordinatorData:
+        """Read one complete snapshot while the session lock is held."""
+        if not self.login_success or self.cloud_alarm is None:
+            # We are not connected to the cloud server, so try to reconnect
+            LOGGER.debug("Updating data - Cloud connection has not been made")
+            await self._async_panel_reconnect()
+
+        if not self.login_success or self.cloud_alarm is None:
+            # We are still not connected to the cloud server (having tried reconnect)
+            self._last_snapshot = VisonicCoordinatorData(
+                connected=False,
+                ispowermaster=True,
+                mode="cloud",
+                achieved_powerlink=True,
+                model=self.settings.panel_name,
+            )
+            return self._last_snapshot
+
+        # We're connected to the visonic cloud server and we are logged in
+
+        timenow: datetime = get_utc_time()
+        # Attempt to get status using current session (is the panel responsive)
+        status: Status | None = await self.cloud_alarm.get_status()
+
+        if status is None:
+            status = Status({"connected": False})
+
+        if not status.connected:
+            # The panel is not responsive so try to reconnect
+            #  This may be a temporary thing though so have timeouts
+            timeout: float = min(60, 2.5 * self.settings.update_interval)
+            delta_time: timedelta = timenow - self.last_connected_timestamp
+            if self.never_connected or delta_time >= timedelta(seconds=timeout):
+                # not less than 60 seconds, but allow 2 tries at updating before it's considered a timeout
+                timeout = min(90, 4.5 * self.settings.update_interval)
+                if delta_time > timedelta(seconds=timeout):
+                    # not less than 90 seconds, but allow 4 tries at updating before it's considered a reconnect
+                    LOGGER.debug("Updating data - re-connection to cloud server")
+                    self.last_connected_timestamp = timenow
+                    await self._async_panel_reconnect()
+                LOGGER.debug(
+                    "Updating data - panel is not connected to the cloud, no access!"
+                )
+                self._last_snapshot = VisonicCoordinatorData(
+                    connected=False,
+                    ispowermaster=True,
+                    mode="cloud",
+                    achieved_powerlink=True,
+                    model=self.settings.panel_name,  # .panel_model,
+                )
+                return self._last_snapshot
+            # Here when it's disconnected but within the timeout so return last times data i.e. we have been connected
+            # The frozen snapshot may contain read-only mappings that cannot be deep-copied.
+            d: VisonicCoordinatorData = copy(self._last_snapshot)
+            LOGGER.debug(
+                "Updating data - returning copy of existing data, connected set to %s",
+                str(d.connected),
+            )
+            return d
+
+        # The visonic cloud server is currently connected to the panel and the panel is responding
+        self.last_connected_timestamp = timenow
+        self.never_connected = False
+        panel_info: PanelInfo | None = await self.cloud_alarm.get_panel_info()
+        partitions = status.partitions
+        if panel_info is not None:
+            if panel_info.multi_partitions:
+                active_ids = {part.id for part in panel_info.partitions if part.active}
+                partitions = [part for part in partitions if part.id in active_ids]
+            else:
+                partitions = partitions[:1]
+        armcode = combine_partition_statuses(
+            self._determine_armcode(part) for part in partitions
+        )
+        devices: list[Device] = await self.cloud_alarm.get_devices()
+        # Process the panel device
+        panelstate = self.process_devices(devices)
+        panelstate.attributes["ready"] = bool(partitions) and all(
+            part.ready for part in partitions
+        )
+        alarms: list[Alarm] = await self.cloud_alarm.get_alarms()
+        siren_active = False
+        for part in partitions:
+            most_recent_alarm = self._determine_most_recent(
+                alarms,
+                part.id
+                if panel_info is not None and panel_info.multi_partitions
+                else None,
+            )
+            if most_recent_alarm is None or most_recent_alarm.alarm_type is None:
+                continue
+            alarm_type = MAP_ALARM_TYPE.get(
+                most_recent_alarm.alarm_type, TriggerAlarmType.NONE
+            )
+            zone = most_recent_alarm.zone if most_recent_alarm.zone is not None else -1
+            if self._determine_siren_state(
+                self._determine_armcode(part), alarm_type, zone
+            )[0]:
+                siren_active = True
+                break
+
+        new_data = VisonicCoordinatorData(
+            connected=True,
             ispowermaster=True,
             mode="cloud",
             achieved_powerlink=True,
             model=self.settings.panel_name,  # .panel_model,
+            disconnection_count=self.disconnection_counter,
+            panelstate=panelstate,
+            armcode=armcode,
+            siren_active=siren_active,
         )
-        return self._last_snapshot
+        self._last_snapshot = new_data
+        return new_data
 
     def process_devices(self, devices: list[Device]) -> PanelState:
         """Process the devices from the panel."""
