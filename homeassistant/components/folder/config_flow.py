@@ -45,6 +45,19 @@ async def validate_setup(
     return {**user_input, CONF_FOLDER_PATHS: path}
 
 
+async def validate_options(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Check no other entry monitors the folder with the same filter."""
+    handler.parent_handler._async_abort_entries_match(  # noqa: SLF001
+        {
+            CONF_FOLDER_PATHS: handler.options[CONF_FOLDER_PATHS],
+            CONF_FILTER: user_input[CONF_FILTER],
+        }
+    )
+    return user_input
+
+
 OPTIONS_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_FILTER, default=DEFAULT_FILTER): TextSelector(),
@@ -60,7 +73,9 @@ CONFIG_FLOW = {
     "user": SchemaFlowFormStep(schema=DATA_SCHEMA, validate_user_input=validate_setup),
 }
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(schema=OPTIONS_SCHEMA),
+    "init": SchemaFlowFormStep(
+        schema=OPTIONS_SCHEMA, validate_user_input=validate_options
+    ),
 }
 
 

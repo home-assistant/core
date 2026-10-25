@@ -124,6 +124,43 @@ async def test_form_same_folder_other_filter(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, folder_path: str
+) -> None:
+    """Test the filter can't be changed to one another entry uses for the folder."""
+    mock_config_entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=folder_path,
+        options={CONF_FOLDER_PATHS: folder_path, CONF_FILTER: "*.txt"},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_FILTER: "*.txt"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.options[CONF_FILTER] == "*"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow_keep_filter(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test saving the entry's own filter again is not a duplicate."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_FILTER: "*"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_options_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, folder_path: str
 ) -> None:
