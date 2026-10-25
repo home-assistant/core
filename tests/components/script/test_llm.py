@@ -6,6 +6,7 @@ from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.script import llm as script_llm
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, llm
 from homeassistant.setup import async_setup_component
 
@@ -93,6 +94,19 @@ async def test_script_tool_call(hass: HomeAssistant) -> None:
         hass, llm.ToolInput("script__test_script", {"beer": 1}), llm_context
     )
     assert response == llm.ToolResult(data={"result": {"drinks": 2}})
+
+
+async def test_script_tool_call_unexposed(hass: HomeAssistant) -> None:
+    """Test the tool refuses to run a script that is no longer exposed."""
+    llm_context = _llm_context()
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
+    tool = next(tool for tool in result.tools if tool.name == "script__test_script")
+    async_expose_entity(hass, "conversation", ENTITY_ID, False)
+
+    with pytest.raises(HomeAssistantError, match="is not exposed"):
+        await tool.async_call(
+            hass, llm.ToolInput("script__test_script", {"beer": 1}), llm_context
+        )
 
 
 async def test_script_tool_name_not_started_with_digit(hass: HomeAssistant) -> None:
