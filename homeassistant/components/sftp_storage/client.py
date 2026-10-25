@@ -3,6 +3,7 @@
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 import json
+from pathlib import PurePosixPath
 from types import TracebackType
 from typing import TYPE_CHECKING, Self
 
@@ -153,9 +154,7 @@ class BackupAgentClient:
         """
 
         # Test for metadata file existence.
-        metadata_file = (
-            f"{self.cfg.runtime_data.backup_location}/.{backup_id}.metadata.json"
-        )
+        metadata_file = f".{backup_id}.metadata.json"
         if not await self.sftp.exists(metadata_file):
             raise FileNotFoundError(
                 f"Metadata file not found at remote location: {metadata_file}"
@@ -226,9 +225,9 @@ class BackupAgentClient:
     ) -> None:
         """Accept `iterator` as bytes iterator and write backup archive."""
 
-        file_path = (
-            f"{self.cfg.runtime_data.backup_location}/{suggested_filename(backup)}"
-        )
+        file_path = suggested_filename(backup)
+        if PurePosixPath(file_path).name != file_path:
+            raise BackupAgentError(f"Invalid backup filename: {file_path}")
         bytes_uploaded = 0
         async with self.sftp.open(file_path, "wb") as f:
             async for b in iterator:
@@ -242,7 +241,7 @@ class BackupAgentClient:
             "metadata": backup.as_dict(),
         }
         async with self.sftp.open(
-            f"{self.cfg.runtime_data.backup_location}/.{backup.backup_id}.metadata.json",
+            f".{backup.backup_id}.metadata.json",
             "w",
         ) as f:
             await f.write(json.dumps(metadata))
@@ -274,9 +273,8 @@ class BackupAgentClient:
         """Return a list of `*.metadata.json` files located in backup location."""
         files = []
         LOGGER.debug(
-            "Changing directory to: `%s`", self.cfg.runtime_data.backup_location
+            "Listing backup directory: `%s`", self.cfg.runtime_data.backup_location
         )
-        await self.sftp.chdir(self.cfg.runtime_data.backup_location)
 
         for file in await self.sftp.listdir():
             LOGGER.debug(
@@ -286,7 +284,7 @@ class BackupAgentClient:
             )
             if file.endswith(".metadata.json"):
                 LOGGER.debug("Found metadata file: `%s`", file)
-                files.append(f"{self.cfg.runtime_data.backup_location}/{file}")
+                files.append(file)
         return files
 
     async def open(self) -> BackupAgentClient:

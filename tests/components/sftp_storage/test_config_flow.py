@@ -193,10 +193,12 @@ async def test_config_entry_error(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_process_uploaded_file")
 @pytest.mark.usefixtures("mock_ssh_connection")
-async def test_relative_backup_location_rejected(
+@pytest.mark.parametrize("backup_location", [".", "backups", "nested/backups"])
+async def test_relative_backup_location(
     hass: HomeAssistant,
+    backup_location: str,
 ) -> None:
-    """Test that a relative backup location path is rejected."""
+    """Test that a backup location relative to the login directory is accepted."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -204,19 +206,11 @@ async def test_relative_backup_location_rejected(
     assert result["step_id"] == "user"
 
     user_input = USER_INPUT.copy()
-    user_input[CONF_BACKUP_LOCATION] = "backups"
+    user_input[CONF_BACKUP_LOCATION] = backup_location
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_BACKUP_LOCATION: "backup_location_relative"}
-
-    # Fix the path and verify the flow succeeds
-    user_input[CONF_BACKUP_LOCATION] = "/backups"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BACKUP_LOCATION] == backup_location

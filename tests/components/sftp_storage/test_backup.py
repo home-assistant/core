@@ -155,7 +155,7 @@ async def test_agents_list_backups_include_bad_metadata(
     assert mock_ssh_connection._sftp._mock_open._mock_read.call_count == 2
     assert (
         "Failed to load backup metadata from file:"
-        " /backup_location/invalid.metadata.json."
+        " invalid.metadata.json."
         " Expecting value: line 1 column 1 (char 0)" in caplog.messages
     )
 
