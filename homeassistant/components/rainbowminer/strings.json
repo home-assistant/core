@@ -60,9 +60,6 @@
       "unpaid_balance_mbtc": {
         "name": "Unpaid balance (mBTC)"
       },
-      "uptime": {
-        "name": "Uptime"
-      },
       "weekly_earnings": {
         "name": "Weekly earnings"
       },
