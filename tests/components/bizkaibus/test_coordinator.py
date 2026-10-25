@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
-from bizkaibus import BizkaibusParseError
+from bizkaibus import BizkaibusConnectionError, BizkaibusParseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -69,12 +69,16 @@ async def test_coordinator_returns_empty_data_without_timetable(
     assert coordinator.data == []
 
 
-async def test_coordinator_raises_update_failed_on_parse_error(
-    hass: HomeAssistant,
+@pytest.mark.parametrize(
+    "error",
+    [BizkaibusConnectionError(), BizkaibusParseError()],
+    ids=["connection", "parse"],
+)
+async def test_coordinator_raises_update_failed_on_api_error(
+    hass: HomeAssistant, error: BizkaibusConnectionError | BizkaibusParseError
 ) -> None:
-    """Test a timetable parse error is reported as an update failure."""
-    parse_error = BizkaibusParseError()
-    api = SimpleNamespace(get_timetable=AsyncMock(side_effect=parse_error))
+    """Test API errors are reported as update failures."""
+    api = SimpleNamespace(get_timetable=AsyncMock(side_effect=error))
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_STOP_ID: "1234"})
     entry.add_to_hass(hass)
     coordinator = BizkaibusUpdateCoordinator(hass, api, entry)
@@ -82,7 +86,7 @@ async def test_coordinator_raises_update_failed_on_parse_error(
     with pytest.raises(UpdateFailed) as err:
         await coordinator._async_update_data()
 
-    assert err.value.__cause__ is parse_error
+    assert err.value.__cause__ is error
 
 
 async def test_coordinator_skips_arrivals_without_nearest_arrival(

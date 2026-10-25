@@ -5,7 +5,12 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
-from bizkaibus import BizkaibusAPI, BizkaibusArrivalTime, BizkaibusParseError
+from bizkaibus import (
+    BizkaibusAPI,
+    BizkaibusArrivalTime,
+    BizkaibusConnectionError,
+    BizkaibusParseError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -63,7 +68,7 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
         """Async update wrapper."""
         try:
             timetable = await self.api.get_timetable()
-        except BizkaibusParseError as err:
+        except (BizkaibusConnectionError, BizkaibusParseError) as err:
             raise UpdateFailed from err
 
         if timetable is None:
