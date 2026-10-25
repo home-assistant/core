@@ -155,6 +155,27 @@
         }),
         dict({
           'color': None,
+          'name': 'Door',
+          'source': 'user',
+          'use': 'motion',
+          'vertices': list([
+            dict({
+              'x': 0.0,
+              'y': 50.05,
+            }),
+            dict({
+              'x': 25.01,
+              'y': 50.05,
+            }),
+            dict({
+              'x': 0.0,
+              'y': 100.0,
+            }),
+          ]),
+          'zone_id': 3,
+        }),
+        dict({
+          'color': None,
           'name': 'Unknown',
           'source': None,
           'use': None,
@@ -172,7 +193,7 @@
               'y': 0.09,
             }),
           ]),
-          'zone_id': 3,
+          'zone_id': 4,
         }),
       ]),
     }),

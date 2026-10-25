@@ -785,14 +785,14 @@
     "bitmap_write_not_supported": {
       "message": "The device does not support changing {name}."
     },
+    "camera_focus_zones_not_supported": {
+      "message": "{entity_id} does not support focus zones."
+    },
+    "camera_motion_zone_not_editable": {
+      "message": "Zone {zone_id} of {entity_id} is a motion zone, which can't be changed. It can only be removed."
+    },
     "camera_zone_not_editable": {
-      "message": "Zone {zone_id} came with {entity_id} and can't be changed."
-    },
-    "camera_zone_not_found": {
-      "message": "{entity_id} has no zone {zone_id}."
-    },
-    "camera_zone_use_not_supported": {
-      "message": "{entity_id} does not support {use} zones."
+      "message": "Zone {zone_id} of {entity_id} isn't a user zone and can't be changed."
     },
     "camera_zones_not_editable": {
       "message": "{entity_id} does not allow changing its zones."
@@ -917,7 +917,7 @@
           "name": "Color"
         },
         "name": {
-          "description": "The name of the zone, up to 32 characters.",
+          "description": "The name of the zone, up to 32 bytes. Letters like ä take 2 bytes.",
           "name": "Name"
         },
         "use": {

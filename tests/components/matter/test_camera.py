@@ -7,7 +7,7 @@ import dataclasses
 from typing import Any
 from unittest.mock import MagicMock, call, patch
 
-from chip.clusters import Objects as clusters
+from chip.clusters.Objects import ZoneManagement
 from matter_server.client.exceptions import NotConnected
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import CameraPrivacyMode, MatterError
@@ -59,8 +59,6 @@ from .common import (
 )
 
 ENTITY_ID = "camera.mock_camera"
-
-ZoneManagement = clusters.ZoneManagement
 MATTER_SESSION_ID = 5
 CURRENT_SESSION = {
     "0": MATTER_SESSION_ID,
@@ -689,8 +687,10 @@ async def test_camera_image_resolution(
     assert matter_client.camera_snapshot.call_args.kwargs["resolution"] == resolution
 
 
-# A camera with a 1920x1080 sensor. Zones 3 and 4 are malformed.
+# A camera with a 1920x1080 sensor and user-defined zones. Zone 1 came with
+# the camera, zones 2 and 3 are user zones, and zones 4 and 5 are malformed.
 ZONE_ATTRIBUTES = {
+    "1/29/1": [3, 29, 1360, 1361, 1363],
     "1/1360/0": 5,
     "1/1360/1": 8,
     "1/1360/2": [
@@ -722,6 +722,16 @@ ZONE_ATTRIBUTES = {
         {
             "0": 3,
             "1": 0,
+            "2": 1,
+            "3": {
+                "0": "Door",
+                "1": 0,
+                "2": [{"0": 0, "1": 540}, {"0": 480, "1": 540}, {"0": 0, "1": 1079}],
+            },
+        },
+        {
+            "0": 4,
+            "1": 0,
             "2": 7,
             "3": {
                 "0": "Unknown",
@@ -729,11 +739,20 @@ ZONE_ATTRIBUTES = {
                 "2": [{"0": 0, "1": 0}, {"0": 1, "1": 0}, {"0": 1, "1": 1}],
             },
         },
-        {"0": 4, "1": 0, "2": 1},
+        {"0": 5, "1": 0, "2": 1},
     ],
+    "1/1360/3": [],
+    "1/1360/4": 5,
     "1/1360/6": {"0": 1919, "1": 1079},
+    "1/1360/65528": [1],
+    "1/1360/65529": [0, 2, 3, 4, 5],
+    "1/1360/65531": [0, 1, 2, 3, 4, 6, 65528, 65529, 65531, 65532, 65533],
     "1/1360/65532": 0b0101,
+    "1/1360/65533": 1,
+    "1/1361/2": {"0": 1920, "1": 1080, "2": 30},
+    "1/1361/65531": [2, 9, 20, 21, 65528, 65529, 65531, 65532, 65533],
 }
+ZONE_FOCUS_ATTRIBUTES = {**ZONE_ATTRIBUTES, "1/1360/65532": 0b1101}
 ZONE_DATA = {
     "name": "Garden",
     "use": "privacy",
@@ -768,32 +787,56 @@ async def test_get_camera_zones(
 
 
 @pytest.mark.parametrize(
-    ("data", "response", "command"),
+    ("attributes", "data", "response", "zone_id", "command"),
     [
         pytest.param(
+            ZONE_ATTRIBUTES,
             {**ZONE_DATA, "color": "#00FF0080"},
-            {"zoneID": 5},
+            {"zoneID": 6},
+            6,
             ZoneManagement.Commands.CreateTwoDCartesianZone(
                 zone=dataclasses.replace(ZONE, color="#00FF0080")
             ),
             id="create",
         ),
         pytest.param(
+            ZONE_FOCUS_ATTRIBUTES,
+            {**ZONE_DATA, "use": "focus"},
+            {"zoneID": 6},
+            6,
+            ZoneManagement.Commands.CreateTwoDCartesianZone(
+                zone=dataclasses.replace(
+                    ZONE, use=ZoneManagement.Enums.ZoneUseEnum.kFocus
+                )
+            ),
+            id="create_focus",
+        ),
+        pytest.param(
+            ZONE_ATTRIBUTES,
             {**ZONE_DATA, "zone_id": 2},
             None,
+            2,
             ZoneManagement.Commands.UpdateTwoDCartesianZone(zoneID=2, zone=ZONE),
             id="update",
+        ),
+        pytest.param(
+            ZONE_ATTRIBUTES,
+            {**ZONE_DATA, "zone_id": 9},
+            None,
+            9,
+            ZoneManagement.Commands.UpdateTwoDCartesianZone(zoneID=9, zone=ZONE),
+            id="update_unknown_zone",
         ),
     ],
 )
 @pytest.mark.parametrize("node_fixture", ["mock_camera"])
-@pytest.mark.parametrize("attributes", [ZONE_ATTRIBUTES])
 async def test_set_camera_zone(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
     data: dict[str, Any],
     response: dict[str, Any] | None,
+    zone_id: int,
     command: Any,
 ) -> None:
     """Test setting a zone converts percent to camera coordinates."""
@@ -806,31 +849,40 @@ async def test_set_camera_zone(
         blocking=True,
         return_response=True,
     )
-    assert result == {ENTITY_ID: {"zone_id": data.get("zone_id", 5)}}
+    assert result == {ENTITY_ID: {"zone_id": zone_id}}
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id, endpoint_id=1, command=command
     )
 
 
+@pytest.mark.parametrize(
+    "zone_id",
+    [
+        pytest.param(2, id="privacy_zone"),
+        pytest.param(3, id="motion_zone"),
+        pytest.param(9, id="unknown_zone"),
+    ],
+)
 @pytest.mark.parametrize("node_fixture", ["mock_camera"])
 @pytest.mark.parametrize("attributes", [ZONE_ATTRIBUTES])
 async def test_clear_camera_zone(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
+    zone_id: int,
 ) -> None:
     """Test removing a zone."""
     await hass.services.async_call(
         DOMAIN,
         "clear_camera_zone",
-        {"zone_id": 2},
+        {"zone_id": zone_id},
         target={"entity_id": ENTITY_ID},
         blocking=True,
     )
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
-        command=ZoneManagement.Commands.RemoveZone(zoneID=2),
+        command=ZoneManagement.Commands.RemoveZone(zoneID=zone_id),
     )
 
 
@@ -839,17 +891,24 @@ async def test_clear_camera_zone(
     [
         pytest.param(
             {},
+            "set_camera_zone",
+            ZONE_DATA,
+            "does not support zones",
+            id="set_no_zone_cluster",
+        ),
+        pytest.param(
+            {},
             "clear_camera_zone",
             {"zone_id": 2},
             "does not support zones",
-            id="clear",
+            id="clear_no_zone_cluster",
         ),
         pytest.param(
             {**ZONE_ATTRIBUTES, "1/1360/6": {"0": 0, "1": 0}},
             "set_camera_zone",
             ZONE_DATA,
             "does not support zones",
-            id="no_maximum",
+            id="set_no_maximum",
         ),
         pytest.param(
             {**ZONE_ATTRIBUTES, "1/1360/65532": 0b0001},
@@ -870,35 +929,35 @@ async def test_clear_camera_zone(
             "set_camera_zone",
             {**ZONE_DATA, "use": "focus"},
             "does not support focus zones",
-            id="no_focus",
+            id="set_no_focus",
         ),
         pytest.param(
             ZONE_ATTRIBUTES,
             "set_camera_zone",
             {**ZONE_DATA, "zone_id": 1},
-            "Zone 1 came with camera.mock_camera",
+            "Zone 1 of camera.mock_camera isn't a user zone",
             id="set_manufacturer_zone",
         ),
         pytest.param(
             ZONE_ATTRIBUTES,
             "clear_camera_zone",
             {"zone_id": 1},
-            "Zone 1 came with camera.mock_camera",
+            "Zone 1 of camera.mock_camera isn't a user zone",
             id="clear_manufacturer_zone",
         ),
         pytest.param(
             ZONE_ATTRIBUTES,
-            "set_camera_zone",
-            {**ZONE_DATA, "zone_id": 9},
-            "camera.mock_camera has no zone 9",
-            id="set_unknown_zone",
+            "clear_camera_zone",
+            {"zone_id": 4},
+            "Zone 4 of camera.mock_camera isn't a user zone",
+            id="clear_unknown_source_zone",
         ),
         pytest.param(
-            {**ZONE_ATTRIBUTES, "1/1360/2": None},
-            "clear_camera_zone",
-            {"zone_id": 2},
-            "camera.mock_camera has no zone 2",
-            id="clear_unknown_zone",
+            ZONE_ATTRIBUTES,
+            "set_camera_zone",
+            {**ZONE_DATA, "zone_id": 3},
+            "Zone 3 of camera.mock_camera is a motion zone",
+            id="set_motion_zone",
         ),
     ],
 )
@@ -942,6 +1001,9 @@ async def test_get_camera_zones_not_supported(hass: HomeAssistant) -> None:
         pytest.param({**ZONE_DATA, "name": "a" * 33}, id="long_name"),
         pytest.param({**ZONE_DATA, "name": "\u00e4" * 17}, id="long_name_bytes"),
         pytest.param({**ZONE_DATA, "vertices": ZONE_DATA["vertices"][:2]}, id="two"),
+        pytest.param({**ZONE_DATA, "vertices": [{"x": 101, "y": 0}] * 3}, id="x_101"),
+        pytest.param({**ZONE_DATA, "color": "#FFF"}, id="color_short"),
+        pytest.param({**ZONE_DATA, "color": "red"}, id="color_name"),
         pytest.param({**ZONE_DATA, "color": "#FF0000\n"}, id="color_newline"),
     ],
 )
@@ -961,6 +1023,28 @@ async def test_set_camera_zone_invalid(
             blocking=True,
         )
     matter_client.send_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_camera"])
+@pytest.mark.parametrize("attributes", [ZONE_ATTRIBUTES])
+async def test_set_camera_zone_longest_name(
+    hass: HomeAssistant, matter_client: MagicMock, matter_node: MatterNode
+) -> None:
+    """Test a name of exactly 32 bytes is accepted."""
+    await hass.services.async_call(
+        DOMAIN,
+        "set_camera_zone",
+        {**ZONE_DATA, "zone_id": 2, "name": "\u00e4" * 16},
+        target={"entity_id": ENTITY_ID},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=ZoneManagement.Commands.UpdateTwoDCartesianZone(
+            zoneID=2, zone=dataclasses.replace(ZONE, name="\u00e4" * 16)
+        ),
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_camera"])

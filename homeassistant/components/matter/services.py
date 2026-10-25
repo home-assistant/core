@@ -12,19 +12,23 @@ from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
+    ATTR_COLOR,
     ATTR_CREDENTIAL_DATA,
     ATTR_CREDENTIAL_INDEX,
     ATTR_CREDENTIAL_RULE,
     ATTR_CREDENTIAL_TYPE,
+    ATTR_USE,
     ATTR_USER_INDEX,
     ATTR_USER_NAME,
     ATTR_USER_STATUS,
     ATTR_USER_TYPE,
-    CAMERA_ZONE_SETTABLE_USES,
+    ATTR_VERTICES,
+    ATTR_ZONE_ID,
     CLEAR_ALL_INDEX,
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
     DOMAIN,
+    SERVICE_CAMERA_ZONE_USES,
     SERVICE_CREDENTIAL_TYPES,
     USER_TYPE_REVERSE_MAP,
 )
@@ -34,11 +38,6 @@ ATTR_EMERGENCY_BOOST = "emergency_boost"
 ATTR_TEMPORARY_SETPOINT = "temporary_setpoint"
 
 SERVICE_WATER_HEATER_BOOST = "water_heater_boost"
-
-ATTR_COLOR = "color"
-ATTR_USE = "use"
-ATTR_VERTICES = "vertices"
-ATTR_ZONE_ID = "zone_id"
 
 ZONE_ID = probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=65535))
 ZONE_PERCENT = probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100))
@@ -99,7 +98,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema={
             probatio.Optional(ATTR_ZONE_ID): ZONE_ID,
             probatio.Required(ATTR_NAME): _zone_name,
-            probatio.Required(ATTR_USE): probatio.In(CAMERA_ZONE_SETTABLE_USES),
+            probatio.Required(ATTR_USE): probatio.In(SERVICE_CAMERA_ZONE_USES),
             probatio.Required(ATTR_VERTICES): probatio.All(
                 probatio.EnsureList(),
                 [

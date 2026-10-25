@@ -318,9 +318,16 @@ class MatterCamera(MatterEntity, Camera):
 
     def _zone_features(self) -> ZoneManagement.Bitmaps.Feature:
         """Return the zone features of the camera, if it allows changing zones."""
-        features = ZoneFeature(
-            self.get_matter_attribute_value(ZoneManagement.Attributes.FeatureMap) or 0
+        feature_map: int | None = self.get_matter_attribute_value(
+            ZoneManagement.Attributes.FeatureMap
         )
+        if feature_map is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="camera_zones_not_supported",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        features = ZoneFeature(feature_map)
         if ZoneFeature.kUserDefined not in features:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -329,8 +336,12 @@ class MatterCamera(MatterEntity, Camera):
             )
         return features
 
-    def _check_user_zone(self, zone_id: int) -> None:
-        """Raise if the zone doesn't exist or came with the camera."""
+    def _check_zone_editable(self, zone_id: int, *, remove: bool = False) -> None:
+        """Raise if the zone is known and can't be changed.
+
+        Unknown zone IDs are left to the camera, as the Zones attribute can
+        lag behind a zone that was just created.
+        """
         zone = next(
             (
                 zone
@@ -342,18 +353,24 @@ class MatterCamera(MatterEntity, Camera):
             ),
             None,
         )
-        if zone is None or zone.zoneSource != ZoneManagement.Enums.ZoneSourceEnum.kUser:
+        if zone is None:
+            return
+        placeholders = {"entity_id": self.entity_id, "zone_id": str(zone_id)}
+        if zone.zoneSource != ZoneManagement.Enums.ZoneSourceEnum.kUser:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key=(
-                    "camera_zone_not_found"
-                    if zone is None
-                    else "camera_zone_not_editable"
-                ),
-                translation_placeholders={
-                    "entity_id": self.entity_id,
-                    "zone_id": str(zone_id),
-                },
+                translation_key="camera_zone_not_editable",
+                translation_placeholders=placeholders,
+            )
+        if (
+            not remove
+            and zone.twoDCartesianZone is not None
+            and zone.twoDCartesianZone.use == ZoneManagement.Enums.ZoneUseEnum.kMotion
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="camera_motion_zone_not_editable",
+                translation_placeholders=placeholders,
             )
 
     async def async_get_camera_zones(self) -> ServiceResponse:
@@ -399,8 +416,8 @@ class MatterCamera(MatterEntity, Camera):
         if use == "focus" and ZoneFeature.kFocusZones not in features:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="camera_zone_use_not_supported",
-                translation_placeholders={"entity_id": self.entity_id, "use": use},
+                translation_key="camera_focus_zones_not_supported",
+                translation_placeholders={"entity_id": self.entity_id},
             )
         zone = ZoneManagement.Structs.TwoDCartesianZoneStruct(
             name=name,
@@ -414,7 +431,7 @@ class MatterCamera(MatterEntity, Camera):
             )
             zone_id = response["zoneID"]
         else:
-            self._check_user_zone(zone_id)
+            self._check_zone_editable(zone_id)
             await self.send_device_command(
                 ZoneManagement.Commands.UpdateTwoDCartesianZone(
                     zoneID=zone_id, zone=zone
@@ -424,9 +441,8 @@ class MatterCamera(MatterEntity, Camera):
 
     async def async_clear_camera_zone(self, zone_id: int) -> None:
         """Remove a zone from the camera."""
-        self._zone_maximum()
         self._zone_features()
-        self._check_user_zone(zone_id)
+        self._check_zone_editable(zone_id, remove=True)
         await self.send_device_command(
             ZoneManagement.Commands.RemoveZone(zoneID=zone_id)
         )
