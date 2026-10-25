@@ -24,9 +24,14 @@ from homeassistant.components.onedrive.const import (
     DOMAIN,
     OAUTH2_TOKEN,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -237,7 +242,7 @@ async def test_device(
     await setup_integration(hass, mock_config_entry)
 
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_drive.id), mock_config_entry.entry_id
+        (DOMAIN, "MOCK_DRIVE_ID"), mock_config_entry.entry_id
     )
     assert device
     assert device == snapshot
@@ -297,7 +302,7 @@ async def test_1_1_to_1_2_migration(
     await setup_integration(hass, old_config_entry)
     assert old_config_entry.data[CONF_FOLDER_ID] == mock_folder.id
     assert old_config_entry.data[CONF_FOLDER_NAME] == mock_folder.name
-    assert old_config_entry.minor_version == 2
+    assert old_config_entry.minor_version == 3
 
 
 @pytest.mark.parametrize(
@@ -364,6 +369,59 @@ async def test_migration_guard_against_major_downgrade(
 
     await setup_integration(hass, old_config_entry)
     assert old_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_1_2_to_1_3_migration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration from 1.2 to 1.3 uppercases the drive ID."""
+    old_config_entry = MockConfigEntry(
+        unique_id="mock_drive_id",
+        title=mock_config_entry.title,
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        minor_version=2,
+    )
+    old_config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=old_config_entry.entry_id,
+        identifiers={(DOMAIN, "mock_drive_id")},
+    )
+    lowercase_entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "mock_drive_id_total_size",
+        config_entry=old_config_entry,
+        device_id=device.id,
+    )
+    # Not all entities need migrating, e.g. if the drive ID was already uppercase
+    uppercase_entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "MOCK_DRIVE_ID_used_size",
+        config_entry=old_config_entry,
+        device_id=device.id,
+    )
+
+    await setup_integration(hass, old_config_entry)
+
+    assert old_config_entry.state is ConfigEntryState.LOADED
+    assert old_config_entry.unique_id == "MOCK_DRIVE_ID"
+    assert old_config_entry.minor_version == 3
+    assert (
+        entity_registry.async_get(lowercase_entity.entity_id).unique_id
+        == "MOCK_DRIVE_ID_total_size"
+    )
+    assert (
+        entity_registry.async_get(uppercase_entity.entity_id).unique_id
+        == "MOCK_DRIVE_ID_used_size"
+    )
+    assert device_registry.async_get(device.id).identifiers == {
+        (DOMAIN, "MOCK_DRIVE_ID")
+    }
 
 
 async def test_oauth_implementation_not_available(

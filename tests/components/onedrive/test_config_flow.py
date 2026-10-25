@@ -96,7 +96,7 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert result["title"] == "John Doe's OneDrive"
-    assert result["result"].unique_id == "mock_drive_id"
+    assert result["result"].unique_id == "MOCK_DRIVE_ID"
     assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
     assert result["data"][CONF_FOLDER_NAME] == "myFolder"
@@ -131,7 +131,7 @@ async def test_full_flow_with_owner_not_found(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert result["title"] == "OneDrive"
-    assert result["result"].unique_id == "mock_drive_id"
+    assert result["result"].unique_id == "MOCK_DRIVE_ID"
     assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
     assert result["data"][CONF_FOLDER_NAME] == "myFolder"
@@ -173,7 +173,7 @@ async def test_error_during_folder_creation(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "John Doe's OneDrive"
-    assert result["result"].unique_id == "mock_drive_id"
+    assert result["result"].unique_id == "MOCK_DRIVE_ID"
     assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
     assert result["data"][CONF_FOLDER_NAME] == "myFolder"
@@ -231,13 +231,23 @@ async def test_already_configured(
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@pytest.mark.parametrize(
+    "drive_id",
+    [
+        pytest.param("MOCK_DRIVE_ID", id="same_casing"),
+        pytest.param("mock_drive_id", id="different_casing"),
+    ],
+)
 async def test_reauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
+    mock_approot: AppRoot,
+    drive_id: str,
 ) -> None:
     """Test that the reauth flow works."""
+    mock_approot.parent_reference.drive_id = drive_id
 
     await setup_integration(hass, mock_config_entry)
 
