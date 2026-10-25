@@ -183,7 +183,15 @@ class WebDavTodoListEntity(TodoListEntity):
         vtodo = todo.icalendar_component
         vtodo["SUMMARY"] = item.summary or ""
         if status := item.status:
+            previous = TODO_STATUS_MAP.get(
+                vtodo.get("STATUS", ""), TodoItemStatus.NEEDS_ACTION
+            )
             vtodo["STATUS"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
+            if status != TodoItemStatus.COMPLETED:
+                vtodo.pop("COMPLETED", None)
+            elif previous != TodoItemStatus.COMPLETED:
+                vtodo.pop("COMPLETED", None)
+                vtodo.add("COMPLETED", dt_util.utcnow())
         if due := item.due:
             todo.set_due(due)
         else:
