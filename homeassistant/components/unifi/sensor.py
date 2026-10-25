@@ -246,7 +246,8 @@ def device_system_stats_value_fn(
     """Retrieve item at index in system stats."""
     if "system-stats" not in device.raw:
         return None
-    return device.system_stats[stat_index] or None
+    value = device.system_stats[stat_index]
+    return None if value == "" else value
 
 
 @callback

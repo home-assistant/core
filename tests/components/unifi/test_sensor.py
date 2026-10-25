@@ -1460,10 +1460,10 @@ async def test_device_system_stats(
     assert hass.states.get("sensor.device_cpu_utilization").state == STATE_UNKNOWN
     assert hass.states.get("sensor.device_memory_utilization").state == STATE_UNKNOWN
 
-    device["system-stats"] = {"cpu": 8.8, "mem": 34.4, "uptime": 10}
+    device["system-stats"] = {"cpu": 0, "mem": 34.4, "uptime": 10}
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
-    assert hass.states.get("sensor.device_cpu_utilization").state == "8.8"
+    assert hass.states.get("sensor.device_cpu_utilization").state == "0"
     assert hass.states.get("sensor.device_memory_utilization").state == "34.4"
 
 
