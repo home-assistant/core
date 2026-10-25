@@ -16,7 +16,6 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
-from homeassistant.helpers.chat_session import async_get_chat_session
 
 from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT, IntentSource
 from .entity import ConversationEntity
@@ -125,13 +124,7 @@ async def async_converse(
             )
         )
         try:
-            with async_get_chat_session(
-                hass, conversation_id, context=context
-            ) as session:
-                # The history keeps a failed turn, so the error result returns
-                # the conversation ID to continue it.
-                conversation_input.conversation_id = session.conversation_id
-                result = await method(conversation_input)
+            result = await method(conversation_input)
         except HomeAssistantError as err:
             intent_response = intent.IntentResponse(language=language)
             intent_response.async_set_error(
@@ -140,7 +133,7 @@ async def async_converse(
             )
             result = ConversationResult(
                 response=intent_response,
-                conversation_id=conversation_input.conversation_id,
+                conversation_id=conversation_id,
             )
 
         trace.set_result(**result.as_dict())
