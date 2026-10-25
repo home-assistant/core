@@ -484,6 +484,16 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         mode = PRESET_MODES_TO_OVERKIZ[preset_mode]
 
+        # A setpoint still waiting to be sent would start a derogation over the
+        # mode chosen now.
+        self.coordinator.discard_pending_commands(
+            self.device_url,
+            {
+                OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
+                OverkizCommand.SET_COOLING_TARGET_TEMPERATURE,
+            },
+        )
+
         # For consistency, it is better both are synced like on the Thermostat.
         commands = [
             Command(name=OverkizCommand.SET_PASS_APC_HEATING_MODE, parameters=[mode]),
@@ -776,8 +786,10 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         # Commands of one execution run in order, so the refreshes only start
         # once the device has applied the previous commands. Each command takes
         # seconds on the device, and a long queue makes it drop commands.
+        # The device refuses calls sent too quickly: while a write of the same
+        # setting is running, only the latest value is kept and sent after it.
         await self.executor.async_execute_commands(
-            [*commands, *(Command(name=name) for name in refresh)]
+            [*commands, *(Command(name=name) for name in refresh)], coalesce=True
         )
 
     @property
