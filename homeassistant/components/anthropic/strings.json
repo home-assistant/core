@@ -117,7 +117,7 @@
       "entry_type": "Conversation agent",
       "error": {
         "api_error": "Unable to get model info: {message}",
-        "effort_requires_thinking": "This effort level requires thinking to be enabled for the selected model.",
+        "effort_requires_thinking": "This effort level is not supported for the selected thinking type.",
         "model_not_found": "Model not found",
         "model_retired": "This model is retired. Select another model.",
         "thinking_budget_too_large": "Thinking budget must be less than the Maximum tokens."
@@ -294,6 +294,7 @@
     "thinking_type": {
       "options": {
         "adaptive": "Adaptive",
+        "between_tools": "Between tool calls",
         "disabled": "Disabled",
         "enabled": "Enabled"
       }

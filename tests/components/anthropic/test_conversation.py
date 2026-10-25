@@ -1886,6 +1886,34 @@ async def test_extended_thinking(
             },
             id="high_effort",
         ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-sonnet-5-5",
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_EFFORT: "low",
+            },
+            id="between_tools_low_effort",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-sonnet-5-5",
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_EFFORT: "medium",
+            },
+            id="between_tools_medium_effort",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-sonnet-5-5",
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_THINKING_BUDGET: 1500,
+                CONF_EFFORT: "high",
+            },
+            id="between_tools_high_effort",
+        ),
     ],
 )
 @freeze_time("2024-05-24 12:00:00")
@@ -1897,7 +1925,7 @@ async def test_disabled_thinking(
     snapshot: SnapshotAssertion,
     subentry_data: dict[str, str | int],
 ) -> None:
-    """Test that effort remains independent when thinking is disabled."""
+    """Test that effort remains independent of the thinking mode."""
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),

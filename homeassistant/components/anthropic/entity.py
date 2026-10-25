@@ -55,6 +55,7 @@ from anthropic.types import (
     ThinkingBlock,
     ThinkingBlockParam,
     ThinkingConfigAdaptiveParam,
+    ThinkingConfigBetweenToolsParam,
     ThinkingConfigDisabledParam,
     ThinkingConfigEnabledParam,
     ThinkingDelta,
@@ -944,7 +945,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _get_model_args(
+    async def _get_model_args(  # noqa: C901
         self,
         chat_log: conversation.ChatLog,
         structure: probatio.Schema | None = None,
@@ -1017,6 +1018,10 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     type="enabled",
                     display="summarized",
                     budget_tokens=options[CONF_THINKING_BUDGET],
+                )
+            case "between_tools":
+                model_args["thinking"] = ThinkingConfigBetweenToolsParam(
+                    type="between_tools"
                 )
             case "disabled":
                 model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
