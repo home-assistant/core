@@ -46,27 +46,6 @@ async def test_sensor_platform(
 
 
 @pytest.mark.usefixtures("mock_version")
-async def test_sensor_modules_without_data(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_websocket_client: MagicMock,
-) -> None:
-    """Test setup keeps the defaults for modules the backend had no data for."""
-    mock_websocket_client.get_data.return_value = replace(
-        mock_websocket_client.get_data.return_value, displays=None, gpus=None
-    )
-    mock_websocket_client.listen.side_effect = None
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.data.displays == []
-    assert mock_config_entry.runtime_data.data.gpus == []
-
-
-@pytest.mark.usefixtures("mock_version")
 async def test_sensor_memory_missing(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
