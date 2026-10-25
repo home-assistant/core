@@ -146,7 +146,7 @@ CAMERA_ZONE_SOURCE_MAP: dict[int, str] = {
     _ZoneSource.kUser: "user",
 }
 
-# Motion zones only act through triggers, which aren't supported yet.
+# Motion zones only act through triggers, which aren't supported.
 SERVICE_CAMERA_ZONE_USES = ["privacy", "focus"]
 
 CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"

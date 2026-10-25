@@ -789,7 +789,7 @@
       "message": "{entity_id} does not support focus zones."
     },
     "camera_motion_zone_not_editable": {
-      "message": "Home Assistant cannot change motion zones yet. Zone {zone_id} of {entity_id} can only be removed."
+      "message": "Home Assistant cannot change motion zones. Zone {zone_id} of {entity_id} can only be removed."
     },
     "camera_user_zones_not_supported": {
       "message": "{entity_id} does not allow changing its zones."

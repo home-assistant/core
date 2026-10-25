@@ -980,7 +980,7 @@ async def test_clear_camera_zone(
             ZONE_ATTRIBUTES,
             "set_camera_zone",
             {**ZONE_DATA, "zone_id": 3},
-            "Home Assistant cannot change motion zones yet",
+            "Home Assistant cannot change motion zones",
             id="set_motion_zone",
         ),
     ],
