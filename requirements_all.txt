@@ -3007,7 +3007,7 @@ radios==2.0.1
 radiotherm==2.1.0
 
 # homeassistant.components.rainbowminer
-rainbowminer-api-client==0.2.2
+rainbowminer-api-client==0.2.3
 
 # homeassistant.components.rapt_ble
 rapt-ble==2.0.0
