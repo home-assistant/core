@@ -4441,6 +4441,13 @@ def _rename_agent_storage(
             ["test.other"],
             id="old_agent_not_configured",
         ),
+        pytest.param(
+            {"test.new": {"protected": False, "retention": None}},
+            ["test.new"],
+            {"test.new": {"protected": False, "retention": None}},
+            ["test.new"],
+            id="old_agent_not_configured_new_agent_configured",
+        ),
     ],
 )
 async def test_rename_agent(

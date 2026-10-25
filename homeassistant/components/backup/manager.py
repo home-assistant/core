@@ -413,12 +413,17 @@ class BackupManager:
 
         Integrations call this when the ID of one of their backup agents changes,
         for example when migrating the unique ID of a config entry. Raises
-        ValueError if the new agent ID is already loaded or configured.
+        ValueError if the old agent ID is configured and the new agent ID is
+        already loaded or configured.
         """
+        config = self.config.data
         if (
+            old_agent_id in config.agents
+            or old_agent_id in config.create_backup.agent_ids
+        ) and (
             new_agent_id in self.backup_agents
-            or new_agent_id in self.config.data.agents
-            or new_agent_id in self.config.data.create_backup.agent_ids
+            or new_agent_id in config.agents
+            or new_agent_id in config.create_backup.agent_ids
         ):
             raise ValueError(f"Backup agent {new_agent_id} already exists")
         self.config.rename_agent(old_agent_id, new_agent_id)
