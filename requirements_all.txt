@@ -499,7 +499,7 @@ aiovitesy==1.4.4
 aiovlc==0.8.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.3.5
+aiovodafone==3.3.10
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
