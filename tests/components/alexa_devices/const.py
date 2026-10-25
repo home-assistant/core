@@ -10,6 +10,7 @@ from aioamazondevices.const.schedules import (
 )
 from aioamazondevices.structures import (
     AmazonDevice,
+    AmazonDeviceFeature,
     AmazonDeviceSensor,
     AmazonSchedule,
     AmazonVocalRecord,
@@ -27,6 +28,7 @@ TEST_DEVICE_1 = AmazonDevice(
     capabilities=["AUDIO_PLAYER", "MICROPHONE", "ALEXA_DEVICE_REBOOT"],
     device_family="mine",
     device_type="echo",
+    primary_display_category="ALEXA_VOICE_ENABLED",
     household_device=False,
     device_owner_customer_id="amazon_ower_id",
     device_cluster_members={TEST_DEVICE_1_SN: TEST_DEVICE_1_ID},
@@ -91,7 +93,41 @@ TEST_DEVICE_1 = AmazonDevice(
         "dropin": "All",
     },
     voice_control_supported=True,
-    features={},
+    features={
+        "temperatureSensor": {
+            "1": AmazonDeviceFeature(
+                properties=["temperature"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"temperature": "temperature"},
+            )
+        }
+    },
+    unsupported_features={
+        "toggle": {
+            "11": AmazonDeviceFeature(
+                properties=["toggleState"],
+                supported_operations=["turnOn", "turnOff"],
+                supported_modes=[],
+                friendly_name="Enable LED Indicator",
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={
+                    "__typename": "ToggleConfiguration",
+                    "friendlyName": {"value": {"text": "Enable LED Indicator"}},
+                },
+                sensor_keys={},
+            )
+        },
+    },
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
@@ -100,6 +136,7 @@ TEST_DEVICE_2 = AmazonDevice(
     capabilities=["AUDIO_PLAYER", "MICROPHONE", "ALEXA_DEVICE_REBOOT"],
     device_family="mine",
     device_type="echo",
+    primary_display_category="ALEXA_VOICE_ENABLED",
     household_device=True,
     device_owner_customer_id="amazon_ower_id",
     device_cluster_members={TEST_DEVICE_2_SN: "echo_test_2_device_id"},
@@ -131,6 +168,7 @@ TEST_DEVICE_2 = AmazonDevice(
     communication_settings={},
     voice_control_supported=True,
     features={},
+    unsupported_features={},
 )
 
 TEST_DEVICE_AQM_SN = "aqm_test_serial_number"
@@ -141,6 +179,7 @@ TEST_DEVICE_AQM = AmazonDevice(
     capabilities=[],
     device_family="AIR_QUALITY_MONITOR",
     device_type=DEVICE_TYPE_AQM,
+    primary_display_category="AIR_QUALITY_MONITOR",
     household_device=False,
     device_owner_customer_id="amazon_ower_id",
     device_cluster_members={TEST_DEVICE_AQM_SN: DEVICE_TYPE_AQM},
@@ -227,6 +266,7 @@ TEST_DEVICE_AQM = AmazonDevice(
     communication_settings={},
     voice_control_supported=False,
     features={},
+    unsupported_features={},
 )
 
 TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(

@@ -94,20 +94,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
 
     device_registry = dr.async_get(hass)
 
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id)},
-            name=info_api.data.name,
-            manufacturer=MANUFACTURER,
-            sw_version=info_api.data.version,
-            hw_version=coordinator_info.data.device.pcb,
-            configuration_url=entry.data[CONF_URL],
-            serial_number=str(info_api.data.device.serial),
-            model=info_api.data.product_name,
-            model_id=(
-                f"{coordinator_info.data.device.article_number}{coordinator_info.data.article_suffix}"
-            ),
+        identifiers={(DOMAIN, entry.unique_id)},
+        name=info_api.data.name,
+        manufacturer=MANUFACTURER,
+        sw_version=info_api.data.version,
+        hw_version=coordinator_info.data.device.pcb,
+        configuration_url=entry.data[CONF_URL],
+        serial_number=str(info_api.data.device.serial),
+        model=info_api.data.product_name,
+        model_id=(
+            f"{coordinator_info.data.device.article_number}{coordinator_info.data.article_suffix}"
         ),
     )
 
@@ -129,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
                 f"{line_info.device.article_number}{line_info.device.article_info}"
             )
 
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=entry.entry_id, device_info=device_info
         )
 

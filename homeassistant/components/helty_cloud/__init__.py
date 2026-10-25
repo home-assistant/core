@@ -4,13 +4,13 @@ from pyheltycloud import HeltyCloud, HeltyCloudAuthError, HeltyCloudError
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import HeltyCloudConfigEntry, HeltyCloudDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.FAN]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.FAN, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -> None:
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -
     try:
         devices = await client.get_devices()
     except HeltyCloudAuthError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
     except HeltyCloudError as err:
