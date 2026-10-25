@@ -93,7 +93,14 @@ def async_get_chat_log(
         ):
             chat_log.async_add_user_content(UserContent(content=user_input.text))
 
-        yield chat_log
+        try:
+            yield chat_log
+        except (Exception, asyncio.CancelledError) as err:
+            # The caller may handle the error before the outer turn ends.
+            chat_log.async_add_error(
+                (user_input.agent_id if user_input else None) or DOMAIN, err
+            )
+            raise
         return
 
     # Each turn works on a copy and stores it at the end, so a concurrent turn
@@ -110,7 +117,9 @@ def async_get_chat_log(
     is_new_log = session.conversation_id not in all_chat_logs
 
     if chat_log := all_chat_logs.get(session.conversation_id):
-        chat_log = replace(chat_log, content=chat_log.content.copy())
+        chat_log = replace(
+            chat_log, content=chat_log.content.copy(), _started_tool_calls={}
+        )
     else:
         chat_log = ChatLog(hass, session.conversation_id)
 
@@ -405,6 +414,11 @@ class ChatLog:
     delta_listener: Callable[[ChatLog, dict], None] | None = None
     llm_input_provided_index = 0
     created: datetime = field(init=False, default_factory=utcnow)
+    _last_error: BaseException | None = field(default=None, repr=False)
+    # Tool calls that a stream started before their content was added.
+    _started_tool_calls: dict[str, tuple[str, llm.ToolInput, asyncio.Task]] = field(
+        default_factory=dict, repr=False
+    )
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the chat log."""
@@ -453,9 +467,45 @@ class ChatLog:
         )
 
     @callback
+    def _async_add_started_tool_calls(self) -> None:
+        """Add the started tool calls of an interrupted stream."""
+        started = list(self._started_tool_calls.values())
+        self._started_tool_calls.clear()
+        content = AssistantContent(
+            agent_id=started[0][0],
+            content=None,
+            tool_calls=[tool_call for _, tool_call, _ in started],
+        )
+        self.content.append(content)
+        _async_notify_subscribers(
+            self.hass,
+            self.conversation_id,
+            ChatLogEventType.CONTENT_ADDED,
+            {"content": content.as_dict()},
+        )
+        for agent_id, tool_call, task in started:
+            # A tool that did not finish gets an error result.
+            if not task.done() or task.cancelled() or task.exception():
+                continue
+            self.async_add_assistant_content_without_tools(
+                ToolResultContent(
+                    agent_id=agent_id,
+                    tool_call_id=tool_call.id,
+                    tool_name=tool_call.tool_name,
+                    result=task.result(),
+                )
+            )
+
+    @callback
     def async_add_error(self, agent_id: str, error: BaseException) -> None:
         """Add the error that ended a turn as assistant content."""
+        # A nested chat log and the outer turn may both see the error.
+        if error is self._last_error:
+            return
+        self._last_error = error
         error_text = str(error) or type(error).__name__
+        if self._started_tool_calls:
+            self._async_add_started_tool_calls()
         # LLM providers refuse a tool call without a result.
         answered: set[str] = set()
         for content in reversed(self.content):
@@ -526,6 +576,9 @@ class ChatLog:
         """
         LOGGER.debug("Adding assistant content: %s", content)
         self.content.append(content)
+        if isinstance(content, AssistantContent):
+            for tool_call in content.tool_calls or ():
+                self._started_tool_calls.pop(tool_call.id, None)
 
         if (
             not isinstance(content, AssistantContent)
@@ -636,6 +689,11 @@ class ChatLog:
                             tool_call_tasks[tool_call.id] = self.hass.async_create_task(
                                 self.llm_api.async_call_tool(tool_call),
                                 name=f"llm_tool_{tool_call.id}",
+                            )
+                            self._started_tool_calls[tool_call.id] = (
+                                agent_id,
+                                tool_call,
+                                tool_call_tasks[tool_call.id],
                             )
                 if self.delta_listener:
                     if filtered_delta := {

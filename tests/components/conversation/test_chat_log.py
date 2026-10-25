@@ -236,6 +236,129 @@ async def test_failed_turn_tool_call_result(
     assert content[-1].content == "Error: Tool is broken"
 
 
+async def test_failed_nested_turn_stored(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test an error that the caller handles inside the turn is stored."""
+    # Like the agent in an Assist pipeline, the nested turn reuses the open
+    # chat log, and the error is handled before the outer turn ends.
+    with (
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input),
+        pytest.raises(HomeAssistantError),
+        async_get_chat_log(hass, session, mock_conversation_input),
+    ):
+        raise HomeAssistantError("Provider is down")
+
+    content = hass.data[DATA_CHAT_LOGS]["koala"].content
+    assert [(item.role, item.content) for item in content] == [
+        ("system", ""),
+        ("user", "Hello"),
+        ("assistant", "Error: Provider is down"),
+    ]
+
+
+async def test_failed_nested_turn_error_added_once(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test an error that ends a nested and an outer turn is added once."""
+    with (
+        pytest.raises(HomeAssistantError),
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input),
+        async_get_chat_log(hass, session, mock_conversation_input),
+    ):
+        raise HomeAssistantError("Provider is down")
+
+    content = hass.data[DATA_CHAT_LOGS]["koala"].content
+    assert [(item.role, item.content) for item in content] == [
+        ("system", ""),
+        ("user", "Hello"),
+        ("assistant", "Error: Provider is down"),
+    ]
+
+
+def _mock_tool() -> AsyncMock:
+    """Return a mock LLM tool."""
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = probatio.Schema({})
+    return mock_tool
+
+
+@pytest.mark.parametrize(
+    ("tool_side_effect", "tool_result"),
+    [
+        pytest.param(
+            [llm.ToolResult(data="Test response")],
+            llm.ToolResult(data="Test response"),
+            id="tool_finished",
+        ),
+        pytest.param(
+            HomeAssistantError("Tool failed"),
+            llm.ToolResult(
+                data={"error": "HomeAssistantError", "error_text": "Connection lost"},
+                error=True,
+            ),
+            id="tool_failed",
+        ),
+    ],
+)
+@freeze_time("2025-10-31 12:00:00")
+async def test_failed_stream_keeps_started_tool_call(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    tool_side_effect: list[llm.ToolResult] | Exception,
+    tool_result: llm.ToolResult,
+) -> None:
+    """Test a stream that fails after a tool call started keeps the tool call."""
+    mock_tool = _mock_tool()
+    mock_tool.async_call.side_effect = tool_side_effect
+    tool_call = llm.ToolInput(
+        id="mock-tool-call-id", tool_name="test_tool", tool_args={}
+    )
+
+    async def stream() -> AsyncGenerator[AssistantContentDeltaDict]:
+        yield {"role": "assistant"}
+        # A tool call in a later delta starts right away.
+        yield {"tool_calls": [tool_call]}
+        await hass.async_block_till_done()
+        raise HomeAssistantError("Connection lost")
+
+    async def run_turn() -> None:
+        with (
+            patch(
+                "homeassistant.components.llm.async_get_tools",
+                new_callable=AsyncMock,
+                return_value=LLMTools(tools=[mock_tool]),
+            ),
+            chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        ):
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api="assist",
+            )
+            async for _ in chat_log.async_add_delta_content_stream(
+                "mock-agent-id", stream()
+            ):
+                pass
+
+    with pytest.raises(HomeAssistantError):
+        await run_turn()
+
+    content = hass.data[DATA_CHAT_LOGS]["koala"].content
+    assert content[-3].tool_calls == [tool_call]
+    assert content[-2] == ToolResultContent(
+        agent_id="mock-agent-id",
+        tool_call_id="mock-tool-call-id",
+        tool_name="test_tool",
+        result=tool_result,
+    )
+    assert content[-1].content == "Error: Connection lost"
+
+
 class AdminAPI(llm.API):
     """Test API that requires an admin user."""
 
