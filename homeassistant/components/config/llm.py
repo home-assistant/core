@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from collections.abc import Iterable, Iterator
+from dataclasses import dataclass, field
 import heapq
 from typing import Any, override
 
@@ -159,13 +160,23 @@ def _rank_integration(
     return None
 
 
+@dataclass(order=True, slots=True, frozen=True)
+class _SearchMatch:
+    """Ranked integration search match ordered by rank, name, and domain."""
+
+    rank: int
+    sort_name: str
+    domain: str
+    entry_info: JsonObjectType = field(compare=False)
+
+
 def _match_searchable_entry(
     query: str,
     domain: str,
     meta: dict[str, Any],
     title_trans: dict[str, str],
     brand_name: str | None = None,
-) -> tuple[int, str, str, JsonObjectType] | None:
+) -> _SearchMatch | None:
     """Rank an integration description and build its result dict if matched."""
     if meta.get("integration_type") == "hardware":
         return None
@@ -193,7 +204,7 @@ def _match_searchable_entry(
         entry_info["iot_standards"] = list[JsonValueType](iot_standards)
     if meta.get("single_config_entry"):
         entry_info["single_config_entry"] = True
-    return (rank, name.casefold(), domain, entry_info)
+    return _SearchMatch(rank, name.casefold(), domain, entry_info)
 
 
 def _iter_searchable_matches(
@@ -201,7 +212,7 @@ def _iter_searchable_matches(
     descriptions: dict[str, Any],
     title_trans: dict[str, str],
     filter_type: str | None,
-) -> Iterator[tuple[int, str, str, JsonObjectType]]:
+) -> Iterator[_SearchMatch]:
     """Yield ranked integration matches for query."""
     if filter_type in (None, "integration"):
         integrations = (
@@ -426,11 +437,7 @@ class SearchIntegrationsTool(Tool):
             _iter_searchable_matches(query, descriptions, title_trans, filter_type),
         )
         return ToolResult(
-            data={
-                "result": list[JsonValueType](
-                    entry_info for _, _, _, entry_info in best
-                )
-            }
+            data={"result": list[JsonValueType](match.entry_info for match in best)}
         )
 
 
