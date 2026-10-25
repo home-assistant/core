@@ -34,7 +34,10 @@ from homeassistant.components.overkiz.climate.atlantic_pass_apc_zone_control_zon
     AtlanticPassAPCZoneControlZone,
 )
 from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
-from homeassistant.components.overkiz.coordinator import OverkizDataUpdateCoordinator
+from homeassistant.components.overkiz.coordinator import (
+    OverkizDataUpdateCoordinator,
+    _send_pending_commands,
+)
 from homeassistant.components.overkiz.executor import OverkizExecutor
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -2104,3 +2107,22 @@ async def test_zone_control_zone_waiting_value_that_cannot_be_sent(
     await _async_end_execution(hass, freezer, mock_client, "exec-1")
 
     assert "Sending the waiting Overkiz commands failed" in caplog.text
+
+
+async def test_zone_control_zone_nothing_waiting_is_nothing_sent(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test sending what waits for a setting that nothing waits for sends nothing."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+
+    await _send_pending_commands(
+        _zone_coordinator(hass),
+        (ZONE_CONTROL_ZONE.device_url, ("setHeatingTargetTemperature",)),
+    )
+
+    mock_client.execute_action_group.assert_not_called()
