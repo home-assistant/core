@@ -1291,13 +1291,13 @@
       "message": "Command was rejected: {reason}"
     },
     "local_command_failed": {
-      "message": "The Powerwall gateway could not complete the command. Check the Home Assistant log for details, then try again."
+      "message": "The Powerwall gateway could not complete the command, check the logs for details"
     },
     "local_command_not_supported": {
       "message": "The Powerwall gateway firmware does not support this command"
     },
     "local_command_out_of_range": {
-      "message": "The Powerwall gateway rejected the requested power. Change the power value and try again."
+      "message": "The Powerwall gateway rejected the requested power, change the power value and try again"
     },
     "local_update_failed": {
       "message": "Error fetching data from the local Powerwall gateway: {message}"
@@ -1312,7 +1312,7 @@
       "message": "No energy site data for device ID: {device_id}"
     },
     "no_local_powerwall": {
-      "message": "{name} is not connected to its Powerwall for local control. Add it as a local energy site in the Teslemetry integration, or restore its local connection, then try again."
+      "message": "{name} is not connected to its Powerwall for local control, add it as a local energy site or restore its local connection"
     },
     "no_vehicle_data_for_device": {
       "message": "No vehicle data for device ID: {device_id}"

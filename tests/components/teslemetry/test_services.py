@@ -708,8 +708,8 @@ async def test_dispatch_battery_power_out_of_range_message(
             blocking=True,
         )
     assert str(exc_info.value) == (
-        "The Powerwall gateway rejected the requested power. "
-        "Change the power value and try again"
+        "The Powerwall gateway rejected the requested power, "
+        "change the power value and try again"
     )
     assert "exceeds discharge limit" not in str(exc_info.value)
     assert "power 10100.000000 exceeds discharge limit 10000" in caplog.text
