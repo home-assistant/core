@@ -15,3 +15,5 @@ CONF_NOT_FIRST_RUN = "not_first_run"
 
 SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
+
+SIGNAL_ZONE_UPDATED = "monoprice_zone_updated_{}_{}"

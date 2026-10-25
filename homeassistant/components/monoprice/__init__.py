@@ -1,8 +1,8 @@
 """The Monoprice 6-Zone Amplifier integration."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from pymonoprice import Monoprice, get_monoprice
+from pymonoprice import Monoprice, ZoneStatus, get_monoprice
 from serialx import SerialException
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +15,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_NOT_FIRST_RUN, DOMAIN
 from .services import async_setup_services
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER]
 
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -29,6 +29,8 @@ class MonopriceRuntimeData:
 
     client: Monoprice
     first_run: bool
+    # Latest status of each zone, so the number entities need no serial queries
+    zone_status: dict[int, ZoneStatus] = field(default_factory=dict)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -63,7 +65,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) ->
         first_run=first_run,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # The number entities are only added for zones with an enabled media player
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.MEDIA_PLAYER])
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.NUMBER])
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) -> None:

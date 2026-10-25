@@ -22,6 +22,19 @@
       }
     }
   },
+  "entity": {
+    "number": {
+      "balance": {
+        "name": "Balance"
+      },
+      "bass": {
+        "name": "Bass"
+      },
+      "treble": {
+        "name": "Treble"
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {

@@ -61,7 +61,9 @@ class MockMonoprice:
     def __init__(self) -> None:
         """Init mock object."""
         self.zones = defaultdict(
-            lambda: AttrDict(power=True, volume=0, mute=True, source=1)
+            lambda: AttrDict(
+                power=True, volume=0, mute=True, source=1, treble=7, bass=7, balance=10
+            )
         )
 
     def zone_status(self, zone_id):

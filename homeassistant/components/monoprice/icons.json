@@ -1,4 +1,17 @@
 {
+  "entity": {
+    "number": {
+      "balance": {
+        "default": "mdi:scale-balance"
+      },
+      "bass": {
+        "default": "mdi:speaker"
+      },
+      "treble": {
+        "default": "mdi:music-clef-treble"
+      }
+    }
+  },
   "services": {
     "restore": {
       "service": "mdi:content-paste"
