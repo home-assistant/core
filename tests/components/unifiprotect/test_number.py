@@ -17,7 +17,6 @@ from uiprotect.data import (
     ModelType,
     Permission,
     ProtectAdoptableDeviceModel,
-    RingSetting,
     Sensor,
     WSAction,
 )
@@ -627,12 +626,12 @@ async def test_number_sense_sensitivity_unavailable_on_public_disconnect(
 RING_VOLUME_ENTITY = "number.test_chime_ring_volume_test_camera"
 
 
-def _setup_chime_with_doorbell(
-    chime: Chime, doorbell: Camera, volume: int = 50
-) -> None:
-    """Set up chime with paired doorbell for testing."""
-    chime.ring_settings = [
-        RingSetting(
+def _paired_ring_settings(
+    doorbell: Camera, volume: int = 50
+) -> list[PublicRingSettings]:
+    """Return the public ring settings of a chime paired with the doorbell."""
+    return [
+        PublicRingSettings(
             camera_id=doorbell.id,
             repeat_times=1,
             ringtone_id="test-ringtone-id",
@@ -649,8 +648,8 @@ async def test_chime_ring_volume_setup(
     doorbell: Camera,
 ) -> None:
     """Test chime ring volume number entity setup."""
-    _setup_chime_with_doorbell(chime, doorbell, volume=75)
-    setup_public_chime(ufp)
+    ring_settings = _paired_ring_settings(doorbell, volume=75)
+    setup_public_chime(ufp, ring_settings)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
@@ -682,8 +681,8 @@ async def test_chime_ring_volume_ignores_local_permissions(
     ufp.api.bootstrap.auth_user.all_permissions = [
         Permission.unifi_dict_to_dict({"rawPermission": "chime:read:*"})
     ]
-    _setup_chime_with_doorbell(chime, doorbell, volume=75)
-    setup_public_chime(ufp)
+    ring_settings = _paired_ring_settings(doorbell, volume=75)
+    setup_public_chime(ufp, ring_settings)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
@@ -697,8 +696,8 @@ async def test_chime_ring_volume_set_value(
     doorbell: Camera,
 ) -> None:
     """Test setting chime ring volume writes through the public chime."""
-    _setup_chime_with_doorbell(chime, doorbell)
-    setup_public_chime(ufp)
+    ring_settings = _paired_ring_settings(doorbell)
+    setup_public_chime(ufp, ring_settings)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
@@ -733,8 +732,8 @@ async def test_chime_ring_volume_set_value_without_ringtone(
 ) -> None:
     """A paired camera without a ringtone is named so the user can pick one."""
     doorbell.id = "test-doorbell"
-    _setup_chime_with_doorbell(chime, doorbell)
-    setup_public_chime(ufp)
+    ring_settings = _paired_ring_settings(doorbell)
+    setup_public_chime(ufp, ring_settings)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
@@ -768,8 +767,8 @@ async def test_chime_volume_set_value(
     doorbell: Camera,
 ) -> None:
     """Setting the overall chime volume sets every ring volume on the public chime."""
-    _setup_chime_with_doorbell(chime, doorbell, volume=40)
-    setup_public_chime(ufp)
+    ring_settings = _paired_ring_settings(doorbell, volume=40)
+    setup_public_chime(ufp, ring_settings)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
     public = ufp.api.public_bootstrap.chimes[chime.id]
@@ -791,8 +790,6 @@ async def test_chime_volume_set_value_without_public_chime(
     doorbell: Camera,
 ) -> None:
     """The overall chime volume cannot be set while the public chime is missing."""
-    _setup_chime_with_doorbell(chime, doorbell)
-
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
     assert chime.id not in ufp.api.public_bootstrap.chimes
 
@@ -821,14 +818,14 @@ async def test_chime_ring_volume_multiple_cameras(
     doorbell2.name = "Test Doorbell 2"
     doorbell2.mac = "aa:bb:cc:dd:ee:02"
 
-    chime.ring_settings = [
-        RingSetting(
+    ring_settings = [
+        PublicRingSettings(
             camera_id=doorbell.id,
             repeat_times=1,
             ringtone_id="test-ringtone-id",
             volume=60,
         ),
-        RingSetting(
+        PublicRingSettings(
             camera_id=doorbell2.id,
             repeat_times=2,
             ringtone_id="test-ringtone-id-2",
@@ -836,7 +833,7 @@ async def test_chime_ring_volume_multiple_cameras(
         ),
     ]
 
-    setup_public_chime(ufp)
+    setup_public_chime(ufp, ring_settings)
 
     await init_entry(hass, ufp, [chime, doorbell, doorbell2], regenerate_ids=False)
 
@@ -896,13 +893,15 @@ async def test_chime_ring_volume_follows_public(
 ) -> None:
     """The ring volume follows the public chime, not the private one."""
     doorbell.id = "test-doorbell"
-    _setup_chime_with_doorbell(chime, doorbell, volume=50)
-    setup_public_chime(ufp)
+    ring_settings = _paired_ring_settings(doorbell, volume=50)
+    setup_public_chime(ufp, ring_settings)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
     assert hass.states.get(RING_VOLUME_ENTITY).state == "50"
 
-    public = make_public_chime(chime, **public_kwargs)
+    public = make_public_chime(
+        chime, **{"ring_settings": ring_settings, **public_kwargs}
+    )
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
@@ -959,12 +958,12 @@ async def test_chime_ring_volume_added_when_public_arrives(
     doorbell: Camera,
 ) -> None:
     """A chime without its public mirror gets the ring volume once it arrives."""
-    _setup_chime_with_doorbell(chime, doorbell, volume=55)
+    ring_settings = _paired_ring_settings(doorbell, volume=55)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
     assert hass.states.get(RING_VOLUME_ENTITY) is None
 
-    public = make_public_chime(chime)
+    public = make_public_chime(chime, ring_settings=ring_settings)
     ufp.api.public_bootstrap.chimes[chime.id] = public
     ufp.devices_ws_subscription(public_device_ws_message(public, action=WSAction.ADD))
     await hass.async_block_till_done()
@@ -990,8 +989,8 @@ async def _pair_second_doorbell(
 ) -> None:
     """Set up a chime paired with one doorbell, then pair a second one."""
     doorbell2 = _second_doorbell(doorbell)
-    _setup_chime_with_doorbell(chime, doorbell)
-    setup_public_chime(ufp)
+    ring_settings = _paired_ring_settings(doorbell)
+    setup_public_chime(ufp, ring_settings)
 
     await init_entry(hass, ufp, [chime, doorbell, doorbell2], regenerate_ids=False)
     assert hass.states.get(RING_VOLUME_ENTITY_2) is None
@@ -1037,10 +1036,13 @@ async def test_chime_ring_volume_ignores_unrelated_change(
 
 
 async def _offer_public_chime(
-    hass: HomeAssistant, ufp: MockUFPFixture, chime: Chime
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    ring_settings: list[PublicRingSettings],
 ) -> None:
     """Send the add frame of the chime's public mirror."""
-    public = make_public_chime(chime)
+    public = make_public_chime(chime, ring_settings=ring_settings)
     ufp.api.public_bootstrap.chimes[chime.id] = public
     ufp.devices_ws_subscription(public_device_ws_message(public, action=WSAction.ADD))
     await hass.async_block_till_done()
@@ -1053,14 +1055,14 @@ async def test_chime_ring_volume_skips_chime_adopted_elsewhere(
     doorbell: Camera,
 ) -> None:
     """In hybrid a public chime adopted by another console gets no ring volume."""
-    _setup_chime_with_doorbell(chime, doorbell)
-    setup_public_chime(ufp)
+    ring_settings = _paired_ring_settings(doorbell)
+    setup_public_chime(ufp, ring_settings)
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
     await remove_entities(hass, ufp, [chime])
 
     chime.is_adopted_by_other = True
     ufp.api.bootstrap.chimes[chime.id] = chime
-    await _offer_public_chime(hass, ufp, chime)
+    await _offer_public_chime(hass, ufp, chime, ring_settings)
 
     assert hass.states.get(RING_VOLUME_ENTITY) is None
 
@@ -1072,12 +1074,12 @@ async def test_chime_ring_volume_waits_for_private_adopt(
     doorbell: Camera,
 ) -> None:
     """In hybrid a public chime arriving first gets its ring volume on adopt."""
-    _setup_chime_with_doorbell(chime, doorbell, volume=55)
-    setup_public_chime(ufp)
+    ring_settings = _paired_ring_settings(doorbell, volume=55)
+    setup_public_chime(ufp, ring_settings)
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
     await remove_entities(hass, ufp, [chime])
 
-    await _offer_public_chime(hass, ufp, chime)
+    await _offer_public_chime(hass, ufp, chime, ring_settings)
     assert hass.states.get(RING_VOLUME_ENTITY) is None
 
     await adopt_devices(hass, ufp, [chime])
@@ -1093,8 +1095,8 @@ async def test_chime_ring_volume_restored_on_readopt(
     doorbell: Camera,
 ) -> None:
     """Removing and re-adopting a chime brings its ring volume back."""
-    _setup_chime_with_doorbell(chime, doorbell, volume=75)
-    setup_public_chime(ufp)
+    ring_settings = _paired_ring_settings(doorbell, volume=75)
+    setup_public_chime(ufp, ring_settings)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
     unique_ids = _ring_volume_unique_ids(entity_registry, ufp, chime)
@@ -1255,8 +1257,8 @@ async def test_public_only_chime_ring_volume(
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """A public-only chime gets its ring volume numbers and writes them publicly."""
-    _setup_chime_with_doorbell(chime, doorbell, volume=40)
-    public = make_public_chime(chime)
+    ring_settings = _paired_ring_settings(doorbell, volume=40)
+    public = make_public_chime(chime, ring_settings=ring_settings)
     ufp_public_only.api.public_bootstrap.chimes[chime.id] = public
     _add_public_cameras(ufp_public_only, doorbell)
 
@@ -1283,13 +1285,13 @@ async def test_public_only_chime_ring_volume_for_added_chime(
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """A chime added after setup gets its ring volume from the add frame."""
-    _setup_chime_with_doorbell(chime, doorbell, volume=40)
+    ring_settings = _paired_ring_settings(doorbell, volume=40)
     _add_public_cameras(ufp_public_only, doorbell)
 
     await setup_public_only()
     assert hass.states.get(RING_VOLUME_ENTITY) is None
 
-    public = make_public_chime(chime)
+    public = make_public_chime(chime, ring_settings=ring_settings)
     ufp_public_only.api.public_bootstrap.chimes[chime.id] = public
     ufp_public_only.devices_ws_subscription(
         public_device_ws_message(public, action=WSAction.ADD)
@@ -1328,9 +1330,11 @@ async def test_public_only_chime_ring_volume_added_on_resync(
 ) -> None:
     """A pairing seen only by a resync is added without a device frame."""
     doorbell2 = _second_doorbell(doorbell)
-    _setup_chime_with_doorbell(chime, doorbell, volume=40)
+    ring_settings = _paired_ring_settings(doorbell, volume=40)
     public_bootstrap = ufp_public_only.api.public_bootstrap
-    public_bootstrap.chimes[chime.id] = make_public_chime(chime)
+    public_bootstrap.chimes[chime.id] = make_public_chime(
+        chime, ring_settings=ring_settings
+    )
     _add_public_cameras(ufp_public_only, doorbell, doorbell2)
 
     await setup_public_only()
@@ -1355,8 +1359,10 @@ async def test_public_only_chime_ring_volume_added_with_camera(
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """A ring volume whose camera was missing at setup is added with the camera."""
-    _setup_chime_with_doorbell(chime, doorbell, volume=40)
-    ufp_public_only.api.public_bootstrap.chimes[chime.id] = make_public_chime(chime)
+    ring_settings = _paired_ring_settings(doorbell, volume=40)
+    ufp_public_only.api.public_bootstrap.chimes[chime.id] = make_public_chime(
+        chime, ring_settings=ring_settings
+    )
 
     await setup_public_only()
     assert hass.states.get(RING_VOLUME_ENTITY) is None
@@ -1382,8 +1388,10 @@ async def test_public_only_chime_ring_volume_skips_unknown_camera(
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """A pairing with a camera missing from the public bootstrap is skipped."""
-    _setup_chime_with_doorbell(chime, doorbell, volume=40)
-    ufp_public_only.api.public_bootstrap.chimes[chime.id] = make_public_chime(chime)
+    ring_settings = _paired_ring_settings(doorbell, volume=40)
+    ufp_public_only.api.public_bootstrap.chimes[chime.id] = make_public_chime(
+        chime, ring_settings=ring_settings
+    )
 
     await setup_public_only()
 
