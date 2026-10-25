@@ -14,12 +14,14 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    LocationSelector,
+    LocationSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -52,8 +54,8 @@ def configured_instances(hass: HomeAssistant) -> set[str]:
 def _location_data(user_input: dict[str, Any]) -> dict[str, Any]:
     """Return config entry data for a fixed location."""
     return {
-        CONF_LATITUDE: user_input[CONF_LATITUDE],
-        CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+        CONF_LATITUDE: user_input[CONF_LOCATION][CONF_LATITUDE],
+        CONF_LONGITUDE: user_input[CONF_LOCATION][CONF_LONGITUDE],
         CONF_ELEVATION: user_input[CONF_ELEVATION],
     }
 
@@ -81,11 +83,12 @@ def _get_data_schema(
         return probatio.Schema(
             {
                 probatio.Required(
-                    CONF_LATITUDE, default=hass.config.latitude
-                ): cv.latitude,
-                probatio.Required(
-                    CONF_LONGITUDE, default=hass.config.longitude
-                ): cv.longitude,
+                    CONF_LOCATION,
+                    default={
+                        CONF_LATITUDE: hass.config.latitude,
+                        CONF_LONGITUDE: hass.config.longitude,
+                    },
+                ): LocationSelector(LocationSelectorConfig(radius=False)),
                 probatio.Required(
                     CONF_ELEVATION, default=hass.config.elevation
                 ): NumberSelector(
@@ -100,11 +103,12 @@ def _get_data_schema(
     return probatio.Schema(
         {
             probatio.Required(
-                CONF_LATITUDE, default=config_entry.data.get(CONF_LATITUDE)
-            ): cv.latitude,
-            probatio.Required(
-                CONF_LONGITUDE, default=config_entry.data.get(CONF_LONGITUDE)
-            ): cv.longitude,
+                CONF_LOCATION,
+                default={
+                    CONF_LATITUDE: config_entry.data.get(CONF_LATITUDE),
+                    CONF_LONGITUDE: config_entry.data.get(CONF_LONGITUDE),
+                },
+            ): LocationSelector(LocationSelectorConfig(radius=False)),
             probatio.Required(
                 CONF_ELEVATION, default=config_entry.data.get(CONF_ELEVATION)
             ): NumberSelector(

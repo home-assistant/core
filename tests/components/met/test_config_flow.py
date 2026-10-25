@@ -14,7 +14,12 @@ from homeassistant.components.met.const import (
     DOMAIN,
     HOME_LOCATION_NAME,
 )
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
@@ -60,16 +65,18 @@ async def test_flow_with_home_location(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     default_data = result["data_schema"]({})
-    assert default_data["latitude"] == 1
-    assert default_data["longitude"] == 2
+    assert default_data["location"]["latitude"] == 1
+    assert default_data["location"]["longitude"] == 2
     assert default_data["elevation"] == 3
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     test_data = {
-        CONF_LONGITUDE: 0,
-        CONF_LATITUDE: 0,
+        CONF_LOCATION: {
+            CONF_LONGITUDE: 0,
+            CONF_LATITUDE: 0,
+        },
         CONF_ELEVATION: 0,
     }
 
@@ -84,7 +91,11 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     # The schema validates the coordinates as floats.
     assert result["title"] == f"{DEFAULT_NAME} (0.0, 0.0)"
-    assert result["data"] == test_data
+    assert result["data"] == {
+        CONF_LONGITUDE: 0,
+        CONF_LATITUDE: 0,
+        CONF_ELEVATION: 0,
+    }
 
 
 async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
@@ -103,8 +114,10 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     home_entry.add_to_hass(hass)
 
     test_data = {
-        CONF_LONGITUDE: 0,
-        CONF_LATITUDE: 0,
+        CONF_LOCATION: {
+            CONF_LONGITUDE: 0,
+            CONF_LATITUDE: 0,
+        },
         CONF_ELEVATION: 0,
     }
 
@@ -121,7 +134,13 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={**test_data, CONF_LATITUDE: 1, CONF_LONGITUDE: 1},
+        user_input={
+            CONF_ELEVATION: 0,
+            CONF_LOCATION: {
+                CONF_LATITUDE: 1,
+                CONF_LONGITUDE: 1,
+            },
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -165,13 +184,13 @@ async def test_onboarding_step_abort_no_home(
     ("track_home", "initial_title", "expected_title"),
     [
         pytest.param(
-            False, None, f"{DEFAULT_NAME} (12, 23)", id="generated_title_updated"
+            False, None, f"{DEFAULT_NAME} (12.0, 23.0)", id="generated_title_updated"
         ),
         pytest.param(
             False, "Custom location", "Custom location", id="custom_title_kept"
         ),
         pytest.param(
-            True, None, f"{DEFAULT_NAME} (12, 23)", id="track_home_title_updated"
+            True, None, f"{DEFAULT_NAME} (12.0, 23.0)", id="track_home_title_updated"
         ),
     ],
 )
@@ -183,8 +202,10 @@ async def test_options_flow(
 ) -> None:
     """Test show options form."""
     update_data = {
-        CONF_LATITUDE: 12,
-        CONF_LONGITUDE: 23,
+        CONF_LOCATION: {
+            CONF_LATITUDE: 12,
+            CONF_LONGITUDE: 23,
+        },
         CONF_ELEVATION: 456,
     }
 
@@ -200,15 +221,23 @@ async def test_options_flow(
     with patch(
         "homeassistant.components.met.coordinator.metno.MetWeatherData"
     ) as weatherdatamock:
-        result = await hass.config_entries.options.async_init(
-            entry.entry_id, data=update_data
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=update_data
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
-    assert result["data"] == update_data
+    assert result["data"] == {
+        CONF_LATITUDE: 12,
+        CONF_LONGITUDE: 23,
+        CONF_ELEVATION: 456,
+    }
     assert entry.title == expected_title
-    assert entry.data == update_data
+    assert entry.data == {
+        CONF_LATITUDE: 12,
+        CONF_LONGITUDE: 23,
+        CONF_ELEVATION: 456,
+    }
     weatherdatamock.assert_called_with(
-        {"lat": "12", "lon": "23", "msl": "456"}, ANY, api_url=ANY
+        {"lat": "12.0", "lon": "23.0", "msl": "456.0"}, ANY, api_url=ANY
     )
