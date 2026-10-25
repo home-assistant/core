@@ -275,6 +275,63 @@ async def test_select_entity_availability(
         assert state.state != STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
+async def test_select_option_available_on_option_events(
+    entity_registry: er.EntityRegistry,
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test option entities become available when option events arrive.
+
+    Appliances like hoods push option values without an ActiveProgram
+    event when switched on locally. Regression test for
+    https://github.com/home-assistant/core/issues/188559 .
+    """
+    entity_id = "select.hood_venting_level"
+    entity_registry.async_get_or_create(
+        Platform.SELECT,
+        DOMAIN,
+        f"{appliance.ha_id}-{OptionKey.COOKING_COMMON_HOOD_VENTING_LEVEL}",
+        suggested_object_id=entity_id.split(".", 1)[1],
+    )
+    client.get_all_programs = AsyncMock(
+        return_value=ArrayOfPrograms([], None, None)
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.COOKING_COMMON_OPTION_HOOD_VENTING_LEVEL,
+                            raw_key=EventKey.COOKING_COMMON_OPTION_HOOD_VENTING_LEVEL.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value="Cooking.Hood.EnumType.Stage.FanStage02",
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
 async def test_filter_programs(
     entity_registry: er.EntityRegistry,
     client: MagicMock,
