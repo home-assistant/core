@@ -8,7 +8,11 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.folder.const import CONF_FILTER, CONF_FOLDER_PATHS, DOMAIN
 from homeassistant.components.folder.sensor import SCAN_INTERVAL
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    SensorStateClass,
+)
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -33,6 +37,7 @@ async def test_sensor(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == "0.0"
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
     assert state.attributes["path"] == f"{folder_path}/"
     assert state.attributes["filter"] == "*"
     assert state.attributes["number_of_files"] == 1

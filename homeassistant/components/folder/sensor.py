@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import UnitOfInformation
@@ -132,6 +133,7 @@ class Folder(SensorEntity):
     _attr_icon = "mdi:folder"
     _attr_name = None
     _attr_native_unit_of_measurement = UnitOfInformation.MEGABYTES
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, folder_path: str, filter_term: str, entry_id: str) -> None:
         """Initialize the data object."""
