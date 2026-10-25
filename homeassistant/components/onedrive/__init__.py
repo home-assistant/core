@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from html import unescape
 from json import dumps, loads
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from onedrive_personal_sdk import OneDriveClient
 from onedrive_personal_sdk.exceptions import (
@@ -14,13 +14,17 @@ from onedrive_personal_sdk.exceptions import (
 )
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -167,6 +171,37 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
             minor_version=2,
         )
         _LOGGER.debug("Migration to version 1.2 successful")
+
+    if entry.version == 1 and entry.minor_version == 2:
+        if TYPE_CHECKING:
+            assert entry.unique_id
+        # Microsoft returns drive IDs with inconsistent casing
+        drive_id = entry.unique_id.upper()
+
+        @callback
+        def _uppercase_drive_id(
+            entity_entry: er.RegistryEntry,
+        ) -> dict[str, str] | None:
+            if entity_entry.unique_id.startswith(drive_id):
+                return None
+            return {"new_unique_id": drive_id + entity_entry.unique_id[len(drive_id) :]}
+
+        await er.async_migrate_entries(hass, entry.entry_id, _uppercase_drive_id)
+        device_registry = dr.async_get(hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            device_registry.async_update_device(
+                device.id,
+                new_identifiers={
+                    (domain, identifier.upper())
+                    for domain, identifier in device.identifiers
+                },
+            )
+        hass.config_entries.async_update_entry(
+            entry, unique_id=drive_id, minor_version=3
+        )
+        _LOGGER.debug("Migration to version 1.3 successful")
 
 
 async def _get_onedrive_client(

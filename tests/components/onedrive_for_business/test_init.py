@@ -18,10 +18,13 @@ from homeassistant.components.onedrive_for_business.const import (
     CONF_FOLDER_ID,
     CONF_FOLDER_PATH,
     CONF_TENANT_ID,
+    DOMAIN,
     OAUTH2_TOKEN,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -177,3 +180,56 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_1_1_to_1_2_migration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration from 1.1 to 1.2 uppercases the drive ID."""
+    old_config_entry = MockConfigEntry(
+        unique_id="mock_drive_id",
+        title=mock_config_entry.title,
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        minor_version=1,
+    )
+    old_config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=old_config_entry.entry_id,
+        identifiers={(DOMAIN, "mock_drive_id")},
+    )
+    lowercase_entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "mock_drive_id_total_size",
+        config_entry=old_config_entry,
+        device_id=device.id,
+    )
+    # Not all entities need migrating, e.g. if the drive ID was already uppercase
+    uppercase_entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "MOCK_DRIVE_ID_used_size",
+        config_entry=old_config_entry,
+        device_id=device.id,
+    )
+
+    await setup_integration(hass, old_config_entry)
+
+    assert old_config_entry.state is ConfigEntryState.LOADED
+    assert old_config_entry.unique_id == "MOCK_DRIVE_ID"
+    assert old_config_entry.minor_version == 2
+    assert (
+        entity_registry.async_get(lowercase_entity.entity_id).unique_id
+        == "MOCK_DRIVE_ID_total_size"
+    )
+    assert (
+        entity_registry.async_get(uppercase_entity.entity_id).unique_id
+        == "MOCK_DRIVE_ID_used_size"
+    )
+    assert device_registry.async_get(device.id).identifiers == {
+        (DOMAIN, "MOCK_DRIVE_ID")
+    }
