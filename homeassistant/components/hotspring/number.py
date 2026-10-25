@@ -10,9 +10,11 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import HotSpringConfigEntry, HotSpringDataUpdateCoordinator
 from .entity import HotSpringEntity
 from .helpers import hotspring_exception_handler
@@ -27,10 +29,22 @@ MIN_TEMP_CELSIUS = 26.0
 MAX_TEMP_CELSIUS = 40.0
 STEP_CELSIUS = 0.5
 
+MIN_SALT_OUTPUT_LEVEL = 0.0
+MAX_SALT_OUTPUT_LEVEL = 10.0
+STEP_SALT_OUTPUT_LEVEL = 1.0
+
 TARGET_TEMPERATURE_DESCRIPTION = NumberEntityDescription(
     key="target_temperature",
     translation_key="target_temperature",
     device_class=NumberDeviceClass.TEMPERATURE,
+)
+
+SALT_OUTPUT_LEVEL_DESCRIPTION = NumberEntityDescription(
+    key="salt_output_level",
+    translation_key="salt_output_level",
+    native_min_value=MIN_SALT_OUTPUT_LEVEL,
+    native_max_value=MAX_SALT_OUTPUT_LEVEL,
+    native_step=STEP_SALT_OUTPUT_LEVEL,
 )
 
 
@@ -40,8 +54,29 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hot Spring number entities."""
+    coordinator = entry.runtime_data
     async_add_entities(
-        [HotSpringNumberEntity(entry.runtime_data, TARGET_TEMPERATURE_DESCRIPTION)]
+        [HotSpringNumberEntity(coordinator, TARGET_TEMPERATURE_DESCRIPTION)]
+    )
+    added_salt_output_level = False
+
+    @callback
+    def async_add_salt_output_level_entity() -> None:
+        """Add the salt output level entity once a cartridge is reported."""
+        nonlocal added_salt_output_level
+        if (
+            added_salt_output_level
+            or not coordinator.data.water_care.cartridge_installed
+        ):
+            return
+        added_salt_output_level = True
+        async_add_entities(
+            [HotSpringSaltOutputLevelEntity(coordinator, SALT_OUTPUT_LEVEL_DESCRIPTION)]
+        )
+
+    async_add_salt_output_level_entity()
+    entry.async_on_unload(
+        coordinator.async_add_listener(async_add_salt_output_level_entity)
     )
 
 
@@ -109,3 +144,47 @@ class HotSpringNumberEntity(HotSpringEntity, NumberEntity):
         target = round(value / self.native_step) * self.native_step
         await self.coordinator.hotspring.set_temperature(target)
         self.coordinator.async_set_updated_data(self.coordinator.data)
+
+
+class HotSpringSaltOutputLevelEntity(HotSpringEntity, NumberEntity):
+    """Defines a Hot Spring salt output level number entity."""
+
+    entity_description: NumberEntityDescription
+
+    def __init__(
+        self,
+        coordinator: HotSpringDataUpdateCoordinator,
+        description: NumberEntityDescription,
+    ) -> None:
+        """Initialize the number entity."""
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the entity is available."""
+        return (
+            super().available
+            and self.coordinator.data.connection_status.spa_connected
+            and self.coordinator.data.water_care.cartridge_installed
+        )
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the current salt output level."""
+        return self.coordinator.data.water_care.level
+
+    @hotspring_exception_handler
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the salt output level."""
+        if not value.is_integer():
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="salt_output_level_not_whole",
+                translation_placeholders={"value": str(value)},
+            )
+        await self.coordinator.hotspring.set_water_care_level(int(value))
+        await self.coordinator.async_request_refresh()

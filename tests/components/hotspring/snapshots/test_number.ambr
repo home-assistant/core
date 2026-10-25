@@ -1,4 +1,63 @@
 # serializer version: 1
+# name: test_number_state[number.connectedspa_ddeeff_salt_output_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hotspring', 'AA:BB:CC:DD:EE:FF')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.connectedspa_ddeeff_salt_output_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Salt output level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Salt output level',
+    'platform': 'hotspring',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_output_level',
+    'unique_id': 'AA:BB:CC:DD:EE:FF_salt_output_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_state[number.connectedspa_ddeeff_salt_output_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ConnectedSpa_DDEEFF Salt output level',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.connectedspa_ddeeff_salt_output_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
 # name: test_number_state[number.connectedspa_ddeeff_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

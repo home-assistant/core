@@ -41,6 +41,9 @@
       }
     },
     "number": {
+      "salt_output_level": {
+        "name": "Salt output level"
+      },
       "target_temperature": {
         "name": "Target temperature"
       }
@@ -95,6 +98,9 @@
     },
     "invalid_response": {
       "message": "Invalid response received from the Hot Spring API."
+    },
+    "salt_output_level_not_whole": {
+      "message": "Salt output level must be a whole number, got {value}."
     }
   }
 }
