@@ -60,7 +60,10 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             if data is not None:
                 res[username] = data
         if not res:
-            raise UpdateFailed
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            )
         return res
 
     def _get_user_data(self, username: str) -> LastFMUserData | None:

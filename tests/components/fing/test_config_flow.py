@@ -2,15 +2,14 @@
 
 import httpx2
 import pytest
+from pytest_homeassistant.common import AsyncMock
+from pytest_homeassistant.plugins import MockConfigEntry
 
 from homeassistant.components.fing.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import AsyncMock
-from tests.conftest import MockConfigEntry
 
 
 async def test_verify_connection_success(

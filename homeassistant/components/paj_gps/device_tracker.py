@@ -10,8 +10,7 @@ from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PajGpsConfigEntry
-from .coordinator import PajGpsCoordinator
+from .coordinator import PajGpsConfigEntry, PajGpsCoordinator
 from .entity import PajGpsEntity
 
 _LOGGER = logging.getLogger(__name__)

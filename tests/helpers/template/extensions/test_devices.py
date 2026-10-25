@@ -5,12 +5,12 @@ from typing import Any
 
 import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.template import TemplateError
 
-from tests.common import MockConfigEntry
 from tests.helpers.template.helpers import assert_result_info, render, render_to_info
 
 

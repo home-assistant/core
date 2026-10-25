@@ -1,6 +1,6 @@
 """Const for Sonos."""
 
-import datetime
+import datetime as dt
 
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.const import Platform
@@ -206,11 +206,11 @@ ATTR_DIALOG_LEVEL = "dialog_level"
 ATTR_DIALOG_LEVEL_ENUM = "dialog_level_enum"
 ATTR_QUEUE_POSITION = "queue_position"
 
-AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
+AVAILABILITY_CHECK_INTERVAL = dt.timedelta(minutes=1)
 AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5
-BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)
-SCAN_INTERVAL = datetime.timedelta(seconds=10)
-DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
+BATTERY_SCAN_INTERVAL = dt.timedelta(minutes=15)
+SCAN_INTERVAL = dt.timedelta(seconds=10)
+DISCOVERY_INTERVAL = dt.timedelta(seconds=60)
 SUBSCRIPTION_TIMEOUT = 1200
 LONG_SERVICE_TIMEOUT = 30.0
 

@@ -4,6 +4,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock
 
 from pycync.exceptions import AuthFailedError, CyncError, TwoFactorRequiredError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cync.const import (
     CONF_AUTHORIZE_STRING,
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import MOCKED_EMAIL, MOCKED_USER, SECOND_MOCKED_USER
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_auth_success(

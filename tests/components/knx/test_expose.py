@@ -5,6 +5,8 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ExposeSchema
@@ -20,9 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:

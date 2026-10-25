@@ -242,6 +242,9 @@
     },
     "no_file_path": {
       "message": "Telegram did not return a path for the requested file."
+    },
+    "platform_setup_failed": {
+      "message": "Failed to set up the Telegram bot."
     }
   },
   "issues": {

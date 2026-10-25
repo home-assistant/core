@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.field_visibility import get_hidden_fields
 from homeassistant.util import yaml as yaml_util
 
 from .const import (
@@ -31,6 +32,7 @@ from .const import (
     CONF_MIN_VERSION,
     CONF_SOURCE_URL,
     CONF_USE_BLUEPRINT,
+    CONF_VISIBLE,
     DOMAIN,
 )
 from .errors import (
@@ -104,6 +106,21 @@ class Blueprint:
         return inputs
 
     @property
+    def input_visibility(self) -> dict[str, Any]:
+        """Return the visible condition of each input, including its section's."""
+        visibility = {}
+        for key, value in self.data[CONF_BLUEPRINT][CONF_INPUT].items():
+            if value and CONF_INPUT in value:
+                for name, blueprint_input in value[CONF_INPUT].items():
+                    visibility[name] = _combine_visible(
+                        value.get(CONF_VISIBLE),
+                        (blueprint_input or {}).get(CONF_VISIBLE),
+                    )
+            else:
+                visibility[key] = _combine_visible((value or {}).get(CONF_VISIBLE))
+        return visibility
+
+    @property
     def metadata(self) -> dict[str, Any]:
         """Return blueprint metadata."""
         return self.data[CONF_BLUEPRINT]  # type: ignore[no-any-return]
@@ -161,6 +178,16 @@ class BlueprintInputs:
             blueprint_input = self.blueprint.inputs[inp]
             if isinstance(blueprint_input, dict) and CONF_DEFAULT in blueprint_input:
                 inputs_with_default[inp] = blueprint_input[CONF_DEFAULT]
+
+        for inp in get_hidden_fields(
+            self.blueprint.input_visibility, inputs_with_default
+        ):
+            blueprint_input = self.blueprint.inputs[inp]
+            inputs_with_default[inp] = (
+                blueprint_input.get(CONF_DEFAULT)
+                if isinstance(blueprint_input, dict)
+                else None
+            )
 
         return inputs_with_default
 
@@ -382,3 +409,15 @@ class DomainBlueprints:
             )
 
         await self.hass.async_add_executor_job(populate)
+
+
+def _combine_visible(*options: Any) -> bool | list[Any]:
+    """Combine visible options so all of them must match."""
+    conditions: list[Any] = []
+    for visible in options:
+        if visible is None or visible is True:
+            continue
+        if visible is False:
+            return False
+        conditions.extend(visible if isinstance(visible, list) else [visible])
+    return conditions

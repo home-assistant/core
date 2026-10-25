@@ -6,12 +6,11 @@ from zoneinfo import ZoneInfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from victron_vrm.models.aggregations import ForecastAggregations
 
 from homeassistant.components.victron_remote_monitoring.coordinator import get_forecast
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

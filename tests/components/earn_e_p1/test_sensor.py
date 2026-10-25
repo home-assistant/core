@@ -4,14 +4,13 @@ from unittest.mock import MagicMock
 
 from earn_e_p1 import PacketType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_DEVICE_DATA, trigger_callback
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 # The meter alternates between a realtime packet holding the instantaneous
 # values and a heartbeat packet holding the meter totals. Each type only

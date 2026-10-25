@@ -7,21 +7,41 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser, flush_store
 
 from homeassistant.components import media_source
-from homeassistant.components.ai_task import AITaskPreferences
+from homeassistant.components.ai_task import (
+    AITaskPreferences,
+    async_is_automatic_evaluation_enabled,
+)
 from homeassistant.components.ai_task.const import (
     DATA_MEDIA_SOURCE,
     DATA_PREFERENCES,
     DOMAIN,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import selector
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
 
-from tests.common import MockUser, flush_store
+
+async def test_automatic_evaluation_without_setup(hass: HomeAssistant) -> None:
+    """Automatic evaluation is disabled when AI Task has not been set up."""
+    assert async_is_automatic_evaluation_enabled(hass) is False
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_automatic_evaluation_preference(hass: HomeAssistant) -> None:
+    """The public helper reflects the default and subsequent preference changes."""
+    assert async_is_automatic_evaluation_enabled(hass) is False
+
+    preferences = hass.data[DATA_PREFERENCES]
+    preferences.async_set_preferences(allow_automatic_evaluation=True)
+    assert async_is_automatic_evaluation_enabled(hass) is True
+
+    preferences.async_set_preferences(allow_automatic_evaluation=False)
+    assert async_is_automatic_evaluation_enabled(hass) is False
 
 
 async def test_preferences_storage_load(
@@ -32,10 +52,19 @@ async def test_preferences_storage_load(
     await preferences.async_load()
 
     # Initial state should be None for entity IDs
-    for key in AITaskPreferences.KEYS:
-        assert getattr(preferences, key) is None, f"Initial {key} should be None"
+    assert preferences.as_dict() == {
+        "gen_data_entity_id": None,
+        "gen_image_entity_id": None,
+        "evaluate_entity_id": None,
+        "allow_automatic_evaluation": False,
+    }
 
-    new_values = {key: f"ai_task.test_{key}" for key in AITaskPreferences.KEYS}
+    new_values = {
+        "gen_data_entity_id": "ai_task.data",
+        "gen_image_entity_id": "ai_task.image",
+        "evaluate_entity_id": "ai_task.decision",
+        "allow_automatic_evaluation": True,
+    }
 
     preferences.async_set_preferences(**new_values)
 
@@ -367,7 +396,7 @@ async def test_generate_image_service_no_entity(
 ) -> None:
     """Test the generate image service with no entity specified."""
     with pytest.raises(
-        HomeAssistantError,
+        ServiceValidationError,
         match="No entity_id provided and no preferred entity set",
     ):
         await hass.services.async_call(
@@ -380,6 +409,28 @@ async def test_generate_image_service_no_entity(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_preferences_existing_storage(hass: HomeAssistant) -> None:
+    """Existing installations do not opt in to automatic evaluation on upgrade."""
+    preferences = AITaskPreferences(hass)
+    await preferences._store.async_save(
+        {"gen_data_entity_id": "ai_task.data", "evaluate_entity_id": "ai_task.decision"}
+    )
+    await preferences.async_load()
+    assert preferences.gen_data_entity_id == "ai_task.data"
+    assert preferences.evaluate_entity_id == "ai_task.decision"
+    assert preferences.allow_automatic_evaluation is False
+
+    preferences.async_set_preferences(allow_automatic_evaluation=True)
+    await flush_store(preferences._store)
+    preferences.async_set_preferences(allow_automatic_evaluation=False)
+    await flush_store(preferences._store)
+
+    loaded = AITaskPreferences(hass)
+    await loaded.async_load()
+    assert loaded.allow_automatic_evaluation is False
+    assert loaded.evaluate_entity_id == "ai_task.decision"
 
 
 @pytest.mark.usefixtures("init_components")

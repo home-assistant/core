@@ -8,6 +8,15 @@ from unittest.mock import AsyncMock, MagicMock, call
 import probatio
 from propcache.api import cached_property
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    async_mock_service,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.water_heater import (
     DOMAIN,
@@ -32,16 +41,6 @@ from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    async_mock_service,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
 )
 
 
@@ -146,12 +145,11 @@ async def test_operation_mode_validation(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.WATER_HEATER]
         )
-        return True
 
     async def async_setup_entry_water_heater_platform(
         hass: HomeAssistant,
@@ -1005,6 +1003,48 @@ async def test_deprecated_temperature_member_read_reports_the_reader(
     # The call site was already reported, whichever entity it reads
     assert _count_warnings(caplog, "reads the deprecated") == 1
     assert f"{__name__}::MigratedWaterHeaterEntity" not in caplog.text
+
+
+@pytest.mark.parametrize(("member", "native_value"), DEPRECATED_MEMBER_VALUES)
+@pytest.mark.parametrize("prefix", ["", "_attr_"], ids=["property", "attribute"])
+async def test_deprecated_temperature_member_core_declaration_raises(
+    prefix: str, member: str, native_value: Any
+) -> None:
+    """Test a core integration still declaring a deprecated member raises."""
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "homeassistant.components.test.water_heater::CoreWaterHeaterEntity provides the "
+            f"deprecated {prefix}{member},"
+        ),
+    ):
+        type(
+            "CoreWaterHeaterEntity",
+            (MockShimWaterHeaterEntity,),
+            {
+                "__module__": "homeassistant.components.test.water_heater",
+                f"{prefix}{member}": native_value,
+            },
+        )
+
+
+@pytest.mark.parametrize("integration_frame_path", ["homeassistant/components/hue"])
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_deprecated_temperature_member_core_read_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test a core integration reading a deprecated member raises."""
+    entity = _migrated_entity("MigratedWaterHeaterEntity")
+    entity.hass = hass
+
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "Detected that integration 'hue' reads the deprecated "
+            "MigratedWaterHeaterEntity.current_temperature"
+        ),
+    ):
+        _ = entity.current_temperature
 
 
 @pytest.mark.parametrize(

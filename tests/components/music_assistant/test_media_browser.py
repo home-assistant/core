@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from music_assistant_models.enums import MediaType as MASSMediaType
 from music_assistant_models.media_items import SearchResults
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -32,8 +33,6 @@ from homeassistant.components.music_assistant.media_browser import (
 from homeassistant.core import HomeAssistant
 
 from .common import setup_integration_from_fixtures
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(

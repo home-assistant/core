@@ -1,6 +1,7 @@
 {
   "domain": "wilight",
   "name": "WiLight",
+  "categories": ["plugs_switches", "lighting", "blinds_curtains"],
   "codeowners": ["@leofig-rj"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wilight",

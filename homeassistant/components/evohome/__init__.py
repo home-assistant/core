@@ -121,6 +121,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
 
-    async_setup_services(hass, coordinator)
+    async_setup_services(hass)
 
     return True

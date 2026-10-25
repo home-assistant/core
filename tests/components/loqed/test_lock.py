@@ -3,6 +3,7 @@
 import aiohttp
 from loqedAPI import loqed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lock import LockState
 from homeassistant.const import (
@@ -14,8 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 
 async def test_lock_entity(

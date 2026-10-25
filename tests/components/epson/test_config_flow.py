@@ -23,7 +23,7 @@ def _patch_projector_on() -> Generator[None]:
             return_value="12345",
         ),
         patch("homeassistant.components.epson.Projector.close", return_value=True),
-        patch("homeassistant.components.epson.async_setup_entry", return_value=True),
+        patch("homeassistant.components.epson.async_setup_entry", return_value=None),
     ):
         yield
 
@@ -49,7 +49,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.epson.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.epson.Projector.close",

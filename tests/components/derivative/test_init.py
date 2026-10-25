@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import derivative
 from homeassistant.components.derivative.const import DOMAIN
@@ -10,8 +11,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-
-from tests.common import MockConfigEntry
 
 
 def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[str]:

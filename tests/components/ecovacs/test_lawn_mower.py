@@ -73,6 +73,31 @@ async def test_lawn_mower(
     assert state.state == LawnMowerActivity.DOCKED
 
 
+@pytest.mark.parametrize("device_fixture", ["5xu9h3"])
+@pytest.mark.parametrize(
+    ("bot_state", "expected"),
+    [
+        pytest.param(State.IDLE, LawnMowerActivity.IDLE, id="idle"),
+        pytest.param(State.CLEANING, LawnMowerActivity.MOWING, id="cleaning"),
+        pytest.param(State.RETURNING, LawnMowerActivity.RETURNING, id="returning"),
+        pytest.param(State.DOCKED, LawnMowerActivity.DOCKED, id="docked"),
+        pytest.param(State.ERROR, LawnMowerActivity.ERROR, id="error"),
+        pytest.param(State.PAUSED, LawnMowerActivity.PAUSED, id="paused"),
+    ],
+)
+async def test_lawn_mower_activity(
+    hass: HomeAssistant,
+    controller: EcovacsController,
+    bot_state: State,
+    expected: LawnMowerActivity,
+) -> None:
+    """Test the bot state is mapped to the lawn mower activity."""
+    await notify_and_wait(hass, controller.devices[0].events, StateEvent(bot_state))
+
+    assert (state := hass.states.get("lawn_mower.goat_g1"))
+    assert state.state == expected
+
+
 @dataclass(frozen=True)
 class MowerTestCase:
     """Mower test."""

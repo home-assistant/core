@@ -37,6 +37,7 @@ class NovyCookerHoodConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Novy Cooker Hood."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the flow."""
@@ -165,8 +166,9 @@ class NovyCookerHoodConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create or update the config entry."""
+        assert self._transmitter_entity_id is not None
         assert self._transmitter_id is not None
-        data = {CONF_TRANSMITTER: self._transmitter_id, CONF_CODE: self._code}
+        data = {CONF_TRANSMITTER: self._transmitter_entity_id, CONF_CODE: self._code}
         if self.source == SOURCE_RECONFIGURE:
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(),

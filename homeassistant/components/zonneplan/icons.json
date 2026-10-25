@@ -1,6 +1,12 @@
 {
   "entity": {
     "binary_sensor": {
+      "automatic_charging_paused": {
+        "default": "mdi:ev-station",
+        "state": {
+          "on": "mdi:pause-circle-outline"
+        }
+      },
       "backup_power_active": {
         "default": "mdi:battery-alert-variant-outline",
         "state": {
@@ -30,12 +36,27 @@
         }
       }
     },
+    "select": {
+      "control_mode": {
+        "default": "mdi:tune-variant",
+        "state": {
+          "day_ahead_arbitrage": "mdi:cash-sync",
+          "dynamic_charging": "mdi:chart-line",
+          "home_optimization": "mdi:home-lightning-bolt",
+          "self_consumption": "mdi:solar-power"
+        }
+      }
+    },
     "sensor": {
       "battery_state": {
         "default": "mdi:battery",
         "state": {
+          "backup_power_active": "mdi:home-battery",
           "charging": "mdi:battery-charging",
-          "discharging": "mdi:battery-arrow-down"
+          "discharging": "mdi:battery-arrow-down",
+          "fault": "mdi:battery-alert",
+          "off": "mdi:battery-off-outline",
+          "permanent_fault": "mdi:battery-alert"
         }
       },
       "current_electricity_price": {

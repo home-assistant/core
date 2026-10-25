@@ -19,11 +19,10 @@ from homeassistant.components.climate import (
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
-    ClimateEntity,
     ClimateEntityFeature,
-    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
+    RestoreClimate,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -37,9 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import get_hub
 from .const import (
@@ -137,7 +134,7 @@ async def async_setup_platform(
     async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
 
 
-class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
+class ModbusThermostat(ModbusStructEntity, RestoreClimate):
     """Representation of a Modbus Thermostat."""
 
     _attr_supported_features = (
@@ -315,18 +312,10 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
-        state = await self.async_get_last_state()
-        if state and state.attributes.get(
-            ClimateEntityStateAttribute.TARGET_TEMPERATURE
-        ):
-            self._attr_native_target_temperature = TemperatureConverter.convert(
-                float(state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]),
-                state.attributes.get(
-                    ClimateEntityStateAttribute.TEMPERATURE_UNIT,
-                    self.hass.config.units.temperature_unit,
-                ),
-                self.native_temperature_unit,
-            )
+        if (climate_data := await self.async_get_last_climate_data()) is not None and (
+            temperature := climate_data.native_target_temperature
+        ) is not None:
+            self._attr_native_target_temperature = temperature
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
