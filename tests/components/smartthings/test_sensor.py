@@ -481,3 +481,32 @@ async def test_partial_power_consumption_report(
     assert hass.states.get("sensor.theater_washer_energy").state == STATE_UNKNOWN
     assert hass.states.get("sensor.theater_washer_power").state == STATE_UNKNOWN
     assert hass.states.get("sensor.theater_washer_energy_saved").state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_wm_000001"])
+async def test_negative_power_consumption_values(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test negative values are unknown only for always increasing sensors."""
+    await setup_integration(hass, mock_config_entry)
+
+    await trigger_update(
+        hass,
+        devices,
+        "f984b91d-f250-9d42-3436-33f09a422a47",
+        Capability.POWER_CONSUMPTION_REPORT,
+        Attribute.POWER_CONSUMPTION,
+        {
+            "energy": 352800,
+            "power": 0,
+            "energySaved": -5,
+            "deltaEnergy": -200,
+            "powerEnergy": -300,
+        },
+    )
+
+    assert hass.states.get("sensor.theater_washer_energy_saved").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.theater_washer_energy_difference").state == "-0.2"
+    assert hass.states.get("sensor.theater_washer_power_energy").state == "-0.3"
