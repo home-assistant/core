@@ -91,14 +91,13 @@ async def test_successful_poll_resets_failure_count(
     setup_entry: None,
 ) -> None:
     """Test only consecutive failures make entities unavailable."""
-    for _ in range(MAX_STALE_POLLS):
+    for _ in range(MAX_STALE_POLLS + 1):
         spa.get_status_full.side_effect = TimeoutError
         await trigger_update(hass)
+        assert _thermostat_state(hass, spa) != STATE_UNAVAILABLE
         spa.get_status_full.side_effect = None
         spa.get_status_full.return_value = spa_state
         await trigger_update(hass)
-
-    assert _thermostat_state(hass, spa) != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("failure", FAILURES)
@@ -201,3 +200,35 @@ async def test_failed_spa_does_not_discard_other_spas(
     assert data[spa.id][ATTR_STATUS] is refreshed_status
     assert data[second_spa.id][ATTR_STATUS] is previous_second_status
     assert entry.runtime_data.coordinator.last_update_success
+
+
+@pytest.mark.usefixtures("two_spa_account")
+async def test_last_data_is_kept_for_each_spa_through_an_aggregate_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    spa: smarttub.Spa,
+    second_spa: smarttub.Spa,
+) -> None:
+    """Test a spa's last data is not older than its last successful poll."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    initial_second_status = config_entry.runtime_data.coordinator.data[second_spa.id][
+        ATTR_STATUS
+    ]
+
+    spa.get_status_full.side_effect = TimeoutError
+    for _ in range(MAX_STALE_POLLS + 1):
+        latest_second_status = copy.copy(initial_second_status)
+        second_spa.get_status_full.return_value = latest_second_status
+        await trigger_update(hass)
+    assert not config_entry.runtime_data.coordinator.last_update_success
+
+    spa.get_status_full.side_effect = None
+    second_spa.get_status_full.side_effect = TimeoutError
+    await trigger_update(hass)
+
+    data = config_entry.runtime_data.coordinator.data
+    assert config_entry.runtime_data.coordinator.last_update_success
+    assert data[second_spa.id][ATTR_STATUS] is latest_second_status
+    assert data[second_spa.id][ATTR_STATUS] is not initial_second_status

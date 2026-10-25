@@ -47,6 +47,7 @@ class SmartTubController:
         """Initialize an interface to SmartTub."""
         self._hass = hass
         self._failed_polls: dict[str, int] = {}
+        self._last_data: dict[str, dict[str, Any]] = {}
 
     async def async_setup_entry(self, entry: SmartTubConfigEntry) -> bool:
         """Perform initial setup.
@@ -91,9 +92,15 @@ class SmartTubController:
         """Query the API and return the new state."""
 
         results = await asyncio.gather(
-            *(self._async_update_spa(spa) for spa in self.spas)
+            *(self._async_update_spa(spa) for spa in self.spas),
+            return_exceptions=True,
         )
-        return {spa.id: data for spa, data in zip(self.spas, results, strict=True)}
+        data = {}
+        for spa, result in zip(self.spas, results, strict=True):
+            if isinstance(result, BaseException):
+                raise result
+            data[spa.id] = result
+        return data
 
     async def _async_update_spa(self, spa: Spa) -> dict[str, Any]:
         """Query the state of one spa, keeping its last data over brief outages."""
@@ -103,7 +110,7 @@ class SmartTubController:
         except (APIError, TimeoutError) as err:
             failed_polls = self._failed_polls.get(spa.id, 0) + 1
             self._failed_polls[spa.id] = failed_polls
-            previous = (self.coordinator.data or {}).get(spa.id)
+            previous = self._last_data.get(spa.id)
             if previous is None or failed_polls > MAX_STALE_POLLS:
                 if isinstance(err, APIError):
                     raise UpdateFailed(err) from err
@@ -117,6 +124,7 @@ class SmartTubController:
             return previous
 
         self._failed_polls[spa.id] = 0
+        self._last_data[spa.id] = data
         return data
 
     async def _get_spa_data(self, spa: Spa) -> dict[str, Any]:
