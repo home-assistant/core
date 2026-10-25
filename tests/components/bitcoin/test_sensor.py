@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_CURRENCY,
     CONF_DISPLAY_OPTIONS,
     STATE_UNAVAILABLE,
+    UnitOfInformation,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import (
@@ -332,3 +333,31 @@ async def test_device(
         (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device == snapshot
+
+
+@pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
+async def test_registered_blocks_size_keeps_bytes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a blocks size sensor set up before it had a unit keeps showing bytes.
+
+    The suggested unit is only stored the first time a sensor is registered,
+    so setups that already exist keep the scale they had.
+    """
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{mock_config_entry.entry_id}_blocks_size",
+        suggested_object_id="block_size",
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.block_size")
+    assert state.state == "220382927"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfInformation.BYTES
