@@ -483,7 +483,7 @@ async def test_start_selected_favorite_program(
     appliance: HomeAppliance,
     get_active_program_side_effect: NoProgramActiveError | None,
 ) -> None:
-    """Test starting the selected program with optional parameter overrides."""
+    """Test starting the selected favorite program."""
     base_program = ProgramKey.DISHCARE_DISHWASHER_ECO_50
     non_writable_options = [
         Option(key=OptionKey.BSH_COMMON_BASE_PROGRAM, value=base_program)
@@ -695,7 +695,7 @@ async def test_start_selected_favorite_program_no_base_program(
     appliance: HomeAppliance,
     get_active_program_side_effect: NoProgramActiveError | None,
 ) -> None:
-    """Test starting the selected program with optional parameter overrides."""
+    """Test starting the selected favorite program without base program option."""
     client.get_active_program = AsyncMock(
         return_value=Program(key=ProgramKey.BSH_COMMON_FAVORITE_001),
         side_effect=get_active_program_side_effect,
