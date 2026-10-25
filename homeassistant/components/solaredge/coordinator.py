@@ -117,7 +117,6 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
                 translation_placeholders={
                     "service": "overview",
                     "status": str(ex.status),
-                    "message": ex.message,
                 },
             ) from None
 
@@ -178,7 +177,6 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
                 translation_placeholders={
                     "service": "details",
                     "status": str(ex.status),
-                    "message": ex.message,
                 },
             ) from None
 
@@ -237,7 +235,6 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
                 translation_placeholders={
                     "service": "inventory",
                     "status": str(ex.status),
-                    "message": ex.message,
                 },
             ) from None
 
@@ -298,7 +295,6 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
                 translation_placeholders={
                     "service": "energy details",
                     "status": str(ex.status),
-                    "message": ex.message,
                 },
             ) from None
 
@@ -372,7 +368,6 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
                 translation_placeholders={
                     "service": "power flow",
                     "status": str(ex.status),
-                    "message": ex.message,
                 },
             ) from None
 
@@ -444,7 +439,6 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
                 translation_placeholders={
                     "service": "storage",
                     "status": str(ex.status),
-                    "message": ex.message,
                 },
             ) from None
         storage_data = data.get("storageData")

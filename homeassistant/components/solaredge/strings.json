@@ -177,7 +177,7 @@
   },
   "exceptions": {
     "api_request_failed": {
-      "message": "Error requesting {service} data: {status} {message}"
+      "message": "Error requesting {service} data: {status}"
     },
     "cannot_retrieve_details": {
       "message": "Could not retrieve details from SolarEdge API"
