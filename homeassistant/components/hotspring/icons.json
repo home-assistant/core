@@ -7,6 +7,17 @@
       "jet": {
         "default": "mdi:pump"
       }
+    },
+    "sensor": {
+      "freshwater_iq_chlorine": {
+        "default": "mdi:flask"
+      },
+      "freshwater_iq_orp": {
+        "default": "mdi:water-check"
+      },
+      "freshwater_iq_sensor_life": {
+        "default": "mdi:progress-clock"
+      }
     }
   }
 }

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import math
 from typing import override
 
 from hotspring import Spa, TemperatureUnit
@@ -12,8 +13,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfRatio,
+    UnitOfTemperature,
+    UnitOfTime,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -21,6 +29,17 @@ from .coordinator import HotSpringConfigEntry, HotSpringDataUpdateCoordinator
 from .entity import HotSpringEntity
 
 PARALLEL_UPDATES = 0
+
+
+def _fwiq_reading(value: float | None) -> StateType:
+    """Map FreshWater IQ sentinels and non-finite readings to unknown.
+
+    ``-1`` is the FreshWater IQ sentinel reported by the device; legitimate
+    zero readings and other negative readings are preserved.
+    """
+    if not isinstance(value, (int, float)) or not math.isfinite(value) or value == -1:
+        return None
+    return value
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -31,6 +50,46 @@ class HotSpringSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Spa], StateType]
     unit_fn: Callable[[Spa], str | None] | None = None
 
+
+FRESHWATER_IQ_SENSORS: tuple[HotSpringSensorEntityDescription, ...] = (
+    HotSpringSensorEntityDescription(
+        key="freshwater_iq_chlorine",
+        translation_key="freshwater_iq_chlorine",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        suggested_display_precision=2,
+        value_fn=lambda spa: _fwiq_reading(spa.freshwater_iq.chlorine),
+        exists_fn=lambda spa: spa.freshwater_iq.installed,
+    ),
+    HotSpringSensorEntityDescription(
+        key="freshwater_iq_orp",
+        translation_key="freshwater_iq_orp",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        suggested_display_precision=0,
+        value_fn=lambda spa: _fwiq_reading(spa.freshwater_iq.orp),
+        exists_fn=lambda spa: spa.freshwater_iq.installed,
+    ),
+    HotSpringSensorEntityDescription(
+        key="freshwater_iq_ph",
+        device_class=SensorDeviceClass.PH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda spa: _fwiq_reading(spa.freshwater_iq.ph),
+        exists_fn=lambda spa: spa.freshwater_iq.installed,
+    ),
+    HotSpringSensorEntityDescription(
+        key="freshwater_iq_sensor_life",
+        translation_key="freshwater_iq_sensor_life",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=1,
+        value_fn=lambda spa: _fwiq_reading(spa.freshwater_iq.sensor_life_percentage),
+        exists_fn=lambda spa: spa.freshwater_iq.installed,
+    ),
+)
 
 SENSORS: tuple[HotSpringSensorEntityDescription, ...] = (
     HotSpringSensorEntityDescription(
@@ -92,6 +151,7 @@ SENSORS: tuple[HotSpringSensorEntityDescription, ...] = (
         value_fn=lambda spa: spa.versions.fwss,
         exists_fn=lambda spa: bool(spa.versions.fwss),
     ),
+    *FRESHWATER_IQ_SENSORS,
 )
 
 
@@ -106,6 +166,29 @@ async def async_setup_entry(
         HotSpringSensorEntity(coordinator, description)
         for description in SENSORS
         if description.exists_fn(coordinator.data)
+    )
+
+    # The spa may not publish FreshWater IQ data until after setup; add the
+    # FreshWater IQ sensors whenever the library first reports it installed.
+    added_fwiq_keys: set[str] = set()
+
+    @callback
+    def _async_add_freshwater_iq_entities() -> None:
+        if not coordinator.data.freshwater_iq.installed:
+            return
+        new_entities = [
+            HotSpringSensorEntity(coordinator, description)
+            for description in FRESHWATER_IQ_SENSORS
+            if description.key not in added_fwiq_keys
+        ]
+        added_fwiq_keys.update(entity.entity_description.key for entity in new_entities)
+        if new_entities:
+            async_add_entities(new_entities)
+
+    if coordinator.data.freshwater_iq.installed:
+        return
+    entry.async_on_unload(
+        coordinator.async_add_listener(_async_add_freshwater_iq_entities)
     )
 
 

@@ -72,6 +72,15 @@
       "current_temperature": {
         "name": "Current temperature"
       },
+      "freshwater_iq_chlorine": {
+        "name": "Chlorine"
+      },
+      "freshwater_iq_orp": {
+        "name": "Oxidation reduction potential"
+      },
+      "freshwater_iq_sensor_life": {
+        "name": "Sensor life"
+      },
       "fwss_version": {
         "name": "FreshWater Salt System version"
       },
