@@ -166,6 +166,76 @@ async def test_concurrent_turn_busy(
     await run_turn()
 
 
+async def test_failed_turn_stored(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test a failed turn stays in the history with its error."""
+    with (
+        pytest.raises(HomeAssistantError),
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input),
+    ):
+        raise HomeAssistantError("Provider is down")
+
+    content = hass.data[DATA_CHAT_LOGS]["koala"].content
+    assert [(item.role, item.content) for item in content] == [
+        ("system", ""),
+        ("user", "Hello"),
+        ("assistant", "Error: Provider is down"),
+    ]
+    assert content[-1].agent_id == "mock-agent-id"
+
+
+@freeze_time("2025-10-31 12:00:00")
+async def test_failed_turn_tool_call_result(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test a failed turn gets an error result for a tool call without one."""
+
+    async def failing_tool() -> llm.ToolResult:
+        raise ValueError("Tool is broken")
+
+    async def run_turn() -> None:
+        with (
+            chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        ):
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api="assist",
+            )
+            async for _ in chat_log.async_add_assistant_content(
+                AssistantContent(
+                    agent_id="mock-agent-id",
+                    content=None,
+                    tool_calls=[
+                        llm.ToolInput(
+                            id="mock-tool-call-id", tool_name="test_tool", tool_args={}
+                        )
+                    ],
+                ),
+                tool_call_tasks={
+                    "mock-tool-call-id": hass.async_create_task(failing_tool())
+                },
+            ):
+                pass
+
+    with pytest.raises(ValueError):
+        await run_turn()
+
+    content = hass.data[DATA_CHAT_LOGS]["koala"].content
+    assert content[-2] == ToolResultContent(
+        agent_id="mock-agent-id",
+        tool_call_id="mock-tool-call-id",
+        tool_name="test_tool",
+        result=llm.ToolResult(
+            data={"error": "ValueError", "error_text": "Tool is broken"},
+            error=True,
+        ),
+    )
+    assert content[-1].content == "Error: Tool is broken"
+
+
 class AdminAPI(llm.API):
     """Test API that requires an admin user."""
 

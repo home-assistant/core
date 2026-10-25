@@ -135,9 +135,32 @@ def async_get_chat_log(
     active_chat_logs.add(session.conversation_id)
     try:
         yield chat_log
+    except (Exception, asyncio.CancelledError) as err:
+        # Keep what the turn did, like tool calls that ran, so the user can
+        # continue the conversation.
+        chat_log.async_add_error(
+            (user_input.agent_id if user_input else None) or DOMAIN, err
+        )
+        raise
     finally:
         active_chat_logs.discard(session.conversation_id)
         current_chat_log.reset(token)
+        _async_store_chat_log(
+            hass, session, chat_log, last_message, is_new_log=is_new_log
+        )
+
+
+@callback
+def _async_store_chat_log(
+    hass: HomeAssistant,
+    session: chat_session.ChatSession,
+    chat_log: ChatLog,
+    last_message: Content,
+    *,
+    is_new_log: bool,
+) -> None:
+    """Store the chat log of a turn that added content."""
+    chat_log.delta_listener = None
 
     if chat_log.content[-1] is last_message:
         LOGGER.debug(
@@ -153,6 +176,8 @@ def async_get_chat_log(
             )
         return
 
+    all_chat_logs = hass.data[DATA_CHAT_LOGS]
+
     if is_new_log:
 
         @callback
@@ -167,9 +192,6 @@ def async_get_chat_log(
             )
 
         session.async_on_cleanup(do_cleanup)
-
-    if chat_log_delta_listener:
-        chat_log.delta_listener = None
 
     all_chat_logs[session.conversation_id] = chat_log
 
@@ -428,6 +450,40 @@ class ChatLog:
             self.conversation_id,
             ChatLogEventType.CONTENT_ADDED,
             {"content": content.as_dict()},
+        )
+
+    @callback
+    def async_add_error(self, agent_id: str, error: BaseException) -> None:
+        """Add the error that ended a turn as assistant content."""
+        error_text = str(error) or type(error).__name__
+        # LLM providers refuse a tool call without a result.
+        answered: set[str] = set()
+        for content in reversed(self.content):
+            if isinstance(content, ToolResultContent):
+                answered.add(content.tool_call_id)
+                continue
+            if isinstance(content, AssistantContent) and content.tool_calls:
+                for tool_call in content.tool_calls:
+                    if tool_call.external or tool_call.id in answered:
+                        continue
+                    self.async_add_assistant_content_without_tools(
+                        ToolResultContent(
+                            agent_id=content.agent_id,
+                            tool_call_id=tool_call.id,
+                            tool_name=tool_call.tool_name,
+                            result=llm.ToolResult(
+                                data={
+                                    "error": type(error).__name__,
+                                    "error_text": error_text,
+                                },
+                                error=True,
+                            ),
+                        )
+                    )
+            break
+
+        self.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id=agent_id, content=f"Error: {error_text}")
         )
 
     @callback
