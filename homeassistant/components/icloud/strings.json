@@ -56,6 +56,60 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "altitude": {
+        "name": "Altitude"
+      },
+      "battery_status": {
+        "name": "Battery status",
+        "state": {
+          "charging": "Charging",
+          "full": "Full",
+          "not_charging": "Not charging"
+        }
+      },
+      "device_status": {
+        "name": "Status",
+        "state": {
+          "error": "Error",
+          "offline": "Offline",
+          "online": "Online",
+          "pending": "Pending",
+          "unregistered": "Unregistered"
+        }
+      },
+      "floor_level": {
+        "name": "Floor"
+      },
+      "last_location": {
+        "name": "Last located"
+      },
+      "last_locked": {
+        "name": "Last locked"
+      },
+      "last_lost": {
+        "name": "Last lost"
+      },
+      "last_wiped": {
+        "name": "Last wiped"
+      },
+      "location_accuracy": {
+        "name": "Location accuracy"
+      },
+      "location_type": {
+        "name": "Location type",
+        "state": {
+          "cellular": "Cellular",
+          "gps": "GPS",
+          "wifi": "Wi-Fi"
+        }
+      },
+      "owner": {
+        "name": "Owner"
+      }
+    }
+  },
   "exceptions": {
     "account_not_initialized": {
       "message": "Account not initialized: {entry}"

@@ -57,8 +57,10 @@ from boschshcpy.services_impl import (
     PowerSwitchConfigurationService,
     PresenceSimulationConfigurationService,
     SmokeSensitivityService,
+    SwitchConfiguration,
     ValveTappetService,
     VibrationSensorService,
+    WallThermostatConfiguration,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -498,6 +500,8 @@ def thermostat_gen2_device(
     | None = None,
     supports_display_direction: bool | None = None,
     supports_displayed_temperature: bool | None = None,
+    valve_type: WallThermostatConfiguration.ValveType | None = None,
+    heater_type: WallThermostatConfiguration.HeaterType | None = None,
     spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
 ) -> SHCThermostatGen2 | SHCRoomThermostat2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
@@ -526,6 +530,12 @@ def thermostat_gen2_device(
         else supports_displayed_temperature
     )
     device.displayed_temperature = displayed_temperature
+    if spec is SHCThermostatGen2:
+        device.supports_wall_thermostat_configuration = (
+            valve_type is not None or heater_type is not None
+        )
+        device.valve_type = valve_type
+        device.heater_type = heater_type
     return device
 
 
@@ -581,6 +591,7 @@ def micromodule_relay_device(
     swap_outputs: bool = False,
     impulse_length: float | None = None,
     impulse_length_raises_key_error: bool = False,
+    switch_type: SwitchConfiguration.SwitchType | None = None,
 ) -> SHCMicromoduleRelay:
     """Build a minimal device double for the micromodule_relays bucket."""
     device = create_autospec(SHCMicromoduleRelay, instance=True, spec_set=True)
@@ -598,6 +609,7 @@ def micromodule_relay_device(
     device.supports_switch_configuration = supports_switch_configuration
     device.swap_inputs = swap_inputs
     device.swap_outputs = swap_outputs
+    device.switch_type = switch_type
     if impulse_length_raises_key_error:
         type(device).impulse_length = PropertyMock(
             side_effect=KeyError("impulseLength")

@@ -74,6 +74,7 @@
         'online': True,
         'parent_clusters': dict({
         }),
+        'primary_display_category': 'ALEXA_VOICE_ENABLED',
         'sensors': dict({
           'dnd': dict({
             'error': False,
@@ -215,6 +216,7 @@
         'online': True,
         'parent_clusters': dict({
         }),
+        'primary_display_category': 'ALEXA_VOICE_ENABLED',
         'sensors': dict({
           'dnd': dict({
             'error': False,
@@ -356,6 +358,7 @@
         'online': True,
         'parent_clusters': dict({
         }),
+        'primary_display_category': 'ALEXA_VOICE_ENABLED',
         'sensors': dict({
           'dnd': dict({
             'error': False,
