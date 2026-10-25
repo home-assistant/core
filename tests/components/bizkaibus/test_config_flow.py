@@ -262,9 +262,12 @@ async def test_user_flow_with_api_factory_error(
 
 async def test_user_flow_with_lines_connection_error(hass: HomeAssistant) -> None:
     """Test the user flow handles a connection error fetching lines."""
-    with patch(
-        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
-    ) as mock_api_class:
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry", return_value=True),
+    ):
         mock_api = _mock_api(mock_api_class)
         mock_api.get_lines_on_stop = AsyncMock(
             side_effect=[
