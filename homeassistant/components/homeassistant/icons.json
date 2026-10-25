@@ -235,6 +235,9 @@
         },
         "shopping_groceries": {
           "default": "mdi:cart"
+        },
+        "parcel_tracking": {
+          "default": "mdi:package-variant"
         }
       }
     },
