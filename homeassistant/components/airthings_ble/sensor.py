@@ -76,6 +76,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, AirthingsBLESensorEntityDescription] = {
         device_class=SensorDeviceClass.RADON,
         native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     "radon_week_level": AirthingsBLESensorEntityDescription(
         key="radon_week_level",
@@ -83,6 +84,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, AirthingsBLESensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         options=["good", "fair", "poor"],
         value_fn=lambda value: value if value != "unknown" else None,
+        entity_registry_enabled_default=False,
     ),
     "radon_month_avg": AirthingsBLESensorEntityDescription(
         key="radon_month_avg",
@@ -90,6 +92,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, AirthingsBLESensorEntityDescription] = {
         device_class=SensorDeviceClass.RADON,
         native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     "radon_month_level": AirthingsBLESensorEntityDescription(
         key="radon_month_level",
@@ -97,6 +100,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, AirthingsBLESensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         options=["good", "fair", "poor"],
         value_fn=lambda value: value if value != "unknown" else None,
+        entity_registry_enabled_default=False,
     ),
     "radon_year_avg": AirthingsBLESensorEntityDescription(
         key="radon_year_avg",

@@ -73,6 +73,7 @@ async def test_translation_keys_wave_enhance(
     assert state.attributes.get("friendly_name") == expected_name
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("unique_suffix", "expected_sensor_name"),
     [
@@ -123,6 +124,57 @@ async def test_radon_averages_corentium_home_2(
         state.attributes.get("friendly_name")
         == f"Airthings Corentium Home 2 (123456) {expected_sensor_name}"
     )
+
+
+@pytest.mark.parametrize(
+    ("unique_suffix", "disabled"),
+    [
+        ("radon_1day_avg", False),
+        ("radon_1day_level", False),
+        ("radon_week_avg", True),
+        ("radon_week_level", True),
+        ("radon_month_avg", True),
+        ("radon_month_level", True),
+        ("radon_year_avg", False),
+        ("radon_year_level", False),
+    ],
+)
+async def test_radon_averages_enabled_default_corentium_home_2(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    unique_suffix: str,
+    disabled: bool,
+) -> None:
+    """Test that the 7-day and 30-day radon sensors are disabled by default."""
+    entry = create_entry(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO
+    )
+    create_device(
+        entry,
+        device_registry,
+        CORENTIUM_HOME_2_SERVICE_INFO,
+        CORENTIUM_HOME_2_DEVICE_INFO,
+    )
+
+    with (
+        patch_async_ble_device_from_address(CORENTIUM_HOME_2_SERVICE_INFO.device),
+        patch_async_discovered_service_info([CORENTIUM_HOME_2_SERVICE_INFO]),
+        patch_airthings_ble(CORENTIUM_HOME_2_DEVICE_INFO),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    unique_id = f"{CORENTIUM_HOME_2_DEVICE_INFO.address}_{unique_suffix}"
+    entity_id = entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, unique_id)
+    assert entity_id is not None
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    if disabled:
+        assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    else:
+        assert entity_entry.disabled_by is None
 
 
 async def test_disabled_connectivity_mode_corentium_home_2(
