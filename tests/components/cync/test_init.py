@@ -8,6 +8,7 @@ from pycync.devices.device_types import DeviceType
 from homeassistant.components.cync.const import DOMAIN
 from homeassistant.components.cync.coordinator import CyncCoordinator
 from homeassistant.components.cync.entity import CyncBaseEntity
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -63,3 +64,16 @@ async def test_outlet_registry_identifiers(
     assert {entry.unique_id for entry in entries} == {"10000-1006", "10000-2006"}
     assert len({entry.device_id for entry in entries}) == 2
     assert set(coordinator.data) == {"10000-1006", "10000-2006"}
+
+
+async def test_setup_existing_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test an existing version 1 config entry sets up without migration."""
+    mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.version == 1
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED

@@ -1,17 +1,20 @@
 """Tests for the Cync integration switch platform."""
 
-from unittest.mock import AsyncMock, patch
+from copy import deepcopy
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 PLUG_UNIQUE_ID = "10000-4"
 PLUG_ENTITY_ID = "switch.bedroom_bedroom_plug"
@@ -166,3 +169,53 @@ async def test_switch(
 
     getattr(test_device, device_method).assert_awaited_once()
     getattr(test_device, other_method).assert_not_awaited()
+
+
+async def test_availability_grace_period(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    cync_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a transient offline report keeps the plug available until the grace period ends."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(PLUG_ENTITY_ID).state != STATE_UNAVAILABLE
+
+    offline_plug = deepcopy(mock_config_entry.runtime_data.data[PLUG_UNIQUE_ID])
+    offline_plug.is_online = False
+    callback = cync_client.set_update_callback.call_args.args[0]
+    await callback({PLUG_UNIQUE_ID: offline_plug})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(PLUG_ENTITY_ID).state != STATE_UNAVAILABLE
+
+    cync_client.get_devices.return_value = [offline_plug]
+    freezer.tick(timedelta(seconds=91))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(PLUG_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_availability_recovers_within_grace_period(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    cync_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coming back online cancels the pending expiry."""
+    await setup_integration(hass, mock_config_entry)
+    plug = mock_config_entry.runtime_data.data[PLUG_UNIQUE_ID]
+    offline_plug = deepcopy(plug)
+    offline_plug.is_online = False
+    callback = cync_client.set_update_callback.call_args.args[0]
+
+    await callback({PLUG_UNIQUE_ID: offline_plug})
+    await callback({PLUG_UNIQUE_ID: plug})
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=91))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(PLUG_ENTITY_ID).state != STATE_UNAVAILABLE
