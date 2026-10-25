@@ -97,6 +97,11 @@ def _resolve_entry_reason(entry: ConfigEntry) -> str | None:
     return entry.reason
 
 
+def _error_result(error: str) -> ToolResult:
+    """Return an error ToolResult."""
+    return ToolResult(data={"error": error}, error=True)
+
+
 def _format_config_entry(entry: ConfigEntry, short_id: str) -> JsonObjectType:
     """Format a ConfigEntry into a compact dictionary for LLM consumption."""
     result: JsonObjectType = {
@@ -227,40 +232,23 @@ class ReloadConfigEntryTool(Tool):
         try:
             entry = _resolve_short_entry_id(hass, entry_id)
         except HomeAssistantError as err:
-            return ToolResult(data={"error": str(err)}, error=True)
+            return _error_result(str(err))
 
         if entry.disabled_by is not None:
-            return ToolResult(
-                data={
-                    "error": (
-                        f"Config entry '{entry_id}' cannot be reloaded because it is "
-                        "disabled."
-                    )
-                },
-                error=True,
+            return _error_result(
+                f"Config entry '{entry_id}' cannot be reloaded because it is disabled."
             )
         if entry.source == config_entries.SOURCE_IGNORE:
-            return ToolResult(
-                data={
-                    "error": (
-                        f"Config entry '{entry_id}' cannot be reloaded because it is "
-                        "ignored."
-                    )
-                },
-                error=True,
+            return _error_result(
+                f"Config entry '{entry_id}' cannot be reloaded because it is ignored."
             )
 
         try:
             await hass.config_entries.async_reload(entry.entry_id)
         except config_entries.OperationNotAllowed:
-            return ToolResult(
-                data={
-                    "error": (
-                        f"Config entry '{entry_id}' cannot be reloaded in state "
-                        f"'{entry.state.value}'."
-                    )
-                },
-                error=True,
+            return _error_result(
+                f"Config entry '{entry_id}' cannot be reloaded in state "
+                f"'{entry.state.value}'."
             )
 
         result: JsonObjectType = {
