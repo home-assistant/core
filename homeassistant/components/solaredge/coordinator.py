@@ -5,6 +5,7 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, override
 
+from aiohttp import ClientResponseError
 from aiosolaredge import SolarEdge
 from solaredge_web import EnergyData, SolarEdgeWeb
 
@@ -105,6 +106,10 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
             overview = data["overview"]
         except KeyError as ex:
             raise UpdateFailed("Missing overview data, skipping update") from ex
+        except ClientResponseError as ex:
+            raise UpdateFailed(
+                f"Error requesting overview data: {ex.status} {ex.message}"
+            ) from None
 
         self.data = {}
 
@@ -152,6 +157,10 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
             details = data["details"]
         except KeyError as ex:
             raise UpdateFailed("Missing details data, skipping update") from ex
+        except ClientResponseError as ex:
+            raise UpdateFailed(
+                f"Error requesting details data: {ex.status} {ex.message}"
+            ) from None
 
         self.data = {}
         self.attributes = {}
@@ -197,6 +206,10 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
             inventory = data["Inventory"]
         except KeyError as ex:
             raise UpdateFailed("Missing inventory data, skipping update") from ex
+        except ClientResponseError as ex:
+            raise UpdateFailed(
+                f"Error requesting inventory data: {ex.status} {ex.message}"
+            ) from None
 
         self.data = {}
         self.attributes = {}
@@ -244,6 +257,10 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
             energy_details = data["energyDetails"]
         except KeyError as ex:
             raise UpdateFailed("Missing power flow data, skipping update") from ex
+        except ClientResponseError as ex:
+            raise UpdateFailed(
+                f"Error requesting energy details data: {ex.status} {ex.message}"
+            ) from None
 
         if "meters" not in energy_details:
             LOGGER.debug(
@@ -304,6 +321,10 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
             power_flow = data["siteCurrentPowerFlow"]
         except KeyError as ex:
             raise UpdateFailed("Missing power flow data, skipping update") from ex
+        except ClientResponseError as ex:
+            raise UpdateFailed(
+                f"Error requesting power flow data: {ex.status} {ex.message}"
+            ) from None
 
         power_from = []
         power_to = []
@@ -360,11 +381,16 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
         """Update the data from the SolarEdge Monitoring API."""
         now = dt_util.now()
         start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        data = await self.api.get_storage_data(
-            self.site_id,
-            start_of_day,
-            now,
-        )
+        try:
+            data = await self.api.get_storage_data(
+                self.site_id,
+                start_of_day,
+                now,
+            )
+        except ClientResponseError as ex:
+            raise UpdateFailed(
+                f"Error requesting storage data: {ex.status} {ex.message}"
+            ) from None
         storage_data = data.get("storageData")
         if storage_data is None:
             raise UpdateFailed("Storage data not available from API")
