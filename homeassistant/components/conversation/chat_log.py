@@ -15,7 +15,6 @@ import probatio
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, frame, intent, llm, template
-from homeassistant.helpers.json import json_dumps
 from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
@@ -118,12 +117,7 @@ def async_get_chat_log(
     is_new_log = session.conversation_id not in all_chat_logs
 
     if chat_log := all_chat_logs.get(session.conversation_id):
-        chat_log = replace(
-            chat_log,
-            content=chat_log.content.copy(),
-            _pending_tool_calls={},
-            _tool_call_tasks={},
-        )
+        chat_log = replace(chat_log, content=chat_log.content.copy())
     else:
         chat_log = ChatLog(hass, session.conversation_id)
 
@@ -419,12 +413,6 @@ class ChatLog:
     llm_input_provided_index = 0
     created: datetime = field(init=False, default_factory=utcnow)
     _last_error: BaseException | None = field(default=None, repr=False)
-    # Tool calls that a stream started before their content was added.
-    _pending_tool_calls: dict[str, llm.ToolInput] = field(
-        default_factory=dict, repr=False
-    )
-    # Tool calls that started and have no result content yet.
-    _tool_call_tasks: dict[str, asyncio.Task] = field(default_factory=dict, repr=False)
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the chat log."""
@@ -472,35 +460,6 @@ class ChatLog:
             {"content": content.as_dict()},
         )
 
-    def _get_interrupted_tool_result(
-        self, tool_call_id: str, error: BaseException
-    ) -> llm.ToolResult:
-        """Return the result of a tool call that has no result content."""
-        task = self._tool_call_tasks.pop(tool_call_id, None)
-        if task is not None and (not task.done() or task.cancelled()):
-            # The action may still happen, so do not report it as failed.
-            return llm.ToolResult(
-                data={
-                    "error": "Interrupted",
-                    "error_text": (
-                        "The turn ended before the tool finished. "
-                        "The action may have completed."
-                    ),
-                },
-                error=True,
-            )
-        if task is not None:
-            if (tool_error := task.exception()) is None:
-                return task.result()
-            error = tool_error
-        return llm.ToolResult(
-            data={
-                "error": type(error).__name__,
-                "error_text": str(error) or type(error).__name__,
-            },
-            error=True,
-        )
-
     @callback
     def async_add_error(self, agent_id: str, error: BaseException) -> None:
         """Add the error that ended a turn as assistant content."""
@@ -508,6 +467,7 @@ class ChatLog:
         if error is self._last_error:
             return
         self._last_error = error
+        error_text = str(error) or type(error).__name__
         # LLM providers refuse a tool call without a result.
         answered: set[str] = set()
         for content in reversed(self.content):
@@ -523,27 +483,19 @@ class ChatLog:
                             agent_id=content.agent_id,
                             tool_call_id=tool_call.id,
                             tool_name=tool_call.tool_name,
-                            result=self._get_interrupted_tool_result(
-                                tool_call.id, error
+                            result=llm.ToolResult(
+                                data={
+                                    "error": type(error).__name__,
+                                    "error_text": error_text,
+                                },
+                                error=True,
                             ),
                         )
                     )
             break
 
-        lines = [f"Error: {str(error) or type(error).__name__}"]
-        # An interrupted stream misses the provider data of its tool calls, like
-        # a signature, so describe them as text.
-        if self._pending_tool_calls:
-            lines.append("Tool calls that started before the error:")
-            for tool_call in self._pending_tool_calls.values():
-                result = self._get_interrupted_tool_result(tool_call.id, error)
-                lines.append(
-                    f"- {tool_call.tool_name}({json_dumps(tool_call.tool_args)}):"
-                    f" {json_dumps(result.data)}"
-                )
-            self._pending_tool_calls.clear()
         self.async_add_assistant_content_without_tools(
-            AssistantContent(agent_id=agent_id, content="\n".join(lines))
+            AssistantContent(agent_id=agent_id, content=f"Error: {error_text}")
         )
 
     @callback
@@ -586,9 +538,6 @@ class ChatLog:
         """
         LOGGER.debug("Adding assistant content: %s", content)
         self.content.append(content)
-        if isinstance(content, AssistantContent):
-            for tool_call in content.tool_calls or ():
-                self._pending_tool_calls.pop(tool_call.id, None)
 
         if (
             not isinstance(content, AssistantContent)
@@ -608,8 +557,6 @@ class ChatLog:
                     self.llm_api.async_call_tool(tool_input),
                     name=f"llm_tool_{tool_input.id}",
                 )
-            if not tool_input.external:
-                self._tool_call_tasks[tool_input.id] = tool_call_tasks[tool_input.id]
 
         for tool_input in content.tool_calls:
             if tool_input.external:
@@ -634,7 +581,6 @@ class ChatLog:
                 tool_name=tool_input.tool_name,
                 result=tool_result,
             )
-            self._tool_call_tasks.pop(tool_input.id, None)
             self.content.append(response_content)
             _async_notify_subscribers(
                 self.hass,
@@ -703,10 +649,6 @@ class ChatLog:
                                 self.llm_api.async_call_tool(tool_call),
                                 name=f"llm_tool_{tool_call.id}",
                             )
-                            self._pending_tool_calls[tool_call.id] = tool_call
-                            self._tool_call_tasks[tool_call.id] = tool_call_tasks[
-                                tool_call.id
-                            ]
                 if self.delta_listener:
                     if filtered_delta := {
                         k: v for k, v in assistant_delta.items() if k != "native"
