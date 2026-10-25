@@ -17,6 +17,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.conversation import (
     AssistantContent,
     AssistantContentDeltaDict,
+    ConversationBusyError,
     ConversationInput,
     ConverseError,
     ToolResultContent,
@@ -134,37 +135,35 @@ async def test_unknown_llm_api(
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
 
 
-async def test_new_chat_log_parallel_turns_cleanup(
+async def test_concurrent_turn_busy(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
-    """Test the cleanup after parallel first turns of a new conversation."""
+    """Test a second turn of a conversation raises while the first is open."""
 
     async def run_turn() -> None:
         with (
             chat_session.async_get_chat_session(hass, "koala", context=None) as session,
-            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+            async_get_chat_log(hass, session, mock_conversation_input),
         ):
-            chat_log.async_add_assistant_content_without_tools(
-                AssistantContent(agent_id="mock-agent-id", content="Hi")
-            )
+            pass
 
     with (
         chat_session.async_get_chat_session(hass, "koala", context=None) as session,
-        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        async_get_chat_log(hass, session, mock_conversation_input),
+        pytest.raises(ConversationBusyError),
     ):
         # A new context runs the request like a separate task would.
         await asyncio.create_task(run_turn(), context=contextvars.Context())
-        chat_log.async_add_assistant_content_without_tools(
-            AssistantContent(agent_id="mock-agent-id", content="Hello")
-        )
 
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT * 2,
-    )
+    with (
+        pytest.raises(ValueError),
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input),
+    ):
+        raise ValueError
 
-    assert "koala" not in hass.data[DATA_CHAT_LOGS]
-    assert "koala" not in hass.data[chat_session.DATA_CHAT_SESSION]
+    # The failed turn has ended, so the next turn may start.
+    await run_turn()
 
 
 class AdminAPI(llm.API):

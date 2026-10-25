@@ -24,6 +24,7 @@ from .const import DOMAIN, ChatLogEventType
 from .models import ConversationInput, ConversationResult
 
 DATA_CHAT_LOGS: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_logs")
+DATA_ACTIVE_CHAT_LOGS: HassKey[set[str]] = HassKey("conversation_active_chat_logs")
 DATA_SUBSCRIPTIONS: HassKey[
     list[Callable[[str, ChatLogEventType, dict[str, Any]], None]]
 ] = HassKey("conversation_chat_log_subscriptions")
@@ -95,6 +96,12 @@ def async_get_chat_log(
         yield chat_log
         return
 
+    # Each turn works on a copy and stores it at the end, so a concurrent turn
+    # would overwrite the messages of this one.
+    active_chat_logs = hass.data.setdefault(DATA_ACTIVE_CHAT_LOGS, set())
+    if session.conversation_id in active_chat_logs:
+        raise ConversationBusyError(session.conversation_id)
+
     all_chat_logs = hass.data.get(DATA_CHAT_LOGS)
     if all_chat_logs is None:
         all_chat_logs = {}
@@ -125,7 +132,11 @@ def async_get_chat_log(
     last_message = chat_log.content[-1]
 
     token = current_chat_log.set(chat_log)
-    yield chat_log
+    active_chat_logs.add(session.conversation_id)
+    try:
+        yield chat_log
+    finally:
+        active_chat_logs.discard(session.conversation_id)
     current_chat_log.reset(token)
 
     if chat_log.content[-1] is last_message:
@@ -142,8 +153,7 @@ def async_get_chat_log(
             )
         return
 
-    # Parallel first turns share the session, so register the cleanup once.
-    if session.conversation_id not in all_chat_logs:
+    if is_new_log:
 
         @callback
         def do_cleanup() -> None:
@@ -194,6 +204,15 @@ class ConverseError(HomeAssistantError):
             response=self.response,
             conversation_id=self.conversation_id,
         )
+
+
+class ConversationBusyError(HomeAssistantError):
+    """Error when another turn of the conversation is in progress."""
+
+    def __init__(self, conversation_id: str) -> None:
+        """Initialize the error."""
+        super().__init__("This conversation is busy with another message")
+        self.conversation_id = conversation_id
 
 
 @dataclass(frozen=True)

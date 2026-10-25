@@ -955,6 +955,49 @@ async def test_ws_chat_log_index_subscription_requires_admin(
     assert msg["error"]["code"] == "unauthorized"
 
 
+async def test_ws_chat_log_subscription_during_turn(
+    hass: HomeAssistant,
+    init_components,
+    mock_conversation_input: ConversationInput,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test subscribing to a chat log while a turn is in progress."""
+    client = await hass_ws_client(hass)
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        conversation_id = session.conversation_id
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent("test-agent-id", "I hear you")
+        )
+
+    with (
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
+        async_get_chat_log(hass, session, mock_conversation_input),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "conversation/chat_log/subscribe",
+                "conversation_id": conversation_id,
+            }
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+
+        # The initial state is the stored chat log, without the open turn.
+        msg = await client.receive_json()
+        assert msg["event"]["event_type"] == "initial_state"
+        assert [content["role"] for content in msg["event"]["data"]["content"]] == [
+            "system",
+            "user",
+            "assistant",
+        ]
+
+
 async def test_ws_chat_log_subscription(
     hass: HomeAssistant,
     init_components,

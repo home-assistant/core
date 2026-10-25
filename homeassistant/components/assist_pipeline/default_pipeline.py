@@ -847,6 +847,11 @@ class _DefaultPipelineProcessor:
                         )
                     )
 
+        except conversation.ConversationBusyError as src_error:
+            raise IntentRecognitionError(
+                code="intent-busy",
+                message=str(src_error),
+            ) from src_error
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")
             raise IntentRecognitionError(
