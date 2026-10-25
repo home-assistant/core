@@ -1,120 +1,83 @@
 """Test the RainbowMiner sensors."""
 
 from datetime import datetime, timedelta
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from rainbowminer_api_client import CurrentProfit
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rainbowminer.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
+from . import setup_integration
 from .conftest import (
-    TEST_HOST,
-    TEST_PORT,
     VALID_ACTIVE_MINERS,
     VALID_BALANCES,
     VALID_CURRENT_PROFIT,
     VALID_UPTIME,
-    VALID_VERSION,
-    mock_rainbowminer_endpoints,
 )
 
 
-def _register_all(
-    aioclient_mock: AiohttpClientMocker,
-    *,
-    current_profit: dict[str, Any] | None = None,
-    active_miners: list[dict[str, Any]] | None = None,
-    balances: list[dict[str, Any]] | None = None,
-) -> None:
-    """Register canned responses for all endpoints."""
-    mock_rainbowminer_endpoints(
-        aioclient_mock,
-        current_profit=current_profit
-        if current_profit is not None
-        else VALID_CURRENT_PROFIT,
-        uptime=VALID_UPTIME,
-        active_miners=active_miners
-        if active_miners is not None
-        else VALID_ACTIVE_MINERS,
-        version=VALID_VERSION,
-        balances=balances if balances is not None else VALID_BALANCES,
-    )
-
-
-async def _setup(
+async def test_entities(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    *,
-    currency: str | None = "USD",
-    current_profit: dict[str, Any] | None = None,
-    active_miners: list[dict[str, Any]] | None = None,
-    balances: list[dict[str, Any]] | None = None,
-) -> MockConfigEntry:
-    """Set up the integration with the given HA currency."""
-    _register_all(
-        aioclient_mock,
-        current_profit=current_profit,
-        active_miners=active_miners,
-        balances=balances,
-    )
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT},
-    )
-    entry.add_to_hass(hass)
-    with patch.object(hass.config, "currency", currency):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-    return entry
+    entity_registry: er.EntityRegistry,
+    mock_rainbowminer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sensor entities are fixated in the snapshot."""
+    freezer.move_to("2026-09-13 12:00:00+00:00")
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_always_sensors(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    mock_rainbowminer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the non-currency sensors."""
     freezer.move_to("2026-09-13 12:00:00+00:00")
-    await _setup(hass, aioclient_mock)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.rainbowminer_active_miners")
     assert state is not None
-    assert state.state == str(
-        sum(1 for m in VALID_ACTIVE_MINERS if m.get("Status") == 0)
-    )
+    assert state.state == str(sum(1 for m in VALID_ACTIVE_MINERS if m.Status == 0))
 
     state = hass.states.get("sensor.rainbowminer_power")
     assert state is not None
-    assert state.state == str(VALID_CURRENT_PROFIT["Power"])
+    assert state.state == str(VALID_CURRENT_PROFIT.Power)
 
     state = hass.states.get("sensor.rainbowminer_uptime")
     assert state is not None
     start = dt_util.parse_datetime(state.state)
     assert start is not None
-    assert start == dt_util.utcnow() - timedelta(seconds=VALID_UPTIME["Seconds"])
+    assert start == dt_util.utcnow() - timedelta(seconds=VALID_UPTIME.Seconds)
     assert start == datetime.fromisoformat("2026-09-12 12:00:00+00:00")
 
     assert hass.states.get("sensor.rainbowminer_version") is None
 
 
 async def test_mbtc_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_rainbowminer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the mBTC-denominated sensors."""
-    await _setup(hass, aioclient_mock)
+    await setup_integration(hass, mock_config_entry)
 
-    earnings_btc_sum = sum(b["Earnings_BTC"] for b in VALID_BALANCES)
-    total_btc_sum = sum(b["Total_BTC"] for b in VALID_BALANCES)
-    earnings_1w_btc_sum = sum(b["Earnings_1w_BTC"] for b in VALID_BALANCES)
-    earnings_1d_btc_sum = sum(b["Earnings_1d_BTC"] for b in VALID_BALANCES)
-    earnings_1h_btc_sum = sum(b["Earnings_1h_BTC"] for b in VALID_BALANCES)
+    earnings_btc_sum = sum(b.Earnings_BTC for b in VALID_BALANCES)
+    total_btc_sum = sum(b.Total_BTC for b in VALID_BALANCES)
+    earnings_1w_btc_sum = sum(b.Earnings_1w_BTC for b in VALID_BALANCES)
+    earnings_1d_btc_sum = sum(b.Earnings_1d_BTC for b in VALID_BALANCES)
+    earnings_1h_btc_sum = sum(b.Earnings_1h_BTC for b in VALID_BALANCES)
 
     state = hass.states.get("sensor.rainbowminer_total_earnings_mbtc")
     assert state is not None
@@ -126,7 +89,7 @@ async def test_mbtc_sensors(
 
     state = hass.states.get("sensor.rainbowminer_estimated_daily_profit_mbtc")
     assert state is not None
-    assert state.state == str(VALID_CURRENT_PROFIT["AllProfitBTC"] * 1000)
+    assert state.state == str(VALID_CURRENT_PROFIT.AllProfitBTC * 1000)
 
     state = hass.states.get("sensor.rainbowminer_weekly_earnings_mbtc")
     assert state is not None
@@ -142,18 +105,20 @@ async def test_mbtc_sensors(
 
 
 async def test_currency_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_rainbowminer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the currency-denominated sensors."""
-    await _setup(hass, aioclient_mock, currency="USD")
+    hass.config.currency = "USD"
+    await setup_integration(hass, mock_config_entry)
 
-    rate = float(VALID_CURRENT_PROFIT["Rates"]["USD"])
-    earnings_btc_sum = sum(b["Earnings_BTC"] for b in VALID_BALANCES)
-    total_btc_sum = sum(b["Total_BTC"] for b in VALID_BALANCES)
-    earnings_1w_btc_sum = sum(b["Earnings_1w_BTC"] for b in VALID_BALANCES)
-    earnings_1d_btc_sum = sum(b["Earnings_1d_BTC"] for b in VALID_BALANCES)
-    earnings_1h_btc_sum = sum(b["Earnings_1h_BTC"] for b in VALID_BALANCES)
-    all_profit_btc = float(VALID_CURRENT_PROFIT["AllProfitBTC"])
+    rate = float(VALID_CURRENT_PROFIT.Rates["USD"])
+    earnings_btc_sum = sum(b.Earnings_BTC for b in VALID_BALANCES)
+    total_btc_sum = sum(b.Total_BTC for b in VALID_BALANCES)
+    earnings_1w_btc_sum = sum(b.Earnings_1w_BTC for b in VALID_BALANCES)
+    earnings_1d_btc_sum = sum(b.Earnings_1d_BTC for b in VALID_BALANCES)
+    earnings_1h_btc_sum = sum(b.Earnings_1h_BTC for b in VALID_BALANCES)
 
     state = hass.states.get("sensor.rainbowminer_total_earnings")
     assert state is not None
@@ -165,7 +130,7 @@ async def test_currency_sensors(
 
     state = hass.states.get("sensor.rainbowminer_estimated_daily_profit")
     assert state is not None
-    assert state.state == str(round(all_profit_btc * rate, 10))
+    assert state.state == str(round(VALID_CURRENT_PROFIT.AllProfitBTC * rate, 10))
 
     state = hass.states.get("sensor.rainbowminer_weekly_earnings")
     assert state is not None
@@ -181,10 +146,13 @@ async def test_currency_sensors(
 
 
 async def test_currency_sensors_not_created_without_currency(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_rainbowminer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test currency sensors are not created when no HA currency is set."""
-    await _setup(hass, aioclient_mock, currency=None)
+    hass.config.currency = None
+    await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.rainbowminer_total_earnings") is None
     assert hass.states.get("sensor.rainbowminer_unpaid_balance") is None
@@ -195,14 +163,18 @@ async def test_currency_sensors_not_created_without_currency(
 
 
 async def test_currency_sensors_unavailable_when_rate_missing(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_rainbowminer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test currency sensors are unavailable when the currency isn't in Rates."""
-    profit = {
-        **VALID_CURRENT_PROFIT,
-        "Rates": {"EUR": 55000.0},
-    }
-    await _setup(hass, aioclient_mock, currency="USD", current_profit=profit)
+    hass.config.currency = "USD"
+    mock_rainbowminer_client.get_current_profit.return_value = CurrentProfit(
+        AllProfitBTC=VALID_CURRENT_PROFIT.AllProfitBTC,
+        Rates={"EUR": 55000.0},
+        Power=VALID_CURRENT_PROFIT.Power,
+    )
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.rainbowminer_total_earnings")
     assert state is not None
@@ -214,10 +186,13 @@ async def test_currency_sensors_unavailable_when_rate_missing(
 
 
 async def test_mbtc_sensors_unavailable_without_balances(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_rainbowminer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test balance-derived mBTC sensors are unknown when no balances."""
-    await _setup(hass, aioclient_mock, balances=[])
+    mock_rainbowminer_client.get_balances.return_value = []
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.rainbowminer_total_earnings_mbtc")
     assert state is not None
@@ -230,14 +205,14 @@ async def test_mbtc_sensors_unavailable_without_balances(
 
 async def test_device_info(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    mock_rainbowminer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the device registry entry contains the software version."""
-    entry = await _setup(hass, aioclient_mock)
+    await setup_integration(hass, mock_config_entry)
 
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, entry.entry_id), entry.entry_id
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device is not None
-    assert device.sw_version == "5.0.0"
