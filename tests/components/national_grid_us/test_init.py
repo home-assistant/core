@@ -4,13 +4,12 @@ from unittest.mock import AsyncMock, patch
 
 from py_nationalgrid.exceptions import CannotConnectError, InvalidAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import ENTITY_ELECTRIC_COST, ENTITY_ELECTRIC_USAGE, make_api_mock
-
-from tests.common import MockConfigEntry
 
 PATCH_CLIENT = (
     "homeassistant.components.national_grid_us.coordinator.NationalGridClient"
@@ -50,13 +49,27 @@ async def test_setup_entry_auth_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_entry_connect_error(
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(CannotConnectError("Timeout"), id="cannot_connect"),
+        pytest.param(
+            ValueError("GraphQL errors encountered"), id="graphql_value_error"
+        ),
+    ],
+)
+async def test_setup_entry_update_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    error: Exception,
 ) -> None:
-    """Test setup with connection error results in retry."""
+    """Test setup retries when the first refresh fails.
+
+    py-nationalgrid raises a bare ValueError from GraphQLResponse.raise_on_errors
+    for GraphQL error payloads, so it must be handled as an update failure.
+    """
     api = make_api_mock()
-    api.get_billing_account = AsyncMock(side_effect=CannotConnectError("Timeout"))
+    api.get_billing_account = AsyncMock(side_effect=error)
 
     with patch(PATCH_CLIENT, return_value=api):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -90,6 +103,15 @@ async def test_sensor_missing_usage_data(
 
 
 @pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(CannotConnectError("Timeout"), id="cannot_connect"),
+        pytest.param(
+            ValueError("GraphQL errors encountered"), id="graphql_value_error"
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     ("method", "entity_id"),
     [
         ("get_energy_usages", ENTITY_ELECTRIC_USAGE),
@@ -101,10 +123,15 @@ async def test_sensor_api_errors(
     mock_config_entry: MockConfigEntry,
     method: str,
     entity_id: str,
+    error: Exception,
 ) -> None:
-    """Test sensors handle usage and cost API errors gracefully."""
+    """Test sensors handle usage and cost API errors gracefully.
+
+    A bare ValueError from py-nationalgrid's raise_on_errors must degrade to an
+    empty list like the typed errors, leaving the entry loaded.
+    """
     api = make_api_mock()
-    getattr(api, method).side_effect = CannotConnectError("Timeout")
+    getattr(api, method).side_effect = error
 
     with patch(PATCH_CLIENT, return_value=api):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

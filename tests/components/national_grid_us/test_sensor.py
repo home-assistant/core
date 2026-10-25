@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.national_grid_us.const import CONF_ACCOUNT_ID, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -22,8 +23,6 @@ from .conftest import (
     make_api_mock,
     mock_billing_account,
 )
-
-from tests.common import MockConfigEntry
 
 PATCH_CLIENT = (
     "homeassistant.components.national_grid_us.coordinator.NationalGridClient"
@@ -49,7 +48,7 @@ async def test_sensor_entities_created(
     assert state is not None
     assert float(state.state) == 120.5
 
-    # Gas meter - usage (CCF converted to m³ by HA)
+    # Gas meter - usage (filtered by usageType THERMS)
     state = hass.states.get(ENTITY_GAS_USAGE)
     assert state is not None
     assert float(state.state) > 0

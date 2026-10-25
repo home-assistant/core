@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+import probatio
 from py_nationalgrid import NationalGridClient, NationalGridConfig, create_cookie_jar
 from py_nationalgrid.exceptions import (
     CannotConnectError,
@@ -10,7 +11,6 @@ from py_nationalgrid.exceptions import (
     NationalGridError,
     RetryExhaustedError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -51,7 +51,7 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except CannotConnectError:
                 errors["base"] = "cannot_connect"
-            except NationalGridError:
+            except NationalGridError, ValueError:
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
@@ -79,17 +79,19 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME,
-                        default=(user_input or {}).get(CONF_USERNAME, vol.UNDEFINED),
+                        default=(user_input or {}).get(
+                            CONF_USERNAME, probatio.UNDEFINED
+                        ),
                     ): selector.TextSelector(
                         selector.TextSelectorConfig(
                             type=selector.TextSelectorType.TEXT,
                         ),
                     ),
-                    vol.Required(CONF_PASSWORD): selector.TextSelector(
+                    probatio.Required(CONF_PASSWORD): selector.TextSelector(
                         selector.TextSelectorConfig(
                             type=selector.TextSelectorType.PASSWORD,
                         ),
@@ -133,7 +135,7 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
                 break
         return account_id
 
-    def _get_account_selection_schema(self) -> vol.Schema:
+    def _get_account_selection_schema(self) -> probatio.Schema:
         """Get the schema for account selection."""
         options: list[selector.SelectOptionDict] = []
         for account in self._accounts:
@@ -146,9 +148,9 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
                     label=label,
                 )
             )
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_ACCOUNT_ID): selector.SelectSelector(
+                probatio.Required(CONF_ACCOUNT_ID): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=options,
                         mode=selector.SelectSelectorMode.LIST,
@@ -180,6 +182,7 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
                     CannotConnectError,
                     RetryExhaustedError,
                     NationalGridError,
+                    ValueError,
                 ) as err:
                     _LOGGER.debug(
                         "Could not fetch service address for account %s: %s",

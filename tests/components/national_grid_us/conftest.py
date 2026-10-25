@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.national_grid_us.const import CONF_ACCOUNT_ID, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_USERNAME = "testuser@example.com"
 MOCK_PASSWORD = "testpassword123"
@@ -76,7 +75,7 @@ def mock_usages() -> list[dict]:
     """Return mock energy usages."""
     return [
         {"usageType": "TOTAL_KWH", "usageYearMonth": 202501, "usage": 500.0},
-        {"usageType": "CCF", "usageYearMonth": 202501, "usage": 30.0},
+        {"usageType": "THERMS", "usageYearMonth": 202501, "usage": 30.0},
     ]
 
 

@@ -8,6 +8,7 @@ from py_nationalgrid.exceptions import (
     NationalGridError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.national_grid_us.const import CONF_ACCOUNT_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_ACCOUNT_ID, MOCK_ACCOUNT_ID_2, MOCK_PASSWORD, MOCK_USERNAME
-
-from tests.common import MockConfigEntry
 
 PATCH_CLIENT = (
     "homeassistant.components.national_grid_us.config_flow.NationalGridClient"
@@ -55,9 +54,11 @@ async def test_user_step_single_account(hass: HomeAssistant) -> None:
     client = _mock_client([{"billingAccountId": MOCK_ACCOUNT_ID}])
     with patch(PATCH_CLIENT, return_value=client):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -80,13 +81,16 @@ async def test_user_step_single_account_without_service_address(
     )
     with patch(PATCH_CLIENT, return_value=client):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_ACCOUNT_ID
+    assert result["result"].unique_id == MOCK_ACCOUNT_ID
 
 
 async def test_user_step_multiple_accounts(hass: HomeAssistant) -> None:
@@ -99,9 +103,11 @@ async def test_user_step_multiple_accounts(hass: HomeAssistant) -> None:
     )
     with patch(PATCH_CLIENT, return_value=client):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -114,6 +120,7 @@ async def test_user_step_multiple_accounts(hass: HomeAssistant) -> None:
         (InvalidAuthError("Bad creds"), "invalid_auth"),
         (CannotConnectError("Timeout"), "cannot_connect"),
         (NationalGridError("Something broke"), "unknown"),
+        (ValueError("GraphQL errors encountered"), "unknown"),
     ],
 )
 async def test_user_step_errors(
@@ -124,9 +131,11 @@ async def test_user_step_errors(
     client.get_linked_accounts = AsyncMock(side_effect=side_effect)
     with patch(PATCH_CLIENT, return_value=client):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -150,9 +159,11 @@ async def test_user_step_no_accounts_aborts(hass: HomeAssistant) -> None:
     client = _mock_client([])
     with patch(PATCH_CLIENT, return_value=client):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -179,9 +190,11 @@ async def test_select_account_labels_include_service_address(
     )
     with patch(PATCH_CLIENT, return_value=client):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
         )
 
     assert _select_labels(result) == [
@@ -203,9 +216,11 @@ async def test_select_account_labels_fallback_when_address_unavailable(
     client.get_billing_account = AsyncMock(side_effect=CannotConnectError("Timeout"))
     with patch(PATCH_CLIENT, return_value=client):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
         )
 
     assert _select_labels(result) == [
@@ -224,9 +239,11 @@ async def test_select_account_step(hass: HomeAssistant) -> None:
     )
     with patch(PATCH_CLIENT, return_value=client):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -266,13 +283,16 @@ async def test_user_step_skips_already_configured_account(
     )
     with patch(PATCH_CLIENT, return_value=client):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_ACCOUNT_ID] == MOCK_ACCOUNT_ID_2
+    assert result["result"].unique_id == MOCK_ACCOUNT_ID_2
 
 
 async def test_already_configured(hass: HomeAssistant) -> None:
@@ -292,9 +312,11 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     client = _mock_client([{"billingAccountId": MOCK_ACCOUNT_ID}])
     with patch(PATCH_CLIENT, return_value=client):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
         )
 
     assert result["type"] is FlowResultType.ABORT

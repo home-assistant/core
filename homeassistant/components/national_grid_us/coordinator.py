@@ -31,7 +31,7 @@ type NationalGridConfigEntry = ConfigEntry[NationalGridDataUpdateCoordinator]
 # Maps normalized (uppercase) fuel type to the API's usageType field value
 _FUEL_TYPE_TO_USAGE_TYPE: dict[str, str] = {
     "ELECTRIC": "TOTAL_KWH",
-    "GAS": "CCF",
+    "GAS": "THERMS",
 }
 
 
@@ -97,7 +97,12 @@ class NationalGridDataUpdateCoordinator(
             data = await self._fetch_account_data(account_id, today, from_month)
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(err) from err
-        except (CannotConnectError, RetryExhaustedError, NationalGridError) as err:
+        except (
+            CannotConnectError,
+            RetryExhaustedError,
+            NationalGridError,
+            ValueError,
+        ) as err:
             raise UpdateFailed(
                 f"Failed to fetch data for account {account_id}: {err}"
             ) from err
@@ -130,7 +135,12 @@ class NationalGridDataUpdateCoordinator(
             usages = await self.api.get_energy_usages(
                 account_number=account_id, from_month=from_month
             )
-        except (CannotConnectError, RetryExhaustedError, NationalGridError) as err:
+        except (
+            CannotConnectError,
+            RetryExhaustedError,
+            NationalGridError,
+            ValueError,
+        ) as err:
             _LOGGER.debug("Could not fetch usages for account %s: %s", account_id, err)
             usages = []
 
@@ -146,6 +156,7 @@ class NationalGridDataUpdateCoordinator(
                 CannotConnectError,
                 RetryExhaustedError,
                 NationalGridError,
+                ValueError,
             ) as err:
                 _LOGGER.debug(
                     "Could not fetch costs for account %s: %s", account_id, err
