@@ -6,9 +6,7 @@
     "abort": {
       "already_configured": "This document is already configured",
       "create_document_failure": "Unable to create the document. Check that the Google Docs API is enabled in your Google Cloud project and try again.",
-      "missing_scope": "The required file permission was not granted. Start setup again and allow access to files used with this app.",
-      "open_document_failure": "Unable to open the existing document. Use the Google account that owns it and check that the document still exists and the Google Docs API is enabled.",
-      "reauth_successful": "Reauthentication was successful"
+      "missing_scope": "The required file permission was not granted. Start setup again and allow access to files used with this app."
     },
     "create_entry": {
       "default": "Successfully authenticated and document created at: {url}"
@@ -25,10 +23,6 @@
           "implementation": "[%key:common::config_flow::description::implementation%]"
         },
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
-      },
-      "reauth_confirm": {
-        "description": "Authorize your Google account again to reconnect the existing document. A new document will not be created.",
-        "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
   },
@@ -37,7 +31,7 @@
       "message": "Failed to append text to the Google document"
     },
     "auth_failed": {
-      "message": "Google account authorization expired. Reauthenticate Google Docs in Settings > Devices & services."
+      "message": "Google account authorization expired."
     },
     "cannot_connect": {
       "message": "Unable to connect to Google. Try again later."
@@ -69,7 +63,7 @@
       "fields": {
         "config_entry": {
           "description": "The document to read.",
-          "name": "Document"
+          "name": "[%key:component::google_docs::services::append_text::fields::config_entry::name%]"
         }
       },
       "name": "Get text"

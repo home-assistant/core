@@ -64,13 +64,12 @@ GET_TEXT_SCHEMA = probatio.Schema(
 )
 
 
-async def _async_access_token(call: ServiceCall, entry: GoogleDocsConfigEntry) -> str:
-    """Get a valid token and start reauthentication when authorization expires."""
+async def _async_access_token(entry: GoogleDocsConfigEntry) -> str:
+    """Get a valid token and translate refresh failures."""
     session = entry.runtime_data
     try:
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
-        entry.async_start_reauth(call.hass)
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="auth_failed"
         ) from err
@@ -81,14 +80,11 @@ async def _async_access_token(call: ServiceCall, entry: GoogleDocsConfigEntry) -
     return cast(str, session.token[CONF_ACCESS_TOKEN])
 
 
-def _raise_action_error(
-    call: ServiceCall, entry: GoogleDocsConfigEntry, err: Exception, action: str
-) -> NoReturn:
+def _raise_action_error(err: Exception, action: str) -> NoReturn:
     """Translate Google errors without including document text in messages."""
     if isinstance(err, GoogleAuthError) or (
         isinstance(err, HttpError) and err.resp.status == 401
     ):
-        entry.async_start_reauth(call.hass)
         key = "auth_failed"
     elif isinstance(err, HttpError) and err.resp.status in (403, 404):
         key = "document_not_accessible"
@@ -102,7 +98,7 @@ async def _async_append_text(call: ServiceCall) -> None:
     entry: GoogleDocsConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[GoogleDocsServiceArgument.CONFIG_ENTRY]
     )
-    access_token = await _async_access_token(call, entry)
+    access_token = await _async_access_token(entry)
     assert entry.unique_id is not None
     try:
         await call.hass.async_add_executor_job(
@@ -112,7 +108,7 @@ async def _async_append_text(call: ServiceCall) -> None:
             call.data[GoogleDocsServiceArgument.TEXT],
         )
     except gdocs_client.API_ERRORS as err:
-        _raise_action_error(call, entry, err, "append")
+        _raise_action_error(err, "append")
 
 
 async def _async_get_text(call: ServiceCall) -> ServiceResponse:
@@ -120,14 +116,14 @@ async def _async_get_text(call: ServiceCall) -> ServiceResponse:
     entry: GoogleDocsConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[GoogleDocsServiceArgument.CONFIG_ENTRY]
     )
-    access_token = await _async_access_token(call, entry)
+    access_token = await _async_access_token(entry)
     assert entry.unique_id is not None
     try:
         document = await call.hass.async_add_executor_job(
             gdocs_client.get_document, access_token, entry.unique_id
         )
     except gdocs_client.API_ERRORS as err:
-        _raise_action_error(call, entry, err, "get")
+        _raise_action_error(err, "get")
 
     return {
         "document_id": entry.unique_id,

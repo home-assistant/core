@@ -1,4 +1,4 @@
-"""Test OAuth setup and reauthentication through the actual HA config flow."""
+"""Test OAuth setup through the actual HA config flow."""
 
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -176,92 +176,6 @@ async def test_missing_scope(
     mock_api["create_document"].assert_called_once_with(
         "new-access-token", "Home Assistant"
     )
-
-
-@pytest.mark.usefixtures("setup_credentials")
-async def test_reauth_preserves_document(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_api: dict[str, MagicMock],
-) -> None:
-    """Reauthentication reconnects the existing document without creating another."""
-    config_entry.add_to_hass(hass)
-    config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
-    flow = hass.config_entries.flow.async_progress()[0]
-    assert flow["step_id"] == "reauth_confirm"
-    confirm = await hass.config_entries.flow.async_configure(flow["flow_id"])
-    assert confirm["step_id"] == "reauth_confirm"
-    result = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
-    result = await finish_oauth(
-        hass, await hass_client_no_auth(), aioclient_mock, result
-    )
-    assert result["reason"] == "reauth_successful"
-    assert config_entry.unique_id == DOCUMENT_ID
-    assert config_entry.data["token"]["access_token"] == "new-access-token"
-    mock_api["create_document"].assert_not_called()
-    mock_api["get_document"].assert_called_once_with(
-        "new-access-token", DOCUMENT_ID, False
-    )
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-
-@pytest.mark.usefixtures("setup_credentials")
-@pytest.mark.parametrize(
-    ("error", "scope", "reason"),
-    [
-        pytest.param(
-            http_error(404),
-            DEFAULT_ACCESS,
-            "open_document_failure",
-            id="inaccessible-document",
-        ),
-        pytest.param(None, "", "missing_scope", id="missing-scope"),
-    ],
-)
-async def test_reauth_error_recovery(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_api: dict[str, MagicMock],
-    error: Exception | None,
-    scope: str,
-    reason: str,
-) -> None:
-    """Reauthentication preserves the original document through error recovery."""
-    mock_api["get_document"].side_effect = error
-    config_entry.add_to_hass(hass)
-    config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
-    flow = hass.config_entries.flow.async_progress()[0]
-    result = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
-    result = await finish_oauth(
-        hass, await hass_client_no_auth(), aioclient_mock, result, scope=scope
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-    assert config_entry.unique_id == DOCUMENT_ID
-    assert config_entry.data["token"]["access_token"] == "mock-access-token"
-    mock_api["create_document"].assert_not_called()
-
-    mock_api["get_document"].side_effect = None
-    aioclient_mock.clear_requests()
-    config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
-    flow = hass.config_entries.flow.async_progress()[0]
-    result = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
-    result = await finish_oauth(
-        hass, await hass_client_no_auth(), aioclient_mock, result
-    )
-    assert result["reason"] == "reauth_successful"
-    assert config_entry.unique_id == DOCUMENT_ID
-    assert config_entry.data["token"]["access_token"] == "new-access-token"
-    mock_api["get_document"].assert_called_with("new-access-token", DOCUMENT_ID, False)
-    mock_api["create_document"].assert_not_called()
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 @pytest.mark.usefixtures("setup_credentials")

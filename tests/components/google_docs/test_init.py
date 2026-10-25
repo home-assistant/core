@@ -44,7 +44,7 @@ async def test_missing_scope(
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert hass.config_entries.flow.async_progress()[0]["step_id"] == "reauth_confirm"
+    assert hass.config_entries.flow.async_progress() == []
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -73,6 +73,7 @@ async def test_document_access_failure(
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is state
+    assert hass.config_entries.flow.async_progress() == []
     mock_api["create_document"].assert_not_called()
 
 
@@ -95,13 +96,11 @@ async def test_expired_token_is_refreshed(
 
 @pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize(
-    ("status", "error", "state", "reauth_count"),
+    ("status", "error", "state"),
     [
-        pytest.param(400, None, ConfigEntryState.SETUP_ERROR, 1, id="invalid-grant"),
-        pytest.param(503, None, ConfigEntryState.SETUP_RETRY, 0, id="server-error"),
-        pytest.param(
-            200, TimeoutError(), ConfigEntryState.SETUP_RETRY, 0, id="timeout"
-        ),
+        pytest.param(400, None, ConfigEntryState.SETUP_ERROR, id="invalid-grant"),
+        pytest.param(503, None, ConfigEntryState.SETUP_RETRY, id="server-error"),
+        pytest.param(200, TimeoutError(), ConfigEntryState.SETUP_RETRY, id="timeout"),
     ],
 )
 async def test_refresh_failure(
@@ -112,9 +111,8 @@ async def test_refresh_failure(
     status: int,
     error: Exception | None,
     state: ConfigEntryState,
-    reauth_count: int,
 ) -> None:
-    """Permanent token failure starts reauth while temporary failure retries setup."""
+    """Permanent token failure stops setup while temporary failure retries it."""
     config_entry.data["token"]["expires_at"] = 0
     aioclient_mock.post(
         TOKEN_URI, status=status, json={"error": "invalid_grant"}, exc=error
@@ -123,6 +121,6 @@ async def test_refresh_failure(
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is state
-    assert len(hass.config_entries.flow.async_progress()) == reauth_count
+    assert hass.config_entries.flow.async_progress() == []
     mock_api["get_document"].assert_not_called()
     mock_api["create_document"].assert_not_called()

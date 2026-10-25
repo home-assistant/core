@@ -60,9 +60,7 @@ async def test_get_text(
     ("action", "fields", "return_response"),
     [("append_text", {"text": "Entry"}, False), ("get_text", {}, True)],
 )
-@pytest.mark.parametrize(
-    ("status", "reauth_count"), [(401, 1), (403, 0), (404, 0), (429, 0), (503, 0)]
-)
+@pytest.mark.parametrize("status", [401, 403, 404, 429, 503])
 async def test_action_http_error(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
@@ -71,9 +69,8 @@ async def test_action_http_error(
     fields: dict[str, str],
     return_response: bool,
     status: int,
-    reauth_count: int,
 ) -> None:
-    """Auth failures reauthenticate and access/server failures surface clearly."""
+    """Auth, access, and server failures surface without starting reauthentication."""
     mock_api["append_text"].side_effect = http_error(status)
     mock_api["get_document"].side_effect = http_error(status)
     data = {"config_entry": setup_integration.entry_id, **fields}
@@ -86,7 +83,7 @@ async def test_action_http_error(
             return_response=return_response,
         )
     await hass.async_block_till_done()
-    assert len(hass.config_entries.flow.async_progress()) == reauth_count
+    assert hass.config_entries.flow.async_progress() == []
 
 
 async def test_append_rejects_empty_text(
@@ -214,11 +211,11 @@ async def test_action_refresh_survives_unload(
     ],
 )
 @pytest.mark.parametrize(
-    ("status", "error", "reauth_count", "translation_key"),
+    ("status", "error", "translation_key"),
     [
-        pytest.param(400, None, 1, "auth_failed", id="invalid-grant"),
-        pytest.param(503, None, 0, "cannot_connect", id="server-error"),
-        pytest.param(200, TimeoutError(), 0, "cannot_connect", id="timeout"),
+        pytest.param(400, None, "auth_failed", id="invalid-grant"),
+        pytest.param(503, None, "cannot_connect", id="server-error"),
+        pytest.param(200, TimeoutError(), "cannot_connect", id="timeout"),
     ],
 )
 async def test_action_refresh_failure(
@@ -231,10 +228,9 @@ async def test_action_refresh_failure(
     return_response: bool,
     status: int,
     error: Exception | None,
-    reauth_count: int,
     translation_key: str,
 ) -> None:
-    """A failed token refresh prevents Docs calls and only invalid grants reauth."""
+    """A failed token refresh prevents Docs calls and surfaces translated errors."""
     token = {**setup_integration.data["token"], "expires_at": 0}
     hass.config_entries.async_update_entry(
         setup_integration, data={**setup_integration.data, "token": token}
@@ -256,4 +252,4 @@ async def test_action_refresh_failure(
     assert exc.value.translation_key == translation_key
     mock_api["append_text"].assert_not_called()
     mock_api["get_document"].assert_not_called()
-    assert len(hass.config_entries.flow.async_progress()) == reauth_count
+    assert hass.config_entries.flow.async_progress() == []
