@@ -258,6 +258,7 @@ FLOWS = {
         "flume",
         "fluss",
         "flux_led",
+        "folder",
         "folder_watcher",
         "foreca",
         "forecast_solar",
