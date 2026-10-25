@@ -404,7 +404,13 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
                 # not held over as an expired end time within tolerance.
                 self._remaining_end = self._new_remaining_filter()
                 return None
-            return self._remaining_end(remaining)
+            end_time = self._remaining_end(remaining)
+            if end_time <= utcnow():
+                # A restart without a zero reading can leave the held end time
+                # in the past; drop it so the new countdown is reported fresh.
+                self._remaining_end = self._new_remaining_filter()
+                end_time = self._remaining_end(remaining)
+            return end_time
         if (value_fn := self.entity_description.value_fn) is not None:
             value: float | int | str | datetime | None = value_fn(self.coordinator.data)
             return value
