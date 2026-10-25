@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, cast
+from typing import Any, Concatenate, cast, override
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,6 +27,12 @@ class WebOsTvEntity(CoordinatorEntity[WebOsTvDataUpdateCoordinator]):
             manufacturer="LG",
             name=entry.title,
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.device_available
 
 
 def cmd[_EntityT: WebOsTvEntity, _R, **_P](
