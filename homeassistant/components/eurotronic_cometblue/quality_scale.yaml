@@ -67,7 +67,9 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: This integration doesn't have settings in its configuration flow.
   repair-issues:
     status: exempt
     comment: Not required.
