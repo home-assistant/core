@@ -1700,7 +1700,9 @@ async def test_double_system_messages(
     """Test error for two or more system prompts."""
     conversation_id = "conversation_id"
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         chat_log.content = [
@@ -3869,7 +3871,9 @@ async def test_history_conversion(
     conversation_id = "conversation_id"
     mock_create_stream.return_value = [create_content_block(0, ["Yes, I am sure!"])]
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         chat_log.content = content
@@ -3898,7 +3902,9 @@ async def test_history_conversion_skips_whitespace_content(
     conversation_id = "conversation_id"
     mock_create_stream.return_value = [create_content_block(0, ["Yes, I am sure!"])]
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         chat_log.content = [
