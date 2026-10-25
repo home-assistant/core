@@ -7,7 +7,10 @@ import probatio
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.service import async_extract_config_entry_ids
+from homeassistant.helpers.service import (
+    async_extract_config_entry_ids,
+    verify_domain_control,
+)
 
 from .const import DOMAIN
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
@@ -37,6 +40,7 @@ SERVICES = {
 }
 
 
+@verify_domain_control(DOMAIN)
 async def _service_handler(call: ServiceCall) -> None:
     """Call one of the Fritzbox services."""
 
