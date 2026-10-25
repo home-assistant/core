@@ -688,11 +688,12 @@ async def test_camera_image_resolution(
 
 
 # A camera with a 1920x1080 sensor and user-defined zones. Zone 1 came with
-# the camera, zones 2 and 3 are user zones, and zones 4 and 5 are malformed.
+# the camera, zones 2 and 3 are user zones, zone 4 has an unknown source and
+# zone 5 has no shape.
 ZONE_ATTRIBUTES = {
     "1/29/1": [3, 29, 1360, 1361, 1363],
     "1/1360/0": 5,
-    "1/1360/1": 8,
+    "1/1360/1": 6,
     "1/1360/2": [
         {
             "0": 1,
@@ -743,10 +744,11 @@ ZONE_ATTRIBUTES = {
     ],
     "1/1360/3": [],
     "1/1360/4": 5,
+    "1/1360/5": 3,
     "1/1360/6": {"0": 1919, "1": 1079},
     "1/1360/65528": [1],
     "1/1360/65529": [0, 2, 3, 4, 5],
-    "1/1360/65531": [0, 1, 2, 3, 4, 6, 65528, 65529, 65531, 65532, 65533],
+    "1/1360/65531": [0, 1, 2, 3, 4, 5, 6, 65528, 65529, 65531, 65532, 65533],
     "1/1360/65532": 0b0101,
     "1/1360/65533": 1,
     "1/1361/2": {"0": 1920, "1": 1080, "2": 30},
@@ -818,6 +820,14 @@ async def test_get_camera_zones(
             2,
             ZoneManagement.Commands.UpdateTwoDCartesianZone(zoneID=2, zone=ZONE),
             id="update",
+        ),
+        pytest.param(
+            ZONE_ATTRIBUTES,
+            {**ZONE_DATA, "zone_id": 5},
+            None,
+            5,
+            ZoneManagement.Commands.UpdateTwoDCartesianZone(zoneID=5, zone=ZONE),
+            id="update_zone_without_shape",
         ),
         pytest.param(
             ZONE_ATTRIBUTES,
@@ -904,11 +914,18 @@ async def test_clear_camera_zone(
             id="clear_no_zone_cluster",
         ),
         pytest.param(
-            {**ZONE_ATTRIBUTES, "1/1360/6": {"0": 0, "1": 0}},
+            {**ZONE_ATTRIBUTES, "1/1360/6": None},
             "set_camera_zone",
             ZONE_DATA,
             "does not support zones",
             id="set_no_maximum",
+        ),
+        pytest.param(
+            {**ZONE_ATTRIBUTES, "1/1360/6": {"0": 0, "1": 0}},
+            "set_camera_zone",
+            ZONE_DATA,
+            "does not support zones",
+            id="set_zero_maximum",
         ),
         pytest.param(
             {**ZONE_ATTRIBUTES, "1/1360/65532": 0b0001},
@@ -935,28 +952,35 @@ async def test_clear_camera_zone(
             ZONE_ATTRIBUTES,
             "set_camera_zone",
             {**ZONE_DATA, "zone_id": 1},
-            "Zone 1 of camera.mock_camera isn't a user zone",
+            "Zone 1 of camera.mock_camera is not a user zone and cannot be changed",
             id="set_manufacturer_zone",
         ),
         pytest.param(
             ZONE_ATTRIBUTES,
             "clear_camera_zone",
             {"zone_id": 1},
-            "Zone 1 of camera.mock_camera isn't a user zone",
+            "Zone 1 of camera.mock_camera is not a user zone and cannot be removed",
             id="clear_manufacturer_zone",
         ),
         pytest.param(
             ZONE_ATTRIBUTES,
             "clear_camera_zone",
             {"zone_id": 4},
-            "Zone 4 of camera.mock_camera isn't a user zone",
+            "Zone 4 of camera.mock_camera is not a user zone and cannot be removed",
             id="clear_unknown_source_zone",
         ),
         pytest.param(
             ZONE_ATTRIBUTES,
             "set_camera_zone",
+            {**ZONE_DATA, "zone_id": 4},
+            "Zone 4 of camera.mock_camera is not a user zone and cannot be changed",
+            id="set_unknown_source_zone",
+        ),
+        pytest.param(
+            ZONE_ATTRIBUTES,
+            "set_camera_zone",
             {**ZONE_DATA, "zone_id": 3},
-            "Zone 3 of camera.mock_camera is a motion zone",
+            "Home Assistant cannot change motion zones yet",
             id="set_motion_zone",
         ),
     ],
@@ -1002,6 +1026,11 @@ async def test_get_camera_zones_not_supported(hass: HomeAssistant) -> None:
         pytest.param({**ZONE_DATA, "name": "\u00e4" * 17}, id="long_name_bytes"),
         pytest.param({**ZONE_DATA, "vertices": ZONE_DATA["vertices"][:2]}, id="two"),
         pytest.param({**ZONE_DATA, "vertices": [{"x": 101, "y": 0}] * 3}, id="x_101"),
+        pytest.param({**ZONE_DATA, "vertices": [{"x": 0, "y": 101}] * 3}, id="y_101"),
+        pytest.param(
+            {**ZONE_DATA, "vertices": [{"x": -1, "y": 0}] * 3}, id="x_negative"
+        ),
+        pytest.param({**ZONE_DATA, "zone_id": 65535}, id="zone_id_65535"),
         pytest.param({**ZONE_DATA, "color": "#FFF"}, id="color_short"),
         pytest.param({**ZONE_DATA, "color": "red"}, id="color_name"),
         pytest.param({**ZONE_DATA, "color": "#FF0000\n"}, id="color_newline"),

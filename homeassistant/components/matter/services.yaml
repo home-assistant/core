@@ -9,7 +9,7 @@ clear_camera_zone:
       selector:
         number:
           min: 0
-          max: 65535
+          max: 65534
           step: 1
           mode: box
 
@@ -110,7 +110,7 @@ set_camera_zone:
       selector:
         number:
           min: 0
-          max: 65535
+          max: 65534
           step: 1
           mode: box
     name:

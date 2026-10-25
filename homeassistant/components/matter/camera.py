@@ -331,13 +331,13 @@ class MatterCamera(MatterEntity, Camera):
         if ZoneFeature.kUserDefined not in features:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="camera_zones_not_editable",
+                translation_key="camera_user_zones_not_supported",
                 translation_placeholders={"entity_id": self.entity_id},
             )
         return features
 
     def _check_zone_editable(self, zone_id: int, *, remove: bool = False) -> None:
-        """Raise if the zone is known and can't be changed.
+        """Raise if the zone is known and can't be changed or removed.
 
         Unknown zone IDs are left to the camera, as the Zones attribute can
         lag behind a zone that was just created.
@@ -359,7 +359,11 @@ class MatterCamera(MatterEntity, Camera):
         if zone.zoneSource != ZoneManagement.Enums.ZoneSourceEnum.kUser:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="camera_zone_not_editable",
+                translation_key=(
+                    "camera_zone_not_removable"
+                    if remove
+                    else "camera_zone_not_editable"
+                ),
                 translation_placeholders=placeholders,
             )
         if (

@@ -39,7 +39,8 @@ ATTR_TEMPORARY_SETPOINT = "temporary_setpoint"
 
 SERVICE_WATER_HEATER_BOOST = "water_heater_boost"
 
-ZONE_ID = probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=65535))
+# Zone IDs wrap to 0 after 65534.
+ZONE_ID = probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=65534))
 ZONE_PERCENT = probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100))
 # Matter limits zone names to 32 bytes.
 ZONE_NAME_MAX_BYTES = 32

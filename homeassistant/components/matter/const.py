@@ -125,15 +125,11 @@ SERVICE_CREDENTIAL_TYPES = [
     CRED_TYPE_FACE,
 ]
 
-# --- Camera domain constants ---
-
-# Shared field keys
 ATTR_COLOR = "color"
 ATTR_USE = "use"
 ATTR_VERTICES = "vertices"
 ATTR_ZONE_ID = "zone_id"
 
-# Zone use mapping (Matter ZoneManagement ZoneUseEnum)
 _ZoneUse = clusters.ZoneManagement.Enums.ZoneUseEnum
 CAMERA_ZONE_USE_MAP: dict[int, str] = {
     _ZoneUse.kMotion: "motion",
@@ -144,15 +140,13 @@ CAMERA_ZONE_USE_REVERSE_MAP: dict[str, int] = {
     v: k for k, v in CAMERA_ZONE_USE_MAP.items()
 }
 
-# Zone source mapping (Matter ZoneManagement ZoneSourceEnum)
 _ZoneSource = clusters.ZoneManagement.Enums.ZoneSourceEnum
 CAMERA_ZONE_SOURCE_MAP: dict[int, str] = {
     _ZoneSource.kMfg: "manufacturer",
     _ZoneSource.kUser: "user",
 }
 
-# Zone uses allowed in the set service. Motion zones only act through
-# triggers, which aren't supported yet.
+# Motion zones only act through triggers, which aren't supported yet.
 SERVICE_CAMERA_ZONE_USES = ["privacy", "focus"]
 
 CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"

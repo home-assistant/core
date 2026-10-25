@@ -789,13 +789,16 @@
       "message": "{entity_id} does not support focus zones."
     },
     "camera_motion_zone_not_editable": {
-      "message": "Zone {zone_id} of {entity_id} is a motion zone, which can't be changed. It can only be removed."
+      "message": "Home Assistant cannot change motion zones yet. Zone {zone_id} of {entity_id} can only be removed."
+    },
+    "camera_user_zones_not_supported": {
+      "message": "{entity_id} does not allow changing its zones."
     },
     "camera_zone_not_editable": {
-      "message": "Zone {zone_id} of {entity_id} isn't a user zone and can't be changed."
+      "message": "Zone {zone_id} of {entity_id} is not a user zone and cannot be changed."
     },
-    "camera_zones_not_editable": {
-      "message": "{entity_id} does not allow changing its zones."
+    "camera_zone_not_removable": {
+      "message": "Zone {zone_id} of {entity_id} is not a user zone and cannot be removed."
     },
     "camera_zones_not_supported": {
       "message": "{entity_id} does not support zones."
@@ -917,7 +920,7 @@
           "name": "Color"
         },
         "name": {
-          "description": "The name of the zone, up to 32 bytes. Letters like ä take 2 bytes.",
+          "description": "The name of the zone, up to 32 bytes. Letters like ä take more than 1 byte.",
           "name": "Name"
         },
         "use": {

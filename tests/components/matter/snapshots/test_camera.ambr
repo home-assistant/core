@@ -109,7 +109,7 @@
   dict({
     'camera.mock_camera': dict({
       'max_user_defined_zones': 5,
-      'max_zones': 8,
+      'max_zones': 6,
       'zones': list([
         dict({
           'color': '#FF0000',
