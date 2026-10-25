@@ -1,5 +1,6 @@
 """The tests for the webdav todo component."""
 
+import asyncio
 from datetime import UTC, date, datetime
 from typing import Any
 from unittest.mock import MagicMock, Mock
@@ -1141,3 +1142,82 @@ async def test_update_after_write(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == expected_state
+
+    # The first update starts over with a new token, the second one skips again
+    await async_update_entity(hass, TEST_ENTITY)
+    reads = calendar.search.call_count
+    await async_update_entity(hass, TEST_ENTITY)
+    assert calendar.search.call_count == reads
+
+
+async def test_update_after_write_during_read(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+) -> None:
+    """Test a write during a full read is read on the next update."""
+    calendar.get_objects_by_sync_token.side_effect = [
+        sync_report("token-1"),
+        sync_report("token-2"),
+        sync_report("token-2"),
+    ]
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    def write_during_search(**kwargs: Any) -> list[Todo]:
+        asyncio.run_coroutine_threadsafe(
+            hass.services.async_call(
+                TODO_DOMAIN,
+                TodoServices.ADD_ITEM,
+                {ATTR_ITEM: "Cheese"},
+                target={ATTR_ENTITY_ID: TEST_ENTITY},
+                blocking=True,
+            ),
+            hass.loop,
+        ).result()
+        return []
+
+    calendar.search.side_effect = write_during_search
+    await async_update_entity(hass, TEST_ENTITY)
+
+    calendar.search.side_effect = None
+    calendar.search.return_value = [create_todo(calendar, "1", TODO_NEEDS_ACTION)]
+    await async_update_entity(hass, TEST_ENTITY)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+    calendar.get_objects_by_sync_token.assert_called_with(
+        "token-2", disable_fallback=True
+    )
+
+
+async def test_update_after_partial_delete(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+) -> None:
+    """Test the list is read in full after a delete that failed halfway."""
+    item1 = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
+    item2 = Todo(dav_client, None, TODO_NO_STATUS, calendar, "1")
+    item1.delete = Mock()
+    item2.delete = Mock(side_effect=DAVError)
+    calendar.search.return_value = [item1, item2]
+    calendar.get_todo_by_uid = Mock(side_effect={"2": item1, "1": item2}.get)
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    calendar.search.return_value = [item2]
+    with pytest.raises(HomeAssistantError, match="CalDAV delete error"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.REMOVE_ITEM,
+            {ATTR_ITEM: ["Cheese", "Milk"]},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+    await async_update_entity(hass, TEST_ENTITY)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"

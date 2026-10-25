@@ -152,13 +152,16 @@ class WebDavTodoListEntity(TodoListEntity):
         self._attr_unique_id = f"{config_entry_id}-{calendar.id}"
         self._sync_token: str | None = None
         self._skips_left = 0
+        self._writes = 0
+        self._writes_seen = 0
 
     async def async_update(self) -> None:
         """Update To-do list entity state."""
         changed, sync_token = await self.hass.async_add_executor_job(
             _get_changes, self._calendar, self._sync_token
         )
-        if not changed and self._skips_left:
+        writes = self._writes
+        if not changed and self._skips_left and writes == self._writes_seen:
             self._skips_left -= 1
             return
         todo_items = await self.hass.async_add_executor_job(
@@ -170,6 +173,7 @@ class WebDavTodoListEntity(TodoListEntity):
         self._attr_todo_items = todo_items
         self._sync_token = sync_token
         self._skips_left = MAX_SKIPPED_UPDATES
+        self._writes_seen = writes
 
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
@@ -187,7 +191,7 @@ class WebDavTodoListEntity(TodoListEntity):
             await self.hass.async_add_executor_job(
                 partial(self._calendar.add_todo, **item_data),
             )
-            self._skips_left = 0
+            self._writes += 1
             # refreshing async otherwise it would take too much time
             self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
         except (
@@ -244,7 +248,7 @@ class WebDavTodoListEntity(TodoListEntity):
                     obj_type="todo",
                 ),
             )
-            self._skips_left = 0
+            self._writes += 1
             # refreshing async otherwise it would take too much time
             self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
         except (
@@ -283,6 +287,6 @@ class WebDavTodoListEntity(TodoListEntity):
                 DAVError,
             ) as err:
                 raise HomeAssistantError(f"CalDAV delete error: {err}") from err
-        self._skips_left = 0
+            self._writes += 1
         # refreshing async otherwise it would take too much time
         self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
