@@ -49,18 +49,18 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import build_mocks, init_integration
 
-TEST__STATION = "123"
+TEST_STATION = "123"
 TEST_LATITUDE = 42.42
 TEST_LONGITUDE = -42.42
 
 FAKE_CONFIG = {
-    CONF_STATION: TEST__STATION,
-    CONF_LANGUAGE: "English",
+    CONF_STATION: TEST_STATION,
+    CONF_LANGUAGE: "english",
     CONF_LATITUDE: TEST_LATITUDE,
     CONF_LONGITUDE: TEST_LONGITUDE,
 }
 USER_INPUT = {
-    CONF_STATION: TEST__STATION,
+    CONF_STATION: TEST_STATION,
     CONF_LANGUAGE: "en",
     CONF_LOCATION: {
         CONF_LATITUDE: TEST_LATITUDE,

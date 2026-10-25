@@ -72,13 +72,13 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MAP_LANGUAGES = {"en": "English", "fr": "French"}
+MAP_LANGUAGES = {"en": "english", "fr": "erench"}
 
 
 async def validate_input(data):
     """Validate the user input allows us to connect."""
-    lat = data[CONF_LATITUDE]
-    lon = data[CONF_LONGITUDE]
+    lat = data[CONF_LOCATION][CONF_LATITUDE]
+    lon = data[CONF_LOCATION][CONF_LONGITUDE]
     station = data.get(CONF_STATION)
     lang = MAP_LANGUAGES[data[CONF_LANGUAGE]]
 
@@ -131,9 +131,8 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            location = user_input[CONF_LOCATION]
             try:
-                info = await validate_input({**user_input, **location})
+                info = await validate_input(user_input)
             except ET.ParseError, probatio.MultipleInvalid, ec_exc.UnknownStationId:
                 errors["base"] = "bad_station_id"
             except aiohttp.ClientConnectionError:
@@ -151,7 +150,7 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
                 # The combination of station and language are
                 # unique for all EC weather reporting
                 await self.async_set_unique_id(
-                    f"{info[CONF_STATION]}-{info[CONF_LANGUAGE].lower()}"
+                    f"{info[CONF_STATION]}-{info[CONF_LANGUAGE]}"
                 )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info.pop(CONF_TITLE), data=info)
@@ -172,7 +171,7 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
-                    probatio.Optional(CONF_LOCATION): LocationSelector(
+                    probatio.Required(CONF_LOCATION): LocationSelector(
                         LocationSelectorConfig(radius=False)
                     ),
                     probatio.Required(CONF_LANGUAGE, default="en"): LanguageSelector(
