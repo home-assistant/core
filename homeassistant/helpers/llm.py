@@ -200,7 +200,11 @@ class ToolAnnotations:
 
 
 class Tool:
-    """LLM Tool base class."""
+    """LLM Tool base class.
+
+    Tools may implement equality to allow merged APIs to deduplicate
+    interchangeable instances with the same name.
+    """
 
     name: str
     title: str | None = None
@@ -263,7 +267,7 @@ class APIInstance:
             if tool.name == tool_input.tool_name
             or (
                 isinstance(tool, NamespacedTool)
-                and tool.legacy_name == tool_input.tool_name
+                and tool_input.tool_name in tool.legacy_names
             )
         ]
         # A cached legacy name must not dispatch a different API's tool.
@@ -451,21 +455,17 @@ class IntentResponseDict(dict):
 
 
 class NamespacedTool(Tool):
-    """A tool that wraps another tool, prepending a namespace.
+    """A tool wrapper for merged API names and legacy aliases.
 
     This is used to support tools from multiple API. This tool dispatches
     the original tool with the original non-namespaced name.
     """
 
-    def __init__(
-        self, namespace: str, tool: Tool, *, legacy_namespace: str | None = None
-    ) -> None:
+    def __init__(self, namespace: str, tool: Tool) -> None:
         """Init the class."""
         self.namespace = namespace
         self.name = f"{namespace}__{tool.name}"
-        self.legacy_name = (
-            f"{legacy_namespace}__{tool.name}" if legacy_namespace is not None else None
-        )
+        self.legacy_names = {self.name}
         self.title = tool.title
         self.description = tool.description
         self.parameters = tool.parameters
@@ -516,26 +516,59 @@ class MergedAPI(API):
             await llm_api.async_get_api_instance(llm_context)
             for llm_api in self.llm_apis
         ]
-        prompt_parts = []
-        tools: list[Tool] = []
+        tools_by_name: dict[str, list[NamespacedTool]] = {}
+        api_tools: list[list[NamespacedTool]] = []
         for api_instance in llm_apis:
             namespace = unicode_slug.slugify(api_instance.api.id)
             legacy_namespace = unicode_slug.slugify(api_instance.api.name)
+            instance_tools = []
+            for tool in api_instance.tools:
+                candidates = tools_by_name.setdefault(tool.name, [])
+                merged_tool = next(
+                    (candidate for candidate in candidates if candidate.tool == tool),
+                    None,
+                )
+                if merged_tool is None:
+                    merged_tool = NamespacedTool(namespace, tool)
+                    candidates.append(merged_tool)
+                merged_tool.legacy_names.update(
+                    (f"{namespace}__{tool.name}", f"{legacy_namespace}__{tool.name}")
+                )
+                instance_tools.append(merged_tool)
+            api_tools.append(instance_tools)
+
+        tools = [tool for group in tools_by_name.values() for tool in group]
+        for name, group in tools_by_name.items():
+            if len({tool.namespace for tool in group}) != len(group):
+                raise ValueError("Tools within an API must have unique names")
+            if len(group) == 1:
+                group[0].name = name
+
+        # Advertised names must not collide with another tool's legacy aliases.
+        assigned_names: set[str] = set()
+        for tool in tools:
+            while tool.name in assigned_names or any(
+                tool is not other and tool.name in other.legacy_names for other in tools
+            ):
+                tool.name = f"{tool.namespace}__{tool.name}"
+            assigned_names.add(tool.name)
+
+        prompt_parts = []
+        for api_instance, instance_tools in zip(llm_apis, api_tools, strict=True):
+            namespace = unicode_slug.slugify(api_instance.api.id)
+            tool_names = ", ".join(tool.name for tool in instance_tools)
             prompt_parts.append(
-                f'Follow these instructions for tools from "{namespace}":\n'
+                f'Follow these instructions for tools from "{namespace}" '
+                f"({tool_names}):\n"
             )
             prompt_parts.append(api_instance.api_prompt)
             prompt_parts.append("\n\n")
-            tools.extend(
-                NamespacedTool(namespace, tool, legacy_namespace=legacy_namespace)
-                for tool in api_instance.tools
-            )
 
         return APIInstance(
             api=self,
             api_prompt="".join(prompt_parts),
             llm_context=llm_context,
-            tools=tools,
+            tools=list(tools),
             custom_serializer=self._custom_serializer(llm_apis),
         )
 

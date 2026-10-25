@@ -12,6 +12,7 @@ from pytest_homeassistant.common import (
     mock_integration,
 )
 
+from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script import ScriptConfig
@@ -1669,28 +1670,28 @@ async def test_merged_api(
 
     assert (
         instance.api_prompt
-        == """Follow these instructions for tools from "api-1":
+        == """Follow these instructions for tools from "api-1" (Tool_1):
 This is prompt 1
 
-Follow these instructions for tools from "api-2":
+Follow these instructions for tools from "api-2" (Tool_2):
 This is prompt 2
 
 """
     )
     assert [(tool.name, tool.description) for tool in instance.tools] == [
-        ("api-1__Tool_1", "Description 1"),
-        ("api-2__Tool_2", "Description 2"),
+        ("Tool_1", "Description 1"),
+        ("Tool_2", "Description 2"),
     ]
 
     # The test tool returns back the provided arguments so we can verify
     # the original tool is invoked with the correct tool name and args.
     result = await instance.async_call_tool(
-        llm.ToolInput(tool_name="api-1__Tool_1", tool_args={"arg1": "value1"})
+        llm.ToolInput(tool_name="Tool_1", tool_args={"arg1": "value1"})
     )
     assert result.data == {"result": {"Tool_1": {"arg1": "value1"}}}
 
     result = await instance.async_call_tool(
-        llm.ToolInput(tool_name="api-2__Tool_2", tool_args={"arg2": "value2"})
+        llm.ToolInput(tool_name="Tool_2", tool_args={"arg2": "value2"})
     )
     assert result.data == {"result": {"Tool_2": {"arg2": "value2"}}}
 
@@ -1732,10 +1733,108 @@ async def test_merged_api_legacy_names(
     llm.async_register_api(hass, second)
 
     instance = await llm.async_get_api(hass, ["first", "second"], llm_context)
+    assert [tool.name for tool in instance.tools] == [
+        "first__test_tool",
+        "second__second__test_tool",
+    ]
     result = await instance.async_call_tool(
         llm.ToolInput(tool_name=tool_name, tool_args={})
     )
     assert result.data == {"api": expected_api, "tool": "test_tool"}
+
+
+@pytest.mark.parametrize(
+    "tool_name",
+    [
+        "llm__GetDateTime",
+        "first__llm__GetDateTime",
+        "second__llm__GetDateTime",
+        "same-name__llm__GetDateTime",
+    ],
+)
+async def test_merged_api_equal_tools(
+    hass: HomeAssistant, llm_context: llm.LLMContext, tool_name: str
+) -> None:
+    """Equal tools are advertised once and retain aliases from every API."""
+    first = MyAPI(hass=hass, id="first", name="Same name")
+    first.tools = (
+        await llm_component.async_get_tools(hass, llm_context, "first")
+    ).tools
+    second = MyAPI(hass=hass, id="second", name="Same name")
+    second.tools = (
+        await llm_component.async_get_tools(hass, llm_context, "second")
+    ).tools
+
+    instance = await llm.MergedAPI([first, second]).async_get_api_instance(llm_context)
+
+    assert [tool.name for tool in instance.tools] == ["llm__GetDateTime"]
+    result = await instance.async_call_tool(llm.ToolInput(tool_name, {}))
+    assert "date" in result.data
+    assert "time" in result.data
+
+
+async def test_merged_api_generated_name_collision(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Namespace unique tools too when their names collide with generated names."""
+    first = MyAPI(hass=hass, id="first", name="First")
+    first_tool = llm.Tool()
+    first_tool.name = "test_tool"
+    first_tool.integration = "test"
+    first.tools = [first_tool]
+    second = MyAPI(hass=hass, id="second", name="Second")
+    second_tool = llm.Tool()
+    second_tool.name = "test_tool"
+    second_tool.integration = "test"
+    colliding_tool = llm.Tool()
+    colliding_tool.name = "first__test_tool"
+    colliding_tool.integration = "test"
+    second.tools = [second_tool, colliding_tool]
+
+    instance = await llm.MergedAPI([first, second]).async_get_api_instance(llm_context)
+
+    assert [tool.name for tool in instance.tools] == [
+        "first__test_tool",
+        "second__test_tool",
+        "second__first__test_tool",
+    ]
+
+
+@pytest.mark.parametrize("api_ids", [("first", "second"), ("second", "first")])
+async def test_merged_api_name_collides_with_legacy_alias(
+    hass: HomeAssistant, llm_context: llm.LLMContext, api_ids: tuple[str, str]
+) -> None:
+    """Advertised names remain callable when an old alias conflicts."""
+
+    class MyTool(llm.Tool):
+        integration = "test"
+
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> llm.ToolResult:
+            return llm.ToolResult(data={"tool": tool_input.tool_name})
+
+    first = MyAPI(hass=hass, id="first", name="First")
+    first.tools = [MyTool("test_tool")]
+    second = MyAPI(hass=hass, id="second", name="Second")
+    second.tools = [MyTool("first__test_tool")]
+    llm.async_register_api(hass, first)
+    llm.async_register_api(hass, second)
+
+    instance = await llm.async_get_api(hass, list(api_ids), llm_context)
+    assert {tool.name for tool in instance.tools} == {
+        "test_tool",
+        "second__first__test_tool",
+    }
+    result = await instance.async_call_tool(llm.ToolInput("test_tool", {}))
+    assert result.data == {"tool": "test_tool"}
+    result = await instance.async_call_tool(
+        llm.ToolInput("second__first__test_tool", {})
+    )
+    assert result.data == {"tool": "first__test_tool"}
 
 
 @pytest.mark.parametrize(
@@ -1759,7 +1858,10 @@ async def test_merged_api_ambiguous_legacy_name(
     first = MyAPI(hass=hass, id="first", name=first_name)
     first.tools = [tool]
     second = MyAPI(hass=hass, id="second", name=second_name)
-    second.tools = [tool]
+    other_tool = llm.Tool()
+    other_tool.name = "test_tool"
+    other_tool.integration = "test"
+    second.tools = [other_tool]
     llm.async_register_api(hass, first)
     llm.async_register_api(hass, second)
 

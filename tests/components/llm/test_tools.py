@@ -4,9 +4,23 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import llm as llm_component
+from homeassistant.components.llm.llm import GetDateTimeTool
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+
+
+def test_get_datetime_equality() -> None:
+    """Only the stateless date/time tool opts into equality."""
+
+    class ConfiguredDateTimeTool(GetDateTimeTool):
+        """A tool whose subclass may introduce configuration."""
+
+    assert GetDateTimeTool() == GetDateTimeTool()
+    assert GetDateTimeTool() != llm.Tool()
+    assert GetDateTimeTool() != ConfiguredDateTimeTool()
+    assert ConfiguredDateTimeTool() != GetDateTimeTool()
+    assert ConfiguredDateTimeTool() != ConfiguredDateTimeTool()
 
 
 @pytest.fixture(autouse=True)

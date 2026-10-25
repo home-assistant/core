@@ -714,15 +714,18 @@ async def test_mcp_tools_list_all_llm_apis(
         result = await session.list_tools()
 
     tool_names = {tool.name for tool in result.tools}
-    assert "assist__homeassistant__GetLiveContext" in tool_names
+    assert "homeassistant__GetLiveContext" in tool_names
+    assert "assist__homeassistant__GetLiveContext" not in tool_names
     assert "device-control__homeassistant__GetLiveContext" not in tool_names
-    assert "test-api__test_tool" in tool_names
+    assert "test_tool" in tool_names
+    assert [tool.name for tool in result.tools].count("llm__GetDateTime") == 1
 
 
 @pytest.mark.parametrize("llm_hass_api", [[llm.LLM_API_ASSIST, TEST_LLM_API_ID]])
 @pytest.mark.parametrize(
     "tool_name",
     [
+        "homeassistant__GetLiveContext",
         "assist__homeassistant__GetLiveContext",
         "device-control__homeassistant__GetLiveContext",
     ],
