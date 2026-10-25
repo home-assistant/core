@@ -244,3 +244,99 @@ async def test_1_1_to_1_2_migration(
     backup_config = async_get_manager(hass).config.data
     assert backup_config.create_backup.agent_ids == [f"{DOMAIN}.MOCK_DRIVE_ID"]
     assert list(backup_config.agents) == [f"{DOMAIN}.MOCK_DRIVE_ID"]
+
+
+async def test_1_1_to_1_2_migration_removes_duplicates(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration removes duplicates created by a drive ID casing flip."""
+    old_config_entry = MockConfigEntry(
+        unique_id="mock_drive_id",
+        title=mock_config_entry.title,
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        minor_version=1,
+    )
+    old_config_entry.add_to_hass(hass)
+    lowercase_device = device_registry.async_get_or_create(
+        config_entry_id=old_config_entry.entry_id,
+        identifiers={(DOMAIN, "mock_drive_id")},
+    )
+    lowercase_entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "mock_drive_id_total_size",
+        config_entry=old_config_entry,
+        device_id=lowercase_device.id,
+    )
+    uppercase_device = device_registry.async_get_or_create(
+        config_entry_id=old_config_entry.entry_id,
+        identifiers={(DOMAIN, "MOCK_DRIVE_ID")},
+    )
+    uppercase_entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "MOCK_DRIVE_ID_total_size",
+        config_entry=old_config_entry,
+        device_id=uppercase_device.id,
+    )
+    assert await async_setup_component(hass, BACKUP_DOMAIN, {})
+
+    await setup_integration(hass, old_config_entry)
+
+    assert old_config_entry.state is ConfigEntryState.LOADED
+    assert old_config_entry.unique_id == "MOCK_DRIVE_ID"
+    assert entity_registry.async_get(lowercase_entity.entity_id) is None
+    assert entity_registry.async_get(uppercase_entity.entity_id) is not None
+    assert device_registry.async_get(lowercase_device.id) is None
+    assert device_registry.async_get(uppercase_device.id) is not None
+
+
+async def test_1_1_to_1_2_migration_duplicate_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration fails if another config entry already has the drive ID."""
+    other_config_entry = MockConfigEntry(
+        unique_id="MOCK_DRIVE_ID",
+        title=mock_config_entry.title,
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        minor_version=2,
+    )
+    other_config_entry.add_to_hass(hass)
+    other_entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "MOCK_DRIVE_ID_total_size",
+        config_entry=other_config_entry,
+    )
+    old_config_entry = MockConfigEntry(
+        unique_id="mock_drive_id",
+        title=mock_config_entry.title,
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        minor_version=1,
+    )
+    old_config_entry.add_to_hass(hass)
+    old_entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "mock_drive_id_total_size",
+        config_entry=old_config_entry,
+    )
+    assert await async_setup_component(hass, BACKUP_DOMAIN, {})
+
+    await setup_integration(hass, old_config_entry)
+
+    assert old_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert old_config_entry.unique_id == "mock_drive_id"
+    assert (
+        entity_registry.async_get(old_entity.entity_id).unique_id
+        == "mock_drive_id_total_size"
+    )
+    assert entity_registry.async_get(other_entity.entity_id) is not None
