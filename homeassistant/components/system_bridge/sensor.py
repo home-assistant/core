@@ -718,7 +718,7 @@ async def async_setup_entry(
 
     if (
         coordinator.data.battery
-        and coordinator.data.battery.percentage
+        and coordinator.data.battery.percentage is not None
         and coordinator.data.battery.percentage > -1
     ):
         entities.extend(

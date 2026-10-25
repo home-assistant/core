@@ -109,6 +109,33 @@ async def test_sensor_load_average_missing(
 
 
 @pytest.mark.usefixtures("mock_version")
+async def test_sensor_battery_empty(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test battery sensors are added when setup happens at 0% charge."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value,
+        battery=replace(FIXTURE_BATTERY, percentage=0, state=BatteryState.EMPTY),
+    )
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("sensor.hostname_battery")
+    assert state
+    assert state.state == "0"
+    state = hass.states.get("sensor.hostname_battery_state")
+    assert state
+    assert state.state == BatteryState.EMPTY
+
+
+@pytest.mark.usefixtures("mock_version")
 async def test_sensor_memory_free_uses_available(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
