@@ -6,7 +6,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow: done
+  config-flow: todo
   config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions:
