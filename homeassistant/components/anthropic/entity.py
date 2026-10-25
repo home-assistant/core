@@ -34,12 +34,6 @@ from anthropic.types import (
     ModelInfo,
     OutputConfigParam,
     RawContentBlockDelta,
-    RawContentBlockDeltaEvent,
-    RawContentBlockStartEvent,
-    RawContentBlockStopEvent,
-    RawMessageDeltaEvent,
-    RawMessageStartEvent,
-    RawMessageStopEvent,
     RedactedThinkingBlock,
     RedactedThinkingBlockParam,
     ServerToolUseBlock,
@@ -312,10 +306,9 @@ def _convert_content(  # noqa: C901
                 "assistant" if external_tool else "user"
             ):
                 messages.append(
-                    MessageParam(
-                        role="assistant" if external_tool else "user",
-                        content=[tool_result_block],
-                    )
+                    {"role": "assistant", "content": [tool_result_block]}
+                    if external_tool
+                    else {"role": "user", "content": [tool_result_block]}
                 )
             elif isinstance(messages[-1]["content"], str):
                 messages[-1]["content"] = [
@@ -337,10 +330,7 @@ def _convert_content(  # noqa: C901
             # Combine consequent user messages
             if not messages or messages[-1]["role"] != "user":
                 messages.append(
-                    MessageParam(
-                        role="user",
-                        content=content.content if has_text else [],
-                    )
+                    {"role": "user", "content": content.content if has_text else []}
                 )
             elif not has_text:
                 # Attachments are appended to the last user message later
@@ -357,12 +347,7 @@ def _convert_content(  # noqa: C901
         elif isinstance(content, conversation.AssistantContent):
             # Combine consequent assistant messages
             if not messages or messages[-1]["role"] != "assistant":
-                messages.append(
-                    MessageParam(
-                        role="assistant",
-                        content=[],
-                    )
-                )
+                messages.append({"role": "assistant", "content": []})
             elif isinstance(messages[-1]["content"], str):
                 messages[-1]["content"] = [
                     TextBlockParam(type="text", text=messages[-1]["content"]),
@@ -580,25 +565,25 @@ class AnthropicDeltaStream:
 
     def on_message_stream_event(self, event: MessageStreamEvent) -> None:
         """Handle MessageStreamEvent."""
-        if isinstance(event, RawMessageStartEvent):
+        if event.type == "message_start":
             self.on_message_start_event(event.message)
             return
-        if isinstance(event, RawContentBlockStartEvent):
+        if event.type == "content_block_start":
             self.on_content_block_start_event(event.content_block, event.index)
             return
-        if isinstance(event, RawContentBlockDeltaEvent):
+        if event.type == "content_block_delta":
             self.on_content_block_delta_event(event.delta)
             return
-        if isinstance(event, RawContentBlockStopEvent):
+        if event.type == "content_block_stop":
             self.on_content_block_stop_event(event.index)
             return
-        if isinstance(event, RawMessageDeltaEvent):
+        if event.type == "message_delta":
             self.on_message_delta_event(event.delta, event.usage)
             return
-        if isinstance(event, RawMessageStopEvent):
+        if event.type == "message_stop":
             self.on_message_stop_event()
             return
-        LOGGER.debug("Unhandled event type: %s", event.type)  # type: ignore[unreachable]  # pragma: no cover - All types are handled but we want to verify that
+        LOGGER.debug("Unhandled event type: %s", event.type)  # type: ignore[unreachable]
 
     def on_message_start_event(self, message: Message) -> None:
         """Handle RawMessageStartEvent."""
