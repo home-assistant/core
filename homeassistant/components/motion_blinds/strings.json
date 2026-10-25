@@ -60,6 +60,11 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to Motion Gateway at {host}"
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -87,11 +92,6 @@
         }
       },
       "name": "Set absolute position"
-    }
-  },
-  "exceptions": {
-    "cannot_connect": {
-      "message": "Cannot connect to Motion Gateway at {host}"
     }
   }
 }
