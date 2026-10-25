@@ -5,6 +5,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "pubsub_api_error": "[%key:component::nest::config::error::pubsub_api_error%]",
@@ -147,6 +148,16 @@
     },
     "subscriber_timeout": {
       "message": "Subscriber timed out while attempting to connect to Google. Please check your network connection and IPv6 configuration if applicable."
+    }
+  },
+  "issues": {
+    "legacy_pubsub_topic": {
+      "description": "The Nest integration entry **{entry_title}** receives device events from a Google-hosted Pub/Sub topic. Google stops publishing events to Google-hosted topics on November 30, 2026. After that date, Home Assistant no longer receives realtime updates, camera events, or doorbell presses for this entry.\n\nTo fix this, go to **Settings > Devices & services > Nest**, open the entry menu, and select **Reconfigure**. Home Assistant will create a Pub/Sub topic in your Google Cloud project and guide you through updating the Device Access Console.",
+      "title": "Nest Pub/Sub topic must be migrated"
+    },
+    "pubsub_subscription_not_found": {
+      "description": "The Nest integration entry **{entry_title}** could not connect to its Pub/Sub subscription. The subscription or its topic may have been deleted or misconfigured.\n\nTo fix this, go to **Settings > Devices & services > Nest**, open the entry menu, and select **Reconfigure** to select or create a Pub/Sub topic and subscription.",
+      "title": "Nest Pub/Sub subscription not found"
     }
   },
   "selector": {

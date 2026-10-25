@@ -10,7 +10,13 @@ from teltasync.system import DeviceStatusData
 from teltasync.unauthorized import UnauthorizedStatusData
 
 from homeassistant.components.teltonika.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 
 
@@ -71,8 +77,11 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="RUTX50 Test",
+        version=2,
         data={
             CONF_HOST: "192.168.1.1",
+            CONF_PORT: 443,
+            CONF_SSL: True,
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "test_password",
         },

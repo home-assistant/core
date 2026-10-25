@@ -23,6 +23,27 @@
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'features': dict({
+          'temperatureSensor': dict({
+            '1': dict({
+              'friendly_name': None,
+              'maximum_value': None,
+              'minimum_value': None,
+              'precision': None,
+              'properties': list([
+                'temperature',
+              ]),
+              'raw_configuration': dict({
+              }),
+              'sensor_keys': dict({
+                'temperature': 'temperature',
+              }),
+              'supported_modes': list([
+              ]),
+              'supported_operations': list([
+              ]),
+              'unit_of_measure': None,
+            }),
+          }),
         }),
         'hardware_version': '1.0',
         'household_device': False,
@@ -53,6 +74,7 @@
         'online': True,
         'parent_clusters': dict({
         }),
+        'primary_display_category': 'ALEXA_VOICE_ENABLED',
         'sensors': dict({
           'dnd': dict({
             'error': False,
@@ -82,6 +104,34 @@
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
         'unsupported_features': dict({
+          'toggle': dict({
+            '11': dict({
+              'friendly_name': 'Enable LED Indicator',
+              'maximum_value': None,
+              'minimum_value': None,
+              'precision': None,
+              'properties': list([
+                'toggleState',
+              ]),
+              'raw_configuration': dict({
+                '__typename': 'ToggleConfiguration',
+                'friendlyName': dict({
+                  'value': dict({
+                    'text': 'Enable LED Indicator',
+                  }),
+                }),
+              }),
+              'sensor_keys': dict({
+              }),
+              'supported_modes': list([
+              ]),
+              'supported_operations': list([
+                'turnOn',
+                'turnOff',
+              ]),
+              'unit_of_measure': None,
+            }),
+          }),
         }),
         'voice_control_supported': True,
       }),
@@ -115,6 +165,27 @@
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'features': dict({
+          'temperatureSensor': dict({
+            '1': dict({
+              'friendly_name': None,
+              'maximum_value': None,
+              'minimum_value': None,
+              'precision': None,
+              'properties': list([
+                'temperature',
+              ]),
+              'raw_configuration': dict({
+              }),
+              'sensor_keys': dict({
+                'temperature': 'temperature',
+              }),
+              'supported_modes': list([
+              ]),
+              'supported_operations': list([
+              ]),
+              'unit_of_measure': None,
+            }),
+          }),
         }),
         'hardware_version': '1.0',
         'household_device': False,
@@ -145,6 +216,7 @@
         'online': True,
         'parent_clusters': dict({
         }),
+        'primary_display_category': 'ALEXA_VOICE_ENABLED',
         'sensors': dict({
           'dnd': dict({
             'error': False,
@@ -174,6 +246,34 @@
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
         'unsupported_features': dict({
+          'toggle': dict({
+            '11': dict({
+              'friendly_name': 'Enable LED Indicator',
+              'maximum_value': None,
+              'minimum_value': None,
+              'precision': None,
+              'properties': list([
+                'toggleState',
+              ]),
+              'raw_configuration': dict({
+                '__typename': 'ToggleConfiguration',
+                'friendlyName': dict({
+                  'value': dict({
+                    'text': 'Enable LED Indicator',
+                  }),
+                }),
+              }),
+              'sensor_keys': dict({
+              }),
+              'supported_modes': list([
+              ]),
+              'supported_operations': list([
+                'turnOn',
+                'turnOff',
+              ]),
+              'unit_of_measure': None,
+            }),
+          }),
         }),
         'voice_control_supported': True,
       }),
@@ -207,6 +307,27 @@
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'features': dict({
+          'temperatureSensor': dict({
+            '1': dict({
+              'friendly_name': None,
+              'maximum_value': None,
+              'minimum_value': None,
+              'precision': None,
+              'properties': list([
+                'temperature',
+              ]),
+              'raw_configuration': dict({
+              }),
+              'sensor_keys': dict({
+                'temperature': 'temperature',
+              }),
+              'supported_modes': list([
+              ]),
+              'supported_operations': list([
+              ]),
+              'unit_of_measure': None,
+            }),
+          }),
         }),
         'hardware_version': '1.0',
         'household_device': False,
@@ -237,6 +358,7 @@
         'online': True,
         'parent_clusters': dict({
         }),
+        'primary_display_category': 'ALEXA_VOICE_ENABLED',
         'sensors': dict({
           'dnd': dict({
             'error': False,
@@ -266,6 +388,34 @@
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
         'unsupported_features': dict({
+          'toggle': dict({
+            '11': dict({
+              'friendly_name': 'Enable LED Indicator',
+              'maximum_value': None,
+              'minimum_value': None,
+              'precision': None,
+              'properties': list([
+                'toggleState',
+              ]),
+              'raw_configuration': dict({
+                '__typename': 'ToggleConfiguration',
+                'friendlyName': dict({
+                  'value': dict({
+                    'text': 'Enable LED Indicator',
+                  }),
+                }),
+              }),
+              'sensor_keys': dict({
+              }),
+              'supported_modes': list([
+              ]),
+              'supported_operations': list([
+                'turnOn',
+                'turnOff',
+              ]),
+              'unit_of_measure': None,
+            }),
+          }),
         }),
         'voice_control_supported': True,
       }),

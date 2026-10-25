@@ -226,6 +226,43 @@
         "required": ["models"],
         "additionalProperties": false
       },
+      "lorawan": {
+        "description": "A list of LoRaWAN matchers. Each matcher is a pair of a network server stack and the brand ID it uses for the vendor. This requires \"config_flow\" to be true and \"lorawan\" in the \"dependencies\".\nhttps://contributors.home-assistant.io/core/integrations/manifest/#lorawan",
+        "examples": [
+          [
+            ["chirpstack", 744],
+            ["tts", "sensecap"]
+          ]
+        ],
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "type": "array",
+          "items": [
+            {
+              "description": "The network server stack.",
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "description": "The brand ID the network server uses for the vendor.",
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "string",
+                  "minLength": 1
+                }
+              ]
+            }
+          ],
+          "minItems": 2,
+          "additionalItems": false
+        }
+      },
       "dhcp": {
         "description": "A list of matchers to find devices discoverable via DHCP. In order to be discovered, the device has to match all properties of any of the matchers.\nYou can specify an item with \"registered_devices\" set to true to check for devices with MAC addresses specified in the device registry.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#dhcp",
         "type": "array",
@@ -398,6 +435,18 @@
           "calculated"
         ]
       },
+      "categories": {
+        "description": "The categories of the integration, the primary category first.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#categories",
+        "examples": [["energy"], ["energy.ev_charging"]],
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 3,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+)?$"
+        }
+      },
       "single_config_entry": {
         "description": "Whether the integration only supports a single config entry.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#single_config_entry",
         "const": true
@@ -406,6 +455,19 @@
     "additionalProperties": false,
     "required": ["domain", "name", "codeowners", "documentation"],
     "dependencies": {
+      "lorawan": {
+        "properties": {
+          "config_flow": {
+            "const": true
+          },
+          "dependencies": {
+            "contains": {
+              "const": "lorawan"
+            }
+          }
+        },
+        "required": ["config_flow", "dependencies"]
+      },
       "mqtt": {
         "anyOf": [
           { "required": ["dependencies"] },

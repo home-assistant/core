@@ -15,8 +15,8 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import API_ERRORS
 from .const import DEFAULT_CURRENCY, DOMAIN, INTEGRATION_TITLE
+from .coordinator import API_ERRORS
 
 
 def _get_currencies() -> list[str]:

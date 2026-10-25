@@ -880,6 +880,35 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
         mock_get.assert_called_once_with(hass)
 
 
+async def test_integration_descriptions_custom_categories(
+    hass: HomeAssistant,
+) -> None:
+    """Test the descriptions give the categories of custom integrations."""
+    custom_components = {
+        domain: loader.Integration(
+            hass,
+            f"custom_components.{domain}",
+            None,
+            {"domain": domain, "name": domain, **manifest},
+        )
+        for domain, manifest in (
+            ("custom_solar", {"categories": ["energy.solar_batteries"]}),
+            ("custom_plain", {}),
+        )
+    }
+
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value=custom_components,
+    ):
+        descriptions = await loader.async_get_integration_descriptions(hass)
+
+    custom = descriptions["custom"]["integration"]
+    assert custom["custom_solar"]["categories"] == ["energy.solar_batteries"]
+    # Without categories it is an empty list, like the built-in integrations
+    assert custom["custom_plain"]["categories"] == []
+
+
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_get_custom_components_concurrent_load_cancelled(
     hass: HomeAssistant,
