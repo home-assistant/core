@@ -716,26 +716,18 @@ class ChatLog:
     ) -> None:
         """Set the LLM system prompt."""
         llm_api: llm.APIInstance | None = None
-        selected_apis: list[llm.API | None]
         if isinstance(user_llm_hass_api, llm.API):
-            selected_apis = [user_llm_hass_api]
+            api_ids: tuple[str, ...] = (user_llm_hass_api.id,)
+        elif isinstance(user_llm_hass_api, str):
+            api_ids = (user_llm_hass_api,)
         else:
-            registered_apis = {api.id: api for api in llm.async_get_apis(self.hass)}
-            api_ids = (
-                [user_llm_hass_api]
-                if isinstance(user_llm_hass_api, str)
-                else user_llm_hass_api or []
-            )
-            selected_apis = [registered_apis.get(api_id) for api_id in api_ids]
+            api_ids = tuple(user_llm_hass_api or ())
         llm_api_key = (
             llm_context.agent_id,
             llm_context.context.user_id if llm_context.context else None,
             # The prompt and tools depend on the area and timer support.
             llm_context.device_id,
-            # An integration that reloads registers a new API that compares
-            # equal to the old one. The cached instance keeps the old API
-            # alive, so its id is not reused.
-            tuple(map(id, selected_apis)),
+            api_ids,
         )
 
         if (
