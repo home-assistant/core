@@ -465,6 +465,42 @@ async def test_conversation_agent(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+async def test_unknown_stream_event(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Ignore unknown SSE events decoded by the SDK and continue the response."""
+    mock_create_stream.return_value = [create_content_block(0, ["Hello!"])]
+    create_stream = mock_create_stream.side_effect
+
+    async def sdk_stream(
+        **kwargs: Unpack[MessageCreateParamsStreaming],
+    ) -> AsyncStream[RawMessageStreamEvent]:
+        stream = create_stream(**kwargs)
+        body = 'event: future_event\ndata: {"type":"future_event"}\n\n' + "".join(
+            [
+                f"event: {event.type}\ndata: {event.to_json(indent=None)}\n\n"
+                async for event in stream
+            ]
+        )
+        return AsyncStream(
+            cast_to=RawMessageStreamEvent,
+            response=Response(200, content=body),
+            client=mock_config_entry.runtime_data.client,
+        )
+
+    mock_create_stream.side_effect = sdk_stream
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == "Hello!"
+
+
+@pytest.mark.usefixtures("mock_init_component")
 @pytest.mark.parametrize(
     "response_usage",
     [
@@ -1886,6 +1922,34 @@ async def test_extended_thinking(
             },
             id="high_effort",
         ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-sonnet-5-5",
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_EFFORT: "low",
+            },
+            id="between_tools_low_effort",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-sonnet-5-5",
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_EFFORT: "medium",
+            },
+            id="between_tools_medium_effort",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-sonnet-5-5",
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_THINKING_BUDGET: 1500,
+                CONF_EFFORT: "high",
+            },
+            id="between_tools_high_effort",
+        ),
     ],
 )
 @freeze_time("2024-05-24 12:00:00")
@@ -1897,7 +1961,7 @@ async def test_disabled_thinking(
     snapshot: SnapshotAssertion,
     subentry_data: dict[str, str | int],
 ) -> None:
-    """Test that effort remains independent when thinking is disabled."""
+    """Test that effort remains independent of the thinking mode."""
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),

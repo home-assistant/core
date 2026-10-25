@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==16.9.1
+aioamazondevices==16.11.3
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -484,7 +484,7 @@ aiotedee==0.3.0
 aiothreema==0.2.0
 
 # homeassistant.components.tractive
-aiotractive==1.3.1
+aiotractive==2.0.0
 
 # homeassistant.components.unifi
 aiounifi==97
@@ -571,7 +571,7 @@ anova-wifi==1.0.1
 anthemav==1.4.2
 
 # homeassistant.components.anthropic
-anthropic==1.15.0
+anthropic==2.3.0
 
 # homeassistant.components.mcp_server
 anyio==4.15.1
@@ -580,7 +580,7 @@ anyio==4.15.1
 apple_weatherkit==1.1.3
 
 # homeassistant.components.apprise
-apprise==1.11.0
+apprise==2.1.0
 
 # homeassistant.components.aprs
 aprslib==0.7.2
@@ -2454,7 +2454,7 @@ pylitejet==0.6.3
 pylitterbot==2025.7.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.30.0
+pylutron-caseta==0.30.1
 
 # homeassistant.components.lutron
 pylutron==0.4.4
@@ -2588,7 +2588,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.49
+pyportainer==1.0.50
 
 # homeassistant.components.probe_plus
 pyprobeplus==2.1.0
@@ -2786,7 +2786,7 @@ python-gitlab==1.6.0
 python-google-drive-api==0.2.0
 
 # homeassistant.components.google_travel_time
-python-google-maps-routing-api==0.0.2
+python-google-maps-routing-api==0.0.3
 
 # homeassistant.components.google_weather
 python-google-weather-api==0.0.9
@@ -2804,7 +2804,7 @@ python-hotspring==3.1.0
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==1.3.11
+python-izone==1.3.12
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.1.1
@@ -3267,7 +3267,7 @@ switchbot-api==2.13.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.12.1
+systembridgeconnector==5.16.0
 
 # homeassistant.components.tailscale
 tailscale==1.0.0

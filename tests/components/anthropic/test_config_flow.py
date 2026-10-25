@@ -1,7 +1,7 @@
 """Test the Anthropic config flow."""
 
 import datetime as dt
-from typing import Literal
+from typing import Literal, cast
 from unittest.mock import AsyncMock, patch
 
 from anthropic import (
@@ -361,7 +361,6 @@ async def test_subentry_options_thinking_budget_more_than_max(
 @pytest.mark.parametrize(
     "model",
     [
-        pytest.param("claude-sonnet-5-5", id="sonnet_5_5"),
         pytest.param("claude-opus-5-5", id="opus_5_5"),
         pytest.param("claude-fable-5", id="fable_5"),
         pytest.param("claude-fable-5-1", id="fable_5_1"),
@@ -374,12 +373,20 @@ async def test_subentry_options_thinking_budget_more_than_max(
         pytest.param("ai_task_data", id="ai_task"),
     ],
 )
+@pytest.mark.parametrize(
+    "unsupported_type",
+    [
+        pytest.param("disabled", id="disabled"),
+        pytest.param("between_tools", id="between_tools"),
+    ],
+)
 @pytest.mark.usefixtures("mock_init_component")
 async def test_creating_subentry_with_required_thinking(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     model: str,
     subentry_type: str,
+    unsupported_type: str,
 ) -> None:
     """Test models that require adaptive thinking exclude disabled thinking."""
     result = await hass.config_entries.subentries.async_init(
@@ -405,7 +412,7 @@ async def test_creating_subentry_with_required_thinking(
 
     with pytest.raises(InvalidData):
         await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_THINKING_TYPE: "disabled"}
+            result["flow_id"], {CONF_THINKING_TYPE: unsupported_type}
         )
 
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
@@ -490,7 +497,6 @@ async def test_subentry_with_optional_thinking(
         pytest.param("claude-opus-5-5", id="opus_5_5"),
         pytest.param("claude-fable-5", id="fable_5"),
         pytest.param("claude-fable-5-1", id="fable_5_1"),
-        pytest.param("claude-sonnet-5-5", id="sonnet_5_5"),
     ],
 )
 @pytest.mark.parametrize(
@@ -501,10 +507,19 @@ async def test_subentry_with_optional_thinking(
     ],
 )
 @pytest.mark.parametrize(
-    ("current_thinking_type", "user_input", "expected_effort"),
+    ("source_model", "current_thinking_type", "user_input", "expected_effort"),
     [
-        pytest.param("disabled", {}, "low", id="enable_thinking"),
-        pytest.param("adaptive", {CONF_EFFORT: "high"}, "high", id="preserve_thinking"),
+        pytest.param("claude-opus-4-6", "disabled", {}, "low", id="enable_thinking"),
+        pytest.param(
+            "claude-opus-4-6",
+            "adaptive",
+            {CONF_EFFORT: "high"},
+            "high",
+            id="preserve_thinking",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5", "between_tools", {}, "low", id="between_tools"
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")
@@ -513,6 +528,7 @@ async def test_reconfigure_subentry_with_required_thinking(
     mock_config_entry: MockConfigEntry,
     model: str,
     subentry_type: str,
+    source_model: str,
     current_thinking_type: str,
     user_input: dict[str, str],
     expected_effort: str,
@@ -527,7 +543,7 @@ async def test_reconfigure_subentry_with_required_thinking(
         mock_config_entry,
         subentry,
         data={
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: source_model,
             CONF_THINKING_TYPE: current_thinking_type,
             CONF_EFFORT: expected_effort,
         },
@@ -2003,7 +2019,12 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
             True,
             ["low", "medium", "high"],
             {
-                CONF_THINKING_TYPE: ["disabled", "enabled", "adaptive"],
+                CONF_THINKING_TYPE: [
+                    "disabled",
+                    "enabled",
+                    "adaptive",
+                    "between_tools",
+                ],
                 CONF_EFFORT: ["low", "medium", "high"],
             },
             {
@@ -2015,7 +2036,7 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
         ),
         pytest.param(
             False,
-            ["disabled", "enabled", "adaptive"],
+            ["disabled", "enabled", "adaptive", "between_tools"],
             True,
             ["low", "high"],
             {CONF_EFFORT: ["low", "high"]},
@@ -2028,8 +2049,35 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
             True,
             ["high"],
             {CONF_EFFORT: ["high"]},
-            {CONF_EFFORT: "high"},
-            id="unsupported_default_effort",
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "high"},
+            id="between_tools_only",
+        ),
+        pytest.param(
+            True,
+            ["between_tools"],
+            False,
+            [],
+            {},
+            {CONF_THINKING_TYPE: "between_tools"},
+            id="between_tools_without_effort",
+        ),
+        pytest.param(
+            True,
+            ["between_tools"],
+            True,
+            ["high", "xhigh", "max"],
+            {CONF_EFFORT: ["high", "xhigh", "max"]},
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "high"},
+            id="between_tools_compatible_default_effort",
+        ),
+        pytest.param(
+            True,
+            ["disabled", "between_tools"],
+            False,
+            [],
+            {CONF_THINKING_TYPE: ["disabled", "between_tools"]},
+            {CONF_THINKING_TYPE: "disabled"},
+            id="disabled_preferred_to_between_tools",
         ),
         pytest.param(
             True,
@@ -2074,16 +2122,16 @@ async def test_model_thinking_and_effort_capabilities(
 ) -> None:
     """Build independent thinking and effort selectors from the API capabilities."""
     model = model_list[0].model_copy(deep=True, update={"id": "custom-model"})
-    assert model.capabilities is not None
-    model.capabilities.thinking.supported = thinking_supported
+    capabilities = cast(types.ModelCapabilities, model.capabilities)
+    capabilities.thinking.supported = thinking_supported
     for thinking_type in ("disabled", "enabled", "adaptive", "between_tools"):
-        getattr(model.capabilities.thinking.types, thinking_type).supported = (
+        getattr(capabilities.thinking.types, thinking_type).supported = (
             thinking_type in supported_types
         )
-    model.capabilities.effort.supported = effort_supported
+    capabilities.effort.supported = effort_supported
     for effort in ("low", "medium", "high", "xhigh", "max"):
         setattr(
-            model.capabilities.effort,
+            capabilities.effort,
             effort,
             types.CapabilitySupport(supported=effort in supported_efforts),
         )
@@ -2240,10 +2288,24 @@ async def test_required_enabled_thinking_budget(
 
 
 @pytest.mark.parametrize(
-    "model_id",
+    ("source_model_id", "model_id", "thinking_type"),
     [
-        pytest.param("claude-haiku-5-5", id="haiku_5_5"),
-        pytest.param("claude-opus-5", id="opus_5"),
+        pytest.param(
+            "claude-haiku-5-5", "claude-haiku-5-5", "disabled", id="haiku_5_5"
+        ),
+        pytest.param("claude-opus-5", "claude-opus-5", "disabled", id="opus_5"),
+        pytest.param(
+            "claude-sonnet-5-5",
+            "claude-sonnet-5-5",
+            "between_tools",
+            id="sonnet_5_5",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5",
+            "custom-model",
+            "between_tools",
+            id="custom_model",
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -2259,14 +2321,16 @@ async def test_effort_requires_thinking(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_model_catalogue: list[ModelInfo],
+    source_model_id: str,
     model_id: str,
+    thinking_type: str,
     version_suffix: str,
     effort: str,
 ) -> None:
     """Reject incompatible combinations even when each field is supported."""
-    model = next(model for model in model_list if model.id == model_id).model_copy(
-        deep=True, update={"id": model_id + version_suffix}
-    )
+    model = next(
+        model for model in model_list if model.id == source_model_id
+    ).model_copy(deep=True, update={"id": model_id + version_suffix})
     mock_model_catalogue[:] = [model]
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "conversation"),
@@ -2280,7 +2344,7 @@ async def test_effort_requires_thinking(
     )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: effort},
+        {CONF_THINKING_TYPE: thinking_type, CONF_EFFORT: effort},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_EFFORT: "effort_requires_thinking"}
@@ -2288,7 +2352,7 @@ async def test_effort_requires_thinking(
         key.schema: key.description["suggested_value"]
         for key in result["data_schema"].schema
         if key in {CONF_THINKING_TYPE, CONF_EFFORT}
-    } == {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: effort}
+    } == {CONF_THINKING_TYPE: thinking_type, CONF_EFFORT: effort}
 
     # Retrying without changed values must preserve the incompatible combination.
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
@@ -2303,26 +2367,42 @@ async def test_effort_requires_thinking(
 
 
 @pytest.mark.parametrize(
-    "model",
+    ("model", "thinking_type", "effort"),
     [
-        pytest.param("claude-opus-4-7", id="opus_4_7"),
-        pytest.param("claude-opus-4-8", id="opus_4_8"),
+        pytest.param("claude-opus-4-7", "disabled", "xhigh", id="opus_4_7_xhigh"),
+        pytest.param("claude-opus-4-7", "disabled", "max", id="opus_4_7_max"),
+        pytest.param("claude-opus-4-8", "disabled", "xhigh", id="opus_4_8_xhigh"),
+        pytest.param("claude-opus-4-8", "disabled", "max", id="opus_4_8_max"),
+        pytest.param(
+            "claude-sonnet-5-5", "between_tools", "low", id="between_tools_low"
+        ),
+        pytest.param(
+            "claude-sonnet-5-5", "between_tools", "medium", id="between_tools_medium"
+        ),
+        pytest.param(
+            "claude-sonnet-5-5", "between_tools", "high", id="between_tools_high"
+        ),
     ],
 )
 @pytest.mark.parametrize(
-    "effort",
-    [pytest.param("xhigh", id="xhigh"), pytest.param("max", id="max")],
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
 )
 @pytest.mark.usefixtures("mock_init_component")
-async def test_high_effort_without_thinking(
+async def test_effort_without_thinking(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     model: str,
+    thinking_type: str,
     effort: str,
+    subentry_type: str,
 ) -> None:
-    """Allow high effort without thinking on models that support the combination."""
+    """Allow effort without thinking when the model supports the combination."""
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "conversation"),
+        (mock_config_entry.entry_id, subentry_type),
         context={"source": config_entries.SOURCE_USER},
     )
     result = await hass.config_entries.subentries.async_configure(
@@ -2333,10 +2413,10 @@ async def test_high_effort_without_thinking(
     )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: effort},
+        {CONF_THINKING_TYPE: thinking_type, CONF_EFFORT: effort},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_THINKING_TYPE] == "disabled"
+    assert result["data"][CONF_THINKING_TYPE] == thinking_type
     assert result["data"][CONF_EFFORT] == effort
 
 
