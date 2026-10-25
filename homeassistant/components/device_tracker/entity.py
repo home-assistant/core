@@ -696,6 +696,7 @@ class ScannerEntity(
             return name
         return self.hostname
 
+    @final
     @property
     @override
     def name(self) -> str | UndefinedType | None:
