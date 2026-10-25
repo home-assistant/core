@@ -60,12 +60,12 @@ class GdacsFlowHandler(ConfigFlow, domain=DOMAIN):
         if not user_input:
             return await self._show_form()
 
-        location = user_input[CONF_LOCATION]
-        identifier = f"{location[CONF_LATITUDE]}, {location[CONF_LONGITUDE]}"
-
-        await self.async_set_unique_id(identifier)
+        await self.async_set_unique_id(
+            f"{user_input[CONF_LOCATION][CONF_LATITUDE]}, "
+            f"{user_input[CONF_LOCATION][CONF_LONGITUDE]}"
+        )
         self._abort_if_unique_id_configured()
-
+        user_input.setdefault(CONF_LOCATION, DEFAULT_RADIUS)
         return self.async_create_entry(
             title="Global Disaster Alert and Coordination System", data=user_input
         )
