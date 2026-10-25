@@ -961,8 +961,20 @@
       "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same state and can also change it.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Read-only setting entity deprecated"
     },
+    "setting_mirror_deprecated_doorbell_text": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same message and can also change it. Where this entity is unknown because no message is set, it shows the default message instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    },
+    "setting_mirror_deprecated_hdr_mode": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same setting and can also change it. Its states differ: `on` is `auto` or `always`, and `off` is `off`, so update any conditions that compare them.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    },
     "setting_mirror_deprecated_light_mode": {
       "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same setting and can also change it. Its states are named differently: `always` is `when_dark` and `off` is `manual`, so update any conditions that compare them.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    },
+    "setting_mirror_deprecated_mic_level": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same level and can also change it. While the microphone is disabled, `{replacement}` is unavailable, so update any automations and scripts that read the level then.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
     }
   },

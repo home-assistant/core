@@ -721,7 +721,14 @@ class ManifestJSONView(HomeAssistantView):
     {
         "type": "frontend/get_icons",
         probatio.Required("category"): probatio.In(
-            {"conditions", "entity", "entity_component", "services", "triggers"}
+            {
+                "conditions",
+                "entity",
+                "entity_component",
+                "integration_category",
+                "services",
+                "triggers",
+            }
         ),
         probatio.Optional("integration"): probatio.All(probatio.EnsureList(), [str]),
     }

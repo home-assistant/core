@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
     OutdoorSirenService,
+    SHCMicromoduleRelay,
     SHCMotionDetector2,
     SHCOutdoorSiren,
     SHCRoomThermostat2,
@@ -22,7 +23,9 @@ from boschshcpy.services_impl import (
     PirSensorConfigurationService,
     PowerSwitchConfigurationService,
     SmokeSensitivityService,
+    SwitchConfiguration,
     VibrationSensorService,
+    WallThermostatConfiguration,
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -189,6 +192,69 @@ STATE_AFTER_POWER_OUTAGE_DESCRIPTION = SHCSelectEntityDescription[
 )
 
 
+def _valve_type_select_option(device: SHCThermostatGen2, option: str) -> None:
+    """Write the thermostat's valve type."""
+    device.valve_type = WallThermostatConfiguration.ValveType[option.upper()]
+
+
+VALVE_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCThermostatGen2](
+    key="valve_type",
+    translation_key="valve_type",
+    entity_category=EntityCategory.CONFIG,
+    options=["normally_close", "normally_open"],
+    current_option_fn=lambda device, options: (
+        valve.name.lower() if (valve := device.valve_type) else None
+    ),
+    select_option_fn=_valve_type_select_option,
+)
+
+
+def _heater_type_select_option(device: SHCThermostatGen2, option: str) -> None:
+    """Write the thermostat's heater type."""
+    device.heater_type = WallThermostatConfiguration.HeaterType[option.upper()]
+
+
+HEATER_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCThermostatGen2](
+    key="heater_type",
+    translation_key="heater_type",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "floor_heating",
+        "floor_heating_low_energy",
+        "radiator",
+        "convector_passive",
+        "convector_active",
+        "volt_free_heating",
+    ],
+    current_option_fn=lambda device, options: (
+        heater.name.lower() if (heater := device.heater_type) else None
+    ),
+    select_option_fn=_heater_type_select_option,
+)
+
+
+def _switch_type_select_option(device: SHCMicromoduleRelay, option: str) -> None:
+    """Write the relay's switch type."""
+    device.switch_type = SwitchConfiguration.SwitchType[option.upper()]
+
+
+SWITCH_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
+    key="switch_type",
+    translation_key="switch_type",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "none",
+        "pushbutton",
+        "switch",
+        "no_switch",
+    ],
+    current_option_fn=lambda device, options: (
+        value.name.lower() if (value := device.switch_type) else None
+    ),
+    select_option_fn=_switch_type_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -309,6 +375,44 @@ async def async_setup_entry(
         )
         for compact_plug in session.device_helper.smart_plugs_compact
         if compact_plug.state_after_power_outage is not None
+    )
+
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=thermostat,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=VALVE_TYPE_DESCRIPTION,
+        )
+        for thermostat in session.device_helper.thermostats
+        if isinstance(thermostat, SHCThermostatGen2)
+        and thermostat.supports_wall_thermostat_configuration
+        and thermostat.valve_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=thermostat,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=HEATER_TYPE_DESCRIPTION,
+        )
+        for thermostat in session.device_helper.thermostats
+        if isinstance(thermostat, SHCThermostatGen2)
+        and thermostat.supports_wall_thermostat_configuration
+        and thermostat.heater_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=relay,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPE_DESCRIPTION,
+        )
+        for relay in session.device_helper.micromodule_relays
+        if relay.supports_switch_configuration and relay.switch_type is not None
     )
 
     async_add_entities(entities)

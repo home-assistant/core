@@ -2,7 +2,16 @@
 
 from unittest.mock import AsyncMock
 
-from google.api_core.exceptions import GoogleAPIError, PermissionDenied
+from google_maps_routing_api import (
+    GoogleMapsRoutingApiAuthError,
+    GoogleMapsRoutingApiConnectionTimeoutError,
+    GoogleMapsRoutingApiError,
+    TrafficModel,
+    TransitRoutingPreference,
+    TransitTravelMode,
+    TravelMode,
+    Units,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -76,8 +85,15 @@ async def test_service_get_travel_times_with_all_options(
         blocking=True,
         return_response=True,
     )
-    assert "routes" in response_data
     assert len(response_data["routes"]) == 1
+
+    kwargs = routes_mock.async_compute_routes.call_args.kwargs
+    assert kwargs["units"] == Units.IMPERIAL
+    assert kwargs["language_code"] == "en"
+    assert kwargs["avoid_tolls"] is True
+    assert kwargs["traffic_model"] == TrafficModel.BEST_GUESS
+    assert kwargs["departure_time"] is not None
+    assert kwargs["arrival_time"] is None
 
 
 @pytest.mark.parametrize(
@@ -90,7 +106,7 @@ async def test_service_get_travel_times_empty_response(
     mock_config: MockConfigEntry,
 ) -> None:
     """Test service get_travel_times with empty response."""
-    routes_mock.compute_routes.return_value = None
+    routes_mock.async_compute_routes.return_value = None
 
     response_data = await hass.services.async_call(
         DOMAIN,
@@ -116,11 +132,19 @@ async def test_service_get_travel_times_empty_response(
     ("exception", "error_message"),
     [
         (
-            PermissionDenied("test"),
+            GoogleMapsRoutingApiAuthError(
+                "Routes API is disabled.",
+                status="PERMISSION_DENIED",
+                reason="SERVICE_DISABLED",
+            ),
             "The Routes API is not enabled for this API key",
         ),
-        (GoogleAPIError("test"), "Google API error"),
+        (GoogleMapsRoutingApiError("test"), "Google API error"),
         (TimeoutError(), "Timed out getting travel times"),
+        (
+            GoogleMapsRoutingApiConnectionTimeoutError("Timeout"),
+            "Timed out getting travel times",
+        ),
         (ValueError("boom"), "Google API error: boom"),
     ],
 )
@@ -132,7 +156,7 @@ async def test_service_get_travel_times_errors(
     error_message: str,
 ) -> None:
     """Test service get_travel_times error handling."""
-    routes_mock.compute_routes.side_effect = exception
+    routes_mock.async_compute_routes.side_effect = exception
 
     with pytest.raises(
         HomeAssistantError,
@@ -214,8 +238,18 @@ async def test_service_get_transit_times_with_all_options(
         blocking=True,
         return_response=True,
     )
-    assert "routes" in response_data
     assert len(response_data["routes"]) == 1
+
+    kwargs = routes_mock.async_compute_routes.call_args.kwargs
+    assert kwargs["travel_mode"] == TravelMode.TRANSIT
+    assert kwargs["units"] == Units.IMPERIAL
+    assert kwargs["language_code"] == "en"
+    assert kwargs["transit_routing_preference"] == (
+        TransitRoutingPreference.FEWER_TRANSFERS
+    )
+    assert kwargs["allowed_travel_modes"] == [TransitTravelMode.BUS]
+    assert kwargs["departure_time"] is not None
+    assert kwargs["arrival_time"] is None
 
 
 @pytest.mark.parametrize(
@@ -226,11 +260,19 @@ async def test_service_get_transit_times_with_all_options(
     ("exception", "error_message"),
     [
         (
-            PermissionDenied("test"),
+            GoogleMapsRoutingApiAuthError(
+                "Routes API is disabled.",
+                status="PERMISSION_DENIED",
+                reason="SERVICE_DISABLED",
+            ),
             "The Routes API is not enabled for this API key",
         ),
-        (GoogleAPIError("test"), "Google API error"),
+        (GoogleMapsRoutingApiError("test"), "Google API error"),
         (TimeoutError(), "Timed out getting travel times"),
+        (
+            GoogleMapsRoutingApiConnectionTimeoutError("Timeout"),
+            "Timed out getting travel times",
+        ),
         (ValueError("boom"), "Google API error: boom"),
     ],
 )
@@ -242,7 +284,7 @@ async def test_service_get_transit_times_errors(
     error_message: str,
 ) -> None:
     """Test service get_transit_times error handling."""
-    routes_mock.compute_routes.side_effect = exception
+    routes_mock.async_compute_routes.side_effect = exception
 
     with pytest.raises(
         HomeAssistantError,
