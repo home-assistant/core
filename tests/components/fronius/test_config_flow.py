@@ -291,25 +291,57 @@ async def test_dhcp(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
     assert result["result"].unique_id == "123.4567"
 
 
+@pytest.mark.parametrize(
+    ("configured_host", "discovery_info"),
+    [
+        pytest.param(MOCK_DHCP_DATA.ip, MOCK_DHCP_DATA, id="bare_ip"),
+        pytest.param(f"http://{MOCK_DHCP_DATA.ip}", MOCK_DHCP_DATA, id="http_url"),
+        pytest.param(f"https://{MOCK_DHCP_DATA.ip}", MOCK_DHCP_DATA, id="https_url"),
+        pytest.param(
+            f"HTTP://{MOCK_DHCP_DATA.ip}", MOCK_DHCP_DATA, id="uppercase_scheme"
+        ),
+        pytest.param(f"{MOCK_DHCP_DATA.ip}:80", MOCK_DHCP_DATA, id="host_with_port"),
+        pytest.param(
+            f"http://{MOCK_DHCP_DATA.ip}:80/", MOCK_DHCP_DATA, id="url_with_port"
+        ),
+        pytest.param("http://fronius/solar_api/", MOCK_DHCP_DATA, id="url_with_path"),
+        pytest.param(
+            "FRONIUS-symo",
+            DhcpServiceInfo(
+                hostname="Fronius-Symo", ip="10.2.3.5", macaddress="0003ac112233"
+            ),
+            id="hostname_different_case",
+        ),
+    ],
+)
 async def test_dhcp_already_configured(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    configured_host: str,
+    discovery_info: DhcpServiceInfo,
 ) -> None:
-    """Test starting a flow from discovery."""
+    """Test discovery of an already configured device aborts before probing it."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="123.4567890",
         data={
-            CONF_HOST: f"http://{MOCK_DHCP_DATA.ip}/",
+            CONF_HOST: configured_host,
             "is_logger": True,
         },
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=MOCK_DHCP_DATA
-    )
+    # a missed match would also hit the 60 s DHCP_REQUEST_DELAY before validate_host
+    with patch(
+        "homeassistant.components.fronius.config_flow.validate_host"
+    ) as mock_validate_host:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=discovery_info
+        )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    mock_validate_host.assert_not_called()
+    assert aioclient_mock.call_count == 0
 
 
 async def test_dhcp_invalid(
