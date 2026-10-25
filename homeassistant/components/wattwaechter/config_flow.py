@@ -165,7 +165,6 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm zeroconf discovery."""
         if user_input is None:
-            self._set_confirm_only()
             return self.async_show_form(
                 step_id="zeroconf_confirm",
                 description_placeholders={
