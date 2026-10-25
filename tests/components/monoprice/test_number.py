@@ -1,10 +1,12 @@
 """Tests for the Monoprice number platform."""
 
+from collections.abc import Callable
 from dataclasses import replace
 from unittest.mock import MagicMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from serialx import SerialException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
@@ -141,6 +143,33 @@ async def test_unavailable_while_zone_is_off(
     mock_monoprice.zones[12].power = False
     await _update_zone(hass, "media_player.zone_12")
     assert hass.states.get(ZONE_2_BASS).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        pytest.param(SerialException, id="serial_error"),
+        pytest.param(lambda zone_id: None, id="no_response"),
+    ],
+)
+async def test_unavailable_after_failed_poll(
+    hass: HomeAssistant,
+    mock_monoprice: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    failure: type[SerialException] | Callable[[int], None],
+) -> None:
+    """Test the numbers are unavailable while the amplifier does not answer."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ZONE_1_BASS).state == "2"
+
+    answer = mock_monoprice.zone_status.side_effect
+    mock_monoprice.zone_status.side_effect = failure
+    await _update_zone(hass, "media_player.zone_11")
+    assert hass.states.get(ZONE_1_BASS).state == STATE_UNAVAILABLE
+
+    mock_monoprice.zone_status.side_effect = answer
+    await _update_zone(hass, "media_player.zone_11")
+    assert hass.states.get(ZONE_1_BASS).state == "2"
 
 
 async def test_extension_zones(

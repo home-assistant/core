@@ -3,6 +3,7 @@
 import logging
 from typing import override
 
+from pymonoprice import ZoneStatus
 from serialx import SerialException
 
 from homeassistant import core
@@ -115,6 +116,16 @@ class MonopriceZone(MediaPlayerEntity):
         self._snapshot = None
         self._update_success = True
 
+    def _share_status(self, state: ZoneStatus | None) -> None:
+        """Share the zone status with the numbers, or clear it when it is unknown."""
+        if state is None:
+            self._runtime_data.zone_status.pop(self._zone_id, None)
+        else:
+            self._runtime_data.zone_status[self._zone_id] = state
+        dispatcher_send(
+            self.hass, SIGNAL_ZONE_UPDATED.format(self._namespace, self._zone_id)
+        )
+
     def update(self) -> None:
         """Retrieve latest state."""
         try:
@@ -122,16 +133,15 @@ class MonopriceZone(MediaPlayerEntity):
         except SerialException:
             self._update_success = False
             _LOGGER.warning("Could not update zone %d", self._zone_id)
+            self._share_status(None)
             return
 
         if not state:
             self._update_success = False
+            self._share_status(None)
             return
 
-        self._runtime_data.zone_status[self._zone_id] = state
-        dispatcher_send(
-            self.hass, SIGNAL_ZONE_UPDATED.format(self._namespace, self._zone_id)
-        )
+        self._share_status(state)
 
         self._attr_state = MediaPlayerState.ON if state.power else MediaPlayerState.OFF
         self._attr_volume_level = state.volume / MAX_VOLUME

@@ -149,8 +149,9 @@ class MonopriceZoneNumber(NumberEntity):
 
     @callback
     def _update_from_status(self) -> None:
-        """Take the power and value from the latest zone status."""
+        """Take the availability and value from the latest zone status."""
         if (status := self._runtime_data.zone_status.get(self._zone_id)) is None:
+            self._attr_available = False
             return
         # The amplifier does not apply tone changes to a zone that is off
         self._attr_available = status.power
