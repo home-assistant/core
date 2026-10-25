@@ -127,14 +127,19 @@ class CountingAPI(llm.API):
 
 
 @pytest.mark.parametrize(
-    ("agent_id", "user_id", "extra_system_prompt", "instances"),
+    ("agent_id", "user_id", "device_id", "extra_system_prompt", "instances"),
     [
-        pytest.param("mock-agent-id", None, None, 1, id="same_agent"),
-        pytest.param("mock-agent-id", None, "Be brief", 1, id="same_extra_prompt"),
-        pytest.param("other-agent-id", None, None, 2, id="other_agent"),
-        pytest.param("mock-agent-id", "other-user-id", None, 2, id="other_user"),
-        pytest.param("mock-agent-id", None, "Be long", 2, id="new_extra_prompt"),
-        pytest.param(None, None, None, 2, id="no_agent"),
+        pytest.param("mock-agent-id", None, None, None, 1, id="same_agent"),
+        pytest.param(
+            "mock-agent-id", None, None, "Be brief", 1, id="same_extra_prompt"
+        ),
+        pytest.param("other-agent-id", None, None, None, 2, id="other_agent"),
+        pytest.param("mock-agent-id", "other-user-id", None, None, 2, id="other_user"),
+        pytest.param(
+            "mock-agent-id", None, "other-device-id", None, 2, id="other_device"
+        ),
+        pytest.param("mock-agent-id", None, None, "Be long", 2, id="new_extra_prompt"),
+        pytest.param(None, None, None, None, 2, id="no_agent"),
     ],
 )
 async def test_llm_api_reuse(
@@ -142,6 +147,7 @@ async def test_llm_api_reuse(
     mock_conversation_input: ConversationInput,
     agent_id: str | None,
     user_id: str | None,
+    device_id: str | None,
     extra_system_prompt: str | None,
     instances: int,
 ) -> None:
@@ -164,6 +170,7 @@ async def test_llm_api_reuse(
         llm_context = mock_conversation_input.as_llm_context("test")
         llm_context.agent_id = agent_id
         llm_context.context = Context(user_id=user_id)
+        llm_context.device_id = device_id
         with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
             await chat_log.async_provide_llm_data(
                 llm_context,

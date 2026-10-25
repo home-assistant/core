@@ -719,6 +719,8 @@ class ChatLog:
         llm_api_key = (
             llm_context.agent_id,
             llm_context.context.user_id if llm_context.context else None,
+            # The prompt and tools depend on the area and timer support.
+            llm_context.device_id,
         )
 
         if (
