@@ -24,6 +24,7 @@ from homeassistant.components.roborock.const import (
     CONF_USER_DATA,
     DOMAIN,
     DRAWABLES,
+    REGION_AUTO,
     REGION_CUSTOM,
     REGION_US,
 )
@@ -662,7 +663,7 @@ async def test_reconfigure_flow(
         "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_AUTO}
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -698,7 +699,7 @@ async def test_reconfigure_flow_wrong_account(
         "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_AUTO}
         )
 
     assert result["step_id"] == "code"
@@ -717,10 +718,10 @@ async def test_reconfigure_flow_wrong_account(
     assert result["reason"] == "wrong_account"
 
 
-async def test_reconfigure_flow_preserves_base_url(
+async def test_reconfigure_flow_with_region(
     hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
 ) -> None:
-    """Test reconfigure flow preserves the stored base URL."""
+    """Test reconfigure flow with an explicit region updates the base URL."""
     result = await mock_roborock_entry.start_reconfigure_flow(hass)
     assert result["step_id"] == "reconfigure"
 
@@ -731,17 +732,17 @@ async def test_reconfigure_flow_preserves_base_url(
         mock_client.request_code_v4 = AsyncMock(return_value=None)
         mock_client.code_login_v4 = AsyncMock(return_value=USER_DATA)
         future_base_url = hass.loop.create_future()
-        future_base_url.set_result(mock_roborock_entry.data[CONF_BASE_URL])
+        future_base_url.set_result("https://euiot.roborock.com")
         mock_client.base_url = future_base_url
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: "eu"}
         )
         assert result["step_id"] == "code"
 
         mock_client_cls.assert_called_with(
             USER_EMAIL,
-            base_url=mock_roborock_entry.data[CONF_BASE_URL],
+            base_url="https://euiot.roborock.com",
             session=async_get_clientsession(hass),
         )
 
@@ -754,7 +755,7 @@ async def test_reconfigure_flow_preserves_base_url(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_roborock_entry.data[CONF_BASE_URL] == "https://usiot.roborock.com"
+    assert mock_roborock_entry.data[CONF_BASE_URL] == "https://euiot.roborock.com"
 
 
 async def test_reconfigure_flow_request_code_error(
@@ -769,7 +770,7 @@ async def test_reconfigure_flow_request_code_error(
         side_effect=RoborockInvalidEmail,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_AUTO}
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -780,7 +781,7 @@ async def test_reconfigure_flow_request_code_error(
         "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_AUTO}
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -813,7 +814,7 @@ async def test_reconfigure_flow_invalid_code(
         "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_AUTO}
         )
 
     assert result["step_id"] == "code"
@@ -849,7 +850,8 @@ async def test_reconfigure_flow_invalid_code(
 async def test_reconfigure_flow_with_custom_url(
     hass: HomeAssistant,
 ) -> None:
-    """Test reconfigure for an entry with a custom base URL preserves that URL."""
+    """Test reconfigure flow with a custom server URL updates the base URL."""
+    old_url = "https://usiot.roborock.com"
     custom_url = "https://mycustom.roborock.com"
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -857,7 +859,7 @@ async def test_reconfigure_flow_with_custom_url(
         data={
             CONF_USERNAME: USER_EMAIL,
             CONF_USER_DATA: USER_DATA.as_dict(),
-            CONF_BASE_URL: custom_url,
+            CONF_BASE_URL: old_url,
         },
         unique_id=ROBOROCK_RRUID,
         version=1,
@@ -872,6 +874,14 @@ async def test_reconfigure_flow_with_custom_url(
     schema_keys = {str(k): k for k in result["data_schema"].schema}
     assert schema_keys[CONF_USERNAME].description == {"suggested_value": USER_EMAIL}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_CUSTOM}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "custom_url"
+    custom_url_key = next(iter(result["data_schema"].schema))
+    assert custom_url_key.default() == old_url
+
     with patch(
         "homeassistant.components.roborock.config_flow.RoborockApiClient"
     ) as mock_client_cls:
@@ -883,7 +893,7 @@ async def test_reconfigure_flow_with_custom_url(
         mock_client.base_url = future_base_url
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+            result["flow_id"], {CONF_ROBOROCK_SERVER_URL: custom_url}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "code"

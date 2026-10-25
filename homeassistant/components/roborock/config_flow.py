@@ -120,10 +120,17 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         entry = self._get_reconfigure_entry()
         if user_input is not None:
-            self._username = user_input[CONF_USERNAME]
+            username = user_input[CONF_USERNAME]
+            region = user_input[CONF_REGION]
+            self._username = username
+            if region == REGION_CUSTOM:
+                return await self.async_step_custom_url()
+            base_url = None
+            if region != REGION_AUTO:
+                base_url = f"https://{region}iot.roborock.com"
             self._client = RoborockApiClient(
-                self._username,
-                base_url=entry.data.get(CONF_BASE_URL),
+                username,
+                base_url=base_url,
                 session=async_get_clientsession(self.hass),
             )
             errors = await self._request_code()
@@ -132,7 +139,20 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                probatio.Schema({probatio.Required(CONF_USERNAME): str}),
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_USERNAME): str,
+                        probatio.Required(
+                            CONF_REGION, default=REGION_AUTO
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                options=REGION_OPTIONS,
+                                mode=SelectSelectorMode.DROPDOWN,
+                                translation_key="region",
+                            )
+                        ),
+                    }
+                ),
                 {CONF_USERNAME: entry.data[CONF_USERNAME]},
             ),
             errors=errors,
@@ -161,6 +181,10 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             default_url = user_input[CONF_ROBOROCK_SERVER_URL]
+        elif self.source == SOURCE_RECONFIGURE:
+            default_url = self._get_reconfigure_entry().data.get(
+                CONF_BASE_URL, "https://usiot.roborock.com"
+            )
         else:
             default_url = "https://usiot.roborock.com"
         return self.async_show_form(
