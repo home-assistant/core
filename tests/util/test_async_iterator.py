@@ -482,3 +482,32 @@ async def test_resource_chunk_iterator_close_during_read() -> None:
         await task
     with pytest.raises(StopAsyncIteration):
         await anext(iterator)
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(OSError("Boom!"), id="error"),
+        pytest.param(asyncio.CancelledError(), id="cancelled"),
+    ],
+)
+async def test_resource_chunk_iterator_aclose_fails(error: BaseException) -> None:
+    """Test the resource is closed without waiting if closing gracefully fails."""
+    resource = MockResource([b"hello", b"world"])
+
+    async def aclose() -> None:
+        raise error
+
+    iterator = ResourceChunkIterator(resource.read, close=resource.close, aclose=aclose)
+    assert await anext(iterator) == b"hello"
+
+    with pytest.raises(type(error)):
+        await iterator.aclose()
+    assert resource.close_threads == [threading.get_ident()]
+
+    # The resource is not closed again
+    await iterator.aclose()
+    iterator.close()
+    del iterator
+    gc.collect()
+    assert len(resource.close_threads) == 1

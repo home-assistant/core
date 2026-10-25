@@ -266,9 +266,15 @@ class ResourceChunkIterator:
         if self._aclose is None:
             self._close_resource()
             return
-        if not self._closed:
-            self._closed = True
+        if self._closed:
+            return
+        self._closed = True
+        try:
             await self._aclose()
+        except BaseException:
+            # Don't leave the resource open if closing it gracefully failed
+            self._close()
+            raise
 
     def __del__(self) -> None:
         """Close the resource on the event loop when garbage collected."""
