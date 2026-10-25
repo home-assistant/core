@@ -59,7 +59,7 @@ from .const import (
     ATTR_USERNAME,
     DOMAIN,
 )
-from .helpers import catch_user_not_found, get_music_assistant_client, linked_user
+from .helpers import catch_user_not_found, get_music_assistant_client, user_from_context
 from .schemas import (
     LIBRARY_RESULTS_SCHEMA,
     SEARCH_RESULT_SCHEMA,
@@ -226,7 +226,7 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
             library_only=call.data[ATTR_LIBRARY_ONLY],
             user=search_username
             if search_username is not None
-            else linked_user(call.context),
+            else user_from_context(call.context),
         )
     response: ServiceResponse = SEARCH_RESULT_SCHEMA(
         {

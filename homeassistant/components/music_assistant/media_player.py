@@ -69,7 +69,7 @@ from .helpers import (
     catch_musicassistant_error,
     catch_user_not_found,
     dashboard_identifier,
-    linked_user,
+    user_from_context,
 )
 from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
@@ -549,7 +549,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         # unknown name). When omitted, default playback to the Home Assistant user that made
         # the call.
         user: str | LinkedUser | None = (
-            username if username is not None else linked_user(self._context)
+            username if username is not None else user_from_context(self._context)
         )
 
         media_uris: list[str] = []
@@ -736,7 +736,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     @override
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
         """Search media."""
-        return await async_search_media(self.mass, query, linked_user(self._context))
+        return await async_search_media(
+            self.mass, query, user_from_context(self._context)
+        )
 
     def _update_media_image_url(self, player: Player) -> None:
         """Update image URL."""

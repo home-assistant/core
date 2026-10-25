@@ -59,7 +59,7 @@ def catch_user_not_found(username: str | None) -> Generator[None]:
         ) from err
 
 
-def linked_user(context: Context | None) -> LinkedUser | None:
+def user_from_context(context: Context | None) -> LinkedUser | None:
     """Return the Music Assistant user to act as for the Home Assistant caller."""
     if context is None or context.user_id is None:
         return None

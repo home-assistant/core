@@ -532,7 +532,7 @@
           "name": "Search name"
         },
         "username": {
-          "description": "Music Assistant username used for searching. Searches respect the user's configured provider filters.",
+          "description": "Music Assistant username used for searching. Searches respect the user's configured provider filters. Defaults to the Home Assistant user that made the request, when the username matches a Music Assistant user.",
           "name": "Username"
         }
       },
