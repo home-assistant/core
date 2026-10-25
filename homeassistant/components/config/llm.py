@@ -135,41 +135,21 @@ def _rank_integration(
     brand_name: str | None,
     other: Iterable[str],
 ) -> int | None:
-    """Rank an integration match against a case-folded query string."""
+    """Return the rank of an integration for the query, or None if no match."""
     domain_folded = domain.casefold()
     name_folded = name.casefold()
-    brand_folded = brand_name.casefold() if brand_name else ""
     if query in (name_folded, domain_folded):
         return 0
+    brand_folded = brand_name.casefold() if brand_name else ""
     if brand_folded == query:
         return 1
     if query in name_folded or query in domain_folded:
         return 2
-    if len(query_words := query.split()) > 1 and all(
-        word in name_folded or word in domain_folded or word in brand_folded
-        for word in query_words
-    ):
-        return 3
     if (brand_folded and query in brand_folded) or any(
         query in item.casefold() for item in other
     ):
-        return 4
+        return 3
     return None
-
-
-def _build_integration_meta_index(
-    custom_integrations: dict[str, Any],
-    core_integrations: dict[str, Any],
-) -> dict[str, dict[str, Any]]:
-    """Build an O(1) lookup index mapping domain to integration metadata dict."""
-    index: dict[str, dict[str, Any]] = {}
-    for source_dict in (core_integrations, custom_integrations):
-        for domain, item in source_dict.items():
-            if "integration_type" in item:
-                index[domain] = item
-            elif sub_integrations := item.get("integrations"):
-                index.update(sub_integrations)
-    return index
 
 
 def _match_searchable_entry(
@@ -177,35 +157,24 @@ def _match_searchable_entry(
     domain: str,
     meta: dict[str, Any],
     title_trans: dict[str, str],
-    meta_index: dict[str, dict[str, Any]],
     brand_name: str | None = None,
-    brand_iot_standards: list[str] | None = None,
-) -> tuple[bool, int, str, str, JsonObjectType] | None:
-    """Rank an integration description and build its result dict only if matched."""
+) -> tuple[int, str, str, JsonObjectType] | None:
+    """Rank an integration description and build its result dict if matched."""
     if meta.get("integration_type") == "hardware":
         return None
-
     supported_by: str | None = meta.get("supported_by")
-    resolved_meta = (
-        meta_index.get(supported_by, meta) if supported_by is not None else meta
-    )
+    iot_standards: list[str] | None = meta.get("iot_standards")
+    has_config_flow = bool(meta.get("config_flow", False))
+    if not (has_config_flow or supported_by or iot_standards):
+        return None
+
     name: str = (
         meta.get("name") or title_trans.get(f"component.{domain}.title") or domain
     )
-    iot_standards: list[str] | None = (
-        resolved_meta.get("iot_standards") or brand_iot_standards
-    )
-    other_terms = (
-        *((supported_by,) if supported_by else ()),
-        *(meta.get("categories") or ()),
-        *(iot_standards or ()),
-    )
-    if (
-        rank := _rank_integration(query, domain, name, brand_name, other_terms)
-    ) is None:
+    other = (*((supported_by,) if supported_by else ()), *(iot_standards or ()))
+    if (rank := _rank_integration(query, domain, name, brand_name, other)) is None:
         return None
 
-    has_config_flow = bool(resolved_meta.get("config_flow", False))
     entry_info: JsonObjectType = {
         "domain": domain,
         "name": name,
@@ -215,53 +184,9 @@ def _match_searchable_entry(
         entry_info["supported_by"] = supported_by
     if iot_standards:
         entry_info["iot_standards"] = list[JsonValueType](iot_standards)
-    if resolved_meta.get("single_config_entry"):
+    if meta.get("single_config_entry"):
         entry_info["single_config_entry"] = True
-
-    is_non_configurable = not (has_config_flow or supported_by)
-    return (is_non_configurable and rank > 0, rank, name.casefold(), domain, entry_info)
-
-
-def _iter_integration_group_matches(
-    query: str,
-    source_dict: dict[str, Any],
-    seen_domains: set[str],
-    title_trans: dict[str, str],
-    meta_index: dict[str, dict[str, Any]],
-) -> Iterator[tuple[bool, int, str, str, JsonObjectType]]:
-    """Yield ranked integration matches from a single integration dictionary."""
-    for key, info in source_dict.items():
-        if "integration_type" in info:
-            seen_domains.add(key)
-            if match := _match_searchable_entry(
-                query, key, info, title_trans, meta_index
-            ):
-                yield match
-            continue
-
-        brand_name = info.get("name", key)
-        iot_standards: list[str] | None = info.get("iot_standards")
-        sub_integrations: dict[str, Any] = info.get("integrations") or {}
-        for sub_domain, sub_info in sub_integrations.items():
-            if sub_domain in seen_domains:
-                continue
-            if match := _match_searchable_entry(
-                query,
-                sub_domain,
-                sub_info,
-                title_trans,
-                meta_index,
-                brand_name=brand_name,
-                brand_iot_standards=iot_standards if sub_domain == key else None,
-            ):
-                seen_domains.add(sub_domain)
-                yield match
-        if iot_standards and key not in seen_domains and key not in sub_integrations:
-            seen_domains.add(key)
-            if match := _match_searchable_entry(
-                query, key, info, title_trans, meta_index
-            ):
-                yield match
+    return (rank, name.casefold(), domain, entry_info)
 
 
 def _iter_searchable_matches(
@@ -269,30 +194,29 @@ def _iter_searchable_matches(
     descriptions: dict[str, Any],
     title_trans: dict[str, str],
     filter_type: str | None,
-) -> Iterator[tuple[bool, int, str, str, JsonObjectType]]:
+) -> Iterator[tuple[int, str, str, JsonObjectType]]:
     """Yield ranked integration matches for query."""
     if filter_type in (None, "integration"):
-        core_integrations: dict[str, Any] = descriptions["core"]["integration"]
-        custom_integrations: dict[str, Any] = descriptions["custom"]["integration"]
-        meta_index = _build_integration_meta_index(
-            custom_integrations, core_integrations
+        integrations = (
+            descriptions["core"]["integration"] | descriptions["custom"]["integration"]
         )
-        seen_domains: set[str] = set()
-        for source_dict in (custom_integrations, core_integrations):
-            yield from _iter_integration_group_matches(
-                query, source_dict, seen_domains, title_trans, meta_index
-            )
-
-    if filter_type in (None, "helper"):
-        for source_dict in (
-            descriptions["custom"]["helper"],
-            descriptions["core"]["helper"],
-        ):
-            for domain, info in source_dict.items():
+        for key, info in integrations.items():
+            if "integration_type" in info or not info.get("integrations"):
+                if match := _match_searchable_entry(query, key, info, title_trans):
+                    yield match
+                continue
+            brand_name = info.get("name", key)
+            for sub_domain, sub_info in info["integrations"].items():
                 if match := _match_searchable_entry(
-                    query, domain, info, title_trans, {}
+                    query, sub_domain, sub_info, title_trans, brand_name=brand_name
                 ):
                     yield match
+
+    if filter_type in (None, "helper"):
+        helpers = descriptions["core"]["helper"] | descriptions["custom"]["helper"]
+        for domain, info in helpers.items():
+            if match := _match_searchable_entry(query, domain, info, title_trans):
+                yield match
 
 
 class GetConfigEntriesTool(Tool):
@@ -497,7 +421,7 @@ class SearchIntegrationsTool(Tool):
         return ToolResult(
             data={
                 "result": list[JsonValueType](
-                    entry_info for _, _, _, _, entry_info in best
+                    entry_info for _, _, _, entry_info in best
                 )
             }
         )

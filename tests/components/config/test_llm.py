@@ -649,7 +649,7 @@ async def test_reload_config_entry_invalid_args(
                 {
                     "domain": "3_day_blinds",
                     "name": "3 Day Blinds",
-                    "config_flow": True,
+                    "config_flow": False,
                     "supported_by": "motion_blinds",
                 }
             ],
@@ -670,28 +670,22 @@ async def test_reload_config_entry_invalid_args(
             id="single_config_entry",
         ),
         pytest.param(
-            {"query": "time of day"},
-            [],
-            {"tod"},
-            id="multi_word_name",
-        ),
-        pytest.param(
-            {"query": "amazon alexa"},
+            {"query": "Times of the Day"},
             [
                 {
-                    "domain": "alexa_devices",
-                    "name": "Alexa Devices",
+                    "domain": "tod",
+                    "name": "Times of the Day Sensor",
                     "config_flow": True,
                 }
             ],
-            {"alexa_devices"},
-            id="multi_word_brand_and_name",
+            {"tod"},
+            id="translated_title_match",
         ),
         pytest.param(
             {"query": "yale"},
             [],
             {"august", "yalexs_ble"},
-            id="multi_brand_sub_integration",
+            id="brand_sub_integrations",
         ),
         pytest.param(
             {"query": "motion_blinds"},
@@ -703,33 +697,26 @@ async def test_reload_config_entry_invalid_args(
                 }
             ],
             {"motion_blinds", "3_day_blinds"},
-            id="supported_by_rank4_match",
+            id="supported_by_match",
         ),
         pytest.param(
-            {"query": "leviton"},
+            {"query": "aqara"},
             [
                 {
-                    "domain": "leviton",
-                    "name": "Leviton",
+                    "domain": "aqara",
+                    "name": "Aqara",
                     "config_flow": False,
-                    "iot_standards": ["zwave"],
+                    "iot_standards": ["matter", "zigbee"],
                 }
             ],
-            {"decora_wifi", "leviton"},
-            id="brand_with_sub_integration_and_iot_standards",
+            {"aqara"},
+            id="iot_standards_brand",
         ),
         pytest.param(
-            {"query": "tplink"},
-            [
-                {
-                    "domain": "tplink",
-                    "name": "TP-Link Smart Home",
-                    "config_flow": True,
-                    "iot_standards": ["matter"],
-                }
-            ],
-            {"tplink"},
-            id="brand_matching_sub_domain_with_iot_standards",
+            {"query": "actiontec"},
+            [],
+            set(),
+            id="yaml_only_excluded",
         ),
         pytest.param(
             {"query": "homeassistant_yellow"},
