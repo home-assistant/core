@@ -736,8 +736,6 @@ class ChatLog:
             and llm_context.agent_id is not None
             and llm_api_key == self._llm_api_key
             and user_extra_system_prompt in (None, self.extra_system_prompt)
-            # The user may have lost access since the instance was built.
-            and await llm.async_is_authorized(self.llm_api.api, llm_context)
         ):
             # Keep the system prompt and tools static between turns, so LLM
             # providers can cache them. Tool calls use the context of this turn.
