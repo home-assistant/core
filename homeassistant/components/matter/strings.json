@@ -785,6 +785,15 @@
     "bitmap_write_not_supported": {
       "message": "The device does not support changing {name}."
     },
+    "camera_zone_use_not_supported": {
+      "message": "{entity_id} does not support {use} zones."
+    },
+    "camera_zones_not_editable": {
+      "message": "{entity_id} does not allow changing its zones."
+    },
+    "camera_zones_not_supported": {
+      "message": "{entity_id} does not support zones."
+    },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."
     },
@@ -809,7 +818,32 @@
       "title": "Newer version of Matter Server needed"
     }
   },
+  "selector": {
+    "camera_zone_use": {
+      "options": {
+        "focus": "Focus",
+        "motion": "Motion",
+        "privacy": "Privacy"
+      }
+    },
+    "camera_zone_vertex": {
+      "fields": {
+        "x": "X",
+        "y": "Y"
+      }
+    }
+  },
   "services": {
+    "clear_camera_zone": {
+      "description": "Removes a zone from a camera.",
+      "fields": {
+        "zone_id": {
+          "description": "The ID of the zone to remove.",
+          "name": "Zone ID"
+        }
+      },
+      "name": "Clear camera zone"
+    },
     "clear_lock_credential": {
       "description": "Removes a credential from a lock.",
       "fields": {
@@ -833,6 +867,10 @@
         }
       },
       "name": "Clear lock user"
+    },
+    "get_camera_zones": {
+      "description": "Returns the zones of a camera, with corners in percent of the image.",
+      "name": "Get camera zones"
     },
     "get_lock_credential_status": {
       "description": "Returns the status of a credential slot on a lock.",
@@ -865,6 +903,32 @@
         }
       },
       "name": "Open commissioning window"
+    },
+    "set_camera_zone": {
+      "description": "Creates a camera zone, or updates the zone with the given ID.",
+      "fields": {
+        "color": {
+          "description": "The color to show the zone in, like #FF0000 or #FF000080.",
+          "name": "Color"
+        },
+        "name": {
+          "description": "The name of the zone, up to 16 characters.",
+          "name": "Name"
+        },
+        "use": {
+          "description": "What the camera uses the zone for.",
+          "name": "Use"
+        },
+        "vertices": {
+          "description": "The corners of the zone, in percent of the image from the top left. 3 to 12 corners.",
+          "name": "Corners"
+        },
+        "zone_id": {
+          "description": "The ID of the zone to update. Leave empty to create a zone.",
+          "name": "Zone ID"
+        }
+      },
+      "name": "Set camera zone"
     },
     "set_lock_credential": {
       "description": "Adds or updates a credential on a lock.",

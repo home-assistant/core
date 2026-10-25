@@ -1,3 +1,18 @@
+clear_camera_zone:
+  target:
+    entity:
+      domain: camera
+      integration: matter
+  fields:
+    zone_id:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 65535
+          step: 1
+          mode: box
+
 clear_lock_credential:
   target:
     entity:
@@ -37,6 +52,12 @@ clear_lock_user:
           step: 1
           mode: box
       required: true
+
+get_camera_zones:
+  target:
+    entity:
+      domain: camera
+      integration: matter
 
 get_lock_credential_status:
   target:
@@ -78,6 +99,61 @@ get_lock_users:
     entity:
       domain: lock
       integration: matter
+
+set_camera_zone:
+  target:
+    entity:
+      domain: camera
+      integration: matter
+  fields:
+    zone_id:
+      selector:
+        number:
+          min: 0
+          max: 65535
+          step: 1
+          mode: box
+    name:
+      required: true
+      selector:
+        text:
+    use:
+      required: true
+      selector:
+        select:
+          translation_key: camera_zone_use
+          options:
+            - motion
+            - privacy
+            - focus
+    vertices:
+      required: true
+      selector:
+        object:
+          multiple: true
+          translation_key: camera_zone_vertex
+          fields:
+            x:
+              required: true
+              selector:
+                number:
+                  min: 0
+                  max: 100
+                  step: 0.01
+                  unit_of_measurement: "%"
+                  mode: box
+            y:
+              required: true
+              selector:
+                number:
+                  min: 0
+                  max: 100
+                  step: 0.01
+                  unit_of_measurement: "%"
+                  mode: box
+    color:
+      selector:
+        text:
 
 set_lock_credential:
   target:

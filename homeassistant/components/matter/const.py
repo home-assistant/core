@@ -126,3 +126,9 @@ SERVICE_CREDENTIAL_TYPES = [
 ]
 
 CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"
+
+CAMERA_ZONE_USES: Final = {
+    "motion": clusters.ZoneManagement.Enums.ZoneUseEnum.kMotion,
+    "privacy": clusters.ZoneManagement.Enums.ZoneUseEnum.kPrivacy,
+    "focus": clusters.ZoneManagement.Enums.ZoneUseEnum.kFocus,
+}

@@ -186,11 +186,17 @@
     }
   },
   "services": {
+    "clear_camera_zone": {
+      "service": "mdi:vector-square-remove"
+    },
     "clear_lock_credential": {
       "service": "mdi:key-remove"
     },
     "clear_lock_user": {
       "service": "mdi:account-remove"
+    },
+    "get_camera_zones": {
+      "service": "mdi:vector-square"
     },
     "get_lock_credential_status": {
       "service": "mdi:key-chain"
@@ -200,6 +206,9 @@
     },
     "get_lock_users": {
       "service": "mdi:account-multiple"
+    },
+    "set_camera_zone": {
+      "service": "mdi:vector-square-edit"
     },
     "set_lock_credential": {
       "service": "mdi:key-plus"

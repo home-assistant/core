@@ -4,7 +4,11 @@ from base64 import b64decode
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
-from chip.clusters.Objects import CameraAvStreamManagement, WebRtcTransportProvider
+from chip.clusters.Objects import (
+    CameraAvStreamManagement,
+    WebRtcTransportProvider,
+    ZoneManagement,
+)
 from matter_server.client.exceptions import MatterClientException
 from matter_server.client.models import device_types
 from matter_server.common.errors import MatterError
@@ -28,11 +32,11 @@ from homeassistant.components.camera import (
     WebRTCSendMessage,
 )
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import LOGGER
+from .const import CAMERA_ZONE_USES, DOMAIN, LOGGER
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema, MatterEntityInfo
@@ -49,6 +53,11 @@ TwoWayTalkSupportType = CameraAvStreamManagement.Enums.TwoWayTalkSupportTypeEnum
 
 STREAM_USAGE_LIVE_VIEW = "LiveView"
 MAX_ICE_SERVERS = 10
+
+ZoneFeature = ZoneManagement.Bitmaps.Feature
+ZoneSource = ZoneManagement.Enums.ZoneSourceEnum
+
+ZONE_SOURCES = {ZoneSource.kMfg: "manufacturer", ZoneSource.kUser: "user"}
 
 
 async def async_setup_entry(
@@ -290,6 +299,129 @@ class MatterCamera(MatterEntity, Camera):
         except (MatterError, MatterClientException) as err:
             raise HomeAssistantError(str(err) or type(err).__name__) from err
         return b64decode(result.data)
+
+    def _zone_maximum(self) -> ZoneManagement.Structs.TwoDCartesianVertexStruct:
+        """Return the largest zone coordinates of the camera."""
+        maximum: ZoneManagement.Structs.TwoDCartesianVertexStruct | None = (
+            self.get_matter_attribute_value(ZoneManagement.Attributes.TwoDCartesianMax)
+        )
+        if not self._endpoint.has_cluster(ZoneManagement) or maximum is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="camera_zones_not_supported",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        return maximum
+
+    async def async_get_camera_zones(self) -> ServiceResponse:
+        """Return the zones of the camera."""
+        maximum = self._zone_maximum()
+        zones = []
+        for zone in (
+            self.get_matter_attribute_value(ZoneManagement.Attributes.Zones) or []
+        ):
+            if (area := zone.twoDCartesianZone) is None:
+                continue
+            zones.append(
+                {
+                    "zone_id": zone.zoneID,
+                    "name": area.name,
+                    "use": next(
+                        (
+                            key
+                            for key, use in CAMERA_ZONE_USES.items()
+                            if use == area.use
+                        ),
+                        None,
+                    ),
+                    "source": ZONE_SOURCES.get(zone.zoneSource),
+                    "vertices": [
+                        _vertex_to_percent(vertex, maximum) for vertex in area.vertices
+                    ],
+                    "color": area.color,
+                }
+            )
+        return {
+            "zones": zones,
+            "max_zones": self.get_matter_attribute_value(
+                ZoneManagement.Attributes.MaxZones
+            ),
+            "max_user_defined_zones": self.get_matter_attribute_value(
+                ZoneManagement.Attributes.MaxUserDefinedZones
+            ),
+        }
+
+    async def async_set_camera_zone(
+        self,
+        name: str,
+        use: str,
+        vertices: list[dict[str, float]],
+        zone_id: int | None = None,
+        color: str | None = None,
+    ) -> ServiceResponse:
+        """Create a zone, or update the zone with the given ID."""
+        maximum = self._zone_maximum()
+        features = ZoneFeature(
+            self.get_matter_attribute_value(ZoneManagement.Attributes.FeatureMap) or 0
+        )
+        if ZoneFeature.kUserDefined not in features:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="camera_zones_not_editable",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        if use == "focus" and ZoneFeature.kFocusZones not in features:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="camera_zone_use_not_supported",
+                translation_placeholders={"entity_id": self.entity_id, "use": use},
+            )
+        zone = ZoneManagement.Structs.TwoDCartesianZoneStruct(
+            name=name,
+            use=CAMERA_ZONE_USES[use],
+            vertices=[_vertex_from_percent(vertex, maximum) for vertex in vertices],
+            color=color,
+        )
+        if zone_id is None:
+            response = await self.send_device_command(
+                ZoneManagement.Commands.CreateTwoDCartesianZone(zone=zone)
+            )
+            zone_id = response["zoneID"]
+        else:
+            await self.send_device_command(
+                ZoneManagement.Commands.UpdateTwoDCartesianZone(
+                    zoneID=zone_id, zone=zone
+                )
+            )
+        return {"zone_id": zone_id}
+
+    async def async_clear_camera_zone(self, zone_id: int) -> None:
+        """Remove a zone from the camera."""
+        self._zone_maximum()
+        await self.send_device_command(
+            ZoneManagement.Commands.RemoveZone(zoneID=zone_id)
+        )
+
+
+def _vertex_to_percent(
+    vertex: ZoneManagement.Structs.TwoDCartesianVertexStruct,
+    maximum: ZoneManagement.Structs.TwoDCartesianVertexStruct,
+) -> dict[str, float]:
+    """Convert camera coordinates to percent of the image."""
+    return {
+        "x": round(vertex.x / maximum.x * 100, 2),
+        "y": round(vertex.y / maximum.y * 100, 2),
+    }
+
+
+def _vertex_from_percent(
+    vertex: dict[str, float], maximum: ZoneManagement.Structs.TwoDCartesianVertexStruct
+) -> ZoneManagement.Structs.TwoDCartesianVertexStruct:
+    """Convert percent of the image to camera coordinates."""
+    return ZoneManagement.Structs.TwoDCartesianVertexStruct(
+        x=round(vertex["x"] / 100 * maximum.x),
+        y=round(vertex["y"] / 100 * maximum.y),
+    )
 
 
 DISCOVERY_SCHEMAS = [
