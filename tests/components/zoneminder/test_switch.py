@@ -183,6 +183,31 @@ async def test_switch_turn_off_service(
     assert monitors[0].function == MonitorState("Monitor")
 
 
+async def test_switch_follows_server_change(
+    hass: HomeAssistant,
+    mock_zoneminder_client: MagicMock,
+    single_server_config: dict,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test switch refreshes the monitor on each poll."""
+    monitor = create_mock_monitor(name="Front Door", function=MonitorState.MONITOR)
+    await _setup_zm_with_switches(
+        hass, mock_zoneminder_client, single_server_config, [monitor], freezer
+    )
+    assert hass.states.get("switch.front_door_state").state == STATE_OFF
+
+    def change_on_server() -> None:
+        monitor.function = MonitorState.MODECT
+
+    # zm-py only fetches new monitor data in update_monitor
+    monitor.update_monitor.side_effect = change_on_server
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("switch.front_door_state").state == STATE_ON
+
+
 async def test_switch_icon(
     hass: HomeAssistant,
     mock_zoneminder_client: MagicMock,

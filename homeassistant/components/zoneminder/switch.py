@@ -69,6 +69,7 @@ class ZMSwitchMonitors(SwitchEntity):
 
     def update(self) -> None:
         """Update the switch value."""
+        self._monitor.update_monitor()
         self._state = self._monitor.function == self._on_state
 
     @property
