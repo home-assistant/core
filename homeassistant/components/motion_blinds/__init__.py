@@ -105,7 +105,7 @@ async def async_setup_entry(
     if not await connect_gateway_class.async_connect_gateway(
         host, key, blind_type_list
     ):
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(f"Cannot connect to Motion Gateway at {host}")
     motion_gateway = connect_gateway_class.gateway_device
 
     coordinator = DataUpdateCoordinatorMotionBlinds(
