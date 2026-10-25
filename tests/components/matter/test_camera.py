@@ -1112,6 +1112,8 @@ async def test_camera_zone_requires_admin(
     data: dict[str, Any],
 ) -> None:
     """Test changing zones requires an admin user."""
+    # Grant control of all entities, so the call is only rejected for not being admin
+    hass_read_only_user.mock_policy({"entities": {"all": {"control": True}}})
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
             DOMAIN,
