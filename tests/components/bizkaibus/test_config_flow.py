@@ -342,6 +342,61 @@ async def test_user_flow_with_timetable_connection_error(hass: HomeAssistant) ->
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    "connection_errors",
+    [
+        pytest.param(
+            [BizkaibusConnectionError(), True, True],
+            id="lines-test-connection",
+        ),
+        pytest.param(
+            [True, BizkaibusConnectionError(), True, True],
+            id="title-test-connection",
+        ),
+    ],
+)
+async def test_user_flow_with_test_connection_error(
+    hass: HomeAssistant, connection_errors: list[bool | BizkaibusConnectionError]
+) -> None:
+    """Test the user flow recovers when a helper's connection check raises."""
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch(
+            "homeassistant.components.bizkaibus.async_setup_entry", return_value=True
+        ),
+    ):
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            timetable=SimpleNamespace(id="stop_1234", name="Central Station"),
+        )
+        mock_api.test_connection = AsyncMock(side_effect=connection_errors)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "1234"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "1234"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "lines"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_user_flow_with_invalid_stop_id(hass: HomeAssistant) -> None:
     """Test the user step rejects an invalid stop ID."""
     with (
