@@ -39,7 +39,10 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     cync_auth: Auth = None
-    user_pass: dict[str, Any] = {}
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self.user_pass: dict[str, Any] = {}
 
     @override
     async def async_step_user(
