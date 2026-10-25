@@ -18,6 +18,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
@@ -95,9 +96,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         await self.async_set_unique_id(self.approot.parent_reference.drive_id.upper())
 
         if self.source != SOURCE_USER:
-            self._abort_if_unique_id_mismatch(
-                reason="wrong_drive",
-            )
+            self._abort_if_drive_mismatch()
 
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
@@ -119,6 +118,17 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return await self.async_step_reconfigure_folder()
 
         return await self.async_step_folder_name()
+
+    def _abort_if_drive_mismatch(self) -> None:
+        """Abort if the drive does not belong to the reauth or reconfigure entry."""
+        entry = (
+            self._get_reauth_entry()
+            if self.source == SOURCE_REAUTH
+            else self._get_reconfigure_entry()
+        )
+        # Entries that are not migrated yet, like disabled ones, can be lowercase
+        if (entry.unique_id or "").upper() != self.unique_id:
+            raise AbortFlow("wrong_drive")
 
     async def async_step_folder_name(
         self, user_input: dict[str, Any] | None = None

@@ -326,6 +326,32 @@ async def test_reconfigure_flow(
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+async def test_reconfigure_flow_unmigrated_entry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring a disabled entry that still has a lowercase drive ID."""
+    config_entry = MockConfigEntry(
+        unique_id="mock_drive_id",
+        title=mock_config_entry.title,
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        minor_version=1,
+        disabled_by=config_entries.ConfigEntryDisabler.USER,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_folder"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reconfigure_flow_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
