@@ -117,6 +117,7 @@
         "default": "mdi:heat-pump",
         "state": {
           "alarm": "mdi:alert-circle",
+          "anti_legionella": "mdi:bacteria",
           "compressor_shutdown": "mdi:power-off",
           "compressor_startup": "mdi:rocket-launch",
           "cooling": "mdi:snowflake",

@@ -1,6 +1,6 @@
 """Tests for HomematicIP Cloud climate."""
 
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from homematicip.base.enums import AbsenceType
@@ -571,7 +571,7 @@ async def test_hmip_climate_services(
         blocking=True,
     )
     assert home.mock_calls[-1][0] == "activate_absence_with_period_async"
-    assert home.mock_calls[-1][1] == (datetime.datetime(2019, 2, 17, 14, 0),)
+    assert home.mock_calls[-1][1] == (dt.datetime(2019, 2, 17, 14, 0),)
     assert len(home._connection.mock_calls) == 3
 
     await hass.services.async_call(
@@ -581,7 +581,7 @@ async def test_hmip_climate_services(
         blocking=True,
     )
     assert home.mock_calls[-1][0] == "activate_absence_with_period_async"
-    assert home.mock_calls[-1][1] == (datetime.datetime(2019, 2, 17, 14, 0),)
+    assert home.mock_calls[-1][1] == (dt.datetime(2019, 2, 17, 14, 0),)
     assert len(home._connection.mock_calls) == 4
 
     await hass.services.async_call(
@@ -591,7 +591,7 @@ async def test_hmip_climate_services(
         blocking=True,
     )
     assert home.mock_calls[-1][0] == "activate_vacation_async"
-    assert home.mock_calls[-1][1] == (datetime.datetime(2019, 2, 17, 14, 0), 18.5)
+    assert home.mock_calls[-1][1] == (dt.datetime(2019, 2, 17, 14, 0), 18.5)
     assert len(home._connection.mock_calls) == 5
 
     await hass.services.async_call(
@@ -601,7 +601,7 @@ async def test_hmip_climate_services(
         blocking=True,
     )
     assert home.mock_calls[-1][0] == "activate_vacation_async"
-    assert home.mock_calls[-1][1] == (datetime.datetime(2019, 2, 17, 14, 0), 18.5)
+    assert home.mock_calls[-1][1] == (dt.datetime(2019, 2, 17, 14, 0), 18.5)
     assert len(home._connection.mock_calls) == 6
 
     await hass.services.async_call(

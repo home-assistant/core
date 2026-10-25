@@ -4,7 +4,7 @@ from collections import defaultdict, deque
 from collections.abc import Callable, Generator, Iterator, Mapping
 import contextlib
 from dataclasses import fields
-import datetime
+import datetime as dt
 from io import SEEK_END, BytesIO
 import logging
 import math
@@ -412,7 +412,7 @@ class StreamMuxer:
         if last_part:
             # If we've written the last part, we can close the memory_file.
             self._memory_file.close()  # We don't need the BytesIO object anymore
-            self._start_time += datetime.timedelta(seconds=segment_duration)
+            self._start_time += dt.timedelta(seconds=segment_duration)
             # Reinitialize
             self.reset(packet.dts)
         else:

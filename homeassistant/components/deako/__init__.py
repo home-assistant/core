@@ -13,7 +13,7 @@ PLATFORMS: list[Platform] = [Platform.LIGHT]
 type DeakoConfigEntry = ConfigEntry[Deako]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> None:
     """Set up deako."""
     _zc = await zeroconf.async_get_instance(hass)
     discoverer = DeakoDiscoverer(_zc)
@@ -38,11 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> None:
     """Unload a config entry."""
     await entry.runtime_data.disconnect()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -185,7 +185,7 @@ class KnxUiNumber(_KnxNumber, KnxUiEntity):
 
         self._device = NumericValue(
             knx_module.xknx,
-            name=config.entity.xknx_name,
+            name=config.entity.name,
             group_address=knx_conf.ga_sensor.write,
             group_address_state=state_and_passive(knx_conf.ga_sensor),
             respond_to_read=knx_conf.respond_to_read,

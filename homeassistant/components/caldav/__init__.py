@@ -29,7 +29,7 @@ type CalDavConfigEntry = ConfigEntry[DAVClient]
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> None:
     """Set up CalDAV from a config entry."""
     client = await hass.async_add_executor_job(
         partial(
@@ -63,9 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

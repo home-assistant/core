@@ -72,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) -> None:
     """Set up an access point from a config entry."""
 
     # 0.104 introduced config entry unique id, this makes upgrading possible
@@ -97,23 +97,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) 
         EVENT_HOMEASSISTANT_STOP, hap.shutdown
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: HomematicIPConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     hap = entry.runtime_data
     assert hap.reset_connection_listener is not None
     hap.reset_connection_listener()
 
-    return await hap.async_reset()
+    await hap.async_reset()
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+) -> None:
     """Migrate the config entry from version 1 to version 2."""
 
     if config_entry.version == 1:
@@ -232,5 +230,3 @@ async def async_migrate_entry(
 
         hass.config_entries.async_update_entry(config_entry, version=2)
         _LOGGER.info("Migration to version 2 successful")
-
-    return True

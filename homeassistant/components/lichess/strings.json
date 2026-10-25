@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "The API token belongs to a different Lichess account than the one configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +10,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "[%key:component::lichess::config::step::user::data_description::api_token%]"
+        },
+        "description": "The API token for {username} is no longer valid. Create a new personal API token on the [Lichess API token page]({token_url}). Make sure the **Read preferences** permission is allowed.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
@@ -127,6 +138,11 @@
       "ultra_bullet_rating": {
         "name": "UltraBullet rating"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "The Lichess API token is invalid or has been revoked."
     }
   }
 }

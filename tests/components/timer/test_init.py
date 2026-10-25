@@ -9,9 +9,14 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.timer import (
-    ATTR_DURATION,
     ATTR_FINISHES_AT,
     ATTR_LAST_TRANSITION,
     ATTR_REMAINING,
@@ -22,21 +27,24 @@ from homeassistant.components.timer import (
     CONF_RESTORE,
     DEFAULT_DURATION,
     DOMAIN,
+    SERVICE_CANCEL,
+    SERVICE_CHANGE,
+    SERVICE_FINISH,
+    SERVICE_PAUSE,
+    SERVICE_START,
+    Timer,
+)
+from homeassistant.components.timer.const import (
+    ATTR_DURATION,
     EVENT_TIMER_CANCELLED,
     EVENT_TIMER_CHANGED,
     EVENT_TIMER_FINISHED,
     EVENT_TIMER_PAUSED,
     EVENT_TIMER_RESTARTED,
     EVENT_TIMER_STARTED,
-    SERVICE_CANCEL,
-    SERVICE_CHANGE,
-    SERVICE_FINISH,
-    SERVICE_PAUSE,
-    SERVICE_START,
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
-    Timer,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -55,9 +63,6 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import StoredState, async_get
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1376,7 +1381,7 @@ async def test_restore_active_resume(
 
     # In patch make sure we ignore microseconds
     with patch(
-        "homeassistant.components.timer.dt_util.utcnow",
+        "homeassistant.components.timer.entity.dt_util.utcnow",
         return_value=simulated_utc_now.replace(microsecond=999),
     ):
         await entity.async_added_to_hass()
@@ -1434,7 +1439,8 @@ async def test_restore_active_finished_outside_grace(
     entity.entity_id = "timer.test"
 
     with patch(
-        "homeassistant.components.timer.dt_util.utcnow", return_value=simulated_utc_now
+        "homeassistant.components.timer.entity.dt_util.utcnow",
+        return_value=simulated_utc_now,
     ):
         await entity.async_added_to_hass()
         await hass.async_block_till_done()

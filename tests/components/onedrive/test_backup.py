@@ -14,6 +14,12 @@ from onedrive_personal_sdk.exceptions import (
 )
 from onedrive_personal_sdk.models.items import File
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.onedrive.backup import (
@@ -27,9 +33,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import BACKUP_METADATA
-
-from tests.common import AsyncMock, MockConfigEntry
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -244,7 +247,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_onedrive_client.delete_drive_item.call_count == 2
 
 
@@ -408,13 +411,14 @@ async def test_error_on_agents_download(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error"),
+    ("side_effect", "error", "translation_key"),
     [
         (
             OneDriveException(),
             "Backup operation failed",
+            "agent_operation_failed",
         ),
-        (TimeoutError(), "Backup operation timed out"),
+        (TimeoutError(), "Backup operation timed out", "agent_operation_timed_out"),
     ],
 )
 async def test_delete_error(
@@ -424,6 +428,7 @@ async def test_delete_error(
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     error: str,
+    translation_key: str,
 ) -> None:
     """Test error during delete."""
     mock_onedrive_client.delete_drive_item.side_effect = AsyncMock(
@@ -441,8 +446,16 @@ async def test_delete_error(
     response = await client.receive_json()
 
     assert response["success"]
+    agent_id = f"{DOMAIN}.{mock_config_entry.unique_id}"
     assert response["result"] == {
-        "agent_errors": {f"{DOMAIN}.{mock_config_entry.unique_id}": error}
+        "agent_error_translations": {
+            agent_id: {
+                "translation_domain": "backup",
+                "translation_key": translation_key,
+                "translation_placeholders": None,
+            }
+        },
+        "agent_errors": {agent_id: error},
     }
 
 
@@ -464,7 +477,7 @@ async def test_agents_delete_not_found_does_not_throw(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_agents_backup_not_found(
@@ -502,7 +515,7 @@ async def test_reauth_on_403(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{mock_config_entry.unique_id}": "Authentication error"
+        f"{DOMAIN}.{mock_config_entry.unique_id}": "Authentication with the backup location failed"
     }
 
     await hass.async_block_till_done()
