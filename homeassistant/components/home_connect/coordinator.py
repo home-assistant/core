@@ -2,6 +2,7 @@
 
 from asyncio import sleep as asyncio_sleep
 from collections.abc import Callable
+import contextlib
 from dataclasses import dataclass
 import logging
 from typing import override
@@ -634,6 +635,12 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
             resolved_program_key = program_key
 
         options.update(await self.get_options_definitions(resolved_program_key))
+
+        # Drop events for options that are no longer part of the program.
+        for event_key in tuple(events):
+            with contextlib.suppress(ValueError):
+                if OptionKey(event_key.value) not in options:
+                    del events[event_key]
 
         for option in options.values():
             option_event_key = EventKey(option.key)

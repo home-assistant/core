@@ -297,9 +297,7 @@ async def test_select_option_available_on_option_events(
         f"{appliance.ha_id}-{OptionKey.COOKING_COMMON_HOOD_VENTING_LEVEL}",
         suggested_object_id=entity_id.split(".", 1)[1],
     )
-    client.get_all_programs = AsyncMock(
-        return_value=ArrayOfPrograms([], None, None)
-    )
+    client.get_all_programs = AsyncMock(return_value=ArrayOfPrograms([], None, None))
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
