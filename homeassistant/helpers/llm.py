@@ -619,6 +619,16 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
             return {"type": "string", "enum": schema.config["languages"]}
         return {"type": "string", "format": "RFC 5646"}
 
+    if isinstance(schema, selector.ImageRegionSelector):
+        result = {
+            "type": "array",
+            "items": probatio.to_openapi(schema.DATA_SCHEMA),
+            "minItems": schema.config["min_points"],
+        }
+        if "max_points" in schema.config:
+            result["maxItems"] = schema.config["max_points"]
+        return result
+
     if isinstance(schema, selector.LocationSelector):
         return probatio.to_openapi(schema.DATA_SCHEMA)
 

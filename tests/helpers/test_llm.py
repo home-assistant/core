@@ -1438,6 +1438,28 @@ async def test_selector_serializer(
         "items": {"type": "string"},
     }
     assert selector_serializer(selector.IconSelector()) == {"type": "string"}
+    image_region_point = {
+        "type": "object",
+        "properties": {
+            "x": {"type": "number", "minimum": 0, "maximum": 100},
+            "y": {"type": "number", "minimum": 0, "maximum": 100},
+        },
+        "required": ["x", "y"],
+        "additionalProperties": False,
+    }
+    assert selector_serializer(selector.ImageRegionSelector()) == {
+        "type": "array",
+        "items": image_region_point,
+        "minItems": 3,
+    }
+    assert selector_serializer(
+        selector.ImageRegionSelector({"min_points": 4, "max_points": 12})
+    ) == {
+        "type": "array",
+        "items": image_region_point,
+        "minItems": 4,
+        "maxItems": 12,
+    }
     assert selector_serializer(selector.LabelSelector()) == {"type": "string"}
     assert selector_serializer(selector.LabelSelector({"multiple": True})) == {
         "type": "array",

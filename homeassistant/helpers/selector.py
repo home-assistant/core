@@ -1297,6 +1297,80 @@ class IconSelector(Selector[IconSelectorConfig]):
         return icon
 
 
+def _validate_image_region_selector_config(config: Any) -> Any:
+    """Validate that max_points is not lower than min_points."""
+    if config.get("max_points", config["min_points"]) < config["min_points"]:
+        raise probatio.Invalid("max_points can not be lower than min_points")
+    return config
+
+
+class ImageRegionSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent an image region selector config."""
+
+    entity_id: str
+    min_points: int
+    max_points: int
+
+
+@SELECTORS.register("image_region")
+class ImageRegionSelector(Selector[ImageRegionSelectorConfig]):
+    """Selector for a region of an image, as polygon corners in percent.
+
+    The corners are in percent of the image width and height from the top
+    left. The polygon is closed implicitly, the first corner is not repeated.
+    """
+
+    selector_type = "image_region"
+
+    allowed_context_keys = ReadOnlyDict(
+        {
+            # Draws on the image of the selected entity
+            "filter_entity": frozenset({EntitySelector.selector_type})
+        }
+    )
+
+    CONFIG_SCHEMA = probatio.All(
+        make_selector_config_schema(
+            {
+                # The image source, if not given by the context
+                probatio.Optional("entity_id"): cv.entity_domain("camera"),
+                probatio.Optional("min_points", default=3): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=3)
+                ),
+                probatio.Optional("max_points"): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=3)
+                ),
+            }
+        ),
+        _validate_image_region_selector_config,
+    )
+
+    DATA_SCHEMA = probatio.Schema(
+        {
+            probatio.Required("x"): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=0, max=100)
+            ),
+            probatio.Required("y"): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=0, max=100)
+            ),
+        }
+    )
+
+    def __init__(self, config: ImageRegionSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> list[dict[str, float]]:
+        """Validate the passed selection."""
+        points: list[dict[str, float]] = probatio.All(
+            [self.DATA_SCHEMA],
+            probatio.Length(
+                min=self.config["min_points"], max=self.config.get("max_points")
+            ),
+        )(data)
+        return points
+
+
 class LabelSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a label selector config."""
 
