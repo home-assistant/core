@@ -20,6 +20,7 @@ from homeassistant.components import config as config_component
 from homeassistant.components.config.llm import (
     GetConfigEntriesTool,
     ReloadConfigEntryTool,
+    SearchIntegrationsTool,
     async_get_tools,
 )
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
@@ -54,13 +55,18 @@ async def test_async_get_tools(
     assert [tool.name for tool in ha_tools.tools] == [
         "config__get_config_entries",
         "config__reload_config_entry",
+        "config__search_integrations",
     ]
     assert ha_tools.prompt is None
 
 
 def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
     """Test that tool schemas can be exported for LLM clients."""
-    tools = [GetConfigEntriesTool(), ReloadConfigEntryTool()]
+    tools = [
+        GetConfigEntriesTool(),
+        ReloadConfigEntryTool(),
+        SearchIntegrationsTool(),
+    ]
     assert {
         tool.name: probatio.to_openapi(tool.parameters) for tool in tools
     } == snapshot
@@ -96,6 +102,14 @@ async def test_call_through_api(
     assert reload_tool.integration == config_component.DOMAIN
     assert reload_tool.annotations == llm.ToolAnnotations(
         read_only=False, destructive=False, idempotent=True, open_world=False
+    )
+
+    search_tool = next(
+        tool for tool in api.tools if tool.name == "config__search_integrations"
+    )
+    assert search_tool.integration == config_component.DOMAIN
+    assert search_tool.annotations == llm.ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
     )
 
     result = await api.async_call_tool(
@@ -616,5 +630,152 @@ async def test_reload_config_entry_invalid_args(
 ) -> None:
     """Test that invalid entry_id arguments raise probatio.Invalid."""
     tool = ReloadConfigEntryTool()
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "expected_prefix", "expected_domains"),
+    [
+        pytest.param(
+            {"query": "random", "type": "helper"},
+            [{"domain": "random", "name": "Random", "config_flow": True}],
+            {"random"},
+            id="helper_exact",
+        ),
+        pytest.param(
+            {"query": "3 Day Blinds", "type": "integration"},
+            [
+                {
+                    "domain": "3_day_blinds",
+                    "name": "3 Day Blinds",
+                    "config_flow": True,
+                    "supported_by": "motion_blinds",
+                }
+            ],
+            {"3_day_blinds"},
+            id="virtual_supported_by",
+        ),
+        pytest.param(
+            {"query": "sun", "type": "integration"},
+            [
+                {
+                    "domain": "sun",
+                    "name": "Sun",
+                    "config_flow": True,
+                    "single_config_entry": True,
+                }
+            ],
+            {"sun"},
+            id="single_config_entry",
+        ),
+        pytest.param(
+            {"query": "time of day"},
+            [],
+            {"tod"},
+            id="multi_word_name",
+        ),
+        pytest.param(
+            {"query": "amazon alexa"},
+            [
+                {
+                    "domain": "alexa_devices",
+                    "name": "Alexa Devices",
+                    "config_flow": True,
+                }
+            ],
+            {"alexa_devices"},
+            id="multi_word_brand_and_name",
+        ),
+        pytest.param(
+            {"query": "yale"},
+            [],
+            {"august", "yalexs_ble"},
+            id="multi_brand_sub_integration",
+        ),
+        pytest.param(
+            {"query": "motion_blinds"},
+            [
+                {
+                    "domain": "motion_blinds",
+                    "name": "Motionblinds",
+                    "config_flow": True,
+                }
+            ],
+            {"motion_blinds", "3_day_blinds"},
+            id="supported_by_rank4_match",
+        ),
+        pytest.param(
+            {"query": "leviton"},
+            [
+                {
+                    "domain": "leviton",
+                    "name": "Leviton",
+                    "config_flow": False,
+                    "iot_standards": ["zwave"],
+                }
+            ],
+            {"decora_wifi", "leviton"},
+            id="brand_with_sub_integration_and_iot_standards",
+        ),
+        pytest.param(
+            {"query": "tplink"},
+            [
+                {
+                    "domain": "tplink",
+                    "name": "TP-Link Smart Home",
+                    "config_flow": True,
+                    "iot_standards": ["matter"],
+                }
+            ],
+            {"tplink"},
+            id="brand_matching_sub_domain_with_iot_standards",
+        ),
+        pytest.param(
+            {"query": "homeassistant_yellow"},
+            [],
+            set(),
+            id="hardware_excluded",
+        ),
+    ],
+)
+async def test_search_integrations(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    tool_args: dict[str, Any],
+    expected_prefix: list[dict[str, Any]],
+    expected_domains: set[str],
+) -> None:
+    """Test searching available integrations, helpers, and virtual integrations."""
+    tool = SearchIntegrationsTool()
+    res = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, tool_args),
+        llm_context,
+    )
+    assert res.error is False
+    assert isinstance(items := res.data["result"], list)
+    assert items[: len(expected_prefix)] == expected_prefix
+    domains = {item["domain"] for item in items if isinstance(item, dict)}
+    assert expected_domains <= domains
+    assert bool(domains) is bool(expected_domains)
+
+
+@pytest.mark.parametrize(
+    "invalid_args",
+    [
+        pytest.param({}, id="missing_query"),
+        pytest.param({"query": ""}, id="empty_query"),
+        pytest.param({"query": "   "}, id="whitespace_query"),
+        pytest.param({"query": "hue", "type": "unknown"}, id="invalid_type"),
+    ],
+)
+async def test_search_integrations_invalid_args(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    invalid_args: dict[str, Any],
+) -> None:
+    """Test invalid arguments are rejected by SearchIntegrationsTool."""
+    tool = SearchIntegrationsTool()
     with pytest.raises(probatio.Invalid):
         await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
