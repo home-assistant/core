@@ -188,6 +188,12 @@ class EsphomeAssistSatelliteWakeWordSelect(
                 self._wake_word_index
             ] = last_state.state
 
+        self.async_on_remove(
+            lambda: self._entry_data.assist_satellite_wake_word_options.pop(
+                self._wake_word_index, None
+            )
+        )
+
         # Update options when config is updated
         self.async_on_remove(
             self._entry_data.async_register_assist_satellite_config_updated_callback(
@@ -232,8 +238,15 @@ class EsphomeAssistSatelliteWakeWordSelect(
 
         option = self._attr_current_option
 
-        if option in (None, NO_WAKE_WORD):
-            # Adopt the first wake word the device reports that no other slot uses
+        if (option is not None) and (
+            self._wake_words.get(option) not in config.active_wake_words
+        ):
+            # Not active on the device (anymore), treat the slot as empty
+            option = None
+
+        if option is None:
+            # Adopt the wake word the device reports for this slot, or else
+            # another one that no other slot uses
             taken_wake_word_ids = {
                 self._wake_words[other_option]
                 for index, other_option in (
@@ -241,23 +254,24 @@ class EsphomeAssistSatelliteWakeWordSelect(
                 )
                 if index != self._wake_word_index and other_option in self._wake_words
             }
+            wake_word_names = {
+                wake_word_id: wake_word
+                for wake_word, wake_word_id in self._wake_words.items()
+            }
+            candidate_ids = config.active_wake_words[
+                self._wake_word_index : self._wake_word_index + 1
+            ]
+            if len(config.active_wake_words) > 1:
+                candidate_ids = [*candidate_ids, *config.active_wake_words]
             option = next(
                 (
-                    wake_word
-                    for active_wake_word_id in config.active_wake_words
-                    if active_wake_word_id not in taken_wake_word_ids
-                    for wake_word, wake_word_id in self._wake_words.items()
-                    if wake_word_id == active_wake_word_id
+                    wake_word_names[wake_word_id]
+                    for wake_word_id in candidate_ids
+                    if wake_word_id not in taken_wake_word_ids
+                    and wake_word_id in wake_word_names
                 ),
-                None,
+                NO_WAKE_WORD,
             )
-
-        if (
-            (option is None)
-            or ((wake_word_id := self._wake_words.get(option)) is None)
-            or (wake_word_id not in config.active_wake_words)
-        ):
-            option = NO_WAKE_WORD
 
         self._attr_current_option = option
         self._entry_data.assist_satellite_wake_word_options[self._wake_word_index] = (

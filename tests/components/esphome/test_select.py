@@ -556,3 +556,44 @@ async def test_wake_word_select_restored_choice_not_adopted_twice(
     state_2 = hass.states.get("select.test_wake_word_2")
     assert state_2 is not None
     assert state_2.state == "Okay Nabu"
+
+
+async def test_wake_word_select_inactive_choice_is_replaced(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a choice that is no longer active on the device is treated as empty."""
+    mock_restore_cache(
+        hass,
+        [
+            State("select.test_wake_word", "Hey Jarvis"),
+            State("select.test_wake_word_2", NO_WAKE_WORD),
+        ],
+    )
+    device_config = AssistSatelliteConfiguration(
+        available_wake_words=[
+            AssistSatelliteWakeWord("okay_nabu", "Okay Nabu", ["en"]),
+            AssistSatelliteWakeWord("hey_jarvis", "Hey Jarvis", ["en"]),
+        ],
+        active_wake_words=["okay_nabu"],
+        max_active_wake_words=2,
+    )
+    mock_client.get_voice_assistant_configuration.return_value = device_config
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.ANNOUNCE
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_wake_word")
+    assert state is not None
+    assert state.state == "Okay Nabu"
+
+    state_2 = hass.states.get("select.test_wake_word_2")
+    assert state_2 is not None
+    assert state_2.state == NO_WAKE_WORD
