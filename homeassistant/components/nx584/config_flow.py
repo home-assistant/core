@@ -8,13 +8,13 @@ import requests
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.helpers.typing import UNDEFINED
 
 from . import create_client
 from .const import (
     CONF_EXCLUDE_ZONES,
     CONF_ZONE_TYPES,
     DEFAULT_HOST,
-    DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
 )
@@ -73,7 +73,7 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Another flow may have set up the server during the validation.
                 self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
                 return self.async_create_entry(
-                    title=DEFAULT_NAME, data={CONF_HOST: host, CONF_PORT: port}
+                    title=f"{host}:{port}", data={CONF_HOST: host, CONF_PORT: port}
                 )
 
         return self.async_show_form(
@@ -88,9 +88,8 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import the YAML configuration of one platform."""
         host: str = import_data[CONF_HOST]
         port: int = import_data[CONF_PORT]
-        data: dict[str, Any] = {CONF_HOST: host, CONF_PORT: port}
-        if CONF_NAME in import_data:
-            data[CONF_NAME] = import_data[CONF_NAME]
+        # Only the alarm platform has a name; it names the entry and the alarm.
+        name: str | None = import_data.get(CONF_NAME)
         options: dict[str, Any] = {}
         if CONF_EXCLUDE_ZONES in import_data:
             options[CONF_EXCLUDE_ZONES] = list(import_data[CONF_EXCLUDE_ZONES])
@@ -115,14 +114,14 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
             # Each platform owns its keys; the other platform's keys are kept.
             return self.async_update_reload_and_abort(
                 entry,
-                data={**entry.data, **data},
+                title=name or UNDEFINED,
                 options={**entry.options, **options},
                 reason="already_configured",
                 reload_even_if_entry_is_unchanged=False,
             )
 
         return self.async_create_entry(
-            title=data.get(CONF_NAME, DEFAULT_NAME),
-            data=data,
+            title=name or f"{host}:{port}",
+            data={CONF_HOST: host, CONF_PORT: port},
             options=options,
         )

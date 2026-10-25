@@ -172,11 +172,8 @@ async def test_import_alarm_only(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-    assert entries[0].data == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
-        CONF_NAME: "House",
-    }
+    assert entries[0].title == "House"
+    assert entries[0].data == {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     assert hass.states.get("alarm_control_panel.house")
     assert sorted(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == [
         "binary_sensor.back",
@@ -215,13 +212,14 @@ async def test_import_binary_sensor_only(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
+    assert entries[0].title == f"{TEST_HOST}:{TEST_PORT}"
     assert entries[0].data == {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     assert entries[0].options == {
         CONF_EXCLUDE_ZONES: [2],
         CONF_ZONE_TYPES: {"3": "motion"},
     }
     assert hass.states.async_entity_ids(ALARM_CONTROL_PANEL_DOMAIN) == [
-        "alarm_control_panel.nx584"
+        "alarm_control_panel.192_168_1_10_5007"
     ]
     assert hass.states.get("binary_sensor.front").attributes["device_class"] == (
         "opening"
@@ -258,11 +256,8 @@ async def test_import_both_platforms(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-    assert entries[0].data == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
-        CONF_NAME: "House",
-    }
+    assert entries[0].title == "House"
+    assert entries[0].data == {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     assert entries[0].options == {
         CONF_EXCLUDE_ZONES: [2],
         CONF_ZONE_TYPES: {"3": "motion"},
@@ -295,7 +290,7 @@ async def test_import_both_platforms_at_once(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data[CONF_NAME] == "House"
+    assert entries[0].title == "House"
     assert entries[0].options[CONF_EXCLUDE_ZONES] == [2]
 
 
@@ -311,11 +306,8 @@ async def test_import_ignores_entity_namespace(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
-        CONF_NAME: "House",
-    }
+    assert entries[0].title == "House"
+    assert entries[0].data == {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     assert hass.states.async_entity_ids(ALARM_CONTROL_PANEL_DOMAIN) == [
         "alarm_control_panel.house"
     ]

@@ -28,7 +28,6 @@ IMPORT_DATA = {
     CONF_EXCLUDE_ZONES: [2],
     CONF_ZONE_TYPES: {3: "motion"},
 }
-IMPORTED_DATA = {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT, CONF_NAME: "House"}
 IMPORTED_OPTIONS = {CONF_EXCLUDE_ZONES: [2], CONF_ZONE_TYPES: {"3": "motion"}}
 
 
@@ -83,7 +82,7 @@ async def test_user_flow(hass: HomeAssistant, mock_client: MagicMock) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "NX584"
+    assert result["title"] == f"{TEST_HOST}:{TEST_PORT}"
     assert result["data"] == {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     mock_client.assert_called_with(f"http://{TEST_HOST}:{TEST_PORT}")
 
@@ -160,21 +159,31 @@ async def test_user_flow_same_host_other_port(
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_client")
-async def test_import_flow(hass: HomeAssistant) -> None:
-    """Test the import keeps the zone settings."""
+@pytest.mark.parametrize(
+    ("name", "title"),
+    [
+        pytest.param({CONF_NAME: "House"}, "House", id="alarm"),
+        pytest.param({}, f"{TEST_HOST}:{TEST_PORT}", id="binary_sensor"),
+    ],
+)
+async def test_import_flow(
+    hass: HomeAssistant, name: dict[str, str], title: str
+) -> None:
+    """Test the import titles the entry by the alarm name and keeps the zones."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
+            **name,
             CONF_EXCLUDE_ZONES: [2],
             CONF_ZONE_TYPES: {3: "motion"},
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "NX584"
+    assert result["title"] == title
     assert result["data"] == {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     assert result["options"] == {
         CONF_EXCLUDE_ZONES: [2],
@@ -201,6 +210,7 @@ async def test_import_flow_merges_into_existing_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert mock_config_entry.title == "NX584"
     assert mock_config_entry.data == {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     assert mock_config_entry.options == {
         CONF_EXCLUDE_ZONES: [1],
@@ -219,11 +229,8 @@ async def test_import_flow_merges_into_existing_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
-        CONF_NAME: "House",
-    }
+    assert mock_config_entry.title == "House"
+    assert mock_config_entry.data == {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     assert mock_config_entry.options == {
         CONF_EXCLUDE_ZONES: [1],
         CONF_ZONE_TYPES: {},
@@ -266,26 +273,26 @@ async def test_import_flow_errors(
 
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
-    ("first_flow", "second_flow", "data", "options"),
+    ("first_flow", "second_flow", "title", "options"),
     [
         pytest.param(
             _async_user_flow,
             _async_user_flow,
-            {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT},
+            f"{TEST_HOST}:{TEST_PORT}",
             {},
             id="user_then_user",
         ),
         pytest.param(
             _async_import_flow,
             _async_user_flow,
-            IMPORTED_DATA,
+            "House",
             IMPORTED_OPTIONS,
             id="import_then_user",
         ),
         pytest.param(
             _async_user_flow,
             _async_import_flow,
-            IMPORTED_DATA,
+            "House",
             IMPORTED_OPTIONS,
             id="user_then_import",
         ),
@@ -296,7 +303,7 @@ async def test_flow_server_configured_during_validation(
     held_validation: tuple[threading.Event, threading.Event],
     first_flow: Callable[[HomeAssistant], Awaitable[ConfigFlowResult]],
     second_flow: Callable[[HomeAssistant], Awaitable[ConfigFlowResult]],
-    data: dict[str, object],
+    title: str,
     options: dict[str, object],
 ) -> None:
     """Test a server set up while a flow validates it is not set up twice."""
@@ -317,5 +324,6 @@ async def test_flow_server_configured_during_validation(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data == data
+    assert entries[0].title == title
+    assert entries[0].data == {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     assert entries[0].options == options

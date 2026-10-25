@@ -7,13 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.nx584.const import DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -23,17 +17,20 @@ ENTITY_ID = "alarm_control_panel.nx584"
 
 
 @pytest.mark.usefixtures("mock_client", "mock_watcher")
-async def test_entity_id_from_entry_name(hass: HomeAssistant) -> None:
-    """Test the alarm panel takes the imported YAML name."""
+async def test_name_from_entry_title(hass: HomeAssistant) -> None:
+    """Test the alarm panel is named after the entry title."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT, CONF_NAME: "House"},
+        title="House",
+        data={CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT},
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("alarm_control_panel.house")
+    state = hass.states.get("alarm_control_panel.house")
+    assert state
+    assert state.name == "House"
     assert hass.states.get(ENTITY_ID) is None
 
 
