@@ -135,7 +135,14 @@ def _rank_integration(
     brand_name: str | None,
     other: Iterable[str],
 ) -> int | None:
-    """Return the rank of an integration for the query, or None if no match."""
+    """Return the match rank for a case-folded query, or None if it does not match.
+
+    Lower numbers rank higher when sorting with heapq.nsmallest:
+    - 0: exact match on name or domain
+    - 1: exact match on brand name
+    - 2: substring match on name or domain
+    - 3: substring match on brand name, supported_by, or iot_standards
+    """
     domain_folded = domain.casefold()
     name_folded = name.casefold()
     if query in (name_folded, domain_folded):
