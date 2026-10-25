@@ -541,6 +541,15 @@ DISCOVERY_SCHEMAS = [
         product_type={0x0904},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
+    # Simon IO: Roller Blind (700 Series)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter",
+        manufacturer_id={0x0267},
+        product_id={0x0000},
+        product_type={0x0102},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
     # Vision Security ZL7432 In Wall Dual Relay Switch
     ZWaveDiscoverySchema(
         platform=Platform.SWITCH,
