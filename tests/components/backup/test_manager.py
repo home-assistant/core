@@ -4473,6 +4473,16 @@ def _rename_agent_storage(
             ["test.new"],
             id="new_agent_has_stale_settings_old_agent_has_none",
         ),
+        pytest.param(
+            {
+                "test.old": {"protected": False, "retention": None},
+                "test.new": {"protected": True, "retention": None},
+            },
+            ["backup.local", "test.new"],
+            {"test.new": {"protected": False, "retention": None}},
+            ["backup.local"],
+            id="new_agent_stale_selection_old_agent_not_selected",
+        ),
     ],
 )
 async def test_rename_agent(
@@ -4497,6 +4507,26 @@ async def test_rename_agent(
     assert stored_data["config"]["agents"] == expected_agents
     assert stored_data["config"]["create_backup"]["agent_ids"] == expected_agent_ids
     assert stored_data["backups"][0]["failed_agent_ids"] == ["test.new"]
+
+
+async def test_rename_agent_same_id(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test renaming an agent to its own ID keeps its settings."""
+    agents = {"test.old": {"protected": False, "retention": None}}
+    hass_storage[DOMAIN] = _rename_agent_storage(agents, ["test.old"])
+    await setup_backup_integration(hass)
+
+    async_get_manager(hass).async_rename_agent("test.old", "test.old")
+    freezer.tick()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    stored_data = hass_storage[DOMAIN]["data"]
+    assert stored_data["config"]["agents"] == agents
+    assert stored_data["config"]["create_backup"]["agent_ids"] == ["test.old"]
 
 
 async def test_rename_agent_already_exists(

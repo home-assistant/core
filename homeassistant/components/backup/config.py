@@ -251,13 +251,12 @@ class BackupConfig:
             self.data.agents[new_agent_id] = agent_config
         self.data.create_backup = replace(
             self.data.create_backup,
-            # The new agent ID may already be listed, only keep it once
-            agent_ids=list(
-                dict.fromkeys(
-                    new_agent_id if agent_id == old_agent_id else agent_id
-                    for agent_id in self.data.create_backup.agent_ids
-                )
-            ),
+            # A left behind new agent ID is dropped, the old agent's selection wins
+            agent_ids=[
+                new_agent_id if agent_id == old_agent_id else agent_id
+                for agent_id in self.data.create_backup.agent_ids
+                if agent_id != new_agent_id
+            ],
         )
         self._manager.store.save()
 

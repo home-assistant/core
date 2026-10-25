@@ -417,6 +417,8 @@ class BackupManager:
         are replaced. Raises ValueError if the old agent ID is configured and an
         agent with the new agent ID is loaded.
         """
+        if old_agent_id == new_agent_id:
+            return
         config = self.config.data
         if (
             old_agent_id in config.agents
