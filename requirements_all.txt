@@ -469,7 +469,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.13.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.1.3
+aioswitcher==6.3.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
@@ -1601,7 +1601,7 @@ loqedAPI==2.1.16
 lorawan-connection[chirpstack,tts]==1.3.0
 
 # homeassistant.components.luftdaten
-luftdaten==0.7.4
+luftdaten==0.8.0
 
 # homeassistant.components.lunatone
 lunatone-rest-api-client==0.11.2
@@ -2810,7 +2810,7 @@ python-izone==1.3.12
 python-join-api==0.1.1
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.11.0.1
+python-kasa[speedups]==0.12.0
 
 # homeassistant.components.linkplay
 python-linkplay==0.2.14
@@ -3625,7 +3625,7 @@ ziggo-mediabox-xl==1.1.0
 zinvolt==1.1.0
 
 # homeassistant.components.zoneminder
-zm-py==0.5.4
+zm-py==0.5.9
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.74.0
