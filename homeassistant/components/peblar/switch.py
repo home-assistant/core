@@ -4,7 +4,12 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from peblar import Peblar, PeblarEVInterface, PeblarUserConfiguration
+from peblar import (
+    Peblar,
+    PeblarEVInterface,
+    PeblarSetUserConfiguration,
+    PeblarUserConfiguration,
+)
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -19,7 +24,7 @@ from .coordinator import (
     PeblarUserConfigurationDataUpdateCoordinator,
 )
 from .entity import PeblarEntity
-from .helpers import peblar_exception_handler
+from .helpers import peblar_exception_handler, supports_custom_solar
 
 PARALLEL_UPDATES = 1
 
@@ -83,6 +88,16 @@ USER_CONFIG_DESCRIPTIONS = [
         has_fn=lambda x: x.system_information.hardware_has_socket,
         is_on_fn=lambda x: x.user_keep_socket_locked,
         set_fn=lambda peblar, on: peblar.socket_lock(locked=on),
+    ),
+    PeblarUserConfigSwitchEntityDescription(
+        key="solar_charging_custom_always_charge",
+        translation_key="solar_charging_custom_always_charge",
+        entity_category=EntityCategory.CONFIG,
+        has_fn=lambda x: supports_custom_solar(x.user_configuration_coordinator.data),
+        is_on_fn=lambda x: bool(x.solar_charging_custom_always_charge),
+        set_fn=lambda peblar, on: peblar.update_user_configuration(
+            PeblarSetUserConfiguration(solar_charging_custom_always_charge=on)
+        ),
     ),
 ]
 

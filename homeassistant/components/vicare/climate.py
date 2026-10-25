@@ -11,7 +11,6 @@ from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareNotSupportedFeatureError,
 )
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -27,7 +26,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -37,8 +35,6 @@ from .utils import get_burners, get_circuits, get_compressors
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_SET_VICARE_MODE = "set_vicare_mode"
-SERVICE_SET_VICARE_MODE_ATTR_MODE = "vicare_mode"
 
 VICARE_MODE_DHW = "dhw"
 VICARE_MODE_COOLING = "cooling"
@@ -57,10 +53,11 @@ VICARE_HOLD_MODE_OFF = "off"
 VICARE_TEMP_HEATING_MIN = 3
 VICARE_TEMP_HEATING_MAX = 60
 
+# Setting a mode picks the first supported key, so standby has to come first.
 VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
-    VICARE_MODE_FORCEDREDUCED: HVACMode.OFF,
     VICARE_MODE_OFF: HVACMode.OFF,
     VICARE_MODE_DHW: HVACMode.OFF,
+    VICARE_MODE_FORCEDREDUCED: HVACMode.OFF,
     VICARE_MODE_DHWANDHEATINGCOOLING: HVACMode.AUTO,
     VICARE_MODE_DHWANDHEATING: HVACMode.AUTO,
     VICARE_MODE_HEATINGCOOLING: HVACMode.AUTO,
@@ -99,13 +96,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ViCare climate platform."""
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_VICARE_MODE,
-        {vol.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): cv.string},
-        "set_vicare_mode",
-    )
-
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
@@ -124,7 +114,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = VICARE_TEMP_HEATING_MIN
     _attr_max_temp = VICARE_TEMP_HEATING_MAX
     _attr_target_temperature_step = PRECISION_WHOLE
@@ -167,11 +157,11 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 _supply_temperature = self._api.getSupplyTemperature()
 
             if _room_temperature is not None:
-                self._attr_current_temperature = _room_temperature
+                self._attr_native_current_temperature = _room_temperature
             elif _supply_temperature is not None:
-                self._attr_current_temperature = _supply_temperature
+                self._attr_native_current_temperature = _supply_temperature
             else:
-                self._attr_current_temperature = None
+                self._attr_native_current_temperature = None
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["active_vicare_program"] = self._current_program = (
@@ -179,7 +169,9 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 )
 
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_target_temperature = self._api.getCurrentDesiredTemperature()
+                self._attr_native_target_temperature = (
+                    self._api.getCurrentDesiredTemperature()
+                )
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["active_vicare_mode"] = self._current_mode = (
@@ -294,7 +286,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._api.setProgramTemperature(self._current_program, temp)
-            self._attr_target_temperature = temp
+            self._attr_native_target_temperature = temp
 
     @property
     @override

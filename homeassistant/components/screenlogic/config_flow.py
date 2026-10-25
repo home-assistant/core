@@ -3,10 +3,10 @@
 import logging
 from typing import Any, override
 
+import probatio
 from screenlogicpy import ScreenLogicError, discovery
 from screenlogicpy.const.common import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
 from screenlogicpy.requests import login
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
@@ -119,9 +119,9 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="gateway_select",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(GATEWAY_SELECT_KEY): vol.In(
+                    probatio.Required(GATEWAY_SELECT_KEY): probatio.In(
                         {
                             **unconfigured_gateways,
                             GATEWAY_MANUAL_ENTRY: (
@@ -163,10 +163,10 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="gateway_entry",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_IP_ADDRESS, default=ip_address): str,
-                    vol.Required(CONF_PORT, default=port): int,
+                    probatio.Required(CONF_IP_ADDRESS, default=ip_address): str,
+                    probatio.Required(CONF_PORT, default=port): int,
                 }
             ),
             errors=errors,

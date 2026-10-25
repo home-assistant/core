@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
@@ -20,7 +20,7 @@ from .const import DEFAULT_HOST, DOMAIN
 from .coordinator import SwisscomConfigEntry, SwisscomDataUpdateCoordinator
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
+    {probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
 )
 
 

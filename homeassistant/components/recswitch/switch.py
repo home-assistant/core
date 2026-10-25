@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyrecswitch import RSNetwork, RSNetworkError
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -24,9 +24,9 @@ DATA_RSN = "RSN"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_MAC): vol.All(cv.string, vol.Upper),
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_MAC): probatio.All(cv.string, probatio.Upper),
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 

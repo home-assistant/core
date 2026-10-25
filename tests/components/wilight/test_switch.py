@@ -4,21 +4,26 @@ from unittest.mock import patch
 
 import pytest
 import pywilight
+from pywilight.wilight_device import PyWiLightDevice
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.wilight.const import DOMAIN
-from homeassistant.components.wilight.switch import (
+from homeassistant.components.wilight.const import (
     ATTR_PAUSE_TIME,
+    ATTR_WATERING_TIME,
+    DOMAIN,
+)
+from homeassistant.components.wilight.services import (
     ATTR_TRIGGER,
+    ATTR_TRIGGER_INDEX,
+    SERVICE_SET_PAUSE_TIME,
+    SERVICE_SET_TRIGGER,
+    SERVICE_SET_WATERING_TIME,
+)
+from homeassistant.components.wilight.switch import (
     ATTR_TRIGGER_1,
     ATTR_TRIGGER_2,
     ATTR_TRIGGER_3,
     ATTR_TRIGGER_4,
-    ATTR_TRIGGER_INDEX,
-    ATTR_WATERING_TIME,
-    SERVICE_SET_PAUSE_TIME,
-    SERVICE_SET_TRIGGER,
-    SERVICE_SET_WATERING_TIME,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -39,6 +44,9 @@ from . import (
     WILIGHT_ID,
     setup_integration,
 )
+
+WATERING_ENTITY_ID = "switch.wl000000000099_1_watering"
+WATERING_INDEX = "0"
 
 
 @pytest.fixture(name="dummy_device_from_host_switch")
@@ -261,3 +269,58 @@ async def test_switch_services(
         )
 
     assert str(exc_info.value) == "Entity is not a WiLight valve switch"
+
+
+async def test_status_callback_after_entity_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    dummy_device_from_host_switch: PyWiLightDevice,
+) -> None:
+    """Test a removed entity no longer handles status callbacks."""
+    await setup_integration(hass)
+    client = dummy_device_from_host_switch.client
+
+    entity_registry.async_remove(WATERING_ENTITY_ID)
+    await hass.async_block_till_done()
+    assert hass.states.get(WATERING_ENTITY_ID) is None
+
+    with patch(
+        "homeassistant.components.wilight.entity.WiLightDevice.async_write_ha_state"
+    ) as mock_write_ha_state:
+        # Triggers the status callback registered with pywilight.
+        await client.turn_on(WATERING_INDEX)
+        await hass.async_block_till_done()
+
+    mock_write_ha_state.assert_not_called()
+    assert hass.states.get(WATERING_ENTITY_ID) is None
+
+
+async def test_status_callback_after_entity_readded(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    dummy_device_from_host_switch: PyWiLightDevice,
+) -> None:
+    """Test re-adding an entity does not register another status callback."""
+    await setup_integration(hass)
+    client = dummy_device_from_host_switch.client
+
+    with patch.object(
+        client, "register_status_callback", wraps=client.register_status_callback
+    ) as mock_register:
+        # Changing the entity_id removes and re-adds the same entity object.
+        entity_registry.async_update_entity(
+            WATERING_ENTITY_ID, new_entity_id="switch.renamed_watering"
+        )
+        await hass.async_block_till_done()
+
+    mock_register.assert_not_called()
+    assert hass.states.get(WATERING_ENTITY_ID) is None
+    state = hass.states.get("switch.renamed_watering")
+    assert state
+    assert state.state == STATE_OFF
+
+    await client.turn_on(WATERING_INDEX)
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.renamed_watering")
+    assert state
+    assert state.state == STATE_ON

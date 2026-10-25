@@ -5,7 +5,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
-import voluptuous as vol
+import probatio
 from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 
@@ -24,7 +24,9 @@ from .const import (
     DOMAIN,
     REPAIR_ISSUE_DATA_SECURE_GROUP_KEY,
     REPAIR_ISSUE_ENTITY_VALIDATION_ERROR,
+    REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
+    REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR,
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
     KNXConfigEntryData,
 )
@@ -48,14 +50,17 @@ async def async_create_fix_flow(
     raise ValueError(f"unknown repair {issue_id}")
 
 
-###########################
-# Entity store schema issue
-###########################
+#################################
+# Config store validation issues
+#################################
 
 
 @callback
 def async_create_entity_validation_issue(
-    hass: HomeAssistant, platform: Platform, unique_ids: list[str]
+    hass: HomeAssistant,
+    config_entry_id: str,
+    platform: Platform,
+    unique_ids: list[str],
 ) -> None:
     """Create a repair issue for invalid entity configurations in the config store."""
     _LOGGER.error(
@@ -67,6 +72,7 @@ def async_create_entity_validation_issue(
         hass,
         DOMAIN,
         f"{REPAIR_ISSUE_ENTITY_VALIDATION_ERROR}_{platform}",
+        config_entry_id=config_entry_id,
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key=REPAIR_ISSUE_ENTITY_VALIDATION_ERROR,
@@ -74,6 +80,48 @@ def async_create_entity_validation_issue(
             "platform": platform,
             "entities": "\n".join(f"- {unique_id}" for unique_id in unique_ids),
         },
+    )
+
+
+@callback
+def async_create_expose_validation_issue(
+    hass: HomeAssistant, config_entry_id: str, entity_ids: list[str]
+) -> None:
+    """Create a repair issue for invalid expose configurations in the config store."""
+    _LOGGER.error(
+        "Invalid KNX expose configuration in storage. These exposes were not set up: %s",
+        ", ".join(entity_ids),
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR,
+        config_entry_id=config_entry_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key=REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR,
+        translation_placeholders={
+            "entities": "\n".join(f"- {entity_id}" for entity_id in entity_ids),
+        },
+    )
+
+
+@callback
+def async_create_time_server_validation_issue(
+    hass: HomeAssistant, config_entry_id: str
+) -> None:
+    """Create a repair issue for an invalid time server configuration."""
+    _LOGGER.error(
+        "Invalid KNX time server configuration in storage. The time server was not started"
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR,
+        config_entry_id=config_entry_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key=REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR,
     )
 
 
@@ -126,6 +174,7 @@ def _data_secure_group_key_issue_handler(
     issue_registry.async_get_or_create(
         DOMAIN,
         REPAIR_ISSUE_DATA_SECURE_GROUP_KEY,
+        config_entry_id=knx_module.entry.entry_id,
         data=new_data,  # type: ignore[arg-type]
         is_fixable=True,
         is_persistent=True,
@@ -175,14 +224,16 @@ class DataSecureGroupIssueRepairFlow(RepairsFlow):
                 return self.finish_flow(new_entry_data)
 
         fields = {
-            vol.Required(CONF_KEYRING_FILE): selector.FileSelector(
+            probatio.Required(CONF_KEYRING_FILE): selector.FileSelector(
                 config=selector.FileSelectorConfig(accept=".knxkeys")
             ),
-            vol.Required(CONF_KNX_KNXKEY_PASSWORD): selector.TextSelector(),
+            probatio.Required(
+                probatio.Secret(CONF_KNX_KNXKEY_PASSWORD)
+            ): selector.TextSelector(),
         }
         return self.async_show_form(
             step_id="secure_knxkeys",
-            data_schema=vol.Schema(fields),
+            data_schema=probatio.Schema(fields),
             errors=errors,
         )
 
@@ -199,12 +250,15 @@ class DataSecureGroupIssueRepairFlow(RepairsFlow):
 
 
 @callback
-def async_create_telegram_storage_issue(hass: HomeAssistant) -> None:
+def async_create_telegram_storage_issue(
+    hass: HomeAssistant, config_entry_id: str
+) -> None:
     """Create a repair issue for storage initialization failure."""
     ir.async_create_issue(
         hass,
         DOMAIN,
         REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
+        config_entry_id=config_entry_id,
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key="telegram_storage_error",

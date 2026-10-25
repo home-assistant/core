@@ -2,6 +2,7 @@
 
 from pyhap.loader import get_loader
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
@@ -17,8 +18,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant
-
-from tests.common import async_mock_service
 
 
 async def test_switch_set_state(
@@ -312,6 +311,28 @@ async def test_supported_states(hass: HomeAssistant, hk_driver) -> None:
 
         for val in valid_target_values.values():
             assert val in test_config.get("target_values")
+
+
+async def test_supported_states_without_arm_home_log_no_error(
+    hass: HomeAssistant, hk_driver, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test restricting the valid values does not log the HAP default as invalid."""
+    entity_id = "alarm_control_panel.test"
+
+    hass.states.async_set(
+        entity_id,
+        AlarmControlPanelState.DISARMED,
+        {"supported_features": AlarmControlPanelEntityFeature.ARM_AWAY},
+    )
+    await hass.async_block_till_done()
+
+    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, {})
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_current_state.value == 3
+    assert acc.char_target_state.value == 3
+    assert "is an invalid value" not in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -2,14 +2,14 @@
 
 from collections.abc import Mapping
 import ipaddress
-from typing import TYPE_CHECKING, Any, Self, override
+from typing import Any, Self, override
 
+import probatio
 from pyfritzhome import Fritzhome, LoginError
 from requests.exceptions import HTTPError
-import voluptuous as vol
 from yarl import URL
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -24,30 +25,29 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_PRESENTATION_URL,
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
 
 from .const import DEFAULT_URL, DEFAULT_USERNAME, DEFAULT_VERIFY_SSL, DOMAIN
 
-DATA_SCHEMA_USER = vol.Schema(
+DATA_SCHEMA_USER = probatio.Schema(
     {
-        vol.Required(CONF_URL, default=DEFAULT_URL): TextSelector(
+        probatio.Required(CONF_URL, default=DEFAULT_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+        probatio.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
 
-DATA_SCHEMA_CONFIRM = vol.Schema(
+DATA_SCHEMA_CONFIRM = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -57,6 +57,26 @@ RESULT_INVALID_AUTH = "invalid_auth"
 RESULT_NO_DEVICES_FOUND = "no_devices_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
+
+
+def _is_ip(host: str, ipv6_link_local: bool = False) -> bool:
+    """Return whether host is an IP address, optionally requiring IPv6 link-local."""
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    if ipv6_link_local:
+        return ip.version == 6 and ip.is_link_local
+    return True
+
+
+async def _async_resolves_to(hass: HomeAssistant, host: str, ip: str) -> bool:
+    """Return whether host resolves to the given IP address."""
+    try:
+        addresses = await hass.loop.getaddrinfo(host, None)
+    except OSError:
+        return False
+    return any(address[4][0] == ip for address in addresses)
 
 
 class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -109,6 +129,20 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             return RESULT_NO_DEVICES_FOUND
         return RESULT_SUCCESS
 
+    async def async_has_smarthome_capabilities(self) -> bool | None:
+        """Test if the device has smarthome capabilities."""
+        return await self.hass.async_add_executor_job(self._has_smarthome_capabilities)
+
+    def _has_smarthome_capabilities(self) -> bool | None:
+        """Test if the device has smarthome capabilities."""
+        fritzbox = Fritzhome(
+            host=self._url,
+            user=None,
+            password=None,
+            ssl_verify=False,
+        )
+        return fritzbox.has_smarthome_capabilities()  # type: ignore[no-any-return]
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -142,38 +176,53 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
-        if upnp_repr_udl := discovery_info.upnp.get(ATTR_UPNP_PRESENTATION_URL):
-            self._url = upnp_repr_udl
-        else:
-            assert isinstance(discovery_info.ssdp_location, str)
-            host = URL(discovery_info.ssdp_location).host
-            assert isinstance(host, str)
-            self._url = f"http://{host}"
-        representation_url = URL(self._url)
+        assert isinstance(discovery_info.ssdp_location, str)
+        ssdp_host = URL(discovery_info.ssdp_location).host
+        assert isinstance(ssdp_host, str)
 
-        if TYPE_CHECKING:
-            assert isinstance(representation_url.host, str)
+        self._url = str(URL.build(scheme="http", host=ssdp_host))
 
-        if (
-            ipaddress.ip_address(representation_url.host).version == 6
-            and ipaddress.ip_address(representation_url.host).is_link_local
-        ):
+        if _is_ip(ssdp_host, ipv6_link_local=True):
             return self.async_abort(reason="ignore_ip6_link_local")
 
         if uuid := discovery_info.upnp.get(ATTR_UPNP_UDN):
             uuid = uuid.removeprefix("uuid:")
-            await self.async_set_unique_id(uuid)
-            self._abort_if_unique_id_configured({CONF_HOST: self._url})
+            updates = None
+            if (
+                (existing_entry := await self.async_set_unique_id(uuid))
+                and existing_entry.source != SOURCE_IGNORE
+                and (existing_host := URL(existing_entry.data[CONF_HOST]).host)
+                and _is_ip(existing_host)
+                and _is_ip(ssdp_host)
+            ):
+                # keep user-configured hostnames
+                updates = {CONF_HOST: self._url}
+            self._abort_if_unique_id_configured(updates)
 
         if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
         # update old and user-configured config entries
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] == self._url:
+            if (entry_host := URL(entry.data[CONF_HOST]).host) and (
+                (entry_host == ssdp_host)
+                or (
+                    _is_ip(entry_host)
+                    and await _async_resolves_to(self.hass, ssdp_host, entry_host)
+                )
+                or (
+                    _is_ip(ssdp_host)
+                    and await _async_resolves_to(self.hass, entry_host, ssdp_host)
+                )
+            ):
                 if uuid and not entry.unique_id:
                     self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
                 return self.async_abort(reason="already_configured")
+
+        if await self.async_has_smarthome_capabilities() is False:
+            return self.async_abort(reason="not_supported")
 
         self._name = str(discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME) or self._url)
 
@@ -246,10 +295,10 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=self._username): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME, default=self._username): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders={"name": self._name},
@@ -286,12 +335,12 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_URL, default=self._url): TextSelector(
+                    probatio.Required(CONF_URL, default=self._url): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
-                    vol.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
+                    probatio.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
                 }
             ),
             description_placeholders={"name": self._url},

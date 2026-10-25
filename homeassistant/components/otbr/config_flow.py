@@ -1,14 +1,14 @@
-"""Config flow for the Open Thread Border Router integration."""
+"""Config flow for the OpenThread Border Router integration."""
 
 from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, cast, override
 
 import aiohttp
+import probatio
 import python_otbr_api
 from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
-import voluptuous as vol
 import yarl
 
 from homeassistant.components.hassio import AddonError, AddonManager
@@ -35,7 +35,7 @@ from .util import (
 )
 
 if TYPE_CHECKING:
-    from . import OTBRConfigEntry
+    from .types import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
 
 
 class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Open Thread Border Router."""
+    """Handle a config flow for OpenThread Border Router."""
 
     VERSION = 1
 
@@ -178,11 +178,11 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(border_agent_id.hex())
                 return self.async_create_entry(
-                    title="Open Thread Border Router",
+                    title="OpenThread Border Router",
                     data={CONF_URL: url},
                 )
 
-        data_schema = vol.Schema({CONF_URL: str})
+        data_schema = probatio.Schema({CONF_URL: str})
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )

@@ -20,7 +20,7 @@ _PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 UPTIME_KUMA_KEY: HassKey[UptimeKumaSoftwareUpdateCoordinator] = HassKey(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: UptimeKumaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: UptimeKumaConfigEntry) -> None:
     """Set up Uptime Kuma from a config entry."""
     if UPTIME_KUMA_KEY not in hass.data:
         session = async_get_clientsession(hass)
@@ -36,8 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UptimeKumaConfigEntry) -
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-
-    return True
 
 
 async def async_remove_config_entry_device(
@@ -62,11 +60,11 @@ async def async_remove_config_entry_device(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: UptimeKumaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: UptimeKumaConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
-
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        await hass.data[UPTIME_KUMA_KEY].async_shutdown()
-        hass.data.pop(UPTIME_KUMA_KEY)
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
+    finally:
+        if not hass.config_entries.async_loaded_entries(DOMAIN):
+            await hass.data[UPTIME_KUMA_KEY].async_shutdown()
+            hass.data.pop(UPTIME_KUMA_KEY)

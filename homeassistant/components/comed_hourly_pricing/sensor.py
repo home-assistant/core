@@ -6,7 +6,7 @@ import json
 import logging
 
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -45,18 +45,18 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-TYPES_SCHEMA = vol.In(SENSOR_KEYS)
+TYPES_SCHEMA = probatio.In(SENSOR_KEYS)
 
-SENSORS_SCHEMA = vol.Schema(
+SENSORS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SENSOR_TYPE): TYPES_SCHEMA,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_OFFSET, default=0.0): vol.Coerce(float),
+        probatio.Required(CONF_SENSOR_TYPE): TYPES_SCHEMA,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_OFFSET, default=0.0): probatio.Coerce(float),
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_MONITORED_FEEDS): [SENSORS_SCHEMA]}
+    {probatio.Required(CONF_MONITORED_FEEDS): [SENSORS_SCHEMA]}
 )
 
 

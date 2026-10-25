@@ -3,9 +3,9 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pymochad import controller, device
 from pymochad.exceptions import MochadException
-import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PLATFORM
@@ -20,14 +20,14 @@ from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK, MochadCtrl
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORM_SCHEMA = vol.Schema(
+PLATFORM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PLATFORM): DOMAIN,
+        probatio.Required(CONF_PLATFORM): DOMAIN,
         CONF_DEVICES: [
             {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Required(CONF_ADDRESS): cv.x10_address,
-                vol.Optional(CONF_COMM_TYPE): cv.string,
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Required(CONF_ADDRESS): cv.x10_address,
+                probatio.Optional(CONF_COMM_TYPE): cv.string,
             }
         ],
     }

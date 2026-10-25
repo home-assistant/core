@@ -1,7 +1,7 @@
 """Dynalite API interface for the frontend."""
 
 from dynalite_panel import get_build_id, locate_dir
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import panel_custom, websocket_api
 from homeassistant.components.cover import DEVICE_CLASSES
@@ -39,7 +39,7 @@ RELEVANT_CONFS = [
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "dynalite/get-config",
+        probatio.Required("type"): "dynalite/get-config",
     }
 )
 @websocket_api.require_admin
@@ -67,9 +67,9 @@ def get_dynalite_config(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "dynalite/save-config",
-        vol.Required("entry_id"): str,
-        vol.Required("config"): BRIDGE_SCHEMA,
+        probatio.Required("type"): "dynalite/save-config",
+        probatio.Required("entry_id"): str,
+        probatio.Required("config"): BRIDGE_SCHEMA,
     }
 )
 @websocket_api.require_admin

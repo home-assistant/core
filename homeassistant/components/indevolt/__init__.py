@@ -23,7 +23,7 @@ PLATFORMS: list[Platform] = [
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> None:
     """Migrate old entry."""
     if entry.version == 1 and entry.minor_version < 2:
         # 1.1 -> 1.2: indevolt-api 1.8.3 changed IndevoltBattery.MAIN_HEATING_STATE
@@ -42,10 +42,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
         hass.config_entries.async_update_entry(entry, version=1, minor_version=2)
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> None:
     """Set up indevolt integration entry using given configuration."""
     coordinator = IndevoltCoordinator(hass, entry)
 
@@ -54,8 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> 
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -66,9 +62,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> None:
     """Unload a config entry.
 
     Clean up resources when integration is removed or reloaded.
     """
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

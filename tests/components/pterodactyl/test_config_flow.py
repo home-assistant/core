@@ -3,10 +3,10 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientResponseError
 from pydactyl.exceptions import BadRequestError, PterodactylApiError
 import pytest
-from requests.exceptions import HTTPError
-from requests.models import Response
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pterodactyl.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -15,16 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import TEST_API_KEY, TEST_URL, TEST_USER_INPUT
-
-from tests.common import MockConfigEntry
-
-
-def mock_response():
-    """Mock HTTP response."""
-    mock = Response()
-    mock.status_code = 401
-
-    return mock
 
 
 @pytest.mark.usefixtures("mock_pterodactyl", "mock_setup_entry")
@@ -53,8 +43,12 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     [
         (PterodactylApiError, "cannot_connect"),
         (BadRequestError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (Exception, "unknown"),
-        (HTTPError(response=mock_response()), "invalid_auth"),
+        (
+            ClientResponseError(request_info=None, history=[], status=401),
+            "invalid_auth",
+        ),
     ],
 )
 async def test_recovery_after_error(
@@ -144,7 +138,10 @@ async def test_reauth_full_flow(
         (PterodactylApiError, "cannot_connect"),
         (BadRequestError, "cannot_connect"),
         (Exception, "unknown"),
-        (HTTPError(response=mock_response()), "invalid_auth"),
+        (
+            ClientResponseError(request_info=None, history=[], status=401),
+            "invalid_auth",
+        ),
     ],
 )
 async def test_reauth_recovery_after_error(

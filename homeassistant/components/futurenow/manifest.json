@@ -1,6 +1,7 @@
 {
   "domain": "futurenow",
   "name": "P5 FutureNow",
+  "categories": ["plugs_switches", "lighting.lighting_systems"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/futurenow",
   "iot_class": "local_polling",

@@ -4,11 +4,12 @@ from ipaddress import ip_address, ip_network
 from unittest.mock import Mock, patch
 
 from hass_nabucasa import remote
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import auth
 from homeassistant.auth import auth_store
+from homeassistant.auth.models import AuthFlowContext
 from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.components.http import CONF_TRUSTED_PROXIES, CONF_USE_X_FORWARDED_FOR
 from homeassistant.core import HomeAssistant
@@ -153,7 +154,7 @@ async def test_config_schema() -> None:
         }
     )
     # Wrong user id format
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         tn_auth.CONFIG_SCHEMA(
             {
                 "type": "trusted_networks",
@@ -195,6 +196,29 @@ async def test_validate_access(provider: tn_auth.TrustedNetworksAuthProvider) ->
         provider.async_validate_access(ip_address("127.0.0.1"))
     with pytest.raises(auth.InvalidAuthError):
         provider.async_validate_access(ip_address("2001:db8::ff00:42:8329"))
+
+
+@pytest.mark.parametrize(
+    ("context", "expected"),
+    [
+        pytest.param(
+            AuthFlowContext(ip_address=ip_address("192.168.0.1")), True, id="trusted"
+        ),
+        pytest.param(
+            AuthFlowContext(ip_address=ip_address("192.168.0.2")),
+            False,
+            id="untrusted",
+        ),
+        pytest.param(AuthFlowContext(), False, id="no-address"),
+    ],
+)
+async def test_can_start_login(
+    provider: tn_auth.TrustedNetworksAuthProvider,
+    context: AuthFlowContext,
+    expected: bool,
+) -> None:
+    """Test the login screen only offers trusted networks to trusted addresses."""
+    assert provider.async_can_start_login(context) is expected
 
 
 async def test_validate_access_proxy(
@@ -277,7 +301,7 @@ async def test_login_flow(
 
     schema = step["data_schema"]
     assert schema({"user": owner.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": "invalid-user"})
 
     # login with valid user
@@ -322,7 +346,7 @@ async def test_trusted_users_login(
     schema = step["data_schema"]
     # only owner listed
     assert schema({"user": owner.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": user.id})
 
     # from trusted network, list users intersect trusted_users
@@ -335,9 +359,9 @@ async def test_trusted_users_login(
     schema = step["data_schema"]
     # only user listed
     assert schema({"user": user.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": owner.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": sys_user.id})
 
     # from trusted network, list users intersect trusted_users
@@ -349,7 +373,7 @@ async def test_trusted_users_login(
     # both owner and user listed
     assert schema({"user": owner.id})
     assert schema({"user": user.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": sys_user.id})
 
     # from trusted network, list users intersect trusted_users
@@ -361,11 +385,11 @@ async def test_trusted_users_login(
 
     schema = step["data_schema"]
     # no user listed
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": owner.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": user.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": sys_user.id})
 
 
@@ -409,7 +433,7 @@ async def test_trusted_group_login(
     schema = step["data_schema"]
     # only user listed
     assert schema({"user": user.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": owner.id})
 
     # from trusted network, list users intersect trusted_users

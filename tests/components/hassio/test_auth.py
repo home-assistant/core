@@ -10,7 +10,7 @@ import pytest
 
 from homeassistant.auth.providers.homeassistant import InvalidAuth
 from homeassistant.components.hassio.auth import HassIOBaseAuth
-from homeassistant.components.hassio.const import DATA_HASSIO_SUPERVISOR_USER
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.core import HomeAssistant
 
 
@@ -187,7 +187,7 @@ async def test_check_access_unix_socket_or_missing_peername(
     expectation: AbstractContextManager,
 ) -> None:
     """Test _check_access handles Unix socket requests and missing peername."""
-    user = hass.data.get(DATA_HASSIO_SUPERVISOR_USER)
+    user = hass.data.get(DATA_SUPERVISOR_USER)
     assert user is not None
 
     auth_view = HassIOBaseAuth(hass)

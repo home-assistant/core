@@ -9,6 +9,7 @@
       "local_name": "mib*"
     }
   ],
+  "categories": ["buttons_remotes"],
   "codeowners": ["@spycle"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

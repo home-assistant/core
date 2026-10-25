@@ -5,10 +5,10 @@ import logging
 from typing import Any, override
 
 from orvibo.s20 import S20, S20Exception, discover
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -17,10 +17,10 @@ from .const import CONF_SWITCH_LIST, DEFAULT_NAME, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-FULL_EDIT_SCHEMA = vol.Schema(
+FULL_EDIT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_MAC): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_MAC): cv.string,
     }
 )
 
@@ -180,7 +180,9 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="choose_switch",
-            data_schema=vol.Schema({vol.Required(CONF_SWITCH_LIST): vol.In(_options)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_SWITCH_LIST): probatio.In(_options)}
+            ),
         )
 
     async def async_step_discovery_failed(
@@ -190,19 +192,4 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_menu(
             step_id="discovery_failed", menu_options=["start_discovery", "edit"]
-        )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from configuration.yaml."""
-        _LOGGER.debug("Importing config: %s", user_input)
-
-        error = await self._validate_input(user_input)
-        if error:
-            return self.async_abort(reason=error)
-
-        await self.async_set_unique_id(user_input[CONF_MAC])
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=user_input.get(CONF_NAME, user_input[CONF_HOST]), data=user_input
         )

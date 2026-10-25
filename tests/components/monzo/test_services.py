@@ -8,8 +8,9 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 
 from homeassistant.components.monzo.const import (
     DEVICE_MODEL_ACCOUNT,
@@ -35,8 +36,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .conftest import TEST_ACCOUNTS, TEST_POTS
-
-from tests.common import MockConfigEntry, MockUser
 
 
 @dataclass
@@ -175,7 +174,7 @@ async def test_invalid_amount(
     amount: object,
 ) -> None:
     """Test invalid transfer amounts are rejected by the action schema."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await _async_call_transfer(
             hass,
             transfer_devices,

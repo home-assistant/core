@@ -2,8 +2,8 @@
 
 from typing import override
 
-import pysaj
-import voluptuous as vol
+import aiosaj
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -48,11 +48,13 @@ SAJ_UNIT_MAPPINGS = {
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_TYPE, default=CONNECTION_TYPES[0]): vol.In(CONNECTION_TYPES),
-        vol.Inclusive(CONF_USERNAME, "credentials"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "credentials"): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_TYPE, default=CONNECTION_TYPES[0]): probatio.In(
+            CONNECTION_TYPES
+        ),
+        probatio.Inclusive(CONF_USERNAME, "credentials"): cv.string,
+        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "credentials"): cv.string,
     }
 )
 
@@ -65,10 +67,12 @@ async def async_setup_entry(
     """Set up the SAJ sensors from a config entry."""
     coordinator = entry.runtime_data
 
+    # aiosaj also reports voltage, current and frequency channels, which have
+    # no unit mapping and therefore no entities yet.
     async_add_entities(
         SAJsensor(coordinator, entry.unique_id, sensor)
         for sensor in coordinator.sensor_def
-        if sensor.enabled
+        if sensor.enabled and sensor.unit in SAJ_UNIT_MAPPINGS
     )
 
 
@@ -126,21 +130,21 @@ class SAJsensor(CoordinatorEntity[SAJDataUpdateCoordinator], SensorEntity):
         self,
         coordinator: SAJDataUpdateCoordinator,
         serialnumber: str | None,
-        pysaj_sensor: pysaj.Sensor,
+        saj_sensor: aiosaj.Sensor,
     ) -> None:
         """Initialize the SAJ sensor."""
         super().__init__(coordinator)
-        self._sensor = pysaj_sensor
+        self._sensor = saj_sensor
 
-        if pysaj_sensor.name in ("current_power", "temperature"):
+        if saj_sensor.name in ("current_power", "temperature"):
             self._attr_state_class = SensorStateClass.MEASUREMENT
-        if pysaj_sensor.name == "total_yield":
+        if saj_sensor.name == "total_yield":
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
-        self._attr_unique_id = f"{serialnumber}_{pysaj_sensor.name}"
-        native_uom = SAJ_UNIT_MAPPINGS[pysaj_sensor.unit]
+        self._attr_unique_id = f"{serialnumber}_{saj_sensor.name}"
+        native_uom = SAJ_UNIT_MAPPINGS[saj_sensor.unit]
         self._attr_native_unit_of_measurement = native_uom
-        self._attr_name = f"saj_{pysaj_sensor.name}"
+        self._attr_name = f"saj_{saj_sensor.name}"
         if native_uom == UnitOfPower.WATT:
             self._attr_device_class = SensorDeviceClass.POWER
         if native_uom == UnitOfEnergy.KILO_WATT_HOUR:
