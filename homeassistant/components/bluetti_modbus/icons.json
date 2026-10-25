@@ -35,6 +35,11 @@
       "temperature_sensor_count": {
         "default": "mdi:counter"
       }
+    },
+    "switch": {
+      "ac_output": {
+        "default": "mdi:power-socket-eu"
+      }
     }
   }
 }
