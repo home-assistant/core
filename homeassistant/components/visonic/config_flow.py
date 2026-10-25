@@ -215,9 +215,7 @@ async def _panel_suggested_values(handler: SchemaCommonFlowHandler) -> dict[str,
     """Prefill panel settings and select the only available panel."""
     flow = cast(VisonicConfigFlow, handler.parent_handler)
     values: dict[str, Any] = {
-        key: handler.options[key]
-        for key in (CONF_CODE, CONF_SCAN_INTERVAL)
-        if key in handler.options
+        key: handler.options[key] for key in (CONF_CODE,) if key in handler.options
     }
     serial = ""
     if flow.source in (SOURCE_RECONFIGURE, SOURCE_REAUTH):
@@ -443,6 +441,7 @@ class VisonicConfigFlow(SchemaConfigFlowHandler, domain=DOMAIN):
         ):
             raise AbortFlow(CONFIG_FLOW_ALREADY_CONFIGURED)
         connection_data = dict(data)
+        connection_data.pop(CONF_SCAN_INTERVAL, None)
         connection_data = CONNECTION_SCHEMA(connection_data)
         if self.source == SOURCE_REAUTH:
             entry = self._get_reauth_entry()

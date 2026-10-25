@@ -391,7 +391,7 @@ async def test_async_alarm_disarm_code_not_entered(
     assert alarm.supported_features == 0
     alarm.coordinator.send_command = AsyncMock()
 
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(ServiceValidationError) as exc_info:
         await alarm.async_alarm_disarm(None)
 
     assert exc_info.value.translation_key == (

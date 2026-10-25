@@ -53,7 +53,7 @@ from homeassistant.components.visonic.visonic_types import (
     DeviceType,
     PanelStateData,
 )
-from homeassistant.const import CONF_TYPE, Platform
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -65,6 +65,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .helpers import (
@@ -137,6 +138,68 @@ async def test_connection_selection(
     assert not hasattr(coordinator.connection, "hass")
     assert coordinator.update_interval.total_seconds() == interval
     await coordinator.async_shutdown()
+
+
+@pytest.mark.parametrize("saved_interval", [5, 120, "invalid"])
+async def test_cloud_ignores_saved_polling_interval(
+    hass: HomeAssistant, saved_interval: int | str
+) -> None:
+    """Previously saved polling settings do not change the fixed interval."""
+    entry = create_config_entry_example(
+        data={CONF_TYPE: DeviceType.CLOUD, CONF_SCAN_INTERVAL: saved_interval}
+    )
+    coordinator = VisonicCoordinator(hass, entry, 1)
+    assert coordinator.update_interval == timedelta(seconds=20)
+    assert isinstance(coordinator.connection, VisonicCloudConnection)
+    assert coordinator.connection.settings.update_interval == 20
+    await coordinator.async_panel_stop()
+
+
+@pytest.mark.usefixtures("mock_panel_connect", "mock_async_zeroconf")
+@pytest.mark.parametrize(
+    ("disable_polling", "scheduled_polls"),
+    [
+        pytest.param(False, 1, id="default-polling"),
+        pytest.param(True, 0, id="automation-override"),
+    ],
+)
+async def test_cloud_polling_system_option(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    disable_polling: bool,
+    scheduled_polls: int,
+) -> None:
+    """System options disable scheduled polls while Update entity still refreshes."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    entry = create_mock_config_entry(data={CONF_TYPE: DeviceType.CLOUD})
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, pref_disable_polling=disable_polling)
+    with patch.object(
+        VisonicCloudConnection,
+        "create_state_snapshot",
+        return_value=VisonicCoordinatorData(
+            connected=True, armcode=AlarmPanelStatus.DISARMED
+        ),
+    ) as snapshot:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        # Allow the initial entity refresh to finish before measuring polling.
+        freezer.tick(timedelta(seconds=21))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        snapshot.reset_mock()
+        freezer.tick(timedelta(seconds=21))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert snapshot.await_count == scheduled_polls
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {"entity_id": "alarm_control_panel.visonic_alarm_p1"},
+            blocking=True,
+        )
+        assert snapshot.await_count == scheduled_polls + 1
+        assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.parametrize(

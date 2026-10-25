@@ -6,7 +6,7 @@ rules:
   appropriate-polling:
     status: done
     comment: >
-      Cloud polling defaults to 20 seconds (minimum 5). Local updates are
+      Cloud polling uses a fixed 20-second interval. Local updates are
       pushed, with snapshots refreshed at least every 60 seconds.
   brands:
     status: done
@@ -120,7 +120,7 @@ rules:
   test-coverage:
     status: done
     comment: >
-      All 497 tests pass with 98.08 percent combined statement and branch
+      All 494 tests pass with 98.08 percent combined statement and branch
       coverage. Config-flow statement coverage is 100 percent and branch
       coverage is 98.81 percent.
 

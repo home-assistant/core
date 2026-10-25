@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_TYPE,
 )
 from homeassistant.helpers import config_validation as cv, selector
@@ -30,7 +29,6 @@ from .const import (
     CONF_RETRY_CONNECTION_COUNT,
     CONF_RETRY_CONNECTION_DELAY,
     CONF_USER_CODE_SLOT,
-    DEFAULT_CLOUD_SCAN_INTERVAL,
     DEFAULT_DEVICE_HOST,
     DEFAULT_DEVICE_PORT,
     DEFAULT_PANEL_USER_CODE,
@@ -92,9 +90,6 @@ CLOUD_PANEL_SCHEMA = probatio.Schema(
         probatio.Required(
             probatio.Secret(CONF_CODE), default=DEFAULT_PANEL_USER_CODE
         ): PIN_VALIDATOR,
-        probatio.Required(
-            CONF_SCAN_INTERVAL, default=DEFAULT_CLOUD_SCAN_INTERVAL
-        ): probatio.All(cv.positive_int, probatio.Range(min=5)),
     }
 )
 
@@ -143,9 +138,6 @@ CONNECTION_SCHEMA = probatio.TaggedUnion(
                 probatio.Required(probatio.Secret(CONF_CODE)): PIN_VALIDATOR,
                 probatio.Required(probatio.Secret(CONF_PANEL_SERIAL)): str,
                 probatio.Required(CONF_CLOUD_APP_ID): str,
-                probatio.Required(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_CLOUD_SCAN_INTERVAL
-                ): probatio.All(cv.positive_int, probatio.Range(min=5)),
             },
             extra=probatio.ALLOW_EXTRA,
         ),

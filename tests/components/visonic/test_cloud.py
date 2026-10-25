@@ -40,6 +40,7 @@ from homeassistant.components.visonic.const import (
     CONF_ENABLE_REMOTE_ARM,
     CONF_ENABLE_REMOTE_DISARM,
     CONF_PANEL_SERIAL,
+    DEFAULT_CLOUD_SCAN_INTERVAL,
     LOGGER,
     TEXT_PANEL_MODEL,
 )
@@ -62,7 +63,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant
@@ -942,7 +942,7 @@ async def test_coordinator_initialisation(
     assert coordinator.never_connected is True
     assert coordinator.disconnection_counter == 0
     assert entry.runtime_data.coordinator.update_interval == timedelta(
-        seconds=entry.data[CONF_SCAN_INTERVAL]
+        seconds=DEFAULT_CLOUD_SCAN_INTERVAL
     )
 
 

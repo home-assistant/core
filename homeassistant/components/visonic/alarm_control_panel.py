@@ -9,7 +9,7 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -77,7 +77,7 @@ class VisonicAlarm(AlarmBaseLogic, AlarmControlPanelEntity):  # pyright: ignore[
         """Send disarm command."""
         if self.code_format is not None and code is None:
             # Code required but user has selected the green tick without entering a string
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=TRANSLATE_EXCEPTION_DISARM_CODE_NOT_ENTERED,
                 translation_placeholders={

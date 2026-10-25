@@ -80,7 +80,7 @@ CLOUD_INPUT = {
     CONF_EMAIL: "user@example.com",
     CONF_PASSWORD: "password",
 }
-PANEL_INPUT = {CONF_PANEL_SERIAL: "ABCDEF", CONF_CODE: "1234", CONF_SCAN_INTERVAL: 20}
+PANEL_INPUT = {CONF_PANEL_SERIAL: "ABCDEF", CONF_CODE: "1234"}
 
 
 @pytest.fixture
@@ -219,7 +219,7 @@ async def test_user_flow_cloud(
         assert CONF_CODE not in CLOUD_INPUT
         api.panel_login.assert_not_awaited()
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], PANEL_INPUT | {CONF_SCAN_INTERVAL: 7}
+            result["flow_id"], PANEL_INPUT
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         entry = result["result"]
@@ -229,7 +229,6 @@ async def test_user_flow_cloud(
                 CLOUD_INPUT
                 | PANEL_INPUT
                 | {
-                    CONF_SCAN_INTERVAL: 7,
                     CONF_PANEL_NUMBER: 2,
                     CONF_CLOUD_APP_ID: "test-app-id",
                 }
@@ -240,6 +239,7 @@ async def test_user_flow_cloud(
         assert CONF_PANEL_NUMBER not in entry.options
         assert CONF_CODE not in entry.options
         assert CONF_SCAN_INTERVAL not in entry.options
+        assert CONF_SCAN_INTERVAL not in entry.data
         assert CONF_ARM_CODE_AUTO not in entry.options
         assert CONF_INSTANT_ARM_AWAY not in entry.options
         assert CONF_INSTANT_ARM_HOME not in entry.options
@@ -260,6 +260,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             CONF_TYPE: DeviceType.CLOUD,
             CONF_PANEL_NUMBER: 2,
             CONF_CLOUD_APP_ID: "existing-app-id",
+            CONF_SCAN_INTERVAL: 90,
         }
     )
     entry = MockConfigEntry(
@@ -278,7 +279,9 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             result["flow_id"], PANEL_INPUT
         )
     assert result["reason"] == "reauth_successful"
-    assert entry.data == data | {CONF_PASSWORD: "new-password"}
+    expected_data = dict(data)
+    expected_data.pop(CONF_SCAN_INTERVAL)
+    assert entry.data == expected_data | {CONF_PASSWORD: "new-password"}
     assert entry.options == {CONF_ARM_HOME_ENABLED: False}
     reload.assert_awaited_once_with(entry.entry_id)
     await hass.async_block_till_done()
@@ -734,12 +737,12 @@ async def test_reconfigure_error_recovery(
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     "interval",
-    [pytest.param(0, id="zero"), pytest.param(4, id="below-minimum")],
+    [pytest.param(5, id="fast"), pytest.param(60, id="slow")],
 )
-async def test_cloud_polling_interval_error_recovery(
+async def test_cloud_polling_interval_not_configurable(
     hass: HomeAssistant, mock_connection_test: AsyncMock, interval: int
 ) -> None:
-    """Validate polling on the panel form after successful account discovery."""
+    """Reject a removed polling field and allow resubmission without it."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -758,11 +761,11 @@ async def test_cloud_polling_interval_error_recovery(
     assert mock_connection_test.await_count == 1
     assert not hass.config_entries.async_entries(DOMAIN)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], PANEL_INPUT | {CONF_SCAN_INTERVAL: 5}
+        result["flow_id"], PANEL_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "ABCDEF"
-    assert result["result"].data[CONF_SCAN_INTERVAL] == 5
+    assert CONF_SCAN_INTERVAL not in result["result"].data
     assert result["result"].data[CONF_PANEL_NUMBER] == 0
     assert CONF_PANEL_NUMBER not in result["result"].options
     assert mock_connection_test.await_count == 2
@@ -1329,6 +1332,7 @@ async def test_cloud_reconfigure_preserves_panel_identity(
             CONF_PANEL_NUMBER: 2,
             CONF_PANEL_SERIAL: saved_serial,
             CONF_CLOUD_APP_ID: "saved-app-id",
+            CONF_SCAN_INTERVAL: 90,
         }
     )
     saved_options = {
@@ -1395,6 +1399,7 @@ async def test_cloud_reconfigure_preserves_panel_identity(
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reconfigure_successful"
         assert entry.data.items() >= (changed_credentials | PANEL_INPUT).items()
+        assert CONF_SCAN_INTERVAL not in entry.data
         assert entry.unique_id == unique_id
         assert entry.entry_id == entry_id
         assert entry.options == {
@@ -1647,7 +1652,7 @@ async def test_selected_cloud_panel_auth_recovery(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_single_cloud_panel_requires_settings(hass: HomeAssistant) -> None:
-    """A sole panel is preselected, but its code and polling interval still require submission."""
+    """A sole panel is preselected, but its code still requires submission."""
     with patch(
         "homeassistant.components.visonic.connection_test.API", autospec=True
     ) as factory:
@@ -1672,18 +1677,18 @@ async def test_single_cloud_panel_requires_settings(hass: HomeAssistant) -> None
         )
         assert result["step_id"] == FORM_SELECT_PANEL
         fields = {field.schema: field for field in result["data_schema"].schema}
-        assert set(fields) == {CONF_PANEL_SERIAL, CONF_CODE, CONF_SCAN_INTERVAL}
+        assert set(fields) == {CONF_PANEL_SERIAL, CONF_CODE}
         assert fields[CONF_PANEL_SERIAL].description["suggested_value"] == "ABCDEF"
         assert not hass.config_entries.async_entries(DOMAIN)
         api.panel_login.assert_not_awaited()
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PANEL_SERIAL: "ABCDEF", CONF_CODE: "0001", CONF_SCAN_INTERVAL: 30},
+            {CONF_PANEL_SERIAL: "ABCDEF", CONF_CODE: "0001"},
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == "ABCDEF"
         assert result["result"].data[CONF_CODE] == "0001"
-        assert result["result"].data[CONF_SCAN_INTERVAL] == 30
+        assert CONF_SCAN_INTERVAL not in result["result"].data
         assert result["result"].data[CONF_PANEL_NUMBER] == 1
         assert CONF_PANEL_NUMBER not in result["result"].options
         api.panel_login.assert_awaited_once_with("ABCDEF", "0001")

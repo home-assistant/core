@@ -94,15 +94,13 @@
       "select_panel": {
         "data": {
           "code": "Panel User Code",
-          "panel_serial": "Panel",
-          "scan_interval": "Polling Interval (seconds)"
+          "panel_serial": "Panel"
         },
         "data_description": {
           "code": "The Panel's User Code to the cloud server",
-          "panel_serial": "Choose the panel to connect to Home Assistant",
-          "scan_interval": "The period of time between polling the cloud server (seconds)"
+          "panel_serial": "Choose the panel to connect to Home Assistant"
         },
-        "description": "Select a registered cloud panel and enter its user code and polling interval"
+        "description": "Select a registered cloud panel and enter its user code"
       }
     }
   },

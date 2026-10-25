@@ -34,7 +34,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PATH,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant
@@ -127,7 +126,6 @@ def create_config_entry_example(
         CONF_PASSWORD: "",
         CONF_CODE: "",
         CONF_PANEL_SERIAL: "",
-        CONF_SCAN_INTERVAL: 20,
     }
 
     entry.options = {

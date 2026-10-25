@@ -56,37 +56,12 @@ def test_optional_download_code() -> None:
     assert CONF_DOWNLOAD_CODE not in POWERLINK_SCHEMA({})
 
 
-@pytest.mark.parametrize(
-    "interval",
-    [
-        pytest.param(-1, id="negative"),
-        pytest.param(0, id="zero"),
-        pytest.param(3, id="three-seconds"),
-        pytest.param(4, id="below-minimum"),
-    ],
-)
-def test_cloud_polling_interval_below_minimum(interval: int) -> None:
-    """Reject cloud polling faster than the supported five-second minimum."""
+def test_cloud_polling_interval_not_configurable() -> None:
+    """The panel form collects only its PIN and rejects polling settings."""
+    assert CLOUD_PANEL_SCHEMA({}) == {CONF_CODE: "1111"}
     with pytest.raises(MultipleInvalid) as exc:
-        CLOUD_PANEL_SCHEMA({CONF_SCAN_INTERVAL: interval})
+        CLOUD_PANEL_SCHEMA({CONF_SCAN_INTERVAL: 60})
     assert exc.value.path == [CONF_SCAN_INTERVAL]
-
-
-@pytest.mark.parametrize(
-    ("data", "expected"),
-    [
-        pytest.param({}, 20, id="default"),
-        pytest.param({CONF_SCAN_INTERVAL: 5}, 5, id="minimum"),
-        pytest.param({CONF_SCAN_INTERVAL: "5"}, 5, id="string-minimum"),
-        pytest.param({CONF_SCAN_INTERVAL: 20}, 20, id="twenty-seconds"),
-        pytest.param({CONF_SCAN_INTERVAL: 60}, 60, id="slower-polling"),
-    ],
-)
-def test_cloud_polling_interval_valid(
-    data: dict[str, int | str], expected: int
-) -> None:
-    """Keep the twenty-second default and preserve accepted polling intervals."""
-    assert CLOUD_PANEL_SCHEMA(data)[CONF_SCAN_INTERVAL] == expected
 
 
 @pytest.mark.parametrize(

@@ -22,7 +22,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_TYPE,
     Platform,
 )
@@ -133,9 +132,7 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
         device_type = DeviceType(entry.data[CONF_TYPE])
         if update_interval is None:
             update_interval = (
-                int(entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_CLOUD_SCAN_INTERVAL))
-                if device_type == DeviceType.CLOUD
-                else 60
+                DEFAULT_CLOUD_SCAN_INTERVAL if device_type == DeviceType.CLOUD else 60
             )
         request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass=hass,
