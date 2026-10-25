@@ -13,6 +13,17 @@ from freezegun.api import FrozenDateTimeFactory
 import probatio
 from propcache.api import cached_property
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockModule,
+    MockPlatform,
+    RegistryEntryWithDefaults,
+    async_capture_events,
+    mock_integration,
+    mock_registry,
+)
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
@@ -53,18 +64,6 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockModule,
-    MockPlatform,
-    RegistryEntryWithDefaults,
-    async_capture_events,
-    mock_integration,
-    mock_registry,
-)
 
 
 def test_generate_entity_id_requires_hass_or_ids() -> None:

@@ -50,8 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> N
         motion sensors resolve it, including devices added dynamically at runtime.
         """
         for device in coordinator.data.parsed.values():
-            device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id, **get_device_info(device)
+            device_registry.async_get_or_create_from_info(
+                config_entry_id=entry.entry_id, device_info=get_device_info(device)
             )
 
     _async_register_devices()

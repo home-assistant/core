@@ -434,7 +434,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         value_getter=lambda api: api.getGasSummaryConsumptionHeatingLastSevenDays(),
         unit_getter=lambda api: api.getGasSummaryConsumptionHeatingUnit(),
-        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -477,7 +476,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
             api.getGasSummaryConsumptionDomesticHotWaterLastSevenDays()
         ),
         unit_getter=lambda api: api.getGasSummaryConsumptionDomesticHotWaterUnit(),
-        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -512,7 +510,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerSummaryConsumptionHeatingLastSevenDays(),
         unit_getter=lambda api: api.getPowerSummaryConsumptionHeatingUnit(),
-        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -581,7 +578,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
             api.getPowerSummaryConsumptionDomesticHotWaterLastSevenDays()
         ),
         unit_getter=lambda api: api.getPowerSummaryConsumptionDomesticHotWaterUnit(),
-        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(

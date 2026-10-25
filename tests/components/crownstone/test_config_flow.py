@@ -9,6 +9,7 @@ from crownstone_cloud.exceptions import (
     CrownstoneUnknownError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import usb
 from homeassistant.components.crownstone.const import (
@@ -27,8 +28,6 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 type MockFixture = Generator[MagicMock | AsyncMock]
 
 
@@ -36,7 +35,7 @@ type MockFixture = Generator[MagicMock | AsyncMock]
 def crownstone_setup() -> MockFixture:
     """Mock Crownstone entry setup."""
     with patch(
-        "homeassistant.components.crownstone.async_setup_entry", return_value=True
+        "homeassistant.components.crownstone.async_setup_entry", return_value=None
     ) as setup_mock:
         yield setup_mock
 

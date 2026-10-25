@@ -3,6 +3,9 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from pytest_homeassistant.common import load_json_object_fixture
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from uiprotect.data import DeviceState, LinkStation, WSAction
 from uiprotect.websocket import WebsocketState
@@ -17,10 +20,6 @@ from .utils import (
     make_public_bootstrap,
     public_device_ws_message,
 )
-
-from tests.common import load_json_object_fixture
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 DOMAIN = "unifiprotect"
 

@@ -12,6 +12,7 @@ from freezegun.api import FrozenDateTimeFactory
 from lru import LRU
 import objgraph
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.profiler.const import DOMAIN
 from homeassistant.components.profiler.services import (
@@ -36,8 +37,6 @@ from homeassistant.const import CONF_ENABLED, CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_basic_usage(hass: HomeAssistant, tmp_path: Path) -> None:

@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, patch
 
 import plexapi.exceptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 import requests.exceptions
 import requests_mock
 
@@ -41,9 +43,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN, PLEX_DIRECT_URL
 from .mock_classes import MockGDM
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 
 async def _async_retry_website_auth(

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import ring_doorbell
 
 from homeassistant import config_entries
@@ -15,8 +16,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import MOCK_HARDWARE_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(

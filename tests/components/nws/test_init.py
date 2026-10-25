@@ -5,6 +5,7 @@ import logging
 from freezegun.api import FrozenDateTimeFactory
 from pynws import NwsNoDataError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.nws.const import (
     CONF_LOCATION_ENTITY,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .const import NWS_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture

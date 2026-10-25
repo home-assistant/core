@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from awesomeversion import AwesomeVersion
 import pytest
+from pytest_homeassistant.common import MockModule, mock_integration
 
 from homeassistant import loader
 from homeassistant.components import hue
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.generated.zeroconf import ZEROCONF
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
-
-from .common import MockModule, mock_integration
 
 
 async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
@@ -879,6 +878,35 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
         integrations = await loader.async_get_custom_components(hass)
         assert integrations == mock_get.return_value
         mock_get.assert_called_once_with(hass)
+
+
+async def test_integration_descriptions_custom_categories(
+    hass: HomeAssistant,
+) -> None:
+    """Test the descriptions give the categories of custom integrations."""
+    custom_components = {
+        domain: loader.Integration(
+            hass,
+            f"custom_components.{domain}",
+            None,
+            {"domain": domain, "name": domain, **manifest},
+        )
+        for domain, manifest in (
+            ("custom_solar", {"categories": ["energy.solar_batteries"]}),
+            ("custom_plain", {}),
+        )
+    }
+
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value=custom_components,
+    ):
+        descriptions = await loader.async_get_integration_descriptions(hass)
+
+    custom = descriptions["custom"]["integration"]
+    assert custom["custom_solar"]["categories"] == ["energy.solar_batteries"]
+    # Without categories it is an empty list, like the built-in integrations
+    assert custom["custom_plain"]["categories"] == []
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")

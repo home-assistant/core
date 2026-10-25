@@ -9,6 +9,11 @@ from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import Device, DeviceState, DeviceType, PresentationLightControl
 from pyliebherrhomeapi.exceptions import LiebherrServerError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.liebherr.const import DOMAIN
@@ -28,8 +33,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 

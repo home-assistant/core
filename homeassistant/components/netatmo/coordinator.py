@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import islice
 import logging
-from time import time
+from time import monotonic, time
 from typing import TYPE_CHECKING, Any
 
 import aiohttp
@@ -19,6 +19,7 @@ from pyatmo.schedule import Schedule
 from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -98,6 +99,7 @@ DEFAULT_INTERVALS = {
     EVENT: 600,
 }
 SCAN_INTERVAL = 60
+RATE_LIMIT_WINDOW = 3600
 UNAVAILABLE_AFTER_ERRORS = 3
 MAX_ERROR_BACKOFF = 3600
 
@@ -153,6 +155,7 @@ class NetatmoPublisher:
     available: bool = True
     error_count: int = 0
     unavailable_logged: bool = False
+    last_error: Exception | None = None
 
 
 class NetatmoDataHandler:
@@ -176,14 +179,16 @@ class NetatmoDataHandler:
         self._queue: deque = deque()
         self._webhook_delivering: bool = False
         self.webhook_registered: bool = False
+        # Netatmo can hold a registration made before this load, so the first
+        # teardown drops one even though this load never registered
+        self.webhook_dropped: bool = False
         if config_entry.data["auth_implementation"] == cloud.DOMAIN:
             self._interval_factor = CLOUD_FACTOR
             self._rate_limit = CLOUD_LIMIT
         else:
             self._interval_factor = DEV_FACTOR
             self._rate_limit = DEV_LIMIT
-        self.poll_start = time()
-        self.poll_count = 0
+        self._calls: deque[float] = deque()
         self.persons: dict[str, dict[str, str | None]] = {}
         self.schedules: dict[str, dict[str, Schedule]] = {}
         self.device_ids: dict[str, str] = {}
@@ -215,6 +220,15 @@ class NetatmoDataHandler:
         )
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
+
+        # Entities are only created from this first topology. An account
+        # without homes answers NoDeviceError, which a retry cannot change.
+        error = self.publisher[ACCOUNT].last_error
+        if error is not None and not isinstance(error, pyatmo.NoDeviceError):
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="homes_unavailable",
+            ) from error
 
         # Parents must exist before a platform links a child to one
         self.module_parents = netatmo_module_parents(self.account)
@@ -262,14 +276,28 @@ class NetatmoDataHandler:
                     self.publisher[publisher].next_scan = time() + data_class.interval
 
         self._queue.rotate(BATCH_SIZE)
-        cph = self.poll_count / (time() - self.poll_start) * 3600
+        cph = self._calls_in_the_last_hour()
         _LOGGER.debug("Calls per hour: %i", cph)
         if cph > self._rate_limit:
             for publisher in self.publisher.values():
                 publisher.next_scan += 60
-        if (time() - self.poll_start) > 3600:
-            self.poll_start = time()
-            self.poll_count = 0
+
+    def _calls_in_the_last_hour(self) -> int:
+        """Return how many API calls were made over the trailing hour.
+
+        Counted, not extrapolated from a partial window: the calls every publisher
+        makes when it is first subscribed would otherwise scale up to several
+        times the rate limit and throttle the integration for the first minutes
+        after every restart.
+
+        Timed on the monotonic clock rather than the wall clock the schedule uses,
+        so that the NTP correction a host without a real time clock makes shortly
+        after booting cannot expire or retain the wrong calls.
+        """
+        cutoff = monotonic() - RATE_LIMIT_WINDOW
+        while self._calls and self._calls[0] < cutoff:
+            self._calls.popleft()
+        return len(self._calls)
 
     @callback
     def async_force_update(self, signal_name: str) -> None:
@@ -293,7 +321,7 @@ class NetatmoDataHandler:
 
     async def async_fetch_data(self, signal_name: str) -> bool:
         """Fetch data and notify."""
-        self.poll_count += 1
+        self._calls.append(monotonic())
         publisher = self.publisher[signal_name]
         has_error = False
         try:
@@ -306,12 +334,14 @@ class NetatmoDataHandler:
             aiohttp.ClientConnectorError,
         ) as err:
             has_error = True
+            publisher.last_error = err
             if not publisher.unavailable_logged:
                 _LOGGER.info("Error while fetching %s data: %s", signal_name, err)
                 publisher.unavailable_logged = True
             else:
                 _LOGGER.debug(err)
         else:
+            publisher.last_error = None
             if publisher.unavailable_logged:
                 _LOGGER.info("Fetching %s data recovered", signal_name)
                 publisher.unavailable_logged = False

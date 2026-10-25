@@ -6,6 +6,7 @@ from unittest.mock import ANY, AsyncMock, Mock, call, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import YellowOptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 from universal_silabs_flasher.flasher import YellowFlasher
 
 from homeassistant.components.hassio import (
@@ -30,8 +31,6 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
 @pytest.fixture(autouse=True)
@@ -70,7 +69,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
         "homeassistant.components.homeassistant_yellow.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -83,7 +82,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.homeassistant_yellow.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
@@ -130,7 +129,7 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.homeassistant_yellow.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "system"}
