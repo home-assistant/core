@@ -60,6 +60,8 @@ def create_mock_controller(
     controller.temp_setpoint = 24.0
     controller.control_setpoint_owner = None
     controller.control_setpoint = None
+    controller.airflow_lock = False
+    controller.airflow_min_lock = False
     controller.temp_return = 22.0
     controller.temp_supply = 16.0
     controller.temp_min = 15.0
@@ -143,6 +145,7 @@ def create_mock_zone(
     temp_current: float | None = 22.5,
     temp_setpoint: float = 24.0,
     zone_type: Zone.Type = Zone.Type.AUTO,
+    damper_position: int | None = 50,
 ) -> Mock:
     """Create a mock Zone with configurable parameters."""
     zone = Mock(spec=Zone)
@@ -154,6 +157,7 @@ def create_mock_zone(
     zone.temp_setpoint = temp_setpoint
     zone.airflow_min = 0
     zone.airflow_max = 100
+    zone.damper_position = damper_position
     zone.is_on = True
     zone._zone_data = {
         "AirStreamDeviceUId": "000000001",

@@ -44,7 +44,18 @@
     }
   },
   "entity": {
+    "number": {
+      "damper_max": {
+        "name": "Damper maximum"
+      },
+      "damper_min": {
+        "name": "Damper minimum"
+      }
+    },
     "sensor": {
+      "damper_position": {
+        "name": "Damper position"
+      },
       "return_temperature": {
         "name": "Return temperature"
       },
@@ -74,6 +85,9 @@
     },
     "discovery_start_failed": {
       "message": "iZone discovery service failed to start"
+    },
+    "invalid_airflow_step": {
+      "message": "Airflow {value}% is not a multiple of 5%"
     },
     "missing_host": {
       "message": "iZone config entry is missing host"
