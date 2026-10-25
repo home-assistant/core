@@ -174,7 +174,9 @@ async def test_user_flow_with_timetable_parse_error(hass: HomeAssistant) -> None
         patch(
             "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
         ) as mock_api_class,
-        patch("homeassistant.components.bizkaibus.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.bizkaibus.async_setup_entry", return_value=True
+        ),
     ):
         mock_api = _mock_api(
             mock_api_class,
@@ -266,7 +268,9 @@ async def test_user_flow_with_lines_connection_error(hass: HomeAssistant) -> Non
         patch(
             "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
         ) as mock_api_class,
-        patch("homeassistant.components.bizkaibus.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.bizkaibus.async_setup_entry", return_value=True
+        ),
     ):
         mock_api = _mock_api(mock_api_class)
         mock_api.get_lines_on_stop = AsyncMock(
@@ -1059,8 +1063,20 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
         mock_api.test_connection.assert_awaited_once()
 
 
-async def test_options_flow_stop_not_found(hass: HomeAssistant) -> None:
-    """Test the options flow aborts when the API cannot find the stop."""
+@pytest.mark.parametrize(
+    ("error", "expected_reason"),
+    [
+        (BizkaibusStopNotFoundError("1234"), "stop_not_found"),
+        (BizkaibusConnectionError(), "cannot_connect"),
+        (BizkaibusParseError(), "api_parse_error"),
+    ],
+)
+async def test_options_flow_factory_error(
+    hass: HomeAssistant,
+    error: BizkaibusConnectionError | BizkaibusParseError | BizkaibusStopNotFoundError,
+    expected_reason: str,
+) -> None:
+    """Test the options flow aborts when the API factory returns an error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_STOP_ID: "1234"},
@@ -1071,34 +1087,13 @@ async def test_options_flow_stop_not_found(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api_class.create = AsyncMock(
-            side_effect=BizkaibusStopNotFoundError("1234")
-        )
+        mock_api_class.create = AsyncMock(side_effect=error)
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "stop_not_found"
-
-
-async def test_options_flow_parse_error(hass: HomeAssistant) -> None:
-    """Test the options flow handles a parse error from the API factory."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_STOP_ID: "1234"},
-        options={CONF_LINE_IDS: ["A"], CONF_LINES: {"A": "Route A"}},
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
-    ) as mock_api_class:
-        mock_api_class.create = AsyncMock(side_effect=BizkaibusParseError())
-
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "api_parse_error"
+    assert result["reason"] == expected_reason
 
 
 async def test_options_flow_timetable_parse_error(hass: HomeAssistant) -> None:
