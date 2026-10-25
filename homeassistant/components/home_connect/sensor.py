@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import cast, override
 
-from aiohomeconnect.model import EventKey, StatusKey
+from aiohomeconnect.model import Event, EventKey, StatusKey
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -755,6 +755,8 @@ class HomeConnectProgramStartTimeSensor(HomeConnectProgramSensor):
     _awaiting_program_run = False
     # When the next program run started running before its program was reported
     _observed_run_start: datetime | None = None
+    # The active program event that was stored when the last program run ended
+    _ended_run_program_event: Event | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -791,6 +793,8 @@ class HomeConnectProgramStartTimeSensor(HomeConnectProgramSensor):
             program_event and not program_key
         ):
             # The program run ended
+            if not self._awaiting_program_run:
+                self._ended_run_program_event = program_event
             self._attr_native_value = None
             self._program_key = None
             self._awaiting_program_run = True
@@ -804,8 +808,14 @@ class HomeConnectProgramStartTimeSensor(HomeConnectProgramSensor):
             return
 
         start_time = self._attr_native_value
+        if program_event is self._ended_run_program_event:
+            # The program of the new run hasn't been reported yet
+            program_key = None
+        # A program reported after the run finished belongs to a new run
         program_changed = bool(
-            self._program_key and program_key and program_key != self._program_key
+            program_key
+            and program_key != self._program_key
+            and (self._program_key or operation_state == BSH_OPERATION_STATE_FINISHED)
         )
         if program_key:
             self._program_key = program_key

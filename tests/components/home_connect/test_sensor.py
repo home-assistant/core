@@ -1882,6 +1882,62 @@ async def test_program_start_time_unknown_for_program_started_before_setup(
             [
                 (
                     60,
+                    [
+                        _notify(
+                            {
+                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
+                                )
+                            }
+                        )
+                    ],
+                    "2021-01-09T12:01:00+00:00",
+                ),
+                # The run ends without clearing the active program
+                (
+                    60,
+                    [_operation_state(BSH_OPERATION_STATE_READY)],
+                    STATE_UNAVAILABLE,
+                ),
+                (
+                    60,
+                    [_operation_state(BSH_OPERATION_STATE_RUN)],
+                    "2021-01-09T12:04:00+00:00",
+                ),
+                # The program of the new run is reported after it started running
+                (
+                    60,
+                    [
+                        _notify(
+                            {
+                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                                    ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
+                                )
+                            }
+                        )
+                    ],
+                    "2021-01-09T12:04:00+00:00",
+                ),
+                (
+                    60,
+                    [
+                        _notify(
+                            {
+                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
+                                )
+                            }
+                        )
+                    ],
+                    "2021-01-09T12:06:00+00:00",
+                ),
+            ],
+            id="program_reported_after_run_after_ready",
+        ),
+        pytest.param(
+            [
+                (
+                    60,
                     [_operation_state(BSH_OPERATION_STATE_FINISHED)],
                     "2021-01-09T12:01:00+00:00",
                 ),
