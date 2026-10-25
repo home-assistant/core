@@ -360,6 +360,9 @@ def smart_plug_device(
     device.enter_duration_seconds = enter_duration_seconds
     device.supports_led_brightness = led_brightness is not None
     device.led_brightness = led_brightness
+    device.led_brightness_min = 0
+    device.led_brightness_max = 100
+    device.led_brightness_step = 1
     device.state_after_power_outage = state_after_power_outage
     return device
 
@@ -393,6 +396,9 @@ def smart_plug_compact_device(
     device.enter_duration_seconds = enter_duration_seconds
     device.supports_led_brightness = led_brightness is not None
     device.led_brightness = led_brightness
+    device.led_brightness_min = 0
+    device.led_brightness_max = 100
+    device.led_brightness_step = 1
     device.state_after_power_outage = state_after_power_outage
     return device
 
