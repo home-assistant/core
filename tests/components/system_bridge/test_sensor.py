@@ -7,10 +7,16 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
+from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
 from systembridgeconnector.models.fixtures.modules.memory import FIXTURE_MEMORY
 from systembridgeconnector.models.fixtures.modules.networks import FIXTURE_NETWORKS
 from systembridgeconnector.models.modules import Module
+from systembridgeconnector.models.modules.battery import (
+    BatteryInfo,
+    BatteryScope,
+    BatteryState,
+)
 from systembridgeconnector.models.modules.networks import (
     Network,
     NetworkIO,
@@ -266,3 +272,51 @@ async def test_sensor_network_interface_wifi_added(
 
     assert (state := hass.states.get("sensor.hostname_wlan1_ssid"))
     assert state.state == "Home"
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_sensor_battery_added(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test sensors are added for batteries that appear after setup."""
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.hostname_headset_battery") is None
+
+    await mock_config_entry.runtime_data.async_handle_module(
+        Module.BATTERY,
+        replace(
+            FIXTURE_BATTERY,
+            batteries=[
+                *FIXTURE_BATTERY.batteries,
+                BatteryInfo(
+                    name="hidpp_battery_2",
+                    model="headset",
+                    scope=BatteryScope.DEVICE,
+                    state=BatteryState.CHARGING,
+                    percentage=40,
+                ),
+            ],
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.hostname_headset_battery"))
+    assert state.state == "40"
+    assert (state := hass.states.get("sensor.hostname_headset_battery_state"))
+    assert state.state == BatteryState.CHARGING
+
+    await mock_config_entry.runtime_data.async_handle_module(
+        Module.BATTERY, FIXTURE_BATTERY
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.hostname_headset_battery"))
+    assert state.state == STATE_UNKNOWN

@@ -5,6 +5,11 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Final, cast, override
 
+from systembridgeconnector.models.modules.battery import (
+    BatteryInfo,
+    BatteryScope,
+    BatteryState,
+)
 from systembridgeconnector.models.modules.cpu import PerCPU
 from systembridgeconnector.models.modules.displays import Display
 from systembridgeconnector.models.modules.gpus import GPU
@@ -62,6 +67,63 @@ def battery_time_remaining(data: SystemBridgeData) -> datetime | None:
     if (battery_time := data.battery.time_remaining) is not None:
         return dt_util.utcnow() + timedelta(seconds=battery_time)
     return None
+
+
+def with_battery(func) -> Callable:
+    """Wrap a function to ensure a battery is available."""
+
+    def wrapper(data: SystemBridgeData, name: str) -> StateType:
+        """Wrap a function to ensure a battery is available."""
+        for battery in data.battery.batteries:
+            if battery.name == name:
+                return func(battery)
+        return None
+
+    return wrapper
+
+
+@with_battery
+def battery_info_percentage(battery: BatteryInfo) -> float | None:
+    """Return the battery level."""
+    return battery.percentage
+
+
+@with_battery
+def battery_info_state(battery: BatteryInfo) -> str:
+    """Return the battery state."""
+    return battery.state
+
+
+def battery_info_sensor_types(
+    battery: BatteryInfo,
+) -> list[SystemBridgeSensorEntityDescription]:
+    """Return the sensor descriptions for a battery."""
+    name = battery.name
+    placeholders = {"battery": battery.model or name}
+    # The main battery sensors already cover the system's own battery
+    enabled_default = battery.scope == BatteryScope.DEVICE
+    return [
+        SystemBridgeSensorEntityDescription(
+            key=f"battery_{name}",
+            translation_key="battery_info",
+            translation_placeholders=placeholders,
+            entity_registry_enabled_default=enabled_default,
+            device_class=SensorDeviceClass.BATTERY,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            suggested_display_precision=0,
+            value=lambda data, k=name: battery_info_percentage(data, k),
+        ),
+        SystemBridgeSensorEntityDescription(
+            key=f"battery_{name}_state",
+            translation_key="battery_info_state",
+            translation_placeholders=placeholders,
+            entity_registry_enabled_default=enabled_default,
+            device_class=SensorDeviceClass.ENUM,
+            options=[state.value for state in BatteryState],
+            value=lambda data, k=name: battery_info_state(data, k),
+        ),
+    ]
 
 
 def cpu_speed(data: SystemBridgeData) -> float | None:
@@ -583,6 +645,33 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value=battery_time_remaining,
     ),
+    SystemBridgeSensorEntityDescription(
+        key="battery_state",
+        translation_key="battery_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[state.value for state in BatteryState],
+        value=lambda data: data.battery.state,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="battery_power",
+        translation_key="battery_power",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=2,
+        value=lambda data: data.battery.power,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="battery_voltage",
+        translation_key="battery_voltage",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=2,
+        value=lambda data: data.battery.voltage,
+    ),
 )
 
 
@@ -898,6 +987,30 @@ async def async_setup_entry(
     entry.async_on_unload(
         coordinator.async_add_listener(_async_add_network_interface_sensors)
     )
+
+    known_battery_sensors: set[str] = set()
+
+    @callback
+    def _async_add_battery_sensors() -> None:
+        """Add battery sensors not seen before."""
+        new_descriptions = [
+            description
+            for battery in coordinator.data.battery.batteries
+            for description in battery_info_sensor_types(battery)
+            if description.key not in known_battery_sensors
+        ]
+        if not new_descriptions:
+            return
+        known_battery_sensors.update(
+            description.key for description in new_descriptions
+        )
+        async_add_entities(
+            SystemBridgeSensor(coordinator, description, entry.data[CONF_PORT])
+            for description in new_descriptions
+        )
+
+    _async_add_battery_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_battery_sensors))
 
 
 class SystemBridgeSensor(SystemBridgeEntity, SensorEntity):
