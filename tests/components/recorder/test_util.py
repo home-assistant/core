@@ -149,10 +149,21 @@ async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -
             "sqlite:////config/home-assistant_v2.db",
             id="sqlite",
         ),
+        pytest.param(
+            "sqlite:////config/ha%20copy/home-assistant_v2.db",
+            "sqlite:////config/ha%2520copy/home-assistant_v2.db",
+            id="sqlite_percent",
+        ),
+        pytest.param(
+            "sqlite:////config/ha%20copy/home-assistant_v2.db?timeout=0.1",
+            "sqlite:////config/ha%2520copy/home-assistant_v2.db?timeout=0.1",
+            id="sqlite_percent_query",
+        ),
+        pytest.param("sqlite://", "sqlite://", id="sqlite_memory"),
     ],
 )
 def test_get_engine_db_url(db_url: str, expected: str) -> None:
-    """Test driverless PostgreSQL URLs keep using psycopg2."""
+    """Test the engine URL keeps the driver and database of SQLAlchemy 2.0."""
     assert get_engine_db_url(db_url) == expected
 
 

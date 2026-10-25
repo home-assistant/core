@@ -254,12 +254,16 @@ def get_engine_db_url(db_url: str) -> str:
     """Return the database URL to create an engine with.
 
     SQLAlchemy 2.1 defaults postgresql:// to psycopg 3, but installations
-    ship psycopg2.
+    ship psycopg2. It also URL-decodes the database part, so literal percent
+    signs in SQLite paths are escaped to keep pointing at the same file.
     """
     if db_url.startswith(POSTGRESQL_URL_PREFIX):
         return POSTGRESQL_PSYCOPG2_URL_PREFIX + db_url.removeprefix(
             POSTGRESQL_URL_PREFIX
         )
+    if db_url.startswith(SQLITE_URL_PREFIX):
+        path, sep, query = db_url.removeprefix(SQLITE_URL_PREFIX).partition("?")
+        return f"{SQLITE_URL_PREFIX}{path.replace('%', '%25')}{sep}{query}"
     return db_url
 
 
