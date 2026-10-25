@@ -46,6 +46,8 @@ class UnifiEntityLoader:
 
         # Version optional v2 endpoints 404 on controllers that don't support
         # them, they only return with a controller upgrade so stop polling them
+        # Enable this for recently added endpoints too, to not poll the older
+        # controllers in the wild for endpoints they don't have
         self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
             id(hub.api.clients): UnifiDataUpdateCoordinator(hub, hub.api.clients),
             id(hub.api.devices): UnifiDataUpdateCoordinator(hub, hub.api.devices),
