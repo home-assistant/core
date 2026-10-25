@@ -37,6 +37,7 @@ async def test_cover_entity(
             supports_position=True,
             supports_tilt=True,
             supports_stop=True,
+            supports_toggle=True,
         )
     ]
     states = [
@@ -98,6 +99,15 @@ async def test_cover_entity(
 
     await hass.services.async_call(
         COVER_DOMAIN,
+        CoverService.TOGGLE,
+        {TargetKey.ENTITY_ID: "cover.test_my_cover"},
+        blocking=True,
+    )
+    mock_client.cover_command.assert_has_calls([call(key=1, toggle=True, device_id=0)])
+    mock_client.cover_command.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
         CoverService.OPEN_TILT,
         {TargetKey.ENTITY_ID: "cover.test_my_cover"},
         blocking=True,
@@ -151,6 +161,68 @@ async def test_cover_entity(
     state = hass.states.get("cover.test_my_cover")
     assert state is not None
     assert state.state == CoverState.OPEN
+
+
+async def test_cover_entity_without_toggle(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a generic cover entity that does not support toggle."""
+    entity_info = [
+        CoverInfo(
+            object_id="mycover",
+            key=1,
+            name="my cover",
+            supports_stop=True,
+            supports_toggle=False,
+        )
+    ]
+    states = [
+        ESPHomeCoverState(
+            key=1,
+            current_operation=CoverOperation.IS_OPENING,
+        )
+    ]
+    user_service = []
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("cover.test_my_cover")
+    assert state is not None
+    assert state.state == CoverState.OPENING
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.TOGGLE,
+        {TargetKey.ENTITY_ID: "cover.test_my_cover"},
+        blocking=True,
+    )
+    mock_client.cover_command.assert_has_calls([call(key=1, stop=True, device_id=0)])
+    mock_client.cover_command.reset_mock()
+
+    mock_device.set_state(
+        ESPHomeCoverState(
+            key=1,
+            position=0.0,
+            current_operation=CoverOperation.IDLE,
+        )
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_my_cover")
+    assert state is not None
+    assert state.state == CoverState.CLOSED
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.TOGGLE,
+        {TargetKey.ENTITY_ID: "cover.test_my_cover"},
+        blocking=True,
+    )
+    mock_client.cover_command.assert_has_calls([call(key=1, position=1.0, device_id=0)])
 
 
 async def test_cover_entity_without_position(
