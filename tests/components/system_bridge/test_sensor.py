@@ -8,6 +8,13 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.models.fixtures.modules.memory import FIXTURE_MEMORY
+from systembridgeconnector.models.fixtures.modules.networks import FIXTURE_NETWORKS
+from systembridgeconnector.models.modules import Module
+from systembridgeconnector.models.modules.networks import (
+    Network,
+    NetworkIO,
+    NetworkStats,
+)
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -96,3 +103,48 @@ async def test_sensor_memory_free_uses_available(
 
     assert (state := hass.states.get("sensor.hostname_memory_free"))
     assert state.state == "73.0"
+
+
+@pytest.mark.usefixtures("mock_version", "entity_registry_enabled_by_default")
+async def test_sensor_network_interface_added(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test sensors are added for interfaces that appear after setup."""
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.hostname_eth0_download_rate") is None
+
+    networks = FIXTURE_NETWORKS.networks
+    assert networks is not None
+    await mock_config_entry.runtime_data.async_handle_module(
+        Module.NETWORKS,
+        replace(
+            FIXTURE_NETWORKS,
+            networks=[
+                *networks,
+                Network(
+                    name="lo",
+                    stats=NetworkStats(flags=["up", "loopback"]),
+                    io=NetworkIO(bytes_recv_rate=1000.0),
+                ),
+                Network(
+                    name="eth0",
+                    stats=NetworkStats(flags=["up"]),
+                    io=NetworkIO(bytes_recv_rate=125000.0),
+                ),
+            ],
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.hostname_eth0_download_rate"))
+    assert state.state == "1.0"
+    assert hass.states.get("sensor.hostname_eth0_ssid") is None
+    assert hass.states.get("sensor.hostname_lo_download_rate") is None
