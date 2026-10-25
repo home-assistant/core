@@ -773,7 +773,7 @@ class ChatLog:
             if available and len(available) < len(api_ids):
                 LOGGER.warning(
                     "LLM API %s for %s is not available, continuing without it",
-                    [api_id for api_id in api_ids if api_id not in registered],
+                    ", ".join(api_id for api_id in api_ids if api_id not in registered),
                     llm_context.platform,
                 )
                 user_llm_hass_api = available
