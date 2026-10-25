@@ -17,9 +17,9 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .config_flow import reconcile_model_options
 from .const import CONF_CHAT_MODEL, DOMAIN
 from .coordinator import model_alias
+from .model_options import reconcile_model_options
 
 if TYPE_CHECKING:
     from .coordinator import AnthropicConfigEntry

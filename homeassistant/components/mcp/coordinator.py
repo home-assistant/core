@@ -46,8 +46,8 @@ type TokenManager = Callable[[], Awaitable[str]]
 
 
 async def _raise_on_post_error(response: httpx2.Response) -> None:
-    """Raise HTTPStatusError for non-404 error responses on POST requests."""
-    if response.request.method == "POST" and response.status_code != 404:
+    """Raise HTTPStatusError for error responses on POST requests."""
+    if response.request.method == "POST":
         response.raise_for_status()
 
 
@@ -99,6 +99,7 @@ async def mcp_client(
         token = await token_manager()
         headers["Authorization"] = f"Bearer {token}"
 
+    yielded = False
     try:
         async with (
             create_mcp_httpx_client(headers=headers) as http_client,
@@ -109,18 +110,18 @@ async def mcp_client(
             ClientSession(read_stream, write_stream) as session,
         ):
             result = await session.initialize()
+            yielded = True
             yield session, result
     except ExceptionGroup as streamable_err:
         main_error = _first_exception(streamable_err)
-        # Method not Allowed likely means this is not a streamable HTTP server,
-        # but it may be an SSE server. This is part of the MCP Transport
-        # backwards compatibility specification.
-        # We also handle other generic MCPErrors since proxies may not respond
-        # consistently with a 405.
+        # Method not Allowed or Not Found on the initial POST indicates this is
+        # not a streamable HTTP server, but it may be an SSE server. This is
+        # part of the MCP Transport backwards compatibility specification.
         if (
-            isinstance(main_error, httpx2.HTTPStatusError)
-            and main_error.response.status_code == 405
-        ) or isinstance(main_error, MCPError):
+            not yielded
+            and isinstance(main_error, httpx2.HTTPStatusError)
+            and main_error.response.status_code in (404, 405)
+        ):
             _LOGGER.debug(
                 "Streamable HTTP client failed, attempting SSE client: %s", main_error
             )
@@ -207,7 +208,7 @@ class ModelContextProtocolTool(llm.Tool):
                     result = await session.call_tool(
                         tool_input.tool_name, tool_input.tool_args
                     )
-        except TimeoutError as error:
+        except (TimeoutError, httpx2.TimeoutException) as error:
             _LOGGER.debug("Timeout when calling tool: %s", error)
             raise HomeAssistantError(f"Timeout when calling tool: {error}") from error
         except OAuth2TokenRequestReauthError as error:
@@ -229,7 +230,7 @@ class ModelContextProtocolTool(llm.Tool):
                     "The MCP server requires authentication"
                 ) from error
             raise HomeAssistantError(f"Error when calling tool: {error}") from error
-        except httpx2.HTTPError as error:
+        except (httpx2.HTTPError, MCPError) as error:
             _LOGGER.debug(
                 "Error communicating with MCP server when calling tool: %s", error
             )
@@ -278,7 +279,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     self.hass, self.config_entry.data[CONF_URL], self.token_manager
                 ) as (session, _):
                     result = await session.list_tools()
-        except TimeoutError as error:
+        except (TimeoutError, httpx2.TimeoutException) as error:
             _LOGGER.debug("Timeout when listing tools: %s", error)
             raise UpdateFailed(f"Timeout when listing tools: {error}") from error
         except OAuth2TokenRequestReauthError as error:
@@ -297,7 +298,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     "The MCP server requires authentication"
                 ) from error
             raise UpdateFailed(f"Error communicating with API: {error}") from error
-        except httpx2.HTTPError as err:
+        except (httpx2.HTTPError, MCPError) as err:
             _LOGGER.debug("Error communicating with API: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
