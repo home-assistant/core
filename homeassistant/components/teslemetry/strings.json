@@ -1291,13 +1291,13 @@
       "message": "Command was rejected: {reason}"
     },
     "local_command_failed": {
-      "message": "Local Powerwall gateway command failed: {message}"
+      "message": "The Powerwall gateway could not complete the command. Check the Home Assistant log for details, then try again."
     },
     "local_command_not_supported": {
       "message": "The Powerwall gateway firmware does not support this command"
     },
     "local_command_out_of_range": {
-      "message": "The Powerwall gateway rejected the power as outside its limit: {message}"
+      "message": "The Powerwall gateway rejected the requested power. Change the power value and try again."
     },
     "local_update_failed": {
       "message": "Error fetching data from the local Powerwall gateway: {message}"

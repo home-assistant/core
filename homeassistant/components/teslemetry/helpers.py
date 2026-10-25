@@ -137,22 +137,23 @@ async def handle_local_command(command: Awaitable[None]) -> None:
             translation_key="local_command_not_supported",
         ) from e
     except PowerwallCommandError as e:
+        # pylint: disable-next=home-assistant-log-and-raise
+        LOGGER.error("Local Powerwall gateway command failed: %s", e)
         if e.code == GATEWAY_OUT_OF_RANGE:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="local_command_out_of_range",
-                translation_placeholders={"message": e.status_message},
             ) from e
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="local_command_failed",
-            translation_placeholders={"message": str(e)},
         ) from e
     except PowerwallError as e:
+        # pylint: disable-next=home-assistant-log-and-raise
+        LOGGER.error("Local Powerwall gateway command failed: %s", e)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="local_command_failed",
-            translation_placeholders={"message": str(e)},
         ) from e
 
 

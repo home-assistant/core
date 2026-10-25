@@ -675,13 +675,15 @@ async def test_local_battery_services_errors(
             blocking=True,
         )
     assert exc_info.value.translation_key == translation_key
+    assert not exc_info.value.translation_placeholders
 
 
 async def test_dispatch_battery_power_out_of_range_message(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the gateway's own out of range text reaches the user."""
+    """Test the gateway's own out of range text is logged, not shown to the user."""
     entry = await _setup_site(hass, [PAIRED_SITE])
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, str(SITE_ID)), entry.entry_id
@@ -706,9 +708,11 @@ async def test_dispatch_battery_power_out_of_range_message(
             blocking=True,
         )
     assert str(exc_info.value) == (
-        "The Powerwall gateway rejected the power as outside its limit: "
-        "power 10100.000000 exceeds discharge limit 10000"
+        "The Powerwall gateway rejected the requested power. "
+        "Change the power value and try again"
     )
+    assert "exceeds discharge limit" not in str(exc_info.value)
+    assert "power 10100.000000 exceeds discharge limit 10000" in caplog.text
 
 
 @pytest.mark.parametrize(("service", "data", "method"), LOCAL_BATTERY_SERVICES)
