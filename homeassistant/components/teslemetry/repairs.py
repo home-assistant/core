@@ -111,11 +111,13 @@ class BluetoothKeyRepairFlow(RepairsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
-        # A Bluetooth command that succeeds while this flow is open deletes the issue.
-        if issue := ir.async_get(self.hass).async_get_issue(
-            self.handler, self.issue_id
-        ):
-            self._placeholders = issue.translation_placeholders
+        if (
+            issue := ir.async_get(self.hass).async_get_issue(
+                self.handler, self.issue_id
+            )
+        ) is None:
+            return self.async_abort(reason="issue_resolved")
+        self._placeholders = issue.translation_placeholders
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -124,6 +126,8 @@ class BluetoothKeyRepairFlow(RepairsFlow):
         """Check the key with a Bluetooth security handshake and re-approve it if still rejected."""
         if user_input is None:
             return self._async_show_confirm_form()
+        if ir.async_get(self.hass).async_get_issue(self.handler, self.issue_id) is None:
+            return self.async_abort(reason="issue_resolved")
         if not async_scanner_count(self.hass, connectable=True):
             return self.async_abort(reason="bluetooth_not_available")
         entry: TeslemetryConfigEntry | None = self.hass.config_entries.async_get_entry(

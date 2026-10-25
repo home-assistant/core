@@ -3055,6 +3055,24 @@ async def test_subentry_removal_reloads(hass: HomeAssistant) -> None:
     mock_reload.assert_called_once_with(entry.entry_id)
 
 
+async def test_vehicle_subentry_data_change_reloads_once(hass: HomeAssistant) -> None:
+    """Changing a vehicle subentry's address reloads once; an unchanged update does not."""
+    entry = await _setup_paired_entry(hass)
+    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0]
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        hass.config_entries.async_update_subentry(
+            entry, subentry, data={**subentry.data, CONF_ADDRESS: "AA:BB:CC:DD:EE:99"}
+        )
+        await hass.async_block_till_done()
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, "marker": True}
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+
 async def test_subentry_removal_keeps_vehicle_device_and_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

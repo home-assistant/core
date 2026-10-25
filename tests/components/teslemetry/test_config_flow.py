@@ -2181,7 +2181,7 @@ async def test_subentry_reconfigure_requires_key_approval(hass: HomeAssistant) -
         CONF_ADDRESS: ADDRESS,
     }
     vehicle.pair.assert_awaited_once()
-    mock_reload.assert_called_once_with(entry.entry_id)
+    mock_reload.assert_not_called()
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -2281,7 +2281,7 @@ async def test_subentry_reconfigure_device_not_found(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    mock_reload.assert_called_once_with(entry.entry_id)
+    mock_reload.assert_not_called()
 
 
 SITE_ID = 123456

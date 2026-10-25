@@ -55,7 +55,10 @@ from homeassistant.components.teslemetry.const import (
     SUBENTRY_TYPE_VEHICLE,
 )
 from homeassistant.components.teslemetry.coordinator import METADATA_INTERVAL
-from homeassistant.components.teslemetry.repairs import async_create_fix_flow
+from homeassistant.components.teslemetry.repairs import (
+    BluetoothKeyRepairFlow,
+    async_create_fix_flow,
+)
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntryState,
@@ -978,12 +981,12 @@ async def test_ble_key_fix_flow_keeps_repair_open(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_ble_key_fix_flow_keeps_vehicle_name_after_issue_clears(
+async def test_ble_key_fix_flow_aborts_when_issue_clears_mid_flow(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """The form still names the vehicle when a Bluetooth success clears the issue mid-flow."""
+    """A Bluetooth success that clears the issue while the form is open aborts the flow."""
     _, bluetooth_vehicles = await _raise_ble_key_issue(hass)
     client = await hass_client()
     result = await start_repair_fix_flow(client, DOMAIN, BLE_KEY_ISSUE_ID)
@@ -993,11 +996,26 @@ async def test_ble_key_fix_flow_keeps_vehicle_name_after_issue_clears(
     await _press_flash_lights(hass, MagicMock())
     assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is None
 
-    result = await _submit_ble_key_fix_flow(client, result["flow_id"], None)
+    result = await _submit_ble_key_fix_flow(client, result["flow_id"], MagicMock())
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-    assert result["description_placeholders"] == {"vehicle": "Test"}
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "issue_resolved"
+    bluetooth_vehicles[VEHICLE_VIN].handshakeVehicleSecurity.assert_not_awaited()
+
+
+async def test_ble_key_fix_flow_aborts_when_issue_already_gone(
+    hass: HomeAssistant,
+) -> None:
+    """The flow aborts at the first step when the issue no longer exists."""
+    flow = BluetoothKeyRepairFlow("entry_id", "subentry_id")
+    flow.hass = hass
+    flow.handler = DOMAIN
+    flow.issue_id = BLE_KEY_ISSUE_ID
+
+    result = await flow.async_step_init()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "issue_resolved"
 
 
 async def _unload_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -1050,6 +1068,16 @@ async def test_ble_key_fix_flow_bluetooth_not_loaded(
     result = await start_repair_fix_flow(client, DOMAIN, BLE_KEY_ISSUE_ID)
     with patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.BUTTON]):
         await lose_bluetooth_router(hass, entry)
+    # Losing the router clears the issue, so raise it again to reach the router guard.
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        BLE_KEY_ISSUE_ID,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="ble_key_rejected",
+        translation_placeholders={"vehicle": "Test"},
+    )
 
     result = await _submit_ble_key_fix_flow(client, result["flow_id"], MagicMock())
 

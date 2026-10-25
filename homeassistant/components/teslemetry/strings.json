@@ -1355,6 +1355,7 @@
         "abort": {
           "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to re-approve the key over Bluetooth.",
           "bluetooth_not_loaded": "Bluetooth control of this vehicle is not loaded, so its key cannot be checked. Make sure the Teslemetry integration is set up correctly, then try again.",
+          "issue_resolved": "A Bluetooth command to this vehicle has since succeeded, so its key is no longer rejected.",
           "reconfigure": "Continue re-approving the key in the vehicle's Bluetooth reconfiguration."
         },
         "error": {

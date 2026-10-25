@@ -1052,15 +1052,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 def _setup_subentry_change_reload(
     hass: HomeAssistant, entry: TeslemetryConfigEntry
 ) -> None:
-    """Reload the entry when a subentry is added or removed."""
-    known = set(entry.subentries)
+    """Reload the entry when a subentry is added or removed, or a vehicle's data changes."""
+
+    def _snapshot(updated_entry: TeslemetryConfigEntry) -> dict[str, Any]:
+        return {
+            subentry_id: dict(subentry.data)
+            if subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
+            else None
+            for subentry_id, subentry in updated_entry.subentries.items()
+        }
+
+    known = _snapshot(entry)
 
     async def _handle_update(
         hass: HomeAssistant, updated_entry: TeslemetryConfigEntry
     ) -> None:
         nonlocal known
-        current = set(updated_entry.subentries)
-        if known.symmetric_difference(current):
+        current = _snapshot(updated_entry)
+        if known != current:
             hass.config_entries.async_schedule_reload(updated_entry.entry_id)
         # Refresh known so a later update does not re-fire on this same change.
         known = current
