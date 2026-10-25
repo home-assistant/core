@@ -152,7 +152,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
         alarm = self.alarm
         if alarm:
             if "time" in alarm and alarm["time"] is not None:
-                attrs["time"] = alarm["time"].strftime("%H:%M:%S")
+                attrs["time"] = alarm["time"]
 
             if "dow" in alarm and alarm["dow"] is not None:
                 attrs[ATTR_DAYS_OF_WEEK] = list(alarm["dow"])
