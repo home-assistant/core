@@ -62,7 +62,10 @@ OPTIONS_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_CODE): probatio.All(
             selector.TextSelector(
-                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+                selector.TextSelectorConfig(
+                    type=selector.TextSelectorType.PASSWORD,
+                    autocomplete="current-password",
+                ),
             ),
             probatio.Match(r"^[0-9]+\Z", msg="invalid_code_format"),
             probatio.Length(min=4, max=16, msg="invalid_code_length"),
