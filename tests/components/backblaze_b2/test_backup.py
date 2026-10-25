@@ -1,16 +1,17 @@
 """Backblaze B2 backup agent tests."""
 
 import asyncio
-from collections.abc import AsyncGenerator, AsyncIterator
+from collections.abc import AsyncGenerator
 from io import StringIO
 import json
 import logging
 import threading
 import time
 from typing import Any
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, patch
 
 from b2sdk._internal.raw_simulator import BucketSimulator
+from b2sdk.v2 import AbstractProgressListener
 from b2sdk.v2.exception import B2Error
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -21,21 +22,23 @@ from pytest_homeassistant.typing import (
 )
 
 from homeassistant.components.backblaze_b2.backup import (
-    _parse_metadata,
     _ProgressListener,
-    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.backblaze_b2.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, BackupAgentError
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import BACKUP_METADATA, TEST_BACKUP
+
+from tests.components.backup.common import collect_upload_events, upload_backup_via_http
+
+BACKUP_MODULE = "homeassistant.components.backblaze_b2.backup"
 
 
 @pytest.fixture(autouse=True)
@@ -81,15 +84,34 @@ async def test_agents_info(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test agent info."""
+    """Test agent info following config entry unload and setup."""
     client = await hass_ws_client(hass)
+    local_agent = {"agent_id": "backup.local", "name": "local"}
+    b2_agent = {
+        "agent_id": f"{DOMAIN}.{mock_config_entry.entry_id}",
+        "name": mock_config_entry.title,
+    }
+
     await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()
     assert response["success"]
-    assert any(
-        agent["agent_id"] == f"{DOMAIN}.{mock_config_entry.entry_id}"
-        for agent in response["result"]["agents"]
-    )
+    assert response["result"] == {"agents": [local_agent, b2_agent]}
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent]}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent, b2_agent]}
 
 
 async def test_agents_list_backups(
@@ -254,70 +276,58 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("raw_content", "exception", "match"),
+    ("content", "reason"),
     [
         pytest.param(
-            "invalid json", ValueError, "Invalid JSON format", id="invalid_json"
+            b'{"unrelated": "payload"}',
+            "Missing required metadata keys: "
+            "backup_id, backup_metadata, metadata_version",
+            id="foreign",
         ),
+        pytest.param(b"invalid json", "Invalid JSON format", id="invalid_json"),
         pytest.param(
-            '["not", "a", "dict"]',
-            TypeError,
+            b'["not", "a", "dict"]',
             "JSON content is not a dictionary",
             id="not_a_dict",
         ),
         pytest.param(
-            '{"backup_id": "abc", "backup_metadata": {}}',
-            ValueError,
+            b'{"backup_id": "abc", "backup_metadata": {}}',
             "Missing required metadata keys: metadata_version",
             id="missing_metadata_version",
         ),
         pytest.param(
-            '{"metadata_version": "1", "backup_metadata": {}}',
-            ValueError,
+            b'{"metadata_version": "1", "backup_metadata": {}}',
             "Missing required metadata keys: backup_id",
             id="missing_backup_id",
         ),
         pytest.param(
-            '{"metadata_version": "1", "backup_id": "abc"}',
-            ValueError,
+            b'{"metadata_version": "1", "backup_id": "abc"}',
             "Missing required metadata keys: backup_metadata",
             id="missing_backup_metadata",
         ),
         pytest.param(
-            "{}",
-            ValueError,
+            b"{}",
             "Missing required metadata keys: "
             "backup_id, backup_metadata, metadata_version",
             id="empty_dict",
         ),
     ],
 )
-async def test_parse_metadata_invalid(
-    raw_content: str, exception: type[Exception], match: str
-) -> None:
-    """Test metadata parsing rejects malformed or foreign metadata files."""
-    with pytest.raises(exception, match=match):
-        _parse_metadata(raw_content)
-
-
 async def test_agents_list_skips_foreign_metadata_files(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_config_entry: MockConfigEntry,
     mock_backup_files: tuple[Mock, Mock],
     caplog: pytest.LogCaptureFixture,
+    content: bytes,
+    reason: str,
 ) -> None:
-    """Foreign .metadata.json files in the bucket are skipped, not crash the listing."""
+    """Malformed or foreign .metadata.json files are skipped by the listing."""
     mock_main, mock_metadata = mock_backup_files
 
     # Simulate metadata left behind by another bucket-based backup integration.
     foreign_metadata = Mock()
     foreign_metadata.file_name = "testprefix/foreign.metadata.json"
-    foreign_download = Mock()
-    foreign_response = Mock()
-    foreign_response.content = json.dumps({"unrelated": "payload"}).encode()
-    foreign_download.response = foreign_response
-    foreign_metadata.download = Mock(return_value=foreign_download)
+    foreign_metadata.download.return_value.response.content = content
 
     def mock_ls(_self, _prefix=""):
         return iter(
@@ -338,6 +348,7 @@ async def test_agents_list_skips_foreign_metadata_files(
     assert len(backups) == 1
     assert backups[0]["backup_id"] == TEST_BACKUP.backup_id
     assert "Skipping metadata file testprefix/foreign.metadata.json" in caplog.text
+    assert reason in caplog.text
 
 
 async def test_error_during_list_backups(
@@ -456,106 +467,95 @@ async def test_download_backup_not_found(
     assert response["result"]["backup"] is None
 
 
-async def test_metadata_file_invalid_json_during_list(
+@pytest.mark.usefixtures("freezer")
+async def test_upload_progress(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test invalid metadata handling."""
-    client = await hass_ws_client(hass)
-
-    mock_metadata = Mock()
-    mock_metadata.file_name = "testprefix/bad.metadata.json"
-    mock_download = Mock()
-    mock_response = Mock()
-    mock_response.content = b"not valid json"
-    mock_download.response = mock_response
-    mock_metadata.download = Mock(return_value=mock_download)
-
-    mock_tar = Mock()
-    mock_tar.file_name = "testprefix/bad.tar"
-
-    def mock_ls(_self, _prefix=""):
-        return iter([(mock_metadata, None), (mock_tar, None)])
-
-    with (
-        patch.object(BucketSimulator, "ls", mock_ls),
-        caplog.at_level(logging.WARNING),
-    ):
-        await client.send_json_auto_id({"type": "backup/info"})
-        response = await client.receive_json()
-
-    assert response["success"]
-
-
-async def _backup_stream() -> AsyncIterator[bytes]:
-    yield b"\0" * 20000
-
-
-async def _open_backup_stream() -> AsyncIterator[bytes]:
-    return _backup_stream()
-
-
-async def test_upload_progress(hass: HomeAssistant) -> None:
     """Test that upload progress from the B2 worker threads is reported."""
-    on_progress = Mock()
-    (agent,) = await async_get_backup_agents(hass)
+    agent_id = f"{DOMAIN}.{mock_config_entry.entry_id}"
 
-    await agent.async_upload_backup(
-        open_stream=_open_backup_stream,
-        backup=TEST_BACKUP,
-        on_progress=on_progress,
-    )
+    with collect_upload_events(hass, agent_id) as events:
+        resp = await upload_backup_via_http(
+            await hass_client(), agent_id, TEST_BACKUP, [b"\0" * 20000]
+        )
 
-    # The mocked upload reads the stream in 8192 byte chunks
-    assert on_progress.call_args_list == [
-        call(bytes_uploaded=8192),
-        call(bytes_uploaded=16384),
-        call(bytes_uploaded=20000),
-    ]
+    assert resp.status == 201
+    # The manager emits 0 and the backup size; later worker-thread progress
+    # reports are debounced
+    assert [e.uploaded_bytes for e in events] == [0, 8192, TEST_BACKUP.size]
+    assert all(e.total_bytes == TEST_BACKUP.size for e in events)
 
 
 @pytest.mark.parametrize(
-    ("error", "expected_error"),
+    ("patch_target", "patch_kwargs", "expected_status", "expected_log"),
     [
-        (TimeoutError, BackupAgentError),
-        (asyncio.CancelledError, asyncio.CancelledError),
+        pytest.param(
+            f"{BACKUP_MODULE}.UPLOAD_TIMEOUT",
+            {"new": 0.01},
+            201,
+            "timed out after 0.01 seconds",
+            id="timeout",
+        ),
+        pytest.param(
+            f"{BACKUP_MODULE}.asyncio.wait_for",
+            {"side_effect": asyncio.CancelledError},
+            # CancelledError propagates up and causes a 500 error
+            500,
+            "was cancelled",
+            id="cancelled",
+        ),
     ],
 )
-async def test_upload_progress_after_failed_upload(
+async def test_upload_failure_stops_progress(
     hass: HomeAssistant,
-    error: type[BaseException],
-    expected_error: type[BaseException],
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    patch_target: str,
+    patch_kwargs: dict[str, Any],
+    expected_status: int,
+    expected_log: str,
 ) -> None:
     """Test that a B2 worker outliving a failed upload no longer reports progress."""
+    agent_id = f"{DOMAIN}.{mock_config_entry.entry_id}"
     upload_failed = threading.Event()
+    worker_done = threading.Event()
 
-    def upload_unbound_stream_sync(*args: Any) -> None:
+    def upload_unbound_stream(
+        _self: BucketSimulator,
+        *args: Any,
+        progress_listener: AbstractProgressListener,
+        **kwargs: Any,
+    ) -> None:
         upload_failed.wait()
         # A part buffered before the failure finishes uploading
-        args[-1].bytes_completed(8192)
+        progress_listener.bytes_completed(8192)
+        worker_done.set()
 
-    on_progress = Mock()
-    (agent,) = await async_get_backup_agents(hass)
-
+    client = await hass_client()
+    # Stay subscribed until the worker is done, to catch late progress
     with (
-        patch.object(agent, "_upload_unbound_stream_sync", upload_unbound_stream_sync),
-        patch(
-            "homeassistant.components.backblaze_b2.backup.asyncio.wait_for",
-            side_effect=error,
-        ),
-        pytest.raises(expected_error),
+        patch.object(BucketSimulator, "upload_unbound_stream", upload_unbound_stream),
+        collect_upload_events(hass, agent_id) as events,
     ):
-        await agent.async_upload_backup(
-            open_stream=_open_backup_stream,
-            backup=TEST_BACKUP,
-            on_progress=on_progress,
-        )
+        try:
+            # Patching asyncio.wait_for patches it globally, keep the window small
+            with patch(patch_target, **patch_kwargs):
+                resp = await upload_backup_via_http(
+                    client, agent_id, TEST_BACKUP, [b"\0" * 20000]
+                )
+        finally:
+            upload_failed.set()
+        # async_block_till_done does not wait for a cancelled executor job
+        assert await hass.async_add_executor_job(worker_done.wait, 5)
+        await hass.async_block_till_done()
 
-    upload_failed.set()
-    await hass.async_block_till_done()
-
-    on_progress.assert_not_called()
+    assert resp.status == expected_status
+    assert expected_log in caplog.text
+    # Only the manager's initial event, no late progress and no completion
+    assert [e.uploaded_bytes for e in events] == [0]
 
 
 async def test_upload_progress_after_loop_closed(hass: HomeAssistant) -> None:
@@ -1123,97 +1123,6 @@ async def test_metadata_downloads_are_sequential(
     assert response["success"]
     # Verify downloads were sequential (max 1 at a time)
     assert max_concurrent == 1
-
-
-async def test_upload_timeout(
-    hass_client: ClientSessionGenerator,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test upload timeout handling."""
-    client = await hass_client()
-
-    mock_file_info = Mock()
-    mock_file_info.delete = Mock()
-
-    with (
-        patch(
-            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-            return_value=TEST_BACKUP,
-        ),
-        patch(
-            "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BACKUP,
-        ),
-        patch("pathlib.Path.open") as mocked_open,
-        patch(
-            "homeassistant.components.backblaze_b2.backup.BackblazeBackupAgent._upload_unbound_stream_sync",
-        ),
-        patch(
-            "homeassistant.components.backblaze_b2.backup.asyncio.wait_for",
-            side_effect=TimeoutError,
-        ),
-        patch.object(
-            BucketSimulator,
-            "get_file_info_by_name",
-            return_value=mock_file_info,
-        ),
-        caplog.at_level(logging.ERROR),
-    ):
-        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
-        resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
-            data={"file": StringIO("test")},
-        )
-
-    assert resp.status == 201
-    assert any("timed out" in msg for msg in caplog.messages)
-
-
-async def test_upload_cancelled(
-    hass_client: ClientSessionGenerator,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test upload cancellation handling."""
-    client = await hass_client()
-
-    mock_file_info = Mock()
-    mock_file_info.delete = Mock()
-
-    with (
-        patch(
-            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-            return_value=TEST_BACKUP,
-        ),
-        patch(
-            "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BACKUP,
-        ),
-        patch("pathlib.Path.open") as mocked_open,
-        patch(
-            "homeassistant.components.backblaze_b2.backup.BackblazeBackupAgent._upload_unbound_stream_sync",
-        ),
-        patch(
-            "homeassistant.components.backblaze_b2.backup.asyncio.wait_for",
-            side_effect=asyncio.CancelledError,
-        ),
-        patch.object(
-            BucketSimulator,
-            "get_file_info_by_name",
-            return_value=mock_file_info,
-        ),
-        caplog.at_level(logging.WARNING),
-    ):
-        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
-        resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
-            data={"file": StringIO("test")},
-        )
-
-    # CancelledError propagates up and causes a 500 error
-    assert resp.status == 500
-    assert any("cancelled" in msg for msg in caplog.messages)
 
 
 async def test_metadata_download_timeout_during_list(

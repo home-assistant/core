@@ -3,10 +3,11 @@
 from collections.abc import AsyncGenerator
 from io import StringIO
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, call, patch
+from unittest.mock import ANY, Mock, patch
 
 from azure.core.exceptions import AzureError, HttpResponseError, ServiceRequestError
 from azure.storage.blob import BlobProperties
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import (
@@ -16,7 +17,6 @@ from pytest_homeassistant.typing import (
 )
 
 from homeassistant.components.azure_storage.backup import (
-    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.azure_storage.const import (
@@ -29,6 +29,12 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import BACKUP_METADATA, TEST_BACKUP
+
+from tests.components.backup.common import (
+    collect_upload_events,
+    flush_upload_progress,
+    upload_backup_via_http,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -53,22 +59,34 @@ async def test_agents_info(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test backup agent info."""
+    """Test backup agent info following config entry unload and setup."""
     client = await hass_ws_client(hass)
+    local_agent = {"agent_id": "backup.local", "name": "local"}
+    azure_agent = {
+        "agent_id": f"{DOMAIN}.{mock_config_entry.entry_id}",
+        "name": mock_config_entry.title,
+    }
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()
-
     assert response["success"]
-    assert response["result"] == {
-        "agents": [
-            {"agent_id": "backup.local", "name": "local"},
-            {
-                "agent_id": f"{DOMAIN}.{mock_config_entry.entry_id}",
-                "name": mock_config_entry.title,
-            },
-        ],
-    }
+    assert response["result"] == {"agents": [local_agent, azure_agent]}
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent]}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent, azure_agent]}
 
 
 async def test_agents_list_backups(
@@ -241,28 +259,28 @@ async def test_agents_upload(
 
 async def test_agents_upload_progress(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that upload progress is reported from the SDK progress hook."""
+    """Test upload progress reported by the SDK progress hook reaches the manager."""
+    agent_id = f"{DOMAIN}.{mock_config_entry.entry_id}"
 
     async def upload_blob(**kwargs: Any) -> None:
         await kwargs["progress_hook"](4, 8)
+        # Report each value in its own event
+        flush_upload_progress(hass, freezer)
         await kwargs["progress_hook"](8, 8)
 
     mock_client.upload_blob.side_effect = upload_blob
-    on_progress = Mock()
-    (agent,) = await async_get_backup_agents(hass)
 
-    await agent.async_upload_backup(
-        open_stream=AsyncMock(),
-        backup=TEST_BACKUP,
-        on_progress=on_progress,
-    )
+    with collect_upload_events(hass, agent_id) as events:
+        resp = await upload_backup_via_http(await hass_client(), agent_id, TEST_BACKUP)
 
-    assert on_progress.call_args_list == [
-        call(bytes_uploaded=4),
-        call(bytes_uploaded=8),
-    ]
+    assert resp.status == 201
+    # The manager emits the first (0) and last (backup size) events
+    assert [e.uploaded_bytes for e in events] == [0, 4, 8, TEST_BACKUP.size]
 
 
 async def test_agents_download(

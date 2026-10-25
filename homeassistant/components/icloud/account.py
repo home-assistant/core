@@ -1071,6 +1071,17 @@ class IcloudDevice:
         return self._device.lost_mode_available
 
     @property
+    def raw_status(self) -> dict[str, Any]:
+        """Return the raw device data reported by Apple."""
+        # update() stores the fetch interval in the status dict, which is
+        # account state rather than device data.
+        return {
+            key: value
+            for key, value in self._status.items()
+            if key != ATTR_ACCOUNT_FETCH_INTERVAL
+        }
+
+    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes."""
         return self._attrs
