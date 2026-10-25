@@ -1,10 +1,15 @@
 """Test the RainbowMiner config flow."""
 
+import asyncio
 from unittest.mock import AsyncMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from rainbowminer_api_client import RainbowMinerAuthError, RainbowMinerConnectionError
+from rainbowminer_api_client import (
+    RainbowMinerAuthError,
+    RainbowMinerConnectionError,
+    Status,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.rainbowminer.const import DOMAIN
@@ -12,7 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_HOST, TEST_PORT
+from .conftest import TEST_HOST, TEST_PORT, VALID_STATUS
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -144,3 +149,46 @@ async def test_form_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_form_duplicate_during_validation(
+    hass: HomeAssistant,
+    mock_rainbowminer_client: AsyncMock,
+) -> None:
+    """Test a duplicate flow aborts when another flow created an entry meanwhile."""
+    validation_started = asyncio.Event()
+    validation_continue = asyncio.Event()
+
+    async def _slow_get_status() -> Status:
+        validation_started.set()
+        await validation_continue.wait()
+        return VALID_STATUS
+
+    mock_rainbowminer_client.get_status.side_effect = _slow_get_status
+
+    result1 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Park the first flow inside validation.
+    flow1_task = asyncio.create_task(
+        hass.config_entries.flow.async_configure(result1["flow_id"], _user_input())
+    )
+    await validation_started.wait()
+
+    # The second flow passes its first check and creates an entry meanwhile.
+    validation_continue.set()
+    result = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], _user_input()
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # The first flow passed its first check but must abort on the recheck.
+    flow1_result = await flow1_task
+    assert flow1_result["type"] is FlowResultType.ABORT
+    assert flow1_result["reason"] == "already_configured"
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1

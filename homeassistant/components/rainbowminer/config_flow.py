@@ -57,9 +57,11 @@ class RainbowMinerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(
-                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
-            )
+            match_dict = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_PORT: user_input[CONF_PORT],
+            }
+            self._async_abort_entries_match(match_dict)
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
@@ -67,6 +69,8 @@ class RainbowMinerConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             else:
+                # Recheck, another flow may have created an entry during validation.
+                self._async_abort_entries_match(match_dict)
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
