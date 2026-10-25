@@ -1601,7 +1601,7 @@ loqedAPI==2.1.16
 lorawan-connection[chirpstack,tts]==1.3.0
 
 # homeassistant.components.luftdaten
-luftdaten==0.7.4
+luftdaten==0.8.0
 
 # homeassistant.components.lunatone
 lunatone-rest-api-client==0.11.2
