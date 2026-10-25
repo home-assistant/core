@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError, ClientResponseError
+from pydactyl.exceptions import BadRequestError, PterodactylApiError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -123,15 +124,35 @@ async def test_button_press(
 
 
 @pytest.mark.parametrize(
-    ("status", "expected_message"),
+    ("api_error", "expected_message"),
     [
         pytest.param(
-            500,
+            PterodactylApiError,
             "Failed to send action 'start_server': Connection error",
-            id="connection",
+            id="pterodactyl_api_error",
         ),
         pytest.param(
-            401,
+            BadRequestError,
+            "Failed to send action 'start_server': Connection error",
+            id="bad_request_error",
+        ),
+        pytest.param(
+            ClientError,
+            "Failed to send action 'start_server': Connection error",
+            id="client_error",
+        ),
+        pytest.param(
+            TimeoutError,
+            "Failed to send action 'start_server': Connection error",
+            id="timeout",
+        ),
+        pytest.param(
+            ClientResponseError(request_info=None, history=[], status=500),
+            "Failed to send action 'start_server': Connection error",
+            id="http_error",
+        ),
+        pytest.param(
+            ClientResponseError(request_info=None, history=[], status=401),
             "Failed to send action 'start_server': Unauthorized",
             id="authorization",
         ),
@@ -141,13 +162,11 @@ async def test_button_press_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pterodactyl: AsyncMock,
-    status: int,
+    api_error: Exception | type[Exception],
     expected_message: str,
 ) -> None:
     """Test button press error handling."""
-    mock_pterodactyl.client.servers.send_power_action = AsyncMock(
-        side_effect=ClientResponseError(request_info=None, history=[], status=status)
-    )
+    mock_pterodactyl.client.servers.send_power_action = AsyncMock(side_effect=api_error)
 
     with patch("homeassistant.components.pterodactyl._PLATFORMS", [Platform.BUTTON]):
         mock_config_entry = await setup_integration(hass, mock_config_entry)
