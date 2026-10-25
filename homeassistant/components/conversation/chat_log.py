@@ -15,6 +15,7 @@ import probatio
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, frame, intent, llm, template
+from homeassistant.helpers.json import json_dumps
 from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
@@ -419,7 +420,7 @@ class ChatLog:
     created: datetime = field(init=False, default_factory=utcnow)
     _last_error: BaseException | None = field(default=None, repr=False)
     # Tool calls that a stream started before their content was added.
-    _pending_tool_calls: dict[str, tuple[str, llm.ToolInput]] = field(
+    _pending_tool_calls: dict[str, llm.ToolInput] = field(
         default_factory=dict, repr=False
     )
     # Tool calls that started and have no result content yet.
@@ -471,24 +472,6 @@ class ChatLog:
             {"content": content.as_dict()},
         )
 
-    @callback
-    def _async_add_pending_tool_calls(self) -> None:
-        """Add the tool calls that an interrupted stream started."""
-        pending = list(self._pending_tool_calls.values())
-        self._pending_tool_calls.clear()
-        content = AssistantContent(
-            agent_id=pending[0][0],
-            content=None,
-            tool_calls=[tool_call for _, tool_call in pending],
-        )
-        self.content.append(content)
-        _async_notify_subscribers(
-            self.hass,
-            self.conversation_id,
-            ChatLogEventType.CONTENT_ADDED,
-            {"content": content.as_dict()},
-        )
-
     def _get_interrupted_tool_result(
         self, tool_call_id: str, error: BaseException
     ) -> llm.ToolResult:
@@ -525,8 +508,6 @@ class ChatLog:
         if error is self._last_error:
             return
         self._last_error = error
-        if self._pending_tool_calls:
-            self._async_add_pending_tool_calls()
         # LLM providers refuse a tool call without a result.
         answered: set[str] = set()
         for content in reversed(self.content):
@@ -549,9 +530,20 @@ class ChatLog:
                     )
             break
 
-        error_text = str(error) or type(error).__name__
+        lines = [f"Error: {str(error) or type(error).__name__}"]
+        # An interrupted stream misses the provider data of its tool calls, like
+        # a signature, so describe them as text.
+        if self._pending_tool_calls:
+            lines.append("Tool calls that started before the error:")
+            for tool_call in self._pending_tool_calls.values():
+                result = self._get_interrupted_tool_result(tool_call.id, error)
+                lines.append(
+                    f"- {tool_call.tool_name}({json_dumps(tool_call.tool_args)}):"
+                    f" {json_dumps(result.data)}"
+                )
+            self._pending_tool_calls.clear()
         self.async_add_assistant_content_without_tools(
-            AssistantContent(agent_id=agent_id, content=f"Error: {error_text}")
+            AssistantContent(agent_id=agent_id, content="\n".join(lines))
         )
 
     @callback
@@ -711,10 +703,7 @@ class ChatLog:
                                 self.llm_api.async_call_tool(tool_call),
                                 name=f"llm_tool_{tool_call.id}",
                             )
-                            self._pending_tool_calls[tool_call.id] = (
-                                agent_id,
-                                tool_call,
-                            )
+                            self._pending_tool_calls[tool_call.id] = tool_call
                             self._tool_call_tasks[tool_call.id] = tool_call_tasks[
                                 tool_call.id
                             ]

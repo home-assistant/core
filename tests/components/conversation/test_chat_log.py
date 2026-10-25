@@ -307,19 +307,16 @@ def _mock_tool() -> AsyncMock:
 
 
 @pytest.mark.parametrize(
-    ("tool_side_effect", "tool_result"),
+    ("tool_side_effect", "tool_line"),
     [
         pytest.param(
             [llm.ToolResult(data="Test response")],
-            llm.ToolResult(data="Test response"),
+            '- test_tool({}): "Test response"',
             id="tool_finished",
         ),
         pytest.param(
             HomeAssistantError("Tool failed"),
-            llm.ToolResult(
-                data={"error": "HomeAssistantError", "error_text": "Tool failed"},
-                error=True,
-            ),
+            '- test_tool({}): {"error":"HomeAssistantError","error_text":"Tool failed"}',
             id="tool_failed",
         ),
     ],
@@ -329,7 +326,7 @@ async def test_failed_stream_keeps_started_tool_call(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
     tool_side_effect: list[llm.ToolResult] | Exception,
-    tool_result: llm.ToolResult,
+    tool_line: str,
 ) -> None:
     """Test a stream that fails after a tool call started keeps the tool call."""
     mock_tool = _mock_tool()
@@ -368,14 +365,12 @@ async def test_failed_stream_keeps_started_tool_call(
         await run_turn()
 
     content = hass.data[DATA_CHAT_LOGS]["koala"].content
-    assert content[-3].tool_calls == [tool_call]
-    assert content[-2] == ToolResultContent(
-        agent_id="mock-agent-id",
-        tool_call_id="mock-tool-call-id",
-        tool_name="test_tool",
-        result=tool_result,
+    # The tool call misses its provider data, so it is described as text.
+    assert content[-2].role == "user"
+    assert content[-1].content == (
+        "Error: Connection lost\nTool calls that started before the error:\n"
+        + tool_line
     )
-    assert content[-1].content == "Error: Connection lost"
 
 
 @freeze_time("2025-10-31 12:00:00")
@@ -425,17 +420,11 @@ async def test_failed_stream_running_tool_call(
     await hass.async_block_till_done()
 
     content = hass.data[DATA_CHAT_LOGS]["koala"].content
-    assert content[-2].result == llm.ToolResult(
-        data={
-            "error": "Interrupted",
-            "error_text": (
-                "The turn ended before the tool finished. "
-                "The action may have completed."
-            ),
-        },
-        error=True,
+    assert content[-1].content == (
+        "Error: Connection lost\nTool calls that started before the error:\n"
+        '- test_tool({}): {"error":"Interrupted","error_text":"The turn ended '
+        'before the tool finished. The action may have completed."}'
     )
-    assert content[-1].content == "Error: Connection lost"
 
 
 class AdminAPI(llm.API):
