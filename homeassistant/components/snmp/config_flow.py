@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentry,
     ConfigSubentryFlow,
     FlowType,
     SubentryFlowContext,
@@ -25,6 +26,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -44,6 +46,7 @@ from .const import (
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
     CONF_VERSION,
+    CONTEXT_ERROR_INDICATIONS,
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
     DEFAULT_PORT,
@@ -165,6 +168,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
             raise UsmWrongDigests(str(err_indication))
         if err_indication in AUTH_ERROR_INDICATIONS:
             raise InvalidAuth(str(err_indication))
+        if err_indication in CONTEXT_ERROR_INDICATIONS:
+            raise InvalidContext(str(err_indication))
         raise CannotConnect(str(err_indication))
 
     if version == "3" and err_status:
@@ -402,6 +407,8 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "usm_wrong_digests"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+        except InvalidContext:
+            errors["base"] = "invalid_context"
         except Exception:
             _LOGGER.exception("Unexpected exception validating the SNMP device")
             errors["base"] = "unknown"
@@ -482,6 +489,8 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
             if error := await self._async_validate_baseoid(user_input[CONF_BASEOID]):
                 errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
             else:
+                if user_input[CONF_BASEOID] != subentry.data[CONF_BASEOID]:
+                    self._async_remove_entities(subentry)
                 return self.async_update_and_abort(
                     self._get_entry(),
                     subentry,
@@ -497,6 +506,20 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
             ),
             errors=errors,
         )
+
+    @callback
+    def _async_remove_entities(self, subentry: ConfigSubentry) -> None:
+        """Remove the trackers of the table which is no longer watched.
+
+        Setup restores every MAC of the subentry from the registry, so keeping the
+        entities of the previous table would leave them as permanent not_home.
+        """
+        ent_reg = er.async_get(self.hass)
+        for reg_entry in er.async_entries_for_config_entry(
+            ent_reg, self._get_entry().entry_id
+        ):
+            if reg_entry.config_subentry_id == subentry.subentry_id:
+                ent_reg.async_remove(reg_entry.entity_id)
 
     async def _async_validate_baseoid(self, baseoid: str) -> str | None:
         """Return an error key if the device cannot read the base OID.
@@ -527,6 +550,10 @@ class SnmpTimeout(CannotConnect):
 
 class InvalidAuth(Exception):
     """Error to indicate there is invalid auth."""
+
+
+class InvalidContext(Exception):
+    """Error to indicate the SNMPv3 context does not exist on the device."""
 
 
 class UsmWrongDigests(InvalidAuth):

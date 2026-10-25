@@ -10,7 +10,6 @@ from pysnmp.smi.error import WrongValueError
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .client import SnmpClient, SnmpWalkError
@@ -134,9 +133,9 @@ class SnmpDeviceTrackerCoordinator(DataUpdateCoordinator[dict[str, str | None]])
 
                 devices[mac] = _ip_address_from_oid(oid.asTuple())
         except WrongValueError as err:
-            raise ConfigEntryAuthFailed(
-                f"Invalid authentication credentials or protocols: {err}"
-            ) from err
+            # The credentials were validated at setup, so an unconvertible value is
+            # a device or MIB problem rather than a wrong key: retry instead of reauth.
+            raise UpdateFailed(f"Table {self._baseoid} returned {err}") from err
         except (PySnmpError, SnmpWalkError) as err:
             raise UpdateFailed(f"SNMP error during walk: {err}") from err
 

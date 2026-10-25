@@ -97,9 +97,10 @@ class SnmpClient:
                 message = f"SNMPLIB error: {errindication}"
                 if errindication in INVALID_CREDENTIAL_INDICATIONS:
                     raise ConfigEntryAuthFailed(message)
-                if isinstance(errindication, BaseException):
-                    raise SnmpWalkError(message) from errindication
-                raise SnmpWalkError(message)
+                cause = (
+                    errindication if isinstance(errindication, BaseException) else None
+                )
+                raise SnmpWalkError(message) from cause
             if errstatus:
                 # The error index is 1 based and may point outside the response
                 index = int(errindex) - 1 if errindex else -1

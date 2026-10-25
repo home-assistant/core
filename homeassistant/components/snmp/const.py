@@ -81,6 +81,10 @@ AUTH_ERROR_INDICATIONS: Final = (
     errind.authenticationError,
 )
 
+# Indications which mean the requested SNMPv3 context does not exist on the
+# agent, which is a fixable configuration mistake rather than a network problem.
+CONTEXT_ERROR_INDICATIONS: Final = (errind.noSuchContext,)
+
 # Any indication which means the credentials are not accepted, so reauthenticating
 # can fix it.
 INVALID_CREDENTIAL_INDICATIONS: Final = (

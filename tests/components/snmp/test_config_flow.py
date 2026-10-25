@@ -314,6 +314,24 @@ async def test_user_flow_v3_vacm_denied_sysdescr(hass: HomeAssistant) -> None:
             {"username": "validuser", "auth_key": "pass", "auth_protocol": "hmac-sha"},
             id="unknown_user",
         ),
+        pytest.param(
+            "3",
+            errind.noSuchContext,
+            {
+                "username": "user",
+                "auth_key": "pass",
+                "auth_protocol": "hmac-sha",
+                "context_name": "missing",
+            },
+            "invalid_context",
+            {
+                "username": "user",
+                "auth_key": "pass",
+                "auth_protocol": "hmac-sha",
+                "context_name": "existing",
+            },
+            id="unknown_context",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")

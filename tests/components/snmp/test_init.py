@@ -13,7 +13,7 @@ from pysnmp.proto import errind
 from pysnmp.proto.rfc1902 import OctetString
 from pysnmp.smi.error import WrongValueError
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import async_capture_events, async_fire_time_changed
 
 from homeassistant.components import snmp
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
@@ -23,6 +23,7 @@ from homeassistant.components.snmp.const import (
     DOMAIN,
     SUBENTRY_TYPE_DEVICE_TRACKER,
 )
+from homeassistant.components.snmp.coordinator import MAX_CONSECUTIVE_FAILURES
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState, ConfigSubentry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -36,6 +37,9 @@ MAC = "00:11:22:33:44:55"
 
 # ipNetToMediaPhysAddress, the MAC column of the ARP table
 ARP_MAC_OID = (1, 3, 6, 1, 2, 1, 4, 22, 1, 2)
+
+# dot1dTpFdbAddress, the MAC column of the bridge forwarding table
+BRIDGE_MAC_OID = "1.3.6.1.2.1.17.4.3.1.1"
 
 
 async def _async_mock_walk_with_mac(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
@@ -257,10 +261,10 @@ async def test_walk_errstatus(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_walk_auth_error(
+async def test_walk_value_error_does_not_reauthenticate(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_walk: Mock
 ) -> None:
-    """Test that WrongValueError during a poll triggers reauth."""
+    """Test that an unconvertible value is retried instead of triggering reauth."""
     entry = mock_entry()
     entry.add_to_hass(hass)
 
@@ -270,7 +274,30 @@ async def test_walk_auth_error(
     mock_walk.side_effect = WrongValueError
     await _async_advance_poll(hass, freezer)
 
-    assert _async_reauth_flow(hass)
+    assert not _async_reauth_flow(hass)
+
+
+async def test_walk_value_error_makes_coordinator_fail(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_walk: Mock
+) -> None:
+    """Test that repeated unconvertible values fail the coordinator after a retry."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry_id = next(iter(entry.subentries))
+    coordinator = entry.runtime_data.coordinators[subentry_id]
+    mock_walk.side_effect = WrongValueError
+
+    await _async_advance_poll(hass, freezer)
+    assert coordinator.last_update_success
+
+    for _ in range(MAX_CONSECUTIVE_FAILURES - 1):
+        await _async_advance_poll(hass, freezer)
+
+    assert not coordinator.last_update_success
 
 
 @pytest.mark.parametrize(
@@ -414,20 +441,47 @@ async def test_subentry_reconfigure_reloads_coordinator(hass: HomeAssistant) -> 
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert entry.runtime_data.coordinators[subentry_id].update_interval == (
-            DEFAULT_SCAN_INTERVAL
-        )
+        previous_coordinator = entry.runtime_data.coordinators[subentry_id]
 
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            {CONF_BASEOID: ARP_TABLE_MAC_OID},
+            {CONF_BASEOID: BRIDGE_MAC_OID},
         )
         await hass.async_block_till_done()
 
     assert result["reason"] == "reconfigure_successful"
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.runtime_data.coordinators[subentry_id].update_interval == (
-        DEFAULT_SCAN_INTERVAL
+    assert entry.runtime_data.coordinators[subentry_id] is not previous_coordinator
+
+
+async def test_subentry_reconfigure_to_another_table_removes_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test that changing the base OID drops the trackers of the previous table."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+    subentry_id = next(iter(entry.subentries))
+
+    with patch(
+        "homeassistant.components.snmp.client.bulk_walk_cmd",
+        side_effect=_async_mock_walk_with_mac,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        entity_id = _async_mac_entity_id(hass, subentry_id)
+        assert entity_id is not None
+        events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
+
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {CONF_BASEOID: BRIDGE_MAC_OID},
+        )
+        await hass.async_block_till_done()
+
+    assert result["reason"] == "reconfigure_successful"
+    assert any(
+        event.data["action"] == "remove" and event.data["entity_id"] == entity_id
+        for event in events
     )
-    assert _async_mac_entity_id(hass, subentry_id) is not None
