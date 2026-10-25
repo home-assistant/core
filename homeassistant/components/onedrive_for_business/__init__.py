@@ -14,7 +14,11 @@ from onedrive_personal_sdk.exceptions import (
 from homeassistant.components.backup import async_get_manager
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -92,6 +96,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
             assert entry.unique_id
         # Microsoft returns drive IDs with inconsistent casing
         drive_id = entry.unique_id.upper()
+        if (
+            other_entry := hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, drive_id
+            )
+        ) and other_entry.entry_id != entry.entry_id:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="duplicate_drive",
+                translation_placeholders={"title": other_entry.title},
+            )
 
         entity_registry = er.async_get(hass)
 
@@ -102,7 +116,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
             if entity_entry.unique_id.startswith(drive_id):
                 return None
             new_unique_id = drive_id + entity_entry.unique_id[len(drive_id) :]
-            # A casing flip may already have created a duplicate with the new ID
+            # A casing flip may have created a duplicate, keep the older entity
             if (
                 (
                     existing_entity_id := entity_registry.async_get_entity_id(
@@ -112,25 +126,31 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
                 and (existing_entity := entity_registry.async_get(existing_entity_id))
                 and existing_entity.config_entry_id == entry.entry_id
             ):
-                entity_registry.async_remove(entity_entry.entity_id)
-                return None
+                if existing_entity.created_at <= entity_entry.created_at:
+                    entity_registry.async_remove(entity_entry.entity_id)
+                    return None
+                entity_registry.async_remove(existing_entity_id)
             return {"new_unique_id": new_unique_id}
 
         await er.async_migrate_entries(hass, entry.entry_id, _uppercase_drive_id)
         device_registry = dr.async_get(hass)
-        for device in dr.async_entries_for_config_entry(
-            device_registry, entry.entry_id
+        # A casing flip may have created duplicate devices, keep the oldest
+        if devices := sorted(
+            dr.async_entries_for_config_entry(device_registry, entry.entry_id),
+            key=lambda device: device.created_at,
         ):
-            uppercase_device = device_registry.async_get_device_by_identifier(
-                (DOMAIN, drive_id), entry.entry_id
+            device, *duplicates = devices
+            for duplicate in duplicates:
+                for entity_entry in er.async_entries_for_device(
+                    entity_registry, duplicate.id, include_disabled_entities=True
+                ):
+                    entity_registry.async_update_entity(
+                        entity_entry.entity_id, device_id=device.id
+                    )
+                device_registry.async_remove_device(duplicate.id)
+            device_registry.async_update_device(
+                device.id, new_identifiers={(DOMAIN, drive_id)}
             )
-            if uppercase_device is None:
-                device_registry.async_update_device(
-                    device.id, new_identifiers={(DOMAIN, drive_id)}
-                )
-            elif uppercase_device.id != device.id:
-                # Duplicate created by a casing flip
-                device_registry.async_remove_device(device.id)
         if entry.unique_id != drive_id:
             async_get_manager(hass).async_rename_agent(
                 f"{DOMAIN}.{entry.unique_id}", f"{DOMAIN}.{drive_id}"

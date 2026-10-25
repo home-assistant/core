@@ -4,6 +4,7 @@ from copy import copy
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from onedrive_personal_sdk.exceptions import (
     AuthenticationError,
     NotFoundError,
@@ -246,13 +247,23 @@ async def test_1_1_to_1_2_migration(
     assert list(backup_config.agents) == [f"{DOMAIN}.MOCK_DRIVE_ID"]
 
 
+@pytest.mark.parametrize(
+    ("first_drive_id", "second_drive_id"),
+    [
+        pytest.param("MOCK_DRIVE_ID", "mock_drive_id", id="uppercase_first"),
+        pytest.param("mock_drive_id", "MOCK_DRIVE_ID", id="lowercase_first"),
+    ],
+)
 async def test_1_1_to_1_2_migration_removes_duplicates(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    first_drive_id: str,
+    second_drive_id: str,
 ) -> None:
-    """Test migration removes duplicates created by a drive ID casing flip."""
+    """Test migration keeps the oldest entity and device after a casing flip."""
     old_config_entry = MockConfigEntry(
         unique_id="mock_drive_id",
         title=mock_config_entry.title,
@@ -261,27 +272,36 @@ async def test_1_1_to_1_2_migration_removes_duplicates(
         minor_version=1,
     )
     old_config_entry.add_to_hass(hass)
-    lowercase_device = device_registry.async_get_or_create(
+    original_device = device_registry.async_get_or_create(
         config_entry_id=old_config_entry.entry_id,
-        identifiers={(DOMAIN, "mock_drive_id")},
+        identifiers={(DOMAIN, first_drive_id)},
     )
-    lowercase_entity = entity_registry.async_get_or_create(
+    original_entity = entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
-        "mock_drive_id_total_size",
+        f"{first_drive_id}_total_size",
         config_entry=old_config_entry,
-        device_id=lowercase_device.id,
+        device_id=original_device.id,
     )
-    uppercase_device = device_registry.async_get_or_create(
+    freezer.tick()
+    duplicate_device = device_registry.async_get_or_create(
         config_entry_id=old_config_entry.entry_id,
-        identifiers={(DOMAIN, "MOCK_DRIVE_ID")},
+        identifiers={(DOMAIN, second_drive_id)},
     )
-    uppercase_entity = entity_registry.async_get_or_create(
+    duplicate_entity = entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
-        "MOCK_DRIVE_ID_total_size",
+        f"{second_drive_id}_total_size",
         config_entry=old_config_entry,
-        device_id=uppercase_device.id,
+        device_id=duplicate_device.id,
+    )
+    # Only exists on the duplicate device, so it has to move to the original one
+    moved_entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{second_drive_id}_used_size",
+        config_entry=old_config_entry,
+        device_id=duplicate_device.id,
     )
     assert await async_setup_component(hass, BACKUP_DOMAIN, {})
 
@@ -289,10 +309,17 @@ async def test_1_1_to_1_2_migration_removes_duplicates(
 
     assert old_config_entry.state is ConfigEntryState.LOADED
     assert old_config_entry.unique_id == "MOCK_DRIVE_ID"
-    assert entity_registry.async_get(lowercase_entity.entity_id) is None
-    assert entity_registry.async_get(uppercase_entity.entity_id) is not None
-    assert device_registry.async_get(lowercase_device.id) is None
-    assert device_registry.async_get(uppercase_device.id) is not None
+    original_entity = entity_registry.async_get(original_entity.entity_id)
+    assert original_entity.unique_id == "MOCK_DRIVE_ID_total_size"
+    assert original_entity.device_id == original_device.id
+    assert entity_registry.async_get(duplicate_entity.entity_id) is None
+    moved_entity = entity_registry.async_get(moved_entity.entity_id)
+    assert moved_entity.unique_id == "MOCK_DRIVE_ID_used_size"
+    assert moved_entity.device_id == original_device.id
+    assert device_registry.async_get(original_device.id).identifiers == {
+        (DOMAIN, "MOCK_DRIVE_ID")
+    }
+    assert device_registry.async_get(duplicate_device.id) is None
 
 
 async def test_1_1_to_1_2_migration_duplicate_config_entry(
@@ -301,20 +328,13 @@ async def test_1_1_to_1_2_migration_duplicate_config_entry(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migration fails if another config entry already has the drive ID."""
-    other_config_entry = MockConfigEntry(
+    MockConfigEntry(
         unique_id="MOCK_DRIVE_ID",
         title=mock_config_entry.title,
         domain=DOMAIN,
         data=mock_config_entry.data,
         minor_version=2,
-    )
-    other_config_entry.add_to_hass(hass)
-    other_entity = entity_registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "MOCK_DRIVE_ID_total_size",
-        config_entry=other_config_entry,
-    )
+    ).add_to_hass(hass)
     old_config_entry = MockConfigEntry(
         unique_id="mock_drive_id",
         title=mock_config_entry.title,
@@ -329,7 +349,6 @@ async def test_1_1_to_1_2_migration_duplicate_config_entry(
         "mock_drive_id_total_size",
         config_entry=old_config_entry,
     )
-    assert await async_setup_component(hass, BACKUP_DOMAIN, {})
 
     await setup_integration(hass, old_config_entry)
 
@@ -339,4 +358,3 @@ async def test_1_1_to_1_2_migration_duplicate_config_entry(
         entity_registry.async_get(old_entity.entity_id).unique_id
         == "mock_drive_id_total_size"
     )
-    assert entity_registry.async_get(other_entity.entity_id) is not None
