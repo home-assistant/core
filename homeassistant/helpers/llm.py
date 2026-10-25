@@ -261,19 +261,11 @@ class APIInstance:
             {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},
         )
 
-        matching_tools = [
-            tool
-            for tool in self.tools
-            if tool.name == tool_input.tool_name
-            or (
-                isinstance(tool, NamespacedTool)
-                and tool_input.tool_name in tool.legacy_names
-            )
-        ]
-        # A cached legacy name must not dispatch a different API's tool.
-        if len(matching_tools) != 1:
+        for tool in self.tools:
+            if tool.name == tool_input.tool_name:
+                break
+        else:
             raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
-        tool = matching_tools[0]
 
         result = await tool.async_call(self.api.hass, tool_input, self.llm_context)
         if isinstance(result, ToolResult):
@@ -455,7 +447,7 @@ class IntentResponseDict(dict):
 
 
 class NamespacedTool(Tool):
-    """A tool wrapper for merged API names and legacy aliases.
+    """A tool wrapper for merged API names.
 
     This is used to support tools from multiple API. This tool dispatches
     the original tool with the original non-namespaced name.
@@ -465,7 +457,6 @@ class NamespacedTool(Tool):
         """Init the class."""
         self.namespace = namespace
         self.name = f"{namespace}__{tool.name}"
-        self.legacy_names = {self.name}
         self.title = tool.title
         self.description = tool.description
         self.parameters = tool.parameters
@@ -520,7 +511,6 @@ class MergedAPI(API):
         api_tools: list[list[NamespacedTool]] = []
         for api_instance in llm_apis:
             namespace = unicode_slug.slugify(api_instance.api.id)
-            legacy_namespace = unicode_slug.slugify(api_instance.api.name)
             instance_tools = []
             for tool in api_instance.tools:
                 candidates = tools_by_name.setdefault(tool.name, [])
@@ -531,9 +521,6 @@ class MergedAPI(API):
                 if merged_tool is None:
                     merged_tool = NamespacedTool(namespace, tool)
                     candidates.append(merged_tool)
-                merged_tool.legacy_names.update(
-                    (f"{namespace}__{tool.name}", f"{legacy_namespace}__{tool.name}")
-                )
                 instance_tools.append(merged_tool)
             api_tools.append(instance_tools)
 
@@ -544,12 +531,10 @@ class MergedAPI(API):
             if len(group) == 1:
                 group[0].name = name
 
-        # Advertised names must not collide with another tool's legacy aliases.
+        # Generated prefixes can also collide with existing tool names.
         assigned_names: set[str] = set()
         for tool in tools:
-            while tool.name in assigned_names or any(
-                tool is not other and tool.name in other.legacy_names for other in tools
-            ):
+            while tool.name in assigned_names:
                 tool.name = f"{tool.namespace}__{tool.name}"
             assigned_names.add(tool.name)
 

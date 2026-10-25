@@ -1700,16 +1700,16 @@ This is prompt 2
     ("tool_name", "expected_api"),
     [
         ("first__test_tool", "first"),
-        ("legacy-name__test_tool", "second"),
+        ("second__test_tool", "second"),
     ],
 )
-async def test_merged_api_legacy_names(
+async def test_merged_api_conflicting_names(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
     tool_name: str,
     expected_api: str,
 ) -> None:
-    """Unambiguous stable and legacy names call the original tool."""
+    """Conflicting tool names use API IDs regardless of their display names."""
 
     class MyTool(llm.Tool):
         name = "test_tool"
@@ -1727,7 +1727,7 @@ async def test_merged_api_legacy_names(
 
     first = MyAPI(hass=hass, id="first", name="Second")
     first.tools = [MyTool("first")]
-    second = MyAPI(hass=hass, id="second", name="Legacy name")
+    second = MyAPI(hass=hass, id="second", name="First")
     second.tools = [MyTool("second")]
     llm.async_register_api(hass, first)
     llm.async_register_api(hass, second)
@@ -1735,7 +1735,7 @@ async def test_merged_api_legacy_names(
     instance = await llm.async_get_api(hass, ["first", "second"], llm_context)
     assert [tool.name for tool in instance.tools] == [
         "first__test_tool",
-        "second__second__test_tool",
+        "second__test_tool",
     ]
     result = await instance.async_call_tool(
         llm.ToolInput(tool_name=tool_name, tool_args={})
@@ -1743,19 +1743,10 @@ async def test_merged_api_legacy_names(
     assert result.data == {"api": expected_api, "tool": "test_tool"}
 
 
-@pytest.mark.parametrize(
-    "tool_name",
-    [
-        "llm__GetDateTime",
-        "first__llm__GetDateTime",
-        "second__llm__GetDateTime",
-        "same-name__llm__GetDateTime",
-    ],
-)
 async def test_merged_api_equal_tools(
-    hass: HomeAssistant, llm_context: llm.LLMContext, tool_name: str
+    hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Equal tools are advertised once and retain aliases from every API."""
+    """Equal tools are advertised once without an API prefix."""
     first = MyAPI(hass=hass, id="first", name="Same name")
     first.tools = (
         await llm_component.async_get_tools(hass, llm_context, "first")
@@ -1768,7 +1759,7 @@ async def test_merged_api_equal_tools(
     instance = await llm.MergedAPI([first, second]).async_get_api_instance(llm_context)
 
     assert [tool.name for tool in instance.tools] == ["llm__GetDateTime"]
-    result = await instance.async_call_tool(llm.ToolInput(tool_name, {}))
+    result = await instance.async_call_tool(llm.ToolInput("llm__GetDateTime", {}))
     assert "date" in result.data
     assert "time" in result.data
 
@@ -1801,10 +1792,10 @@ async def test_merged_api_generated_name_collision(
 
 
 @pytest.mark.parametrize("api_ids", [("first", "second"), ("second", "first")])
-async def test_merged_api_name_collides_with_legacy_alias(
+async def test_merged_api_distinct_names(
     hass: HomeAssistant, llm_context: llm.LLMContext, api_ids: tuple[str, str]
 ) -> None:
-    """Advertised names remain callable when an old alias conflicts."""
+    """Distinct tool names stay unchanged even when one contains an API prefix."""
 
     class MyTool(llm.Tool):
         integration = "test"
@@ -1827,47 +1818,12 @@ async def test_merged_api_name_collides_with_legacy_alias(
     instance = await llm.async_get_api(hass, list(api_ids), llm_context)
     assert {tool.name for tool in instance.tools} == {
         "test_tool",
-        "second__first__test_tool",
+        "first__test_tool",
     }
     result = await instance.async_call_tool(llm.ToolInput("test_tool", {}))
     assert result.data == {"tool": "test_tool"}
-    result = await instance.async_call_tool(
-        llm.ToolInput("second__first__test_tool", {})
-    )
+    result = await instance.async_call_tool(llm.ToolInput("first__test_tool", {}))
     assert result.data == {"tool": "first__test_tool"}
-
-
-@pytest.mark.parametrize(
-    ("first_name", "second_name", "tool_name"),
-    [
-        ("Second", "First", "second__test_tool"),
-        ("Same name", "Same name", "same-name__test_tool"),
-    ],
-)
-async def test_merged_api_ambiguous_legacy_name(
-    hass: HomeAssistant,
-    llm_context: llm.LLMContext,
-    first_name: str,
-    second_name: str,
-    tool_name: str,
-) -> None:
-    """Do not dispatch a legacy name that collides with another tool's name."""
-    tool = llm.Tool()
-    tool.name = "test_tool"
-    tool.integration = "test"
-    first = MyAPI(hass=hass, id="first", name=first_name)
-    first.tools = [tool]
-    second = MyAPI(hass=hass, id="second", name=second_name)
-    other_tool = llm.Tool()
-    other_tool.name = "test_tool"
-    other_tool.integration = "test"
-    second.tools = [other_tool]
-    llm.async_register_api(hass, first)
-    llm.async_register_api(hass, second)
-
-    instance = await llm.async_get_api(hass, ["first", "second"], llm_context)
-    with pytest.raises(HomeAssistantError, match=f'Tool "{tool_name}" not found'):
-        await instance.async_call_tool(llm.ToolInput(tool_name=tool_name, tool_args={}))
 
 
 async def test_deprecated_async_render_no_api_prompt(
