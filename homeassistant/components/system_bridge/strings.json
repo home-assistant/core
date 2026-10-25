@@ -113,6 +113,15 @@
       "load": {
         "name": "Load"
       },
+      "load_average": {
+        "name": "Load average (1 min)"
+      },
+      "load_average_15": {
+        "name": "Load average (15 min)"
+      },
+      "load_average_5": {
+        "name": "Load average (5 min)"
+      },
       "memory_free": {
         "name": "Memory free"
       },

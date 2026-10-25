@@ -81,7 +81,7 @@ class OverkizExecutor:
             }
         )
         if refresh_afterwards:
-            await self.coordinator.async_refresh()
+            self.coordinator.async_execution_started()
 
     async def async_execute_commands(
         self, commands: list[Command], refresh_afterwards: bool = True
@@ -120,7 +120,7 @@ class OverkizExecutor:
             }
         )
         if refresh_afterwards:
-            await self.coordinator.async_refresh()
+            self.coordinator.async_execution_started()
 
     async def async_cancel_command(
         self, commands_to_cancel: list[OverkizCommand]
