@@ -371,6 +371,13 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
                 },
             ) from None
 
+        if power_flow is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="missing_data",
+                translation_placeholders={"service": "power flow"},
+            )
+
         power_from = []
         power_to = []
 
