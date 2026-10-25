@@ -69,7 +69,7 @@ rules:
   icon-translations: done
   reconfiguration-flow:
     status: exempt
-    comment: This integration doesn't have settings in its configuration flow.
+    comment: Device PIN reconfiguration is exempt by maintainer agreement.
   repair-issues:
     status: exempt
     comment: Not required.
