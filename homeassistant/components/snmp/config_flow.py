@@ -413,6 +413,8 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception validating the SNMP device")
             errors["base"] = "unknown"
         else:
+            # Another flow can pass the check above while this one probes the device.
+            self._abort_if_already_configured(data)
             title = _entry_title(data)
             if self.source == SOURCE_RECONFIGURE:
                 entry = self._get_reconfigure_entry()
@@ -494,14 +496,14 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            # Checked before the entities are removed: aborting later would leave
-            # the current table untracked while its data stays unchanged.
-            if self._async_is_table_tracked(
+            if error := await self._async_validate_baseoid(user_input[CONF_BASEOID]):
+                errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
+            # Checked after the validation and before anything is mutated, so a
+            # refusal can not leave the current table untracked.
+            elif self._async_is_table_tracked(
                 user_input[CONF_BASEOID], subentry.subentry_id
             ):
                 return self.async_abort(reason="already_configured")
-            if error := await self._async_validate_baseoid(user_input[CONF_BASEOID]):
-                errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
             else:
                 if user_input[CONF_BASEOID] != subentry.data[CONF_BASEOID]:
                     self._async_remove_entities(subentry)
