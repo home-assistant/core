@@ -45,7 +45,6 @@ from .const import (
     DEFAULT_VERSION,
     DOMAIN,
     SNMP_VERSIONS,
-    SUBENTRY_TYPE_DEVICE_TRACKER,
 )
 from .coordinator import SnmpConfigEntry, SnmpDeviceTrackerCoordinator
 from .util import RequestArgsType, async_create_request_cmd_args
@@ -243,8 +242,10 @@ async def async_setup_entry(
     """Set up the device trackers of the entry's subentries."""
     ent_reg = er.async_get(hass)
 
-    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER):
-        _async_setup_subentry(entry, subentry.subentry_id, ent_reg, async_add_entities)
+    # Iterate the coordinators, not the subentries: a subentry added while the
+    # entry was starting has no coordinator yet and is handled by the reload.
+    for subentry_id in entry.runtime_data.coordinators:
+        _async_setup_subentry(entry, subentry_id, ent_reg, async_add_entities)
 
 
 @callback

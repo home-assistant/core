@@ -1,5 +1,6 @@
 """SNMP tests."""
 
+import asyncio
 import binascii
 from collections.abc import AsyncIterator
 from typing import Any
@@ -407,6 +408,50 @@ async def test_subentry_added_after_setup(
     assert set(entry.runtime_data.coordinators) == {subentry.subentry_id}
     assert set(entry.runtime_data.coordinators[subentry.subentry_id].data) == {MAC}
     assert _async_mac_entity_id(hass, subentry.subentry_id) is not None
+
+
+async def test_subentry_added_during_setup(hass: HomeAssistant) -> None:
+    """Test that a tracker added while the entry starts up is not lost."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+
+    refresh_started = asyncio.Event()
+    release_refresh = asyncio.Event()
+
+    async def blocking_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        """Block the poll until the test has added the subentry."""
+        refresh_started.set()
+        await release_refresh.wait()
+        async for row in _async_mock_walk_with_mac(*args, **kwargs):
+            yield row
+
+    with patch(
+        "homeassistant.components.snmp.client.bulk_walk_cmd",
+        side_effect=blocking_walk,
+    ):
+        setup_task = hass.async_create_task(
+            hass.config_entries.async_setup(entry.entry_id)
+        )
+        await refresh_started.wait()
+
+        second = ConfigSubentry(
+            data={CONF_BASEOID: BRIDGE_MAC_OID},
+            subentry_type=SUBENTRY_TYPE_DEVICE_TRACKER,
+            title=BRIDGE_MAC_OID,
+            unique_id=BRIDGE_MAC_OID,
+        )
+        assert hass.config_entries.async_add_subentry(entry, second)
+
+        release_refresh.set()
+        assert await setup_task
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert set(entry.runtime_data.coordinators) == {
+        next(iter(entry.subentries)),
+        second.subentry_id,
+    }
+    assert _async_mac_entity_id(hass, second.subentry_id) is not None
 
 
 async def test_subentry_removed_after_setup(hass: HomeAssistant) -> None:

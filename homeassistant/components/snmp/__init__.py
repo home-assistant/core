@@ -18,6 +18,10 @@ __all__ = ["async_get_snmp_engine"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> None:
     """Set up SNMP from a config entry."""
+    # Registered before the first await: a subentry added while the device is
+    # polled has to schedule a reload, or it is silently dropped.
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     try:
         client = await SnmpClient.async_create(hass, entry.data)
     except PySnmpError as err:
@@ -36,8 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> None
 
     if coordinators:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: SnmpConfigEntry) -> None:
