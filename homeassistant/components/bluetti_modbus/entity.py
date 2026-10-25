@@ -82,20 +82,21 @@ class BluettiModbusSettingEntity(CoordinatorEntity[BluettiModbusSettingsCoordina
 
         The device serves the old value for a moment after a write.
         """
-        # An action can wait for another to finish first, and the readings
-        # poll may have found another device at the address in the meantime.
-        if not self.available:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="setting_unavailable"
-            )
-        try:
-            await self.coordinator.device.write(self._field_name, value)
-        except ModbusError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="write_failed",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        async with self.coordinator.io_lock:
+            # A poll that ran while this write waited may have found another
+            # device at the address.
+            if not self.available:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="setting_unavailable"
+                )
+            try:
+                await self.coordinator.device.write(self._field_name, value)
+            except ModbusError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="write_failed",
+                    translation_placeholders={"error": str(err)},
+                ) from err
         self.coordinator.async_set_updated_data(
             self.coordinator.data | {self._field_name: value}
         )

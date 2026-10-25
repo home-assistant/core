@@ -13,7 +13,10 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bluetti_modbus.const import SCAN_INTERVAL
+from homeassistant.components.bluetti_modbus.const import (
+    SCAN_INTERVAL,
+    SETTINGS_SCAN_INTERVAL,
+)
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -123,3 +126,89 @@ async def test_queued_write_is_dropped_for_another_device(
             await second
 
     assert written == [CHARGE_LIMIT_ADDRESS]
+
+
+async def test_write_waits_for_a_poll_that_finds_another_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A write that waits for a running poll is dropped if the poll fails."""
+    await setup_integration(hass, mock_config_entry)
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+    release = asyncio.Event()
+    written: list[int] = []
+
+    async def held_read(address: int, count: int) -> list[int]:
+        await release.wait()
+        return await read_holding_registers(address, count)
+
+    async def recorded_write(address: int, value: int) -> None:
+        written.append(address)
+
+    mock_modbus_unit.holding[SERIAL_ADDRESS] = 1
+    with (
+        patch.object(mock_modbus_unit, "read_holding_registers", held_read),
+        patch.object(mock_modbus_unit, "write_register", recorded_write),
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await _let_tasks_run()
+        # The poll holds the lock; the write passes the entity's own check.
+        write = hass.async_create_task(
+            hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: CHARGE_LIMIT_ENTITY, ATTR_VALUE: 95},
+                blocking=True,
+            )
+        )
+        await _let_tasks_run()
+        release.set()
+        with pytest.raises(HomeAssistantError, match="setting was not written"):
+            await write
+
+    assert written == []
+
+
+async def test_running_settings_poll_does_not_undo_a_write(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A settings read already under way cannot show the value from before a write."""
+    await setup_integration(hass, mock_config_entry)
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+    release = asyncio.Event()
+
+    async def held_settings_read(address: int, count: int) -> list[int]:
+        # The reply is read off the device before the write, and only
+        # handed back after it.
+        registers = await read_holding_registers(address, count)
+        if address == DISCHARGE_LIMIT_ADDRESS:
+            await release.wait()
+        return registers
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", held_settings_read):
+        freezer.tick(SETTINGS_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await _let_tasks_run()
+        write = hass.async_create_task(
+            hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: DISCHARGE_LIMIT_ENTITY, ATTR_VALUE: 20},
+                blocking=True,
+            )
+        )
+        await _let_tasks_run()
+        release.set()
+        await write
+        await hass.async_block_till_done()
+
+    entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
+    assert entity is not None
+    assert entity.state == "20"
+    assert mock_modbus_unit.holding[DISCHARGE_LIMIT_ADDRESS] == 20

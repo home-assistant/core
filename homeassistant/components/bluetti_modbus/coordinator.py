@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the BLUETTI Modbus integration."""
 
+import asyncio
 from dataclasses import dataclass
 import logging
 from typing import Any, override
@@ -29,9 +30,11 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         entry: BluettiModbusConfigEntry,
         device: Balco260,
+        io_lock: asyncio.Lock,
     ) -> None:
         """Initialize the coordinator."""
         self._device = device
+        self.io_lock = io_lock
         super().__init__(
             hass,
             _LOGGER,
@@ -43,6 +46,12 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Poll the device."""
+        # Held until the serial number is checked, so a write never goes out
+        # while this poll may still find another device at the address.
+        async with self.io_lock:
+            return await self._async_poll()
+
+    async def _async_poll(self) -> dict[str, Any]:
         # Besides BluettiModbusConnectionError, the library lets a device still
         # busy after its retry, or a failed teardown of the link, through unwrapped.
         try:
@@ -75,9 +84,11 @@ class BluettiModbusSettingsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         entry: BluettiModbusConfigEntry,
         device: Balco260,
+        io_lock: asyncio.Lock,
     ) -> None:
         """Initialize the coordinator."""
         self.device = device
+        self.io_lock = io_lock
         super().__init__(
             hass,
             _LOGGER,
@@ -89,8 +100,11 @@ class BluettiModbusSettingsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Poll the device's settings."""
+        # A write waits for this read, so the read cannot replace the value
+        # the write shows with the one from before it.
         try:
-            await self.device.async_update_with_retry()
+            async with self.io_lock:
+                await self.device.async_update_with_retry()
         except ModbusError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
