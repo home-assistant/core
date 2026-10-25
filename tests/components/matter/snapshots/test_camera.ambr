@@ -105,3 +105,76 @@
     'state': 'idle',
   })
 # ---
+# name: test_get_camera_zones[attributes0-mock_camera]
+  dict({
+    'camera.mock_camera': dict({
+      'max_user_defined_zones': 5,
+      'max_zones': 8,
+      'zones': list([
+        dict({
+          'color': '#FF0000',
+          'name': 'Driveway',
+          'source': 'manufacturer',
+          'use': 'motion',
+          'vertices': list([
+            dict({
+              'x': 0.0,
+              'y': 0.0,
+            }),
+            dict({
+              'x': 50.03,
+              'y': 0.0,
+            }),
+            dict({
+              'x': 50.03,
+              'y': 50.05,
+            }),
+          ]),
+          'zone_id': 1,
+        }),
+        dict({
+          'color': None,
+          'name': 'Window',
+          'source': 'user',
+          'use': 'privacy',
+          'vertices': list([
+            dict({
+              'x': 74.99,
+              'y': 25.02,
+            }),
+            dict({
+              'x': 100.0,
+              'y': 25.02,
+            }),
+            dict({
+              'x': 100.0,
+              'y': 100.0,
+            }),
+          ]),
+          'zone_id': 2,
+        }),
+        dict({
+          'color': None,
+          'name': 'Unknown',
+          'source': None,
+          'use': None,
+          'vertices': list([
+            dict({
+              'x': 0.0,
+              'y': 0.0,
+            }),
+            dict({
+              'x': 0.05,
+              'y': 0.0,
+            }),
+            dict({
+              'x': 0.05,
+              'y': 0.09,
+            }),
+          ]),
+          'zone_id': 3,
+        }),
+      ]),
+    }),
+  })
+# ---

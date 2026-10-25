@@ -127,8 +127,18 @@ SERVICE_CREDENTIAL_TYPES = [
 
 CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"
 
-CAMERA_ZONE_USES: Final = {
-    "motion": clusters.ZoneManagement.Enums.ZoneUseEnum.kMotion,
-    "privacy": clusters.ZoneManagement.Enums.ZoneUseEnum.kPrivacy,
-    "focus": clusters.ZoneManagement.Enums.ZoneUseEnum.kFocus,
+CAMERA_ZONE_USE_MAP: dict[int, str] = {
+    clusters.ZoneManagement.Enums.ZoneUseEnum.kMotion: "motion",
+    clusters.ZoneManagement.Enums.ZoneUseEnum.kPrivacy: "privacy",
+    clusters.ZoneManagement.Enums.ZoneUseEnum.kFocus: "focus",
+}
+CAMERA_ZONE_USE_REVERSE_MAP: dict[str, int] = {
+    v: k for k, v in CAMERA_ZONE_USE_MAP.items()
+}
+# Motion zones only act through triggers, which aren't supported yet.
+CAMERA_ZONE_SETTABLE_USES: Final = ["privacy", "focus"]
+
+CAMERA_ZONE_SOURCE_MAP: dict[int, str] = {
+    clusters.ZoneManagement.Enums.ZoneSourceEnum.kMfg: "manufacturer",
+    clusters.ZoneManagement.Enums.ZoneSourceEnum.kUser: "user",
 }

@@ -1,5 +1,7 @@
 """Services for Matter devices."""
 
+from typing import Any
+
 import probatio
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
@@ -18,7 +20,7 @@ from .const import (
     ATTR_USER_NAME,
     ATTR_USER_STATUS,
     ATTR_USER_TYPE,
-    CAMERA_ZONE_USES,
+    CAMERA_ZONE_SETTABLE_USES,
     CLEAR_ALL_INDEX,
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
@@ -40,6 +42,20 @@ ATTR_ZONE_ID = "zone_id"
 
 ZONE_ID = probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=65535))
 ZONE_PERCENT = probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100))
+# Matter limits zone names to 32 bytes.
+ZONE_NAME_MAX_BYTES = 32
+
+
+def _zone_name(value: Any) -> str:
+    """Validate a zone name."""
+    name = cv.string(value)
+    if not name.strip():
+        raise probatio.Invalid("Zone name can't be empty")
+    if len(name.encode()) > ZONE_NAME_MAX_BYTES:
+        raise probatio.Invalid(
+            f"Zone name can't be longer than {ZONE_NAME_MAX_BYTES} bytes"
+        )
+    return name
 
 
 @callback
@@ -82,10 +98,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=CAMERA_DOMAIN,
         schema={
             probatio.Optional(ATTR_ZONE_ID): ZONE_ID,
-            probatio.Required(ATTR_NAME): probatio.All(
-                cv.string, probatio.Length(min=1, max=16)
-            ),
-            probatio.Required(ATTR_USE): probatio.In(list(CAMERA_ZONE_USES)),
+            probatio.Required(ATTR_NAME): _zone_name,
+            probatio.Required(ATTR_USE): probatio.In(CAMERA_ZONE_SETTABLE_USES),
             probatio.Required(ATTR_VERTICES): probatio.All(
                 probatio.EnsureList(),
                 [
@@ -97,7 +111,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 probatio.Length(min=3, max=12),
             ),
             probatio.Optional(ATTR_COLOR): probatio.Match(
-                r"^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+                r"^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?\Z"
             ),
         },
         func="async_set_camera_zone",

@@ -785,6 +785,12 @@
     "bitmap_write_not_supported": {
       "message": "The device does not support changing {name}."
     },
+    "camera_zone_not_editable": {
+      "message": "Zone {zone_id} came with {entity_id} and can't be changed."
+    },
+    "camera_zone_not_found": {
+      "message": "{entity_id} has no zone {zone_id}."
+    },
     "camera_zone_use_not_supported": {
       "message": "{entity_id} does not support {use} zones."
     },
@@ -822,7 +828,6 @@
     "camera_zone_use": {
       "options": {
         "focus": "Focus",
-        "motion": "Motion",
         "privacy": "Privacy"
       }
     },
@@ -869,7 +874,7 @@
       "name": "Clear lock user"
     },
     "get_camera_zones": {
-      "description": "Returns the zones of a camera, with corners in percent of the image.",
+      "description": "Returns the zones of a camera, with corners in percent of the camera sensor.",
       "name": "Get camera zones"
     },
     "get_lock_credential_status": {
@@ -908,11 +913,11 @@
       "description": "Creates a camera zone, or updates the zone with the given ID.",
       "fields": {
         "color": {
-          "description": "The color to show the zone in, like #FF0000 or #FF000080.",
+          "description": "A color for the zone, as #RRGGBB or #RRGGBBAA, where AA is the opacity.",
           "name": "Color"
         },
         "name": {
-          "description": "The name of the zone, up to 16 characters.",
+          "description": "The name of the zone, up to 32 characters.",
           "name": "Name"
         },
         "use": {
@@ -920,7 +925,7 @@
           "name": "Use"
         },
         "vertices": {
-          "description": "The corners of the zone, in percent of the image from the top left. 3 to 12 corners.",
+          "description": "The corners of the zone, in percent of the camera sensor from the top left. 3 to 12 corners.",
           "name": "Corners"
         },
         "zone_id": {

@@ -36,7 +36,13 @@ from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CAMERA_ZONE_USES, DOMAIN, LOGGER
+from .const import (
+    CAMERA_ZONE_SOURCE_MAP,
+    CAMERA_ZONE_USE_MAP,
+    CAMERA_ZONE_USE_REVERSE_MAP,
+    DOMAIN,
+    LOGGER,
+)
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema, MatterEntityInfo
@@ -55,9 +61,6 @@ STREAM_USAGE_LIVE_VIEW = "LiveView"
 MAX_ICE_SERVERS = 10
 
 ZoneFeature = ZoneManagement.Bitmaps.Feature
-ZoneSource = ZoneManagement.Enums.ZoneSourceEnum
-
-ZONE_SOURCES = {ZoneSource.kMfg: "manufacturer", ZoneSource.kUser: "user"}
 
 
 async def async_setup_entry(
@@ -305,7 +308,7 @@ class MatterCamera(MatterEntity, Camera):
         maximum: ZoneManagement.Structs.TwoDCartesianVertexStruct | None = (
             self.get_matter_attribute_value(ZoneManagement.Attributes.TwoDCartesianMax)
         )
-        if not self._endpoint.has_cluster(ZoneManagement) or maximum is None:
+        if maximum is None or not maximum.x or not maximum.y:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="camera_zones_not_supported",
@@ -313,36 +316,67 @@ class MatterCamera(MatterEntity, Camera):
             )
         return maximum
 
+    def _zone_features(self) -> ZoneManagement.Bitmaps.Feature:
+        """Return the zone features of the camera, if it allows changing zones."""
+        features = ZoneFeature(
+            self.get_matter_attribute_value(ZoneManagement.Attributes.FeatureMap) or 0
+        )
+        if ZoneFeature.kUserDefined not in features:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="camera_zones_not_editable",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        return features
+
+    def _check_user_zone(self, zone_id: int) -> None:
+        """Raise if the zone doesn't exist or came with the camera."""
+        zone = next(
+            (
+                zone
+                for zone in self.get_matter_attribute_value(
+                    ZoneManagement.Attributes.Zones
+                )
+                or []
+                if zone.zoneID == zone_id
+            ),
+            None,
+        )
+        if zone is None or zone.zoneSource != ZoneManagement.Enums.ZoneSourceEnum.kUser:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=(
+                    "camera_zone_not_found"
+                    if zone is None
+                    else "camera_zone_not_editable"
+                ),
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "zone_id": str(zone_id),
+                },
+            )
+
     async def async_get_camera_zones(self) -> ServiceResponse:
         """Return the zones of the camera."""
         maximum = self._zone_maximum()
-        zones = []
-        for zone in (
-            self.get_matter_attribute_value(ZoneManagement.Attributes.Zones) or []
-        ):
-            if (area := zone.twoDCartesianZone) is None:
-                continue
-            zones.append(
+        return {
+            "zones": [
                 {
                     "zone_id": zone.zoneID,
                     "name": area.name,
-                    "use": next(
-                        (
-                            key
-                            for key, use in CAMERA_ZONE_USES.items()
-                            if use == area.use
-                        ),
-                        None,
-                    ),
-                    "source": ZONE_SOURCES.get(zone.zoneSource),
+                    "use": CAMERA_ZONE_USE_MAP.get(area.use),
+                    "source": CAMERA_ZONE_SOURCE_MAP.get(zone.zoneSource),
                     "vertices": [
                         _vertex_to_percent(vertex, maximum) for vertex in area.vertices
                     ],
                     "color": area.color,
                 }
-            )
-        return {
-            "zones": zones,
+                for zone in (
+                    self.get_matter_attribute_value(ZoneManagement.Attributes.Zones)
+                    or []
+                )
+                if (area := zone.twoDCartesianZone) is not None
+            ],
             "max_zones": self.get_matter_attribute_value(
                 ZoneManagement.Attributes.MaxZones
             ),
@@ -361,15 +395,7 @@ class MatterCamera(MatterEntity, Camera):
     ) -> ServiceResponse:
         """Create a zone, or update the zone with the given ID."""
         maximum = self._zone_maximum()
-        features = ZoneFeature(
-            self.get_matter_attribute_value(ZoneManagement.Attributes.FeatureMap) or 0
-        )
-        if ZoneFeature.kUserDefined not in features:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="camera_zones_not_editable",
-                translation_placeholders={"entity_id": self.entity_id},
-            )
+        features = self._zone_features()
         if use == "focus" and ZoneFeature.kFocusZones not in features:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -378,7 +404,7 @@ class MatterCamera(MatterEntity, Camera):
             )
         zone = ZoneManagement.Structs.TwoDCartesianZoneStruct(
             name=name,
-            use=CAMERA_ZONE_USES[use],
+            use=CAMERA_ZONE_USE_REVERSE_MAP[use],
             vertices=[_vertex_from_percent(vertex, maximum) for vertex in vertices],
             color=color,
         )
@@ -388,6 +414,7 @@ class MatterCamera(MatterEntity, Camera):
             )
             zone_id = response["zoneID"]
         else:
+            self._check_user_zone(zone_id)
             await self.send_device_command(
                 ZoneManagement.Commands.UpdateTwoDCartesianZone(
                     zoneID=zone_id, zone=zone
@@ -398,6 +425,8 @@ class MatterCamera(MatterEntity, Camera):
     async def async_clear_camera_zone(self, zone_id: int) -> None:
         """Remove a zone from the camera."""
         self._zone_maximum()
+        self._zone_features()
+        self._check_user_zone(zone_id)
         await self.send_device_command(
             ZoneManagement.Commands.RemoveZone(zoneID=zone_id)
         )
@@ -407,7 +436,7 @@ def _vertex_to_percent(
     vertex: ZoneManagement.Structs.TwoDCartesianVertexStruct,
     maximum: ZoneManagement.Structs.TwoDCartesianVertexStruct,
 ) -> dict[str, float]:
-    """Convert camera coordinates to percent of the image."""
+    """Convert camera coordinates to percent of the sensor."""
     return {
         "x": round(vertex.x / maximum.x * 100, 2),
         "y": round(vertex.y / maximum.y * 100, 2),
@@ -417,7 +446,7 @@ def _vertex_to_percent(
 def _vertex_from_percent(
     vertex: dict[str, float], maximum: ZoneManagement.Structs.TwoDCartesianVertexStruct
 ) -> ZoneManagement.Structs.TwoDCartesianVertexStruct:
-    """Convert percent of the image to camera coordinates."""
+    """Convert percent of the sensor to camera coordinates."""
     return ZoneManagement.Structs.TwoDCartesianVertexStruct(
         x=round(vertex["x"] / 100 * maximum.x),
         y=round(vertex["y"] / 100 * maximum.y),
