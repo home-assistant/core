@@ -360,6 +360,32 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     ),
 )
 
+LOAD_AVERAGE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
+    SystemBridgeSensorEntityDescription(
+        key="load_average",
+        translation_key="load_average",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value=lambda data: data.cpu.load_average,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="load_average_5",
+        translation_key="load_average_5",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value=lambda data: data.cpu.load_average_5,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="load_average_15",
+        translation_key="load_average_15",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value=lambda data: data.cpu.load_average_15,
+    ),
+)
+
 BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="battery",
@@ -427,6 +453,12 @@ async def async_setup_entry(
         entities.extend(
             SystemBridgeSensor(coordinator, description, entry.data[CONF_PORT])
             for description in BATTERY_SENSOR_TYPES
+        )
+
+    if coordinator.data.cpu.load_average is not None:
+        entities.extend(
+            SystemBridgeSensor(coordinator, description, entry.data[CONF_PORT])
+            for description in LOAD_AVERAGE_SENSOR_TYPES
         )
 
     entities.append(

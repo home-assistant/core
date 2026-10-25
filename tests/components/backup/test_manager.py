@@ -41,6 +41,8 @@ from homeassistant.components.backup import (
     BackupReaderWriterError,
     Folder,
     LocalBackupAgent,
+    async_get_manager,
+    store,
 )
 from homeassistant.components.backup.agent import BackupAgentError
 from homeassistant.components.backup.const import BUF_SIZE, DATA_MANAGER
@@ -4361,3 +4363,154 @@ async def test_failed_upload_closes_stream(
 
     assert len(streams) == 1
     assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
+
+
+def _rename_agent_storage(
+    agents: dict[str, Any], agent_ids: list[str]
+) -> dict[str, Any]:
+    """Return backup storage with a known backup that failed for test.old."""
+    return {
+        "data": {
+            "backups": [
+                {
+                    "backup_id": "abc123",
+                    "failed_addons": [],
+                    "failed_agent_ids": ["test.old"],
+                    "failed_folders": [],
+                }
+            ],
+            "config": {
+                "agents": agents,
+                "automatic_backups_configured": True,
+                "create_backup": {
+                    "agent_ids": agent_ids,
+                    "include_addons": None,
+                    "include_all_addons": False,
+                    "include_database": True,
+                    "include_folders": None,
+                    "name": None,
+                    "password": None,
+                },
+                "last_attempted_automatic_backup": None,
+                "last_completed_automatic_backup": None,
+                "last_completed_automatic_backup_size": None,
+                "retention": {"copies": None, "days": None},
+                "schedule": {
+                    "days": [],
+                    "recurrence": "never",
+                    "state": "never",
+                    "time": None,
+                },
+            },
+        },
+        "key": DOMAIN,
+        "version": store.STORAGE_VERSION,
+        "minor_version": store.STORAGE_VERSION_MINOR,
+    }
+
+
+@pytest.mark.parametrize(
+    (
+        "stored_agents",
+        "stored_agent_ids",
+        "expected_agents",
+        "expected_agent_ids",
+    ),
+    [
+        pytest.param(
+            {
+                "test.old": {
+                    "protected": False,
+                    "retention": {"copies": 3, "days": None},
+                }
+            },
+            ["backup.local", "test.old"],
+            {
+                "test.new": {
+                    "protected": False,
+                    "retention": {"copies": 3, "days": None},
+                }
+            },
+            ["backup.local", "test.new"],
+            id="rename",
+        ),
+        pytest.param(
+            {"test.other": {"protected": False, "retention": None}},
+            ["test.other"],
+            {"test.other": {"protected": False, "retention": None}},
+            ["test.other"],
+            id="old_agent_not_configured",
+        ),
+        pytest.param(
+            {"test.new": {"protected": False, "retention": None}},
+            ["test.new"],
+            {"test.new": {"protected": False, "retention": None}},
+            ["test.new"],
+            id="old_agent_not_configured_new_agent_configured",
+        ),
+    ],
+)
+async def test_rename_agent(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    stored_agents: dict[str, Any],
+    stored_agent_ids: list[str],
+    expected_agents: dict[str, Any],
+    expected_agent_ids: list[str],
+) -> None:
+    """Test renaming an agent updates the backup config and known backups."""
+    hass_storage[DOMAIN] = _rename_agent_storage(stored_agents, stored_agent_ids)
+    await setup_backup_integration(hass)
+
+    async_get_manager(hass).async_rename_agent("test.old", "test.new")
+    freezer.tick()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    stored_data = hass_storage[DOMAIN]["data"]
+    assert stored_data["config"]["agents"] == expected_agents
+    assert stored_data["config"]["create_backup"]["agent_ids"] == expected_agent_ids
+    assert stored_data["backups"][0]["failed_agent_ids"] == ["test.new"]
+
+
+@pytest.mark.parametrize(
+    ("stored_agents", "stored_agent_ids", "remote_agents"),
+    [
+        pytest.param(
+            {"test.new": {"protected": True, "retention": None}},
+            ["test.old"],
+            [],
+            id="new_agent_has_settings",
+        ),
+        pytest.param(
+            {},
+            ["test.old", "test.new"],
+            [],
+            id="new_agent_used_for_automatic_backups",
+        ),
+        pytest.param(
+            {},
+            ["test.old"],
+            ["test.new"],
+            id="new_agent_loaded",
+        ),
+    ],
+)
+async def test_rename_agent_already_exists(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    stored_agents: dict[str, Any],
+    stored_agent_ids: list[str],
+    remote_agents: list[str],
+) -> None:
+    """Test renaming an agent to an agent ID that already exists fails."""
+    hass_storage[DOMAIN] = _rename_agent_storage(stored_agents, stored_agent_ids)
+    await setup_backup_integration(hass, remote_agents=remote_agents)
+    manager = async_get_manager(hass)
+
+    with pytest.raises(ValueError, match="Backup agent test.new already exists"):
+        manager.async_rename_agent("test.old", "test.new")
+
+    assert manager.config.data.create_backup.agent_ids == stored_agent_ids
+    assert manager.known_backups.get("abc123").failed_agent_ids == ["test.old"]
