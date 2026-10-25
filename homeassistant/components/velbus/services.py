@@ -87,20 +87,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
             call.hass, DOMAIN, call.data[CONF_CONFIG_ENTRY]
         )
 
+        address = call.data.get(CONF_ADDRESS)
+        cache_path = hass.config.path(
+            STORAGE_DIR,
+            f"velbuscache-{entry.entry_id}/{address}.p"
+            if address
+            else f"velbuscache-{entry.entry_id}/",
+        )
+
         def _clear_cache() -> None:
-            if call.data.get(CONF_ADDRESS):
-                cache_path = hass.config.path(
-                    STORAGE_DIR,
-                    f"velbuscache-{entry.entry_id}/{call.data[CONF_ADDRESS]}.p",
-                )
+            if address:
                 if os.path.exists(cache_path):
                     os.unlink(cache_path)
-            else:
-                cache_path = hass.config.path(
-                    STORAGE_DIR, f"velbuscache-{entry.entry_id}/"
-                )
-                if os.path.isdir(cache_path):
-                    shutil.rmtree(cache_path)
+            elif os.path.isdir(cache_path):
+                shutil.rmtree(cache_path)
 
         try:
             await hass.async_add_executor_job(_clear_cache)
@@ -108,7 +108,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="clear_cache_failed",
-                translation_placeholders={"error": str(exc)},
+                translation_placeholders={"path": cache_path},
             ) from exc
         # call a scan to repopulate
         await scan(call)

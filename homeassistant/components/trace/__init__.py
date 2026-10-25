@@ -14,6 +14,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
 from .const import (
+    ATTR_ITEM_ID,
+    ATTR_RUN_ID,
     CONF_STORED_TRACES,
     DATA_TRACE,
     DATA_TRACE_STORE,
@@ -38,6 +40,8 @@ TRACE_CONFIG_SCHEMA = {
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 __all__ = [
+    "ATTR_ITEM_ID",
+    "ATTR_RUN_ID",
     "CONF_STORED_TRACES",
     "TRACE_CONFIG_SCHEMA",
     "ActionTrace",

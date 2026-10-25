@@ -7,7 +7,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unique_id_mismatch": "The device serial number does not match the original device."
+      "unique_id_mismatch": "The device serial number does not match the original device.",
+      "unsupported_device": "This my-PV device is not supported."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -60,13 +61,13 @@
   "entity": {
     "number": {
       "ww1boost": {
-        "name": "Boost Target Temperature"
+        "name": "Boost target temperature"
       },
       "ww_boost_h": {
-        "name": "Minimum Hysteresis"
+        "name": "Minimum hysteresis"
       },
       "ww_targ_h": {
-        "name": "Maximum Hysteresis"
+        "name": "Maximum hysteresis"
       }
     },
     "select": {
@@ -163,7 +164,7 @@
     },
     "switch": {
       "bstmode": {
-        "name": "Boost Mode"
+        "name": "Boost mode"
       }
     }
   },
@@ -180,8 +181,14 @@
     "fetch_failed": {
       "message": "Failed to fetch data."
     },
+    "rate_limiting": {
+      "message": "Too many requests."
+    },
     "unknown_error": {
       "message": "The device could not complete the requested action."
+    },
+    "unsupported_device": {
+      "message": "This my-PV device is not supported."
     }
   }
 }

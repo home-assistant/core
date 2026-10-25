@@ -16,9 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IndevoltConfigEntry
 from .const import DOMAIN
-from .coordinator import IndevoltCoordinator
+from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 from .entity import IndevoltEntity
 
 PARALLEL_UPDATES = 0
@@ -52,7 +51,7 @@ NUMBERS: Final = (
         read_key=IndevoltConfig.READ_MAX_AC_OUTPUT_POWER,
         write_key=IndevoltConfig.WRITE_MAX_AC_OUTPUT_POWER,
         native_min_value=0,
-        native_max_value=2400,
+        native_max_value=10800,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=NumberDeviceClass.POWER,
@@ -64,7 +63,7 @@ NUMBERS: Final = (
         read_key=IndevoltConfig.READ_INVERTER_INPUT_LIMIT,
         write_key=IndevoltConfig.WRITE_INVERTER_INPUT_LIMIT,
         native_min_value=100,
-        native_max_value=2400,
+        native_max_value=10800,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=NumberDeviceClass.POWER,
@@ -76,7 +75,7 @@ NUMBERS: Final = (
         read_key=IndevoltConfig.READ_FEEDIN_POWER_LIMIT,
         write_key=IndevoltConfig.WRITE_FEEDIN_POWER_LIMIT,
         native_min_value=0,
-        native_max_value=2400,
+        native_max_value=10800,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=NumberDeviceClass.POWER,

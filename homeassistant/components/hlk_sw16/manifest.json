@@ -1,6 +1,7 @@
 {
   "domain": "hlk_sw16",
   "name": "Hi-Link HLK-SW16",
+  "categories": ["plugs_switches"],
   "codeowners": ["@jameshilliard"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hlk_sw16",

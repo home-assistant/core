@@ -55,6 +55,12 @@
       "green_up": {
         "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::green_up%]"
       },
+      "mode_down": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::mode_down%]"
+      },
+      "mode_up": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::mode_up%]"
+      },
       "quick": {
         "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::quick%]"
       },
@@ -66,6 +72,12 @@
       },
       "slow": {
         "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::slow%]"
+      },
+      "speed_down": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::speed_down%]"
+      },
+      "speed_up": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::speed_up%]"
       },
       "timer": {
         "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer%]"
@@ -145,7 +157,9 @@
               "light": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light%]",
               "light_cyan": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light_cyan%]",
               "light_green": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light_green%]",
+              "light_yellow": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light_yellow%]",
               "magenta": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::magenta%]",
+              "moccasin": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::moccasin%]",
               "mode_1": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_1%]",
               "mode_2": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_2%]",
               "mode_3": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_3%]",
@@ -154,6 +168,8 @@
               "mode_6": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_6%]",
               "mode_7": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_7%]",
               "mode_8": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_8%]",
+              "mode_down": "Mode down",
+              "mode_up": "Mode up",
               "off": "[%key:common::entity::button::power_off::name%]",
               "on": "[%key:common::entity::button::power_on::name%]",
               "orange": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::orange%]",
@@ -169,6 +185,8 @@
               "sky_blue": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::sky_blue%]",
               "slow": "Slow",
               "smooth": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::smooth%]",
+              "speed_down": "Speed down",
+              "speed_up": "Speed up",
               "strobe": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::strobe%]",
               "timer": "Timer",
               "timer_2h": "Timer 2h",
@@ -224,7 +242,9 @@
               "light": "Steady light",
               "light_cyan": "Color: Light Cyan",
               "light_green": "Color: Light green",
+              "light_yellow": "Color: Light yellow",
               "magenta": "Color: Magenta",
+              "moccasin": "Color: Moccasin",
               "mode_1": "Mode 1",
               "mode_2": "Mode 2",
               "mode_3": "Mode 3",
@@ -259,6 +279,7 @@
       "options": {
         "generic_10_key": "10-key remote control",
         "generic_13_key": "13-key remote control",
+        "generic_21_key": "21-key remote control",
         "generic_24_key": "24-key remote control",
         "generic_40_key": "40-key remote control",
         "generic_44_key": "44-key remote control"

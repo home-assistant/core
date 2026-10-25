@@ -1,6 +1,7 @@
 """The tests for the MQTT component setup and helpers."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
@@ -14,11 +15,33 @@ from freezegun.api import FrozenDateTimeFactory
 from paho.mqtt.client import MQTTMessage, Properties
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockMqttReasonCode,
+    MockUser,
+    async_capture_events,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
+from pytest_homeassistant.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 from homeassistant import core as ha
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
-from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.const import (
+    ATTR_EVALUATE_PAYLOAD,
+    ATTR_MESSAGE_EXPIRY_INTERVAL,
+    DOMAIN,
+    SERVICE_DUMP,
+)
 from homeassistant.components.mqtt.models import (
     MessageCallbackType,
     MqttCommandTemplateException,
@@ -35,6 +58,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    __version__ as HA_VERSION,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -56,24 +80,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockMqttReasonCode,
-    MockUser,
-    async_capture_events,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
 from tests.components.sensor.common import MockSensor
-from tests.typing import (
-    MqttMockHAClientGenerator,
-    MqttMockPahoClient,
-    WebSocketGenerator,
-)
 
 
 class _DebugDeviceInfo(TypedDict, total=False):
@@ -238,11 +245,18 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
     ) as template_state_calls:
+        template_state_calls.return_value.entity_id = "select.test"
         tpl3 = template.Template("{{ this.entity_id }}", hass=hass)
         val_tpl3 = mqtt.MqttValueTemplate(tpl3, entity=entity)
         val_tpl3.async_render_with_possible_json_value("call1")
         val_tpl3.async_render_with_possible_json_value("call2")
         assert template_state_calls.call_count == 1
+
+        # The cached this follows an entity_id change
+        entity.entity_id = "select.renamed"
+        val_tpl3.async_render_with_possible_json_value("call3")
+        assert template_state_calls.call_count == 2
+        template_state_calls.assert_called_with(hass, "select.renamed")
 
 
 async def test_value_template_fails(hass: HomeAssistant) -> None:
@@ -365,7 +379,7 @@ async def test_mqtt_publish_action_call_with_raw_data(
         {
             mqtt.ATTR_TOPIC: "test/topic",
             mqtt.ATTR_PAYLOAD: attr_payload,
-            mqtt.ATTR_EVALUATE_PAYLOAD: evaluate_payload,
+            ATTR_EVALUATE_PAYLOAD: evaluate_payload,
         },
         blocking=True,
     )
@@ -392,7 +406,7 @@ async def test_mqtt_publish_action_call_with_raw_data(
             {
                 mqtt.ATTR_TOPIC: "test/topic",
                 mqtt.ATTR_PAYLOAD: attr_payload,
-                mqtt.ATTR_EVALUATE_PAYLOAD: evaluate_payload,
+                ATTR_EVALUATE_PAYLOAD: evaluate_payload,
             },
             blocking=True,
         )
@@ -496,7 +510,7 @@ async def test_publish_action_with_message_expiry_interval(
             mqtt.ATTR_PAYLOAD: "bla",
             mqtt.ATTR_QOS: 2,
             mqtt.ATTR_RETAIN: False,
-            mqtt.ATTR_MESSAGE_EXPIRY_INTERVAL: interval_data,
+            ATTR_MESSAGE_EXPIRY_INTERVAL: interval_data,
         },
         blocking=True,
     )
@@ -1112,7 +1126,7 @@ async def test_dump_service(
     async_fire_mqtt_message(hass, "bla/1", "test1")
     async_fire_mqtt_message(hass, "bla/2", "test2")
 
-    with patch("homeassistant.components.mqtt.open", mopen):
+    with patch("homeassistant.components.mqtt.services.open", mopen):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
         await hass.async_block_till_done()
 
@@ -1127,7 +1141,7 @@ ADMIN_SERVICE_CALLS = [
         {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD: "payload"},
         id="publish",
     ),
-    pytest.param(mqtt.SERVICE_DUMP, {"topic": "bla/#", "duration": 3}, id="dump"),
+    pytest.param(SERVICE_DUMP, {"topic": "bla/#", "duration": 3}, id="dump"),
 ]
 
 
@@ -2707,3 +2721,172 @@ async def test_mqtt_protocol_failed_migration_to_v5(
     )
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.data.get(mqtt.CONF_PROTOCOL, mqtt.PROTOCOL_311) == current_protocol
+
+
+INVALID_SENSOR_1 = {
+    "name": "test_1",
+    "state_topic": "test-topic",
+    "device_class": "energy",
+    "unit_of_measurement": "ppm",
+}
+INVALID_SENSOR_2 = {**INVALID_SENSOR_1, "name": "test_2"}
+VALID_SENSOR_2 = {**INVALID_SENSOR_2, "unit_of_measurement": "kWh"}
+# The ids are stable across restarts
+INVALID_SENSOR_1_ISSUE_ID = "invalid_platform_config_06215595fdd907a0"
+INVALID_SENSOR_2_ISSUE_ID = "invalid_platform_config_b05cc844b0025242"
+OTHER_ISSUE_ID = "01JQ0000000000000000000000"
+
+
+async def _disable_config_entry(hass: HomeAssistant, entry_id: str) -> None:
+    await hass.config_entries.async_set_disabled_by(entry_id, ConfigEntryDisabler.USER)
+
+
+async def _remove_config_entry(hass: HomeAssistant, entry_id: str) -> None:
+    await hass.config_entries.async_remove(entry_id)
+
+
+def _create_other_mqtt_issue(hass: HomeAssistant) -> None:
+    """Create an mqtt issue outside the scope of invalid platform config issues."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        OTHER_ISSUE_ID,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="subentry_migration_yaml",
+        translation_placeholders={"name": "test"},
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config", [{DOMAIN: {"sensor": [INVALID_SENSOR_1, INVALID_SENSOR_2]}}]
+)
+async def test_entry_reload_keeps_invalid_platform_config_issues(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test entry reload keeps issues of still invalid items and deletes stale ones."""
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    _create_other_mqtt_issue(hass)
+    assert set(issue_registry.issues) == {
+        (DOMAIN, INVALID_SENSOR_1_ISSUE_ID),
+        (DOMAIN, INVALID_SENSOR_2_ISSUE_ID),
+        (DOMAIN, OTHER_ISSUE_ID),
+    }
+    ir.async_ignore_issue(hass, DOMAIN, INVALID_SENSOR_1_ISSUE_ID, True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={DOMAIN: {"sensor": [INVALID_SENSOR_1, VALID_SENSOR_2]}},
+    ):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert set(issue_registry.issues) == {
+        (DOMAIN, INVALID_SENSOR_1_ISSUE_ID),
+        (DOMAIN, OTHER_ISSUE_ID),
+    }
+    issue = issue_registry.async_get_issue(DOMAIN, INVALID_SENSOR_1_ISSUE_ID)
+    assert issue is not None
+    assert issue.dismissed_version == HA_VERSION
+    # The still invalid item's issue is neither removed nor re-created
+    assert [event.data for event in events] == [
+        {"action": "remove", "domain": DOMAIN, "issue_id": INVALID_SENSOR_2_ISSUE_ID}
+    ]
+
+
+@pytest.mark.parametrize(
+    "hass_config", [{DOMAIN: {"sensor": [INVALID_SENSOR_1, INVALID_SENSOR_2]}}]
+)
+async def test_reload_service_invalid_platform_config_issues(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the reload service keeps issues when it fails and deletes stale ones."""
+    await mqtt_mock_entry()
+    _create_other_mqtt_issue(hass)
+    ir.async_ignore_issue(hass, DOMAIN, INVALID_SENSOR_1_ISSUE_ID, True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    # The reload service rejects a config with invalid items
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            return_value={DOMAIN: {"sensor": [INVALID_SENSOR_1, VALID_SENSOR_2]}},
+        ),
+        pytest.raises(ServiceValidationError),
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+    await hass.async_block_till_done()
+
+    assert set(issue_registry.issues) == {
+        (DOMAIN, INVALID_SENSOR_1_ISSUE_ID),
+        (DOMAIN, INVALID_SENSOR_2_ISSUE_ID),
+        (DOMAIN, OTHER_ISSUE_ID),
+    }
+    issue = issue_registry.async_get_issue(DOMAIN, INVALID_SENSOR_1_ISSUE_ID)
+    assert issue is not None
+    assert issue.dismissed_version == HA_VERSION
+    assert events == []
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={DOMAIN: {"sensor": [VALID_SENSOR_2]}},
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+    await hass.async_block_till_done()
+
+    assert set(issue_registry.issues) == {(DOMAIN, OTHER_ISSUE_ID)}
+
+
+@pytest.mark.parametrize("hass_config", [{DOMAIN: {"sensor": INVALID_SENSOR_1}}])
+@pytest.mark.parametrize(
+    ("unload", "expected_dismissed_versions"),
+    [
+        # Core hides the issues of a disabled entry, keeping them keeps the ignore
+        pytest.param(
+            _disable_config_entry,
+            {
+                (DOMAIN, INVALID_SENSOR_1_ISSUE_ID): HA_VERSION,
+                (DOMAIN, OTHER_ISSUE_ID): None,
+            },
+            id="disable",
+        ),
+        pytest.param(
+            _remove_config_entry, {(DOMAIN, OTHER_ISSUE_ID): None}, id="remove"
+        ),
+    ],
+)
+async def test_invalid_platform_config_issues_on_entry_disable_or_remove(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    unload: Callable[[HomeAssistant, str], Coroutine[Any, Any, None]],
+    expected_dismissed_versions: dict[tuple[str, str], str | None],
+) -> None:
+    """Test issues of invalid items are kept when the entry is disabled.
+
+    They are deleted when the entry is removed.
+    """
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    _create_other_mqtt_issue(hass)
+    assert set(issue_registry.issues) == {
+        (DOMAIN, INVALID_SENSOR_1_ISSUE_ID),
+        (DOMAIN, OTHER_ISSUE_ID),
+    }
+    issue = issue_registry.async_get_issue(DOMAIN, INVALID_SENSOR_1_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+    ir.async_ignore_issue(hass, DOMAIN, INVALID_SENSOR_1_ISSUE_ID, True)
+
+    await unload(hass, entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert {
+        key: issue.dismissed_version for key, issue in issue_registry.issues.items()
+    } == expected_dismissed_versions

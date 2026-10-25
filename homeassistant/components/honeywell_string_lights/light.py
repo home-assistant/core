@@ -37,7 +37,7 @@ class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEnti
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the entity."""
         super().__init__(entry)
-        self._rf_transmitter_entity_id_or_uuid = entry.data[CONF_TRANSMITTER]
+        self._rf_transmitter_entity_id = entry.data[CONF_TRANSMITTER]
 
     @override
     async def async_added_to_hass(self) -> None:

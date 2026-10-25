@@ -5,10 +5,9 @@ from typing import Any
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
 
 from . import GoogleConfigEntry
-from .const import CONF_SECURE_DEVICES_PIN, CONF_SERVICE_ACCOUNT, DATA_CONFIG, DOMAIN
+from .const import CONF_SECURE_DEVICES_PIN, CONF_SERVICE_ACCOUNT, DATA_CONFIG
 from .smart_home import (
     async_devices_query_response,
     async_devices_sync_response,
@@ -30,7 +29,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostic information."""
     config = entry.runtime_data
-    yaml_config: ConfigType = hass.data[DOMAIN][DATA_CONFIG]
+    yaml_config = hass.data[DATA_CONFIG]
     devices = await async_devices_sync_response(hass, config, REDACTED)
     sync = create_sync_response(REDACTED, devices)
     query = await async_devices_query_response(hass, config, devices)

@@ -9,10 +9,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_DEVICE_KEY
 from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.COVER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SENSOR,
+]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenGarageConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenGarageConfigEntry) -> None:
     """Set up OpenGarage from a config entry."""
     open_garage_connection = opengarage.OpenGarage(
         f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}",
@@ -28,9 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenGarageConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OpenGarageConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpenGarageConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

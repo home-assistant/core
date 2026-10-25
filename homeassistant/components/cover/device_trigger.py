@@ -7,6 +7,10 @@ from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
     state as state_trigger,
 )
+from homeassistant.components.homeassistant.triggers.numeric_state import (
+    NumericStateTriggerArgument,
+)
+from homeassistant.components.homeassistant.triggers.state import StateTriggerArgument
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -16,7 +20,6 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
-    CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -36,10 +39,10 @@ POSITION_TRIGGER_SCHEMA = probatio.All(
             probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             probatio.Required(CONF_TYPE): probatio.In(POSITION_TRIGGER_TYPES),
             probatio.Optional(CONF_ABOVE): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
             probatio.Optional(CONF_BELOW): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
         }
     ),
@@ -54,7 +57,17 @@ STATE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
-TRIGGER_SCHEMA = probatio.Any(POSITION_TRIGGER_SCHEMA, STATE_TRIGGER_SCHEMA)
+TRIGGER_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        "position": POSITION_TRIGGER_SCHEMA,
+        "tilt_position": POSITION_TRIGGER_SCHEMA,
+        "opened": STATE_TRIGGER_SCHEMA,
+        "closed": STATE_TRIGGER_SCHEMA,
+        "opening": STATE_TRIGGER_SCHEMA,
+        "closing": STATE_TRIGGER_SCHEMA,
+    },
+)
 
 
 async def async_get_triggers(
@@ -123,10 +136,10 @@ async def async_get_trigger_capabilities(
         "extra_fields": probatio.Schema(
             {
                 probatio.Optional(CONF_ABOVE, default=0): probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=0, max=100)
+                    probatio.Coerce(int), probatio.Percentage()
                 ),
                 probatio.Optional(CONF_BELOW, default=100): probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=0, max=100)
+                    probatio.Coerce(int), probatio.Percentage()
                 ),
             }
         )
@@ -150,13 +163,13 @@ async def async_attach_trigger(
         elif config[CONF_TYPE] == "closing":
             to_state = CoverState.CLOSING
 
-        state_config = {
-            CONF_PLATFORM: "state",
-            CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            state_trigger.CONF_TO: to_state,
+        state_config: ConfigType = {
+            StateTriggerArgument.PLATFORM: "state",
+            StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
+            StateTriggerArgument.TO: to_state,
         }
         if CONF_FOR in config:
-            state_config[CONF_FOR] = config[CONF_FOR]
+            state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
         state_config = await state_trigger.async_validate_trigger_config(
             hass, state_config
         )
@@ -172,12 +185,12 @@ async def async_attach_trigger(
     max_pos = config.get(CONF_BELOW, 101)
     value_template = f"{{{{ state.attributes.{position} }}}}"
 
-    numeric_state_config = {
-        CONF_PLATFORM: "numeric_state",
-        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        CONF_BELOW: max_pos,
-        CONF_ABOVE: min_pos,
-        CONF_VALUE_TEMPLATE: value_template,
+    numeric_state_config: ConfigType = {
+        NumericStateTriggerArgument.PLATFORM: "numeric_state",
+        NumericStateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
+        NumericStateTriggerArgument.BELOW: max_pos,
+        NumericStateTriggerArgument.ABOVE: min_pos,
+        NumericStateTriggerArgument.VALUE_TEMPLATE: value_template,
     }
     numeric_state_config = await numeric_state_trigger.async_validate_trigger_config(
         hass, numeric_state_config

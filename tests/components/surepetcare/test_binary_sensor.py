@@ -1,11 +1,11 @@
 """The tests for the Sure Petcare binary sensor platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import HOUSEHOLD_ID, HUB_ID
-
-from tests.common import MockConfigEntry
 
 EXPECTED_ENTITY_IDS = {
     "binary_sensor.pet_flap_connectivity": f"{HOUSEHOLD_ID}-13576-connectivity",

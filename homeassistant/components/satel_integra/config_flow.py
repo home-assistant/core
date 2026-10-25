@@ -51,7 +51,7 @@ CONNECTION_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
-        probatio.Optional(CONF_ENCRYPTION_KEY): selector.TextSelector(
+        probatio.Optional(probatio.Secret(CONF_ENCRYPTION_KEY)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
@@ -105,6 +105,13 @@ ZONE_SCHEMA = ZONE_AND_OUTPUT_SCHEMA.extend(
 
 
 SWITCHABLE_OUTPUT_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.string})
+
+
+def _validate_user_code(code: str | None) -> dict[str, str]:
+    """Validate the user code used by control commands."""
+    if code is not None and not 4 <= len(code) <= 16:
+        return {CONF_CODE: "invalid_code_length"}
+    return {}
 
 
 async def _async_validate_zone_temperature_sensor(
@@ -199,16 +206,22 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle code configuration."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self.async_create_entry(
-                title=self.connection_data[CONF_HOST],
-                data=self.connection_data,
-                options={CONF_CODE: user_input.get(CONF_CODE)},
-            )
+            code = user_input.get(CONF_CODE)
+            errors = _validate_user_code(code)
+            if not errors:
+                return self.async_create_entry(
+                    title=self.connection_data[CONF_HOST],
+                    data=self.connection_data,
+                    options={CONF_CODE: code},
+                )
 
         return self.async_show_form(
             step_id="code",
             data_schema=CODE_SCHEMA,
+            errors=errors,
         )
 
     async def async_step_reconfigure(
@@ -293,14 +306,20 @@ class SatelOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Init step."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self.async_create_entry(data={CONF_CODE: user_input.get(CONF_CODE)})
+            code = user_input.get(CONF_CODE)
+            errors = _validate_user_code(code)
+            if not errors:
+                return self.async_create_entry(data={CONF_CODE: code})
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 CODE_SCHEMA, self.config_entry.options
             ),
+            errors=errors,
         )
 
 

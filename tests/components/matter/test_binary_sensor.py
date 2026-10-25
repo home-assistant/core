@@ -776,6 +776,54 @@ async def test_co_detector(
     assert state.state == "off"
 
 
+@pytest.mark.parametrize("node_fixture", ["heiman_co_sensor"])
+async def test_battery_binary_sensor_with_percent_attribute(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that battery binary sensor is created even when BatPercentRemaining exists."""
+    # This fixture has both BatChargeLevel (14) and BatPercentRemaining (12) attributes
+    # Previously, the binary sensor would not be created if BatPercentRemaining was present.
+    # Now they should coexist.
+
+    # Verify the binary sensor from BatChargeLevel exists
+    binary_state = hass.states.get("binary_sensor.smart_co_sensor_battery")
+    assert binary_state
+    assert binary_state.state == "off"  # BatChargeLevel = 0 (Ok state)
+
+    # Test that BatChargeLevel changes update the binary sensor state
+    bat_charge_level_attribute = clusters.PowerSource.Attributes.BatChargeLevel
+    # Set BatChargeLevel to kWarning (value 1)
+    set_node_attribute(
+        matter_node,
+        1,
+        bat_charge_level_attribute.cluster_id,
+        bat_charge_level_attribute.attribute_id,
+        1,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    binary_state = hass.states.get("binary_sensor.smart_co_sensor_battery")
+    assert binary_state
+    assert binary_state.state == "on"  # BatChargeLevel != Ok
+
+    # Set BatChargeLevel back to kOk (value 0)
+    set_node_attribute(
+        matter_node,
+        1,
+        bat_charge_level_attribute.cluster_id,
+        bat_charge_level_attribute.attribute_id,
+        0,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    binary_state = hass.states.get("binary_sensor.smart_co_sensor_battery")
+    assert binary_state
+    assert binary_state.state == "off"  # BatChargeLevel = Ok
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
 async def test_general_diagnostics_fault_sensors(

@@ -48,7 +48,7 @@ def _base_schema(
             CONF_USERNAME, default=nut_config.get(CONF_USERNAME, probatio.UNDEFINED)
         ): str,
         probatio.Optional(
-            CONF_PASSWORD,
+            probatio.Secret(CONF_PASSWORD),
             default=PASSWORD_NOT_CHANGED
             if use_password_not_changed
             else probatio.UNDEFINED,

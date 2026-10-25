@@ -22,6 +22,9 @@ class PullRequest:
     changed_files: int
     file_statuses: dict[str, str]
     """Changed file paths mapped to their GitHub API `status`."""
+    snapshot_lines: int
+    """Added plus deleted lines in test snapshot files."""
+    snapshot_files: int
 
     @property
     def filenames(self) -> list[str]:
@@ -32,6 +35,16 @@ class PullRequest:
     def changed_lines(self) -> int:
         """Return the number of added plus deleted lines."""
         return self.additions + self.deletions
+
+    @property
+    def reviewed_lines(self) -> int:
+        """Return the number of changed lines outside test snapshot files."""
+        return self.changed_lines - self.snapshot_lines
+
+    @property
+    def reviewed_files(self) -> int:
+        """Return the number of changed files that are not test snapshots."""
+        return self.changed_files - self.snapshot_files
 
     def to_meta_dict(self) -> dict[str, Any]:
         """Return the `pr-meta.json` payload."""
@@ -75,8 +88,6 @@ class Results:
     skip: bool
     too_long: bool
     skip_reason: str
-    changed_lines: int
-    changed_files: int
     domains: list[str]
 
     def to_dict(self) -> dict[str, Any]:

@@ -11,7 +11,7 @@ from .coordinator import CO2SignalConfigEntry, CO2SignalCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CO2SignalConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CO2SignalConfigEntry) -> None:
     """Set up CO2 Signal from a config entry."""
     session = async_get_clientsession(hass)
     coordinator = CO2SignalCoordinator(
@@ -21,9 +21,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CO2SignalConfigEntry) ->
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: CO2SignalConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CO2SignalConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

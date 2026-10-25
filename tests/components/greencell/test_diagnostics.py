@@ -1,5 +1,8 @@
 """Tests for the Greencell diagnostics."""
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -14,10 +17,6 @@ from .conftest import (
     TEST_VOLTAGE_PAYLOAD_NORMAL,
     TEST_VOLTAGE_TOPIC,
 )
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
