@@ -119,6 +119,8 @@ class VlcDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
     _volume_bkp = 0.0
+    _vlc_repeat: bool | None = None
+    _vlc_loop: bool | None = None
     volume_level: int
 
     def __init__(
@@ -159,6 +161,9 @@ class VlcDevice(MediaPlayerEntity):
 
             self._attr_state = MediaPlayerState.IDLE
             self._attr_available = True
+            self._vlc_repeat = None
+            self._vlc_loop = None
+            self._attr_repeat = None
             LOGGER.debug("Connected to vlc host: %s", self._vlc.host)
 
         status = await self._vlc.status()
@@ -322,18 +327,26 @@ class VlcDevice(MediaPlayerEntity):
     @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        repeat_command: Literal["on", "off"] = (
-            "on" if repeat == RepeatMode.ONE else "off"
-        )
-        loop_command: Literal["on", "off"] = "on" if repeat == RepeatMode.ALL else "off"
+        # Repeat overrides loop in VLC, so loop goes first and only when it matters.
         try:
-            await self._vlc.repeat(repeat_command)
-            await self._vlc.loop(loop_command)
-        except CommandError, ConnectError:
-            self._attr_repeat = None
+            if repeat != RepeatMode.ONE:
+                self._vlc_loop = None
+                await self._vlc.loop("on" if repeat == RepeatMode.ALL else "off")
+                self._vlc_loop = repeat == RepeatMode.ALL
+            self._vlc_repeat = None
+            await self._vlc.repeat("on" if repeat == RepeatMode.ONE else "off")
+            self._vlc_repeat = repeat == RepeatMode.ONE
+        finally:
+            self._attr_repeat = self._confirmed_repeat_mode()
             self.async_write_ha_state()
-            raise
-        self._attr_repeat = repeat
+
+    def _confirmed_repeat_mode(self) -> RepeatMode | None:
+        """Return the repeat mode VLC has confirmed, or None if it is unknown."""
+        if self._vlc_repeat:
+            return RepeatMode.ONE
+        if self._vlc_repeat is None or self._vlc_loop is None:
+            return None
+        return RepeatMode.ALL if self._vlc_loop else RepeatMode.OFF
 
     @override
     async def async_browse_media(

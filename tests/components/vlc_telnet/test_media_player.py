@@ -1,7 +1,7 @@
 """Test the VLC media player Telnet integration."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 from aiovlc.exceptions import CommandError, ConnectError
 from freezegun.api import FrozenDateTimeFactory
@@ -197,11 +197,11 @@ async def test_update_logs_error_instead_of_raising(
 
 
 @pytest.mark.parametrize(
-    ("repeat", "repeat_command", "loop_command"),
+    ("repeat", "expected_calls"),
     [
-        pytest.param(RepeatMode.OFF, "off", "off", id="off"),
-        pytest.param(RepeatMode.ONE, "on", "off", id="one"),
-        pytest.param(RepeatMode.ALL, "off", "on", id="all"),
+        pytest.param(RepeatMode.OFF, [call.loop("off"), call.repeat("off")], id="off"),
+        pytest.param(RepeatMode.ONE, [call.repeat("on")], id="one"),
+        pytest.param(RepeatMode.ALL, [call.loop("on"), call.repeat("off")], id="all"),
     ],
 )
 @pytest.mark.usefixtures("setup_integration")
@@ -209,10 +209,11 @@ async def test_repeat_set(
     hass: HomeAssistant,
     vlc_mock: MagicMock,
     repeat: RepeatMode,
-    repeat_command: str,
-    loop_command: str,
+    expected_calls: list,
 ) -> None:
-    """Test that repeat_set sends the VLC repeat and loop commands."""
+    """Test that repeat_set sends the VLC loop and repeat commands in order."""
+    vlc_mock.reset_mock()
+
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_REPEAT_SET,
@@ -220,44 +221,57 @@ async def test_repeat_set(
         blocking=True,
     )
 
-    vlc_mock.repeat.assert_awaited_once_with(repeat_command)
-    vlc_mock.loop.assert_awaited_once_with(loop_command)
+    assert [
+        method_call
+        for method_call in vlc_mock.method_calls
+        if method_call[0] in ("loop", "repeat")
+    ] == expected_calls
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.attributes[ATTR_MEDIA_REPEAT] == repeat
 
 
 @pytest.mark.parametrize(
-    "error_class",
+    ("previous", "repeat", "failing_method", "expected"),
     [
-        pytest.param(CommandError, id="command_error"),
-        pytest.param(ConnectError, id="connect_error"),
+        pytest.param(
+            RepeatMode.ONE, RepeatMode.ALL, "loop", RepeatMode.ONE, id="one_loop_fails"
+        ),
+        pytest.param(
+            RepeatMode.ONE, RepeatMode.ALL, "repeat", None, id="one_repeat_fails"
+        ),
+        pytest.param(RepeatMode.OFF, RepeatMode.ALL, "loop", None, id="off_loop_fails"),
+        pytest.param(
+            RepeatMode.ALL, RepeatMode.ONE, "repeat", None, id="all_repeat_fails"
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_integration")
-async def test_repeat_set_partial_failure_clears_repeat(
+async def test_repeat_set_failure_keeps_confirmed_mode(
     hass: HomeAssistant,
     vlc_mock: MagicMock,
-    error_class: type[Exception],
+    previous: RepeatMode,
+    repeat: RepeatMode,
+    failing_method: str,
+    expected: RepeatMode | None,
 ) -> None:
-    """Test that a failed loop command after a successful repeat clears the mode."""
+    """Test that a failed VLC command leaves only the mode VLC has confirmed."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_REPEAT_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ONE},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: previous},
         blocking=True,
     )
-    vlc_mock.loop.side_effect = error_class("test error")
+    getattr(vlc_mock, failing_method).side_effect = CommandError("test error")
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_REPEAT_SET,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: repeat},
             blocking=True,
         )
 
-    vlc_mock.repeat.assert_awaited_with("off")
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert ATTR_MEDIA_REPEAT not in state.attributes
+    assert state.attributes.get(ATTR_MEDIA_REPEAT) == expected
