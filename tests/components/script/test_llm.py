@@ -109,6 +109,21 @@ async def test_script_tool_call_unexposed(hass: HomeAssistant) -> None:
         )
 
 
+async def test_script_tool_call_renamed(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the tool runs a script that was renamed after the tool was created."""
+    llm_context = _llm_context()
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
+    tool = next(tool for tool in result.tools if tool.name == "script__test_script")
+    entity_registry.async_update_entity(ENTITY_ID, new_entity_id="script.renamed")
+
+    response = await tool.async_call(
+        hass, llm.ToolInput("script__test_script", {"beer": 1}), llm_context
+    )
+    assert response == llm.ToolResult(data={"result": {"drinks": 2}})
+
+
 async def test_script_tool_name_not_started_with_digit(hass: HomeAssistant) -> None:
     """Test a script whose id starts with a digit gets a valid tool name."""
     async_expose_entity(hass, "conversation", "script.123456", True)

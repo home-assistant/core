@@ -60,9 +60,13 @@ class ScriptTool(ActionTool):
     ) -> ToolResult:
         """Call the script if it is still exposed."""
         # A conversation keeps its tools, so the script may have been
-        # unexposed since this tool was created.
-        if not async_should_expose(hass, llm_context.assistant, self._entity_id):
-            raise HomeAssistantError(f"Script {self._entity_id} is not exposed")
+        # unexposed or renamed since this tool was created.
+        entity_id = (
+            er.async_get(hass).async_get_entity_id(DOMAIN, DOMAIN, self._action)
+            or self._entity_id
+        )
+        if not async_should_expose(hass, llm_context.assistant, entity_id):
+            raise HomeAssistantError(f"Script {entity_id} is not exposed")
         return await super().async_call(hass, tool_input, llm_context)
 
 
