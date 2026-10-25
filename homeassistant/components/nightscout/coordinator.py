@@ -21,7 +21,7 @@ SCAN_INTERVAL = timedelta(minutes=1)
 type NightscoutConfigEntry = ConfigEntry[NightscoutGlucoseCoordinator]
 
 
-class NightscoutGlucoseCoordinator(DataUpdateCoordinator[SGV]):
+class NightscoutGlucoseCoordinator(DataUpdateCoordinator[SGV | None]):
     """Fetch the latest glucose reading from Nightscout."""
 
     config_entry: NightscoutConfigEntry
@@ -43,8 +43,8 @@ class NightscoutGlucoseCoordinator(DataUpdateCoordinator[SGV]):
         self.api = api
 
     @override
-    async def _async_update_data(self) -> SGV:
-        """Fetch the latest glucose reading."""
+    async def _async_update_data(self) -> SGV | None:
+        """Fetch the latest glucose reading, or None if there is none."""
         try:
             values = await self.api.get_sgvs()
         except (ClientError, TimeoutError, OSError) as error:
@@ -53,9 +53,4 @@ class NightscoutGlucoseCoordinator(DataUpdateCoordinator[SGV]):
                 translation_key="update_error",
                 translation_placeholders={"error": str(error)},
             ) from error
-        if not values:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="no_readings",
-            )
-        return values[0]
+        return values[0] if values else None

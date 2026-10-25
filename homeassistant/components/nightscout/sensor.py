@@ -58,23 +58,38 @@ class NightscoutSensor(CoordinatorEntity[NightscoutGlucoseCoordinator], SensorEn
 
     @property
     @override
-    def native_value(self) -> int:
-        """Return the latest glucose value."""
-        return int(self.coordinator.data.sgv)
+    def available(self) -> bool:
+        """Return if a glucose reading is available."""
+        return super().available and self.coordinator.data is not None
 
     @property
     @override
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def native_value(self) -> int | None:
+        """Return the latest glucose value."""
+        reading = self.coordinator.data
+        return int(reading.sgv) if reading else None
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the attributes of the latest glucose reading."""
-        return {
-            ATTR_DEVICE: self.coordinator.data.device,
-            ATTR_DATE: self.coordinator.data.date,
-            ATTR_DELTA: self.coordinator.data.delta,
-            ATTR_DIRECTION: self.coordinator.data.direction,
-        }
+        reading = self.coordinator.data
+        return (
+            {
+                ATTR_DEVICE: reading.device,
+                ATTR_DATE: reading.date,
+                ATTR_DELTA: reading.delta,
+                ATTR_DIRECTION: reading.direction,
+            }
+            if reading
+            else None
+        )
 
     @property
     @override
     def icon(self) -> str:
         """Return an icon matching the trend direction."""
-        return TREND_ICONS.get(self.coordinator.data.direction, "mdi:cloud-question")
+        reading = self.coordinator.data
+        if reading is None:
+            return "mdi:cloud-question"
+        return TREND_ICONS.get(reading.direction, "mdi:cloud-question")

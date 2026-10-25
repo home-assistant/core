@@ -23,9 +23,6 @@
     }
   },
   "exceptions": {
-    "no_readings": {
-      "message": "The Nightscout server returned no glucose readings."
-    },
     "update_error": {
       "message": "Error communicating with the Nightscout server: {error}"
     }

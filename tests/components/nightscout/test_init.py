@@ -7,7 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import SERVER_STATUS, init_integration, init_integration_empty_response
@@ -43,11 +43,12 @@ async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_no_readings_raises_entry_not_ready(hass: HomeAssistant) -> None:
-    """Test setup is retried when the server returns no glucose readings."""
+async def test_setup_without_readings(hass: HomeAssistant) -> None:
+    """Test setup succeeds when the server returns no glucose readings."""
     config_entry = await init_integration_empty_response(hass)
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.blood_sugar").state == STATE_UNAVAILABLE
 
 
 async def test_first_refresh_error_raises_entry_not_ready(
