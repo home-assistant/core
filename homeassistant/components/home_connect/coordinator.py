@@ -636,21 +636,35 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         options.update(await self.get_options_definitions(resolved_program_key))
 
         # Drop events for options that are no longer part of the program,
-        # including options that were only ever reported by events. The
-        # base program event is kept: it is not an option event and is
-        # needed to resolve favorite programs.
+        # including options that were only ever reported by events. Only
+        # keys used by option entities are pruned, so status events like
+        # program progress are kept. BaseProgram is kept too: it is not an
+        # option event and is needed to resolve favorite programs.
+        from .number import NUMBER_OPTIONS  # noqa: PLC0415
+        from .select import PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS  # noqa: PLC0415
+        from .switch import SWITCH_OPTIONS  # noqa: PLC0415
+
+        known_option_keys = {
+            description.key
+            for description in (
+                *PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS,
+                *NUMBER_OPTIONS,
+                *SWITCH_OPTIONS,
+            )
+        }
         event_keys_to_check = {EventKey(key) for key in options_to_notify}
         event_keys_to_check.update(events)
         for event_key in event_keys_to_check:
-            if (option_key := OptionKey(event_key)) in (
-                OptionKey.UNKNOWN,
-                OptionKey.BSH_COMMON_BASE_PROGRAM,
+            option_key = OptionKey(event_key)
+            if (
+                option_key not in known_option_keys
+                or option_key in options
+                or event_key not in events
             ):
                 continue
-            if option_key not in options and event_key in events:
-                del events[event_key]
-                for listener in self._get_listeners_for_event_key(event_key):
-                    listener()
+            del events[event_key]
+            for listener in self._get_listeners_for_event_key(event_key):
+                listener()
 
         for option in options.values():
             option_event_key = EventKey(option.key)
