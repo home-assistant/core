@@ -1091,7 +1091,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "bmw_connected_drive",
     "bond",
     "bosch_shc",
-    "braviatv",
     "broadlink",
     "brottsplatskartan",
     "browser",
