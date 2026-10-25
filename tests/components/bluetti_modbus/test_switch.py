@@ -40,7 +40,7 @@ AC_OUTPUT_ENTITY = "switch.balco_260_ac_output"
 AC_OUTPUT_ADDRESS = 57001
 
 
-@pytest.mark.usefixtures("mock_modbus_unit")
+@pytest.mark.usefixtures("mock_modbus_unit", "entity_registry_enabled_by_default")
 @patch("homeassistant.components.bluetti_modbus.PLATFORMS", [Platform.SWITCH])
 async def test_switches(
     hass: HomeAssistant,
@@ -61,6 +61,7 @@ async def test_switches(
         pytest.param(SERVICE_TURN_ON, 1, STATE_ON, id="on"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_writes_the_register(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -93,6 +94,7 @@ async def test_switch_writes_the_register(
     assert entity.state == state
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_write_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -115,6 +117,7 @@ async def test_switch_write_failure(
     assert entity.state == STATE_ON
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_unavailable_for_another_device(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -134,6 +137,7 @@ async def test_switch_unavailable_for_another_device(
     assert entity.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_settings_are_read_on_their_own_poll(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -163,6 +167,7 @@ async def test_settings_are_read_on_their_own_poll(
     assert entity.state == STATE_OFF
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_settings_poll_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -180,3 +185,18 @@ async def test_settings_poll_failure(
     entity = hass.states.get(AC_OUTPUT_ENTITY)
     assert entity is not None
     assert entity.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_modbus_unit")
+async def test_ac_output_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The AC output switch has to be enabled on purpose."""
+    await setup_integration(hass, mock_config_entry)
+
+    entry = entity_registry.async_get(AC_OUTPUT_ENTITY)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(AC_OUTPUT_ENTITY) is None

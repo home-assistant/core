@@ -14,7 +14,13 @@ from .entity import BluettiModbusSettingEntity
 PARALLEL_UPDATES = 1
 
 SWITCH_DESCRIPTIONS: tuple[SwitchEntityDescription, ...] = (
-    SwitchEntityDescription(key="ac_o_switch", translation_key="ac_output"),
+    SwitchEntityDescription(
+        key="ac_o_switch",
+        translation_key="ac_output",
+        # Turning it off cuts whatever is plugged into the AC output, so it
+        # has to be enabled on purpose.
+        entity_registry_enabled_default=False,
+    ),
     SwitchEntityDescription(
         key="g_i_switch",
         translation_key="grid_charging",
