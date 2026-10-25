@@ -1,21 +1,12 @@
 """LLM tools for the script integration."""
 
 from operator import attrgetter
-from typing import override
 
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.llm import (
-    LLM_API_ASSIST,
-    ActionTool,
-    LLMContext,
-    Tool,
-    ToolInput,
-    ToolResult,
-)
+from homeassistant.helpers.llm import LLM_API_ASSIST, ActionTool, LLMContext, Tool
 
 from .const import DOMAIN
 
@@ -39,7 +30,6 @@ class ScriptTool(ActionTool):
 
         super().__init__(hass, DOMAIN, action)
 
-        self._entity_id = script_entity_id
         self.name = f"{DOMAIN}__{script_name}"
         # The script is named by the user, so its name is already in their
         # language.
@@ -53,21 +43,6 @@ class ScriptTool(ActionTool):
             self.description = (
                 f"{self.description}. {alias_text}" if self.description else alias_text
             )
-
-    @override
-    async def async_call(
-        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> ToolResult:
-        """Call the script if it is still exposed."""
-        # A conversation keeps its tools, so the script may have been
-        # unexposed or renamed since this tool was created.
-        entity_id = (
-            er.async_get(hass).async_get_entity_id(DOMAIN, DOMAIN, self._action)
-            or self._entity_id
-        )
-        if not async_should_expose(hass, llm_context.assistant, entity_id):
-            raise HomeAssistantError(f"Script {entity_id} is not exposed")
-        return await super().async_call(hass, tool_input, llm_context)
 
 
 @callback
