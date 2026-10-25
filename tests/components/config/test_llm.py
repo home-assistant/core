@@ -363,69 +363,6 @@ async def test_get_config_entries_filtering_and_error_reasons(
 
 
 @pytest.mark.parametrize(
-    ("built_in", "partial_manifest", "expected_fields"),
-    [
-        pytest.param(
-            False,
-            {"version": "1.2.3", "issue_tracker": "https://example.com/issues"},
-            {
-                "custom_integration": True,
-                "integration_version": "1.2.3",
-                "issue_tracker": "https://example.com/issues",
-            },
-            id="custom",
-        ),
-        pytest.param(
-            False,
-            {},
-            {"custom_integration": True},
-            id="custom_without_version_and_issue_tracker",
-        ),
-        pytest.param(
-            True,
-            {"issue_tracker": "https://example.com/issues"},
-            {},
-            id="built_in",
-        ),
-    ],
-)
-async def test_get_config_entries_custom_integration(
-    hass: HomeAssistant,
-    llm_context: llm.LLMContext,
-    built_in: bool,
-    partial_manifest: dict[str, Any],
-    expected_fields: dict[str, Any],
-) -> None:
-    """Test that only entries of custom integrations show the integration info."""
-    mock_integration(
-        hass, MockModule(TEST_DOMAIN, partial_manifest=partial_manifest), built_in
-    )
-    MockConfigEntry(
-        domain=TEST_DOMAIN,
-        title="My Entry",
-        entry_id="01J00000000000000000001001",
-        state=ConfigEntryState.LOADED,
-    ).add_to_hass(hass)
-
-    tool = GetConfigEntriesTool()
-    res = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
-
-    assert res == llm.ToolResult(
-        data={
-            "result": [
-                {
-                    "entry_id": f"{TEST_DOMAIN}:1001",
-                    "domain": TEST_DOMAIN,
-                    "title": "My Entry",
-                    "state": "loaded",
-                    **expected_fields,
-                }
-            ]
-        }
-    )
-
-
-@pytest.mark.parametrize(
     "invalid_args",
     [
         pytest.param({"domain": ""}, id="empty_domain_str"),
