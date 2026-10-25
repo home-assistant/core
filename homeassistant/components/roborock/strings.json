@@ -40,12 +40,12 @@
       },
       "reconfigure": {
         "data": {
-          "username": "[%key:common::config_flow::data::email%]",
-          "region": "[%key:component::roborock::config::step::user::data::region%]"
+          "region": "[%key:component::roborock::config::step::user::data::region%]",
+          "username": "[%key:common::config_flow::data::email%]"
         },
         "data_description": {
-          "username": "The email address used to sign in to the Roborock app.",
-          "region": "[%key:component::roborock::config::step::user::data_description::region%]"
+          "region": "[%key:component::roborock::config::step::user::data_description::region%]",
+          "username": "The email address used to sign in to the Roborock app."
         },
         "description": "Re-authenticate your Roborock account."
       },
