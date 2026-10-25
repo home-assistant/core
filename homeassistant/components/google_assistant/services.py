@@ -33,7 +33,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         await entry.runtime_data.async_sync_entities(agent_user_id)
 
-    if CONF_SERVICE_ACCOUNT in hass.data[DOMAIN][DATA_CONFIG]:
+    if CONF_SERVICE_ACCOUNT in hass.data[DATA_CONFIG]:
         hass.services.async_register(
             DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
         )

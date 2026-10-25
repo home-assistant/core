@@ -159,8 +159,7 @@ class GoogleConfig(AbstractConfig):
                     translation_key="restart_required",
                     translation_placeholders={"option": key},
                 )
-        # pylint: disable-next=home-assistant-use-runtime-data
-        self.hass.data[DOMAIN][DATA_CONFIG] = self._config = config
+        self.hass.data[DATA_CONFIG] = self._config = config
         self.async_update_report_state()
         return True
 

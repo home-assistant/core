@@ -3,10 +3,9 @@
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
-
-import pytest
 
 from homeassistant.components import google_assistant as ga
 from homeassistant.components.google_assistant import (
@@ -142,7 +141,7 @@ async def test_reload_service(hass: HomeAssistant) -> None:
     }
     assert not google_config.should_expose("light.kitchen")
     assert not google_config.should_expose("switch.outlet")
-    assert hass.data[DOMAIN][ga.const.DATA_CONFIG]["exposed_domains"] == ["light"]
+    assert hass.data[ga.const.DATA_CONFIG]["exposed_domains"] == ["light"]
     mock_sync.assert_called_once_with()
 
 
