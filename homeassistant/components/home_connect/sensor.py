@@ -798,9 +798,13 @@ class HomeConnectProgramStartTimeSensor(HomeConnectProgramSensor):
             self._attr_native_value = None
             self._program_key = None
             self._awaiting_program_run = True
-            if entered_run:
+            if entered_run and self._observed_run_start is None:
                 self._observed_run_start = now
-            elif not is_running:
+            elif operation_state in (
+                *PROGRAM_NOT_STARTED_OPERATION_STATES,
+                BSH_OPERATION_STATE_FINISHED,
+            ):
+                # Pauses and required actions keep the observed start
                 self._observed_run_start = None
             return
         if operation_state not in PROGRAM_STARTED_OPERATION_STATES:

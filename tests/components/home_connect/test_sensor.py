@@ -1998,6 +1998,36 @@ async def test_program_start_time_unknown_for_program_started_before_setup(
             ],
             id="outdated_elapsed_program_time_after_observed_run",
         ),
+        pytest.param(
+            [
+                (
+                    60,
+                    [
+                        _operation_state(BSH_OPERATION_STATE_FINISHED),
+                        _notify({EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None}),
+                    ],
+                    STATE_UNKNOWN,
+                ),
+                (60, [_operation_state(BSH_OPERATION_STATE_RUN)], STATE_UNKNOWN),
+                # Paused and resumed before the program was reported
+                (60, [_operation_state(BSH_OPERATION_STATE_PAUSE)], STATE_UNKNOWN),
+                (60, [_operation_state(BSH_OPERATION_STATE_RUN)], STATE_UNKNOWN),
+                (
+                    60,
+                    [
+                        _notify(
+                            {
+                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
+                                )
+                            }
+                        )
+                    ],
+                    "2021-01-09T12:03:00+00:00",
+                ),
+            ],
+            id="paused_before_program_reported",
+        ),
     ],
 )
 async def test_program_start_time_new_run_without_ready(
