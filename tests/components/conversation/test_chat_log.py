@@ -302,6 +302,37 @@ async def test_llm_api_object_requires_admin_unauthorized(
     assert chat_log.llm_api is None
 
 
+async def test_llm_api_reuse_requires_admin(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a reused admin-only LLM API checks the user again."""
+    api = AdminAPI(hass=hass, id="admin-api", name="Admin", requires_admin=True)
+    llm_context = llm.LLMContext(
+        platform="test",
+        context=Context(user_id=hass_admin_user.id),
+        language="en",
+        assistant=None,
+        device_id=None,
+        agent_id="mock-agent-id",
+    )
+
+    with chat_session.async_get_chat_session(hass, context=None) as session:
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(llm_context, user_llm_hass_api=api)
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+
+        hass_admin_user.groups = []
+        with (
+            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+            pytest.raises(Unauthorized),
+        ):
+            await chat_log.async_provide_llm_data(llm_context, user_llm_hass_api=api)
+
+
 async def test_llm_api_object_requires_admin_authorized(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,

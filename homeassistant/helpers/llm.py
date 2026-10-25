@@ -121,16 +121,21 @@ async def async_get_api(
     return await async_get_authorized_api_instance(api, llm_context)
 
 
+async def async_is_authorized(api: API, llm_context: LLMContext) -> bool:
+    """Return if the user of the context may use the API."""
+    return not api.requires_admin or bool(
+        llm_context.context
+        and llm_context.context.user_id
+        and (user := await api.hass.auth.async_get_user(llm_context.context.user_id))
+        and user.is_admin
+    )
+
+
 async def async_get_authorized_api_instance(
     api: API, llm_context: LLMContext
 ) -> APIInstance:
     """Get an API instance, requiring an admin user if the API requires it."""
-    if api.requires_admin and (
-        not llm_context.context
-        or not llm_context.context.user_id
-        or not (user := await api.hass.auth.async_get_user(llm_context.context.user_id))
-        or not user.is_admin
-    ):
+    if not await async_is_authorized(api, llm_context):
         raise Unauthorized(context=llm_context.context)
 
     return await api.async_get_api_instance(llm_context)
