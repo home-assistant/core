@@ -3,7 +3,6 @@
 from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -20,16 +19,6 @@ SWITCH_DESCRIPTIONS: tuple[SwitchEntityDescription, ...] = (
         # Turning it off cuts whatever is plugged into the AC output, so it
         # has to be enabled on purpose.
         entity_registry_enabled_default=False,
-    ),
-    SwitchEntityDescription(
-        key="g_i_switch",
-        translation_key="grid_charging",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    SwitchEntityDescription(
-        key="g_o_switch",
-        translation_key="grid_feed_in",
-        entity_category=EntityCategory.CONFIG,
     ),
 )
 

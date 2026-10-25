@@ -157,12 +157,6 @@
     "switch": {
       "ac_output": {
         "name": "AC output"
-      },
-      "grid_charging": {
-        "name": "Grid charging"
-      },
-      "grid_feed_in": {
-        "name": "Grid feed-in"
       }
     }
   },
