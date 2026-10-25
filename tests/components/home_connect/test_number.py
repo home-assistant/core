@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
+    ArrayOfPrograms,
     ArrayOfSettings,
     Event,
     EventKey,
@@ -700,6 +701,58 @@ async def test_options_unavailable_when_option_is_missing(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+async def test_option_number_unavailable_on_option_events_without_definition(
+    entity_registry: er.EntityRegistry,
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test option number entities stay unavailable on bare option events.
+
+    Without an option definition the entity has no constraints or unit,
+    so it must not become available on event evidence alone.
+    """
+    entity_id = "number.oven_setpoint_temperature"
+    entity_registry.async_get_or_create(
+        NUMBER_DOMAIN,
+        DOMAIN,
+        f"{appliance.ha_id}-{OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE}",
+        suggested_object_id=entity_id.split(".", 1)[1],
+    )
+    client.get_all_programs = AsyncMock(return_value=ArrayOfPrograms([], None, None))
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                ArrayOfEvents(
+                    [
+                        Event(
+                            EventKey.COOKING_OVEN_OPTION_SETPOINT_TEMPERATURE,
+                            EventKey.COOKING_OVEN_OPTION_SETPOINT_TEMPERATURE.value,
+                            0,
+                            level="",
+                            handling="",
+                            value=150,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
 
 
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
