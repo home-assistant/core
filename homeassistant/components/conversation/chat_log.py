@@ -494,7 +494,19 @@ class ChatLog:
     ) -> llm.ToolResult:
         """Return the result of a tool call that has no result content."""
         task = self._tool_call_tasks.pop(tool_call_id, None)
-        if task is not None and task.done() and not task.cancelled():
+        if task is not None and (not task.done() or task.cancelled()):
+            # The action may still happen, so do not report it as failed.
+            return llm.ToolResult(
+                data={
+                    "error": "Interrupted",
+                    "error_text": (
+                        "The turn ended before the tool finished. "
+                        "The action may have completed."
+                    ),
+                },
+                error=True,
+            )
+        if task is not None:
             if (tool_error := task.exception()) is None:
                 return task.result()
             error = tool_error

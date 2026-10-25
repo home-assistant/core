@@ -378,6 +378,66 @@ async def test_failed_stream_keeps_started_tool_call(
     assert content[-1].content == "Error: Connection lost"
 
 
+@freeze_time("2025-10-31 12:00:00")
+async def test_failed_stream_running_tool_call(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test a tool that still runs when the stream fails is not reported failed."""
+    tool_running = asyncio.Event()
+
+    async def slow_tool(*args: Any) -> llm.ToolResult:
+        await tool_running.wait()
+        return llm.ToolResult(data="Test response")
+
+    mock_tool = _mock_tool()
+    mock_tool.async_call.side_effect = slow_tool
+    tool_call = llm.ToolInput(
+        id="mock-tool-call-id", tool_name="test_tool", tool_args={}
+    )
+
+    async def stream() -> AsyncGenerator[AssistantContentDeltaDict]:
+        yield {"role": "assistant"}
+        yield {"tool_calls": [tool_call]}
+        raise HomeAssistantError("Connection lost")
+
+    async def run_turn() -> None:
+        with (
+            patch(
+                "homeassistant.components.llm.async_get_tools",
+                new_callable=AsyncMock,
+                return_value=LLMTools(tools=[mock_tool]),
+            ),
+            chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        ):
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api="assist",
+            )
+            async for _ in chat_log.async_add_delta_content_stream(
+                "mock-agent-id", stream()
+            ):
+                pass
+
+    with pytest.raises(HomeAssistantError):
+        await run_turn()
+    tool_running.set()
+    await hass.async_block_till_done()
+
+    content = hass.data[DATA_CHAT_LOGS]["koala"].content
+    assert content[-2].result == llm.ToolResult(
+        data={
+            "error": "Interrupted",
+            "error_text": (
+                "The turn ended before the tool finished. "
+                "The action may have completed."
+            ),
+        },
+        error=True,
+    )
+    assert content[-1].content == "Error: Connection lost"
+
+
 class AdminAPI(llm.API):
     """Test API that requires an admin user."""
 
