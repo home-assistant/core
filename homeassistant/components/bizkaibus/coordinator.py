@@ -69,7 +69,7 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
         try:
             timetable = await self.api.get_timetable()
         except (BizkaibusConnectionError, BizkaibusParseError) as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(str(err)) from err
 
         if timetable is None:
             return []
