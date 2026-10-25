@@ -9498,6 +9498,15 @@
       ],
       "supported_by": "overkiz"
     },
+    "rexense": {
+      "name": "Rexense",
+      "integration_type": "hub",
+      "categories": [
+        "hubs_protocols.smart_home_hubs"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "rflink": {
       "name": "RFLink",
       "integration_type": "hub",

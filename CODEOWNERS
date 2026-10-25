@@ -1628,6 +1628,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/repetier/ @ShadowBr0ther
 /homeassistant/components/rest_command/ @jpbede
 /tests/components/rest_command/ @jpbede
+/homeassistant/components/rexense/ @GorgeOu
+/tests/components/rexense/ @GorgeOu
 /homeassistant/components/rflink/ @javicalle
 /tests/components/rflink/ @javicalle
 /homeassistant/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
