@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, Mock
 from caldav.calendarobjectresource import Todo
 from caldav.collection import SynchronizableCalendarObjectCollection
 from caldav.lib.error import DAVError, NotFoundError
+from caldav.lib.http_sync import requests as caldav_requests
 from caldav.lib.url import URL
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -986,13 +987,31 @@ async def test_subscribe(
             [sync_report("token-1"), DAVError()], "1", None, id="rejected_token"
         ),
         pytest.param([DAVError(), DAVError()], "1", None, id="no_sync_report"),
+        pytest.param(
+            [sync_report("token-1"), caldav_requests.exceptions.ConnectionError()],
+            "1",
+            None,
+            id="report_connection_error",
+        ),
+        pytest.param(
+            [sync_report("token-1"), caldav_requests.exceptions.Timeout()],
+            "1",
+            None,
+            id="report_timeout",
+        ),
+        pytest.param(
+            [sync_report("token-1"), caldav_requests.exceptions.ChunkedEncodingError()],
+            "1",
+            None,
+            id="report_cut_off",
+        ),
     ],
 )
 async def test_update_after_sync_report(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     calendar: Mock,
-    reports: list[SynchronizableCalendarObjectCollection | DAVError],
+    reports: list[SynchronizableCalendarObjectCollection | Exception],
     expected_state: str,
     next_token: str | None,
 ) -> None:
@@ -1150,6 +1169,44 @@ async def test_update_after_write(
     assert calendar.search.call_count == reads
 
 
+def add_item_from_executor(hass: HomeAssistant) -> None:
+    """Add an item from an executor job, as during a running update."""
+    asyncio.run_coroutine_threadsafe(
+        hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: "Cheese"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        ),
+        hass.loop,
+    ).result()
+
+
+async def test_update_after_write_during_report(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+) -> None:
+    """Test a write during the sync report is read by the same update."""
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    def write_during_report(
+        sync_token: str | None, disable_fallback: bool
+    ) -> SynchronizableCalendarObjectCollection:
+        add_item_from_executor(hass)
+        return sync_report("token-1")
+
+    calendar.get_objects_by_sync_token.side_effect = write_during_report
+    calendar.search.return_value = [create_todo(calendar, "1", TODO_NEEDS_ACTION)]
+    await async_update_entity(hass, TEST_ENTITY)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+
 async def test_update_after_write_during_read(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -1164,16 +1221,7 @@ async def test_update_after_write_during_read(
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     def write_during_search(**kwargs: Any) -> list[Todo]:
-        asyncio.run_coroutine_threadsafe(
-            hass.services.async_call(
-                TODO_DOMAIN,
-                TodoServices.ADD_ITEM,
-                {ATTR_ITEM: "Cheese"},
-                target={ATTR_ENTITY_ID: TEST_ENTITY},
-                blocking=True,
-            ),
-            hass.loop,
-        ).result()
+        add_item_from_executor(hass)
         return []
 
     calendar.search.side_effect = write_during_search

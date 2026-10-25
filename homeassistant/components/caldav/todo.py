@@ -67,15 +67,14 @@ async def async_setup_entry(
 def _get_changes(calendar: Calendar, sync_token: str | None) -> tuple[bool, str | None]:
     """Return whether a calendar changed since the sync token, and the new token.
 
-    A server that can't answer the sync-collection report (RFC 6578) counts as
-    changed.
+    A failed sync-collection report (RFC 6578) counts as changed.
     """
     try:
         changes = cast(
             SynchronizableCalendarObjectCollection,
             calendar.get_objects_by_sync_token(sync_token, disable_fallback=True),
         )
-    except DAVError as err:
+    except (caldav_requests.exceptions.RequestException, DAVError) as err:
         _LOGGER.debug("Cannot read the changes, reading all items: %s", err)
         return True, None
     # A token with second precision can stay the same, but the change is listed
