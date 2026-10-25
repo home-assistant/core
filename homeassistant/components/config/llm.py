@@ -160,7 +160,9 @@ class GetConfigEntriesTool(Tool):
         domain_filter: str | list[str] | None = args.get("domain")
         status_filter: str | None = args.get("status")
 
-        entries = hass.config_entries.async_entries()
+        entries = hass.config_entries.async_entries(
+            include_ignore=True, include_disabled=True
+        )
 
         if domain_filter is not None:
             domains = {
