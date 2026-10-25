@@ -15,7 +15,7 @@ from homeassistant.const import CONF_API_KEY
 def mock_setup_entry() -> Iterator[AsyncMock]:
     """Skip integration setup during config flow tests."""
     with patch(
-        "homeassistant.components.axle_energy.async_setup_entry", return_value=True
+        "homeassistant.components.axle_energy.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

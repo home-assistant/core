@@ -25,8 +25,14 @@ from .const import (
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TTS_MODEL,
 )
-from .entity import GoogleGenerativeAILLMBaseEntity, supports_custom_sampling
+from .entity import (
+    GoogleGenerativeAILLMBaseEntity,
+    supports_custom_sampling,
+    supports_speech_metadata,
+)
 from .helpers import convert_to_wav
+
+ATTR_STYLE = "style"
 
 
 async def async_setup_entry(
@@ -50,27 +56,51 @@ class GoogleGenerativeAITextToSpeechEntity(
 ):
     """Google Generative AI text-to-speech entity."""
 
-    _attr_supported_options = [ATTR_VOICE]
     # See https://ai.google.dev/gemini-api/docs/speech-generation#languages
     # Note the documentation might not be up to date, e.g. el-GR is not listed
-    # there but is supported.
+    # there but is supported. The docs only name the languages, so regions are
+    # the CLDR likely region, or the locale of the voices API for regional variants.
     _attr_supported_languages = [
+        "ace-ID",
         "af-ZA",
+        "ak-GH",
         "am-ET",
+        "ar-001",
         "ar-EG",
+        "as-IN",
+        "awa-IN",
         "az-AZ",
+        "azb-IR",
+        "ba-RU",
+        "ban-ID",
         "be-BY",
+        "bem-ZM",
         "bg-BG",
+        "bho-IN",
+        "bjn-ID",
         "bn-BD",
+        "bs-BA",
+        "bug-ID",
         "ca-ES",
         "ceb-PH",
+        "ckb-IQ",
         "cmn-CN",
+        "crh-UA",
         "cs-CZ",
         "da-DK",
         "de-DE",
+        "dyu-BF",
+        "dz-BT",
         "el-GR",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IE",
         "en-IN",
+        "en-NZ",
         "en-US",
+        "en-ZA",
+        "es-419",
         "es-ES",
         "es-US",
         "et-EE",
@@ -78,64 +108,103 @@ class GoogleGenerativeAITextToSpeechEntity(
         "fa-IR",
         "fi-FI",
         "fil-PH",
+        "fr-CA",
         "fr-FR",
+        "fuv-NG",
         "gl-ES",
+        "gn-PY",
         "gu-IN",
+        "ha-NG",
         "he-IL",
         "hi-IN",
+        "hne-IN",
         "hr-HR",
         "ht-HT",
         "hu-HU",
         "hy-AM",
         "id-ID",
+        "ig-NG",
+        "ilo-PH",
         "is-IS",
         "it-IT",
         "ja-JP",
         "jv-ID",
         "ka-GE",
+        "kab-DZ",
+        "kam-KE",
+        "kg-CD",
+        "ki-KE",
+        "kk-KZ",
+        "km-KH",
         "kn-IN",
         "ko-KR",
         "kok-IN",
+        "ks-IN",
+        "ky-KG",
         "la-VA",
         "lb-LU",
+        "lg-UG",
+        "ln-CD",
         "lo-LA",
         "lt-LT",
+        "ltg-LV",
+        "lus-IN",
         "lv-LV",
+        "mag-IN",
         "mai-IN",
         "mg-MG",
+        "min-ID",
         "mk-MK",
         "ml-IN",
         "mn-MN",
+        "mni-IN",
         "mr-IN",
         "ms-MY",
+        "mt-MT",
         "my-MM",
         "nb-NO",
         "ne-NP",
         "nl-NL",
         "nn-NO",
+        "nso-ZA",
+        "ny-MW",
+        "oc-FR",
         "or-IN",
         "pa-IN",
+        "pag-PH",
         "pl-PL",
         "ps-AF",
         "pt-BR",
         "pt-PT",
         "ro-RO",
         "ru-RU",
+        "rw-RW",
+        "sat-IN",
         "sd-PK",
         "si-LK",
         "sk-SK",
         "sl-SI",
+        "so-SO",
         "sq-AL",
         "sr-RS",
+        "ss-ZA",
+        "st-ZA",
         "sv-SE",
         "sw-KE",
         "ta-IN",
         "te-IN",
+        "tg-TJ",
         "th-TH",
+        "ti-ET",
         "tr-TR",
+        "ug-CN",
         "uk-UA",
         "ur-PK",
+        "uz-UZ",
         "vi-VN",
+        "yue-HK",
+        "zh-CN",
+        "zh-TW",
     ]
     # Unused, but required by base class.
     # The Gemini TTS models detect the input language automatically.
@@ -181,6 +250,15 @@ class GoogleGenerativeAITextToSpeechEntity(
         """Initialize the TTS entity."""
         super().__init__(config_entry, subentry, RECOMMENDED_TTS_MODEL)
 
+    @cached_property
+    @override
+    def supported_options(self) -> list[str]:
+        """Return the options supported by the configured model."""
+        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL)
+        if supports_speech_metadata(model):
+            return [ATTR_VOICE, ATTR_STYLE]
+        return [ATTR_VOICE]
+
     @callback
     @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
@@ -215,6 +293,13 @@ class GoogleGenerativeAITextToSpeechEntity(
             )
         )
 
+        contents: str | types.Part = message
+        if style := options.get(ATTR_STYLE):
+            contents = types.Part(
+                text=message,
+                speech_metadata=types.SpeechMetadata(style=style),
+            )
+
         def _extract_audio_parts(
             response: types.GenerateContentResponse,
         ) -> tuple[bytes, str]:
@@ -243,7 +328,7 @@ class GoogleGenerativeAITextToSpeechEntity(
         try:
             response = await self._genai_client.aio.models.generate_content(
                 model=model,
-                contents=message,
+                contents=contents,
                 config=config,
             )
 

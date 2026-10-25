@@ -39,7 +39,7 @@ async def test_full_user_flow_implementation(
 
     with patch(
         "homeassistant.components.modern_forms.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
@@ -131,7 +131,7 @@ async def test_connection_error(
     update_mock.return_value.info.device_name = "ModernFormsFan"
     with patch(
         "homeassistant.components.modern_forms.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -272,7 +272,7 @@ async def test_full_user_flow_gen4(
 
     with patch(
         "homeassistant.components.modern_forms.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}

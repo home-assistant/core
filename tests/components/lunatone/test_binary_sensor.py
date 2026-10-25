@@ -9,12 +9,15 @@ from lunatone_rest_api_client.models import ScanLineState, ScanState
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lunatone.coordinator import DEFAULT_SCAN_UPDATE_INTERVAL
+from homeassistant.components.lunatone.coordinator import (
+    DEFAULT_INFO_UPDATE_INTERVAL,
+    DEFAULT_SCAN_UPDATE_INTERVAL,
+)
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import build_info_data, setup_integration
 
 
 async def test_setup(
@@ -98,37 +101,48 @@ async def test_line_scan_status_availability_updates_with_line_data(
     mock_lunatone_sensors: AsyncMock,
     mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the availability of line scan status sensors."""
-    scan_data_with_lines = deepcopy(mock_lunatone_scan.data)
     mock_lunatone_scan.data.lines = []
-    mock_lunatone_scan.data.status = ScanState.ADDRESSING
 
     await setup_integration(hass, mock_config_entry)
 
     entity_ids = (
-        ("binary_sensor.test_scan_status", STATE_ON),
-        ("binary_sensor.dali_line_0_scan_status", STATE_UNAVAILABLE),
-        ("binary_sensor.dali_line_1_scan_status", STATE_UNAVAILABLE),
+        ("binary_sensor.dali_line_0_scan_status", STATE_OFF),
+        ("binary_sensor.dali_line_1_scan_status", STATE_OFF),
     )
-
     for entity_id, expected_state in entity_ids:
         entity = hass.states.get(entity_id)
         assert entity and entity.state == expected_state
 
-    mock_lunatone_scan.data = scan_data_with_lines
+    new_info_data = deepcopy(mock_lunatone_info.data)
+    new_info_data.lines = {}
+    mock_lunatone_info.data = new_info_data
 
-    freezer.tick(DEFAULT_SCAN_UPDATE_INTERVAL)
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_ids = (
-        ("binary_sensor.test_scan_status", STATE_OFF),
+        ("binary_sensor.dali_line_0_scan_status", STATE_UNAVAILABLE),
+        ("binary_sensor.dali_line_1_scan_status", STATE_UNAVAILABLE),
+    )
+    for entity_id, expected_state in entity_ids:
+        entity = hass.states.get(entity_id)
+        assert entity and entity.state == expected_state
+
+    mock_lunatone_info.data = build_info_data()
+
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_ids = (
         ("binary_sensor.dali_line_0_scan_status", STATE_OFF),
         ("binary_sensor.dali_line_1_scan_status", STATE_OFF),
     )
-
     for entity_id, expected_state in entity_ids:
         entity = hass.states.get(entity_id)
         assert entity and entity.state == expected_state

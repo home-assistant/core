@@ -90,15 +90,22 @@ def _todo_item(resource: CalendarObjectResource) -> TodoItem | None:
             due = dt_util.as_local(due_value)
         elif isinstance(due_value, date):
             due = due_value
+    status = TODO_STATUS_MAP.get(
+        get_attr_value(todo, "status") or "",
+        TodoItemStatus.NEEDS_ACTION,
+    )
+    completed: datetime | None = None
+    if status == TodoItemStatus.COMPLETED and isinstance(
+        completed_value := get_attr_value(todo, "completed"), datetime
+    ):
+        completed = dt_util.as_local(completed_value)
     return TodoItem(
         uid=uid,
         summary=summary,
-        status=TODO_STATUS_MAP.get(
-            get_attr_value(todo, "status") or "",
-            TodoItemStatus.NEEDS_ACTION,
-        ),
+        status=status,
         due=due,
         description=get_attr_value(todo, "description"),
+        completed=completed,
     )
 
 
@@ -176,7 +183,15 @@ class WebDavTodoListEntity(TodoListEntity):
         vtodo = todo.icalendar_component
         vtodo["SUMMARY"] = item.summary or ""
         if status := item.status:
+            previous = TODO_STATUS_MAP.get(
+                vtodo.get("STATUS", ""), TodoItemStatus.NEEDS_ACTION
+            )
             vtodo["STATUS"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
+            if status != TodoItemStatus.COMPLETED:
+                vtodo.pop("COMPLETED", None)
+            elif previous != TodoItemStatus.COMPLETED:
+                vtodo.pop("COMPLETED", None)
+                vtodo.add("COMPLETED", dt_util.utcnow())
         if due := item.due:
             todo.set_due(due)
         else:
