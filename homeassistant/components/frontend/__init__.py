@@ -10,32 +10,38 @@ from typing import Any, TypedDict, override
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, StaticPathConfig
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, ActiveConnection
-from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import (
-    CONF_MODE,
-    CONF_NAME,
-    EVENT_PANELS_UPDATED,
-    EVENT_THEMES_UPDATED,
-)
-from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
+from homeassistant.const import EVENT_PANELS_UPDATED
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.icon import async_get_icons
-from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
+from .const import DOMAIN
+from .helpers import (
+    CONF_THEMES,
+    DATA_DEFAULT_DARK_THEME,
+    DATA_DEFAULT_THEME,
+    DATA_THEMES,
+    DATA_THEMES_STORE,
+    DEFAULT_THEME,
+    MANIFEST_JSON,
+    VALUE_NO_THEME,
+    validate_themes,
+)
 from .pr_download import download_pr_artifact
+from .services import async_setup_services
 from .storage import (
     async_setup_frontend_storage,
     async_system_store as async_system_store,
@@ -43,12 +49,6 @@ from .storage import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "frontend"
-CONF_NAME_DARK = "name_dark"
-CONF_THEMES = "themes"
-CONF_THEMES_MODES = "modes"
-CONF_THEMES_LIGHT = "light"
-CONF_THEMES_DARK = "dark"
 CONF_EXTRA_HTML_URL = "extra_html_url"
 CONF_EXTRA_HTML_URL_ES5 = "extra_html_url_es5"
 CONF_EXTRA_MODULE_URL = "extra_module_url"
@@ -59,8 +59,6 @@ CONF_DEVELOPMENT_PR = "development_pr"
 CONF_GITHUB_TOKEN = "github_token"
 
 DEV_ARTIFACTS_DIR = "development_artifacts"
-
-DEFAULT_THEME_COLOR = "#2980b9"
 
 
 DATA_PANELS: HassKey[dict[str, Panel]] = HassKey("frontend_panels")
@@ -73,9 +71,6 @@ DATA_WS_SUBSCRIBERS: HassKey[set[tuple[websocket_api.ActiveConnection, int]]] = 
 
 THEMES_STORAGE_KEY = f"{DOMAIN}_theme"
 THEMES_STORAGE_VERSION = 1
-THEMES_SAVE_DELAY = 60
-DATA_THEMES_STORE: HassKey[Store] = HassKey("frontend_themes_store")
-DATA_THEMES: HassKey[dict[str, Any]] = HassKey("frontend_themes")
 
 PANELS_STORAGE_KEY = f"{DOMAIN}_panels"
 PANELS_STORAGE_VERSION = 1
@@ -86,161 +81,53 @@ DATA_PANELS_STORE: HassKey[Store[dict[str, dict[str, Any]]]] = HassKey(
 DATA_PANELS_CONFIG: HassKey[dict[str, dict[str, Any]]] = HassKey(
     "frontend_panels_config"
 )
-DATA_DEFAULT_THEME = "frontend_default_theme"
-DATA_DEFAULT_DARK_THEME = "frontend_default_dark_theme"
-DEFAULT_THEME = "default"
-VALUE_NO_THEME = "none"
-
-PRIMARY_COLOR = "primary-color"
 
 
-LEGACY_THEME_SCHEMA = vol.Any(
-    # Legacy theme scheme
-    {cv.string: cv.string},
-    # New extended schema with mode support
+CONFIG_SCHEMA = probatio.Schema(
     {
-        # Theme variables that apply to all modes
-        cv.string: cv.string,
-        # Mode specific theme variables
-        vol.Optional(CONF_THEMES_MODES): vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
-                vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
-            }
-        ),
-    },
-)
-
-THEME_SCHEMA = vol.Schema(
-    {
-        # Theme variables that apply to all modes
-        cv.string: cv.string,
-        # Mode specific theme variables
-        vol.Optional(CONF_THEMES_MODES): vol.All(
-            {
-                vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
-                vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
-            },
-            cv.has_at_least_one_key(CONF_THEMES_LIGHT, CONF_THEMES_DARK),
-        ),
-    }
-)
-
-
-def _validate_themes(themes: dict) -> dict[str, Any]:
-    """Validate themes."""
-    validated_themes = {}
-    for theme_name, theme in themes.items():
-        theme_name = cv.string(theme_name)
-        LEGACY_THEME_SCHEMA(theme)
-
-        try:
-            validated_themes[theme_name] = THEME_SCHEMA(theme)
-        except vol.Invalid as err:
-            _LOGGER.error("Theme %s is invalid: %s", theme_name, err)
-
-    return validated_themes
-
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
-                vol.Inclusive(CONF_DEVELOPMENT_PR, "development_pr"): cv.positive_int,
-                vol.Inclusive(CONF_GITHUB_TOKEN, "development_pr"): cv.string,
-                vol.Optional(CONF_THEMES): vol.All(dict, _validate_themes),
-                vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_FRONTEND_REPO): cv.isdir,
+                probatio.Inclusive(
+                    CONF_DEVELOPMENT_PR, "development_pr"
+                ): cv.positive_int,
+                probatio.Inclusive(
+                    probatio.Secret(CONF_GITHUB_TOKEN), "development_pr"
+                ): cv.string,
+                probatio.Optional(CONF_THEMES): probatio.All(dict, validate_themes),
+                probatio.Optional(CONF_EXTRA_MODULE_URL): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_EXTRA_JS_URL_ES5): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_EXTRA_JS_URL_ES5): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
                 # We no longer use these options.
-                vol.Optional(CONF_EXTRA_HTML_URL): cv.match_all,
-                vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
-                vol.Optional(CONF_JS_VERSION): cv.match_all,
+                probatio.Optional(CONF_EXTRA_HTML_URL): cv.match_all,
+                probatio.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
+                probatio.Optional(CONF_JS_VERSION): cv.match_all,
             },
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-SERVICE_SET_THEME = "set_theme"
-SERVICE_RELOAD_THEMES = "reload_themes"
-
-
-class Manifest:
-    """Manage the manifest.json contents."""
-
-    def __init__(self, data: dict) -> None:
-        """Init the manifest manager."""
-        self.manifest = data
-        self._serialize()
-
-    def __getitem__(self, key: str) -> Any:
-        """Return an item in the manifest."""
-        return self.manifest[key]
-
-    @property
-    def json(self) -> str:
-        """Return the serialized manifest."""
-        return self._serialized
-
-    def _serialize(self) -> None:
-        self._serialized = json_dumps_sorted(self.manifest)
-
-    def update_key(self, key: str, val: str) -> None:
-        """Add a keyval to the manifest.json."""
-        self.manifest[key] = val
-        self._serialize()
-
-
-MANIFEST_JSON = Manifest(
-    {
-        "background_color": "#FFFFFF",
-        "description": (
-            "Home automation platform that puts local control and privacy first."
-        ),
-        "dir": "ltr",
-        "display": "standalone",
-        "icons": [
-            {
-                "src": f"/static/icons/favicon-{size}x{size}.png",
-                "sizes": f"{size}x{size}",
-                "type": "image/png",
-                "purpose": "any",
-            }
-            for size in (192, 384, 512, 1024)
-        ]
-        + [
-            {
-                "src": f"/static/icons/maskable_icon-{size}x{size}.png",
-                "sizes": f"{size}x{size}",
-                "type": "image/png",
-                "purpose": "maskable",
-            }
-            for size in (48, 72, 96, 128, 192, 384, 512)
-        ],
-        "screenshots": [
-            {
-                "src": "/static/images/screenshots/screenshot-1.png",
-                "sizes": "413x792",
-                "type": "image/png",
-            }
-        ],
-        "lang": "en-US",
-        "name": "Home Assistant",
-        "short_name": "Home Assistant",
-        "start_url": "/?homescreen=1",
-        "id": "/?homescreen=1",
-        "theme_color": DEFAULT_THEME_COLOR,
-        "prefer_related_applications": True,
-        "related_applications": [
-            {"platform": "play", "id": "io.homeassistant.companion.android"}
-        ],
-    }
-)
+__all__ = [
+    "CONF_THEMES",
+    "DEFAULT_THEME",
+    "DOMAIN",
+    "MANIFEST_JSON",
+    "VALUE_NO_THEME",
+    "IndexView",
+    "UrlManager",
+    "add_extra_js_url",
+    "add_manifest_json_key",
+    "async_get_theme_names",
+    "async_panel_exists",
+    "async_register_built_in_panel",
+    "async_remove_panel",
+    "async_system_store",
+    "remove_extra_js_url",
+]
 
 
 class UrlManager:
@@ -382,8 +269,11 @@ def async_register_built_in_panel(
 
     panels = hass.data.setdefault(DATA_PANELS, {})
 
-    if not update and panel.frontend_url_path in panels:
-        raise ValueError(f"Overwriting panel {panel.frontend_url_path}")
+    if not update and (existing := panels.get(panel.frontend_url_path)) is not None:
+        raise ValueError(
+            f"Overwriting panel {panel.frontend_url_path} owned by"
+            f" {existing.component_name}"
+        )
 
     panels[panel.frontend_url_path] = panel
 
@@ -409,6 +299,12 @@ def async_remove_panel(
 def async_panel_exists(hass: HomeAssistant, frontend_url_path: str) -> bool:
     """Return if a panel is registered for the given frontend URL path."""
     return frontend_url_path in hass.data.get(DATA_PANELS, {})
+
+
+@callback
+def async_get_theme_names(hass: HomeAssistant) -> list[str]:
+    """Return the sorted names of the user-defined themes."""
+    return sorted(hass.data.get(DATA_THEMES, {}).keys())
 
 
 def add_extra_js_url(hass: HomeAssistant, url: str, es5: bool = False) -> None:
@@ -643,24 +539,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_WS_SUBSCRIBERS] = set()
 
     await _async_setup_themes(hass, conf.get(CONF_THEMES))
+    async_setup_services(hass)
 
     return True
-
-
-def _validate_selected_theme(theme: str) -> str:
-    """Validate that a user selected theme is a valid theme."""
-    if theme in (DEFAULT_THEME, VALUE_NO_THEME):
-        return theme
-    hass = async_get_hass()
-    if theme not in hass.data[DATA_THEMES]:
-        raise vol.Invalid(f"Theme {theme} not found")
-    return theme
 
 
 async def _async_setup_themes(
     hass: HomeAssistant, themes: dict[str, Any] | None
 ) -> None:
-    """Set up themes data and services."""
+    """Set up themes data."""
     hass.data[DATA_THEMES] = themes or {}
 
     store = hass.data[DATA_THEMES_STORE] = Store(
@@ -679,100 +566,6 @@ async def _async_setup_themes(
 
     if dark_theme_name == DEFAULT_THEME or dark_theme_name in hass.data[DATA_THEMES]:
         hass.data[DATA_DEFAULT_DARK_THEME] = dark_theme_name
-
-    @callback
-    def update_theme_and_fire_event() -> None:
-        """Update theme_color in manifest."""
-        name = hass.data[DATA_DEFAULT_THEME]
-        themes = hass.data[DATA_THEMES]
-        if name != DEFAULT_THEME:
-            MANIFEST_JSON.update_key(
-                "theme_color",
-                themes[name].get(
-                    "app-header-background-color",
-                    themes[name].get(PRIMARY_COLOR, DEFAULT_THEME_COLOR),
-                ),
-            )
-        else:
-            MANIFEST_JSON.update_key("theme_color", DEFAULT_THEME_COLOR)
-        hass.bus.async_fire(EVENT_THEMES_UPDATED)
-
-    @callback
-    def set_theme(call: ServiceCall) -> None:
-        """Set backend-preferred theme."""
-
-        def _update_hass_theme(theme: str, light: bool) -> None:
-            theme_key = DATA_DEFAULT_THEME if light else DATA_DEFAULT_DARK_THEME
-            if theme == VALUE_NO_THEME:
-                to_set = DEFAULT_THEME if light else None
-            else:
-                _LOGGER.info(
-                    "Theme %s set as default %s theme",
-                    theme,
-                    "light" if light else "dark",
-                )
-                to_set = theme
-            hass.data[theme_key] = to_set
-
-        name = call.data.get(CONF_NAME)
-        if name is not None and CONF_MODE in call.data:
-            mode = call.data.get("mode", "light")
-            light_mode = mode == "light"
-            _update_hass_theme(name, light_mode)
-        else:
-            name_dark = call.data.get(CONF_NAME_DARK)
-            if name:
-                _update_hass_theme(name, True)
-            if name_dark:
-                _update_hass_theme(name_dark, False)
-
-        store.async_delay_save(
-            lambda: {
-                DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
-                DATA_DEFAULT_DARK_THEME: hass.data.get(DATA_DEFAULT_DARK_THEME),
-            },
-            THEMES_SAVE_DELAY,
-        )
-        update_theme_and_fire_event()
-
-    async def reload_themes(_: ServiceCall) -> None:
-        """Reload themes."""
-        config = await async_hass_config_yaml(hass)
-        new_themes = config.get(DOMAIN, {}).get(CONF_THEMES, {})
-
-        try:
-            new_themes = _validate_themes(new_themes)
-        except vol.Invalid as err:
-            raise HomeAssistantError(f"Failed to reload themes: {err}") from err
-
-        hass.data[DATA_THEMES] = new_themes
-        if hass.data[DATA_DEFAULT_THEME] not in new_themes:
-            hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
-        if (
-            hass.data.get(DATA_DEFAULT_DARK_THEME)
-            and hass.data.get(DATA_DEFAULT_DARK_THEME) not in new_themes
-        ):
-            hass.data[DATA_DEFAULT_DARK_THEME] = None
-        update_theme_and_fire_event()
-
-    service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_SET_THEME,
-        set_theme,
-        vol.All(
-            {
-                vol.Optional(CONF_NAME): _validate_selected_theme,
-                vol.Exclusive(CONF_NAME_DARK, "dark_modes"): _validate_selected_theme,
-                vol.Exclusive(CONF_MODE, "dark_modes"): vol.Any("dark", "light"),
-            },
-            cv.has_at_least_one_key(CONF_NAME, CONF_NAME_DARK),
-        ),
-    )
-
-    service.async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD_THEMES, reload_themes
-    )
 
 
 @callback
@@ -927,10 +720,17 @@ class ManifestJSONView(HomeAssistantView):
 @websocket_api.websocket_command(
     {
         "type": "frontend/get_icons",
-        vol.Required("category"): vol.In(
-            {"conditions", "entity", "entity_component", "services", "triggers"}
+        probatio.Required("category"): probatio.In(
+            {
+                "conditions",
+                "entity",
+                "entity_component",
+                "integration_category",
+                "services",
+                "triggers",
+            }
         ),
-        vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
+        probatio.Optional("integration"): probatio.All(probatio.EnsureList(), [str]),
     }
 )
 @websocket_api.async_response
@@ -1004,10 +804,10 @@ def websocket_get_themes(
 @websocket_api.websocket_command(
     {
         "type": "frontend/get_translations",
-        vol.Required("language"): str,
-        vol.Required("category"): str,
-        vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
-        vol.Optional("config_flow"): bool,
+        probatio.Required("language"): str,
+        probatio.Required("category"): str,
+        probatio.Optional("integration"): probatio.All(probatio.EnsureList(), [str]),
+        probatio.Optional("config_flow"): bool,
     }
 )
 @websocket_api.async_response
@@ -1067,12 +867,12 @@ def websocket_subscribe_extra_js(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "frontend/update_panel",
-        vol.Required("url_path"): str,
-        vol.Optional("title"): vol.Any(cv.string, None),
-        vol.Optional("icon"): vol.Any(cv.icon, None),
-        vol.Optional("require_admin"): vol.Any(cv.boolean, None),
-        vol.Optional("show_in_sidebar"): vol.Any(cv.boolean, None),
+        probatio.Required("type"): "frontend/update_panel",
+        probatio.Required("url_path"): str,
+        probatio.Optional("title"): probatio.Any(cv.string, None),
+        probatio.Optional("icon"): probatio.Any(cv.icon, None),
+        probatio.Optional("require_admin"): probatio.Any(cv.boolean, None),
+        probatio.Optional("show_in_sidebar"): probatio.Any(cv.boolean, None),
     }
 )
 @websocket_api.require_admin

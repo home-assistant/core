@@ -1,6 +1,7 @@
 {
   "domain": "influxdb",
   "name": "InfluxDB",
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@mdegat01", "@Robbie1221"],
   "config_flow": true,
   "dependencies": ["file_upload"],

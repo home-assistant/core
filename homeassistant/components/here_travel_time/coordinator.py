@@ -22,7 +22,7 @@ from here_transit import (
     HERETransitNoRouteFoundError,
     HERETransitTooManyRequestsError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODE, UnitOfLength
@@ -306,8 +306,8 @@ def prepare_parameters(
             raise UpdateFailed(f"Could not find entity {entity_id}")
         try:
             formatted_coordinates = coordinates.split(",")
-            vol.Schema(cv.gps(formatted_coordinates))
-        except (AttributeError, vol.ExactSequenceInvalid) as ex:
+            probatio.Schema(cv.gps(formatted_coordinates))
+        except (AttributeError, probatio.ExactSequenceInvalid) as ex:
             raise UpdateFailed(
                 f"{entity_id} does not have valid coordinates: {coordinates}"
             ) from ex

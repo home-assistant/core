@@ -1,17 +1,15 @@
 """Fixtures for saj tests."""
 
 from collections.abc import Generator
-from datetime import date
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.saj.const import DOMAIN
 
 from . import MOCK_SERIAL_NUMBER, MOCK_USER_INPUT_ETHERNET, MOCK_USER_INPUT_WIFI
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -47,18 +45,18 @@ def mock_config_entry(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock the setup entry."""
     with patch(
-        "homeassistant.components.saj.async_setup_entry", return_value=True
+        "homeassistant.components.saj.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
 
 @pytest.fixture
-def mock_pysaj_sensors() -> Generator[list[MagicMock]]:
-    """Mock pysaj.Sensors across SAJ integration modules."""
+def mock_aiosaj_sensors() -> Generator[list[MagicMock]]:
+    """Mock aiosaj.Sensors across SAJ integration modules."""
     sensors: list[MagicMock] = []
-    for key, value, unit, per_day_basis, per_total_basis in (
-        ("current_power", 5000.0, "W", False, False),
-        ("today_yield", 25.5, "kWh", True, False),
+    for key, value, unit in (
+        ("current_power", 5000.0, "W"),
+        ("today_yield", 25.5, "kWh"),
     ):
         sensor = MagicMock()
         sensor.name = key
@@ -66,23 +64,16 @@ def mock_pysaj_sensors() -> Generator[list[MagicMock]]:
         sensor.value = value
         sensor.unit = unit
         sensor.enabled = True
-        sensor.per_day_basis = per_day_basis
-        sensor.per_total_basis = per_total_basis
-        sensor.date = date.today()
         sensors.append(sensor)
 
     with (
         patch(
-            "homeassistant.components.saj.pysaj.Sensors",
+            "homeassistant.components.saj.aiosaj.Sensors",
             autospec=True,
             return_value=sensors,
         ) as sensors_cls,
         patch(
-            "homeassistant.components.saj.config_flow.pysaj.Sensors",
-            new=sensors_cls,
-        ),
-        patch(
-            "homeassistant.components.saj.sensor.pysaj.Sensors",
+            "homeassistant.components.saj.config_flow.aiosaj.Sensors",
             new=sensors_cls,
         ),
     ):
@@ -90,24 +81,20 @@ def mock_pysaj_sensors() -> Generator[list[MagicMock]]:
 
 
 @pytest.fixture
-def mock_pysaj_saj(mock_pysaj_sensors: list[MagicMock]) -> Generator[MagicMock]:
-    """Mock pysaj.SAJ across SAJ integration modules."""
+def mock_aiosaj_saj(mock_aiosaj_sensors: list[MagicMock]) -> Generator[MagicMock]:
+    """Mock aiosaj.SAJ across SAJ integration modules."""
     saj_instance = MagicMock()
     saj_instance.serialnumber = MOCK_SERIAL_NUMBER
     saj_instance.read = AsyncMock(return_value=True)
 
     with (
         patch(
-            "homeassistant.components.saj.pysaj.SAJ",
+            "homeassistant.components.saj.aiosaj.SAJ",
             autospec=True,
             return_value=saj_instance,
         ) as saj_cls,
         patch(
-            "homeassistant.components.saj.config_flow.pysaj.SAJ",
-            new=saj_cls,
-        ),
-        patch(
-            "homeassistant.components.saj.sensor.pysaj.SAJ",
+            "homeassistant.components.saj.config_flow.aiosaj.SAJ",
             new=saj_cls,
         ),
     ):

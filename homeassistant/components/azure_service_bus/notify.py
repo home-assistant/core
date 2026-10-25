@@ -11,7 +11,7 @@ from azure.servicebus.exceptions import (
     ServiceBusConnectionError,
     ServiceBusError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -22,8 +22,11 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+DOMAIN = "azure_service_bus"
 
 CONF_CONNECTION_STRING = "connection_string"
 CONF_QUEUE_NAME = "queue"
@@ -33,15 +36,15 @@ ATTR_ASB_MESSAGE = "message"
 ATTR_ASB_TITLE = "title"
 ATTR_ASB_TARGET = "target"
 
-PLATFORM_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CONF_QUEUE_NAME, CONF_TOPIC_NAME),
+PLATFORM_SCHEMA = probatio.All(
+    probatio.AtLeastOne(CONF_QUEUE_NAME, CONF_TOPIC_NAME),
     NOTIFY_PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_CONNECTION_STRING): cv.string,
-            vol.Exclusive(
+            probatio.Required(CONF_CONNECTION_STRING): cv.string,
+            probatio.Exclusive(
                 CONF_QUEUE_NAME, "output", "Can only send to a queue or a topic."
             ): cv.string,
-            vol.Exclusive(
+            probatio.Exclusive(
                 CONF_TOPIC_NAME, "output", "Can only send to a queue or a topic."
             ): cv.string,
         }
@@ -109,10 +112,9 @@ class ServiceBusNotificationService(BaseNotificationService):
         )
         try:
             await self._client.send_messages(queue_message)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ServiceBusError as err:
-            _LOGGER.error(
-                "Could not send service bus notification to %s. %s",
-                self._client.name,
-                err,
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+                translation_placeholders={"target": self._client.name},
+            ) from err

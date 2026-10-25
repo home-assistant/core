@@ -94,6 +94,7 @@ class WyomingConversationEntity(
                 )
 
         self._supported_languages = list(model_languages)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{config_entry.entry_id}-conversation"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
@@ -130,7 +131,9 @@ class WyomingConversationEntity(
                 )
                 with (
                     chat_session.async_get_chat_session(
-                        self.hass, user_input.conversation_id
+                        self.hass,
+                        user_input.conversation_id,
+                        context=user_input.context,
                     ) as session,
                     conversation.async_get_chat_log(
                         self.hass, session, user_input
@@ -272,6 +275,7 @@ class WyomingConversationEntity(
                                     intent_slots,
                                     text_input=user_input.text,
                                     language=user_input.language,
+                                    assistant=conversation.DOMAIN,
                                     satellite_id=user_input.satellite_id,
                                     device_id=user_input.device_id,
                                 )

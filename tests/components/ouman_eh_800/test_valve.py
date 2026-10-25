@@ -6,8 +6,10 @@ from ouman_eh_800_api import (
     L1BaseEndpoints,
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
+    OumanClientError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import (
@@ -21,8 +23,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 # Only L1 and L2 base endpoints produce valve entities. A single scenario
@@ -95,6 +95,11 @@ async def test_async_set_valve_position(
             OumanClientCommunicationError("Network error: Connection refused"),
             "Error communicating with API",
             id="communication_failure",
+        ),
+        pytest.param(
+            OumanClientError("Endpoint ID missing from response"),
+            "Unexpected response from device",
+            id="unexpected_response",
         ),
     ],
 )

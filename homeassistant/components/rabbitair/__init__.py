@@ -11,7 +11,7 @@ from .coordinator import RabbitAirConfigEntry, RabbitAirDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.FAN, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RabbitAirConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RabbitAirConfigEntry) -> None:
     """Set up Rabbit Air from a config entry."""
 
     host: str = entry.data[CONF_HOST]
@@ -30,12 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RabbitAirConfigEntry) ->
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RabbitAirConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RabbitAirConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: RabbitAirConfigEntry) -> None:

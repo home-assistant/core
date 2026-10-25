@@ -31,10 +31,10 @@ from .entity import (
     async_setup_entry_block,
     async_setup_entry_rest,
     async_setup_entry_rpc,
+    get_entity_blu_trv_device_info,
 )
 from .utils import (
     async_remove_orphaned_entities,
-    get_blu_trv_device_info,
     get_device_entry_gen,
     get_rpc_custom_name,
     get_rpc_key,
@@ -107,6 +107,25 @@ class RpcPresenceBinarySensor(RpcBinarySensor):
         return available and self.coordinator.device.config[self.key]["enable"]
 
 
+class RpcCameraZoneBinarySensor(RpcBinarySensor):
+    """Represent a RPC binary sensor entity for camerazone component."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcBinarySensorDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if not get_rpc_custom_name(coordinator.device, key):
+            _, _, component_id = get_rpc_key(key)
+            self._attr_translation_placeholders = {"zone_number": component_id}
+            self._attr_translation_key = "zone_motion_with_number"
+
+
 class RpcBluTrvBinarySensor(RpcBinarySensor):
     """Represent a RPC BluTrv binary sensor."""
 
@@ -120,16 +139,7 @@ class RpcBluTrvBinarySensor(RpcBinarySensor):
         """Initialize."""
 
         super().__init__(coordinator, key, attribute, description)
-        ble_addr: str = coordinator.device.config[key]["addr"]
-        fw_ver = coordinator.device.status[key].get("fw_ver")
-        self._attr_device_info = get_blu_trv_device_info(
-            coordinator.hass,
-            coordinator.config_entry.entry_id,
-            coordinator.device.config[key],
-            ble_addr,
-            coordinator.mac,
-            fw_ver,
-        )
+        self._attr_device_info = get_entity_blu_trv_device_info(coordinator, key)
 
 
 BLOCK_SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
@@ -401,6 +411,18 @@ RPC_SENSORS: Final = {
         key="camera",
         sub_key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
+    ),
+    "camerazone_motion": RpcBinarySensorDescription(
+        key="camerazone",
+        sub_key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        entity_class=RpcCameraZoneBinarySensor,
+    ),
+    "motion": RpcBinarySensorDescription(
+        key="motion",
+        sub_key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        removal_condition=lambda config, _, key: not config[key].get("enable", True),
     ),
 }
 

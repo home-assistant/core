@@ -4,8 +4,8 @@ import ast
 from dataclasses import asdict
 from typing import Any, Literal, cast
 
+import probatio
 from python_overseerr import OverseerrClient, OverseerrConnectionError
-import voluptuous as vol
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
@@ -36,35 +36,35 @@ SERVICE_GET_REQUESTS = "get_requests"
 SERVICE_SEARCH_MEDIA = "search_media"
 SERVICE_REQUEST_MEDIA = "request_media"
 
-SERVICE_GET_REQUESTS_SCHEMA = vol.Schema(
+SERVICE_GET_REQUESTS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Optional(ATTR_STATUS): vol.In(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Optional(ATTR_STATUS): probatio.In(
             ["approved", "pending", "available", "processing", "unavailable", "failed"]
         ),
-        vol.Optional(ATTR_SORT_ORDER): vol.In(["added", "modified"]),
-        vol.Optional(ATTR_REQUESTED_BY): int,
+        probatio.Optional(ATTR_SORT_ORDER): probatio.In(["added", "modified"]),
+        probatio.Optional(ATTR_REQUESTED_BY): int,
     }
 )
 
-SERVICE_SEARCH_MEDIA_SCHEMA = vol.Schema(
+SERVICE_SEARCH_MEDIA_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_QUERY): str,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_QUERY): str,
     }
 )
 
-SERVICE_REQUEST_MEDIA_SCHEMA = vol.Schema(
+SERVICE_REQUEST_MEDIA_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_MEDIA_TYPE): vol.In(["movie", "tv"]),
-        vol.Required(ATTR_MEDIA_ID): vol.All(
-            vol.Coerce(int),
-            vol.Range(min=1),
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_MEDIA_TYPE): probatio.In(["movie", "tv"]),
+        probatio.Required(ATTR_MEDIA_ID): probatio.All(
+            probatio.Coerce(int),
+            probatio.Range(min=1),
         ),
-        vol.Optional(ATTR_SEASONS): vol.Any(
-            vol.Coerce(int),
-            [vol.Coerce(int)],
+        probatio.Optional(ATTR_SEASONS): probatio.Any(
+            probatio.Coerce(int),
+            [probatio.Coerce(int)],
             str,
         ),
     }

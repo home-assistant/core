@@ -15,14 +15,13 @@ from pyatv.const import (
 from pyatv.interface import FeatureInfo, Features, Playing, PushUpdater
 from pyatv.support import http
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.apple_tv.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .common import MockPairingHandler, airplay_service, create_conf, mrp_service
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True, name="mock_scan")
@@ -61,9 +60,11 @@ def pairing() -> Generator[AsyncMock]:
                 await http.create_session(session), config.get_service(protocol)
             )
             handler.always_fail = mock_pair.always_fail
+            mock_pair.handler = handler
             return handler
 
         mock_pair.always_fail = False
+        mock_pair.handler = None
         mock_pair.side_effect = _pair
         yield mock_pair
 

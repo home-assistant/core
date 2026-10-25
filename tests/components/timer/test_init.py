@@ -1,15 +1,22 @@
 """The tests for the timer component."""
 
-from datetime import timedelta
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.timer import (
-    ATTR_DURATION,
     ATTR_FINISHES_AT,
     ATTR_LAST_TRANSITION,
     ATTR_REMAINING,
@@ -20,21 +27,24 @@ from homeassistant.components.timer import (
     CONF_RESTORE,
     DEFAULT_DURATION,
     DOMAIN,
+    SERVICE_CANCEL,
+    SERVICE_CHANGE,
+    SERVICE_FINISH,
+    SERVICE_PAUSE,
+    SERVICE_START,
+    Timer,
+)
+from homeassistant.components.timer.const import (
+    ATTR_DURATION,
     EVENT_TIMER_CANCELLED,
     EVENT_TIMER_CHANGED,
     EVENT_TIMER_FINISHED,
     EVENT_TIMER_PAUSED,
     EVENT_TIMER_RESTARTED,
     EVENT_TIMER_STARTED,
-    SERVICE_CANCEL,
-    SERVICE_CHANGE,
-    SERVICE_FINISH,
-    SERVICE_PAUSE,
-    SERVICE_START,
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
-    Timer,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -48,14 +58,11 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import StoredState, async_get
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -424,7 +431,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
         ATTR_LAST_TRANSITION: "cancelled",
     }
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CHANGE,
@@ -451,8 +458,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
     }
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Not possible to change timer timer.test1 beyond duration",
+        ServiceValidationError,
+        match="Cannot change timer timer.test1 beyond its duration",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -462,8 +469,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
         )
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Not possible to change timer timer.test1 to negative time remaining",
+        ServiceValidationError,
+        match="Cannot change timer timer.test1 to a negative remaining time",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -520,8 +527,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
     }
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Timer timer.test1 is not running, only active timers can be changed",
+        ServiceValidationError,
+        match="Timer timer.test1 is not running. Only active timers can be changed",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1096,6 +1103,36 @@ async def test_ws_delete(
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, timer_id) is None
 
 
+async def test_ws_delete_running_timer(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
+) -> None:
+    """Test deleting a running timer does not fire the finished event."""
+    assert await storage_setup()
+    timer_entity_id = f"{DOMAIN}.{DOMAIN}_from_storage"
+    events = async_capture_events(hass, EVENT_TIMER_FINISHED)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_START,
+        {CONF_ENTITY_ID: timer_entity_id, CONF_DURATION: 10},
+        blocking=True,
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 6, "type": f"{DOMAIN}/delete", f"{DOMAIN}_id": "from_storage"}
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=20))
+    await hass.async_block_till_done()
+
+    assert not events
+
+
 async def test_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1344,7 +1381,7 @@ async def test_restore_active_resume(
 
     # In patch make sure we ignore microseconds
     with patch(
-        "homeassistant.components.timer.dt_util.utcnow",
+        "homeassistant.components.timer.entity.dt_util.utcnow",
         return_value=simulated_utc_now.replace(microsecond=999),
     ):
         await entity.async_added_to_hass()
@@ -1402,7 +1439,8 @@ async def test_restore_active_finished_outside_grace(
     entity.entity_id = "timer.test"
 
     with patch(
-        "homeassistant.components.timer.dt_util.utcnow", return_value=simulated_utc_now
+        "homeassistant.components.timer.entity.dt_util.utcnow",
+        return_value=simulated_utc_now,
     ):
         await entity.async_added_to_hass()
         await hass.async_block_till_done()
@@ -1415,3 +1453,144 @@ async def test_restore_active_finished_outside_grace(
         ATTR_RESTORE: True,
     }
     assert len(events) == 1
+
+
+# A consumer that answers the timer's own idle -> active transition with
+# another timer.start. `to` is spelled out so that `match_all` is False and
+# the trigger ignores the attribute-only churn of a restart.
+RESTART_ON_OWN_START = {
+    "automation": [
+        {
+            "alias": "Restart the timer when it starts",
+            "trigger": {
+                "platform": "state",
+                "entity_id": "timer.test1",
+                "to": STATUS_ACTIVE,
+            },
+            "action": {
+                "service": "timer.start",
+                "target": {"entity_id": "timer.test1"},
+            },
+        }
+    ]
+}
+
+
+@contextmanager
+def _recorded_expiries() -> Iterator[list[datetime]]:
+    """Record every run of a timer's expiry callback, real behaviour intact."""
+    expiries: list[datetime] = []
+    original = Timer._async_finished
+
+    @callback
+    def _record(self: Timer, time: datetime) -> None:
+        expiries.append(time)
+        original(self, time)
+
+    with patch.object(Timer, "_async_finished", _record):
+        yield expiries
+
+
+async def test_reentrant_start_does_not_orphan_the_expiry_callback(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """One active timer expires once, however it was restarted."""
+    with _recorded_expiries() as expiries:
+        assert await async_setup_component(
+            hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 100}}}
+        )
+        assert await async_setup_component(hass, "automation", RESTART_ON_OWN_START)
+
+        await hass.services.async_call(
+            DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get("timer.test1").state == STATUS_ACTIVE
+
+        freezer.tick(101)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("timer.test1").state == STATUS_IDLE
+    assert len(expiries) == 1
+
+
+async def test_timer_kept_alive_by_restarts_never_finishes(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A timer restarted well inside its duration never expires."""
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 100}}}
+    )
+    assert await async_setup_component(hass, "automation", RESTART_ON_OWN_START)
+    finished = async_capture_events(hass, EVENT_TIMER_FINISHED)
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    for _ in range(6):
+        freezer.tick(20)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get("timer.test1").state == STATUS_ACTIVE
+
+    assert not finished
+
+
+# The same shape against async_change. `mode: parallel` matters: in single mode
+# the automation is still running when its own action rewrites the state, so the
+# reentrant run is dropped and the window never opens.
+REARM_ON_DEADLINE_MOVE = {
+    "automation": [
+        {
+            "alias": "Re-arm the timer when its deadline moves",
+            "trigger": {
+                "platform": "state",
+                "entity_id": "timer.test1",
+                "attribute": "finishes_at",
+            },
+            "mode": "parallel",
+            "action": {
+                "service": "timer.start",
+                "target": {"entity_id": "timer.test1"},
+            },
+        }
+    ]
+}
+
+
+async def test_change_does_not_orphan_the_expiry_callback(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Changing a timer a consumer answers with a start expires it once."""
+    with _recorded_expiries() as expiries:
+        assert await async_setup_component(
+            hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 100}}}
+        )
+        assert await async_setup_component(hass, "automation", REARM_ON_DEADLINE_MOVE)
+
+        await hass.services.async_call(
+            DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        )
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CHANGE,
+            {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -5},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get("timer.test1").state == STATUS_ACTIVE
+
+        freezer.tick(101)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert len(expiries) == 1

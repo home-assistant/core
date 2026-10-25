@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -107,12 +107,12 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_LANGUAGE_CODE,
                         default=self.config_entry.options.get(CONF_LANGUAGE_CODE),
-                    ): vol.In(SUPPORTED_LANGUAGE_CODES),
+                    ): probatio.In(SUPPORTED_LANGUAGE_CODES),
                 }
             ),
         )

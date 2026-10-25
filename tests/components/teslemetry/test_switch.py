@@ -1,24 +1,51 @@
 """Test the Teslemetry switch platform."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
-from tesla_fleet_api.exceptions import InvalidCommand
+from tesla_fleet_api.exceptions import InvalidCommand, InvalidRequest, TeslaFleetError
 from teslemetry_stream import Signal
 
+from homeassistant.components.labs import async_update_preview_feature
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.components.teslemetry.const import (
+    DOMAIN,
+    LABS_CHARGE_ON_SOLAR_FEATURE,
+)
+from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
-from . import assert_entities, assert_entities_alt, reload_platform, setup_platform
-from .const import COMMAND_ERRORS, COMMAND_OK, VEHICLE_DATA_ALT
+from . import (
+    assert_entities,
+    assert_entities_alt,
+    mock_config_entry,
+    reload_platform,
+    setup_platform,
+)
+from .const import COMMAND_ERRORS, COMMAND_OK, VEHICLE_DATA_ALT, VIN
+
+
+async def _async_enable_charge_on_solar_preview_feature(hass: HomeAssistant) -> None:
+    """Enable the Teslemetry charge-on-solar preview feature."""
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, True)
 
 
 async def test_switch(
@@ -148,8 +175,90 @@ async def test_switch_command_errors(hass: HomeAssistant, response: dict) -> Non
         )
 
 
+@pytest.mark.parametrize(
+    ("service", "method", "reason", "expected"),
+    [
+        pytest.param(
+            SERVICE_TURN_ON,
+            "Vehicle.charge_start",
+            "is_charging",
+            STATE_ON,
+            id="charge_start_is_charging",
+        ),
+        pytest.param(
+            SERVICE_TURN_OFF,
+            "Vehicle.charge_stop",
+            "not_charging",
+            STATE_OFF,
+            id="charge_stop_not_charging",
+        ),
+    ],
+)
+async def test_switch_charge_accepted_reason(
+    hass: HomeAssistant, service: str, method: str, reason: str, expected: str
+) -> None:
+    """Tests that charge commands already in the requested state do not raise."""
+
+    await setup_platform(hass, [Platform.SWITCH])
+
+    with patch(
+        f"tesla_fleet_api.teslemetry.{method}",
+        return_value={"response": {"result": False, "reason": reason}},
+    ) as call:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "switch.test_charge"},
+            blocking=True,
+        )
+    call.assert_called_once()
+    assert hass.states.get("switch.test_charge").state == expected
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_switch_command_exception(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("side_effect", "message"),
+    [
+        pytest.param(
+            InvalidCommand,
+            "Command returned exception: The data request or command is unknown.",
+            id="no_data",
+        ),
+        pytest.param(
+            InvalidRequest(
+                {"error": "invalid_request", "error_description": "detail from server"}
+            ),
+            "Command returned exception: detail from server",
+            id="error_description",
+        ),
+        pytest.param(
+            InvalidRequest(
+                {
+                    "response": None,
+                    "error": "vehicle rejected the command",
+                    "error_description": "",
+                }
+            ),
+            "Command returned exception: vehicle rejected the command",
+            id="error",
+        ),
+        pytest.param(
+            InvalidCommand({"error": "invalid_command", "error_description": ""}),
+            "Command returned exception: The data request or command is unknown.",
+            id="error_is_key",
+        ),
+        pytest.param(
+            InvalidRequest({"response": None}),
+            "Command returned exception: The request body is not valid",
+            id="no_error_detail",
+        ),
+    ],
+)
+async def test_switch_command_exception(
+    hass: HomeAssistant,
+    side_effect: type[TeslaFleetError] | TeslaFleetError,
+    message: str,
+) -> None:
     """Tests that an energy command SDK exception raises HomeAssistantError."""
 
     await setup_platform(hass, [Platform.SWITCH])
@@ -157,9 +266,9 @@ async def test_switch_command_exception(hass: HomeAssistant) -> None:
     with (
         patch(
             "tesla_fleet_api.teslemetry.EnergySite.storm_mode",
-            side_effect=InvalidCommand,
+            side_effect=side_effect,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError, match=f"^{message}$"),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -205,3 +314,363 @@ async def test_switch_streaming(
     assert hass.states.get("switch.test_auto_steering_wheel_heater").state == STATE_ON
     assert hass.states.get("switch.test_defrost").state == STATE_OFF
     assert hass.states.get("switch.test_charge").state == STATE_ON
+
+
+async def test_charge_on_solar_switch_disabled_by_default(
+    hass: HomeAssistant,
+) -> None:
+    """Test charge-on-solar switch is disabled by default."""
+    await setup_platform(hass, [Platform.SWITCH])
+
+    assert hass.states.get("switch.test_charge_on_solar") is None
+
+
+async def test_charge_on_solar_switch_enabled_by_labs(
+    hass: HomeAssistant,
+) -> None:
+    """Test charge-on-solar switch appears when Labs feature is enabled."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    await setup_platform(hass, [Platform.SWITCH])
+
+    assert (state := hass.states.get("switch.test_charge_on_solar")) is not None
+    assert state.attributes["assumed_state"] is True
+
+
+@pytest.mark.parametrize(
+    ("service", "enabled", "expected_state"),
+    [
+        (SERVICE_TURN_ON, True, STATE_ON),
+        (SERVICE_TURN_OFF, False, STATE_OFF),
+    ],
+)
+async def test_charge_on_solar_switch_services(
+    hass: HomeAssistant,
+    service: str,
+    enabled: bool,
+    expected_state: str,
+) -> None:
+    """Test charge-on-solar switch service calls use the default lower limit."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch("teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc") as (
+        listener
+    ):
+        listener.return_value = lambda: None
+        entry = await setup_platform(hass, [Platform.SWITCH])
+
+        for call in listener.call_args_list:
+            call.args[0](91)
+
+        with patch(
+            "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+            return_value=COMMAND_OK,
+        ) as command:
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                service,
+                {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+                blocking=True,
+            )
+            command.assert_called_once_with(
+                enabled=enabled,
+                lower_charge_limit=20,
+                upper_charge_limit=91,
+            )
+
+        assert (state := hass.states.get("switch.test_charge_on_solar")) is not None
+        assert state.state == expected_state
+        assert state.attributes["assumed_state"] is True
+
+        await reload_platform(hass, entry, [Platform.SWITCH])
+
+        assert (restored := hass.states.get("switch.test_charge_on_solar")) is not None
+        assert restored.state == expected_state
+        assert restored.attributes["assumed_state"] is True
+
+
+async def test_charge_on_solar_switch_services_polling(
+    hass: HomeAssistant,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test charge-on-solar switch service calls fetch the polled charge limit."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    await setup_platform(hass, [Platform.SWITCH])
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=20,
+            upper_charge_limit=80,
+        )
+
+    assert (state := hass.states.get("switch.test_charge_on_solar")) is not None
+    assert state.state == STATE_ON
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_old_firmware")
+async def test_charge_on_solar_switch_services_old_firmware(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a non-polling vehicle below the streaming firmware still fetches the polled charge limit."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    # The charge limit number is the polling entity that keeps the coordinator running.
+    await setup_platform(hass, [Platform.SWITCH, Platform.NUMBER])
+
+    # This vehicle's raw poll flag is off, so its coordinator gets no initial
+    # refresh; wait for the first poll so the charge limit is known.
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=20,
+            upper_charge_limit=80,
+        )
+
+    assert (state := hass.states.get("switch.test_charge_on_solar")) is not None
+    assert state.state == STATE_ON
+
+
+async def test_charge_on_solar_switch_uses_lower_limit_number(
+    hass: HomeAssistant,
+) -> None:
+    """Test the switch sends the value set on the lower limit number entity."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch("teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc") as (
+        listener
+    ):
+        listener.return_value = lambda: None
+        await setup_platform(hass, [Platform.SWITCH, Platform.NUMBER])
+
+        for call in listener.call_args_list:
+            call.args[0](91)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 40},
+        blocking=True,
+    )
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=40,
+            upper_charge_limit=91,
+        )
+
+
+async def test_charge_on_solar_switch_turn_on_uses_restored_charge_limit(
+    hass: HomeAssistant,
+) -> None:
+    """Test turning on after a restart uses the restored charge limit, not a guess."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch("teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc") as (
+        listener
+    ):
+        listener.return_value = lambda: None
+        entry = await setup_platform(hass, [Platform.SWITCH])
+
+        for call in listener.call_args_list:
+            call.args[0](65)
+
+        await reload_platform(hass, entry, [Platform.SWITCH])
+
+        with patch(
+            "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+            return_value=COMMAND_OK,
+        ) as command:
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+                blocking=True,
+            )
+            command.assert_called_once_with(
+                enabled=True,
+                lower_charge_limit=20,
+                upper_charge_limit=65,
+            )
+
+
+async def test_charge_on_solar_switch_uses_limit_when_number_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the switch still sends the user's limit once the number entity is registry-disabled."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch("teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc") as (
+        listener
+    ):
+        listener.return_value = lambda: None
+        entry = await setup_platform(hass, [Platform.SWITCH, Platform.NUMBER])
+
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                ATTR_VALUE: 35,
+            },
+            blocking=True,
+        )
+
+        entity_registry.async_update_entity(
+            "number.test_charge_on_solar_lower_limit",
+            disabled_by=er.RegistryEntryDisabler.USER,
+        )
+        await hass.async_block_till_done()
+
+        await reload_platform(hass, entry, [Platform.SWITCH, Platform.NUMBER])
+
+    assert hass.states.get("number.test_charge_on_solar_lower_limit") is None
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=35,
+            upper_charge_limit=None,
+        )
+
+
+async def test_charge_on_solar_switch_uses_stored_limit_when_number_disabled(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the switch sends the stored limit after a restart with the number long disabled."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    # No restore state exists for the disabled number, as once it has expired.
+    hass_storage[f"{DOMAIN}.charge_on_solar.{entry.entry_id}"] = {
+        "version": 1,
+        "data": {VIN: {"enabled": False, "lower_limit": 35, "charge_limit_soc": None}},
+    }
+    entity_registry.async_get_or_create(
+        NUMBER_DOMAIN,
+        DOMAIN,
+        f"{VIN}-charge_on_solar_lower_limit",
+        config_entry=entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    with patch(
+        "homeassistant.components.teslemetry.PLATFORMS",
+        [Platform.SWITCH, Platform.NUMBER],
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("number.test_charge_on_solar_lower_limit") is None
+    assert (state := hass.states.get("switch.test_charge_on_solar")) is not None
+    assert state.state == STATE_OFF
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=35,
+            upper_charge_limit=None,
+        )
+
+
+async def test_charge_on_solar_switch_turn_on_omits_unknown_charge_limit(
+    hass: HomeAssistant,
+) -> None:
+    """Test turning on omits the upper limit rather than guessing when unknown."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch("teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc") as (
+        listener
+    ):
+        listener.return_value = lambda: None
+        await setup_platform(hass, [Platform.SWITCH])
+
+        with patch(
+            "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+            return_value=COMMAND_OK,
+        ) as command:
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+                blocking=True,
+            )
+            command.assert_called_once_with(
+                enabled=True,
+                lower_charge_limit=20,
+                upper_charge_limit=None,
+            )
+
+
+async def test_disable_charge_on_solar_preview_removes_registry_entries(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabling preview removes charge-on-solar switch from entity registry."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    entry = await setup_platform(hass, [Platform.SWITCH])
+
+    assert entity_registry.async_get("switch.test_charge_on_solar") is not None
+
+    with patch.object(hass.config_entries, "async_schedule_reload"):
+        await async_update_preview_feature(
+            hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, False
+        )
+        await hass.async_block_till_done()
+
+    await reload_platform(hass, entry, [Platform.SWITCH])
+
+    assert entity_registry.async_get("switch.test_charge_on_solar") is None

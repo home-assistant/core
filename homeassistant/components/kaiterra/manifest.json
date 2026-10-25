@@ -1,6 +1,7 @@
 {
   "domain": "kaiterra",
   "name": "Kaiterra",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@Michsior14"],
   "documentation": "https://www.home-assistant.io/integrations/kaiterra",
   "iot_class": "cloud_polling",

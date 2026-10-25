@@ -5,13 +5,12 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.kitchen_sink import DOMAIN, image
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture

@@ -10,6 +10,13 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions, PartialBackupOptions
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_call_logger_set_level,
+    async_fire_time_changed,
+    async_get_persistent_notifications,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from zwave_js_server.client import Client
 from zwave_js_server.const import SecurityClass
 from zwave_js_server.event import Event
@@ -26,7 +33,12 @@ from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -44,14 +56,6 @@ from .common import (
     TEST_SENSITIVE_NETWORK_KEY,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    async_call_logger_set_level,
-    async_fire_time_changed,
-    async_get_persistent_notifications,
-)
-from tests.typing import WebSocketGenerator
-
 CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 
 
@@ -60,6 +64,74 @@ def connect_timeout_fixture() -> Generator[int]:
     """Mock the connect timeout."""
     with patch("homeassistant.components.zwave_js.CONNECT_TIMEOUT", new=0) as timeout:
         yield timeout
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "data", "expected_unique_id", "expected_data"),
+    [
+        pytest.param(
+            3245146787,
+            {"url": "ws://test.org"},
+            "3245146787",
+            {"url": "ws://test.org"},
+            id="int_unique_id",
+        ),
+        pytest.param(
+            "3245146787",
+            {"url": "ws://test.org", "network_key": "abc123"},
+            "3245146787",
+            {"url": "ws://test.org", "s0_legacy_key": "abc123"},
+            id="network_key_only",
+        ),
+        pytest.param(
+            "3245146787",
+            {
+                "url": "ws://test.org",
+                "network_key": "abc123",
+                "s0_legacy_key": "def456",
+            },
+            "3245146787",
+            {"url": "ws://test.org", "s0_legacy_key": "def456"},
+            id="existing_s0_legacy_key_wins",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("client")
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    unique_id: int | str,
+    data: dict[str, Any],
+    expected_unique_id: str,
+    expected_data: dict[str, Any],
+) -> None:
+    """Test migration of a version 1.1 config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=data, unique_id=unique_id, minor_version=1
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.zwave_js.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert entry.unique_id == expected_unique_id
+    assert dict(entry.data) == expected_data
+
+
+async def test_migrate_entry_from_future_version(hass: HomeAssistant) -> None:
+    """Test migration of a config entry from a future version fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://test.org"}, unique_id="3245146787", version=2
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_entry_setup_unload(
@@ -88,6 +160,33 @@ async def test_home_assistant_stop(
     await hass.async_stop()
 
     assert client.disconnect.call_count == 1
+
+
+async def test_home_assistant_stop_waits_for_neighbors_refresh(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+) -> None:
+    """Test stop disconnects only after a neighbors refresh releases the lock.
+
+    The refresh turns the radio back on before releasing, so disconnecting
+    earlier could leave the radio off.
+    """
+    disconnected = asyncio.Event()
+
+    async def mock_disconnect() -> None:
+        disconnected.set()
+
+    client.disconnect.side_effect = mock_disconnect
+
+    async with integration.runtime_data.network_neighbors_lock:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        for _ in range(10):
+            await asyncio.sleep(0)
+        assert not disconnected.is_set()
+
+    await hass.async_block_till_done()
+    assert disconnected.is_set()
 
 
 @pytest.mark.usefixtures("client", "connect_timeout")
@@ -825,7 +924,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     await hass.async_block_till_done()
     state = hass.states.get(custom_entity)
     assert state
-    assert state.name == "Custom Entity Name"
+    assert state.name == "Custom Device Name Custom Entity Name"
     assert not hass.states.get(motion_entity)
 
     node_state = deepcopy(zp3111_not_ready_state)
@@ -861,7 +960,7 @@ async def test_existing_node_not_replaced_when_not_ready(
 
     state = hass.states.get(custom_entity)
     assert state
-    assert state.name == "Custom Entity Name"
+    assert state.name == "Custom Device Name Custom Entity Name"
 
     event = Event(
         type="ready",
@@ -894,7 +993,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     state = hass.states.get(custom_entity)
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.name == "Custom Entity Name"
+    assert state.name == "Custom Device Name Custom Entity Name"
 
 
 @pytest.mark.usefixtures("client")
@@ -909,13 +1008,31 @@ async def test_null_name(
 
 
 @pytest.mark.usefixtures("addon_installed", "addon_info")
+@pytest.mark.parametrize(
+    "existing_addon_options",
+    [
+        pytest.param({}, id="unconfigured"),
+        pytest.param(
+            {
+                "device": "/old",
+                "log_level": "debug",
+                "log_to_file": True,
+                "rf_region": "Europe",
+            },
+            id="user-configured",
+        ),
+    ],
+)
 async def test_start_addon(
     hass: HomeAssistant,
     install_addon: AsyncMock,
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
+    addon_options: dict[str, Any],
+    existing_addon_options: dict[str, Any],
 ) -> None:
-    """Test start the Z-Wave JS add-on during entry setup."""
+    """Test entry setup preserves user options when starting the Z-Wave JS add-on."""
+    addon_options.update(existing_addon_options)
     device = "/test"
     s0_legacy_key = "s0_legacy"
     s2_access_control_key = "s2_access_control"
@@ -923,7 +1040,7 @@ async def test_start_addon(
     s2_unauthenticated_key = "s2_unauthenticated"
     lr_s2_access_control_key = "lr_s2_access_control"
     lr_s2_authenticated_key = "lr_s2_authenticated"
-    addon_options = {
+    expected_options = existing_addon_options | {
         "device": device,
         "s0_legacy_key": s0_legacy_key,
         "s2_access_control_key": s2_access_control_key,
@@ -955,8 +1072,9 @@ async def test_start_addon(
     assert install_addon.call_count == 0
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        "core_zwave_js", AddonsOptions(config=addon_options)
+        "core_zwave_js", AddonsOptions(config=expected_options)
     )
+    assert addon_options == expected_options
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_zwave_js")
 
@@ -966,7 +1084,7 @@ async def test_start_addon(
     "set_addon_options_side_effect",
     [
         SupervisorError(
-            "not a valid value for dictionary value @ data['options']. "
+            "not a valid value at 'options'. "
             f"Got {{'s0_legacy_key': '{TEST_SENSITIVE_NETWORK_KEY}'}}"
         )
     ],
@@ -996,7 +1114,7 @@ async def test_start_addon_redacts_set_options_error(
     assert set_addon_options.call_count == 1
     assert start_addon.call_count == 0
     assert "Failed to set the Z-Wave JS app options" in caplog.text
-    assert "not a valid value for dictionary value" in caplog.text
+    assert "not a valid value at" in caplog.text
     assert REDACTED in caplog.text
     assert secret not in caplog.text
 
@@ -1280,10 +1398,14 @@ async def test_issue_registry(
 
 @pytest.mark.usefixtures("addon_running", "client")
 @pytest.mark.parametrize(
-    ("stop_addon_side_effect", "entry_state"),
+    ("stop_addon_side_effect", "entry_state", "entry_reason"),
     [
-        (None, ConfigEntryState.NOT_LOADED),
-        (SupervisorError("Boom"), ConfigEntryState.FAILED_UNLOAD),
+        (None, ConfigEntryState.NOT_LOADED, None),
+        (
+            SupervisorError("Boom"),
+            ConfigEntryState.FAILED_UNLOAD,
+            "Failed to stop the Z-Wave JS app",
+        ),
     ],
 )
 async def test_stop_addon(
@@ -1292,6 +1414,7 @@ async def test_stop_addon(
     stop_addon: AsyncMock,
     stop_addon_side_effect: Exception | None,
     entry_state: ConfigEntryState,
+    entry_reason: str | None,
 ) -> None:
     """Test stop the Z-Wave JS add-on on entry unload if entry is disabled."""
     stop_addon.side_effect = stop_addon_side_effect
@@ -1322,6 +1445,7 @@ async def test_stop_addon(
     await hass.async_block_till_done()
 
     assert entry.state is entry_state
+    assert entry.reason == entry_reason
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_zwave_js")
 
@@ -1943,7 +2067,7 @@ async def test_node_model_change(
     assert not hass.states.get(motion_entity)
     state = hass.states.get(custom_entity)
     assert state
-    assert state.name == "Custom Entity Name"
+    assert state.name == "Custom Device Name Custom Entity Name"
 
     # Unload the integration
     assert await hass.config_entries.async_unload(integration.entry_id)
@@ -1973,7 +2097,7 @@ async def test_node_model_change(
     assert not hass.states.get(motion_entity)
     state = hass.states.get(custom_entity)
     assert state
-    assert state.name == "Custom Entity Name"
+    assert state.name == "Custom Device Name Custom Entity Name"
 
 
 @pytest.mark.usefixtures("zp3111", "integration")

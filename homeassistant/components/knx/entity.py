@@ -1,17 +1,19 @@
 """Base classes for KNX entities."""
 
-from dataclasses import dataclass
+from collections.abc import Callable
+import logging
 from typing import TYPE_CHECKING, Any, override
 
 from xknx.devices import Device as XknxDevice
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
 
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ID,
     CONF_NAME,
-    EntityCategory,
+    CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -23,12 +25,14 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN
+from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, KnxEntityIdentifier
 from .storage.config_store import PlatformControllerBase
-from .storage.const import CONF_DEVICE_INFO
+from .storage.entity_store_schema import BaseEntityConfig, KnxEntityData
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _stable_group_address_repr(part: DeviceGroupAddress | int | str | None) -> str:
@@ -79,15 +83,6 @@ def async_migrate_yaml_unique_id(
         ent_reg.async_remove(entity_id)
 
 
-@dataclass(slots=True, frozen=True)
-class KnxEntityIdentifier:
-    """Class to identify KNX entities in KNX frontend."""
-
-    platform: str
-    unique_id: str
-    ui: bool  # ui or yaml entity
-
-
 class KnxUiEntityPlatformController(PlatformControllerBase):
     """Class to manage dynamic adding and reloading of UI entities."""
 
@@ -95,7 +90,7 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
         self,
         knx_module: KNXModule,
         entity_platform: EntityPlatform,
-        entity_class: type[KnxUiEntity],
+        entity_class: Callable[[KNXModule, str, KnxEntityData[Any]], KnxUiEntity],
     ) -> None:
         """Initialize the UI platform."""
         self._knx_module = knx_module
@@ -103,7 +98,7 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
         self._entity_class = entity_class
 
     @override
-    async def create_entity(self, unique_id: str, config: dict[str, Any]) -> None:
+    async def create_entity(self, unique_id: str, config: KnxEntityData[Any]) -> None:
         """Add a new UI entity."""
         await self._entity_platform.async_add_entities(
             [self._entity_class(self._knx_module, unique_id, config)]
@@ -111,16 +106,24 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
 
     @override
     async def update_entity(
-        self, entity_entry: RegistryEntry, config: dict[str, Any]
+        self, entity_entry: RegistryEntry, config: KnxEntityData[Any]
     ) -> None:
-        """Update an existing UI entities configuration."""
-        await self._entity_platform.async_remove_entity(entity_entry.entity_id)
+        """Update an existing UI entities configuration.
+
+        A disabled entity was never added to the platform, so there is nothing
+        to remove - the new configuration applies once it is enabled.
+        """
+        if entity_entry.entity_id in self._entity_platform.entities:
+            await self._entity_platform.async_remove_entity(entity_entry.entity_id)
         await self.create_entity(unique_id=entity_entry.unique_id, config=config)
 
 
 class _KnxEntityBase(Entity):
     """Representation of a KNX entity."""
 
+    # `assumed_state` toggles when a restored state is confirmed by the bus,
+    # which would otherwise write a new attributes row for every entity on startup
+    _unrecorded_attributes = frozenset({ATTR_ASSUMED_STATE})
     _attr_has_entity_name = True
     _attr_should_poll = False
 
@@ -145,35 +148,65 @@ class _KnxEntityBase(Entity):
         self.async_write_ha_state()
 
     @override
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Build the identifier and arrange for the group address map to be updated.
+
+        Runs for every add attempt, including the ones the platform aborts
+        because the entity is disabled.
+        """
+        await super().async_prepare_to_add_to_hass()
+        if not (uid := self.unique_id):
+            return
+        self._knx_entity_identifier = KnxEntityIdentifier(
+            platform=self.platform.domain,
+            unique_id=uid,
+            ui=isinstance(self, KnxUiEntity),
+        )
+        self.async_on_remove(self._untrack_group_addresses)
+
+    @callback
+    def _untrack_group_addresses(self) -> None:
+        """Update the group address map when the entity is aborted or removed.
+
+        A disabled entity - aborted at setup or removing itself when disabled
+        at runtime - stays configured and is tracked as disabled.
+        """
+        if (identifier := self._knx_entity_identifier) is None:
+            return
+        group_addresses = self._device.group_addresses()
+        self._knx_module.remove_from_group_address_entities(group_addresses, identifier)
+        if self.registry_entry is not None and self.registry_entry.disabled:
+            self._knx_module.add_disabled_entity(group_addresses, identifier)
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Store register state change callback and start device object."""
+        # xknx log messages and exceptions name the device
+        self._device.name = self.entity_id
         self._device.register_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_add(self._device)
-        if uid := self.unique_id:
-            self._knx_entity_identifier = KnxEntityIdentifier(
-                platform=self.platform_data.domain,
-                unique_id=uid,
-                ui=isinstance(self, KnxUiEntity),
-            )
+        if (identifier := self._knx_entity_identifier) is not None:
             self._knx_module.add_to_group_address_entities(
                 group_addresses=self._device.group_addresses(),
-                identifier=self._knx_entity_identifier,
+                identifier=identifier,
             )
 
         # super call needed to have methods of multi-inherited classes called
         # eg. for restoring state (like _KNXSwitch)
         await super().async_added_to_hass()
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Rename the xknx device after the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._device.name = self.entity_id
+
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self._device.unregister_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_remove(self._device)
-        if self._knx_entity_identifier:
-            self._knx_module.remove_from_group_address_entities(
-                group_addresses=self._device.group_addresses(),
-                identifier=self._knx_entity_identifier,
-            )
 
 
 class KnxYamlEntity(_KnxEntityBase):
@@ -188,15 +221,44 @@ class KnxYamlEntity(_KnxEntityBase):
         """Initialize the YAML entity.
 
         `unique_id` is the `(new_stable_id, legacy_id)` tuple from
-        `build_yaml_unique_id`; the legacy id is migrated to the stable one.
+        `build_yaml_unique_id`; the legacy id is migrated to the stable one. A
+        user-defined `unique_id` in the config takes precedence, and an existing
+        auto-generated entity is migrated to it so history is preserved. Removing
+        a user-defined `unique_id` again cannot be migrated back. If the id is
+        already used by another entity, the generated id is kept instead.
         """
         new_unique_id, legacy_unique_id = unique_id
+        platform = async_get_current_platform().domain
         async_migrate_yaml_unique_id(
-            knx_module.hass,
-            async_get_current_platform().domain,
-            legacy_unique_id,
-            new_unique_id,
+            knx_module.hass, platform, legacy_unique_id, new_unique_id
         )
+        if (user_unique_id := entity_config.get(CONF_UNIQUE_ID)) and (
+            user_unique_id != new_unique_id
+        ):
+            ent_reg = er.async_get(knx_module.hass)
+            generated_entity_id = ent_reg.async_get_entity_id(
+                platform, DOMAIN, new_unique_id
+            )
+            if generated_entity_id is None:
+                # new entity, or already migrated on an earlier run
+                new_unique_id = user_unique_id
+            else:
+                try:
+                    # rename the existing entry, preserving history and settings
+                    ent_reg.async_update_entity(
+                        generated_entity_id, new_unique_id=user_unique_id
+                    )
+                except ValueError:
+                    # id already belongs to another entity - keep the generated one
+                    _LOGGER.warning(
+                        "Configured `unique_id: %s` for %s entity '%s' is already"
+                        " in use; keeping the generated unique id instead",
+                        user_unique_id,
+                        platform,
+                        entity_config[CONF_NAME],
+                    )
+                else:
+                    new_unique_id = user_unique_id
         self._knx_module = knx_module
         self._attr_name = entity_config[CONF_NAME] or None
         self._attr_unique_id = new_unique_id
@@ -212,7 +274,7 @@ class KnxYamlEntity(_KnxEntityBase):
                 manufacturer="KNX",
             )
             if device_name := device.get(CONF_NAME):
-                self._attr_device_info["name"] = device_name
+                self._attr_device_info.name = device_name
 
         default_entity_id: str | None
         if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
@@ -223,14 +285,15 @@ class KnxUiEntity(_KnxEntityBase):
     """Representation of a KNX UI entity."""
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, entity_config: dict[str, Any]
+        self, knx_module: KNXModule, unique_id: str, entity_config: BaseEntityConfig
     ) -> None:
         """Initialize the UI entity."""
         self._knx_module = knx_module
 
-        self._attr_name = entity_config[CONF_NAME]
+        self._attr_name = entity_config.name
         self._attr_unique_id = unique_id
-        if entity_category := entity_config.get(CONF_ENTITY_CATEGORY):
-            self._attr_entity_category = EntityCategory(entity_category)
-        if device_info := entity_config.get(CONF_DEVICE_INFO):
-            self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
+        self._attr_entity_category = entity_config.entity_category
+        if entity_config.device_info:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, entity_config.device_info)}
+            )

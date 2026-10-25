@@ -1,8 +1,13 @@
 """The tests for Climate device actions."""
 
+from probatio import Invalid, to_field_list
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_device_automations,
+    async_mock_service,
+)
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.climate import DOMAIN, HVACMode, const, device_action
@@ -16,12 +21,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
 
 
 @pytest.mark.parametrize(
@@ -400,7 +399,7 @@ async def test_capabilities(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
+        to_field_list(
             capabilities["extra_fields"], custom_serializer=cv.custom_serializer
         )
         == expected_capabilities
@@ -518,7 +517,7 @@ async def test_capabilities_legacy(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
+        to_field_list(
             capabilities["extra_fields"], custom_serializer=cv.custom_serializer
         )
         == expected_capabilities
@@ -558,8 +557,24 @@ async def test_capabilities_missing_entity(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
+        to_field_list(
             capabilities["extra_fields"], custom_serializer=cv.custom_serializer
         )
         == expected_capabilities
     )
+
+
+async def test_set_preset_mode_without_preset_mode_is_invalid(
+    hass: HomeAssistant,
+) -> None:
+    """Test the action type selects the schema that reports the error."""
+    with pytest.raises(Invalid, match="required key not provided at 'preset_mode'"):
+        await device_action.async_validate_action_config(
+            hass,
+            {
+                "domain": DOMAIN,
+                "device_id": "abcdefgh",
+                "entity_id": "climate.test",
+                "type": "set_preset_mode",
+            },
+        )

@@ -2,9 +2,11 @@
 
 from typing import Any, cast
 from unittest.mock import MagicMock
+from urllib.error import URLError
 
 from pylutron import LutronException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lutron.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -12,11 +14,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
 
 async def test_setup_entry(
-    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting up the integration."""
     mock_config_entry.add_to_hass(hass)
@@ -29,7 +32,6 @@ async def test_setup_entry(
 
     # Verify that the unique ID is generated correctly.
     # This prevents regression in unique ID generation which would be a breaking change.
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     # The light from mock_lutron has uuid="light_uuid" and guid="12345678901"
     expected_unique_id = "12345678901_light_uuid"
     entry = entity_registry.async_get("light.test_area_test_light")
@@ -49,17 +51,37 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("method", ["load_xml_db", "connect"])
+@pytest.mark.parametrize(
+    ("method", "error"),
+    [
+        pytest.param(
+            "load_xml_db",
+            LutronException("load_xml_db failed"),
+            id="load_xml_db_lutron",
+        ),
+        pytest.param(
+            "load_xml_db",
+            URLError(OSError(111, "Connection refused")),
+            id="load_xml_db_urlerror",
+        ),
+        pytest.param(
+            "load_xml_db", TimeoutError("timed out"), id="load_xml_db_timeout"
+        ),
+        pytest.param("connect", LutronException("connect failed"), id="connect_lutron"),
+        pytest.param("connect", OSError(113, "No route to host"), id="connect_oserror"),
+    ],
+)
 async def test_setup_entry_not_ready(
     hass: HomeAssistant,
     mock_lutron: MagicMock,
     mock_config_entry: MockConfigEntry,
     method: str,
+    error: Exception,
 ) -> None:
-    """Test setting up the integration when Lutron repeater is not ready."""
+    """Test that transient connection failures retry setup."""
     mock_config_entry.add_to_hass(hass)
 
-    getattr(mock_lutron, method).side_effect = LutronException(f"{method} failed")
+    getattr(mock_lutron, method).side_effect = error
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -68,7 +90,11 @@ async def test_setup_entry_not_ready(
 
 
 async def test_unique_id_migration(
-    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test migration of legacy unique IDs to the newer UUID-based format.
 
@@ -81,9 +107,6 @@ async def test_unique_id_migration(
 
     # Setup registries with an entry using the "legacy" unique ID format.
     # This simulates a user who had configured the integration in an older version.
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-
     legacy_unique_id = "12345678901_light_legacy_uuid"
     new_unique_id = "12345678901_light_uuid"
 

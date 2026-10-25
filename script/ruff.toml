@@ -9,3 +9,4 @@ forced-separate = [
 [lint.flake8-tidy-imports.banned-api]
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
+"voluptuous".msg = "use probatio instead"

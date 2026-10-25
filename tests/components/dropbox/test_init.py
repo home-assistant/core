@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_dropbox_api import DropboxAuthException, DropboxUnknownException
 
 from homeassistant.components.dropbox.const import DOMAIN, OAUTH2_SCOPES
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_dropbox_client")

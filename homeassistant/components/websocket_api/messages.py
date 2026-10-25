@@ -4,7 +4,7 @@ from functools import lru_cache
 import logging
 from typing import Any, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     COMPRESSED_STATE_ATTRIBUTES,
@@ -27,13 +27,15 @@ from . import const
 _LOGGER: Final = logging.getLogger(__name__)
 
 # Minimal requirements of a message
-MINIMAL_MESSAGE_SCHEMA: Final = vol.Schema(
-    {vol.Required("id"): cv.positive_int, vol.Required("type"): cv.string},
-    extra=vol.ALLOW_EXTRA,
+MINIMAL_MESSAGE_SCHEMA: Final = probatio.Schema(
+    {probatio.Required("id"): cv.positive_int, probatio.Required("type"): cv.string},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 # Base schema to extend by message handlers
-BASE_COMMAND_MESSAGE_SCHEMA: Final = vol.Schema({vol.Required("id"): cv.positive_int})
+BASE_COMMAND_MESSAGE_SCHEMA: Final = probatio.Schema(
+    {probatio.Required("id"): cv.positive_int}
+)
 
 STATE_DIFF_ADDITIONS = "+"
 STATE_DIFF_REMOVALS = "-"

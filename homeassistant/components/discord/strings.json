@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -22,6 +21,11 @@
         },
         "description": "Refer to the documentation on getting your Discord bot key.\n\n{url}"
       }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with Discord."
     }
   }
 }

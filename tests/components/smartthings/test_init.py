@@ -9,11 +9,13 @@ from pysmartthings import (
     DeviceResponse,
     DeviceStatus,
     Lifecycle,
+    SmartThingsAuthenticationFailedError,
     SmartThingsConnectionError,
     SmartThingsSinkError,
     Subscription,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -51,8 +53,6 @@ from . import (
     setup_integration,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_fixtures() -> None:
@@ -188,23 +188,78 @@ async def test_create_subscription(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_create_subscription_sink_error(
+@pytest.mark.parametrize(
+    "error",
+    [
+        SmartThingsSinkError("Sink error"),
+        SmartThingsConnectionError("Timeout occurred while connecting to SmartThings"),
+    ],
+)
+async def test_create_subscription_error(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    error: Exception,
 ) -> None:
     """Test handling an error when creating a subscription."""
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
-    devices.create_subscription.side_effect = SmartThingsSinkError("Sink error")
+    devices.create_subscription.side_effect = error
 
     await setup_integration(hass, mock_config_entry)
 
     devices.subscribe.assert_not_called()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "create_subscription_error"
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize(
+    "call",
+    [
+        "get_rooms",
+        "get_devices",
+        "get_device_status",
+        "get_device_health",
+        "get_scenes",
+    ],
+)
+async def test_initial_fetch_connection_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    call: str,
+) -> None:
+    """Test retrying setup when the cloud is unreachable while fetching."""
+    getattr(devices, call).side_effect = SmartThingsConnectionError(
+        "Timeout occurred while connecting to SmartThings"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_initial_fetch_authentication_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test starting reauth when authentication fails while fetching."""
+    devices.get_devices.side_effect = SmartThingsAuthenticationFailedError(
+        "Authentication failed"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "authentication_failed"
+    assert len(hass.config_entries.flow.async_progress()) == 1
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -250,6 +305,30 @@ async def test_stale_subscription_id(
         == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
     )
     devices.delete_subscription.assert_called_once_with("test")
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_delete_stale_subscription_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test retrying setup when the old subscription can't be deleted."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_SUBSCRIPTION_ID: "test"},
+    )
+    devices.delete_subscription.side_effect = SmartThingsConnectionError(
+        "Timeout occurred while connecting to SmartThings"
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "delete_subscription_error"
+    devices.create_subscription.assert_not_called()
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -393,6 +472,29 @@ async def test_error_refreshing_token(
         await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_missing_token(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test starting reauth when the config entry has no token."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            key: value
+            for key, value in mock_config_entry.data.items()
+            if key != "token"
+        },
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "missing_token"
+    assert len(hass.config_entries.flow.async_progress()) == 1
 
 
 async def test_hub_via_device(

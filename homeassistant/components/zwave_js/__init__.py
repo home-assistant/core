@@ -38,8 +38,13 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
+    area_registry as ar,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
@@ -162,18 +167,30 @@ PLATFORMS = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if not isinstance(entry.unique_id, str):
-            hass.config_entries.async_update_entry(
-                entry, unique_id=str(entry.unique_id)
-            )
-
     async_setup_services(hass)
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> None:
+    """Migrate old config entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        unique_id = entry.unique_id
+        if not isinstance(unique_id, str):
+            # Old entries stored the home ID as int.
+            unique_id = str(unique_id)
+        data = dict(entry.data)
+        # s0_legacy_key was saved as network_key before s2 was added.
+        if CONF_NETWORK_KEY in data:
+            network_key = data.pop(CONF_NETWORK_KEY)
+            if not data.get(CONF_S0_LEGACY_KEY):
+                data[CONF_S0_LEGACY_KEY] = network_key
+        hass.config_entries.async_update_entry(
+            entry, data=data, unique_id=unique_id, minor_version=2
+        )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> None:
     """Set up Z-Wave JS from a config entry."""
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await async_ensure_addon_running(hass, entry)
@@ -220,9 +237,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> b
 
     entry.async_on_unload(client.disconnect)
 
+    # Local because runtime_data is not set yet if HA shuts down during setup
+    network_neighbors_lock = asyncio.Lock()
+
     async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
-        await client.disconnect()
+        # Wait for a running network neighbors refresh, so the client is not
+        # disconnected before it has turned the radio back on
+        async with network_neighbors_lock:
+            await client.disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
@@ -255,6 +278,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> b
     entry_runtime_data = ZwaveJSData(
         client=client,
         driver_events=driver_events,
+        network_neighbors_lock=network_neighbors_lock,
     )
     entry.runtime_data = entry_runtime_data
 
@@ -288,8 +312,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> b
             )
 
     entry.async_on_unload(entry.async_on_state_change(on_config_entry_loaded))
-
-    return True
 
 
 def _get_listen_task_error(
@@ -415,6 +437,7 @@ class DriverEvents:
                 self.hass,
                 DOMAIN,
                 f"migrate_unique_id.{self.config_entry.entry_id}",
+                config_entry_id=self.config_entry.entry_id,
                 data={
                     "config_entry_id": self.config_entry.entry_id,
                     "config_entry_title": self.config_entry.title,
@@ -847,10 +870,15 @@ class NodeEvents:
             issue_id = f"device_config_file_changed.{device.id}"
             if await node.async_has_device_config_changed():
                 device_name = device.name_by_user or device.name or "Unnamed device"
+                if device.area_id and (
+                    area := ar.async_get(self.hass).async_get_area(device.area_id)
+                ):
+                    device_name = f"{device_name} ({area.name})"
                 async_create_issue(
                     self.hass,
                     DOMAIN,
                     issue_id,
+                    config_entry_id=self.config_entry.entry_id,
                     data={"device_id": device.id, "device_name": device_name},
                     is_fixable=True,
                     is_persistent=False,
@@ -1146,26 +1174,32 @@ async def client_listen(
         )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    # Wait for a running network neighbors refresh, so the client is not
+    # disconnected before it has turned the radio back on
+    async with entry.runtime_data.network_neighbors_lock:
+        pass
 
-    entry_runtime_data = entry.runtime_data
-    client = entry_runtime_data.client
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        entry_runtime_data = entry.runtime_data
+        client = entry_runtime_data.client
 
-    if client.connected and (driver := client.driver):
-        await async_disable_server_logging_if_needed(hass, entry, driver)
+        if client.connected and (driver := client.driver):
+            await async_disable_server_logging_if_needed(hass, entry, driver)
 
-    if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
-        addon_manager: AddonManager = get_addon_manager(hass)
-        LOGGER.debug("Stopping Z-Wave JS add-on")
-        try:
-            await addon_manager.async_stop_addon()
-        except AddonError as err:
-            LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
-            return False
-
-    return unload_ok
+        if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
+            addon_manager: AddonManager = get_addon_manager(hass)
+            LOGGER.debug("Stopping Z-Wave JS add-on")
+            try:
+                await addon_manager.async_stop_addon()
+            except AddonError as err:
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="addon_stop_failed",
+                ) from err
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> None:
@@ -1210,10 +1244,7 @@ async def async_ensure_addon_running(
 
     usb_path: str | None = entry.data[CONF_USB_PATH]
     socket_path: str | None = entry.data.get(CONF_SOCKET_PATH)
-    # s0_legacy_key was saved as network_key before s2 was added.
     s0_legacy_key: str = entry.data.get(CONF_S0_LEGACY_KEY, "")
-    if not s0_legacy_key:
-        s0_legacy_key = entry.data.get(CONF_NETWORK_KEY, "")
     s2_access_control_key: str = entry.data.get(CONF_S2_ACCESS_CONTROL_KEY, "")
     s2_authenticated_key: str = entry.data.get(CONF_S2_AUTHENTICATED_KEY, "")
     s2_unauthenticated_key: str = entry.data.get(CONF_S2_UNAUTHENTICATED_KEY, "")

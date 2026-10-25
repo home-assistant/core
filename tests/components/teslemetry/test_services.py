@@ -4,6 +4,7 @@ from datetime import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.components.teslemetry.services import (
@@ -48,8 +49,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_platform
 from .const import COMMAND_ERROR, COMMAND_OK
-
-from tests.common import MockConfigEntry
 
 lat = -27.9699373
 lon = 153.3726526
@@ -381,7 +380,7 @@ async def test_service_validation_errors(
             },
             blocking=True,
         )
-    assert exc_info.value.translation_key == "invalid_device"
+    assert exc_info.value.translation_key == "service_device_not_found"
 
     # Test set_scheduled_charging validation error (enable=True but no time)
     with pytest.raises(ServiceValidationError) as exc_info:
@@ -472,4 +471,4 @@ async def test_service_validation_errors(
             },
             blocking=True,
         )
-    assert exc_info.value.translation_key == "no_config_entry_for_device"
+    assert exc_info.value.translation_key == "service_device_wrong_domain"

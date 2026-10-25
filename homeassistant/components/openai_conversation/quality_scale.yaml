@@ -1,6 +1,9 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: |
+      Integration has no actions.
   appropriate-polling:
     status: exempt
     comment: |
@@ -10,7 +13,10 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: |
+      Integration has no actions.
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.

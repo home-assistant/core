@@ -2,9 +2,9 @@
 
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
-import voluptuous_serialize
+from pytest_homeassistant.common import async_get_device_automations
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
@@ -22,8 +22,6 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_get_device_automations
 
 
 async def test_get_conditions(
@@ -372,6 +370,13 @@ async def test_config_parameter_state(
     assert service_calls[1].data["some"] == "User Slot Status - event - test_event2"
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(255, id="raw_value"),
+        pytest.param("Enable Beeper", id="state_label"),
+    ],
+)
 async def test_value_state(
     hass: HomeAssistant,
     client,
@@ -379,6 +384,7 @@ async def test_value_state(
     integration,
     service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
+    value: int | str,
 ) -> None:
     """Test for value conditions."""
     device = device_registry.async_get_device_by_identifier(
@@ -401,7 +407,7 @@ async def test_value_state(
                             "type": "value",
                             "command_class": 112,
                             "property": 3,
-                            "value": 255,
+                            "value": value,
                         }
                     ],
                     "action": {
@@ -447,7 +453,7 @@ async def test_get_condition_capabilities_node_status(
         },
     )
     assert capabilities and "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert probatio.to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -500,7 +506,7 @@ async def test_get_condition_capabilities_value(
         ("134", "Version"),
     ]
 
-    assert voluptuous_serialize.convert(
+    assert probatio.to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -545,7 +551,7 @@ async def test_get_condition_capabilities_config_parameter(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert probatio.to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -576,7 +582,7 @@ async def test_get_condition_capabilities_config_parameter(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert probatio.to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -684,7 +690,7 @@ async def test_get_value_from_config_failure(
     hass: HomeAssistant, client, hank_binary_switch, integration
 ) -> None:
     """Test get_value_from_config invalid value ID."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         get_zwave_value_from_config(
             hank_binary_switch,
             {

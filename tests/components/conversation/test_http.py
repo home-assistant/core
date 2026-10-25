@@ -7,6 +7,13 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    async_fire_time_changed,
+    async_mock_service,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -34,14 +41,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import MockAgent
-
-from tests.common import (
-    MockConfigEntry,
-    MockUser,
-    async_fire_time_changed,
-    async_mock_service,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 AGENT_ID_OPTIONS = [
     None,
@@ -834,7 +833,7 @@ async def test_ws_chat_log_index_subscription(
         now = utcnow().isoformat()
 
         with (
-            chat_session.async_get_chat_session(hass) as session,
+            chat_session.async_get_chat_session(hass, context=None) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
             before_sub_conversation_id = session.conversation_id
@@ -877,7 +876,7 @@ async def test_ws_chat_log_index_subscription(
         }
 
         with (
-            chat_session.async_get_chat_session(hass) as session,
+            chat_session.async_get_chat_session(hass, context=None) as session,
             async_get_chat_log(hass, session, mock_conversation_input),
         ):
             conversation_id = session.conversation_id
@@ -969,7 +968,7 @@ async def test_ws_chat_log_subscription(
         now = utcnow().isoformat()
 
         with (
-            chat_session.async_get_chat_session(hass) as session,
+            chat_session.async_get_chat_session(hass, context=None) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
             conversation_id = session.conversation_id
@@ -1013,7 +1012,9 @@ async def test_ws_chat_log_subscription(
         }
 
         with (
-            chat_session.async_get_chat_session(hass, conversation_id) as session,
+            chat_session.async_get_chat_session(
+                hass, conversation_id, context=None
+            ) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
             chat_log.async_add_assistant_content_without_tools(

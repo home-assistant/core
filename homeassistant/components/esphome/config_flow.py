@@ -10,7 +10,9 @@ from aioesphomeapi import (
     APIClient,
     APIConnectionError,
     BluetoothProxyFeature,
+    ConnectionClosedEvent,
     DeviceInfo,
+    DisconnectReason,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
     RequiresEncryptionAPIError,
@@ -18,7 +20,7 @@ from aioesphomeapi import (
     wifi_mac_to_bluetooth_mac,
 )
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import BluetoothScanningMode
@@ -69,6 +71,7 @@ from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry
 from .manager import async_replace_device
 
+ERROR_PROVISIONING_CLOSED = "provisioning_closed"
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
 ERROR_INVALID_PASSWORD_AUTH = "invalid_auth"
@@ -126,8 +129,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._async_try_fetch_device_info()
 
         fields: dict[Any, type] = OrderedDict()
-        fields[vol.Required(CONF_HOST, default=self._host or vol.UNDEFINED)] = str
-        fields[vol.Optional(CONF_PORT, default=self._port or DEFAULT_PORT)] = int
+        fields[
+            probatio.Required(CONF_HOST, default=self._host or probatio.UNDEFINED)
+        ] = str
+        fields[probatio.Optional(CONF_PORT, default=self._port or DEFAULT_PORT)] = int
 
         errors = {}
         if error is not None:
@@ -135,7 +140,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(fields),
+            data_schema=probatio.Schema(fields),
             errors=errors,
         )
 
@@ -232,7 +237,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_NOISE_PSK): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_NOISE_PSK): str}),
             errors=errors,
             description_placeholders={"name": self._async_get_human_readable_name()},
         )
@@ -771,7 +776,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="encryption_key",
-            data_schema=vol.Schema({vol.Required(CONF_NOISE_PSK): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_NOISE_PSK): str}),
             errors=errors,
             description_placeholders={"name": self._async_get_human_readable_name()},
         )
@@ -814,7 +819,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="authenticate",
-            data_schema=vol.Schema({vol.Required("password"): str}),
+            data_schema=probatio.Schema({probatio.Required("password"): str}),
             description_placeholders={"name": self._async_get_human_readable_name()},
             errors=errors,
         )
@@ -831,6 +836,14 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             zeroconf_instance=zeroconf_instance,
             noise_psk=noise_psk,
         )
+        provisioning_closed = False
+
+        def _on_connection_closed(event: ConnectionClosedEvent) -> None:
+            nonlocal provisioning_closed
+            if event.reason is DisconnectReason.PROVISIONING_CLOSED:
+                provisioning_closed = True
+
+        cli.add_connection_closed_callback(_on_connection_closed)
         try:
             await cli.connect()
             self._device_info = await cli.device_info()
@@ -851,6 +864,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         except ResolveAPIError:
             return "resolve_error"
         except APIConnectionError:
+            if provisioning_closed:
+                return ERROR_PROVISIONING_CLOSED
             return "connection_error"
         finally:
             await cli.disconnect(force=True)
@@ -1004,27 +1019,27 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         options = self.config_entry.options
         schema: dict[Any, Any] = {
-            vol.Required(
+            probatio.Required(
                 CONF_ALLOW_SERVICE_CALLS,
                 default=options.get(
                     CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
                 ),
             ): bool,
-            vol.Required(
+            probatio.Required(
                 CONF_SUBSCRIBE_LOGS,
                 default=options.get(CONF_SUBSCRIBE_LOGS, False),
             ): bool,
         }
         if _entry_has_bluetooth_scanner(self.config_entry):
             schema[
-                vol.Required(
+                probatio.Required(
                     CONF_BLUETOOTH_SCANNING_MODE,
                     default=options.get(
                         CONF_BLUETOOTH_SCANNING_MODE, DEFAULT_BLUETOOTH_SCANNING_MODE
                     ),
                 )
             ] = _BLUETOOTH_SCANNING_MODE_SELECTOR
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))
+        return self.async_show_form(step_id="init", data_schema=probatio.Schema(schema))
 
 
 @callback

@@ -55,7 +55,6 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, LOGGER
 from .discovery_data_template import (
-    BaseDiscoverySchemaDataTemplate,
     ConfigurableFanValueMappingDataTemplate,
     CoverTiltDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
@@ -66,6 +65,7 @@ from .discovery_data_template import (
 from .entity import NewZwaveDiscoveryInfo
 from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
 from .models import (
+    BaseDiscoverySchemaDataTemplate,
     FirmwareVersionRange,
     NewZWaveDiscoverySchema,
     ValueType,
@@ -550,12 +550,12 @@ DISCOVERY_SCHEMAS = [
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
         assumed_state=True,
     ),
-    # Heatit Z-TRM6
+    # Heatit Z-TRM6 / Z-TRM7 (same sensor-mode / endpoint mapping)
     ZWaveDiscoverySchema(
         platform=Platform.CLIMATE,
         hint="dynamic_current_temp",
         manufacturer_id={0x019B},
-        product_id={0x3001},
+        product_id={0x3001, 0x3006},
         product_type={0x0030},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},

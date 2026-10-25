@@ -19,7 +19,7 @@ DEVICE_CLASSES = {
     "Mms100": CoverDeviceClass.GATE,
     "WallStation_ESP32": CoverDeviceClass.GARAGE,
 }
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(

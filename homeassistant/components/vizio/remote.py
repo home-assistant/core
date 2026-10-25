@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Iterable
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
@@ -104,7 +104,9 @@ class VizioRemote(VizioEntity, RemoteEntity):
         """Send remote commands to the device."""
         num_repeats: int = kwargs.get(ATTR_NUM_REPEATS, 1)
         delay: float = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
-        resolved = [vol.All(vol.Lower, self._resolve_command)(cmd) for cmd in command]
+        resolved = [
+            probatio.All(probatio.Lower, self._resolve_command)(cmd) for cmd in command
+        ]
 
         for i in range(num_repeats):
             for cmd in resolved:

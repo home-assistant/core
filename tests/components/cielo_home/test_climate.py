@@ -2,10 +2,10 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_climate_set_temperature_calls_library(

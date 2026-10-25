@@ -9,8 +9,9 @@ from bluecurrent_api.exceptions import (
     RequestLimitReached,
     WebsocketError,
 )
+from probatio import MultipleInvalid
 import pytest
-from voluptuous import MultipleInvalid
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.blue_current.const import (
     CHARGING_CARD_ID,
@@ -24,8 +25,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(

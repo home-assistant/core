@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "event": {
+      "transaction": {
+        "default": "mdi:bank-transfer"
+      }
+    }
+  },
+  "services": {
+    "deposit_into_pot": {
+      "service": "mdi:bank-transfer-in"
+    },
+    "withdraw_from_pot": {
+      "service": "mdi:bank-transfer-out"
+    }
+  }
+}
