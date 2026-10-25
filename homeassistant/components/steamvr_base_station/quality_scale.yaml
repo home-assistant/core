@@ -51,7 +51,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: The Bluetooth address is the unique identifier and does not change.
