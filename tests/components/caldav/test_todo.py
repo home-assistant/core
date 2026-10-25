@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock, Mock
 
 from caldav.calendarobjectresource import Todo
+from caldav.collection import SynchronizableCalendarObjectCollection
 from caldav.lib.error import DAVError, NotFoundError
 from caldav.lib.url import URL
 import pytest
@@ -24,6 +25,7 @@ from homeassistant.components.todo import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_component import async_update_entity
 
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"
@@ -129,6 +131,17 @@ def mock_supported_components() -> list[str]:
     return ["VTODO"]
 
 
+def sync_report(
+    sync_token: str | None, changes: int = 0
+) -> SynchronizableCalendarObjectCollection:
+    """Return a sync-collection report listing a number of changed items."""
+    return SynchronizableCalendarObjectCollection(
+        calendar=None,
+        objects=[Todo(url=f"{idx}.ics") for idx in range(changes)],
+        sync_token=sync_token,
+    )
+
+
 @pytest.fixture(name="calendar")
 def mock_calendar(supported_components: list[str]) -> Mock:
     """Fixture to create the primary calendar for the test."""
@@ -138,6 +151,7 @@ def mock_calendar(supported_components: list[str]) -> Mock:
     calendar.search = MagicMock(return_value=[])
     calendar.get_display_name = MagicMock(return_value=CALENDAR_NAME)
     calendar.get_supported_components = MagicMock(return_value=supported_components)
+    calendar.get_objects_by_sync_token = MagicMock(return_value=sync_report(None))
     return calendar
 
 
@@ -943,3 +957,187 @@ async def test_subscribe(
     assert items[0]["summary"] == "Milk"
     assert items[0]["status"] == "needs_action"
     assert items[0]["uid"]
+
+
+@pytest.mark.parametrize(
+    ("reports", "expected_state", "next_token"),
+    [
+        pytest.param(
+            [sync_report("token-1"), sync_report("token-1")],
+            "0",
+            "token-1",
+            id="unchanged",
+        ),
+        pytest.param(
+            [sync_report("token-1"), sync_report("token-2")],
+            "1",
+            "token-2",
+            id="new_token",
+        ),
+        pytest.param(
+            [sync_report("token-1"), sync_report("token-1", changes=1)],
+            "1",
+            "token-1",
+            id="listed_change",
+        ),
+        pytest.param([sync_report(None), sync_report(None)], "1", None, id="no_token"),
+        pytest.param(
+            [sync_report("token-1"), DAVError()], "1", None, id="rejected_token"
+        ),
+        pytest.param([DAVError(), DAVError()], "1", None, id="no_sync_report"),
+    ],
+)
+async def test_update_after_sync_report(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    reports: list[SynchronizableCalendarObjectCollection | DAVError],
+    expected_state: str,
+    next_token: str | None,
+) -> None:
+    """Test the list is read again unless the server reports no change."""
+    calendar.get_objects_by_sync_token.side_effect = [*reports, sync_report(None)]
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    calendar.search.return_value = [create_todo(calendar, "1", TODO_NEEDS_ACTION)]
+    await async_update_entity(hass, TEST_ENTITY)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == expected_state
+
+    await async_update_entity(hass, TEST_ENTITY)
+    calendar.get_objects_by_sync_token.assert_called_with(
+        next_token, disable_fallback=True
+    )
+
+
+@pytest.mark.parametrize(
+    ("server_todos", "expected_state", "next_token", "next_reads"),
+    [
+        pytest.param([], "0", "token-1", 2, id="unchanged"),
+        pytest.param([TODO_NEEDS_ACTION], "1", None, 3, id="missed_change"),
+    ],
+)
+async def test_update_reads_in_full_every_fourth_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server_todos: list[str],
+    expected_state: str,
+    next_token: str | None,
+    next_reads: int,
+) -> None:
+    """Test the list is read in full every fourth update without a reported change."""
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    calendar.search.return_value = [
+        create_todo(calendar, str(idx), item) for idx, item in enumerate(server_todos)
+    ]
+    for _ in range(3):
+        await async_update_entity(hass, TEST_ENTITY)
+    assert calendar.search.call_count == 1
+
+    await async_update_entity(hass, TEST_ENTITY)
+    assert calendar.search.call_count == 2
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == expected_state
+
+    await async_update_entity(hass, TEST_ENTITY)
+    calendar.get_objects_by_sync_token.assert_called_with(
+        next_token, disable_fallback=True
+    )
+    assert calendar.search.call_count == next_reads
+
+
+@pytest.mark.parametrize(
+    ("reports", "skipped_updates"),
+    [
+        pytest.param(
+            [sync_report("token-1"), sync_report("token-2"), sync_report("token-2")],
+            0,
+            id="new_token",
+        ),
+        pytest.param([sync_report("token-1")] * 6, 3, id="fourth_update"),
+    ],
+)
+async def test_update_after_failed_read(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    reports: list[SynchronizableCalendarObjectCollection],
+    skipped_updates: int,
+) -> None:
+    """Test a failed read is retried on the next update."""
+    calendar.get_objects_by_sync_token.side_effect = reports
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    for _ in range(skipped_updates):
+        await async_update_entity(hass, TEST_ENTITY)
+
+    calendar.search.side_effect = DAVError
+    await async_update_entity(hass, TEST_ENTITY)
+
+    calendar.search.side_effect = None
+    calendar.search.return_value = [create_todo(calendar, "1", TODO_NEEDS_ACTION)]
+    await async_update_entity(hass, TEST_ENTITY)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+
+@pytest.mark.parametrize(
+    ("service", "data", "todos_after", "expected_state"),
+    [
+        pytest.param(
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: "Milk"},
+            [TODO_NEEDS_ACTION, TODO_NO_STATUS],
+            "2",
+            id="add",
+        ),
+        pytest.param(
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: "Cheese", ATTR_STATUS: "completed"},
+            [TODO_COMPLETED],
+            "0",
+            id="update",
+        ),
+        pytest.param(
+            TodoServices.REMOVE_ITEM, {ATTR_ITEM: ["Cheese"]}, [], "0", id="remove"
+        ),
+    ],
+)
+async def test_update_after_write(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    service: TodoServices,
+    data: dict[str, Any],
+    todos_after: list[str],
+    expected_state: str,
+) -> None:
+    """Test the list is read in full after a write the report doesn't show."""
+    item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
+    item.delete = Mock()
+    calendar.search.return_value = [item]
+    calendar.get_todo_by_uid = MagicMock(return_value=item)
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    dav_client.put.return_value.status = 204
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    calendar.search.return_value = [
+        create_todo(calendar, str(idx), ics) for idx, ics in enumerate(todos_after)
+    ]
+    await hass.services.async_call(
+        TODO_DOMAIN, service, data, target={ATTR_ENTITY_ID: TEST_ENTITY}, blocking=True
+    )
+    # Wait for the fire-and-forget state refresh
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == expected_state
