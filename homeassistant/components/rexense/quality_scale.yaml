@@ -4,10 +4,8 @@ rules:
     comment: Only standard switch actions are used; no custom actions are registered.
   appropriate-polling: done
   brands:
-    status: todo
-    comment:
-      Official artwork is prepared; the companion Brands pull request must
-      be opened before Core submission.
+    status: done
+    comment: Brand images submitted in https://github.com/home-assistant/brands/pull/11367.
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
