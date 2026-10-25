@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tile_ble.const import CONF_AUTH_KEY, DOMAIN
 
 from . import AUTH_KEY, OTHER_AUTH_KEY, TILE_ADDRESS
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -21,7 +20,7 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.tile_ble.async_setup_entry", return_value=True
+        "homeassistant.components.tile_ble.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -41,7 +40,7 @@ def _mock_tile(uuid: str, name: str, auth_key: str | None) -> MagicMock:
     tile = MagicMock()
     tile.uuid = uuid
     tile.name = name
-    tile.auth_key = auth_key
+    tile._tile_data = {"result": {"auth_key": auth_key}}
     return tile
 
 

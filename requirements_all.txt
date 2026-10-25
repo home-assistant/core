@@ -3329,9 +3329,6 @@ thingspeak==1.0.0
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.14
 
-# homeassistant.components.tile_ble
-tile-ble==0.1.0
-
 # homeassistant.components.tilt_ble
 tilt-ble==1.0.1
 

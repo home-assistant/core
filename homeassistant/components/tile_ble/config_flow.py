@@ -5,7 +5,7 @@ from typing import Any, override
 import probatio
 from pytile import async_login
 from pytile.errors import InvalidAuthError, TileError
-from tile_ble import TileBleAuthenticationError, TileBleDevice, TileBleError
+from pytile.tile import Tile
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -17,6 +17,7 @@ from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_AUTH_KEY, CONF_TILE, DOMAIN, TILE_SERVICE_UUID
+from .toa import TileBleAuthenticationError, TileBleDevice, TileBleError
 
 STEP_ACCOUNT_SCHEMA = probatio.Schema(
     {
@@ -24,6 +25,12 @@ STEP_ACCOUNT_SCHEMA = probatio.Schema(
         probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
+
+
+def _auth_key(tile: Tile) -> str | None:
+    """Return the key used to authenticate with the Tile over Bluetooth."""
+    # pytile does not expose the key yet.
+    return tile._tile_data["result"].get("auth_key")  # noqa: SLF001
 
 
 class TileBleConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -102,9 +109,9 @@ class TileBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 self._tiles = {
-                    tile.uuid: (tile.name, tile.auth_key)
+                    tile.uuid: (tile.name, auth_key)
                     for tile in tiles.values()
-                    if tile.auth_key
+                    if (auth_key := _auth_key(tile))
                 }
                 if not self._tiles:
                     return self.async_abort(reason="no_tiles")

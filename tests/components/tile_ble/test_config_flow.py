@@ -3,10 +3,15 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from pytile.errors import InvalidAuthError, TileError
-from tile_ble import TileBleAuthenticationError, TileBleConnectionError
 
 from homeassistant.components.tile_ble.const import CONF_AUTH_KEY, CONF_TILE, DOMAIN
+from homeassistant.components.tile_ble.toa import (
+    TileBleAuthenticationError,
+    TileBleConnectionError,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -20,9 +25,6 @@ from . import (
     TILE_ADDRESS,
     TILE_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 ACCOUNT_INPUT = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password"}
 WALLET_UUID = "19264d2dffdbca32"

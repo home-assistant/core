@@ -1,11 +1,11 @@
 """Tests for the Tile BLE integration setup."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload(

@@ -1,9 +1,9 @@
 """Tests for the Tile BLE integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from tests.common import MockConfigEntry
 
 TILE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 AUTH_KEY = "AAECAwQFBgcICQoLDA0ODw=="
