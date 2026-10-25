@@ -122,7 +122,7 @@ class UnifiEntityLoader:
             # The application answers, other data can still be loaded
             LOGGER.debug("UniFi Network answered system information with: %r", err)
 
-        await asyncio.gather(
+        clients_all_loaded, _ = await asyncio.gather(
             self._refresh_data(self._startup_only_api_updaters),
             self._refresh_data(
                 [
@@ -131,7 +131,7 @@ class UnifiEntityLoader:
                 ]
             ),
         )
-        self._restore_inactive_clients()
+        self._restore_inactive_clients(clients_all_loaded)
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
 
     async def _async_update_clients_all(self) -> None:
@@ -150,24 +150,28 @@ class UnifiEntityLoader:
 
     async def _refresh_data(
         self, updaters: Sequence[Callable[[], Coroutine[Any, Any, None]]]
-    ) -> None:
+    ) -> bool:
+        """Run updaters and return if all of them succeeded."""
         results = await asyncio.gather(
             *[update() for update in updaters],
             return_exceptions=True,
         )
+        succeeded = True
         for result in results:
             if result is not None:
                 LOGGER.warning("Exception on update %s", result)
+                succeeded = False
+        return succeeded
 
     @callback
-    def _restore_inactive_clients(self) -> None:
+    def _restore_inactive_clients(self, clients_all_loaded: bool) -> None:
         """Restore recently seen inactive clients and prune stale ones.
 
         The UniFi controller keeps a record of every client it has ever seen.
         Only clients seen within the retention window, or explicitly selected
-        or blocked, are restored. Trackers falling outside that window are
-        removed together with their device so the registry does not grow
-        unbounded.
+        or blocked, are restored. Trackers falling outside that window, or
+        whose client the controller no longer lists, are removed together with
+        their device so the registry does not grow unbounded.
         """
         config = self.hub.config
         api = self.hub.api
@@ -177,6 +181,11 @@ class UnifiEntityLoader:
         now = dt_util.utcnow()
         always_restore = set(config.option_supported_clients)
         always_restore.update(config.option_block_clients)
+
+        # A client missing from clients_all only means it was removed from the
+        # controller when that list loaded. A failed fetch leaves it empty,
+        # which would otherwise wipe every tracker and its device.
+        prune_unlisted = clients_all_loaded and bool(api.clients_all.values())
 
         pruned = 0
         for entry in er.async_entries_for_config_entry(
@@ -189,18 +198,22 @@ class UnifiEntityLoader:
             if mac in api.clients or mac in always_restore:
                 continue
 
-            # Absent means the controller no longer reports it or the
-            # clients_all fetch failed this cycle. Never prune on that, a failed
-            # fetch would wipe every tracker and its device.
             if (client := api.clients_all.get(mac)) is None:
-                continue
-
-            if not self._client_is_stale(client, now):
+                if not prune_unlisted:
+                    continue
+            elif not self._client_is_stale(client, now):
                 api.clients.process_raw([dict(client.raw)])
                 continue
 
             self._remove_client(entity_registry, device_registry, entry.entity_id, mac)
             pruned += 1
+
+        # Network devices are not in clients_all, so their list has to be
+        # loaded too before a device missing from both is taken as removed
+        if prune_unlisted and api.devices.values():
+            pruned += self._prune_unlisted_client_devices(
+                device_registry, always_restore
+            )
 
         if pruned:
             LOGGER.debug("Pruned %s stale UniFi client device(s)", pruned)
@@ -229,6 +242,37 @@ class UnifiEntityLoader:
             (dr.CONNECTION_NETWORK_MAC, mac), self.hub.config.entry.entry_id
         ):
             device_registry.async_remove_device(device.id)
+
+    @callback
+    def _prune_unlisted_client_devices(
+        self, device_registry: dr.DeviceRegistry, keep: set[str]
+    ) -> int:
+        """Remove client devices whose client the controller no longer lists.
+
+        Catches devices without a tracker, such as those holding only a link
+        speed sensor, or nothing at all after their entities were removed.
+        """
+        api = self.hub.api
+        pruned = 0
+        for device in dr.async_entries_for_config_entry(
+            device_registry, self.hub.config.entry.entry_id
+        ):
+            macs = {
+                value
+                for connection_type, value in device.connections
+                if connection_type == dr.CONNECTION_NETWORK_MAC
+            }
+            if not macs or any(
+                mac in api.clients
+                or mac in api.clients_all
+                or mac in api.devices
+                or mac in keep
+                for mac in macs
+            ):
+                continue
+            device_registry.async_remove_device(device.id)
+            pruned += 1
+        return pruned
 
     @callback
     def register_platform(

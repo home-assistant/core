@@ -5,6 +5,8 @@ from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
 
+from aiounifi import AiounifiException
+from aiounifi.interfaces.clients_all import ClientsAll
 from aiounifi.models.event import EventKey
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
@@ -714,9 +716,9 @@ async def test_pruning_stale_restored_clients(
     config_entry_factory: ConfigEntryFactoryType,
     clients_all_payload: list[dict[str, Any]],
 ) -> None:
-    """Restore recently seen inactive clients but prune stale ones and their device."""
+    """Restore recently seen inactive clients but prune stale and unlisted ones."""
     recent, stale = clients_all_payload
-    # Client with a tracker but absent from clients_all, e.g. a failed fetch
+    # Client with a tracker that the controller no longer lists
     absent_mac = "00:00:00:00:00:07"
 
     entries: dict[str, er.RegistryEntry] = {}
@@ -756,11 +758,144 @@ async def test_pruning_stale_restored_clients(
         is None
     )
 
-    # Client absent from clients_all is left untouched, never pruned on missing data
-    assert entity_registry.async_get(entries[absent_mac].entity_id)
-    assert device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, absent_mac), config_entry.entry_id
+    # Client absent from a loaded clients_all is pruned together with its device
+    assert entity_registry.async_get(entries[absent_mac].entity_id) is None
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, absent_mac), config_entry.entry_id
+        )
+        is None
     )
+
+
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT_1]])
+@pytest.mark.parametrize(
+    "clients_all_payload",
+    [
+        [
+            {
+                "hostname": "stale",
+                "is_wired": True,
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:00:06",
+            }
+        ]
+    ],
+)
+async def test_no_pruning_when_clients_all_fails(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Keep every tracker and device when clients_all could not be loaded."""
+    macs = ("00:00:00:00:00:06", "00:00:00:00:00:07")
+    for mac in macs:
+        entity_registry.async_get_or_create(
+            TRACKER_DOMAIN,
+            DOMAIN,
+            f"site_id-{mac}",
+            config_entry=config_entry,
+        )
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        )
+    # Client device without a tracker
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:08")},
+    )
+
+    with patch.object(ClientsAll, "update", side_effect=AiounifiException):
+        await config_entry_factory()
+
+    for mac in macs:
+        assert entity_registry.async_get_entity_id(
+            TRACKER_DOMAIN, DOMAIN, f"site_id-{mac}"
+        )
+    for mac in (*macs, "00:00:00:00:00:08"):
+        assert device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
+        )
+
+
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT_1]])
+@pytest.mark.parametrize(
+    "clients_all_payload",
+    [
+        [
+            {
+                "hostname": "listed",
+                "is_wired": True,
+                "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+                "mac": "00:00:00:00:00:05",
+            }
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_CLIENT_SOURCE: ["00:00:00:00:00:09"]}]
+)
+@pytest.mark.parametrize(
+    ("device_payload", "unlisted_pruned"),
+    [
+        ([SWITCH_1], True),
+        # Device list did not load, a network device would look unlisted
+        ([], False),
+    ],
+)
+async def test_pruning_unlisted_client_devices(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+    unlisted_pruned: bool,
+) -> None:
+    """Prune client devices without a tracker whose client is no longer listed."""
+    devices: dict[str, dr.DeviceEntry] = {
+        mac: device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        )
+        for mac in (
+            WIRED_CLIENT_1["mac"],  # Connected client
+            "00:00:00:00:00:05",  # Listed in clients_all
+            "00:00:00:00:00:07",  # Unlisted, no entities
+            "00:00:00:00:00:08",  # Unlisted, only a disabled link speed sensor
+            "00:00:00:00:00:09",  # Unlisted, but selected by the user
+            SWITCH_1["mac"],  # Network device
+        )
+    }
+    link_speed = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        "wired_speed-00:00:00:00:00:08",
+        config_entry=config_entry,
+        device_id=devices["00:00:00:00:00:08"].id,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+    service = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "wlan_id")},
+    )
+
+    await config_entry_factory()
+
+    for mac in ("00:00:00:00:00:07", "00:00:00:00:00:08"):
+        assert (device_registry.async_get(devices[mac].id) is None) is unlisted_pruned
+    assert (entity_registry.async_get(link_speed.entity_id) is None) is unlisted_pruned
+
+    for mac in (
+        WIRED_CLIENT_1["mac"],
+        "00:00:00:00:00:05",
+        "00:00:00:00:00:09",
+        SWITCH_1["mac"],
+    ):
+        assert device_registry.async_get(devices[mac].id)
+    assert device_registry.async_get(service.id)
 
 
 @pytest.mark.parametrize(
