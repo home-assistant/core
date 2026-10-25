@@ -2,8 +2,8 @@
 
 import asyncio
 
-from homeassistant.const import CONF_TYPE
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -88,9 +88,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: VisonicConfigEntry) -> N
     vcd = VisonicPanelData(VisonicCoordinator(hass, entry, panel_number), panel_number)
     entry.runtime_data = vcd
 
+    async def async_stop(_event: Event) -> None:
+        """Close the panel connection before shared sessions are closed."""
+        await async_terminate_coordinator(vcd.coordinator)
+
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
         if await vcd.coordinator.async_panel_connect():
+            entry.async_on_unload(
+                hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
+            )
             return
     except asyncio.CancelledError:
         await close_connection(vcd.coordinator)

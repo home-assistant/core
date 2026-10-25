@@ -12,7 +12,7 @@
   "quality_scale": "bronze",
   "requirements": [
     "serialx==1.15.0",
-    "pyvisonic==4.1.0",
-    "pyvisonicalarm==0.3.0a1"
+    "pyvisonic==4.1.1",
+    "pyvisonicalarm==0.4.0"
   ]
 }

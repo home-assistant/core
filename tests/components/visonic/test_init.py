@@ -10,7 +10,12 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.visonic import async_terminate_coordinator
-from homeassistant.components.visonic.const import CONF_PANEL_NUMBER
+from homeassistant.components.visonic.const import (
+    CONF_CLOUD_APP_ID,
+    CONF_PANEL_NUMBER,
+    CONF_PANEL_SERIAL,
+    TEXT_PANEL_MODEL,
+)
 from homeassistant.components.visonic.exceptions import (
     VisonicAuthException,
     VisonicException,
@@ -23,6 +28,7 @@ from homeassistant.components.visonic.visonic_types import DeviceType
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
 from .helpers import create_mock_config_entry
@@ -42,15 +48,96 @@ async def test_setup_missing_required_field(
     assert not hasattr(entry, "runtime_data")
 
 
+@pytest.mark.parametrize("device_type", list(DeviceType))
 async def test_unload_entry(
-    hass: HomeAssistant, setup_integration: SetupIntegration
+    hass: HomeAssistant,
+    setup_integration: SetupIntegration,
+    device_type: DeviceType,
 ) -> None:
-    """Unload platforms and stop a successfully initialized panel."""
-    result, entry = await setup_integration()
+    """Unload the backend and remove its shutdown listener."""
+    result, entry = await setup_integration(data={CONF_TYPE: device_type})
     assert result
-    with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
+    connection = entry.runtime_data.coordinator.connection
+    with (
+        patch.object(hass.config_entries, "async_unload_platforms", return_value=True),
+        patch.object(
+            connection, "async_panel_stop", wraps=connection.async_panel_stop
+        ) as stop,
+    ):
         assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
+        stop.assert_awaited_once_with()
+        await hass.async_stop()
+        stop.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize("device_type", list(DeviceType))
+async def test_shutdown_stops_backend(
+    hass: HomeAssistant,
+    setup_integration: SetupIntegration,
+    device_type: DeviceType,
+) -> None:
+    """Home Assistant shutdown closes each supported panel connection."""
+    result, entry = await setup_integration(data={CONF_TYPE: device_type})
+    assert result
+    coordinator = entry.runtime_data.coordinator
+    connection = coordinator.connection
+    with patch.object(
+        connection, "async_panel_stop", wraps=connection.async_panel_stop
+    ) as stop:
+        await hass.async_stop()
+        stop.assert_awaited_once_with()
+    assert not coordinator.data.connected
+    assert coordinator.data.mode == "stopped"
+
+
+async def test_shutdown_logs_out_cloud_before_session_closes(
+    hass: HomeAssistant,
+) -> None:
+    """Log out the real cloud backend while its shared HTTP session is usable."""
+    entry = create_mock_config_entry(
+        data={
+            CONF_TYPE: DeviceType.CLOUD,
+            CONF_PANEL_SERIAL: "ABCDEF",
+            CONF_CLOUD_APP_ID: "test-app-id",
+        }
+    )
+    entry.add_to_hass(hass)
+    session = async_get_clientsession(hass)
+    session_closed_during_logout: list[bool] = []
+
+    async def logout() -> None:
+        session_closed_during_logout.append(session.closed)
+
+    with (
+        patch(
+            "homeassistant.components.visonic.cloud.API", autospec=True
+        ) as api_factory,
+        patch(
+            "homeassistant.components.visonic.cloud.AlarmSystem", autospec=True
+        ) as alarm_factory,
+        patch(
+            "homeassistant.components.visonic.cloud.VisonicCloudConnection.create_state_snapshot",
+            return_value=VisonicCoordinatorData(connected=True),
+        ),
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
+    ):
+        api = api_factory.return_value
+        api.app_id = "test-app-id"
+        api.authenticate_user.return_value = True
+        api.get_panels.return_value = [
+            {CONF_PANEL_SERIAL: "ABCDEF", TEXT_PANEL_MODEL: "PowerMaster 30"}
+        ]
+        alarm = alarm_factory.return_value
+        alarm.api = api
+        alarm.panel_login.return_value = True
+        alarm.panel_logout.side_effect = logout
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        alarm.panel_login.assert_awaited_once_with("ABCDEF", "")
+        alarm.panel_logout.assert_not_awaited()
+        await hass.async_stop()
+        alarm.panel_logout.assert_awaited_once_with()
+    assert session_closed_during_logout == [False]
+    assert session.closed
 
 
 @pytest.mark.parametrize("initial_state", [CoreState.not_running, CoreState.starting])
@@ -234,6 +321,7 @@ async def test_setup_entry_cleans_up_after_connect_failure(
     ):
         entry.add_to_hass(hass)
         assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_stop()
     assert entry.state is expected_state
     assert entry.runtime_data.coordinator is coordinator
     assert entry.runtime_data.panel_id == 4

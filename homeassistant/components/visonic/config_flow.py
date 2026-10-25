@@ -1,7 +1,6 @@
 """Schema-based configuration and options flows for Visonic panels."""
 
 from collections.abc import Mapping
-import os
 import re
 from typing import TYPE_CHECKING, Any, Final, cast, override
 import uuid
@@ -39,7 +38,10 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .connection_test import ConnectionTest
 from .const import (
+    CONF_ARM_CODE_AUTO,
     CONF_CLOUD_APP_ID,
+    CONF_INSTANT_ARM_AWAY,
+    CONF_INSTANT_ARM_HOME,
     CONF_PANEL_NUMBER,
     CONF_PANEL_SERIAL,
     CONFIG_EMAIL_INVALID,
@@ -64,7 +66,11 @@ from .const import (
     VISONIC_UNIQUE_NAME,
 )
 from .exceptions import VisonicException
-from .identity import connection_identity, resolved_connection_identity
+from .identity import (
+    connection_identity,
+    normalize_serial_path,
+    resolved_connection_identity,
+)
 from .schemas import (
     ALARM_OPTIONS_SCHEMA,
     CLOUD_ALARM_OPTIONS_SCHEMA,
@@ -139,7 +145,7 @@ async def _validate_connection(
         case DeviceType.SERIAL:
             if not user_input[CONF_DEVICE]:
                 raise SchemaFlowError(CONFIG_SETTINGS_MISSING)
-            user_input[CONF_DEVICE] = os.path.normpath(user_input[CONF_DEVICE])
+            user_input[CONF_DEVICE] = normalize_serial_path(user_input[CONF_DEVICE])
         case DeviceType.CLOUD:  # pragma: no branch
             if not all(
                 user_input[key]
@@ -449,6 +455,14 @@ class VisonicConfigFlow(SchemaConfigFlowHandler, domain=DOMAIN):
             return self.async_update_reload_and_abort(entry, data=connection_data)
         if self.source == SOURCE_RECONFIGURE:
             entry = self._get_reconfigure_entry()
+            options = dict(entry.options)
+            if connection_data[CONF_TYPE] == DeviceType.CLOUD:
+                for key in (
+                    CONF_ARM_CODE_AUTO,
+                    CONF_INSTANT_ARM_HOME,
+                    CONF_INSTANT_ARM_AWAY,
+                ):
+                    options.pop(key, None)
             update = (
                 self.async_update_and_abort
                 if entry.update_listeners
@@ -457,6 +471,7 @@ class VisonicConfigFlow(SchemaConfigFlowHandler, domain=DOMAIN):
             return update(
                 entry,
                 data=connection_data,
+                options=options,
                 title=self.async_config_entry_title(connection_data),
             )
         if connection_data[CONF_TYPE] == DeviceType.CLOUD:

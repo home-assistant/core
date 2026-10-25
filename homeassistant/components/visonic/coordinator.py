@@ -463,7 +463,10 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
                 self.data = snapshot
                 if TYPE_CHECKING:
                     assert self.config_entry is not None
-                self.set_alarm_device_information(self.config_entry.title)
+                model = self.config_entry.data.get(TEXT_PANEL_MODEL)
+                self.set_alarm_device_information(
+                    model if model is not None else UNDEFINED
+                )
                 await self.async_setup_alarm_panel()
             return snapshot
 

@@ -18,7 +18,7 @@ rules:
     comment: Coordinator, backend and shared entity logic use separate modules.
   config-flow-test-coverage:
     status: done
-    comment: Config flows have 100 percent statement and 98.75 percent branch coverage.
+    comment: Config flows have 100 percent statement and 98.81 percent branch coverage.
   config-flow:
     status: done
     comment: UI setup and options support Ethernet, serial and cloud.
@@ -120,9 +120,9 @@ rules:
   test-coverage:
     status: done
     comment: >
-      All 461 tests pass with 98.07 percent combined statement and branch
+      All 497 tests pass with 98.08 percent combined statement and branch
       coverage. Config-flow statement coverage is 100 percent and branch
-      coverage is 98.75 percent.
+      coverage is 98.81 percent.
 
   # Gold
   devices:
@@ -207,7 +207,7 @@ rules:
     comment: >
       Cloud uses async_get_clientsession(hass); direct connections use no HTTP.
   strict-typing:
-    status: todo
+    status: done
     comment: >
-      Strict mypy checks pass. pyvisonicalarm 0.3.0a1 needs a PEP 561 marker or
-      stubs; pyvisonic and serialx provide py.typed.
+      The integration is listed in .strict-typing and passes strict mypy
+      checks. pyvisonic, pyvisonicalarm and serialx provide py.typed.

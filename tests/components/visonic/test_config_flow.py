@@ -20,6 +20,8 @@ from homeassistant.components.visonic.const import (
     CONF_ARM_HOME_ENABLED,
     CONF_CLOUD_APP_ID,
     CONF_DOWNLOAD_CODE,
+    CONF_ENABLE_REMOTE_ARM,
+    CONF_ENABLE_REMOTE_DISARM,
     CONF_INSTANT_ARM_AWAY,
     CONF_INSTANT_ARM_HOME,
     CONF_PANEL_NUMBER,
@@ -102,6 +104,18 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         pytest.param(
             DeviceType.SERIAL, {CONF_DEVICE: "/dev/ttyUSB0"}, FORM_SERIAL, id="serial"
         ),
+        pytest.param(
+            DeviceType.SERIAL,
+            {CONF_DEVICE: "esphome-hass://esphome/entry-id?port_name=uart"},
+            FORM_SERIAL,
+            id="esphome-serial-proxy",
+        ),
+        pytest.param(
+            DeviceType.SERIAL,
+            {CONF_DEVICE: "socket://192.0.2.1:30000"},
+            FORM_SERIAL,
+            id="socket-url",
+        ),
     ],
 )
 async def test_user_flow_direct(
@@ -161,7 +175,7 @@ async def test_user_flow_direct(
     assert CONF_ARM_HOME_ENABLED not in entry.data
     assert CONF_PANEL_NUMBER not in entry.options
     assert not credentials.keys() & entry.options.keys()
-    mock_connection_test.assert_awaited_once()
+    mock_connection_test.assert_awaited_once_with(device_type, connection_data)
     mock_setup_entry.assert_awaited_once_with(hass, entry)
 
 
@@ -389,6 +403,14 @@ async def test_loaded_cloud_entry_updates(
             1,
             [(FORM_POWERLINK, {CONF_USER_CODE_SLOT: 1})],
             id="changed-type",
+        ),
+        pytest.param(
+            DeviceType.SERIAL,
+            {CONF_DEVICE: "esphome-hass://esphome/entry-id?port_name=uart"},
+            FORM_SERIAL,
+            1,
+            [(FORM_POWERLINK, {CONF_USER_CODE_SLOT: 1})],
+            id="esphome-serial-proxy",
         ),
         pytest.param(
             DeviceType.CLOUD,
@@ -973,6 +995,13 @@ async def test_yaml_import_unsupported(hass: HomeAssistant) -> None:
             FORM_SERIAL,
             id="serial-path",
         ),
+        pytest.param(
+            DeviceType.SERIAL,
+            {CONF_DEVICE: "esphome-hass://esphome/entry-id?port_name=uart"},
+            {CONF_DEVICE: "esphome-hass://esphome/entry-id?port_name=uart"},
+            FORM_SERIAL,
+            id="esphome-serial-proxy",
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -1302,11 +1331,19 @@ async def test_cloud_reconfigure_preserves_panel_identity(
             CONF_CLOUD_APP_ID: "saved-app-id",
         }
     )
+    saved_options = {
+        CONF_ARM_HOME_ENABLED: False,
+        CONF_ENABLE_REMOTE_ARM: True,
+        CONF_ENABLE_REMOTE_DISARM: False,
+        CONF_ARM_CODE_AUTO: True,
+        CONF_INSTANT_ARM_HOME: True,
+        CONF_INSTANT_ARM_AWAY: True,
+    }
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=unique_id,
         data=saved_data,
-        options={CONF_ARM_HOME_ENABLED: False},
+        options=saved_options,
         title="Original panel",
     )
     entry.add_to_hass(hass)
@@ -1346,6 +1383,7 @@ async def test_cloud_reconfigure_preserves_panel_identity(
             assert entry.data == saved_data
             assert entry.unique_id == unique_id
             assert entry.title == "Original panel"
+            assert entry.options == saved_options
             api.panel_login.assert_not_awaited()
             reload.assert_not_awaited()
 
@@ -1359,11 +1397,48 @@ async def test_cloud_reconfigure_preserves_panel_identity(
         assert entry.data.items() >= (changed_credentials | PANEL_INPUT).items()
         assert entry.unique_id == unique_id
         assert entry.entry_id == entry_id
-        assert entry.options == {CONF_ARM_HOME_ENABLED: False}
+        assert entry.options == {
+            CONF_ARM_HOME_ENABLED: False,
+            CONF_ENABLE_REMOTE_ARM: True,
+            CONF_ENABLE_REMOTE_DISARM: False,
+        }
         api.panel_login.assert_awaited_once_with("ABCDEF", "1234")
         api.panel_logout.assert_awaited_once_with()
         reload.assert_awaited_once_with(entry_id)
         assert hass.config_entries.async_entries(DOMAIN) == [entry]
+
+
+@pytest.mark.usefixtures("mock_connection_test")
+async def test_cancelled_cloud_reconfigure_preserves_options(
+    hass: HomeAssistant,
+) -> None:
+    """Do not remove local arming settings before cloud setup is completed."""
+    saved_data = {
+        CONF_TYPE: DeviceType.ETHERNET,
+        CONF_PANEL_NUMBER: 2,
+        CONF_HOST: "192.0.2.1",
+        CONF_PORT: "30000",
+    }
+    saved_options = {
+        CONF_ENABLE_REMOTE_ARM: False,
+        CONF_ENABLE_REMOTE_DISARM: True,
+        CONF_ARM_CODE_AUTO: True,
+        CONF_INSTANT_ARM_HOME: True,
+        CONF_INSTANT_ARM_AWAY: True,
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=saved_data, options=saved_options)
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: DeviceType.CLOUD.title()}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CLOUD_INPUT
+    )
+    assert result["step_id"] == FORM_SELECT_PANEL
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    assert entry.data == saved_data
+    assert entry.options == saved_options
 
 
 # The saved panel is absent from the account, so this flow cannot finish.
@@ -1431,6 +1506,52 @@ async def test_cloud_registered_duplicate(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
         api.panel_login.assert_not_awaited()
     assert hass.config_entries.async_entries(DOMAIN) == [existing]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "device",
+    [
+        pytest.param(
+            "esphome-hass://esphome/entry-id?port_name=uart2", id="different-port"
+        ),
+        pytest.param(
+            "esphome-hass://esphome/other-entry?port_name=uart", id="different-device"
+        ),
+    ],
+)
+async def test_distinct_serial_proxies(
+    hass: HomeAssistant, mock_connection_test: AsyncMock, device: str
+) -> None:
+    """Different proxy devices and UARTs can represent separate panels."""
+    existing = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_TYPE: DeviceType.SERIAL,
+            CONF_DEVICE: "esphome-hass://esphome/entry-id?port_name=uart",
+        },
+    )
+    existing.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: DeviceType.SERIAL.title()}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: device}
+    )
+    assert result["step_id"] == FORM_POWERLINK
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USER_CODE_SLOT: 1}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
+    assert result["result"].data[CONF_DEVICE] == device
+    mock_connection_test.assert_awaited_once_with(
+        DeviceType.SERIAL, {CONF_DEVICE: device}
+    )
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

@@ -46,7 +46,7 @@ class AlarmBaseLogic(CoordinatorEntity[VisonicCoordinator]):
             identifiers={(DOMAIN, identifier)},
             manufacturer=MANUFACTURER,
         )
-        self.panel_state_data: PanelStateData = PanelStateData()
+        self.panel_state_data = self.coordinator.get_panel_state()
         self.update_local(entry)
         self.coordinator.ive_been_created()
 

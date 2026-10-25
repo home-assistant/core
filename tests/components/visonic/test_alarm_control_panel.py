@@ -6,6 +6,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pyvisonic import AlPanelCommand
 from pyvisonicalarm.alarm import AlarmSystem
 
 from homeassistant.components.alarm_control_panel import (
@@ -16,16 +17,23 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.components.visonic.alarm_control_panel import VisonicAlarm
 from homeassistant.components.visonic.cloud import VisonicCloudConnection
 from homeassistant.components.visonic.const import (
+    CONF_ARM_CODE_AUTO,
+    CONF_ARM_HOME_ENABLED,
     CONF_ENABLE_REMOTE_ARM,
     CONF_ENABLE_REMOTE_DISARM,
     CONF_INSTANT_ARM_AWAY,
     CONF_INSTANT_ARM_HOME,
     CONF_PANEL_NUMBER,
+    CONF_PANEL_SERIAL,
     DOMAIN,
+    FORM_CLOUD,
+    FORM_DEVICE_NO_PANEL,
+    FORM_SELECT_PANEL,
     TRANSLATE_EXCEPTION_DISARM_CODE_NOT_ENTERED,
     Platform,
 )
 from homeassistant.components.visonic.coordinator import VisonicCoordinator
+from homeassistant.components.visonic.direct import VisonicDirectConnection
 from homeassistant.components.visonic.visonic_data_types import (
     VisonicConfigEntry,
     VisonicCoordinatorData,
@@ -34,11 +42,20 @@ from homeassistant.components.visonic.visonic_entity_types import AlarmPanelData
 from homeassistant.components.visonic.visonic_types import (
     AlarmCommandStatus,
     AlarmPanelCommand,
+    AlarmPanelStatus,
     CommandResult,
     DeviceType,
     PanelStateData,
 )
-from homeassistant.const import CONF_CODE, CONF_TYPE
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_EMAIL,
+    CONF_EXTERNAL_URL,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_TYPE,
+)
 from homeassistant.core import HomeAssistant, HomeAssistantError
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import (
@@ -47,6 +64,161 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .helpers import SetupIntegration, create_mock_config_entry
+
+
+@pytest.mark.usefixtures("mock_panel_connect", "mock_async_zeroconf")
+@pytest.mark.parametrize(
+    ("device_type", "powerlink", "code_format", "code_arm_required"),
+    [
+        pytest.param(DeviceType.ETHERNET, True, None, False, id="powerlink"),
+        pytest.param(DeviceType.SERIAL, False, CodeFormat.NUMBER, True, id="serial"),
+        pytest.param(DeviceType.CLOUD, True, None, False, id="cloud"),
+    ],
+)
+async def test_initial_entity_state(
+    hass: HomeAssistant,
+    device_type: DeviceType,
+    powerlink: bool,
+    code_format: CodeFormat | None,
+    code_arm_required: bool,
+) -> None:
+    """Publish the existing snapshot before any subsequent panel update or poll."""
+    entry = create_mock_config_entry(
+        data={CONF_TYPE: device_type},
+        options={CONF_ARM_HOME_ENABLED: True, CONF_ARM_CODE_AUTO: False},
+    )
+    entry.add_to_hass(hass)
+    snapshot = VisonicCoordinatorData(
+        connected=True,
+        achieved_powerlink=powerlink,
+        armcode=AlarmPanelStatus.ARMED_AWAY,
+        statusdict={"panel_test_attribute": "initial snapshot"},
+    )
+    with (
+        patch.object(
+            VisonicDirectConnection, "create_state_snapshot", return_value=snapshot
+        ),
+        patch.object(
+            VisonicCloudConnection, "create_state_snapshot", return_value=snapshot
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        state = hass.states.get("alarm_control_panel.visonic_alarm_p1")
+        assert state is not None
+        assert state.state == AlarmControlPanelState.ARMED_AWAY
+        assert state.attributes["supported_features"] == (
+            AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_AWAY
+        )
+        assert state.attributes["code_format"] == code_format
+        assert state.attributes["code_arm_required"] is code_arm_required
+        assert state.attributes["panel_test_attribute"] == "initial snapshot"
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.parametrize(
+    ("command", "panel_command"),
+    [
+        pytest.param("alarm_arm_home", AlPanelCommand.ARM_HOME, id="home"),
+        pytest.param("alarm_arm_away", AlPanelCommand.ARM_AWAY, id="away"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("mock_visonic_client", "quick_arm", "service_data"),
+    [
+        pytest.param(True, False, {}, id="powerlink-stored-pin"),
+        pytest.param(True, True, {}, id="powerlink-quick-arm"),
+        pytest.param(False, True, {}, id="fallback-quick-arm"),
+        pytest.param(False, False, {CONF_CODE: "1234"}, id="fallback-explicit-pin"),
+    ],
+    indirect=["mock_visonic_client"],
+)
+async def test_local_arm_service_accepts_code(
+    hass: HomeAssistant,
+    mock_visonic_client: MagicMock,
+    command: str,
+    panel_command: AlPanelCommand,
+    quick_arm: bool,
+    service_data: dict[str, str],
+) -> None:
+    """Local arming reaches the library with its stored PIN or a supplied code."""
+    entry = create_mock_config_entry(
+        options={
+            CONF_ENABLE_REMOTE_ARM: True,
+            CONF_ARM_CODE_AUTO: quick_arm,
+            CONF_INSTANT_ARM_HOME: False,
+            CONF_INSTANT_ARM_AWAY: False,
+        }
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    state = hass.states.get("alarm_control_panel.visonic_alarm_p1")
+    assert state is not None
+    assert state.state == AlarmControlPanelState.DISARMED
+
+    await hass.services.async_call(
+        "alarm_control_panel",
+        command,
+        {"entity_id": "alarm_control_panel.visonic_alarm_p1"} | service_data,
+        blocking=True,
+    )
+    mock_visonic_client.send_command.assert_awaited_once_with(
+        panel_command, service_data.get(CONF_CODE), None
+    )
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.parametrize("command", ["alarm_arm_home", "alarm_arm_away"])
+@pytest.mark.parametrize(
+    ("mock_visonic_client", "remote_arm", "error_key"),
+    [
+        pytest.param(False, True, "code_arm_required", id="fallback-needs-code"),
+        pytest.param(
+            True,
+            False,
+            "fail_user_config_prevented",
+            id="powerlink-remote-arm-disabled",
+        ),
+    ],
+    indirect=["mock_visonic_client"],
+)
+async def test_local_arm_service_rejects_missing_code_or_permission(
+    hass: HomeAssistant,
+    mock_visonic_client: MagicMock,
+    command: str,
+    remote_arm: bool,
+    error_key: str,
+) -> None:
+    """Stored Powerlink codes do not bypass the remote-arm permission."""
+    entry = create_mock_config_entry(
+        options={
+            CONF_ENABLE_REMOTE_ARM: remote_arm,
+            CONF_ARM_CODE_AUTO: False,
+            CONF_INSTANT_ARM_HOME: False,
+            CONF_INSTANT_ARM_AWAY: False,
+        }
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    state = hass.states.get("alarm_control_panel.visonic_alarm_p1")
+    assert state is not None
+    assert state.state == AlarmControlPanelState.DISARMED
+
+    with pytest.raises(ServiceValidationError) as raised:
+        await hass.services.async_call(
+            "alarm_control_panel",
+            command,
+            {"entity_id": "alarm_control_panel.visonic_alarm_p1"},
+            blocking=True,
+        )
+    assert raised.value.translation_key == error_key
+    mock_visonic_client.send_command.assert_not_awaited()
+    assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.usefixtures("mock_panel_connect", "mock_async_zeroconf")
@@ -106,6 +278,95 @@ async def test_cloud_service_reuses_configured_code(
         assert await hass.config_entries.async_unload(entry.entry_id)
 
 
+@pytest.mark.usefixtures(
+    "mock_connection_test", "mock_panel_connect", "mock_async_zeroconf"
+)
+@pytest.mark.parametrize("command", ["arm_home", "arm_away"])
+async def test_cloud_reconfigure_uses_normal_arming(
+    hass: HomeAssistant, command: str
+) -> None:
+    """A loaded local panel loses hidden instant settings after switching to cloud."""
+    shared_options = {
+        CONF_ENABLE_REMOTE_ARM: True,
+        CONF_ENABLE_REMOTE_DISARM: False,
+        CONF_ARM_HOME_ENABLED: True,
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_TYPE: DeviceType.ETHERNET,
+            CONF_PANEL_NUMBER: 3,
+            CONF_HOST: "192.0.2.1",
+            CONF_PORT: "30000",
+        },
+        options=shared_options
+        | {
+            CONF_ARM_CODE_AUTO: True,
+            CONF_INSTANT_ARM_HOME: True,
+            CONF_INSTANT_ARM_AWAY: True,
+        },
+    )
+    entry.add_to_hass(hass)
+    snapshot = VisonicCoordinatorData(connected=True, achieved_powerlink=True)
+    with (
+        patch(
+            "homeassistant.components.visonic.direct.VisonicDirectConnection.create_state_snapshot",
+            return_value=snapshot,
+        ),
+        patch.object(
+            VisonicCloudConnection, "create_state_snapshot", return_value=snapshot
+        ),
+        patch.object(
+            VisonicCloudConnection,
+            "wait_for_process_status",
+            return_value=AlarmCommandStatus.SUCCESS,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        result = await entry.start_reconfigure_flow(hass)
+        assert result["step_id"] == FORM_DEVICE_NO_PANEL
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_TYPE: DeviceType.CLOUD.title()}
+        )
+        assert result["step_id"] == FORM_CLOUD
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EXTERNAL_URL: "cloud.example.com",
+                CONF_EMAIL: "user@example.com",
+                CONF_PASSWORD: "password",
+            },
+        )
+        assert result["step_id"] == FORM_SELECT_PANEL
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PANEL_SERIAL: "ABCDEF", CONF_CODE: "1234"}
+        )
+        assert result["reason"] == "reconfigure_successful"
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert entry.data[CONF_TYPE] == DeviceType.CLOUD
+        assert entry.options == shared_options
+        cloud = cast(VisonicCloudConnection, entry.runtime_data.coordinator.connection)
+        cloud_alarm = MagicMock(spec=AlarmSystem)
+        cloud_alarm.get_user_code.return_value = "1234"
+        cloud.cloud_alarm = cloud_alarm
+        cloud_command = getattr(cloud_alarm, command)
+        cloud_command.return_value = "process-token"
+        state = hass.states.get("alarm_control_panel.visonic_alarm_p3")
+        assert state is not None
+        assert state.attributes["code_arm_required"] is False
+        await hass.services.async_call(
+            "alarm_control_panel",
+            f"alarm_{command}",
+            {"entity_id": state.entity_id},
+            blocking=True,
+        )
+        cloud_command.assert_awaited_once_with()
+        cloud_alarm.arm_home_instant.assert_not_awaited()
+        cloud_alarm.arm_away_instant.assert_not_awaited()
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+
 @pytest.mark.asyncio
 async def test_async_alarm_disarm_code_not_entered(
     setup_integration: SetupIntegration,
@@ -125,7 +386,9 @@ async def test_async_alarm_disarm_code_not_entered(
 
     coordinator.process_command_result = MagicMock()
     alarm = VisonicAlarm(entry, identifier=identifier)
-    alarm.update_local(entry)
+    assert alarm.available is False
+    assert alarm.alarm_state is None
+    assert alarm.supported_features == 0
     alarm.coordinator.send_command = AsyncMock()
 
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -182,7 +445,7 @@ async def test_update_local_sets_attributes(
     assert alarm._attr_extra_state_attributes == {"foo": "bar"}
     assert alarm._attr_supported_features
     assert alarm._attr_code_format is expected
-    assert alarm.code_arm_required is True
+    assert alarm.code_arm_required is (not achieved_powerlink)
     await wait_for_coordinator_timer()
 
 

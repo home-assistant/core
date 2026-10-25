@@ -128,9 +128,11 @@ class VisonicAlarm(AlarmBaseLogic, AlarmControlPanelEntity):  # pyright: ignore[
 
         if self.panel_state_data.connected:
             is_cloud = entry.data[CONF_TYPE] == DeviceType.CLOUD
-            # Cloud commands reuse the panel code supplied during setup.
-            self._attr_code_arm_required = not is_cloud and not to_bool(
-                entry.options.get(CONF_ARM_CODE_AUTO, False)
+            # Cloud and PowerLink commands can use a stored panel code.
+            self._attr_code_arm_required = (
+                not is_cloud
+                and not self.panel_state_data.achieved_powerlink
+                and not to_bool(entry.options.get(CONF_ARM_CODE_AUTO, False))
             )
             if is_cloud:
                 # No need to use keypad, the user entered the user code as part of configuration

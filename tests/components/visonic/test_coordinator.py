@@ -22,11 +22,13 @@ from homeassistant.components.visonic.connection import (
     VisonicPanelMetadata,
 )
 from homeassistant.components.visonic.const import (
+    CONF_PANEL_NUMBER,
     DOMAIN,
     LOGGER,
     MANUFACTURER,
     PANEL_ATTRIBUTE_NAME,
     TEXT_DISCONNECTION_COUNT,
+    TEXT_PANEL_MODEL,
 )
 from homeassistant.components.visonic.coordinator import VisonicCoordinator
 from homeassistant.components.visonic.direct import VisonicDirectConnection
@@ -58,13 +60,18 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .helpers import SetupIntegration, create_config_entry_example
+from .helpers import (
+    SetupIntegration,
+    create_config_entry_example,
+    create_mock_config_entry,
+)
 
 
 @pytest.mark.parametrize(
@@ -646,7 +653,7 @@ async def test_cloud_panel_setup_from_snapshot(
         assert await coordinator.my_update_data() is snapshot
         assert await coordinator.my_update_data() is snapshot
 
-    register.assert_called_once_with(entry.title)
+    register.assert_called_once_with(UNDEFINED)
     create.assert_called_once_with()
     await coordinator.async_panel_stop()
     await coordinator.async_shutdown()
@@ -755,12 +762,21 @@ async def test_availability_transition_logging(
     listener = MagicMock()
     coordinator.async_add_listener(listener)
     caplog.set_level(logging.INFO, logger=LOGGER.name)
-    caplog.handler.addFilter(logging.Filter(LOGGER.name))
-
-    with patch.object(
-        coordinator.connection,
-        "create_state_snapshot",
-        side_effect=[snapshot, failure, failure, failure, snapshot, snapshot, snapshot],
+    with (
+        caplog.filtering(logging.Filter(LOGGER.name)),
+        patch.object(
+            coordinator.connection,
+            "create_state_snapshot",
+            side_effect=[
+                snapshot,
+                failure,
+                failure,
+                failure,
+                snapshot,
+                snapshot,
+                snapshot,
+            ],
+        ),
     ):
         await _poll_coordinator(coordinator, hass, freezer)
         assert caplog.record_tuples == []
@@ -813,8 +829,8 @@ async def test_cloud_setup_after_disconnected_snapshot(
     coordinator.async_add_listener(MagicMock())
     snapshot = VisonicCoordinatorData(connected=True, mode="cloud")
     caplog.set_level(logging.INFO, logger=LOGGER.name)
-    caplog.handler.addFilter(logging.Filter(LOGGER.name))
     with (
+        caplog.filtering(logging.Filter(LOGGER.name)),
         patch.object(
             coordinator.connection,
             "create_state_snapshot",
@@ -832,11 +848,67 @@ async def test_cloud_setup_after_disconnected_snapshot(
         await _poll_coordinator(coordinator, hass, freezer)
         assert coordinator.last_update_success
         assert coordinator.data is snapshot
-        register.assert_called_once_with(coordinator.config_entry.title)
+        register.assert_called_once_with(UNDEFINED)
         create.assert_called_once_with()
         assert caplog.record_tuples == [
             (LOGGER.name, logging.INFO, f"Fetching {coordinator.name} data recovered")
         ]
+
+
+@pytest.mark.usefixtures("mock_panel_connect", "mock_forward_entry_setups")
+@pytest.mark.parametrize(
+    ("data", "existing_model", "expected_model"),
+    [
+        pytest.param(
+            {TEXT_PANEL_MODEL: "PowerMaster 30"},
+            "Old entry title",
+            "PowerMaster 30",
+            id="reported-model-replaces-incorrect-model",
+        ),
+        pytest.param({}, None, None, id="missing-model"),
+        pytest.param(
+            {TEXT_PANEL_MODEL: None},
+            "PowerMaster 10",
+            "PowerMaster 10",
+            id="null-model-preserves-known-model",
+        ),
+    ],
+)
+async def test_cloud_device_registry_uses_reported_model(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    data: dict[str, str | None],
+    existing_model: str | None,
+    expected_model: str | None,
+) -> None:
+    """Register the reported model without substituting a configuration title."""
+    entry = create_mock_config_entry(data=data | {CONF_TYPE: DeviceType.CLOUD})
+    entry.add_to_hass(hass)
+    identifiers = {
+        (DOMAIN, get_alarm_panel_unique_ident(entry.data[CONF_PANEL_NUMBER]))
+    }
+    existing_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers=identifiers,
+        model=existing_model,
+    )
+    with patch.object(
+        VisonicCloudConnection,
+        "create_state_snapshot",
+        return_value=VisonicCoordinatorData(connected=True),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, get_alarm_panel_unique_ident(entry.data[CONF_PANEL_NUMBER])),
+        entry.entry_id,
+    )
+    assert device is not None
+    assert device.id == existing_device.id
+    assert device.model == expected_model
+    assert device.model != entry.title
+    with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
+        assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 class DummyCoordinator(VisonicCoordinator):

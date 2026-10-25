@@ -1,12 +1,19 @@
 """Common fixtures for the Visonic integration."""
 
 import asyncio
+from collections.abc import Generator
 from datetime import datetime
 from typing import cast
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
+from pyvisonic import (
+    AlCommandStatus,
+    AlPanelStatus,
+    VisonicClientCallbacks,
+    VisonicClientSettings,
+)
 
 from homeassistant.components.visonic.cloud import VisonicCloudConnection
 from homeassistant.components.visonic.connection_test import ConnectionTest
@@ -20,6 +27,37 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 
 from .helpers import create_mock_config_entry
+
+
+@pytest.fixture
+def mock_visonic_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
+    """Expose a connected local panel without opening a transport."""
+    with patch(
+        "homeassistant.components.visonic.direct.VisonicClient", autospec=True
+    ) as factory:
+        client = factory.return_value
+
+        def create_client(
+            settings: VisonicClientSettings, callbacks: VisonicClientCallbacks
+        ) -> MagicMock:
+            client.settings = settings
+            client.callbacks = callbacks
+            return client
+
+        factory.side_effect = create_client
+        client.connect.return_value = True
+        client.is_panel_connected.return_value = True
+        client.achieved_powerlink.return_value = request.param
+        client.get_partitions_in_use.return_value = {0}
+        client.get_partition_status.return_value = AlPanelStatus.DISARMED
+        client.get_panel_status_dict.return_value = {}
+        client.is_any_siren_active.return_value = (False,)
+        client.is_power_master.return_value = False
+        client.panel_mode_str = "Powerlink" if request.param else "Standard Plus"
+        client.disconnection_count = 0
+        client.panel_model = "PowerMax Pro"
+        client.send_command.return_value = AlCommandStatus.SUCCESS
+        yield client
 
 
 @pytest.fixture
