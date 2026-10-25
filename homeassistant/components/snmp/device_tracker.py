@@ -329,16 +329,16 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpDeviceTrackerCoordinator], Scanner
         """Return True if this MAC was seen in the latest scan."""
         if not self.coordinator.data:
             return False
-        return self._attr_mac_address in self.coordinator.data
+        return self.mac_address in self.coordinator.data
 
     @override
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Update attribute so base class can use it."""
-        assert self._attr_mac_address is not None
+        """Update the IP address before the base class writes the state."""
+        mac = self.mac_address
         self._attr_ip_address = (
-            self.coordinator.data.get(self._attr_mac_address)
-            if self.coordinator.data
+            self.coordinator.data.get(mac)
+            if self.coordinator.data and mac is not None
             else None
         )
         super()._handle_coordinator_update()

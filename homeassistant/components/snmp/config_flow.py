@@ -402,6 +402,9 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "usm_wrong_digests"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+        except Exception:
+            _LOGGER.exception("Unexpected exception validating the SNMP device")
+            errors["base"] = "unknown"
         else:
             title = _entry_title(data)
             if self.source == SOURCE_RECONFIGURE:

@@ -1,22 +1,17 @@
 """Conftest for SNMP tests."""
 
-from collections.abc import Iterator
-import socket
+import binascii
+from collections.abc import AsyncIterator, Iterator
+from typing import Any
 from unittest.mock import Mock, patch
 
+from pysnmp.proto.rfc1902 import OctetString
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 
 from . import mock_entry
-
-
-@pytest.fixture(autouse=True)
-def patch_getaddrinfo() -> None:
-    """Patch getaddrinfo to avoid DNS lookups in SNMP tests."""
-    with patch.object(socket, "getaddrinfo"):
-        yield
 
 
 @pytest.fixture
@@ -27,9 +22,25 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
+def mock_walk() -> Iterator[Mock]:
+    """Walk the ARP table of 192.168.1.1 and yield a single MAC address."""
+
+    async def side_effect(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        oid = Mock()
+        oid.asTuple.return_value = (1, 3, 6, 1, 2, 1, 4, 22, 1, 2, 1, 192, 168, 1, 1)
+        yield None, None, None, [(oid, OctetString(binascii.unhexlify("001122334455")))]
+
+    with patch(
+        "homeassistant.components.snmp.client.bulk_walk_cmd",
+        side_effect=side_effect,
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
 def mock_udp_transport() -> Iterator[Mock]:
-    """Patch UdpTransportTarget.create to avoid real network calls."""
+    """Avoid real network calls when a transport target is created."""
     with patch(
         "homeassistant.components.snmp.util.UdpTransportTarget.create",
         return_value=Mock(),

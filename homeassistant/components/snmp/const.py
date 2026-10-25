@@ -34,6 +34,8 @@ DEFAULT_TIMEOUT = 8
 DEFAULT_VERSION = "1"
 DEFAULT_VARTYPE = "none"
 
+# Polling of the config entry device tracker. The YAML sensor platform keeps its
+# own 10 second interval until it is migrated.
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=DEFAULT_INTERVAL_SECONDS)
 
 

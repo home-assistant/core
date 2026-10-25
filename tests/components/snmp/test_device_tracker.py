@@ -1,8 +1,9 @@
 """Tests for the SNMP device tracker."""
 
 import binascii
-from collections.abc import Callable, Iterator
+from collections.abc import AsyncIterator, Callable
 from itertools import cycle
+from typing import Any
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -10,11 +11,22 @@ from pysnmp.error import PySnmpError
 from pysnmp.proto import errind
 from pysnmp.proto.rfc1902 import OctetString
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.device_tracker import (
+    ATTR_IP,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+)
 from homeassistant.components.snmp.const import DEFAULT_SCAN_INTERVAL, DOMAIN
-from homeassistant.components.snmp.coordinator import MAX_CONSECUTIVE_FAILURES
+from homeassistant.components.snmp.coordinator import (
+    MAX_CONSECUTIVE_FAILURES,
+    SnmpDeviceTrackerCoordinator,
+)
 from homeassistant.components.snmp.device_tracker import (
     SnmpScanner,
     SnmpTrackerEntity,
@@ -36,7 +48,10 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_entry
 
+pytestmark = pytest.mark.usefixtures("mock_udp_transport")
+
 MAC = "00:11:22:33:44:55"
+MAC2 = "aa:bb:cc:dd:ee:ff"
 
 # ipNetToMediaPhysAddress, the MAC column of the ARP table
 ARP_MAC_OID = (1, 3, 6, 1, 2, 1, 4, 22, 1, 2)
@@ -58,24 +73,6 @@ async def _async_advance_poll(
         freezer.tick(DEFAULT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-
-
-@pytest.fixture
-def mock_walk() -> Iterator[Mock]:
-    """Mock bulk_walk_cmd."""
-
-    async def side_effect(*args, **kwargs):
-        # Return a list of MAC addresses
-        mac1 = binascii.unhexlify("001122334455")
-        oid1 = Mock()
-        oid1.asTuple.return_value = _arp_oid(192, 168, 1, 1)
-        yield None, None, None, [(oid1, OctetString(mac1))]
-
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=side_effect,
-    ) as mock:
-        yield mock
 
 
 @pytest.fixture
@@ -127,7 +124,7 @@ async def test_yaml_device_tracker_repair(
         }
     }
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, []
 
     with patch(
@@ -185,18 +182,18 @@ async def test_device_tracker_update(
 
     mac1 = binascii.unhexlify("001122334455")
     mac2 = binascii.unhexlify("aabbccddeeff")
-    mac1_str = "00:11:22:33:44:55"
-    mac2_str = "aa:bb:cc:dd:ee:ff"
+    mac1_str = MAC
+    mac2_str = MAC2
 
     oid1 = Mock()
     oid1.asTuple.return_value = _arp_oid(192, 168, 1, 1)
     oid2 = Mock()
     oid2.asTuple.return_value = _arp_oid(192, 168, 1, 22)
 
-    async def mock_walk_1(*args, **kwargs):
+    async def mock_walk_1(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, [(oid1, OctetString(mac1))]
 
-    async def mock_walk_2(*args, **kwargs):
+    async def mock_walk_2(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, [(oid2, OctetString(mac2))]
 
     mock_walk.side_effect = mock_walk_1
@@ -208,7 +205,7 @@ async def test_device_tracker_update(
     entity_id_1 = _tracker_entity_id(entity_registry, entry, mac1_str)
     assert entity_id_1 is not None
     assert hass.states.get(entity_id_1).state == STATE_HOME
-    assert hass.states.get(entity_id_1).attributes["ip"] == "192.168.1.1"
+    assert hass.states.get(entity_id_1).attributes[ATTR_IP] == "192.168.1.1"
 
     mock_walk.side_effect = mock_walk_2
 
@@ -240,20 +237,18 @@ async def test_device_tracker_device_registry_linking(
     entry = mock_entry()
     entry.add_to_hass(hass)
 
-    mac = "00:11:22:33:44:55"
-
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert not dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     assert (
         device_registry.async_get_device_by_connection(
-            (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
+            (dr.CONNECTION_NETWORK_MAC, MAC), entry.entry_id
         )
         is None
     )
 
-    entity_id = _tracker_entity_id(entity_registry, entry, mac)
+    entity_id = _tracker_entity_id(entity_registry, entry, MAC)
     reg_entry = entity_registry.async_get(entity_id)
     assert reg_entry is not None
     assert reg_entry.device_id is None
@@ -285,8 +280,8 @@ async def test_device_tracker_name_resolves_to_mac_address(
 @pytest.mark.usefixtures("mock_walk")
 async def test_device_tracker_enabled_if_device_exists(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    enable_tracker: Callable[[str], None],
 ) -> None:
     """Test that an entity is enabled if its device already exists in the registry.
 
@@ -295,13 +290,7 @@ async def test_device_tracker_enabled_if_device_exists(
     """
     entry = mock_entry()
     entry.add_to_hass(hass)
-
-    other_entry = MockConfigEntry(domain="other_integration")
-    other_entry.add_to_hass(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=other_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, MAC)},
-    )
+    enable_tracker(MAC)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -331,7 +320,7 @@ async def test_device_tracker_initial_macs(
         config_subentry_id=subentry_id,
     )
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, []
 
     with patch(
@@ -348,12 +337,17 @@ async def test_device_tracker_initial_macs(
     assert state.state == STATE_NOT_HOME
 
 
-async def test_device_tracker_properties_empty_coordinator() -> None:
+async def test_device_tracker_properties_empty_coordinator(
+    hass: HomeAssistant, mock_coordinator_entry: MockConfigEntry
+) -> None:
     """Test entity properties when coordinator data is empty."""
-    mock_coord = Mock()
-    mock_coord.data = {}
+    subentry = next(iter(mock_coordinator_entry.subentries.values()))
+    coordinator = SnmpDeviceTrackerCoordinator(
+        hass, mock_coordinator_entry, subentry, Mock()
+    )
 
-    entity = SnmpTrackerEntity(mock_coord, MAC)
+    entity = SnmpTrackerEntity(coordinator, MAC)
+    assert coordinator.data is None
     assert not entity.is_connected
     assert entity.ip_address is None
 
@@ -371,7 +365,7 @@ async def test_device_tracker_update_empty_data(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    async def mock_empty_walk(*args, **kwargs):
+    async def mock_empty_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         return
         yield  # pylint: disable=unreachable
 
@@ -413,7 +407,7 @@ async def test_mac_normalization(
     oid = Mock()
     oid.asTuple.return_value = (1, 192, 168, 1, 10)
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, [(oid, OctetString(input_bytes))]
 
     enable_tracker(expected_mac)
@@ -469,7 +463,7 @@ async def test_ip_extraction(
     oid = Mock()
     oid.asTuple.return_value = oid_tuple
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, [(oid, OctetString(mac_bytes))]
 
     enable_tracker(mac_str)
@@ -487,7 +481,7 @@ async def test_ip_extraction(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_HOME
-    assert state.attributes.get("ip") == expected_ip
+    assert state.attributes.get(ATTR_IP) == expected_ip
 
 
 async def test_ip_extraction_oid_too_short(
@@ -502,7 +496,7 @@ async def test_ip_extraction_oid_too_short(
     oid = Mock()
     oid.asTuple.return_value = (1, 2, 3)
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, [(oid, OctetString(mac_bytes))]
 
     enable_tracker(MAC)
@@ -520,7 +514,7 @@ async def test_ip_extraction_oid_too_short(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_HOME
-    assert state.attributes.get("ip") is None
+    assert state.attributes.get(ATTR_IP) is None
 
 
 @pytest.mark.parametrize(
@@ -543,24 +537,22 @@ async def test_walk_errindication(
     oid = Mock()
     oid.asTuple.return_value = (1, 192, 168, 1, 1)
 
-    async def mock_walk_first(*args, **kwargs):
-        yield None, None, None, [(oid, OctetString(mac_bytes))]
+    walks = 0
 
-    async def mock_walk_error(*args, **kwargs):
-        yield errindication, None, None, []
-
-    fail = False
-
-    async def mock_walk_side_effect(*args, **kwargs):
-        walk = mock_walk_error if fail else mock_walk_first
-        async for item in walk(*args, **kwargs):
-            yield item
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        """Yield the MAC once, then fail on every later poll."""
+        nonlocal walks
+        walks += 1
+        if walks == 1:
+            yield None, None, None, [(oid, OctetString(mac_bytes))]
+        else:
+            yield errindication, None, None, []
 
     enable_tracker(MAC)
 
     with patch(
         "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk_side_effect,
+        side_effect=mock_walk,
     ):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
@@ -572,7 +564,6 @@ async def test_walk_errindication(
         assert state.state == STATE_HOME
 
         # A transient failure keeps the last known state
-        fail = True
         await _async_advance_poll(hass, freezer)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -595,7 +586,7 @@ async def test_invalid_mac_length_ignored(
     oid = Mock()
     oid.asTuple.return_value = (1, 1, 1, 1, 0)
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, [(oid, OctetString(b"too_short"))]
 
     with patch(
@@ -622,7 +613,7 @@ async def test_mac_processing_exception_ignored(
     val = Mock()
     val.asOctets.side_effect = AttributeError
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, [(oid, val)]
 
     with patch(
@@ -652,7 +643,7 @@ async def test_walk_end_of_mib(
     oid2 = Mock()
     oid2.asTuple.return_value = (1, 192, 168, 1, 2)
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, [(oid1, OctetString(mac1_bytes))]
         yield None, None, None, [(oid2, OctetString(mac2_bytes))]
 
@@ -679,9 +670,7 @@ async def test_walk_end_of_mib(
     assert state.state == STATE_HOME
 
     # Second MAC should NOT have been processed (is_end_of_mib returned True)
-    entity_id_2 = _tracker_entity_id(
-        entity_registry, mock_coordinator_entry, "aa:bb:cc:dd:ee:ff"
-    )
+    entity_id_2 = _tracker_entity_id(entity_registry, mock_coordinator_entry, MAC2)
     assert entity_id_2 is None
 
 
@@ -780,7 +769,7 @@ async def test_scanner_walk_errindication() -> None:
     scanner = SnmpScanner(_scanner_config()[DEVICE_TRACKER_DOMAIN])
     scanner.request_args = (Mock(), Mock(), Mock(), Mock(), Mock())
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield errind.requestTimedOut, None, None, []
 
     with patch(
@@ -797,7 +786,7 @@ async def test_scanner_walk_errstatus() -> None:
     errstatus = Mock()
     errstatus.prettyPrint.return_value = "authorizationError"
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, errstatus, 0, []
 
     with patch(
@@ -814,7 +803,7 @@ async def test_scanner_walk_mac() -> None:
     bad_value = Mock()
     bad_value.asOctets.side_effect = AttributeError
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield (
             None,
             None,
@@ -854,4 +843,23 @@ async def test_async_get_scanner_invalid_host(
     assert (
         issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_device_tracker")
         is not None
+    )
+
+
+@pytest.mark.usefixtures("mock_walk")
+async def test_device_tracker_snapshot(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    enable_tracker: Callable[[str], None],
+    mock_coordinator_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the registry entry and state of a tracked device."""
+    enable_tracker(MAC)
+
+    assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_coordinator_entry.entry_id
     )

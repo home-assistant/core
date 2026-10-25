@@ -41,15 +41,23 @@ rules:
 
   # Silver
   action-exceptions: todo
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
-  entity-unavailable: todo
+  entity-unavailable:
+    status: todo
+    comment: The device tracker entities follow their coordinator, but the YAML sensor and switch platforms keep their last value when the device stops responding. This will be addressed when those platforms are migrated.
   integration-owner: todo
-  log-when-unavailable: todo
-  parallel-updates: todo
-  reauthentication-flow: todo
-  test-coverage: todo
+  log-when-unavailable:
+    status: todo
+    comment: The device tracker coordinator logs through UpdateFailed, but the YAML sensor and switch platforms do not log when the device stops responding. This will be addressed when those platforms are migrated.
+  parallel-updates:
+    status: todo
+    comment: PARALLEL_UPDATES will be set once the sensor and switch platforms are migrated.
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: "The migrated modules are above 95%, but sensor.py is at 81% and switch.py at 85%. This will be addressed when those platforms are migrated."
 
   # Gold
   devices: todo
@@ -70,7 +78,7 @@ rules:
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
 

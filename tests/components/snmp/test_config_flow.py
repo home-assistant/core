@@ -1,6 +1,7 @@
 """Tests for the SNMP config flow."""
 
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from pysnmp.error import PySnmpError
@@ -10,12 +11,10 @@ from pysnmp.smi.error import WrongValueError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
-from homeassistant import config_entries
 from homeassistant.components.snmp.config_flow import (
     AUTH_PROTOCOL_SELECTOR,
     PRIV_PROTOCOL_SELECTOR,
     SNMP_VERSION_SELECTOR,
-    InvalidAuth,
 )
 from homeassistant.components.snmp.const import (
     DOMAIN,
@@ -24,7 +23,7 @@ from homeassistant.components.snmp.const import (
     SNMP_VERSIONS,
     SUBENTRY_TYPE_DEVICE_TRACKER,
 )
-from homeassistant.config_entries import SubentryFlowContext
+from homeassistant.config_entries import SOURCE_USER, SubentryFlowContext
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -37,7 +36,7 @@ from . import ARP_TABLE_MAC_OID, mock_entry
 def mock_walk_empty() -> Iterator[None]:
     """Make any base OID readable by returning a walk without rows."""
 
-    async def _walk(*args, **kwargs):
+    async def _walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         return
         yield  # pylint: disable=unreachable
 
@@ -48,12 +47,11 @@ def mock_walk_empty() -> Iterator[None]:
 async def test_user_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) -> None:
     """Test successful user setup flow (v1/v2c)."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # Step 1: Basic info
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -64,7 +62,6 @@ async def test_user_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) ->
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v1_v2c"
 
-    # Step 2: V1/V2c Auth
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
@@ -94,10 +91,9 @@ async def test_user_flow_v3_success(
 ) -> None:
     """Test successful user setup flow (v3)."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # Step 1: Basic info
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -108,7 +104,6 @@ async def test_user_flow_v3_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
 
-    # Step 2: V3 Auth
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
@@ -131,15 +126,13 @@ async def test_user_flow_v3_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test user setup flow failure - cannot connect, then recovery."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # Step 1
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -148,7 +141,6 @@ async def test_user_flow_cannot_connect(
         },
     )
 
-    # Step 2: fails
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=("Timeout", None, None, None),
@@ -163,7 +155,6 @@ async def test_user_flow_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Step 2: retry succeeds
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
@@ -177,12 +168,11 @@ async def test_user_flow_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
+@pytest.mark.usefixtures("mock_config_entry")
+async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
     """Test user flow aborts if already configured."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -197,15 +187,13 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_v3_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
     """Test user setup flow failure - v3 invalid auth, then recovery."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # Step 1
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -214,7 +202,6 @@ async def test_user_flow_v3_invalid_auth(
         },
     )
 
-    # Step 2: V3 Auth fails (err_status returned by get_cmd)
     mock_err_status = MagicMock()
     mock_err_status.prettyPrint.return_value = "usmStatsWrongDigests"
     with patch(
@@ -229,7 +216,6 @@ async def test_user_flow_v3_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "usm_wrong_digests"}
 
-    # Retry with correct credentials succeeds
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
@@ -247,15 +233,13 @@ async def test_user_flow_v3_invalid_auth(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v3_vacm_denied_sysdescr(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v3_vacm_denied_sysdescr(hass: HomeAssistant) -> None:
     """Test v3 flow succeeds when sysDescr is denied by VACM but base OID works."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # Step 1
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -264,7 +248,6 @@ async def test_user_flow_v3_vacm_denied_sysdescr(
         },
     )
 
-    # Step 2: sysDescr.0 returns err_status (VACM denial) but base OID succeeds
     mock_err_status = MagicMock()
     mock_err_status.prettyPrint.return_value = "authorizationError"
     with patch(
@@ -292,6 +275,26 @@ async def test_user_flow_v3_vacm_denied_sysdescr(
             id="timeout",
         ),
         pytest.param(
+            "1",
+            errind.emptyResponse,
+            {"community": "public"},
+            "snmp_timeout",
+            {"community": "public"},
+            id="empty_response",
+        ),
+        pytest.param(
+            "3",
+            errind.decryptionError,
+            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            "usm_wrong_digests",
+            {
+                "username": "user",
+                "auth_key": "correct_pass",
+                "auth_protocol": "hmac-sha",
+            },
+            id="decryption_error",
+        ),
+        pytest.param(
             "3",
             errind.wrongDigest,
             {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
@@ -313,9 +316,9 @@ async def test_user_flow_v3_vacm_denied_sysdescr(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_err_indication(
     hass: HomeAssistant,
-    mock_setup_entry: Mock,
     version: str,
     errindication: object,
     step2_data: dict[str, str],
@@ -324,7 +327,7 @@ async def test_user_flow_err_indication(
 ) -> None:
     """Test user setup flow failure - various errindications, then recovery."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -342,7 +345,6 @@ async def test_user_flow_err_indication(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
-    # Retry succeeds
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
@@ -359,7 +361,7 @@ async def _async_start_subentry_flow(hass: HomeAssistant, entry: MockConfigEntry
     """Start the device tracker subentry flow of an entry."""
     return await hass.config_entries.subentries.async_init(
         (entry.entry_id, SUBENTRY_TYPE_DEVICE_TRACKER),
-        context=SubentryFlowContext(source=config_entries.SOURCE_USER),
+        context=SubentryFlowContext(source=SOURCE_USER),
     )
 
 
@@ -418,7 +420,6 @@ async def test_subentry_flow_invalid_oid(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"baseoid": "invalid_oid"}
 
-    # Retry with a valid OID
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {"baseoid": "1.3.6.1.2.1.4.22.1.2"},
@@ -446,7 +447,7 @@ async def test_subentry_flow_unreadable_oid(
     entry = mock_entry(baseoid=None)
     entry.add_to_hass(hass)
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield errindication, None, None, []
 
     result = await _async_start_subentry_flow(hass, entry)
@@ -462,7 +463,6 @@ async def test_subentry_flow_unreadable_oid(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == expected_errors
 
-    # Retry with a readable OID finishes the flow
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {"baseoid": "1.3.6.1.2.1.4.22.1.2"},
@@ -510,12 +510,11 @@ async def test_subentry_flow_reconfigure(hass: HomeAssistant) -> None:
     assert subentry.unique_id == "1.3.6.1.2.1.17.4.3.1.1"
 
 
-async def test_user_flow_v1_v2c_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v1_v2c_invalid_auth(hass: HomeAssistant) -> None:
     """Test user setup flow failure - v1/v2c invalid auth, then recovery."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -523,8 +522,8 @@ async def test_user_flow_v1_v2c_invalid_auth(
     )
 
     with patch(
-        "homeassistant.components.snmp.config_flow.validate_input",
-        side_effect=InvalidAuth("Invalid community"),
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(errind.unknownCommunityName, None, None, []),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"community": "public"}
@@ -533,7 +532,6 @@ async def test_user_flow_v1_v2c_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
-    # Retry succeeds
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
@@ -546,12 +544,11 @@ async def test_user_flow_v1_v2c_invalid_auth(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v1_v2c_unknown_error(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v1_v2c_unknown_error(hass: HomeAssistant) -> None:
     """Test user setup flow failure - v1/v2c unknown error, then recovery."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -569,7 +566,6 @@ async def test_user_flow_v1_v2c_unknown_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Retry succeeds
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
@@ -582,12 +578,45 @@ async def test_user_flow_v1_v2c_unknown_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v3_auth_key_required_for_priv(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_unexpected_error(hass: HomeAssistant) -> None:
+    """Test that an unexpected exception is reported as an unknown error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "1.1.1.1", "version": "1"},
+    )
+
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        side_effect=RuntimeError("boom"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"community": "public"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"community": "public"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v3_auth_key_required_for_priv(hass: HomeAssistant) -> None:
     """Test user setup flow failure - v3 auth key required for priv, then recovery."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -601,7 +630,6 @@ async def test_user_flow_v3_auth_key_required_for_priv(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"auth_key": "auth_key_required_for_priv"}
 
-    # Retry with auth_key provided succeeds
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
@@ -621,12 +649,11 @@ async def test_user_flow_v3_auth_key_required_for_priv(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v3_unknown_error(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v3_unknown_error(hass: HomeAssistant) -> None:
     """Test user setup flow failure - v3 unknown error, then recovery."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -645,7 +672,6 @@ async def test_user_flow_v3_unknown_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Retry succeeds
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
@@ -659,12 +685,11 @@ async def test_user_flow_v3_unknown_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v3_no_keys_success(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v3_no_keys_success(hass: HomeAssistant) -> None:
     """Test successful v3 setup with only a username (no auth/priv keys)."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -685,12 +710,11 @@ async def test_user_flow_v3_no_keys_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v3_auth_creation_error(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v3_auth_creation_error(hass: HomeAssistant) -> None:
     """Test v3 flow when UsmUserData creation fails."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -723,12 +747,11 @@ async def test_user_flow_v3_auth_creation_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v3_wrong_value_error(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v3_wrong_value_error(hass: HomeAssistant) -> None:
     """Test v3 flow when get_cmd raises WrongValueError."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -763,12 +786,11 @@ async def test_user_flow_v3_wrong_value_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_transport_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_transport_cannot_connect(hass: HomeAssistant) -> None:
     """Test user setup flow failure - transport creation fails (IPv4+IPv6), then recovery."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -792,7 +814,6 @@ async def test_user_flow_transport_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Retry succeeds
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
@@ -805,12 +826,11 @@ async def test_user_flow_transport_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v3_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v3_cannot_connect(hass: HomeAssistant) -> None:
     """Test user setup flow failure - v3 cannot connect, then recovery."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -835,7 +855,6 @@ async def test_user_flow_v3_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Retry succeeds
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
@@ -868,21 +887,18 @@ async def test_user_flow_context_is_part_of_the_device(
     expected_type: FlowResultType,
 ) -> None:
     """Test that only an identical SNMPv3 context is a duplicate device."""
-    existing = MockConfigEntry(
-        domain=DOMAIN,
-        title="192.168.1.1",
-        data={
-            "host": "192.168.1.1",
-            "port": 161,
-            "version": "3",
-            "username": "user",
-            "context_name": "test-context",
-        },
+    existing = mock_entry(
+        baseoid=None,
+        host="192.168.1.1",
+        port=161,
+        version="3",
+        username="user",
+        context_name="test-context",
     )
     existing.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"host": "192.168.1.1", "version": "3"}
@@ -952,7 +968,7 @@ async def test_user_flow_v3_incoherent_credentials(
 ) -> None:
     """Test that keys and protocols which do not pair up are rejected."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"host": "192.168.1.1", "version": "3"}
@@ -984,7 +1000,7 @@ async def test_user_flow_v3_incoherent_credentials(
 async def test_user_flow_v3_auth_without_privacy(hass: HomeAssistant) -> None:
     """Test that authentication without privacy is accepted."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"host": "192.168.1.1", "version": "3"}
@@ -1044,15 +1060,12 @@ async def test_reconfigure_flow_updates_credentials(
     hass: HomeAssistant, mock_setup_entry: Mock
 ) -> None:
     """Test that the community string of an entry can be changed."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="192.168.1.1",
-        data={
-            "host": "192.168.1.1",
-            CONF_PORT: 1161,
-            "version": "1",
-            "community": "public",
-        },
+    entry = mock_entry(
+        baseoid=None,
+        host="192.168.1.1",
+        port=1161,
+        version="1",
+        community="public",
     )
     entry.add_to_hass(hass)
 
@@ -1173,20 +1186,17 @@ async def test_reconfigure_flow_aborts_on_duplicate_device(
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_suggests_credentials(hass: HomeAssistant) -> None:
     """Test that reconfiguring prefills everything but the keys."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="192.168.1.1 (other-context)",
-        data={
-            "host": "192.168.1.1",
-            CONF_PORT: 161,
-            "version": "3",
-            "username": "user",
-            "auth_key": "auth_password",
-            "auth_protocol": "hmac-sha",
-            "priv_key": "priv_password",
-            "priv_protocol": "aes-cfb-128",
-            "context_name": "other-context",
-        },
+    entry = mock_entry(
+        baseoid=None,
+        host="192.168.1.1",
+        port=161,
+        version="3",
+        username="user",
+        auth_key="auth_password",
+        auth_protocol="hmac-sha",
+        priv_key="priv_password",
+        priv_protocol="aes-cfb-128",
+        context_name="other-context",
     )
     entry.add_to_hass(hass)
 
@@ -1209,17 +1219,14 @@ async def test_reauth_flow_updates_credentials(
     hass: HomeAssistant, mock_setup_entry: Mock
 ) -> None:
     """Test that a v3 entry can be reauthenticated with new keys."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="192.168.1.1",
-        data={
-            "host": "192.168.1.1",
-            CONF_PORT: 161,
-            "version": "3",
-            "username": "user",
-            "auth_key": "old-key",
-            "auth_protocol": "hmac-sha",
-        },
+    entry = mock_entry(
+        baseoid=None,
+        host="192.168.1.1",
+        port=161,
+        version="3",
+        username="user",
+        auth_key="old-key",
+        auth_protocol="hmac-sha",
     )
     entry.add_to_hass(hass)
 
@@ -1256,16 +1263,13 @@ async def test_reauth_flow_v1_v2c_does_not_suggest_community(
     hass: HomeAssistant, mock_setup_entry: Mock
 ) -> None:
     """Test that reauthenticating v1/v2c does not prefill the stored community."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="192.168.1.1",
-        data={
-            "host": "192.168.1.1",
-            CONF_PORT: 161,
-            "version": "1",
-            "community": "old-community",
-            "context_name": "",
-        },
+    entry = mock_entry(
+        baseoid=None,
+        host="192.168.1.1",
+        port=161,
+        version="1",
+        community="old-community",
+        context_name="",
     )
     entry.add_to_hass(hass)
 
@@ -1297,19 +1301,16 @@ async def test_reauth_flow_drops_removed_privacy_key(
     hass: HomeAssistant, mock_setup_entry: Mock
 ) -> None:
     """Test that downgrading to authentication without privacy drops the key."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="192.168.1.1",
-        data={
-            "host": "192.168.1.1",
-            CONF_PORT: 161,
-            "version": "3",
-            "username": "user",
-            "auth_key": "auth-key",
-            "auth_protocol": "hmac-sha",
-            "priv_key": "priv-key",
-            "priv_protocol": "aes-cfb-128",
-        },
+    entry = mock_entry(
+        baseoid=None,
+        host="192.168.1.1",
+        port=161,
+        version="3",
+        username="user",
+        auth_key="auth-key",
+        auth_protocol="hmac-sha",
+        priv_key="priv-key",
+        priv_protocol="aes-cfb-128",
     )
     entry.add_to_hass(hass)
 
@@ -1347,19 +1348,16 @@ async def test_reauth_flow_reloads_when_credentials_are_unchanged(
     hass: HomeAssistant,
 ) -> None:
     """Test that a reauth which changes nothing still reloads the entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="192.168.1.1",
-        data={
-            "host": "192.168.1.1",
-            CONF_PORT: 161,
-            "version": "3",
-            "username": "user",
-            "auth_key": "auth-key",
-            "auth_protocol": "hmac-sha",
-            "priv_protocol": "none",
-            "context_name": "",
-        },
+    entry = mock_entry(
+        baseoid=None,
+        host="192.168.1.1",
+        port=161,
+        version="3",
+        username="user",
+        auth_key="auth-key",
+        auth_protocol="hmac-sha",
+        priv_protocol="none",
+        context_name="",
     )
     entry.add_to_hass(hass)
     listener = AsyncMock()
@@ -1406,7 +1404,7 @@ async def test_user_flow_v3_is_checked_after_credentials(hass: HomeAssistant) ->
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"host": "192.168.1.1", "version": "3"}

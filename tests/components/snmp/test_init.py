@@ -1,8 +1,11 @@
 """SNMP tests."""
 
 import binascii
+from collections.abc import AsyncIterator
+from typing import Any
 from unittest.mock import Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
 from pysnmp.hlapi.v3arch.asyncio.cmdgen import LCD
@@ -10,7 +13,7 @@ from pysnmp.proto import errind
 from pysnmp.proto.rfc1902 import OctetString
 from pysnmp.smi.error import WrongValueError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import snmp
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
@@ -20,12 +23,14 @@ from homeassistant.components.snmp.const import (
     DOMAIN,
     SUBENTRY_TYPE_DEVICE_TRACKER,
 )
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState, ConfigSubentry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import ARP_TABLE_MAC_OID, mock_entry
+
+pytestmark = pytest.mark.usefixtures("mock_udp_transport")
 
 MAC = "00:11:22:33:44:55"
 
@@ -33,7 +38,7 @@ MAC = "00:11:22:33:44:55"
 ARP_MAC_OID = (1, 3, 6, 1, 2, 1, 4, 22, 1, 2)
 
 
-async def _async_mock_walk_with_mac(*args, **kwargs):
+async def _async_mock_walk_with_mac(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
     """Yield a single MAC address from the ARP table."""
     oid = Mock()
     oid.asTuple.return_value = (*ARP_MAC_OID, 1, 192, 168, 1, 1)
@@ -47,10 +52,27 @@ def _async_mac_entity_id(hass: HomeAssistant, subentry_id: str) -> str | None:
     )
 
 
-async def _async_mock_walk(*args, **kwargs):
+async def _async_mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
     """Return an empty walk."""
     return
     yield  # pylint: disable=unreachable
+
+
+def _async_reauth_flow(hass: HomeAssistant) -> bool:
+    """Return True when a reauthentication flow is in progress."""
+    return any(
+        flow["context"].get("source") == SOURCE_REAUTH
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    )
+
+
+async def _async_advance_poll(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Advance a single poll."""
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 async def test_async_get_snmp_engine(hass: HomeAssistant) -> None:
@@ -86,14 +108,7 @@ async def test_async_setup_entry_custom_port(
 
 async def test_async_setup_entry_custom_port_used(hass: HomeAssistant) -> None:
     """Test that the configured port is used."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "1.2.3.4",
-            CONF_PORT: 1161,
-            "version": "2c",
-        },
-    )
+    entry = mock_entry(host="1.2.3.4", version="2c", port=1161)
     entry.add_to_hass(hass)
 
     with (
@@ -115,15 +130,7 @@ async def test_async_setup_entry_custom_port_used(hass: HomeAssistant) -> None:
 
 async def test_async_setup_entry_v3_no_keys(hass: HomeAssistant) -> None:
     """Test async_setup_entry with SNMP v3 and no auth/priv keys."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="1.2.3.4",
-        data={
-            "host": "1.2.3.4",
-            "version": "3",
-            "username": "test-user",
-        },
-    )
+    entry = mock_entry(host="1.2.3.4", version="3", username="test-user", baseoid=None)
     entry.add_to_hass(hass)
 
     with patch(
@@ -215,7 +222,7 @@ async def test_walk_error_makes_entry_not_ready(hass: HomeAssistant) -> None:
     entry = mock_entry()
     entry.add_to_hass(hass)
 
-    async def mock_walk_error(*args, **kwargs):
+    async def mock_walk_error(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         raise PySnmpError("Network unreachable")
         yield  # pylint: disable=unreachable
 
@@ -237,7 +244,7 @@ async def test_walk_errstatus(hass: HomeAssistant) -> None:
     mock_err_status = Mock()
     mock_err_status.prettyPrint.return_value = "noSuchName"
 
-    async def mock_walk(*args, **kwargs):
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, mock_err_status, 1, [("oid", "val")]
 
     with patch(
@@ -250,24 +257,20 @@ async def test_walk_errstatus(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_walk_auth_error(hass: HomeAssistant) -> None:
-    """Test that WrongValueError during walk triggers reauth."""
+async def test_walk_auth_error(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_walk: Mock
+) -> None:
+    """Test that WrongValueError during a poll triggers reauth."""
     entry = mock_entry()
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.snmp.client.bulk_walk_cmd",
-            side_effect=WrongValueError,
-        ),
-        patch(
-            "homeassistant.config_entries.ConfigEntry.async_start_reauth_if_available"
-        ) as reauth,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert reauth.called
+    mock_walk.side_effect = WrongValueError
+    await _async_advance_poll(hass, freezer)
+
+    assert _async_reauth_flow(hass)
 
 
 @pytest.mark.parametrize(
@@ -279,58 +282,46 @@ async def test_walk_auth_error(hass: HomeAssistant) -> None:
     ],
 )
 async def test_walk_auth_indication_triggers_reauth(
-    hass: HomeAssistant, errindication: errind.ErrorIndication
+    hass: HomeAssistant,
+    errindication: errind.ErrorIndication,
+    freezer: FrozenDateTimeFactory,
+    mock_walk: Mock,
 ) -> None:
-    """Test that an authentication indication during the walk triggers reauth."""
+    """Test that an authentication indication during a poll triggers reauth."""
     entry = mock_entry()
     entry.add_to_hass(hass)
 
-    async def mock_walk(*args, **kwargs):
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    async def mock_walk_auth(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield errindication, None, None, []
 
-    with (
-        patch(
-            "homeassistant.components.snmp.client.bulk_walk_cmd",
-            side_effect=mock_walk,
-        ),
-        patch(
-            "homeassistant.config_entries.ConfigEntry.async_start_reauth_if_available"
-        ) as reauth,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    mock_walk.side_effect = mock_walk_auth
+    await _async_advance_poll(hass, freezer)
 
-    assert reauth.called
+    assert _async_reauth_flow(hass)
 
 
 async def test_auth_data_auth_error(hass: HomeAssistant) -> None:
-    """Test that invalid v3 credentials trigger reauth."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="1.2.3.4",
-        data={
-            "host": "1.2.3.4",
-            "version": "3",
-            "username": "test-user",
-            "auth_key": "auth-key",
-            "auth_protocol": "hmac-sha",
-        },
+    """Test that credentials which cannot be built fail the setup."""
+    entry = mock_entry(
+        host="1.2.3.4",
+        version="3",
+        username="test-user",
+        auth_key="auth-key",
+        auth_protocol="hmac-sha",
     )
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.snmp.client.create_auth_data",
-            side_effect=WrongValueError,
-        ),
-        patch(
-            "homeassistant.config_entries.ConfigEntry.async_start_reauth_if_available"
-        ) as reauth,
+    with patch(
+        "homeassistant.components.snmp.util.UsmUserData",
+        side_effect=WrongValueError,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert reauth.called
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(
