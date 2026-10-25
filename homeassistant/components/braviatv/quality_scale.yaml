@@ -17,7 +17,7 @@ rules:
     comment: The integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   docs-triggers:
     status: exempt
     comment: The integration does not have any triggers.
@@ -41,7 +41,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: The integration does not have an options flow.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable:
     status: done
     comment: |
@@ -66,13 +66,13 @@ rules:
     comment: |
       The SSDP step uses the UPnP UDN as unique ID while entries use the CID or MAC,
       so the host is never updated when the IP address changes.
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: The integration connects to a single device.
