@@ -12,6 +12,7 @@ from aiohomeconnect.model import (
     ArrayOfCommands,
     ArrayOfEvents,
     ArrayOfHomeAppliances,
+    ArrayOfImages,
     ArrayOfOptions,
     ArrayOfPrograms,
     ArrayOfSettings,
@@ -43,7 +44,14 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import MOCK_AVAILABLE_COMMANDS, MOCK_PROGRAMS, MOCK_SETTINGS, MOCK_STATUS
+from . import (
+    MOCK_AVAILABLE_COMMANDS,
+    MOCK_IMAGE_CONTENT,
+    MOCK_IMAGES,
+    MOCK_PROGRAMS,
+    MOCK_SETTINGS,
+    MOCK_STATUS,
+)
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -404,6 +412,13 @@ def mock_client(
                 )
         raise HomeConnectApiError("error.key", "error description")
 
+    async def _get_images_side_effect(ha_id: str) -> ArrayOfImages:
+        """Get images."""
+        for appliance_ in appliances:
+            if appliance_.ha_id == ha_id and appliance_.type in MOCK_IMAGES:
+                return ArrayOfImages.from_dict(MOCK_IMAGES[appliance_.type])
+        raise HomeConnectApiError("error.key", "error description")
+
     mock.start_program = AsyncMock(
         side_effect=_get_set_program_side_effect(
             event_queue, EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
@@ -443,6 +458,8 @@ def mock_client(
     mock.set_selected_program_option = AsyncMock(
         side_effect=_get_set_program_option_side_effect(event_queue)
     )
+    mock.get_images = AsyncMock(side_effect=_get_images_side_effect)
+    mock.get_image = AsyncMock(return_value=MOCK_IMAGE_CONTENT)
 
     mock.side_effect = mock
     return mock
@@ -498,6 +515,8 @@ def mock_client_with_exception(
     mock.get_selected_program_options = AsyncMock(side_effect=exception)
     mock.set_active_program_option = AsyncMock(side_effect=exception)
     mock.set_selected_program_option = AsyncMock(side_effect=exception)
+    mock.get_images = AsyncMock(side_effect=exception)
+    mock.get_image = AsyncMock(side_effect=exception)
 
     return mock
 
