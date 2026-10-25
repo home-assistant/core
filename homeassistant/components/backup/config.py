@@ -243,6 +243,19 @@ class BackupConfig:
 
         self._manager.store.save()
 
+    @callback
+    def rename_agent(self, old_agent_id: str, new_agent_id: str) -> None:
+        """Rename an agent, keeping any settings already stored for the new ID."""
+        if (agent_config := self.data.agents.pop(old_agent_id, None)) is not None:
+            self.data.agents.setdefault(new_agent_id, agent_config)
+        self.data.create_backup = replace(
+            self.data.create_backup,
+            agent_ids=rename_agent_id(
+                self.data.create_backup.agent_ids, old_agent_id, new_agent_id
+            ),
+        )
+        self._manager.store.save()
+
 
 @dataclass(kw_only=True)
 class AgentConfig:
@@ -754,6 +767,18 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
 
     await manager.async_delete_filtered_backups(
         include_filter=_automatic_backups_filter, delete_filter=_delete_filter
+    )
+
+
+def rename_agent_id(
+    agent_ids: list[str], old_agent_id: str, new_agent_id: str
+) -> list[str]:
+    """Replace an agent ID in a list of agent IDs without creating duplicates."""
+    return list(
+        dict.fromkeys(
+            new_agent_id if agent_id == old_agent_id else agent_id
+            for agent_id in agent_ids
+        )
     )
 
 

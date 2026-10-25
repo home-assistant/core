@@ -42,6 +42,7 @@ from .config import (
     CreateBackupParametersDict,
     check_unavailable_agents,
     delete_backups_exceeding_configured_count,
+    rename_agent_id,
 )
 from .const import (
     BUF_SIZE,
@@ -406,6 +407,17 @@ class BackupManager:
             start.async_at_started(self.hass, set_manager_idle_after_start)
 
         await self.load_platforms()
+
+    @callback
+    def async_rename_agent(self, old_agent_id: str, new_agent_id: str) -> None:
+        """Rename a backup agent in the backup config and known backups.
+
+        Integrations call this when the ID of one of their backup agents changes,
+        for example when migrating the unique ID of a config entry. Settings
+        already stored for the new agent ID take precedence.
+        """
+        self.config.rename_agent(old_agent_id, new_agent_id)
+        self.known_backups.rename_agent(old_agent_id, new_agent_id)
 
     @property
     def state(self) -> BackupManagerState:
@@ -1673,6 +1685,14 @@ class KnownBackups:
             failed_agent_ids=list(chain(agent_errors, unavailable_agents)),
             failed_folders=list(failed_folders),
         )
+        self._manager.store.save()
+
+    def rename_agent(self, old_agent_id: str, new_agent_id: str) -> None:
+        """Rename an agent in the failed agents of known backups."""
+        for backup in self._backups.values():
+            backup.failed_agent_ids = rename_agent_id(
+                backup.failed_agent_ids, old_agent_id, new_agent_id
+            )
         self._manager.store.save()
 
     def get(self, backup_id: str) -> KnownBackup | None:
