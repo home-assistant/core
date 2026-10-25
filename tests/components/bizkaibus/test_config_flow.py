@@ -168,6 +168,45 @@ async def test_user_flow_with_parse_error(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_user_flow_with_lines_parse_error(hass: HomeAssistant) -> None:
+    """Test the user flow handles a line discovery parse error."""
+    line = SimpleNamespace(id="A", route="Route A")
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch(
+            "homeassistant.components.bizkaibus.async_setup_entry", return_value=True
+        ),
+    ):
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[line],
+            timetable=SimpleNamespace(id="stop_1234", name="Central Station"),
+        )
+        mock_api.get_lines_on_stop = AsyncMock(
+            side_effect=[BizkaibusParseError(), [line]]
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "1234"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "api_parse_error"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "1234"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_user_flow_with_timetable_parse_error(hass: HomeAssistant) -> None:
     """Test the user flow handles a timetable parse error."""
     with (
@@ -951,6 +990,51 @@ async def test_reconfigure_step_with_parse_error(hass: HomeAssistant) -> None:
         assert result["reason"] == "reconfigure_successful"
 
 
+async def test_reconfigure_step_with_lines_parse_error(hass: HomeAssistant) -> None:
+    """Test reconfiguration handles a line discovery parse error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STOP_ID: "0252"},
+        unique_id="0252",
+    )
+    config_entry.add_to_hass(hass)
+
+    line = SimpleNamespace(id="A", route="Route A")
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload", return_value=True
+        ),
+    ):
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[line],
+            timetable=SimpleNamespace(id="stop_0252", name="Central Station"),
+        )
+        mock_api.get_lines_on_stop = AsyncMock(
+            side_effect=[BizkaibusParseError(), [line]]
+        )
+
+        result = await config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "0252"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "api_parse_error"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "0252"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
 async def test_reconfigure_step_with_timetable_parse_error(
     hass: HomeAssistant,
 ) -> None:
@@ -1151,6 +1235,27 @@ async def test_options_flow_factory_error(
     assert result["reason"] == expected_reason
 
 
+async def test_options_flow_lines_parse_error(hass: HomeAssistant) -> None:
+    """Test the options flow aborts on a line discovery parse error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STOP_ID: "1234"},
+        options={CONF_LINE_IDS: ["A"], CONF_LINES: {"A": "Route A"}},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        mock_api = _mock_api(mock_api_class)
+        mock_api.get_lines_on_stop = AsyncMock(side_effect=BizkaibusParseError())
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "api_parse_error"
+
+
 async def test_options_flow_timetable_parse_error(hass: HomeAssistant) -> None:
     """Test the options flow handles a timetable parse error."""
     config_entry = MockConfigEntry(
@@ -1220,6 +1325,22 @@ async def test_import_flow_factory_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_reason
+
+
+async def test_import_flow_lines_parse_error(hass: HomeAssistant) -> None:
+    """Test importing a stop aborts on a line discovery parse error."""
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        mock_api = _mock_api(mock_api_class)
+        mock_api.get_lines_on_stop = AsyncMock(side_effect=BizkaibusParseError())
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_STOP_ID: "1234"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "api_parse_error"
 
 
 async def test_import_flow_timetable_parse_error(hass: HomeAssistant) -> None:

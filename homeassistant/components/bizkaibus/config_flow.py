@@ -168,7 +168,15 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors=errors,
                     )
 
-                self._line_ids, self._lines = await _async_get_lines(api)
+                try:
+                    self._line_ids, self._lines = await _async_get_lines(api)
+                except BizkaibusParseError:
+                    errors["base"] = "api_parse_error"
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=USER_DATA_SCHEMA,
+                        errors=errors,
+                    )
                 if self._line_ids == []:
                     errors["base"] = "cannot_connect"
                 else:
@@ -268,7 +276,17 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors=errors,
                     )
 
-                self._line_ids, self._lines = await _async_get_lines(api)
+                try:
+                    self._line_ids, self._lines = await _async_get_lines(api)
+                except BizkaibusParseError:
+                    errors["base"] = "api_parse_error"
+                    return self.async_show_form(
+                        step_id="reconfigure",
+                        data_schema=self.add_suggested_values_to_schema(
+                            USER_DATA_SCHEMA, reconfigure_entry.data
+                        ),
+                        errors=errors,
+                    )
                 if self._line_ids == []:
                     errors["base"] = "cannot_connect"
                 else:
@@ -318,7 +336,10 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         except BizkaibusParseError:
             return self.async_abort(reason="api_parse_error")
 
-        line_ids, lines = await _async_get_lines(api)
+        try:
+            line_ids, lines = await _async_get_lines(api)
+        except BizkaibusParseError:
+            return self.async_abort(reason="api_parse_error")
         if line_ids == []:
             return self.async_abort(reason="cannot_connect")
 
@@ -419,7 +440,10 @@ class BizkaibusOptionsFlow(OptionsFlowWithReload):
         except BizkaibusParseError:
             return self.async_abort(reason="api_parse_error")
 
-        self._line_ids, self._lines = await _async_get_lines(api)
+        try:
+            self._line_ids, self._lines = await _async_get_lines(api)
+        except BizkaibusParseError:
+            return self.async_abort(reason="api_parse_error")
         if self._line_ids == []:
             return self.async_abort(reason="cannot_connect")
 
