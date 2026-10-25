@@ -1734,7 +1734,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup reader/writer."""
         self._hass = hass
-        self.temp_backup_dir = Path(hass.config.path("tmp_backups"))
+        self.temp_backup_dir = Path("/tmp/hass_tmp_backups")
 
     @override
     async def async_create_backup(
