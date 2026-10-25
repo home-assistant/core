@@ -4448,6 +4448,31 @@ def _rename_agent_storage(
             ["test.new"],
             id="old_agent_not_configured_new_agent_configured",
         ),
+        pytest.param(
+            {
+                "test.old": {
+                    "protected": False,
+                    "retention": {"copies": 3, "days": None},
+                },
+                "test.new": {"protected": True, "retention": None},
+            },
+            ["test.old", "test.new"],
+            {
+                "test.new": {
+                    "protected": False,
+                    "retention": {"copies": 3, "days": None},
+                }
+            },
+            ["test.new"],
+            id="new_agent_has_stale_settings",
+        ),
+        pytest.param(
+            {"test.new": {"protected": True, "retention": None}},
+            ["test.old"],
+            {},
+            ["test.new"],
+            id="new_agent_has_stale_settings_old_agent_has_none",
+        ),
     ],
 )
 async def test_rename_agent(
@@ -4474,43 +4499,17 @@ async def test_rename_agent(
     assert stored_data["backups"][0]["failed_agent_ids"] == ["test.new"]
 
 
-@pytest.mark.parametrize(
-    ("stored_agents", "stored_agent_ids", "remote_agents"),
-    [
-        pytest.param(
-            {"test.new": {"protected": True, "retention": None}},
-            ["test.old"],
-            [],
-            id="new_agent_has_settings",
-        ),
-        pytest.param(
-            {},
-            ["test.old", "test.new"],
-            [],
-            id="new_agent_used_for_automatic_backups",
-        ),
-        pytest.param(
-            {},
-            ["test.old"],
-            ["test.new"],
-            id="new_agent_loaded",
-        ),
-    ],
-)
 async def test_rename_agent_already_exists(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    stored_agents: dict[str, Any],
-    stored_agent_ids: list[str],
-    remote_agents: list[str],
 ) -> None:
-    """Test renaming an agent to an agent ID that already exists fails."""
-    hass_storage[DOMAIN] = _rename_agent_storage(stored_agents, stored_agent_ids)
-    await setup_backup_integration(hass, remote_agents=remote_agents)
+    """Test renaming an agent to the ID of a loaded agent fails."""
+    hass_storage[DOMAIN] = _rename_agent_storage({}, ["test.old"])
+    await setup_backup_integration(hass, remote_agents=["test.new"])
     manager = async_get_manager(hass)
 
     with pytest.raises(ValueError, match="Backup agent test.new already exists"):
         manager.async_rename_agent("test.old", "test.new")
 
-    assert manager.config.data.create_backup.agent_ids == stored_agent_ids
+    assert manager.config.data.create_backup.agent_ids == ["test.old"]
     assert manager.known_backups.get("abc123").failed_agent_ids == ["test.old"]

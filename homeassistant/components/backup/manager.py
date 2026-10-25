@@ -412,21 +412,19 @@ class BackupManager:
         """Rename a backup agent in the backup config and known backups.
 
         Integrations call this when the ID of one of their backup agents changes,
-        for example when migrating the unique ID of a config entry. Raises
-        ValueError if the old agent ID is configured and the new agent ID is
-        already loaded or configured.
+        for example when migrating the unique ID of a config entry. Settings
+        left behind for the new agent ID, for example by a removed config entry,
+        are replaced. Raises ValueError if the old agent ID is configured and an
+        agent with the new agent ID is loaded.
         """
         config = self.config.data
         if (
             old_agent_id in config.agents
             or old_agent_id in config.create_backup.agent_ids
-        ) and (
-            new_agent_id in self.backup_agents
-            or new_agent_id in config.agents
-            or new_agent_id in config.create_backup.agent_ids
         ):
-            raise ValueError(f"Backup agent {new_agent_id} already exists")
-        self.config.rename_agent(old_agent_id, new_agent_id)
+            if new_agent_id in self.backup_agents:
+                raise ValueError(f"Backup agent {new_agent_id} already exists")
+            self.config.rename_agent(old_agent_id, new_agent_id)
         self.known_backups.rename_failed_agent(old_agent_id, new_agent_id)
 
     @property
@@ -1700,10 +1698,13 @@ class KnownBackups:
     def rename_failed_agent(self, old_agent_id: str, new_agent_id: str) -> None:
         """Rename an agent in the failed agents of known backups."""
         for backup in self._backups.values():
-            backup.failed_agent_ids = [
-                new_agent_id if agent_id == old_agent_id else agent_id
-                for agent_id in backup.failed_agent_ids
-            ]
+            # The new agent ID may already be listed, only keep it once
+            backup.failed_agent_ids = list(
+                dict.fromkeys(
+                    new_agent_id if agent_id == old_agent_id else agent_id
+                    for agent_id in backup.failed_agent_ids
+                )
+            )
         self._manager.store.save()
 
     def get(self, backup_id: str) -> KnownBackup | None:
