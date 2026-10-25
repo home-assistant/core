@@ -446,7 +446,7 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="data_unavailable",
-                translation_placeholders={"service": "Storage"},
+                translation_placeholders={"service": "storage"},
             )
 
         batteries = storage_data.get("batteries")
@@ -454,7 +454,7 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="data_unavailable",
-                translation_placeholders={"service": "Battery"},
+                translation_placeholders={"service": "battery"},
             )
 
         self.data = {}
