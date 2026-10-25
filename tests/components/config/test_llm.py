@@ -1,6 +1,6 @@
 """Tests for the config LLM tools."""
 
-from typing import Any
+from typing import Any, override
 from unittest.mock import AsyncMock, patch
 
 import probatio
@@ -19,11 +19,17 @@ from homeassistant import config_entries
 from homeassistant.components import config as config_component
 from homeassistant.components.config.llm import (
     GetConfigEntriesTool,
+    GetFlowsInProgressTool,
     ReloadConfigEntryTool,
     SearchIntegrationsTool,
     async_get_tools,
 )
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.config_entries import (
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import llm
@@ -56,6 +62,7 @@ async def test_async_get_tools(
         "config__get_config_entries",
         "config__reload_config_entry",
         "config__search_integrations",
+        "config__get_flows_in_progress",
     ]
     assert ha_tools.prompt is None
 
@@ -66,6 +73,7 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         GetConfigEntriesTool(),
         ReloadConfigEntryTool(),
         SearchIntegrationsTool(),
+        GetFlowsInProgressTool(),
     ]
     assert {
         tool.name: probatio.to_openapi(tool.parameters) for tool in tools
@@ -109,6 +117,14 @@ async def test_call_through_api(
     )
     assert search_tool.integration == config_component.DOMAIN
     assert search_tool.annotations == llm.ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+
+    flows_tool = next(
+        tool for tool in api.tools if tool.name == "config__get_flows_in_progress"
+    )
+    assert flows_tool.integration == config_component.DOMAIN
+    assert flows_tool.annotations == llm.ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
     )
 
@@ -725,5 +741,181 @@ async def test_search_integrations_invalid_args(
 ) -> None:
     """Test invalid arguments are rejected by SearchIntegrationsTool."""
     tool = SearchIntegrationsTool()
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
+
+
+MOCK_FLOW_TRANSLATIONS: dict[str, dict[str, str]] = {
+    "config": {
+        f"component.{TEST_DOMAIN}.config.flow_title": "{model} ({host})",
+    },
+    "title": {
+        f"component.{TEST_DOMAIN}.title": "Test Integration Title",
+    },
+}
+
+
+async def _mock_get_flow_translations(
+    hass: HomeAssistant,
+    language: str,
+    category: str,
+    integrations: Any = None,
+    config_flow: bool | None = None,
+) -> dict[str, str]:
+    """Return mock translations for flow title resolution."""
+    return MOCK_FLOW_TRANSLATIONS.get(category, {})
+
+
+async def test_get_flows_in_progress(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test listing pending discovery and reauth flows with title resolution."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    class DiscoveryFlow(ConfigFlow):
+        """Test flow supporting zeroconf, ssdp, reauth, reconfigure, and user."""
+
+        VERSION = 1
+
+        @override
+        async def async_step_zeroconf(
+            self, discovery_info: Any = None
+        ) -> ConfigFlowResult:
+            self.context["title_placeholders"] = {
+                "model": "Hue Bridge",
+                "host": "192.168.1.2",
+            }
+            return await self.async_step_confirm()
+
+        @override
+        async def async_step_ssdp(self, discovery_info: Any = None) -> ConfigFlowResult:
+            self.context["title_placeholders"] = {"host": "192.168.1.3", "name": ""}
+            return await self.async_step_confirm()
+
+        @override
+        async def async_step_dhcp(self, discovery_info: Any = None) -> ConfigFlowResult:
+            return await self.async_step_confirm()
+
+        async def async_step_confirm(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return self.async_show_form(step_id="confirm")
+
+        async def async_step_reauth(
+            self, entry_data: dict[str, Any]
+        ) -> ConfigFlowResult:
+            return await self.async_step_confirm()
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return self.async_show_form(step_id="reconfigure")
+
+        @override
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return self.async_show_form(step_id="user")
+
+    with (
+        mock_config_flow(TEST_DOMAIN, DiscoveryFlow),
+        patch(
+            "homeassistant.components.config.llm.translation.async_get_translations",
+            side_effect=_mock_get_flow_translations,
+        ),
+    ):
+        entry = MockConfigEntry(
+            domain=TEST_DOMAIN,
+            title="Existing Entry",
+            entry_id="01J00000000000000000001001",
+        )
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await entry.start_reconfigure_flow(hass)
+        disc_result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
+        )
+        ssdp_result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": config_entries.SOURCE_SSDP}
+        )
+        dhcp_result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": config_entries.SOURCE_DHCP}
+        )
+        reauth_result = await entry.start_reauth_flow(hass)
+
+        expected_flows = [
+            {
+                "flow_id": f"{TEST_DOMAIN}:{disc_result['flow_id'][-4:]}",
+                "domain": TEST_DOMAIN,
+                "source": "zeroconf",
+                "title": "Hue Bridge (192.168.1.2)",
+                "step_id": "confirm",
+            },
+            {
+                "flow_id": f"{TEST_DOMAIN}:{ssdp_result['flow_id'][-4:]}",
+                "domain": TEST_DOMAIN,
+                "source": "ssdp",
+                "title": "Test Integration Title",
+                "step_id": "confirm",
+            },
+            {
+                "flow_id": f"{TEST_DOMAIN}:{dhcp_result['flow_id'][-4:]}",
+                "domain": TEST_DOMAIN,
+                "source": "dhcp",
+                "title": "Test Integration Title",
+                "step_id": "confirm",
+            },
+            {
+                "flow_id": f"{TEST_DOMAIN}:{reauth_result['flow_id'][-4:]}",
+                "domain": TEST_DOMAIN,
+                "source": "reauth",
+                "title": "Existing Entry",
+                "step_id": "confirm",
+                "entry_id": f"{TEST_DOMAIN}:1001",
+            },
+        ]
+
+        tool = GetFlowsInProgressTool()
+        all_res = await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {}),
+            llm_context,
+        )
+        assert all_res == llm.ToolResult(data={"result": expected_flows})
+
+        filtered_res = await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"domain": TEST_DOMAIN}),
+            llm_context,
+        )
+        assert filtered_res == llm.ToolResult(data={"result": expected_flows})
+
+        empty_res = await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"domain": "other_domain"}),
+            llm_context,
+        )
+        assert empty_res == llm.ToolResult(data={"result": []})
+
+
+@pytest.mark.parametrize(
+    "invalid_args",
+    [
+        pytest.param({"domain": ""}, id="empty_domain"),
+        pytest.param({"domain": "   "}, id="whitespace_domain"),
+    ],
+)
+async def test_get_flows_in_progress_invalid_args(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    invalid_args: dict[str, Any],
+) -> None:
+    """Test invalid arguments are rejected by GetFlowsInProgressTool."""
+    tool = GetFlowsInProgressTool()
     with pytest.raises(probatio.Invalid):
         await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)

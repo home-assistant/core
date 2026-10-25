@@ -1,8 +1,9 @@
 """LLM tools for the config integration."""
 
 from collections import defaultdict
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 import heapq
+import re
 from typing import Any, override
 
 import probatio
@@ -45,6 +46,7 @@ _STATUS_STATES: dict[str, set[ConfigEntryState]] = {
 }
 _NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
 _MIN_SHORT_ID_LEN = 4
+_PLACEHOLDER_RE = re.compile(r"\{([^}]+)\}")
 
 
 def _resolve_language(hass: HomeAssistant, language: str | None) -> str:
@@ -52,26 +54,40 @@ def _resolve_language(hass: HomeAssistant, language: str | None) -> str:
     return language if language and language != "*" else (hass.config.language or "en")
 
 
-def _format_short_entry_ids(entries: Iterable[ConfigEntry]) -> dict[str, str]:
-    """Return a mapping of full entry_id to short '<domain>:<suffix>' ID.
+def _interpolate_placeholders(
+    text: str | None, placeholders: Mapping[str, Any] | None
+) -> str | None:
+    """Replace {key} placeholders in text using a single regex pass."""
+    if not text or not placeholders:
+        return text
+    return _PLACEHOLDER_RE.sub(
+        lambda m: (
+            str(val)
+            if (val := placeholders.get(m.group(1))) is not None
+            else m.group(0)
+        ),
+        text,
+    )
+
+
+def _format_short_ids(items: Iterable[tuple[str, str]]) -> dict[str, str]:
+    """Return a mapping of full ID to short '<domain>:<suffix>' ID.
 
     Short IDs reduce token usage and LLM transcription errors across tool calls.
-    The trailing suffix starts at 4 characters and expands if another entry in the
+    The trailing suffix starts at 4 characters and expands if another item in the
     same domain shares that suffix.
     """
     groups: defaultdict[tuple[str, str], list[str]] = defaultdict(list)
-    for entry in entries:
-        groups[(entry.domain, entry.entry_id[-_MIN_SHORT_ID_LEN:])].append(
-            entry.entry_id
-        )
+    for domain, item_id in items:
+        groups[(domain, item_id[-_MIN_SHORT_ID_LEN:])].append(item_id)
 
     result: dict[str, str] = {}
     for (domain, _), group in groups.items():
         length = _MIN_SHORT_ID_LEN
-        while len(group) > 1 and len({eid[-length:] for eid in group}) < len(group):
+        while len(group) > 1 and len({iid[-length:] for iid in group}) < len(group):
             length += 1
-        for eid in group:
-            result[eid] = f"{domain}:{eid[-length:]}"
+        for iid in group:
+            result[iid] = f"{domain}:{iid[-length:]}"
     return result
 
 
@@ -242,7 +258,9 @@ class GetConfigEntriesTool(Tool):
             }
             entries = [entry for entry in entries if entry.domain.lower() in domains]
 
-        short_ids = _format_short_entry_ids(entries)
+        short_ids = _format_short_ids(
+            (entry.domain, entry.entry_id) for entry in entries
+        )
 
         if status_filter is not None:
             allowed_states = _STATUS_STATES[status_filter]
@@ -387,6 +405,108 @@ class SearchIntegrationsTool(Tool):
         )
 
 
+class GetFlowsInProgressTool(Tool):
+    """LLM Tool to list pending discovery and reauth config flows."""
+
+    name = "config__get_flows_in_progress"
+    title = "Get config flows in progress"
+    description = (
+        "List non-user-initiated config flows currently in progress, such as "
+        "newly discovered devices on the network (zeroconf, bluetooth, ssdp, dhcp, "
+        "mqtt, usb) and integrations requiring reauthentication (reauth)."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Optional(
+                "domain",
+                description="Filter in-progress flows by integration domain.",
+            ): _NON_EMPTY_STRING,
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """List non-user-initiated flows in progress."""
+        args = self.parameters(tool_input.tool_args)
+        domain_filter: str | None = args.get("domain")
+
+        all_flows = hass.config_entries.flow.async_progress()
+        flows = [
+            flw
+            for flw in all_flows
+            if flw["context"]["source"]
+            not in (config_entries.SOURCE_RECONFIGURE, config_entries.SOURCE_USER)
+            and (domain_filter is None or flw["handler"] == domain_filter)
+        ]
+
+        if not flows:
+            return ToolResult(data={"result": []})
+
+        lang = _resolve_language(hass, llm_context.language)
+        handlers = {flw["handler"] for flw in flows}
+        config_trans = await translation.async_get_translations(
+            hass, lang, "config", handlers
+        )
+        title_trans = await translation.async_get_translations(
+            hass, lang, "title", handlers
+        )
+        short_flow_ids = _format_short_ids(
+            (flw["handler"], flw["flow_id"]) for flw in all_flows
+        )
+        short_entry_ids = (
+            _format_short_ids(
+                (entry.domain, entry.entry_id)
+                for entry in hass.config_entries.async_entries(
+                    include_ignore=True, include_disabled=True
+                )
+            )
+            if any("entry_id" in flw["context"] for flw in flows)
+            else {}
+        )
+
+        results: list[JsonValueType] = []
+        for flw in flows:
+            handler = flw["handler"]
+            context = flw["context"]
+            flow_title: str | None = None
+            if placeholders := context.get("title_placeholders"):
+                if (
+                    template := config_trans.get(
+                        f"component.{handler}.config.flow_title"
+                    )
+                ) and all(
+                    placeholders.get(m.group(1)) is not None
+                    for m in _PLACEHOLDER_RE.finditer(template)
+                ):
+                    flow_title = _interpolate_placeholders(template, placeholders)
+                else:
+                    flow_title = placeholders.get("name")
+            if not flow_title:
+                flow_title = title_trans.get(f"component.{handler}.title", handler)
+
+            item: JsonObjectType = {
+                "flow_id": short_flow_ids[flw["flow_id"]],
+                "domain": handler,
+                "source": context["source"],
+                "title": flow_title,
+            }
+            if (step_id := flw.get("step_id")) is not None:
+                item["step_id"] = step_id
+            if (entry_id := context.get("entry_id")) is not None and (
+                short_id := short_entry_ids.get(entry_id)
+            ) is not None:
+                item["entry_id"] = short_id
+            results.append(item)
+
+        return ToolResult(data={"result": results})
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
@@ -400,5 +520,6 @@ def async_get_tools(
             GetConfigEntriesTool(),
             ReloadConfigEntryTool(),
             SearchIntegrationsTool(),
+            GetFlowsInProgressTool(),
         ]
     )

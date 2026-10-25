@@ -34,6 +34,17 @@
       }),
       'type': 'object',
     }),
+    'config__get_flows_in_progress': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'domain': dict({
+          'description': 'Filter in-progress flows by integration domain.',
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'type': 'object',
+    }),
     'config__reload_config_entry': dict({
       'additionalProperties': False,
       'properties': dict({
