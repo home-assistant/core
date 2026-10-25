@@ -3,10 +3,10 @@
 from datetime import datetime, timedelta
 from unittest.mock import create_autospec
 
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 import smarttub
 
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -70,3 +70,29 @@ async def test_error_event(
     state = hass.states.get(entity_id)
     assert state.state != first_state
     assert state.attributes["error_code"] == 1002
+
+
+async def test_multiple_errors_in_one_poll(
+    spa, config_entry: MockConfigEntry, hass: HomeAssistant
+) -> None:
+    """Test every new error is published, not only the last one in a poll."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = f"event.{spa.brand}_{spa.model}_error"
+    changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    now = dt_util.utcnow()
+    spa.get_errors.return_value = [
+        _make_error(12, "Second", now + timedelta(minutes=1)),
+        _make_error(11, "First", now),
+    ]
+    await trigger_update(hass)
+
+    codes = [
+        event.data["new_state"].attributes["error_code"]
+        for event in changes
+        if event.data["entity_id"] == entity_id
+    ]
+    assert codes == [11, 12]

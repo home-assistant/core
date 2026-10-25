@@ -98,5 +98,6 @@ class SmartTubErrorEvent(SmartTubEntity, EventEntity):
                     ATTR_ERROR_TYPE: error.error_type,
                 },
             )
+            self.async_write_ha_state()
         self._seen = seen
         super()._handle_coordinator_update()
