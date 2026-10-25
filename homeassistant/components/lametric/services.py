@@ -16,7 +16,7 @@ from demetriek import (
 )
 import probatio
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_ICON
+from homeassistant.const import CONF_DEVICE_ID, CONF_ICON, CONF_REPEAT
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -54,6 +54,9 @@ SERVICE_BASE_SCHEMA = probatio.Schema(
         ): probatio.Coerce(NotificationPriority),
         probatio.Optional(CONF_SOUND): probatio.Any(
             probatio.Coerce(AlarmSound), probatio.Coerce(NotificationSound)
+        ),
+        probatio.Optional(CONF_REPEAT, default=1): probatio.All(
+            probatio.Coerce(int), probatio.NonNegative()
         ),
         probatio.Optional(CONF_SOUND_URL): media_content_id,
     }
@@ -137,7 +140,11 @@ async def async_send_notification(
                 translation_key="unknown_sound",
                 translation_placeholders={"sound": str(call.data[CONF_SOUND])},
             )
-        builtin_sound = Sound(sound=snd, category=None)
+        builtin_sound = Sound(
+            sound=snd,
+            category=None,
+            repeat=call.data[CONF_REPEAT],
+        )
 
     # A built-in sound given as well plays when the URL cannot be fetched.
     sound: Sound | SoundURL | None = builtin_sound
