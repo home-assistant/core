@@ -118,7 +118,10 @@ def async_get_chat_log(
 
     if chat_log := all_chat_logs.get(session.conversation_id):
         chat_log = replace(
-            chat_log, content=chat_log.content.copy(), _started_tool_calls={}
+            chat_log,
+            content=chat_log.content.copy(),
+            _pending_tool_calls={},
+            _tool_call_tasks={},
         )
     else:
         chat_log = ChatLog(hass, session.conversation_id)
@@ -416,9 +419,11 @@ class ChatLog:
     created: datetime = field(init=False, default_factory=utcnow)
     _last_error: BaseException | None = field(default=None, repr=False)
     # Tool calls that a stream started before their content was added.
-    _started_tool_calls: dict[str, tuple[str, llm.ToolInput, asyncio.Task]] = field(
+    _pending_tool_calls: dict[str, tuple[str, llm.ToolInput]] = field(
         default_factory=dict, repr=False
     )
+    # Tool calls that started and have no result content yet.
+    _tool_call_tasks: dict[str, asyncio.Task] = field(default_factory=dict, repr=False)
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the chat log."""
@@ -467,14 +472,14 @@ class ChatLog:
         )
 
     @callback
-    def _async_add_started_tool_calls(self) -> None:
-        """Add the started tool calls of an interrupted stream."""
-        started = list(self._started_tool_calls.values())
-        self._started_tool_calls.clear()
+    def _async_add_pending_tool_calls(self) -> None:
+        """Add the tool calls that an interrupted stream started."""
+        pending = list(self._pending_tool_calls.values())
+        self._pending_tool_calls.clear()
         content = AssistantContent(
-            agent_id=started[0][0],
+            agent_id=pending[0][0],
             content=None,
-            tool_calls=[tool_call for _, tool_call, _ in started],
+            tool_calls=[tool_call for _, tool_call in pending],
         )
         self.content.append(content)
         _async_notify_subscribers(
@@ -483,18 +488,23 @@ class ChatLog:
             ChatLogEventType.CONTENT_ADDED,
             {"content": content.as_dict()},
         )
-        for agent_id, tool_call, task in started:
-            # A tool that did not finish gets an error result.
-            if not task.done() or task.cancelled() or task.exception():
-                continue
-            self.async_add_assistant_content_without_tools(
-                ToolResultContent(
-                    agent_id=agent_id,
-                    tool_call_id=tool_call.id,
-                    tool_name=tool_call.tool_name,
-                    result=task.result(),
-                )
-            )
+
+    def _get_interrupted_tool_result(
+        self, tool_call_id: str, error: BaseException
+    ) -> llm.ToolResult:
+        """Return the result of a tool call that has no result content."""
+        task = self._tool_call_tasks.pop(tool_call_id, None)
+        if task is not None and task.done() and not task.cancelled():
+            if (tool_error := task.exception()) is None:
+                return task.result()
+            error = tool_error
+        return llm.ToolResult(
+            data={
+                "error": type(error).__name__,
+                "error_text": str(error) or type(error).__name__,
+            },
+            error=True,
+        )
 
     @callback
     def async_add_error(self, agent_id: str, error: BaseException) -> None:
@@ -503,9 +513,8 @@ class ChatLog:
         if error is self._last_error:
             return
         self._last_error = error
-        error_text = str(error) or type(error).__name__
-        if self._started_tool_calls:
-            self._async_add_started_tool_calls()
+        if self._pending_tool_calls:
+            self._async_add_pending_tool_calls()
         # LLM providers refuse a tool call without a result.
         answered: set[str] = set()
         for content in reversed(self.content):
@@ -521,17 +530,14 @@ class ChatLog:
                             agent_id=content.agent_id,
                             tool_call_id=tool_call.id,
                             tool_name=tool_call.tool_name,
-                            result=llm.ToolResult(
-                                data={
-                                    "error": type(error).__name__,
-                                    "error_text": error_text,
-                                },
-                                error=True,
+                            result=self._get_interrupted_tool_result(
+                                tool_call.id, error
                             ),
                         )
                     )
             break
 
+        error_text = str(error) or type(error).__name__
         self.async_add_assistant_content_without_tools(
             AssistantContent(agent_id=agent_id, content=f"Error: {error_text}")
         )
@@ -578,7 +584,7 @@ class ChatLog:
         self.content.append(content)
         if isinstance(content, AssistantContent):
             for tool_call in content.tool_calls or ():
-                self._started_tool_calls.pop(tool_call.id, None)
+                self._pending_tool_calls.pop(tool_call.id, None)
 
         if (
             not isinstance(content, AssistantContent)
@@ -598,6 +604,8 @@ class ChatLog:
                     self.llm_api.async_call_tool(tool_input),
                     name=f"llm_tool_{tool_input.id}",
                 )
+            if not tool_input.external:
+                self._tool_call_tasks[tool_input.id] = tool_call_tasks[tool_input.id]
 
         for tool_input in content.tool_calls:
             if tool_input.external:
@@ -622,6 +630,7 @@ class ChatLog:
                 tool_name=tool_input.tool_name,
                 result=tool_result,
             )
+            self._tool_call_tasks.pop(tool_input.id, None)
             self.content.append(response_content)
             _async_notify_subscribers(
                 self.hass,
@@ -690,11 +699,13 @@ class ChatLog:
                                 self.llm_api.async_call_tool(tool_call),
                                 name=f"llm_tool_{tool_call.id}",
                             )
-                            self._started_tool_calls[tool_call.id] = (
+                            self._pending_tool_calls[tool_call.id] = (
                                 agent_id,
                                 tool_call,
-                                tool_call_tasks[tool_call.id],
                             )
+                            self._tool_call_tasks[tool_call.id] = tool_call_tasks[
+                                tool_call.id
+                            ]
                 if self.delta_listener:
                     if filtered_delta := {
                         k: v for k, v in assistant_delta.items() if k != "native"

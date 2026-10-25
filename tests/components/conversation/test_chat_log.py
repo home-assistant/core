@@ -190,10 +190,19 @@ async def test_failed_turn_stored(
 async def test_failed_turn_tool_call_result(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
-    """Test a failed turn gets an error result for a tool call without one."""
+    """Test a failed turn keeps the results of the tool calls that ran."""
 
     async def failing_tool() -> llm.ToolResult:
         raise ValueError("Tool is broken")
+
+    async def working_tool() -> llm.ToolResult:
+        return llm.ToolResult(data="Test response")
+
+    tool_call_tasks = {
+        "mock-tool-call-id": hass.async_create_task(failing_tool()),
+        "mock-tool-call-id-2": hass.async_create_task(working_tool()),
+    }
+    await hass.async_block_till_done()
 
     async def run_turn() -> None:
         with (
@@ -211,12 +220,15 @@ async def test_failed_turn_tool_call_result(
                     tool_calls=[
                         llm.ToolInput(
                             id="mock-tool-call-id", tool_name="test_tool", tool_args={}
-                        )
+                        ),
+                        llm.ToolInput(
+                            id="mock-tool-call-id-2",
+                            tool_name="test_tool",
+                            tool_args={},
+                        ),
                     ],
                 ),
-                tool_call_tasks={
-                    "mock-tool-call-id": hass.async_create_task(failing_tool())
-                },
+                tool_call_tasks=tool_call_tasks,
             ):
                 pass
 
@@ -224,7 +236,7 @@ async def test_failed_turn_tool_call_result(
         await run_turn()
 
     content = hass.data[DATA_CHAT_LOGS]["koala"].content
-    assert content[-2] == ToolResultContent(
+    assert content[-3] == ToolResultContent(
         agent_id="mock-agent-id",
         tool_call_id="mock-tool-call-id",
         tool_name="test_tool",
@@ -232,6 +244,13 @@ async def test_failed_turn_tool_call_result(
             data={"error": "ValueError", "error_text": "Tool is broken"},
             error=True,
         ),
+    )
+    # The second tool finished, so its action is not reported as failed.
+    assert content[-2] == ToolResultContent(
+        agent_id="mock-agent-id",
+        tool_call_id="mock-tool-call-id-2",
+        tool_name="test_tool",
+        result=llm.ToolResult(data="Test response"),
     )
     assert content[-1].content == "Error: Tool is broken"
 
@@ -298,7 +317,7 @@ def _mock_tool() -> AsyncMock:
         pytest.param(
             HomeAssistantError("Tool failed"),
             llm.ToolResult(
-                data={"error": "HomeAssistantError", "error_text": "Connection lost"},
+                data={"error": "HomeAssistantError", "error_text": "Tool failed"},
                 error=True,
             ),
             id="tool_failed",
