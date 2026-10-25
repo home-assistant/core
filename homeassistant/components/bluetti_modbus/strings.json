@@ -153,11 +153,6 @@
       "total_pv_input_power": {
         "name": "Total PV input power"
       }
-    },
-    "switch": {
-      "ac_output": {
-        "name": "AC output"
-      }
     }
   },
   "exceptions": {

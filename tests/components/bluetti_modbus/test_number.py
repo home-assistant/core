@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from modbus_connection import ModbusTimeoutError
 from modbus_connection.mock import MockModbusUnit
 import pytest
 from pytest_homeassistant.common import (
@@ -298,3 +299,95 @@ async def test_settings_from_another_device_are_not_shown(
     entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
     assert entity is not None
     assert entity.state == "15"
+
+
+async def test_number_write_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A write the device does not take raises an error and changes nothing."""
+    await setup_integration(hass, mock_config_entry)
+    mock_modbus_unit.fail_write(
+        DISCHARGE_LIMIT_ADDRESS, ModbusTimeoutError("timed out")
+    )
+
+    with pytest.raises(HomeAssistantError, match="could not be written"):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: DISCHARGE_LIMIT_ENTITY, ATTR_VALUE: 20},
+            blocking=True,
+        )
+
+    entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
+    assert entity is not None
+    assert entity.state == "15"
+
+
+async def test_number_unavailable_for_another_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A different device at the address makes the numbers unavailable."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_modbus_unit.holding[SERIAL_ADDRESS] = 1
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
+    assert entity is not None
+    assert entity.state == STATE_UNAVAILABLE
+
+
+async def test_settings_are_read_on_their_own_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """The settings are not read with every reading poll."""
+    await setup_integration(hass, mock_config_entry)
+    mock_modbus_unit.read_events.clear()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_modbus_unit.read_events
+    assert all(
+        event.address < DISCHARGE_LIMIT_ADDRESS
+        for event in mock_modbus_unit.read_events
+    )
+
+    mock_modbus_unit.holding[DISCHARGE_LIMIT_ADDRESS] = 33
+    freezer.tick(SETTINGS_SCAN_INTERVAL - SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
+    assert entity is not None
+    assert entity.state == "33"
+
+
+async def test_settings_poll_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Settings that can't be read leave the numbers unavailable."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_modbus_unit.fail_read(DISCHARGE_LIMIT_ADDRESS, ModbusTimeoutError("timed out"))
+    freezer.tick(SETTINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
+    assert entity is not None
+    assert entity.state == STATE_UNAVAILABLE
