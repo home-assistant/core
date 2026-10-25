@@ -768,6 +768,29 @@ async def test_well_known_protected_resource_no_url(
     assert resp.status == 404
 
 
+@pytest.mark.usefixtures("current_request_with_host")  # Has example.com host
+async def test_well_known_protected_resource_mcp_path(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+) -> None:
+    """Test the MCP path-suffixed URL returns the same protected resource metadata."""
+    await async_process_ha_core_config(
+        hass,
+        {
+            "internal_url": "http://192.168.1.100:8123",
+            "external_url": "https://example.com",
+        },
+    )
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+
+    root = await client.get("/.well-known/oauth-protected-resource")
+    path_suffixed = await client.get("/.well-known/oauth-protected-resource/api/mcp")
+
+    assert root.status == 200
+    assert path_suffixed.status == 200
+    assert await path_suffixed.json() == await root.json()
+
+
 @pytest.mark.parametrize(
     ("payload", "expected_message"),
     [

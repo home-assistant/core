@@ -165,6 +165,8 @@ class WellKnownProtectedResourceView(HomeAssistantView):
     requires_auth = False
     cors_allowed = True
     url = "/.well-known/oauth-protected-resource"
+    # MCP clients insert /api/mcp after this prefix (RFC 9728 section 3.1).
+    extra_urls = ["/.well-known/oauth-protected-resource/api/mcp"]
     name = "well-known/oauth-protected-resource"
 
     async def get(self, request: web.Request) -> web.Response:
