@@ -106,6 +106,8 @@ async def test_generate_data_preferred_entity(
         async_get_chat_log(hass, session) as chat_log,
     ):
         assert chat_log.llm_api.api is llm_api
+        # The session records the user of the task context.
+        assert session.user_id == context.user_id
 
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(
