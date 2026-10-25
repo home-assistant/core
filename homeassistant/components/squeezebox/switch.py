@@ -16,7 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
 
-from .const import ATTR_ALARM_ID, DOMAIN, SIGNAL_PLAYER_DISCOVERED
+from .const import ATTR_ALARM_ID, ATTR_DAYS_OF_WEEK, DOMAIN, SIGNAL_PLAYER_DISCOVERED
 from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 from .entity import SqueezeboxEntity
 
@@ -147,7 +147,21 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return attributes of Squeezebox alarm switch."""
-        return {ATTR_ALARM_ID: str(self._alarm_id)}
+        attrs: dict[str, Any] = {ATTR_ALARM_ID: str(self._alarm_id)}
+
+        alarm = self.alarm
+        if alarm:
+            if "time" in alarm and alarm["time"] is not None:
+                attrs["time"] = alarm["time"].strftime("%H:%M:%S")
+
+            if "dow" in alarm and alarm["dow"] is not None:
+                attrs[ATTR_DAYS_OF_WEEK] = list(alarm["dow"])
+                attrs["dow_text"] = [
+                    ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][day]
+                    for day in alarm["dow"]
+                ]
+
+        return attrs
 
     @property
     @override
