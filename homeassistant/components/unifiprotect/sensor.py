@@ -59,7 +59,10 @@ from .entity import (
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
-from .migrate import async_is_new_private_only_entity
+from .migrate import (
+    async_is_new_private_only_entity,
+    async_is_new_ring_or_motion_sensor,
+)
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -209,14 +212,6 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         precision=2,
     ),
     ProtectSensorEntityDescription(
-        key="doorbell_last_trip_time",
-        translation_key="last_doorbell_ring",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_required_field="feature_flags.is_doorbell",
-        ufp_value="last_ring",
-        entity_registry_enabled_default=False,
-    ),
-    ProtectSensorEntityDescription(
         key="lens_type",
         translation_key="lens_type",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -229,8 +224,8 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="has_mic",
-        ufp_value="mic_volume",
-        ufp_enabled="feature_flags.has_mic",
+        ufp_public_value="mic_volume",
+        ufp_public_enabled_fn=operator.attrgetter("feature_flags.has_mic"),
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -253,7 +248,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         translation_key="doorbell_text",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_lcd_screen",
-        ufp_value="lcd_message.text",
+        ufp_public_value="lcd_message_text",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -548,6 +543,17 @@ MOTION_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         translation_key="last_motion_detected",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_value="last_motion",
+        entity_registry_enabled_default=False,
+    ),
+)
+
+DOORBELL_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="doorbell_last_trip_time",
+        translation_key="last_doorbell_ring",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_required_field="feature_flags.is_doorbell",
+        ufp_value="last_ring",
         entity_registry_enabled_default=False,
     ),
 )
@@ -849,7 +855,13 @@ def _async_event_entities(
     entities: list[ProtectDeviceEntity] = []
     cameras = data.get_cameras() if ufp_device is None else [ufp_device]
     for camera in cameras:
-        for description in MOTION_TRIP_SENSORS:
+        for description in MOTION_TRIP_SENSORS + DOORBELL_TRIP_SENSORS:
+            if not description.has_required(camera):
+                continue
+            if async_is_new_ring_or_motion_sensor(
+                data.hass, Platform.SENSOR, camera.mac, description.key
+            ):
+                continue
             entities.append(ProtectDeviceSensor(data, camera, description))
             _LOGGER.debug(
                 "Adding trip sensor entity %s for %s",

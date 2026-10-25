@@ -13,7 +13,7 @@ from typing import Any, Literal, TypedDict, cast
 import probatio
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, frame, intent, llm, template
 from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
@@ -24,9 +24,6 @@ from .const import DOMAIN, ChatLogEventType
 from .models import ConversationInput, ConversationResult
 
 DATA_CHAT_LOGS: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_logs")
-DATA_CHAT_LOG_OWNERS: HassKey[dict[str, str | None]] = HassKey(
-    "conversation_chat_log_owners"
-)
 DATA_SUBSCRIPTIONS: HassKey[
     list[Callable[[str, ChatLogEventType, dict[str, Any]], None]]
 ] = HassKey("conversation_chat_log_subscriptions")
@@ -71,39 +68,6 @@ def _async_notify_subscribers(
             callback_func(conversation_id, event_type, data)
 
 
-@callback
-def _async_check_owner(
-    hass: HomeAssistant,
-    session: chat_session.ChatSession,
-    user_input: ConversationInput | None,
-) -> None:
-    """Raise if the user of the input may not continue the conversation.
-
-    The user of the first input becomes the owner of the conversation. This
-    includes a conversation started without user input, like by a satellite.
-    Owners are kept apart from the chat log, because parallel requests each
-    work on their own copy of it.
-    """
-    if user_input is None:
-        return
-    owners = hass.data.get(DATA_CHAT_LOG_OWNERS)
-    if owners is None:
-        owners = {}
-        hass.data[DATA_CHAT_LOG_OWNERS] = owners
-    conversation_id = session.conversation_id
-    if conversation_id not in owners:
-        owners[conversation_id] = user_input.context.user_id
-
-        @callback
-        def remove_owner() -> None:
-            """Remove the owner when the session ends."""
-            owners.pop(conversation_id, None)
-
-        session.async_on_cleanup(remove_owner)
-    elif owners[conversation_id] != user_input.context.user_id:
-        raise Unauthorized(context=user_input.context)
-
-
 @contextmanager
 def async_get_chat_log(
     hass: HomeAssistant,
@@ -122,7 +86,6 @@ def async_get_chat_log(
             raise RuntimeError(
                 "Cannot attach chat log delta listener unless initial caller"
             )
-        _async_check_owner(hass, session, user_input)
         if user_input is not None and (
             (content := chat_log.content[-1]).role != "user"
             or content.content != user_input.text
@@ -136,8 +99,6 @@ def async_get_chat_log(
     if all_chat_logs is None:
         all_chat_logs = {}
         hass.data[DATA_CHAT_LOGS] = all_chat_logs
-
-    _async_check_owner(hass, session, user_input)
 
     is_new_log = session.conversation_id not in all_chat_logs
 
@@ -181,7 +142,8 @@ def async_get_chat_log(
             )
         return
 
-    if is_new_log:
+    # Parallel first turns share the session, so register the cleanup once.
+    if session.conversation_id not in all_chat_logs:
 
         @callback
         def do_cleanup() -> None:
