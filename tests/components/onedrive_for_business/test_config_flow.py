@@ -263,6 +263,39 @@ async def test_already_configured(
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+async def test_already_configured_unmigrated_entry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a disabled entry that still has a lowercase drive ID is detected."""
+    MockConfigEntry(
+        unique_id="mock_drive_id",
+        title=mock_config_entry.title,
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        minor_version=1,
+        disabled_by=config_entries.ConfigEntryDisabler.USER,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_tenant"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TENANT_ID: TENANT_ID}
+    )
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

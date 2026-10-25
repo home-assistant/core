@@ -108,6 +108,10 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         if self.source != SOURCE_RECONFIGURE:
             self._abort_if_unique_id_configured()
+            # Entries that are not migrated yet, like disabled ones, can be lowercase
+            for entry in self._async_current_entries(include_ignore=False):
+                if entry.unique_id and entry.unique_id.upper() == self.unique_id:
+                    return self.async_abort(reason="already_configured")
 
         self.step_data = data
 
