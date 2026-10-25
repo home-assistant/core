@@ -155,9 +155,7 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
         pytest.param("get_overview", OVERVIEW_UPDATE_DELAY, id="overview"),
         pytest.param("get_details", DETAILS_UPDATE_DELAY, id="details"),
         pytest.param("get_inventory", INVENTORY_UPDATE_DELAY, id="inventory"),
-        pytest.param(
-            "get_energy_details", ENERGY_DETAILS_DELAY, id="energy-details"
-        ),
+        pytest.param("get_energy_details", ENERGY_DETAILS_DELAY, id="energy-details"),
         pytest.param(
             "get_current_power_flow", POWER_FLOW_UPDATE_DELAY, id="power-flow"
         ),
