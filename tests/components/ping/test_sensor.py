@@ -4,8 +4,9 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from icmplib import Host
+from icmplib import Host, NameLookupError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -58,3 +59,31 @@ async def test_host_unreachable(
         hass.states.get("sensor.10_10_10_10_round_trip_time_average").state
         == STATE_UNAVAILABLE
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration")
+async def test_name_lookup_error_and_recovery(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, patch_ping: Host
+) -> None:
+    """Test sensors become unavailable on a DNS failure and recover after."""
+    with patch(
+        "homeassistant.components.ping.helpers.async_ping",
+        side_effect=NameLookupError("10.10.10.10"),
+    ):
+        freezer.tick(timedelta(minutes=6))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    for sensor in ("packet_loss", "round_trip_time_average", "jitter"):
+        assert hass.states.get(f"sensor.10_10_10_10_{sensor}").state == (
+            STATE_UNAVAILABLE
+        )
+
+    freezer.tick(timedelta(minutes=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    for sensor in ("packet_loss", "round_trip_time_average", "jitter"):
+        assert hass.states.get(f"sensor.10_10_10_10_{sensor}").state != (
+            STATE_UNAVAILABLE
+        )
