@@ -14,6 +14,7 @@ from systembridgeconnector.models.modules.networks import (
     Network,
     NetworkIO,
     NetworkStats,
+    NetworkWifi,
 )
 
 from homeassistant.config_entries import ConfigEntryState
@@ -148,3 +149,48 @@ async def test_sensor_network_interface_added(
     assert state.state == "1.0"
     assert hass.states.get("sensor.hostname_eth0_ssid") is None
     assert hass.states.get("sensor.hostname_lo_download_rate") is None
+
+
+@pytest.mark.usefixtures("mock_version", "entity_registry_enabled_by_default")
+async def test_sensor_network_interface_wifi_added(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test Wi-Fi sensors are added when a known interface gets Wi-Fi data."""
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    networks = FIXTURE_NETWORKS.networks
+    assert networks is not None
+    wlan1 = Network(
+        name="wlan1",
+        stats=NetworkStats(flags=["up"]),
+        io=NetworkIO(bytes_recv_rate=125000.0),
+    )
+    coordinator = mock_config_entry.runtime_data
+
+    await coordinator.async_handle_module(
+        Module.NETWORKS, replace(FIXTURE_NETWORKS, networks=[*networks, wlan1])
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.hostname_wlan1_download_rate")
+    assert hass.states.get("sensor.hostname_wlan1_ssid") is None
+
+    await coordinator.async_handle_module(
+        Module.NETWORKS,
+        replace(
+            FIXTURE_NETWORKS,
+            networks=[*networks, replace(wlan1, wifi=NetworkWifi(ssid="Home"))],
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.hostname_wlan1_ssid"))
+    assert state.state == "Home"

@@ -841,25 +841,25 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    known_interfaces: set[str] = set()
+    known_network_sensors: set[str] = set()
 
     @callback
     def _async_add_network_interface_sensors() -> None:
-        """Add sensors for network interfaces not seen before."""
-        new_interfaces = [
-            interface
+        """Add network interface sensors not seen before."""
+        new_descriptions = [
+            description
             for interface in network_interfaces(coordinator.data)
-            if interface.name not in known_interfaces
+            for description in network_interface_sensor_types(interface)
+            if description.key not in known_network_sensors
         ]
-        if not new_interfaces:
+        if not new_descriptions:
             return
-        known_interfaces.update(
-            cast(str, interface.name) for interface in new_interfaces
+        known_network_sensors.update(
+            description.key for description in new_descriptions
         )
         async_add_entities(
             SystemBridgeSensor(coordinator, description, entry.data[CONF_PORT])
-            for interface in new_interfaces
-            for description in network_interface_sensor_types(interface)
+            for description in new_descriptions
         )
 
     _async_add_network_interface_sensors()
