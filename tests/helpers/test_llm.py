@@ -1628,7 +1628,16 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     ]
 
 
-async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+@pytest.mark.parametrize(
+    ("first_name", "second_name"),
+    [("API 1", "API 2"), ("Renamed API", "Other API"), ("Same name", "Same name")],
+)
+async def test_merged_api(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    first_name: str,
+    second_name: str,
+) -> None:
     """Test an API instance that merges multiple llm apis."""
 
     class MyTool(llm.Tool):
@@ -1644,12 +1653,12 @@ async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> N
                 data={"result": {tool_input.tool_name: tool_input.tool_args}}
             )
 
-    api1 = MyAPI(hass=hass, id="api-1", name="API 1")
+    api1 = MyAPI(hass=hass, id="api-1", name=first_name)
     api1.prompt = "This is prompt 1"
     api1.tools = [MyTool(name="Tool_1", description="Description 1")]
     llm.async_register_api(hass, api1)
 
-    api2 = MyAPI(hass=hass, id="api-2", name="API 2")
+    api2 = MyAPI(hass=hass, id="api-2", name=second_name)
     api2.prompt = "This is prompt 2"
     api2.tools = [MyTool(name="Tool_2", description="Description 2")]
     llm.async_register_api(hass, api2)
@@ -1684,6 +1693,79 @@ This is prompt 2
         llm.ToolInput(tool_name="api-2__Tool_2", tool_args={"arg2": "value2"})
     )
     assert result.data == {"result": {"Tool_2": {"arg2": "value2"}}}
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "expected_api"),
+    [
+        ("first__test_tool", "first"),
+        ("legacy-name__test_tool", "second"),
+    ],
+)
+async def test_merged_api_legacy_names(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    tool_name: str,
+    expected_api: str,
+) -> None:
+    """Unambiguous stable and legacy names call the original tool."""
+
+    class MyTool(llm.Tool):
+        name = "test_tool"
+        integration = "test"
+
+        def __init__(self, api_id: str) -> None:
+            self.api_id = api_id
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> llm.ToolResult:
+            return llm.ToolResult(
+                data={"api": self.api_id, "tool": tool_input.tool_name}
+            )
+
+    first = MyAPI(hass=hass, id="first", name="Second")
+    first.tools = [MyTool("first")]
+    second = MyAPI(hass=hass, id="second", name="Legacy name")
+    second.tools = [MyTool("second")]
+    llm.async_register_api(hass, first)
+    llm.async_register_api(hass, second)
+
+    instance = await llm.async_get_api(hass, ["first", "second"], llm_context)
+    result = await instance.async_call_tool(
+        llm.ToolInput(tool_name=tool_name, tool_args={})
+    )
+    assert result.data == {"api": expected_api, "tool": "test_tool"}
+
+
+@pytest.mark.parametrize(
+    ("first_name", "second_name", "tool_name"),
+    [
+        ("Second", "First", "second__test_tool"),
+        ("Same name", "Same name", "same-name__test_tool"),
+    ],
+)
+async def test_merged_api_ambiguous_legacy_name(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    first_name: str,
+    second_name: str,
+    tool_name: str,
+) -> None:
+    """Do not dispatch a legacy name that collides with another tool's name."""
+    tool = llm.Tool()
+    tool.name = "test_tool"
+    tool.integration = "test"
+    first = MyAPI(hass=hass, id="first", name=first_name)
+    first.tools = [tool]
+    second = MyAPI(hass=hass, id="second", name=second_name)
+    second.tools = [tool]
+    llm.async_register_api(hass, first)
+    llm.async_register_api(hass, second)
+
+    instance = await llm.async_get_api(hass, ["first", "second"], llm_context)
+    with pytest.raises(HomeAssistantError, match=f'Tool "{tool_name}" not found'):
+        await instance.async_call_tool(llm.ToolInput(tool_name=tool_name, tool_args={}))
 
 
 async def test_deprecated_async_render_no_api_prompt(

@@ -714,8 +714,64 @@ async def test_mcp_tools_list_all_llm_apis(
         result = await session.list_tools()
 
     tool_names = {tool.name for tool in result.tools}
-    assert "device-control__homeassistant__GetLiveContext" in tool_names
+    assert "assist__homeassistant__GetLiveContext" in tool_names
+    assert "device-control__homeassistant__GetLiveContext" not in tool_names
     assert "test-api__test_tool" in tool_names
+
+
+@pytest.mark.parametrize("llm_hass_api", [[llm.LLM_API_ASSIST, TEST_LLM_API_ID]])
+@pytest.mark.parametrize(
+    "tool_name",
+    [
+        "assist__homeassistant__GetLiveContext",
+        "device-control__homeassistant__GetLiveContext",
+    ],
+)
+async def test_mcp_merged_live_context(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+    tool_name: str,
+) -> None:
+    """Call live context using the stable name or the previous display name."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(name=tool_name, arguments={"domain": "light"})
+
+    assert not result.is_error
+    assert "Kitchen Light" in result.content[0].text
+
+
+@pytest.mark.parametrize("llm_hass_api", [[llm.LLM_API_ASSIST, TEST_LLM_API_ID]])
+@pytest.mark.parametrize("read_only", [True])
+async def test_mcp_read_only_blocks_legacy_tool_names(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Legacy names cannot bypass the read-only tool filter."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="device-control__intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+        )
+
+    assert result.is_error
+    assert (
+        'Tool "device-control__intent__HassTurnOn" not found' in result.content[0].text
+    )
+    assert hass.states.get(TEST_ENTITY).state == STATE_OFF
 
 
 @pytest.mark.usefixtures("setup_integration")

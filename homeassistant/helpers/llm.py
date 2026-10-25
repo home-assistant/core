@@ -257,11 +257,19 @@ class APIInstance:
             {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},
         )
 
-        for tool in self.tools:
-            if tool.name == tool_input.tool_name:
-                break
-        else:
+        matching_tools = [
+            tool
+            for tool in self.tools
+            if tool.name == tool_input.tool_name
+            or (
+                isinstance(tool, NamespacedTool)
+                and tool.legacy_name == tool_input.tool_name
+            )
+        ]
+        # A cached legacy name must not dispatch a different API's tool.
+        if len(matching_tools) != 1:
             raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
+        tool = matching_tools[0]
 
         result = await tool.async_call(self.api.hass, tool_input, self.llm_context)
         if isinstance(result, ToolResult):
@@ -449,10 +457,15 @@ class NamespacedTool(Tool):
     the original tool with the original non-namespaced name.
     """
 
-    def __init__(self, namespace: str, tool: Tool) -> None:
+    def __init__(
+        self, namespace: str, tool: Tool, *, legacy_namespace: str | None = None
+    ) -> None:
         """Init the class."""
         self.namespace = namespace
         self.name = f"{namespace}__{tool.name}"
+        self.legacy_name = (
+            f"{legacy_namespace}__{tool.name}" if legacy_namespace is not None else None
+        )
         self.title = tool.title
         self.description = tool.description
         self.parameters = tool.parameters
@@ -506,14 +519,16 @@ class MergedAPI(API):
         prompt_parts = []
         tools: list[Tool] = []
         for api_instance in llm_apis:
-            namespace = unicode_slug.slugify(api_instance.api.name)
+            namespace = unicode_slug.slugify(api_instance.api.id)
+            legacy_namespace = unicode_slug.slugify(api_instance.api.name)
             prompt_parts.append(
                 f'Follow these instructions for tools from "{namespace}":\n'
             )
             prompt_parts.append(api_instance.api_prompt)
             prompt_parts.append("\n\n")
             tools.extend(
-                [NamespacedTool(namespace, tool) for tool in api_instance.tools]
+                NamespacedTool(namespace, tool, legacy_namespace=legacy_namespace)
+                for tool in api_instance.tools
             )
 
         return APIInstance(
