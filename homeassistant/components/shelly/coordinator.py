@@ -100,6 +100,7 @@ class ShellyEntryData:
     rpc_blu_trv_update: ShellyBluTrvUpdateCoordinator | None = None
     rpc_script_events: dict[int, list[str]] | None = None
     rpc_ledstrip_effects: dict[str, ShellyLedStripEffect] | None = None
+    rpc_ledstrip_palettes: dict[str, str] | None = None
     rpc_supports_scripts: bool | None = None
     rpc_zigbee_firmware: bool | None = None
 

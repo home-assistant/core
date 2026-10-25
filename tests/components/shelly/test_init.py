@@ -654,16 +654,16 @@ async def test_device_script_getcode_error(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_device_ledstrip_effects_error(
+@pytest.mark.parametrize("method", ["ledstrip_list_effects", "ledstrip_list_palettes"])
+async def test_device_ledstrip_list_error(
     hass: HomeAssistant,
     mock_ledstrip_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    method: str,
 ) -> None:
-    """Test device LED strip effects list error."""
+    """Test device LED strip list error."""
     monkeypatch.setattr(
-        mock_ledstrip_rpc_device,
-        "ledstrip_list_effects",
-        AsyncMock(side_effect=RpcCallError(0)),
+        mock_ledstrip_rpc_device, method, AsyncMock(side_effect=RpcCallError(0))
     )
 
     entry = await init_integration(hass, 2)

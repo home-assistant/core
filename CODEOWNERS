@@ -261,6 +261,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/bluetooth/ @bdraco
 /homeassistant/components/bluetooth_adapters/ @bdraco
 /tests/components/bluetooth_adapters/ @bdraco
+/homeassistant/components/bluetti_modbus/ @chpego
+/tests/components/bluetti_modbus/ @chpego
 /homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
 /tests/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
 /homeassistant/components/bosch_alarm/ @mag1024 @sanjay900
@@ -600,8 +602,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/flexit/ @troelde
 /homeassistant/components/flexit_bacnet/ @lellky @piotrbulinski
 /tests/components/flexit_bacnet/ @lellky @piotrbulinski
-/homeassistant/components/flipr/ @cnico
-/tests/components/flipr/ @cnico
 /homeassistant/components/flo/ @dmulcahey
 /tests/components/flo/ @dmulcahey
 /homeassistant/components/flow_it/ @albertogeniola
@@ -723,8 +723,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/google_sheets/ @tkdrob
 /homeassistant/components/google_tasks/ @allenporter
 /tests/components/google_tasks/ @allenporter
-/homeassistant/components/google_travel_time/ @eifinger
-/tests/components/google_travel_time/ @eifinger
+/homeassistant/components/google_travel_time/ @eifinger @tronikos
+/tests/components/google_travel_time/ @eifinger @tronikos
 /homeassistant/components/google_weather/ @tronikos
 /tests/components/google_weather/ @tronikos
 /homeassistant/components/google_wifi/ @EReaso
@@ -881,8 +881,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/hypontech/ @jcisio
 /tests/components/hypontech/ @jcisio
-/homeassistant/components/ialarm/ @RyuzakiKK
-/tests/components/ialarm/ @RyuzakiKK
+/homeassistant/components/ialarm/ @RyuzakiKK @bigmoby
+/tests/components/ialarm/ @RyuzakiKK @bigmoby
 /homeassistant/components/iammeter/ @lewei50 @IAMMETER @miwyf
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz

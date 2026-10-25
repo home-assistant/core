@@ -1,57 +1,33 @@
 """The Flipr integration."""
 
-import logging
-
-from flipr_api import FliprAPIRestClient
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
-from .coordinator import (
-    FliprConfigEntry,
-    FliprData,
-    FliprDataUpdateCoordinator,
-    FliprHubDataUpdateCoordinator,
-)
-
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
-
-_LOGGER = logging.getLogger(__name__)
+DOMAIN = "flipr"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FliprConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up flipr from a config entry."""
-
-    config = entry.data
-
-    username = config[CONF_EMAIL]
-    password = config[CONF_PASSWORD]
-
-    _LOGGER.debug("Initializing Flipr client %s", username)
-    client = FliprAPIRestClient(username, password)
-    ids = await hass.async_add_executor_job(client.search_all_ids)
-
-    _LOGGER.debug("List of devices ids : %s", ids)
-
-    flipr_coordinators = []
-    for flipr_id in ids["flipr"]:
-        flipr_coordinator = FliprDataUpdateCoordinator(hass, entry, client, flipr_id)
-        await flipr_coordinator.async_config_entry_first_refresh()
-        flipr_coordinators.append(flipr_coordinator)
-
-    hub_coordinators = []
-    for hub_id in ids["hub"]:
-        hub_coordinator = FliprHubDataUpdateCoordinator(hass, entry, client, hub_id)
-        await hub_coordinator.async_config_entry_first_refresh()
-        hub_coordinators.append(hub_coordinator)
-
-    entry.runtime_data = FliprData(flipr_coordinators, hub_coordinators)
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        DOMAIN,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="integration_removed",
+        translation_placeholders={"entries": "/config/integrations/integration/flipr"},
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
 
-    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        ir.async_delete_issue(hass, DOMAIN, DOMAIN)
+        # Remove any remaining disabled or ignored entries
+        for _entry in hass.config_entries.async_entries(DOMAIN):
+            hass.async_create_task(hass.config_entries.async_remove(_entry.entry_id))
