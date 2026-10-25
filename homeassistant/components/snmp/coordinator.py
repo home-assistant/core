@@ -3,7 +3,7 @@
 import binascii
 from dataclasses import dataclass
 import logging
-from typing import override
+from typing import Any, override
 
 from pysnmp.error import PySnmpError
 from pysnmp.smi.error import WrongValueError
@@ -48,6 +48,20 @@ def normalize_mac(value: bytes) -> str | None:
     if len(mac) != 12 or not all(char in "0123456789abcdef" for char in mac):
         return None
     return ":".join(mac[i : i + 2] for i in range(0, 12, 2))
+
+
+def mac_from_value(value: Any) -> str | None:
+    """Return the MAC address a walk row holds.
+
+    Rows of a table which is not indexed by MAC addresses hold other types, which
+    do not offer the octets, so those rows are skipped. Returns None if the value
+    does not describe a 6 byte MAC address.
+    """
+    try:
+        octets = value.asOctets()
+    except AttributeError:
+        return None
+    return normalize_mac(octets)
 
 
 def _ip_address_from_oid(oid: tuple[int, ...]) -> str | None:
@@ -123,12 +137,7 @@ class SnmpDeviceTrackerCoordinator(DataUpdateCoordinator[dict[str, str | None]])
 
         try:
             async for oid, value in self._client.async_walk(self._baseoid):
-                try:
-                    octets = value.asOctets()
-                except AttributeError:
-                    continue
-
-                if (mac := normalize_mac(octets)) is None:
+                if (mac := mac_from_value(value)) is None:
                     continue
 
                 devices[mac] = _ip_address_from_oid(oid.asTuple())

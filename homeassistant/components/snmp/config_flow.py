@@ -60,6 +60,7 @@ from .const import (
     SUBENTRY_TYPE_DEVICE_TRACKER,
     USM_WRONG_DIGEST_INDICATIONS,
 )
+from .coordinator import mac_from_value
 from .util import (
     async_create_request_cmd_args,
     async_create_transport_target,
@@ -473,7 +474,8 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
             if self._async_is_table_tracked(user_input[CONF_BASEOID]):
                 return self.async_abort(reason="already_configured")
 
-            if error := await self._async_validate_baseoid(user_input[CONF_BASEOID]):
+            error, _ = await self._async_validate_baseoid(user_input[CONF_BASEOID])
+            if error:
                 errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
             else:
                 return self.async_create_entry(
@@ -496,7 +498,10 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            if error := await self._async_validate_baseoid(user_input[CONF_BASEOID]):
+            error, table_macs = await self._async_validate_baseoid(
+                user_input[CONF_BASEOID]
+            )
+            if error:
                 errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
             # Checked after the validation and before anything is mutated, so a
             # refusal can not leave the current table untracked.
@@ -506,7 +511,7 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
                 return self.async_abort(reason="already_configured")
             else:
                 if user_input[CONF_BASEOID] != subentry.data[CONF_BASEOID]:
-                    self._async_remove_entities(subentry)
+                    self._async_remove_entities(subentry, table_macs)
                 return self.async_update_and_abort(
                     self._get_entry(),
                     subentry,
@@ -524,36 +529,52 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
         )
 
     @callback
-    def _async_remove_entities(self, subentry: ConfigSubentry) -> None:
+    def _async_remove_entities(
+        self, subentry: ConfigSubentry, keep_macs: set[str]
+    ) -> None:
         """Remove the trackers of the table which is no longer watched.
 
-        Setup restores every MAC of the subentry from the registry, so keeping the
-        entities of the previous table would leave them as permanent not_home.
+        Setup restores every MAC of the subentry from the registry, so keeping them
+        would leave the previous table as permanent not_home. MACs the new table
+        also holds are kept, which preserves their registry entry and with it the
+        person associations pointing at it.
         """
         ent_reg = er.async_get(self.hass)
+        prefix = f"{subentry.subentry_id}_"
         for reg_entry in er.async_entries_for_config_entry(
             ent_reg, self._get_entry().entry_id
         ):
-            if reg_entry.config_subentry_id == subentry.subentry_id:
-                ent_reg.async_remove(reg_entry.entity_id)
+            if reg_entry.config_subentry_id != subentry.subentry_id:
+                continue
+            if reg_entry.unique_id and (
+                reg_entry.unique_id.removeprefix(prefix) in keep_macs
+            ):
+                continue
+            ent_reg.async_remove(reg_entry.entity_id)
 
-    async def _async_validate_baseoid(self, baseoid: str) -> str | None:
-        """Return an error key if the device cannot read the base OID.
+    async def _async_validate_baseoid(
+        self, baseoid: str
+    ) -> tuple[str | None, set[str]]:
+        """Return an error key and the MACs the base OID holds.
 
         The OID has to resolve in the MIB and the device has to serve it. An empty
-        table is valid, so a walk which yields no rows is accepted.
+        table is valid, so a walk which yields no rows is accepted. The whole table
+        is read because the MACs decide which trackers survive a table change.
         """
         if not await async_validate_oid(self.hass, baseoid):
-            return "invalid_oid"
+            return "invalid_oid", set()
+
+        macs: set[str] = set()
         try:
             client = await SnmpClient.async_create(self.hass, self._get_entry().data)
-            async for _ in client.async_walk(baseoid):
-                break
+            async for _oid, value in client.async_walk(baseoid):
+                if (mac := mac_from_value(value)) is not None:
+                    macs.add(mac)
         except ConfigEntryAuthFailed:
-            return "invalid_auth"
+            return "invalid_auth", set()
         except PySnmpError, SnmpWalkError:
-            return "cannot_connect"
-        return None
+            return "cannot_connect", set()
+        return None, macs
 
 
 class CannotConnect(Exception):
