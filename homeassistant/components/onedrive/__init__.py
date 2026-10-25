@@ -39,6 +39,7 @@ from .coordinator import (
     OneDriveRuntimeData,
     OneDriveUpdateCoordinator,
 )
+from .sensor import DRIVE_STATE_ENTITIES
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -179,13 +180,20 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
         entity_reg = er.async_get(hass)
         device_reg = dr.async_get(hass)
 
+        # Entity unique IDs are "{drive_id}_{sensor key}"; the drive ID
+        # itself may contain underscores, so strip the known key suffix.
         def _migrate_unique_id(
             entity_entry: er.RegistryEntry,
         ) -> dict[str, Any] | None:
-            prefix, sep, suffix = entity_entry.unique_id.partition("_")
-            if not sep or prefix == prefix.lower():
+            for description in DRIVE_STATE_ENTITIES:
+                if entity_entry.unique_id.endswith(f"_{description.key}"):
+                    drive_id = entity_entry.unique_id[: -len(description.key) - 1]
+                    break
+            else:
                 return None
-            new_unique_id = f"{prefix.lower()}_{suffix}"
+            if drive_id == drive_id.lower():
+                return None
+            new_unique_id = f"{drive_id.lower()}_{description.key}"
             if entity_reg.async_get_entity_id(
                 entity_entry.domain, DOMAIN, new_unique_id
             ):
@@ -212,21 +220,40 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
                 ),
                 grouped[0],
             )
+            area_id = target.area_id
+            name_by_user = target.name_by_user
+            labels = set(target.labels)
             for device in grouped:
                 if device is target:
                     continue
-                for entity_entry in er.async_entries_for_device(entity_reg, device.id):
+                # Keep the target's values on conflict; only fill in
+                # settings it does not have.
+                area_id = area_id or device.area_id
+                name_by_user = name_by_user or device.name_by_user
+                labels |= device.labels
+                for entity_entry in er.async_entries_for_device(
+                    entity_reg, device.id, include_disabled_entities=True
+                ):
                     entity_reg.async_update_entity(
                         entity_entry.entity_id, device_id=target.id
                     )
                 device_reg.async_remove_device(device.id)
-            if not all(
-                identifier == canonical
-                for domain, identifier in target.identifiers
-                if domain == DOMAIN
+            if (
+                area_id != target.area_id
+                or name_by_user != target.name_by_user
+                or labels != target.labels
+                or not all(
+                    identifier == canonical
+                    for domain, identifier in target.identifiers
+                    if domain == DOMAIN
+                )
             ):
                 device_reg.async_update_device(
-                    target.id, new_identifiers={(DOMAIN, canonical)}
+                    target.id,
+                    new_identifiers={(DOMAIN, canonical)},
+                    area_id=area_id,
+                    name_by_user=name_by_user,
+                    labels=labels,
                 )
 
         hass.config_entries.async_update_entry(

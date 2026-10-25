@@ -415,7 +415,7 @@ async def test_migrate_drive_id_casing(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "mock_drive_id")},
     )
-    entity_registry.async_get_or_create(
+    original_entry = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         "MOCK_DRIVE_ID_drive_state",
@@ -438,10 +438,11 @@ async def test_migrate_drive_id_casing(
     migrated_entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "mock_drive_id_drive_state"
     )
-    assert migrated_entity_id is not None
-    assert (
-        entity_registry.async_get(migrated_entity_id).device_id == canonical_device.id
-    )
+    assert migrated_entity_id == original_entry.entity_id
+    migrated_entry = entity_registry.async_get(migrated_entity_id)
+    assert migrated_entry is not None
+    assert migrated_entry.id == original_entry.id
+    assert migrated_entry.device_id == canonical_device.id
 
     assert device_registry.async_get(old_device.id) is None
     assert device_registry.async_get(canonical_device.id).identifiers == {
