@@ -1,5 +1,6 @@
 """Tests for the Bitcoin sensor platform."""
 
+import logging
 from unittest.mock import MagicMock
 
 from blockchain.exchangerates import Currency
@@ -15,20 +16,25 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.bitcoin.const import DOMAIN
 from homeassistant.components.bitcoin.coordinator import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_IGNORE
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_CURRENCY,
     CONF_DISPLAY_OPTIONS,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
-ENTITY_EXCHANGE_RATE = "sensor.exchange_rate_1_btc"
+ENTITY_EXCHANGE_RATE = "sensor.bitcoin_exchange_rate"
 
 YAML_CONFIG = {
     SENSOR_DOMAIN: {
@@ -290,24 +296,37 @@ async def test_yaml_import_with_ignored_entry(
     ("display_options", "expected"),
     [
         pytest.param(
-            ["trade_volume_usd"], {"sensor.trade_volume": "USD"}, id="trade_volume_usd"
+            ["trade_volume_usd"],
+            {"sensor.trade_volume": "USD", "sensor.bitcoin_trade_volume": "BTC"},
+            id="trade_volume_usd",
         ),
         pytest.param(
-            ["trade_volume_btc"], {"sensor.trade_volume": "BTC"}, id="trade_volume_btc"
+            ["trade_volume_btc"],
+            {"sensor.trade_volume": "BTC", "sensor.bitcoin_trade_volume_in_usd": "USD"},
+            id="trade_volume_btc",
         ),
         pytest.param(
             ["trade_volume_btc", "trade_volume_usd"],
             {"sensor.trade_volume": "BTC", "sensor.trade_volume_2": "USD"},
             id="both_trade_volumes",
         ),
+        # The YAML platform created sensors in its own order, not in list order.
+        pytest.param(
+            ["trade_volume_usd", "trade_volume_btc"],
+            {"sensor.trade_volume": "BTC", "sensor.trade_volume_2": "USD"},
+            id="both_trade_volumes_reversed",
+        ),
         pytest.param(
             ["miners_revenue_btc"],
-            {"sensor.miners_revenue": "BTC"},
+            {
+                "sensor.miners_revenue": "BTC",
+                "sensor.bitcoin_miners_revenue_in_usd": "USD",
+            },
             id="miners_revenue_btc",
         ),
         pytest.param(
             ["miners_revenue_usd"],
-            {"sensor.miners_revenue": "USD"},
+            {"sensor.miners_revenue": "USD", "sensor.bitcoin_miners_revenue": "BTC"},
             id="miners_revenue_usd",
         ),
     ],
@@ -316,17 +335,94 @@ async def test_yaml_import_with_ignored_entry(
 async def test_imported_sensors_keep_their_entity_ids(
     hass: HomeAssistant, display_options: list[str], expected: dict[str, str]
 ) -> None:
-    """Test sensors an imported YAML setup had keep the entity ID they had.
+    """Test the sensors an imported YAML setup had keep the entity ID they had.
 
     The expected values are what the YAML platform created for these
-    display_options before the config flow existed.
+    display_options. Sensors the setup did not have get IDs from their names.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Bitcoin",
+        source=SOURCE_IMPORT,
         data={CONF_CURRENCY: "USD", CONF_DISPLAY_OPTIONS: display_options},
     )
     await setup_integration(hass, entry)
 
-    for entity_id, unit in expected.items():
-        assert hass.states.get(entity_id).attributes[ATTR_UNIT_OF_MEASUREMENT] == unit
+    units = {
+        state.entity_id: state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        for state in hass.states.async_all(SENSOR_DOMAIN)
+    }
+    assert expected.items() <= units.items()
+    assert "sensor.bitcoin_total_supply" in units
+
+
+@pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
+async def test_registered_sensors_keep_their_entity_ids(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sensors that are already registered keep their entity ID and name it."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{mock_config_entry.entry_id}_exchangerate",
+        suggested_object_id="exchange_rate_1_btc",
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.exchange_rate_1_btc")
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Bitcoin Exchange rate"
+    assert hass.states.get(ENTITY_EXCHANGE_RATE) is None
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
+async def test_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the sensors belong to one Bitcoin service device."""
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device == snapshot
+
+
+@pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
+async def test_imported_registered_sensors_keep_their_entity_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a registered sensor of an imported setup keeps its own entity ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Bitcoin",
+        source=SOURCE_IMPORT,
+        data={CONF_CURRENCY: "USD", CONF_DISPLAY_OPTIONS: ["exchangerate"]},
+    )
+    entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{entry.entry_id}_exchangerate",
+        suggested_object_id="my_bitcoin_rate",
+        config_entry=entry,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_bitcoin_rate") is not None
+    assert hass.states.get("sensor.exchange_rate_1_btc") is None
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
