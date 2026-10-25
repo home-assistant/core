@@ -598,7 +598,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "mystrom",
     "mythicbeastsdns",
     "nad",
-    "nam",
     "nanoleaf",
     "nasweb",
     "neato",
