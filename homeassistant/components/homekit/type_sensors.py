@@ -372,8 +372,10 @@ class GasConcentrationSensor(AirQualitySensor):
         unit = new_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         if unit not in self.converter.VALID_UNITS:
             unit = UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
-        density = self.converter.convert(
-            value, unit, UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+        density = round(
+            self.converter.convert(
+                value, unit, UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+            )
         )
         if self.char_density.value != density:
             self.char_density.set_value(density)
