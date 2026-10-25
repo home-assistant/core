@@ -531,12 +531,8 @@ class MergedAPI(API):
             if len(group) == 1:
                 group[0].name = name
 
-        # Generated prefixes can also collide with existing tool names.
-        assigned_names: set[str] = set()
-        for tool in tools:
-            while tool.name in assigned_names:
-                tool.name = f"{tool.namespace}__{tool.name}"
-            assigned_names.add(tool.name)
+        if len({tool.name for tool in tools}) != len(tools):
+            raise ValueError("Merged tool names must be unique")
 
         prompt_parts = []
         for api_instance, instance_tools in zip(llm_apis, api_tools, strict=True):

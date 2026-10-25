@@ -1767,7 +1767,7 @@ async def test_merged_api_equal_tools(
 async def test_merged_api_generated_name_collision(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Namespace unique tools too when their names collide with generated names."""
+    """Reject collisions between generated prefixes and existing tool names."""
     first = MyAPI(hass=hass, id="first", name="First")
     first_tool = llm.Tool()
     first_tool.name = "test_tool"
@@ -1782,13 +1782,8 @@ async def test_merged_api_generated_name_collision(
     colliding_tool.integration = "test"
     second.tools = [second_tool, colliding_tool]
 
-    instance = await llm.MergedAPI([first, second]).async_get_api_instance(llm_context)
-
-    assert [tool.name for tool in instance.tools] == [
-        "first__test_tool",
-        "second__test_tool",
-        "second__first__test_tool",
-    ]
+    with pytest.raises(ValueError, match="Merged tool names must be unique"):
+        await llm.MergedAPI([first, second]).async_get_api_instance(llm_context)
 
 
 @pytest.mark.parametrize("api_ids", [("first", "second"), ("second", "first")])
