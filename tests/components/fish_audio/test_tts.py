@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, MagicMock
 from fishaudio import RateLimitError
 from fishaudio.exceptions import ServerError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import tts
 from homeassistant.components.fish_audio.const import (
@@ -30,9 +32,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from tests.common import MockConfigEntry, async_mock_service
 from tests.components.tts.common import retrieve_media
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)

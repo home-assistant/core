@@ -9,6 +9,7 @@ from pygeosphere_warnings import (
     WeatherWarning,
 )
 import pytest
+from pytest_homeassistant.common import load_json_object_fixture
 
 from homeassistant.components.geosphere_austria_warnings.const import DOMAIN
 from homeassistant.components.geosphere_austria_warnings.warnings import (
@@ -17,8 +18,6 @@ from homeassistant.components.geosphere_austria_warnings.warnings import (
     sort_warnings,
     warning_sensor_attributes,
 )
-
-from tests.common import load_json_object_fixture
 
 
 @pytest.fixture

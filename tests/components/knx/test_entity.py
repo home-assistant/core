@@ -3,8 +3,9 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
-from homeassistant.components.knx.const import DOMAIN, KNX_ADDRESS
+from homeassistant.components.knx.const import DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
 from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -259,3 +260,65 @@ async def test_yaml_device_id_normalization(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, expected_identifier), knx.mock_config_entry.entry_id
     )
+
+
+async def test_disabled_yaml_entity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a YAML entity disabled before setup is tracked for its group address."""
+    entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        "1/2/3",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await knx.setup_integration(
+        {Platform.SWITCH: {"name": "test", KNX_ADDRESS: "1/2/3"}}
+    )
+    assert hass.states.get("switch.test") is None
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"] == {
+        "1/2/3": [
+            {"platform": "switch", "unique_id": "1/2/3", "ui": False, "disabled": True}
+        ]
+    }
+    # only entities added to Home Assistant are in the live map
+    assert not hass.data[KNX_MODULE_KEY].group_address_entities
+
+
+async def test_disable_entity_at_runtime(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test an entity disabled at runtime stays tracked for its group address."""
+    await knx.setup_integration(
+        {Platform.SWITCH: {"name": "test", KNX_ADDRESS: "1/2/3"}}
+    )
+    client = await hass_ws_client(hass)
+    identifier = {"platform": "switch", "unique_id": "1/2/3", "ui": False}
+
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"] == {"1/2/3": [identifier | {"disabled": False}]}
+
+    entity_registry.async_update_entity(
+        "switch.test", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.test") is None
+
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"] == {"1/2/3": [identifier | {"disabled": True}]}
+    assert not hass.data[KNX_MODULE_KEY].group_address_entities

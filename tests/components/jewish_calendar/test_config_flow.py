@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
@@ -22,8 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_step_user(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:

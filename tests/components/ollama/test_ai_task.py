@@ -6,6 +6,7 @@ from unittest.mock import patch
 import ollama
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.ollama import CONF_KEEP_ALIVE
@@ -13,8 +14,6 @@ from homeassistant.components.ollama.const import KEEP_ALIVE_FOREVER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_init_component")

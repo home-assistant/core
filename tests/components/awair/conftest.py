@@ -1,8 +1,7 @@
 """Fixtures for testing Awair integration."""
 
 import pytest
-
-from tests.common import load_json_object_fixture
+from pytest_homeassistant.common import load_json_object_fixture
 
 
 @pytest.fixture(name="cloud_devices", scope="package")

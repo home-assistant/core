@@ -5,20 +5,19 @@ from unittest.mock import AsyncMock, patch
 
 from evolutionhttp import BryantEvolutionLocalClient
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bryant_evolution.const import CONF_SYSTEM_ZONE, DOMAIN
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.bryant_evolution.async_setup_entry", return_value=True
+        "homeassistant.components.bryant_evolution.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

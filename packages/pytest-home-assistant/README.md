@@ -1,27 +1,81 @@
 # pytest-home-assistant
 
-Pytest fixtures and helpers for testing Home Assistant integrations. This package
-contains the shared testing tools used by Home Assistant Core, with the goal of
-making those same tools available to third-party integration authors.
+Pytest fixtures and helpers for testing Home Assistant integrations. Create a
+Home Assistant instance, mock configuration entries and external services,
+simulate events, and check integration behavior.
 
-Use these tools to create a Home Assistant instance for a test, mock configuration
-entries and external services, simulate events, and check integration behavior.
-The Python import namespace is `pytest_homeassistant`.
+## Installation and compatibility
 
-## Current status
+Install the package into your custom integration's virtual environment:
 
-**This package is not yet ready for external consumption.** It is being extracted
-from Home Assistant Core and currently requires a Core development checkout. It
-can be built as a wheel and source distribution, but standalone use and publishing
-are not yet supported.
+```shell
+uv pip install pytest-home-assistant
+```
 
-Runtime dependencies and automatic pytest plugin registration are not yet
-declared. Some helpers also depend on Core's test data, configuration, and
-historical recorder migration schemas. Installing the wheel alone does not
-provide a working test environment for a custom integration.
+Use the package release that matches your Home Assistant version. Upgrade them
+together.
+The plugin loads automatically. Do not install it together with
+`pytest-homeassistant-custom-component`, which supplies overlapping fixtures.
 
-The helpers evolve alongside Core. For now, use them with the Core checkout they
-come from; compatibility across Home Assistant versions is not guaranteed.
+Bluetooth, infrared, and radio-frequency helpers have optional dependencies:
+install the corresponding `bluetooth`, `infrared`, or `radio-frequency` extra
+when using those helpers. Integration-specific libraries must also be installed
+by the consuming project. SQLite recorder tests work with the base installation;
+MySQL/PostgreSQL tests additionally need their database driver and
+`sqlalchemy-utils`.
+
+## Writing tests
+
+Add this pytest configuration to your project's `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+# Let Home Assistant install its httpx alias before respx is imported.
+addopts = "-p no:respx"
+pythonpath = ["."]
+testpaths = ["tests"]
+```
+
+The package's HTTP mocks still use respx directly; only its separate pytest
+plugin is disabled. The `hass` fixture enables custom integrations by default.
+
+Tests request fixtures such as `hass` by name and import helpers from
+`pytest_homeassistant`. For example, `tests/test_config_entry.py` can create a
+configuration entry without setting up the integration:
+
+```python
+from homeassistant.core import HomeAssistant
+from pytest_homeassistant.common import MockConfigEntry
+
+
+async def test_config_entry(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(domain="my_integration", data={"host": "example.local"})
+    entry.add_to_hass(hass)
+
+    assert hass.config_entries.async_get_entry(entry.entry_id) is entry
+```
+
+Run your tests with `pytest`.
+
+Use `@pytest.mark.usefixtures("entity_registry_enabled_by_default")` when a test
+needs entities that are normally disabled in the entity registry.
+
+## Test data and configuration
+
+Load test data with helpers such as `load_fixture` and `load_json_object_fixture`
+from `pytest_homeassistant.common`. They read `tests/fixtures` by default. When
+given an integration name, they use `tests/components/<domain>/fixtures` if that
+integration's test directory exists, otherwise `tests/fixtures`. Set `ha_test_root`
+to use another test directory. Paths are relative to pytest's project root.
+Snapshots are stored next to the consuming test in `snapshots/`.
+
+The `hass` fixture uses the shared `tests/testing_config` path by default, without
+creating or copying a directory. Set `ha_test_config_dir` relative to the project
+root to use another path. For tests that need an isolated writable directory,
+override `hass_config_dir` to return `hass_tmp_config_dir`. That fixture copies the
+shared configuration if it exists, or provides an empty temporary directory.
 
 ## What's included
 
@@ -40,46 +94,14 @@ come from; compatibility across Home Assistant versions is not guaranteed.
 | `pytest_homeassistant.syrupy` | Snapshot extensions for Home Assistant objects. |
 | `pytest_homeassistant.typing` | Type aliases for shared test fixtures. |
 
-The package also includes the JSON, time, and recorder patches used by Core's test
-environment, plus support for detecting uncaught exceptions.
+## Migrating from pytest-homeassistant-custom-component
 
-## Using helpers in Core tests
-
-Set up a Core development checkout with `script/setup`, then run tests from the
-repository root. Core configures the package's import path and loads its shared
-fixtures and hooks through `tests/conftest.py`.
-
-For example, a test can create a configuration entry without setting up the
-integration:
-
-```python
-from homeassistant.core import HomeAssistant
-
-from pytest_homeassistant.common import MockConfigEntry
-
-
-async def test_config_entry(hass: HomeAssistant) -> None:
-    entry = MockConfigEntry(domain="my_integration", data={"host": "example.local"})
-    entry.add_to_hass(hass)
-
-    assert hass.config_entries.async_get_entry(entry.entry_id) is entry
-```
-
-Existing imports such as `from tests.common import MockConfigEntry` continue to
-work: the original Core test modules re-export the same helpers. Core initializes
-the test data path in `tests/__init__.py`, so fixture loaders still read from the
-Core test tree.
-
-## Building
-
-Build both distributions from the Core repository root:
-
-```shell
-uv build packages/pytest-home-assistant
-```
-
-Core's CI builds the package to check that it remains buildable. Publishing and
-standalone installation support will be added separately.
+Replace the old package dependency with `pytest-home-assistant` and change imports
+of `pytest_homeassistant_custom_component` to `pytest_homeassistant`. Existing
+`hass`, `enable_custom_integrations`, registry, HTTP, recorder, and snapshot
+fixtures keep their names.
+The wrapper fixture requesting `enable_custom_integrations` can be removed;
+custom integrations are enabled by default.
 
 ## License
 

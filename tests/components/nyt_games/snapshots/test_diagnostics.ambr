@@ -1,0 +1,72 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'connections': dict({
+      'current_streak': 0,
+      'last_completed': '2024-09-23',
+      'max_streak': 2,
+      'mistakes': dict({
+        '0': 2,
+        '1': 0,
+        '2': 1,
+        '3': 0,
+        '4': 6,
+      }),
+      'puzzles_completed': 9,
+      'puzzles_won': 3,
+    }),
+    'spelling_bee': dict({
+      'puzzles_started': 87,
+      'ranks': dict({
+        'beginner': 23,
+        'good': 21,
+        'good_start': 14,
+        'moving_up': 16,
+        'nice': 4,
+        'solid': 9,
+      }),
+      'total_pangrams': 15,
+      'total_words': 362,
+    }),
+    'wordle': dict({
+      'current_streak': 237,
+      'games_played': 1119,
+      'games_won': 1077,
+      'guesses': dict({
+        '1': 0,
+        '2': 8,
+        '3': 83,
+        '4': 444,
+        '5': 376,
+        '6': 166,
+        'fail': 42,
+      }),
+      'last_completed': '2025-07-08',
+      'last_won': '2025-07-08',
+      'max_streak': 241,
+    }),
+  })
+# ---
+# name: test_diagnostics_new_account
+  dict({
+    'connections': None,
+    'spelling_bee': None,
+    'wordle': dict({
+      'current_streak': 0,
+      'games_played': 1,
+      'games_won': 1,
+      'guesses': dict({
+        '1': 0,
+        '2': 0,
+        '3': 0,
+        '4': 0,
+        '5': 1,
+        '6': 0,
+        'fail': 0,
+      }),
+      'last_completed': None,
+      'last_won': None,
+      'max_streak': 1,
+    }),
+  })
+# ---

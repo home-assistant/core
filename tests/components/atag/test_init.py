@@ -1,11 +1,11 @@
 """Tests for the ATAG integration."""
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import init_integration, mock_connection
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_config_entry_not_ready(

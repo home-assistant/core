@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mcp_server.const import (
     CONF_ALL_LLM_APIS,
@@ -16,8 +17,6 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 TEST_LLM_API_ID = "test-api"
 
@@ -50,7 +49,7 @@ async def ensure_homeassistant_loaded(hass: HomeAssistant) -> None:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.mcp_server.async_setup_entry", return_value=True
+        "homeassistant.components.mcp_server.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

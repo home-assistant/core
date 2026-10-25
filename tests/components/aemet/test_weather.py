@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aemet.coordinator import WEATHER_UPDATE_INTERVAL
@@ -18,9 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .util import async_init_integration, mock_api_call
-
-from tests.common import snapshot_platform
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
