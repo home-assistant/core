@@ -19,6 +19,8 @@ MARIADB_URL_PREFIX = "mariadb://"
 MARIADB_PYMYSQL_URL_PREFIX = "mariadb+pymysql://"
 MYSQLDB_URL_PREFIX = "mysql://"
 MYSQLDB_PYMYSQL_URL_PREFIX = "mysql+pymysql://"
+POSTGRESQL_URL_PREFIX = "postgresql://"
+POSTGRESQL_PSYCOPG2_URL_PREFIX = "postgresql+psycopg2://"
 DOMAIN = "recorder"
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"

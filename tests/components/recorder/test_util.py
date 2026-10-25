@@ -47,6 +47,7 @@ from homeassistant.components.recorder.util import (
     RETRYABLE_MYSQL_ERRORS,
     database_job_retry_wrapper,
     end_incomplete_runs,
+    get_engine_db_url,
     is_second_sunday,
     resolve_period,
     retryable_database_job,
@@ -118,6 +119,41 @@ async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -
         util.execute(mck1)
 
     assert e_mock.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("db_url", "expected"),
+    [
+        pytest.param(
+            "postgresql://user:pass@host/db",
+            "postgresql+psycopg2://user:pass@host/db",
+            id="postgresql",
+        ),
+        pytest.param(
+            "postgresql+psycopg2://user:pass@host/db",
+            "postgresql+psycopg2://user:pass@host/db",
+            id="postgresql_psycopg2",
+        ),
+        pytest.param(
+            "postgresql+psycopg://user:pass@host/db",
+            "postgresql+psycopg://user:pass@host/db",
+            id="postgresql_psycopg",
+        ),
+        pytest.param(
+            "mysql://user:pass@host/db",
+            "mysql://user:pass@host/db",
+            id="mysql",
+        ),
+        pytest.param(
+            "sqlite:////config/home-assistant_v2.db",
+            "sqlite:////config/home-assistant_v2.db",
+            id="sqlite",
+        ),
+    ],
+)
+def test_get_engine_db_url(db_url: str, expected: str) -> None:
+    """Test driverless PostgreSQL URLs keep using psycopg2."""
+    assert get_engine_db_url(db_url) == expected
 
 
 def test_validate_or_move_away_sqlite_database(
