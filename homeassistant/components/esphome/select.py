@@ -188,11 +188,13 @@ class EsphomeAssistSatelliteWakeWordSelect(
                 self._wake_word_index
             ] = last_state.state
 
-        self.async_on_remove(
-            lambda: self._entry_data.assist_satellite_wake_word_options.pop(
+        @callback
+        def _release_wake_word_option() -> None:
+            self._entry_data.assist_satellite_wake_word_options.pop(
                 self._wake_word_index, None
             )
-        )
+
+        self.async_on_remove(_release_wake_word_option)
 
         # Update options when config is updated
         self.async_on_remove(

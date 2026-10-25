@@ -4,6 +4,7 @@ from unittest.mock import call
 
 from aioesphomeapi import APIClient, SelectInfo, SelectState, VoiceAssistantFeature
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
@@ -22,8 +23,6 @@ from homeassistant.components.select import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import mock_restore_cache
 
 from .common import get_satellite_entity
 from .conftest import (
