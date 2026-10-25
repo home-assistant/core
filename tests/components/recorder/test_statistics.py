@@ -23,6 +23,7 @@ from pytest_homeassistant.typing import (
     WebSocketGenerator,
 )
 from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
 
 from homeassistant import exceptions
 from homeassistant.components import recorder
@@ -1577,6 +1578,57 @@ async def test_statistics_during_period_display_inverse_unit(
             }
         ],
     }
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_during_period_stream_error_falls_back(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test statistics are read again without streaming when reading rows fails."""
+    now = get_start_time(dt_util.utcnow())
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set(
+        "sensor.test",
+        10,
+        attributes=POWER_SENSOR_KW_ATTRIBUTES,
+        timestamp=now.timestamp(),
+    )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=now)
+    await async_wait_recording_done(hass)
+
+    sorted_statistics_to_dict = statistics._sorted_statistics_to_dict
+
+    def _fail_streamed(
+        hass: HomeAssistant, stats: Any, **kwargs: Any
+    ) -> dict[str, list[Any]]:
+        # Only the streamed result is not a list
+        if not isinstance(stats, list):
+            raise OperationalError("SELECT", {}, Exception())
+        return sorted_statistics_to_dict(hass, stats, **kwargs)
+
+    with patch.object(
+        statistics, "_sorted_statistics_to_dict", side_effect=_fail_streamed
+    ):
+        assert statistics_during_period(
+            hass, now, period="5minute", statistic_ids={"sensor.test"}
+        ) == {
+            "sensor.test": [
+                {
+                    "end": (now + timedelta(minutes=5)).timestamp(),
+                    "last_reset": None,
+                    "max": 10.0,
+                    "mean": 10.0,
+                    "min": 10.0,
+                    "start": now.timestamp(),
+                }
+            ],
+        }
+    assert "Error reading statistics, retrying" in caplog.text
 
 
 @pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
