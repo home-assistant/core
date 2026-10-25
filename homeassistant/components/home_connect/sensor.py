@@ -811,16 +811,26 @@ class HomeConnectProgramStartTimeSensor(HomeConnectProgramSensor):
         if program_event is self._ended_run_program_event:
             # The program of the new run hasn't been reported yet
             program_key = None
-        # A program reported after the run finished belongs to a new run
-        program_changed = bool(
-            program_key
+        if (
+            operation_state == BSH_OPERATION_STATE_FINISHED
+            and program_key
             and program_key != self._program_key
-            and (self._program_key or operation_state == BSH_OPERATION_STATE_FINISHED)
+        ):
+            # The program belongs to the next run, which starts once it runs
+            self._attr_native_value = None
+            self._program_key = program_key
+            self._awaiting_program_run = True
+            self._observed_run_start = None
+            return
+        program_changed = bool(
+            self._program_key and program_key and program_key != self._program_key
         )
         if program_key:
             self._program_key = program_key
         if program_changed:
             start_time = None
+        if start_time is None and is_running and self._awaiting_program_run:
+            start_time = self._observed_run_start
 
         elapsed_event = self.appliance.events.get(
             EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME
@@ -834,9 +844,9 @@ class HomeConnectProgramStartTimeSensor(HomeConnectProgramSensor):
             ):
                 start_time = elapsed_start_time
 
-        if start_time is None and is_running and self._awaiting_program_run:
-            start_time = self._observed_run_start or now
-        if start_time is None and program_changed:
+        if start_time is None and (
+            program_changed or (is_running and self._awaiting_program_run)
+        ):
             start_time = now
         if is_running:
             self._awaiting_program_run = False

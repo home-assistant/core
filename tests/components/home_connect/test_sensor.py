@@ -1952,15 +1952,51 @@ async def test_program_start_time_unknown_for_program_started_before_setup(
                             }
                         )
                     ],
-                    "2021-01-09T12:03:00+00:00",
+                    STATE_UNKNOWN,
                 ),
+                # The new run starts once it runs
                 (
                     60,
                     [_operation_state(BSH_OPERATION_STATE_RUN)],
-                    "2021-01-09T12:03:00+00:00",
+                    "2021-01-09T12:04:00+00:00",
                 ),
             ],
             id="other_program_after_finished",
+        ),
+        pytest.param(
+            [
+                (
+                    60,
+                    [
+                        _operation_state(BSH_OPERATION_STATE_FINISHED),
+                        _notify({EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None}),
+                    ],
+                    STATE_UNKNOWN,
+                ),
+                (
+                    60,
+                    [
+                        _operation_state(BSH_OPERATION_STATE_RUN),
+                        _notify({EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 0}),
+                    ],
+                    STATE_UNKNOWN,
+                ),
+                # The elapsed program time wasn't updated since the run started
+                (
+                    120,
+                    [
+                        _notify(
+                            {
+                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
+                                )
+                            }
+                        )
+                    ],
+                    "2021-01-09T12:03:00+00:00",
+                ),
+            ],
+            id="outdated_elapsed_program_time_after_observed_run",
         ),
     ],
 )
@@ -1990,5 +2026,38 @@ async def test_program_start_time_new_run_without_ready(
                 "2021-01-09T12:01:00+00:00",
             ),
             *steps,
+        ],
+    )
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+async def test_program_start_time_unknown_for_program_finished_before_setup(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test the start time stays unknown until a run is observed after setup."""
+    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    client.get_status = AsyncMock(
+        return_value=create_operation_state_status(BSH_OPERATION_STATE_FINISHED)
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.is_state(OVEN_START_TIME_ENTITY_ID, STATE_UNKNOWN)
+
+    await _run_program_start_time_steps(
+        hass,
+        freezer,
+        client,
+        appliance.ha_id,
+        [
+            (
+                60,
+                [_operation_state(BSH_OPERATION_STATE_RUN)],
+                "2021-01-09T12:01:00+00:00",
+            ),
         ],
     )
