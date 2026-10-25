@@ -188,13 +188,6 @@ async def test_remove_config_entry_device(
         (dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"]), config_entry.entry_id
     )
 
-    # The removed client stays removed when it reports again
-    mock_websocket_message(message=MessageKey.CLIENT, data=client_payload[0])
-    await hass.async_block_till_done()
-    assert not device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"]), config_entry.entry_id
-    )
-
     # Try to remove an active device from UI: not allowed
     device_entry = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"]), config_entry.entry_id

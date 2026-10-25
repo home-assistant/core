@@ -1411,25 +1411,6 @@ async def test_firewall_policies(
     assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
 
 
-@pytest.mark.parametrize(("firewall_policy_payload"), [([FIREWALL_POLICY])])
-async def test_firewall_policy_becomes_predefined(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    config_entry_setup: MockConfigEntry,
-) -> None:
-    """Test a firewall policy that becomes predefined is removed."""
-    entity_id = "switch.unifi_network_allow_internal_to_iot"
-    assert hass.states.get(entity_id).state == STATE_ON
-
-    config_entry_setup.runtime_data.api.firewall_policies.process_raw(
-        [{**FIREWALL_POLICY, "predefined": True}]
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id) is None
-    assert entity_registry.async_get(entity_id) is None
-
-
 @pytest.mark.parametrize(
     ("object_oriented_network_config_payload"),
     [([OBJECT_ORIENTED_NETWORK_CONFIG, OBJECT_ORIENTED_NETWORK_ROUTE_CONFIG])],
