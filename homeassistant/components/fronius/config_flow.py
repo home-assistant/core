@@ -20,6 +20,7 @@ from .const import (
     DEFAULT_MODBUS_PORT,
     DOMAIN,
     FroniusConfigEntryData,
+    host_from_config,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -130,11 +131,9 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the DHCP client."""
+        discovered_hosts = {discovery_info.ip, discovery_info.hostname.lower()}
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST].removeprefix("http://").rstrip("/").lower() in (
-                discovery_info.ip,
-                discovery_info.hostname,
-            ):
+            if host_from_config(entry.data[CONF_HOST]) in discovered_hosts:
                 return self.async_abort(reason="already_configured")
         # Symo Datalogger devices need up to 1 minute at boot from DHCP request
         # to respond to API requests (connection refused until then)

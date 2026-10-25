@@ -503,16 +503,42 @@ MOCK_LEDSTRIP_CONFIG = {
     }
 }
 
-MOCK_LEDSTRIP_STATUS = {
-    "ledstrip:0": {
-        "id": 0,
-        "on": False,
-        "brightness": 36,
-        "effect": "rainbow",
-        "speed": 33,
-        "reverse": True,
-    }
+MOCK_LEDSTRIP_STATUS_RAINBOW = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "rainbow",
+    "speed": 33,
+    "reverse": True,
 }
+MOCK_LEDSTRIP_STATUS_AURORA = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "bg_rgb": [0, 0, 0],
+    "effect": "aurora",
+    "palette": "ocean",
+    "speed": 50,
+    "intensity": 50,
+}
+MOCK_LEDSTRIP_STATUS_BLINK = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "blink",
+    "rgb": [127, 172, 255],
+    "bg_rgb": [171, 171, 171],
+    "speed": 50,
+    "intensity": 65,
+}
+MOCK_LEDSTRIP_STATUS_SOLID = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "solid",
+    "rgb": [255, 81, 68],
+}
+MOCK_LEDSTRIP_STATUS = {"ledstrip:0": MOCK_LEDSTRIP_STATUS_RAINBOW}
 
 MOCK_SCRIPTS = [
     """"
@@ -542,7 +568,17 @@ MOCK_LEDSTRIP_EFFECTS = {
     "fade": {"name": "Fade", "controls": ["rgb", "speed"]},
     "rainbow": {"name": "Rainbow", "controls": ["speed", "reverse"]},
     "colorwipe": {"name": "Color Wipe", "controls": ["rgb", "speed", "reverse"]},
+    "aurora": {
+        "name": "Aurora",
+        "controls": ["bg_rgb", "palette", "intensity", "speed"],
+    },
     "ddp": {"name": "DDP Receiver", "controls": []},
+}
+MOCK_LEDSTRIP_PALETTES = {
+    "rainbow": "Rainbow",
+    "fire": "Fire",
+    "ocean": "Ocean",
+    "monochrome": "Monochrome",
 }
 
 
@@ -645,6 +681,7 @@ def _mock_rpc_device(version: str | None = None):
         ble_setconfig=AsyncMock(return_value={"restart_required": False}),
         shutdown=AsyncMock(),
         ledstrip_list_effects=AsyncMock(return_value=MOCK_LEDSTRIP_EFFECTS),
+        ledstrip_list_palettes=AsyncMock(return_value=MOCK_LEDSTRIP_PALETTES),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
