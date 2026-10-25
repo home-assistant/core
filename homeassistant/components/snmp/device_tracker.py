@@ -220,7 +220,7 @@ async def async_get_scanner(
         "deprecated_yaml_device_tracker",
         breaks_in_ha_version="2027.5.0",
         is_fixable=False,
-        is_persistent=True,
+        is_persistent=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml_device_tracker",

@@ -27,6 +27,7 @@ from homeassistant.components.snmp.coordinator import MAX_CONSECUTIVE_FAILURES
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState, ConfigSubentry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import ARP_TABLE_MAC_OID, mock_entry
@@ -485,3 +486,39 @@ async def test_subentry_reconfigure_to_another_table_removes_entities(
         event.data["action"] == "remove" and event.data["entity_id"] == entity_id
         for event in events
     )
+
+
+async def test_subentry_reconfigure_to_tracked_table_keeps_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test that aborting a reconfigure does not remove the current entities."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+    subentry_id = next(iter(entry.subentries))
+
+    second = ConfigSubentry(
+        data={CONF_BASEOID: BRIDGE_MAC_OID},
+        subentry_type=SUBENTRY_TYPE_DEVICE_TRACKER,
+        title=BRIDGE_MAC_OID,
+        unique_id=BRIDGE_MAC_OID,
+    )
+    assert hass.config_entries.async_add_subentry(entry, second)
+
+    with patch(
+        "homeassistant.components.snmp.client.bulk_walk_cmd",
+        side_effect=_async_mock_walk_with_mac,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert _async_mac_entity_id(hass, subentry_id) is not None
+
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {CONF_BASEOID: BRIDGE_MAC_OID},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert _async_mac_entity_id(hass, subentry_id) is not None

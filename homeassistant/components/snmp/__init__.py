@@ -49,4 +49,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> Non
     """Unload a config entry."""
     if not entry.runtime_data.coordinators:
         return
-    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
