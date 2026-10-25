@@ -1,9 +1,16 @@
 """Helpers for the Evohome integration."""
 
+import re
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
+
+
+def as_snake_case(mode: str) -> str:
+    """Convert a CamelCase string to the snake_case used by the library."""
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", mode).lower()
 
 
 @callback

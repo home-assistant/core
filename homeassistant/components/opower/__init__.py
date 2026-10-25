@@ -13,7 +13,7 @@ from .coordinator import OpowerConfigEntry, OpowerCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpowerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpowerConfigEntry) -> None:
     """Set up Opower from a config entry."""
     utility_name = entry.data[CONF_UTILITY]
     try:
@@ -23,6 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpowerConfigEntry) -> bo
             hass,
             DOMAIN,
             f"unsupported_utility_{entry.entry_id}",
+            config_entry_id=entry.entry_id,
             is_fixable=True,
             severity=ir.IssueSeverity.ERROR,
             translation_key="unsupported_utility",
@@ -45,9 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpowerConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OpowerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpowerConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -8,10 +8,12 @@ from pyoverkiz.exceptions import (
     InvalidEventListenerIdError,
     MaintenanceError,
     ServiceUnavailableError,
+    SomfyServiceError,
     TooManyConcurrentRequestsError,
     TooManyRequestsError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -21,8 +23,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import async_deliver_events, device_created_event, device_removed_event
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEMPERATURE_SENSOR = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
@@ -46,6 +46,7 @@ SECONDARY_GATEWAY_CHILD_URL = "io://1234-1234-8983/1959462"
         TooManyRequestsError("Too many requests"),
         MaintenanceError("Server is down for maintenance"),
         ServiceUnavailableError("Server is unavailable"),
+        SomfyServiceError("Somfy token refresh failed"),
         InvalidEventListenerIdError("Invalid event listener id"),
         TimeoutError("Timed out"),
         ClientConnectorError(Mock(), Mock()),
@@ -55,6 +56,7 @@ SECONDARY_GATEWAY_CHILD_URL = "io://1234-1234-8983/1959462"
         "too_many_requests",
         "maintenance",
         "service_unavailable",
+        "somfy_service_error",
         "invalid_event_listener_id",
         "timeout",
         "client_connector_error",

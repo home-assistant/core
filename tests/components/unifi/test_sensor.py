@@ -10,6 +10,11 @@ from aiounifi.models.device import DeviceState
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import (
@@ -48,8 +53,6 @@ from .conftest import (
     WebsocketMessageMock,
     WebsocketStateManager,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 WIRED_CLIENT = {
     "hostname": "Wired client",
@@ -1006,9 +1009,10 @@ async def test_wlan_client_sensors(
     await mock_websocket_state.disconnect()
     assert hass.states.get("sensor.ssid_1_clients").state == STATE_UNAVAILABLE
 
-    # Controller reconnects
+    # Controller reconnects, the recovery refetches the clients and the mocked
+    # payload still lists one on the SSID
     await mock_websocket_state.reconnect()
-    assert hass.states.get("sensor.ssid_1_clients").state == "0"
+    assert hass.states.get("sensor.ssid_1_clients").state == "1"
 
     # WLAN gets disabled
     wlan_1 = deepcopy(WLAN)
@@ -1021,7 +1025,7 @@ async def test_wlan_client_sensors(
     wlan_1["enabled"] = True
     mock_websocket_message(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.ssid_1_clients").state == "0"
+    assert hass.states.get("sensor.ssid_1_clients").state == "1"
 
 
 @pytest.mark.parametrize(

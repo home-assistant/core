@@ -229,7 +229,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> None:
     """Set up HomeKit from a config entry."""
     _async_import_options_from_data_if_missing(hass, entry)
 
@@ -291,8 +291,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
 
     entry.async_on_unload(async_at_started(hass, _async_start_homekit))
 
-    return True
-
 
 async def _async_update_listener(
     hass: HomeAssistant, entry: HomeKitConfigEntry
@@ -303,7 +301,7 @@ async def _async_update_listener(
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> None:
     """Unload a config entry."""
     async_dismiss_setup_message(hass, entry.entry_id)
     entry_data = entry.runtime_data
@@ -320,8 +318,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> 
             logged_shutdown_wait = True
 
         await asyncio.sleep(PORT_CLEANUP_CHECK_INTERVAL_SECS)
-
-    return True
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> None:

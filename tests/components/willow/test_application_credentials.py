@@ -1,6 +1,7 @@
 """Tests for the Willow application credentials platform."""
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.components.willow.application_credentials import (
@@ -10,8 +11,6 @@ from homeassistant.components.willow.application_credentials import (
 )
 from homeassistant.components.willow.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture

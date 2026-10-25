@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tololib import ToloCommunicationError
 
 from homeassistant.components.tolo.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 MOCK_DHCP_DATA = DhcpServiceInfo(
     ip="127.0.0.2", macaddress="001122334455", hostname="mock_hostname"

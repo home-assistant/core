@@ -67,7 +67,7 @@ async def _async_setup_coordinator(
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: WaterFurnaceConfigEntry
-) -> bool:
+) -> None:
     """Set up WaterFurnace from a config entry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
@@ -92,19 +92,17 @@ async def async_setup_entry(
     entry.runtime_data = dict(results)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: WaterFurnaceConfigEntry
-) -> bool:
+) -> None:
     """Unload a WaterFurnace config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: WaterFurnaceConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     if entry.version == 1 and entry.minor_version < 2:
@@ -135,5 +133,3 @@ async def async_migrate_entry(
             entry, unique_id=str(client.account_id), minor_version=2
         )
         _LOGGER.info("Migrated config entry unique_id to account_id")
-
-    return True

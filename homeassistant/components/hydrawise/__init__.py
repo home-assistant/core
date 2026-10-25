@@ -8,6 +8,7 @@ from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Plat
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import APP_ID, DOMAIN, MANUFACTURER
@@ -40,17 +41,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: HydrawiseConfigEntry
-) -> bool:
+) -> None:
     """Set up Hydrawise from a config entry."""
     if any(k not in config_entry.data for k in _REQUIRED_AUTH_KEYS):
         # If we are missing any required authentication keys, trigger a reauth flow.
-        raise ConfigEntryAuthFailed
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_credentials",
+        )
 
     hydrawise = hybrid.HybridClient(
         auth.HybridAuth(
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
             config_entry.data[CONF_API_KEY],
+            session=async_get_clientsession(hass),
         ),
         app_id=APP_ID,
     )
@@ -81,6 +86,8 @@ async def async_setup_entry(
                 manufacturer=MANUFACTURER,
                 model=controller.hardware.model.description,
                 name=controller.name,
+                serial_number=controller.hardware.serial_number or None,
+                sw_version=controller.software_version or None,
             )
 
     # Register the controllers known at setup before the platforms construct
@@ -101,9 +108,8 @@ async def async_setup_entry(
         water_use=water_use_coordinator,
     )
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: HydrawiseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HydrawiseConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

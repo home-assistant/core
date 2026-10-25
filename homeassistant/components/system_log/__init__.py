@@ -26,6 +26,7 @@ from .const import (
     EVENT_SYSTEM_LOG,
 )
 from .services import async_setup_services
+from .stream import async_setup_raw_log_stream
 
 type KeyType = tuple[str, tuple[str, int], tuple[str, int, str] | None]
 
@@ -290,11 +291,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     handler.setLevel(logging.WARNING)
 
     hass.data[DOMAIN] = handler
+    raw_log_stream = async_setup_raw_log_stream(hass)
 
     @callback
     def _async_stop_handler(_: Event) -> None:
         """Cleanup handler."""
         logging.root.removeHandler(handler)
+        raw_log_stream.async_shutdown()
         del hass.data[DOMAIN]
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_handler)

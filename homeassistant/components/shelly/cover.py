@@ -372,6 +372,13 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         )
 
     @rpc_call
+    async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
+        """Move the cover and its tilt to a specific position in a single call."""
+        await self.coordinator.device.cover_set_position(
+            self._id, pos=kwargs[ATTR_POSITION], slat_pos=kwargs[ATTR_TILT_POSITION]
+        )
+
+    @rpc_call
     @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover."""

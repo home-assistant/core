@@ -5,6 +5,8 @@ from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import register_auth_provider
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import backup, onboarding
@@ -12,9 +14,6 @@ from homeassistant.components.backup import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-
-from tests.common import register_auth_provider
-from tests.typing import ClientSessionGenerator
 
 
 def mock_onboarding_storage(hass_storage, data):
