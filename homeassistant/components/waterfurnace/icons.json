@@ -7,12 +7,6 @@
       "airflow_current_speed": {
         "default": "mdi:fan"
       },
-      "last_fault": {
-        "default": "mdi:alert-circle-outline"
-      },
-      "lockout_code": {
-        "default": "mdi:lock-alert"
-      },
       "mode": {
         "default": "mdi:gauge"
       }

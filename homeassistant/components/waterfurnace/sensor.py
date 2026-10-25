@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
-    EntityCategory,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfVolumeFlowRate,
@@ -152,16 +151,6 @@ SENSORS = [
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="lockoutstatuscode",
-        translation_key="lockout_code",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="lastfault",
-        translation_key="last_fault",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="load_tank_temp",

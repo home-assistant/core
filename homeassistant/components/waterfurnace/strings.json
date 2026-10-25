@@ -67,9 +67,6 @@
       "hot_water_temp": {
         "name": "Hot water temperature"
       },
-      "last_fault": {
-        "name": "Last fault"
-      },
       "leaving_air_temp": {
         "name": "Leaving air temperature"
       },
@@ -78,9 +75,6 @@
       },
       "load_tank_temp": {
         "name": "Load tank temperature"
-      },
-      "lockout_code": {
-        "name": "Lockout code"
       },
       "loop_pump_power": {
         "name": "Loop pump power"

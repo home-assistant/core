@@ -18,8 +18,6 @@
   "tstatheatingsetpoint": 68,
   "tstatcoolingsetpoint": 74,
   "outdoorair": 55.2,
-  "lockoutstatus": { "lockoutstatuscode": 0, "lockedout": 0 },
-  "lastfault": 15,
   "activesettings": {
     "activemode": 3,
     "heatingsp_read": 68,
