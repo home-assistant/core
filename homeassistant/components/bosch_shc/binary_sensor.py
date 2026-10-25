@@ -189,7 +189,6 @@ class TwinguardAlarmTracker:
         self._retry: CALLBACK_TYPE | None = None
         self._stopped = False
         self._generation = 0
-        self._applied_generation = 0
         self.trigger_ids: set[str] = set()
         self.available = (
             smoke_detection_system.alarm is SurveillanceAlarmService.State.ALARM_OFF
@@ -242,9 +241,8 @@ class TwinguardAlarmTracker:
             except Exception:
                 _LOGGER.warning("Unable to fetch Bosch SHC messages", exc_info=True)
                 available = False
-        if self._stopped or generation < self._applied_generation:
+        if self._stopped or generation != self._generation:
             return
-        self._applied_generation = generation
         self._cancel_retry()
         if not available:
             self._retry = async_call_later(self._hass, RETRY_DELAY, self.async_refresh)
