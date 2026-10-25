@@ -38,7 +38,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    cync_auth: Auth = None
+    cync_auth: Auth
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -121,12 +121,11 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         """Attempt to log in with user email and password, and return the error dict."""
         errors: dict[str, str] = {}
 
-        if CONF_EMAIL in user_input:
-            self.cync_auth = Auth(
-                async_get_clientsession(self.hass),
-                username=user_input[CONF_EMAIL],
-                password=user_input[CONF_PASSWORD],
-            )
+        self.cync_auth = Auth(
+            async_get_clientsession(self.hass),
+            username=user_input[CONF_EMAIL],
+            password=user_input[CONF_PASSWORD],
+        )
 
         try:
             await self.cync_auth.login(user_input.get(CONF_TWO_FACTOR_CODE))
