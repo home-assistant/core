@@ -18,6 +18,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, async_get_manager
 from homeassistant.components.onedrive.const import (
     CONF_FOLDER_ID,
     CONF_FOLDER_NAME,
@@ -35,6 +36,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import BACKUP_METADATA, INSTANCE_ID
@@ -290,7 +292,7 @@ async def test_1_1_to_1_2_migration(
 ) -> None:
     """Test migration from 1.1 to 1.2."""
     old_config_entry = MockConfigEntry(
-        unique_id="mock_drive_id",
+        unique_id="MOCK_DRIVE_ID",
         title="John Doe's OneDrive",
         domain=DOMAIN,
         data={
@@ -406,6 +408,12 @@ async def test_1_2_to_1_3_migration(
         device_id=device.id,
     )
 
+    assert await async_setup_component(hass, BACKUP_DOMAIN, {})
+    async_get_manager(hass).config.update(
+        agents={f"{DOMAIN}.mock_drive_id": {"protected": False}},
+        create_backup={"agent_ids": [f"{DOMAIN}.mock_drive_id"]},
+    )
+
     await setup_integration(hass, old_config_entry)
 
     assert old_config_entry.state is ConfigEntryState.LOADED
@@ -422,6 +430,9 @@ async def test_1_2_to_1_3_migration(
     assert device_registry.async_get(device.id).identifiers == {
         (DOMAIN, "MOCK_DRIVE_ID")
     }
+    backup_config = async_get_manager(hass).config.data
+    assert backup_config.create_backup.agent_ids == [f"{DOMAIN}.MOCK_DRIVE_ID"]
+    assert list(backup_config.agents) == [f"{DOMAIN}.MOCK_DRIVE_ID"]
 
 
 async def test_oauth_implementation_not_available(

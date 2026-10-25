@@ -11,6 +11,7 @@ from onedrive_personal_sdk.exceptions import (
     OneDriveException,
 )
 
+from homeassistant.components.backup import async_get_manager
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -111,6 +112,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
                     (domain, identifier.upper())
                     for domain, identifier in device.identifiers
                 },
+            )
+        if entry.unique_id != drive_id:
+            async_get_manager(hass).async_rename_agent(
+                f"{DOMAIN}.{entry.unique_id}", f"{DOMAIN}.{drive_id}"
             )
         hass.config_entries.async_update_entry(
             entry, unique_id=drive_id, minor_version=2
