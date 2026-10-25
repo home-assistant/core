@@ -97,6 +97,7 @@ class BluettiModbusSettingEntity(CoordinatorEntity[BluettiModbusSettingsCoordina
                     translation_key="write_failed",
                     translation_placeholders={"error": str(err)},
                 ) from err
+            self.coordinator.writes += 1
         self.coordinator.async_set_updated_data(
             self.coordinator.data | {self._field_name: value}
         )

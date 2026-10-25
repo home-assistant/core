@@ -22,7 +22,11 @@ def restricted_device(unit: ModbusUnit) -> Balco260:
 
 
 def settings_device(unit: ModbusUnit) -> Balco260:
-    """Return the power station restricted to the settings it can be given."""
+    """Return the power station restricted to the settings it can be given.
+
+    The serial number comes along, so settings are only taken from the device
+    this entry was set up for.
+    """
     device = Balco260(unit)
-    device.restrict_fields(SETTINGS_FIELDS)
+    device.restrict_fields(SETTINGS_FIELDS | {"d_serial"})
     return device

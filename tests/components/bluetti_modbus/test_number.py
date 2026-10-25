@@ -22,13 +22,13 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import SERIAL_ADDRESS
+from .conftest import SERIAL, SERIAL_ADDRESS
 
 DISCHARGE_LIMIT_ENTITY = "number.balco_260_discharge_limit"
 DISCHARGE_LIMIT_ADDRESS = 57016
@@ -212,3 +212,89 @@ async def test_running_settings_poll_does_not_undo_a_write(
     assert entity is not None
     assert entity.state == "20"
     assert mock_modbus_unit.holding[DISCHARGE_LIMIT_ADDRESS] == 20
+
+
+async def test_settings_read_queued_behind_a_write_is_skipped(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A settings read that waited for a write does not show the old value."""
+    await setup_integration(hass, mock_config_entry)
+    old_value = mock_modbus_unit.holding[DISCHARGE_LIMIT_ADDRESS]
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+    write_register = mock_modbus_unit.write_register
+    release = asyncio.Event()
+
+    async def held_write(address: int, value: int) -> None:
+        await release.wait()
+        await write_register(address, value)
+
+    async def lagging_read(address: int, count: int) -> list[int]:
+        # Right after a write, the device still serves the old value.
+        registers = await read_holding_registers(address, count)
+        if address == DISCHARGE_LIMIT_ADDRESS:
+            registers[0] = old_value
+        return registers
+
+    with (
+        patch.object(mock_modbus_unit, "write_register", held_write),
+        patch.object(mock_modbus_unit, "read_holding_registers", lagging_read),
+    ):
+        write = hass.async_create_task(
+            hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: DISCHARGE_LIMIT_ENTITY, ATTR_VALUE: 20},
+                blocking=True,
+            )
+        )
+        await _let_tasks_run()
+        # The settings poll comes due while the write holds the lock.
+        freezer.tick(SETTINGS_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await _let_tasks_run()
+        release.set()
+        await write
+        await hass.async_block_till_done()
+
+    entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
+    assert entity is not None
+    assert entity.state == "20"
+
+
+async def test_settings_from_another_device_are_not_shown(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Settings read while another device answers are dropped, not kept."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Another device, with its own discharge limit, answers for one settings poll.
+    mock_modbus_unit.holding[SERIAL_ADDRESS] = 1
+    mock_modbus_unit.holding[DISCHARGE_LIMIT_ADDRESS] = 50
+    freezer.tick(SETTINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # This entry's device is back before the next settings poll.
+    mock_modbus_unit.holding[SERIAL_ADDRESS] = int(SERIAL)
+    mock_modbus_unit.holding[DISCHARGE_LIMIT_ADDRESS] = 15
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
+    assert entity is not None
+    assert entity.state == STATE_UNAVAILABLE
+
+    freezer.tick(SETTINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
+    assert entity is not None
+    assert entity.state == "15"

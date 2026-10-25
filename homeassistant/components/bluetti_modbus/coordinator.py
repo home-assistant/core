@@ -89,6 +89,8 @@ class BluettiModbusSettingsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize the coordinator."""
         self.device = device
         self.io_lock = io_lock
+        # Counts the writes, see _async_update_data.
+        self.writes = 0
         super().__init__(
             hass,
             _LOGGER,
@@ -100,18 +102,29 @@ class BluettiModbusSettingsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Poll the device's settings."""
+        writes = self.writes
         # A write waits for this read, so the read cannot replace the value
         # the write shows with the one from before it.
-        try:
-            async with self.io_lock:
+        async with self.io_lock:
+            if self.writes != writes:
+                # A write went out while this read waited for its turn, and
+                # the device serves the old value for a moment afterwards.
+                return self.data
+            try:
                 await self.device.async_update_with_retry()
-        except ModbusError as err:
+            except ModbusError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="communication_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+        values = self.device.values
+        if str(values["d_serial"]) != self.config_entry.unique_id:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        return self.device.values
+                translation_key="wrong_device",
+            )
+        return values
 
 
 @dataclass(kw_only=True)
