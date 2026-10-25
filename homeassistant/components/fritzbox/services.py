@@ -1,7 +1,5 @@
 """Services for FRITZ!Box SmartHome integration."""
 
-import logging
-
 import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID
@@ -12,10 +10,8 @@ from homeassistant.helpers.service import (
     verify_domain_control,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_DURATION = "duration"
 
@@ -61,7 +57,7 @@ async def _service_handler(call: ServiceCall) -> None:
                         SERVICE_SET_WINDOW_OPEN,
                         SERVICE_SET_WINDOW_CLOSE,
                     ]:
-                        _LOGGER.debug("Executing service %s", call.service)
+                        LOGGER.debug("Executing service %s", call.service)
                         await call.hass.async_add_executor_job(
                             coordinator.fritz.set_window_open,
                             ain,
