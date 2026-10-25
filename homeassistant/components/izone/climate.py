@@ -25,14 +25,13 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
 
 from .const import ATTR_AIRFLOW, DOMAIN
 from .coordinator import IZoneConfigEntry, IZoneCoordinator
-from .entity import IZoneCoordinatorEntity
+from .entity import IZoneCoordinatorEntity, zone_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -414,20 +413,7 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
             }
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_unique_id = f"{controller_entity.unique_id}_z{zone.index + 1}"
-        assert controller_entity.unique_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, controller_entity.unique_id, zone.index)  # type:ignore[arg-type]
-            },
-            manufacturer="IZone",
-            model=zone.type.name.title(),
-            name=zone.name.title(),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, controller_entity.unique_id),
-                config_entry_id=coordinator.config_entry.entry_id,
-            ),
-        )
+        self._attr_device_info = zone_device_info(coordinator, zone)
 
     @property
     @override
