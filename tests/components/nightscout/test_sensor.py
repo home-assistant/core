@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
-from py_nightscout.models import ServerStatus
+from py_nightscout.models import SGV, ServerStatus
 from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,7 +18,7 @@ from homeassistant.components.nightscout.coordinator import (
     STATUS_SCAN_INTERVAL,
 )
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
-from homeassistant.const import ATTR_DATE, ATTR_ICON, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_DATE, ATTR_ICON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -30,6 +30,9 @@ from . import (
 )
 
 URGENT_HIGH_THRESHOLD_ENTITY_ID = "sensor.nightscout_urgent_high_threshold"
+GLUCOSE_TREND_ENTITY_ID = "sensor.nightscout_glucose_trend"
+GLUCOSE_CHANGE_ENTITY_ID = "sensor.nightscout_glucose_change"
+GLUCOSE_READING_TIME_ENTITY_ID = "sensor.nightscout_glucose_reading_time"
 
 
 async def test_sensor_state(hass: HomeAssistant) -> None:
@@ -105,12 +108,62 @@ async def test_sensor_attributes(hass: HomeAssistant) -> None:
     assert attr[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
-async def test_threshold_sensors(
+async def test_glucose_sensors(hass: HomeAssistant) -> None:
+    """Test the sensors for the latest glucose reading."""
+    await init_integration(hass)
+
+    assert hass.states.get(GLUCOSE_TREND_ENTITY_ID).state == "falling_slightly"
+    assert hass.states.get(GLUCOSE_CHANGE_ENTITY_ID).state == "-5.257"
+    assert (
+        hass.states.get(GLUCOSE_READING_TIME_ENTITY_ID).state
+        == "2020-08-05T19:01:06+00:00"
+    )
+
+
+async def test_glucose_sensors_empty_response(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the glucose reading sensors are unavailable without readings."""
+    await init_integration(hass)
+
+    with patch(
+        "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
+        return_value=[],
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    for entity_id in (
+        GLUCOSE_TREND_ENTITY_ID,
+        GLUCOSE_CHANGE_ENTITY_ID,
+        GLUCOSE_READING_TIME_ENTITY_ID,
+    ):
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_glucose_trend_unknown_direction(hass: HomeAssistant) -> None:
+    """Test the trend is unknown for directions Nightscout cannot compute."""
+    reading = SGV.new_from_json_dict(
+        {
+            "sgv": 120,
+            "delta": 0,
+            "direction": "NONE",
+            "dateString": "2020-08-05T19:01:06.533Z",
+        }
+    )
+    with patch("tests.components.nightscout.GLUCOSE_READINGS", [reading]):
+        await init_integration(hass)
+
+    assert hass.states.get(GLUCOSE_TREND_ENTITY_ID).state == STATE_UNKNOWN
+
+
+async def test_all_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the threshold sensors."""
+    """Test all sensors with a registry entry."""
     entry = await init_integration(hass, SERVER_STATUS_STATUS_ONLY)
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
