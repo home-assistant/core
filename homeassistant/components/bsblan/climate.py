@@ -194,6 +194,8 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
+        if hvac_mode == self.hvac_mode:
+            return
         await self._async_thermostat(hvac_mode=HA_TO_BSBLAN_HVAC_MODE[hvac_mode])
 
     @override
@@ -212,7 +214,8 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the setpoint of the comfort level currently in effect."""
         temperature = kwargs[ATTR_TEMPERATURE]
-        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) == self.hvac_mode:
+            hvac_mode = None
         if (mode := hvac_mode or self.hvac_mode) in (HVACMode.AUTO, HVACMode.OFF):
             # Scenes replay the saved target, rounded to the display unit
             if not any(

@@ -366,16 +366,18 @@ HA_TO_BSBLAN_HVAC_MODE_TEST: dict[HVACMode, int] = {
 
 
 @pytest.mark.parametrize(
-    "mode",
-    [HVACMode.HEAT, HVACMode.AUTO, HVACMode.OFF],
+    ("hvac_mode_int", "mode"),
+    [(1, HVACMode.HEAT), (3, HVACMode.AUTO), (3, HVACMode.OFF)],
 )
 async def test_async_set_hvac_mode(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    hvac_mode_int: int,
     mode: HVACMode,
 ) -> None:
     """Test setting HVAC mode via service call."""
+    mock_bsblan.state.return_value = _circuit_state(hvac_mode_int, None)
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     # Call the service to set HVAC mode
@@ -390,6 +392,31 @@ async def test_async_set_hvac_mode(
     expected_int = HA_TO_BSBLAN_HVAC_MODE_TEST[mode]
     mock_bsblan.thermostat.assert_called_once_with(hvac_mode=expected_int, circuit=1)
     mock_bsblan.thermostat.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("hvac_mode_int", "mode"),
+    [(3, HVACMode.HEAT), (2, HVACMode.HEAT), (1, HVACMode.AUTO), (0, HVACMode.OFF)],
+)
+async def test_set_hvac_mode_already_active(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    hvac_mode_int: int,
+    mode: HVACMode,
+) -> None:
+    """Test setting the HVAC mode the circuit is already in writes nothing."""
+    mock_bsblan.state.return_value = _circuit_state(hvac_mode_int, None)
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: mode},
+        blocking=True,
+    )
+
+    mock_bsblan.thermostat.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -473,14 +500,14 @@ async def test_async_set_data(
     mock_bsblan.thermostat.assert_called_once_with(target_temperature=19, circuit=1)
     mock_bsblan.thermostat.reset_mock()
 
-    # Test setting HVAC mode - should convert to integer (3=heat)
+    # Test setting HVAC mode - should convert to integer (1=auto)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.AUTO},
         blocking=True,
     )
-    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=3, circuit=1)  # 3 = heat
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=1, circuit=1)  # 1 = auto
     mock_bsblan.thermostat.reset_mock()
 
     # Test setting preset mode to ECO in heat mode - should use integer 2
@@ -759,10 +786,9 @@ async def test_restore_scene_in_auto(
         ],
     )
 
-    assert mock_bsblan.thermostat.call_args_list == [
-        call(hvac_mode=1, circuit=1),
-        call(temporary_mode=temporary_mode, circuit=1),
-    ]
+    mock_bsblan.thermostat.assert_called_once_with(
+        temporary_mode=temporary_mode, circuit=1
+    )
 
 
 @pytest.mark.usefixtures("mock_reduced_setpoint")
@@ -779,7 +805,34 @@ async def test_restore_scene_in_off(
         hass, [HassState(ENTITY_ID, HVACMode.OFF, {ATTR_TEMPERATURE: 8.0})]
     )
 
-    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=0, circuit=1)
+    mock_bsblan.thermostat.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_reduced_setpoint")
+async def test_restore_scene_in_permanent_reduced(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test restoring a heat and eco scene in that same state keeps the comfort setpoint."""
+    mock_bsblan.state.return_value = _circuit_state(2, "17.0")
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    await async_reproduce_state(
+        hass,
+        [
+            HassState(
+                ENTITY_ID,
+                HVACMode.HEAT,
+                {ATTR_TEMPERATURE: 17.0, ATTR_PRESET_MODE: PRESET_ECO},
+            )
+        ],
+    )
+
+    assert mock_bsblan.thermostat.call_args_list == [
+        call(temp_reduced_setpoint=17.0, circuit=1),
+        call(hvac_mode=2, circuit=1),
+    ]
 
 
 @pytest.mark.usefixtures("mock_reduced_setpoint")
@@ -811,6 +864,7 @@ async def test_set_temperature_with_hvac_mode(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting the temperature with an HVAC mode writes both."""
+    mock_bsblan.state.return_value = _circuit_state(0, None)
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     await hass.services.async_call(
