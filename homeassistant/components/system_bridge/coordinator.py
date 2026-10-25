@@ -135,11 +135,12 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             timeout=GET_DATA_WAIT_TIMEOUT,
         )
 
-        # Merge new data with existing data
+        # Merge new data with existing data, keeping what we have for modules
+        # the backend had no data for
         for module in MODULES:
-            if hasattr(modules_data, module):
+            if (module_data := getattr(modules_data, module, None)) is not None:
                 self.logger.debug("[async_get_data] Set new data for: %s", module)
-                setattr(self.data, module, getattr(modules_data, module))
+                setattr(self.data, module, module_data)
 
         return modules_data
 
