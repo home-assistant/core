@@ -79,6 +79,8 @@ class OverkizExecutor:
             {
                 "device_url": self.device.device_url,
                 "command_name": command_name,
+                "command_names": [command_name],
+                "commands": [Command(name=command_name, parameters=parameters)],
             }
         )
         if refresh_afterwards:
@@ -165,15 +167,28 @@ class OverkizExecutor:
         ) as exception:
             raise HomeAssistantError("Failed to connect") from exception
 
-        self.coordinator.executions.setdefault(exec_id, []).append(
-            {
-                "device_url": self.device.device_url,
-                "command_name": commands[-1].name,
-                "commands": commands,
-                "key": key,
-                "started": monotonic(),
-            }
-        )
+        record: dict[str, Any] = {
+            "device_url": self.device.device_url,
+            "command_name": commands[-1].name,
+            "command_names": [command.name for command in commands],
+            "commands": commands,
+            "key": key,
+            "started": monotonic(),
+        }
+
+        # Only the writes that asked for it are replayed if the device never
+        # received them, and only if nothing has replaced them since.
+        if coalesce and any(
+            not str(command.name).startswith("refresh") for command in commands
+        ):
+            self.coordinator.command_sequence += 1
+            for command in commands:
+                self.coordinator.command_sequences[
+                    (self.device.device_url, command.name)
+                ] = self.coordinator.command_sequence
+            record["replay_allowed"] = True
+            record["sequence"] = self.coordinator.command_sequence
+        self.coordinator.executions.setdefault(exec_id, []).append(record)
         if refresh_afterwards:
             self.coordinator.async_execution_started()
 

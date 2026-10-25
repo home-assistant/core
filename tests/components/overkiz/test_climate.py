@@ -33,10 +33,15 @@ from homeassistant.components.climate import (
 from homeassistant.components.overkiz.climate.atlantic_pass_apc_zone_control_zone import (
     AtlanticPassAPCZoneControlZone,
 )
-from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.overkiz.const import (
+    DOMAIN,
+    UPDATE_INTERVAL,
+    UPDATE_INTERVAL_EXECUTION,
+)
 from homeassistant.components.overkiz.coordinator import (
     OverkizDataUpdateCoordinator,
     _send_pending_commands,
+    on_execution_state_changed,
 )
 from homeassistant.components.overkiz.executor import OverkizExecutor
 from homeassistant.const import (
@@ -47,7 +52,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.state import async_reproduce_state
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
@@ -2091,9 +2096,10 @@ async def test_zone_control_zone_waiting_value_that_cannot_be_sent(
     freezer: FrozenDateTimeFactory,
     mock_client: MockOverkizClient,
     setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a value that waited and cannot be sent is logged."""
+    """Test a value that waited and cannot be sent is logged and reported."""
     await _async_set_manual_zone(
         hass, freezer, mock_client, setup_overkiz_integration, "on"
     )
@@ -2107,6 +2113,465 @@ async def test_zone_control_zone_waiting_value_that_cannot_be_sent(
     await _async_end_execution(hass, freezer, mock_client, "exec-1")
 
     assert "Sending the waiting Overkiz commands failed" in caplog.text
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"execution_failed_{ZONE_CONTROL_ZONE.device_url}"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "device": "Living Room",
+        "error": "REQUEST_FAILED",
+    }
+
+
+async def test_zone_control_zone_lost_command_is_replayed_once(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a command the device never received is replayed, then reported."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+    failed = {
+        "failure_type_code": FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        "failed_commands": [{"rank": 0}],
+    }
+    issue_id = f"execution_failed_{ZONE_CONTROL_ZONE.device_url}"
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_end_execution(
+        hass, freezer, mock_client, "exec-1", ExecutionState.FAILED, **failed
+    )
+
+    # Replayed once, without telling the user.
+    assert _sent_commands(mock_client) == [
+        [("setHeatingTargetTemperature", [19.0])],
+        [("setHeatingTargetTemperature", [19.0])],
+    ]
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    # The replay fails too: the user is told.
+    await _async_end_execution(
+        hass, freezer, mock_client, "exec-2", ExecutionState.FAILED, **failed
+    )
+    assert mock_client.execute_action_group.await_count == 2
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == "execution_failed"
+    assert issue.translation_placeholders == {
+        "device": "Living Room",
+        "error": "DATA_TRANSPORT_SERVICE_ERROR",
+    }
+
+    # A later write that goes through clears it.
+    await _async_set_zone_setpoint(hass, 20.0)
+    await _async_end_execution(hass, freezer, mock_client, "exec-3")
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_zone_control_zone_waiting_value_follows_the_replay(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the value that waited is sent once the lost command has been replayed."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_set_zone_setpoint(hass, 21.0)
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        [{"rank": 0}],
+    )
+
+    assert _sent_commands(mock_client) == [
+        [("setHeatingTargetTemperature", [19.0])],
+        [("setHeatingTargetTemperature", [19.0])],
+    ]
+
+    await _async_end_execution(hass, freezer, mock_client, "exec-2")
+
+    assert _sent_commands(mock_client)[2:] == [
+        [("setHeatingTargetTemperature", [21.0])]
+    ]
+
+
+async def test_zone_control_zone_failed_refresh_is_not_reported(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a refresh that fails leaves the setting applied: nothing to report."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "off"
+    )
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    commands = _sent_commands(mock_client)[0]
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        [{"rank": len(commands) - 1}],
+    )
+
+    assert mock_client.execute_action_group.await_count == 1
+    assert not issue_registry.issues
+
+
+@pytest.mark.parametrize(
+    ("failure_type_code", "failed_commands", "reported"),
+    [
+        # A code the library does not know describes nothing to act on.
+        (FailureType.UNKNOWN, [{"rank": 0}], False),
+        # Without the failed commands, only a device that is down is reported.
+        (FailureType.PEER_DOWN, None, True),
+        (FailureType.DATA_TRANSPORT_SERVICE_ERROR, None, False),
+        (FailureType.PEER_DOWN, [{"rank": 99}], True),
+    ],
+)
+async def test_zone_control_zone_failure_reporting(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
+    failure_type_code: FailureType,
+    failed_commands: list[dict[str, Any]] | None,
+    reported: bool,
+) -> None:
+    """Test which failed executions are reported, and that none is replayed."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        failure_type_code,
+        failed_commands,
+    )
+
+    assert mock_client.execute_action_group.await_count == 1
+    assert bool(issue_registry.issues) is reported
+
+
+async def test_zone_control_zone_failure_of_an_unknown_execution_is_ignored(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a failure of an execution not started by Home Assistant is ignored."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "started-in-the-app",
+        ExecutionState.FAILED,
+        FailureType.PEER_DOWN,
+    )
+
+    assert not issue_registry.issues
+
+
+async def test_zone_control_zone_replay_that_cannot_be_sent_is_reported(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the user is told when the replay of a lost command cannot be sent."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+    mock_client.execute_action_group.side_effect = [
+        "exec-1",
+        BaseOverkizError("Server is down"),
+        "exec-3",
+    ]
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_set_zone_setpoint(hass, 21.0)
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        [{"rank": 0}],
+    )
+
+    assert "Replay of the Overkiz command failed" in caplog.text
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"execution_failed_{ZONE_CONTROL_ZONE.device_url}"
+    )
+    # What waited is still sent.
+    assert _sent_commands(mock_client)[-1] == [("setHeatingTargetTemperature", [21.0])]
+
+
+async def test_failed_write_without_coalescing_is_reported_and_cleared(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test only the writes that asked for it are replayed, and any success clears."""
+    entry = await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    executor = OverkizExecutor(
+        ZONE_CONTROL_ZONE.device_url, entry.runtime_data.coordinator
+    )
+    issue_id = f"execution_failed_{ZONE_CONTROL_ZONE.device_url}"
+    mock_client.execute_action_group.reset_mock()
+
+    await executor.async_execute_commands(
+        [Command(name="setHeatingTargetTemperature", parameters=[19.0])]
+    )
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        [{"rank": 0}],
+    )
+
+    # No replay, the user is told.
+    assert mock_client.execute_action_group.await_count == 1
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    # A single command that goes through clears it.
+    await executor.async_execute_command("setHeatingTargetTemperature", 20.0)
+    await _async_end_execution(hass, freezer, mock_client, "exec-2")
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_zone_control_zone_value_waits_behind_a_replay(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a value set while a replay waits its turn replaces the waiting one."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+    coordinator = _zone_coordinator(hass)
+    executor = OverkizExecutor(ZONE_CONTROL_ZONE.device_url, coordinator)
+
+    await _async_set_zone_setpoint(hass, 19.0)
+    await _async_set_zone_setpoint(hass, 20.0)
+
+    # The replay of the lost 19 °C waits for the turn of the writes.
+    async with coordinator._write_lock:
+        await on_execution_state_changed(
+            coordinator,
+            execution_state_changed_event(
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+                failed_commands=[{"rank": 0}],
+            ),
+        )
+        await executor.async_execute_commands(
+            [Command(name="setHeatingTargetTemperature", parameters=[21.0])],
+            coalesce=True,
+        )
+        assert mock_client.execute_action_group.await_count == 1
+
+    await hass.async_block_till_done()
+    await _async_end_execution(hass, freezer, mock_client, "exec-2")
+
+    assert _sent_commands(mock_client) == [
+        [("setHeatingTargetTemperature", [19.0])],
+        [("setHeatingTargetTemperature", [19.0])],
+        [("setHeatingTargetTemperature", [21.0])],
+    ]
+
+
+async def test_zone_control_zone_superseded_replay_is_dropped(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a lost command is not replayed once a newer value has been sent."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+    coordinator = _zone_coordinator(hass)
+
+    await _async_set_zone_setpoint(hass, 19.0)
+
+    # A newer value of the setpoint is sent while the replay waits its turn.
+    async with coordinator._write_lock:
+        await on_execution_state_changed(
+            coordinator,
+            execution_state_changed_event(
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+                failed_commands=[{"rank": 0}],
+            ),
+        )
+        coordinator.command_sequences[
+            (ZONE_CONTROL_ZONE.device_url, "setHeatingTargetTemperature")
+        ] += 1
+
+    await hass.async_block_till_done()
+
+    assert _sent_commands(mock_client) == [[("setHeatingTargetTemperature", [19.0])]]
+
+
+async def test_zone_control_zone_replay_polls_its_events(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the events are polled right after a replay, as after any write."""
+    await _async_set_manual_zone(
+        hass, freezer, mock_client, setup_overkiz_integration, "on"
+    )
+    coordinator = _zone_coordinator(hass)
+
+    await _async_set_zone_setpoint(hass, 19.0)
+
+    coordinator.update_interval = UPDATE_INTERVAL
+
+    await on_execution_state_changed(
+        coordinator,
+        execution_state_changed_event(
+            exec_id="exec-1",
+            new_state=ExecutionState.FAILED,
+            old_state=ExecutionState.IN_PROGRESS,
+            failure_type_code=FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+            failed_commands=[{"rank": 0}],
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert mock_client.execute_action_group.await_count == 2
+    assert coordinator.update_interval == UPDATE_INTERVAL_EXECUTION
+
+
+async def test_failed_single_command_is_reported(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a single command that did not reach its device is reported."""
+    entry = await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    executor = OverkizExecutor(
+        ZONE_CONTROL_ZONE.device_url, entry.runtime_data.coordinator
+    )
+    mock_client.execute_action_group.reset_mock()
+
+    await executor.async_execute_command("setHeatingTargetTemperature", 19.0)
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        [{"rank": 0}],
+    )
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"execution_failed_{ZONE_CONTROL_ZONE.device_url}"
+    )
+
+
+async def test_merged_failed_writes_are_reported(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a failure of writes merged under one execution is reported."""
+    entry = await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    executor = OverkizExecutor(
+        ZONE_CONTROL_ZONE.device_url, entry.runtime_data.coordinator
+    )
+    mock_client.execute_action_group.side_effect = ["exec-1", "exec-1"]
+
+    await executor.async_execute_command("setHeatingTargetTemperature", 19.0)
+    await executor.async_execute_command("setCoolingTargetTemperature", 25.0)
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.DATA_TRANSPORT_SERVICE_ERROR,
+        [{"rank": 0}],
+    )
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"execution_failed_{ZONE_CONTROL_ZONE.device_url}"
+    )
+
+
+async def test_failed_refresh_without_details_is_not_reported(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a refresh alone that fails is not reported, even on a device down."""
+    entry = await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    executor = OverkizExecutor(
+        ZONE_CONTROL_ZONE.device_url, entry.runtime_data.coordinator
+    )
+    mock_client.execute_action_group.reset_mock()
+
+    await executor.async_execute_command("refreshTargetTemperature")
+    await _async_end_execution(
+        hass,
+        freezer,
+        mock_client,
+        "exec-1",
+        ExecutionState.FAILED,
+        FailureType.PEER_DOWN,
+    )
+
+    assert not issue_registry.issues
 
 
 async def test_zone_control_zone_nothing_waiting_is_nothing_sent(
