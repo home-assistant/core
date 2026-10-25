@@ -289,7 +289,7 @@
   },
   "exceptions": {
     "app_not_running": {
-      "message": "The {app} app is not running yet. Home Assistant will retry connecting automatically."
+      "message": "The {app} app is not running yet."
     },
     "dashboard_display_not_available": {
       "message": "The display {display} is not available."
