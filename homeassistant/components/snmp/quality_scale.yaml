@@ -30,7 +30,7 @@ rules:
     comment: Entities of this integration do not subscribe to events.
   entity-unique-id:
     status: todo
-    comment: The device tracker entities have unique IDs, but the legacy YAML sensor and switch platforms do not. This is resolved by migrating them to the config entry, but this will be addressed in a future PR.
+    comment: The config entry device tracker entities have unique IDs, but the legacy YAML device tracker, sensor and switch platforms do not. This will be addressed in a future PR.
   has-entity-name:
     status: exempt
     comment: The device tracker entities do not belong to a device, so they can not use the name of their device.

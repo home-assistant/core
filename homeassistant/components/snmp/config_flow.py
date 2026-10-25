@@ -1,7 +1,6 @@
 """Config flow for SNMP."""
 
 from collections.abc import Mapping
-from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -335,47 +334,6 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         if priv_proto != DEFAULT_PRIV_PROTOCOL and not priv_key:
             return {CONF_PRIV_KEY: "priv_key_required_for_priv_protocol"}
         return {}
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Import the YAML configuration as a device and a device tracker subentry."""
-        # The legacy YAML schema had no way to specify SNMPv3 protocols, so a
-        # configuration with v3 keys cannot be turned into a working v3 entry.
-        if CONF_AUTH_KEY in user_input or CONF_PRIV_KEY in user_input:
-            return self.async_abort(reason="credentials_required")
-
-        # The legacy platform schema adds keys (platform, consider_home,
-        # new_device_defaults) which are not part of a config entry.
-        entry_data: dict[str, Any] = {
-            CONF_HOST: user_input[CONF_HOST],
-            CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
-            CONF_VERSION: user_input.get(CONF_VERSION, DEFAULT_VERSION),
-            CONF_COMMUNITY: user_input.get(CONF_COMMUNITY, DEFAULT_COMMUNITY),
-            CONF_CONTEXT_NAME: "",
-        }
-        self._abort_if_already_configured(entry_data)
-
-        tracker_data: dict[str, Any] = {CONF_BASEOID: user_input[CONF_BASEOID]}
-        # The YAML schema types interval_seconds as a time period, while the
-        # subentry stores seconds, and entry data has to be JSON serializable.
-        if interval := user_input.get(CONF_INTERVAL_SECONDS):
-            tracker_data[CONF_INTERVAL_SECONDS] = int(
-                interval.total_seconds()
-                if isinstance(interval, timedelta)
-                else interval
-            )
-
-        return self.async_create_entry(
-            title=_entry_title(entry_data),
-            data=entry_data,
-            subentries=[
-                {
-                    "subentry_type": SUBENTRY_TYPE_DEVICE_TRACKER,
-                    "title": DEVICE_TRACKER_SUBENTRY_TITLE,
-                    "unique_id": SUBENTRY_TYPE_DEVICE_TRACKER,
-                    "data": tracker_data,
-                }
-            ],
-        )
 
     @callback
     def _abort_if_already_configured(self, data: dict[str, Any]) -> None:

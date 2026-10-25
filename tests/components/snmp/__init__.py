@@ -1,5 +1,7 @@
 """Tests for the SNMP integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.snmp.const import (
     CONF_BASEOID,
     CONF_COMMUNITY,
@@ -10,8 +12,6 @@ from homeassistant.components.snmp.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 ARP_TABLE_MAC_OID = "1.3.6.1.2.1.4.22.1.2"
 

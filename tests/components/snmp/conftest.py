@@ -5,12 +5,11 @@ import socket
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 
 from . import mock_entry
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

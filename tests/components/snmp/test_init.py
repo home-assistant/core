@@ -11,6 +11,7 @@ from pysnmp.proto import errind
 from pysnmp.proto.rfc1902 import OctetString
 from pysnmp.smi.error import WrongValueError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import snmp
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
@@ -27,8 +28,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import ARP_TABLE_MAC_OID, mock_entry
-
-from tests.common import MockConfigEntry
 
 MAC = "00:11:22:33:44:55"
 

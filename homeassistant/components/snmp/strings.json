@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "credentials_required": "SNMPv3 credentials cannot be imported from YAML"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "auth_key_required_for_auth_protocol": "Authentication key is required when an authentication protocol is selected (SNMP v3)",
@@ -113,17 +112,9 @@
     }
   },
   "issues": {
-    "deprecated_yaml_import_issue_credentials_required": {
-      "description": "Configuring the {integration_title} integration through YAML is deprecated. Your configuration uses SNMPv3 credentials, which cannot be imported automatically.\n\nSet up the integration through the UI with your SNMPv3 credentials, then remove configuration from your `configuration.yaml` file and restart Home Assistant.",
-      "title": "The {integration_title} YAML configuration cannot be imported"
-    },
-    "deprecated_yaml_import_issue_multiple_trackers": {
-      "description": "Your `configuration.yaml` configures more than one SNMP device tracker for `{host}`. Only the first table was migrated, so the table at `{baseoid}` is no longer polled.\n\nAdd a device tracker with that OID from the {integration_title} integration page, then remove the YAML configuration and restart Home Assistant.",
-      "title": "The {integration_title} YAML configuration was only partially imported"
-    },
-    "entity_id_changed": {
-      "description": "The SNMP device tracker for `{mac}` could not keep its entity id `{entity_id}` because it is already in use, so it is now `{new_entity_id}`.\n\nUpdate the automations and scripts that refer to `{entity_id}`.",
-      "title": "SNMP device tracker entity id changed"
+    "deprecated_yaml_device_tracker": {
+      "description": "The {integration_title} device tracker configured through YAML is deprecated and will be removed in Home Assistant Core 2027.5.\n\nRemove the `snmp` device tracker from your `configuration.yaml`, remove the devices tracked by SNMP (matched by MAC address) from `known_devices.yaml`, and restart Home Assistant.\n\nThen set up the SNMP integration from the UI and enable the device tracker entities you want to use. Their entity IDs can be changed to the ones you used before.",
+      "title": "The {integration_title} device tracker YAML configuration is being removed"
     }
   },
   "selector": {

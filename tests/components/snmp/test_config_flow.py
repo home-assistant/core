@@ -1,7 +1,6 @@
 """Tests for the SNMP config flow."""
 
 from collections.abc import Iterator
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from pysnmp.error import PySnmpError
@@ -9,6 +8,7 @@ from pysnmp.proto import errind
 from pysnmp.proto.rfc1902 import OctetString
 from pysnmp.smi.error import WrongValueError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.snmp.config_flow import (
@@ -31,8 +31,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.selector import SelectSelector
 
 from . import mock_entry
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.fixture
@@ -177,67 +175,6 @@ async def test_user_flow_cannot_connect(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_import_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) -> None:
-    """Test that YAML is imported as a device with a device tracker subentry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    entry = result["result"]
-    assert entry.data == {
-        "host": "192.168.1.1",
-        "port": 161,
-        "version": "1",
-        "community": "public",
-        "context_name": "",
-    }
-
-    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
-    assert len(subentries) == 1
-    assert subentries[0].data["baseoid"] == "1.3.6.1.4.1.2021.10.1.3.1"
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_flow_with_v3_credentials_aborts(hass: HomeAssistant) -> None:
-    """Test YAML import aborts when the configuration uses SNMPv3 credentials."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            "host": "192.168.1.1",
-            "auth_key": "auth_key",
-            "priv_key": "priv_key",
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "credentials_required"
-    assert not hass.config_entries.async_entries(DOMAIN)
-
-
-async def test_import_flow_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test YAML import flow aborts if already configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            "host": "192.168.1.1",
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 async def test_user_flow_already_configured(
@@ -884,41 +821,6 @@ async def test_user_flow_v3_cannot_connect(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-@pytest.mark.parametrize(
-    "interval",
-    [
-        pytest.param(60, id="plain_seconds"),
-        pytest.param(timedelta(seconds=60), id="time_period"),
-    ],
-)
-async def test_import_flow_with_port_and_interval(
-    hass: HomeAssistant, mock_setup_entry: Mock, interval: int | timedelta
-) -> None:
-    """Test import flow with a custom port and poll interval."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            "host": "192.168.1.1",
-            "port": 1161,
-            "community": "public",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
-            "interval_seconds": interval,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    entry = result["result"]
-    assert entry.unique_id is None
-    assert entry.data["host"] == "192.168.1.1"
-    assert entry.data["port"] == 1161
-
-    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)[0]
-    assert subentry.data["baseoid"] == "1.3.6.1.4.1.2021.10.1.3.1"
-    assert subentry.data["interval_seconds"] == 60
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
