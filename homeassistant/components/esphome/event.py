@@ -36,6 +36,7 @@ _RESERVED_VARIABLE_NAMES = frozenset(
         EntityStateAttribute.ENTITY_PICTURE,
         EntityStateAttribute.FRIENDLY_NAME,
         EntityStateAttribute.ICON,
+        EntityStateAttribute.RESTORED,
         EntityStateAttribute.SUPPORTED_FEATURES,
         EntityStateAttribute.UNIT_OF_MEASUREMENT,
         EventEntityCapabilityAttribute.EVENT_TYPES,

@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    ATTR_RESTORED,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -358,6 +359,8 @@ async def test_event_entity_skips_reserved_variable_names(
         pytest.param(ATTR_DEVICE_CLASS, "doorbell", id="device_class"),
         # the frontend must not show an icon the device picked
         pytest.param(ATTR_ICON, "mdi:fire", id="icon"),
+        # any true value stops Home Assistant saving the state for a restart
+        pytest.param(ATTR_RESTORED, "yes", id="restored"),
     ],
 )
 async def test_event_entity_skips_entity_attribute_variable_names(
