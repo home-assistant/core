@@ -305,8 +305,7 @@ def mock_llm_tool() -> Generator[AsyncMock]:
 def mock_thinking_prefix(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Render a system prompt whose prefix can change between turns."""
-    hass.states.async_set("sensor.thinking_prefix", "A")
+    """Configure an agent for testing changes to its system prompt."""
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
@@ -314,7 +313,7 @@ def mock_thinking_prefix(
             CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_CODE_EXECUTION: True,
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_PROMPT: "{{ states('sensor.thinking_prefix') }}",
+            CONF_PROMPT: "Test system prompt",
             CONF_WEB_SEARCH: True,
         },
     )
@@ -371,7 +370,12 @@ async def thinking_history(
         ]
     ]
     result = await conversation.async_converse(
-        hass, "Start", None, Context(), agent_id=ENTITY_ID
+        hass,
+        "Start",
+        None,
+        Context(),
+        agent_id=ENTITY_ID,
+        extra_system_prompt="A",
     )
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
@@ -2170,13 +2174,13 @@ async def test_thinking_prefix_changes(
     hash_matches: list[bool] = []
     marker_counts: list[int] = []
     for prefix in prefixes:
-        hass.states.async_set("sensor.thinking_prefix", prefix)
         result = await conversation.async_converse(
             hass,
             "Continue",
             thinking_history.conversation_id,
             Context(),
             agent_id=ENTITY_ID,
+            extra_system_prompt=prefix,
         )
         assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
         with (
@@ -2290,7 +2294,6 @@ async def test_thinking_prefix_reset_tool_loop(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Replay thinking generated after a reset when continuing a local tool call."""
-    hass.states.async_set("sensor.thinking_prefix", "B")
     mock_create_stream.return_value = [
         [
             *create_thinking_block(0, ["Fresh thought"]),
@@ -2306,6 +2309,7 @@ async def test_thinking_prefix_reset_tool_loop(
         thinking_history.conversation_id,
         Context(),
         agent_id=ENTITY_ID,
+        extra_system_prompt="B",
     )
 
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
@@ -2325,7 +2329,6 @@ async def test_thinking_prefix_interrupted_stream(
 ) -> None:
     """Keep a new prefix marker when its thinking is saved before stream failure."""
     original_history = deepcopy(thinking_history.content[1:])
-    hass.states.async_set("sensor.thinking_prefix", "B")
 
     async def interrupted_events() -> AsyncGenerator[RawMessageStreamEvent]:
         for event in (
@@ -2358,6 +2361,7 @@ async def test_thinking_prefix_interrupted_stream(
         thinking_history.conversation_id,
         Context(),
         agent_id=ENTITY_ID,
+        extra_system_prompt="B",
     )
     assert result.response.response_type is intent.IntentResponseType.ERROR
 
@@ -2379,7 +2383,6 @@ async def test_thinking_prefix_interrupted_stream(
         assert partial_content.native.thinking_signature is not None
         interrupted_history = deepcopy(chat_log.content[1:])
 
-    hass.states.async_set("sensor.thinking_prefix", "A")
     mock_create_stream.return_value = [create_content_block(0, ["Done"])]
     result = await conversation.async_converse(
         hass,
@@ -2387,6 +2390,7 @@ async def test_thinking_prefix_interrupted_stream(
         thinking_history.conversation_id,
         Context(),
         agent_id=ENTITY_ID,
+        extra_system_prompt="A",
     )
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
