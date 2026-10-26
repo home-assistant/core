@@ -1,12 +1,13 @@
 """Test power stat validation."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components.energy import validate
 from homeassistant.components.energy.data import EnergyManager
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
-from typing import Any
 
 POWER_UNITS_STRING = ", ".join(tuple(UnitOfPower))
 
