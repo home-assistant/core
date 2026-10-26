@@ -2,12 +2,12 @@
 
 from abc import abstractmethod
 from datetime import datetime
-from typing import Any, Unpack, override
+from typing import TYPE_CHECKING, Any, Unpack, override
 
 from aioengiebelgium import EpexGranularity
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID, CONF_ABOVE, CONF_BELOW, CONF_OPTIONS
+from homeassistant.const import ATTR_DEVICE_ID, CONF_ABOVE, CONF_BELOW
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.condition import (
     Condition,
@@ -17,12 +17,12 @@ from homeassistant.helpers.condition import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
+from .coordinator import epex_price_at
 from .helpers import (
     DEVICE_IDS_SCHEMA,
     THRESHOLD_SCHEMA,
     async_get_device_epex,
-    async_validate_device_ids,
-    epex_current_price,
+    async_validate_epex_options,
     price_in_range,
     validate_threshold,
 )
@@ -44,16 +44,13 @@ class _EpexCondition(Condition):
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
-        config = probatio.Schema(
-            {probatio.Required(CONF_OPTIONS): cls._options_schema}
-        )(config)
-        async_validate_device_ids(hass, config[CONF_OPTIONS][ATTR_DEVICE_ID])
-        return config
+        return async_validate_epex_options(hass, config, cls._options_schema)
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize the condition."""
         super().__init__(hass, config)
-        assert config.options is not None
+        if TYPE_CHECKING:
+            assert config.options is not None
         self._options: dict[str, Any] = config.options
         self._device_ids: list[str] = config.options[ATTR_DEVICE_ID]
 
@@ -66,7 +63,7 @@ class _EpexCondition(Condition):
         epex = async_get_device_epex(self._hass, device_id)
         if epex is None or not epex.last_update_success:
             return False
-        price = epex_current_price(epex.data, self._granularity, now)
+        price = epex_price_at(epex.data, self._granularity, now)
         return price is not None and self._check_price(price)
 
     @override

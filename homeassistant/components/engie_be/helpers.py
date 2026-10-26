@@ -1,26 +1,18 @@
 """Shared helpers for the ENGIE Belgium automation triggers and conditions."""
 
-from collections.abc import Callable, Iterable
-from datetime import datetime, timedelta
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
-from aioengiebelgium import EpexGranularity
 import probatio
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID, CONF_ABOVE, CONF_BELOW
+from homeassistant.const import ATTR_DEVICE_ID, CONF_ABOVE, CONF_BELOW, CONF_OPTIONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .coordinator import (
-    BRUSSELS_TIME_ZONE,
-    EngieBeEpexCoordinator,
-    EngieBeEpexData,
-    epex_slot_covering,
-    epex_slots_cover_day,
-    epex_slots_for_day,
-)
+from .coordinator import EngieBeEpexCoordinator
 
 if TYPE_CHECKING:
     from . import EngieBeRuntimeData
@@ -65,6 +57,16 @@ def async_validate_device_ids(hass: HomeAssistant, device_ids: Iterable[str]) ->
 
 
 @callback
+def async_validate_epex_options(
+    hass: HomeAssistant, config: ConfigType, options_schema: probatio.Schema
+) -> ConfigType:
+    """Validate the options and check that every device belongs to ENGIE Belgium."""
+    config = probatio.Schema({probatio.Required(CONF_OPTIONS): options_schema})(config)
+    async_validate_device_ids(hass, config[CONF_OPTIONS][ATTR_DEVICE_ID])
+    return config
+
+
+@callback
 def async_get_device_epex(
     hass: HomeAssistant, device_id: str
 ) -> EngieBeEpexCoordinator | None:
@@ -85,39 +87,3 @@ def async_get_device_epex(
     ):
         return None
     return runtime_data.epex
-
-
-def epex_price_at(
-    data: EngieBeEpexData, granularity: EpexGranularity, moment: datetime
-) -> float | None:
-    """Return the EPEX price of the slot that covers the moment."""
-    slot = epex_slot_covering(data.slots(granularity), moment)
-    return None if slot is None else slot.value_eur_per_kwh
-
-
-def epex_current_price(
-    data: EngieBeEpexData, granularity: EpexGranularity, now: datetime
-) -> float | None:
-    """Return the EPEX price of the current slot."""
-    return epex_price_at(data, granularity, now)
-
-
-def epex_next_price(
-    data: EngieBeEpexData, granularity: EpexGranularity, now: datetime
-) -> float | None:
-    """Return the EPEX price of the slot after the current one."""
-    return epex_price_at(data, granularity, now + timedelta(minutes=granularity.value))
-
-
-def epex_extreme_price_today(
-    data: EngieBeEpexData,
-    granularity: EpexGranularity,
-    now: datetime,
-    choose: Callable[[Iterable[float]], float],
-) -> float | None:
-    """Return the lowest or highest EPEX price of today in Brussels."""
-    today = now.astimezone(BRUSSELS_TIME_ZONE).date()
-    slots = data.slots(granularity)
-    if not epex_slots_cover_day(slots, today, granularity):
-        return None
-    return choose(slot.value_eur_per_kwh for slot in epex_slots_for_day(slots, today))

@@ -1,7 +1,6 @@
 """Binary sensor platform for the ENGIE Belgium integration."""
 
 from collections.abc import Mapping
-from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
 from aioengiebelgium import EpexGranularity
@@ -16,10 +15,10 @@ from homeassistant.util import dt as dt_util
 
 from .const import ATTRIBUTION
 from .coordinator import (
-    BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
     epex_day_available,
-    epex_slot_covering,
+    epex_is_negative,
+    epex_tomorrow,
 )
 
 if TYPE_CHECKING:
@@ -104,8 +103,9 @@ class EngieBeEpexTomorrowAvailableSensor(
     @override
     def is_on(self) -> bool:
         """Return True when both granularities fully cover tomorrow."""
-        tomorrow = dt_util.now(BRUSSELS_TIME_ZONE).date() + timedelta(days=1)
-        return epex_day_available(self.coordinator.data, tomorrow)
+        return epex_day_available(
+            self.coordinator.data, epex_tomorrow(dt_util.utcnow())
+        )
 
 
 class EngieBeEpexNegativeSensor(
@@ -135,9 +135,6 @@ class EngieBeEpexNegativeSensor(
     @override
     def is_on(self) -> bool | None:
         """Return True when the slot covering now has a negative price."""
-        slot = epex_slot_covering(
-            self.coordinator.data.slots(self._granularity), dt_util.utcnow()
+        return epex_is_negative(
+            self.coordinator.data, self._granularity, dt_util.utcnow()
         )
-        if slot is None:
-            return None
-        return slot.value_eur_per_kwh < 0

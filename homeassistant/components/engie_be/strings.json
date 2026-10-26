@@ -1,8 +1,8 @@
 {
   "common": {
-    "above_description": "Only match when the price is above this value, in EUR/kWh.",
+    "above_description": "Only match when the price is above this value, in EUR/kWh. Set Above, Below or both. Above must be lower than Below.",
     "above_name": "Above",
-    "below_description": "Only match when the price is below this value, in EUR/kWh.",
+    "below_description": "Only match when the price is below this value, in EUR/kWh. Set Above, Below or both. Below must be higher than Above.",
     "below_name": "Below",
     "device_description": "The ENGIE Belgium contracts with a dynamic tariff to watch.",
     "device_name": "Contracts"

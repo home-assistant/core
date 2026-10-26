@@ -1,13 +1,13 @@
 """Automation triggers for the ENGIE Belgium integration."""
 
 from abc import abstractmethod
-from datetime import datetime, timedelta
-from typing import Any, override
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, override
 
 from aioengiebelgium import EpexGranularity
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID, CONF_ABOVE, CONF_BELOW, CONF_OPTIONS
+from homeassistant.const import ATTR_DEVICE_ID, CONF_ABOVE, CONF_BELOW
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, async_noop, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -22,20 +22,21 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import (
-    BRUSSELS_TIME_ZONE,
     SIGNAL_EPEX_UPDATED,
     EngieBeEpexCoordinator,
     EngieBeEpexData,
     epex_day_available,
+    epex_extreme_price_today,
+    epex_is_negative,
+    epex_next_price,
+    epex_price_at,
+    epex_tomorrow,
 )
 from .helpers import (
     DEVICE_IDS_SCHEMA,
     THRESHOLD_SCHEMA,
     async_get_device_epex,
-    async_validate_device_ids,
-    epex_current_price,
-    epex_extreme_price_today,
-    epex_next_price,
+    async_validate_epex_options,
     price_in_range,
     validate_threshold,
 )
@@ -56,16 +57,13 @@ class _EpexTrigger(Trigger):
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
-        config = probatio.Schema(
-            {probatio.Required(CONF_OPTIONS): cls._options_schema}
-        )(config)
-        async_validate_device_ids(hass, config[CONF_OPTIONS][ATTR_DEVICE_ID])
-        return config
+        return async_validate_epex_options(hass, config, cls._options_schema)
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the trigger."""
         super().__init__(hass, config)
-        assert config.options is not None
+        if TYPE_CHECKING:
+            assert config.options is not None
         self._options: dict[str, Any] = config.options
         self._device_ids: list[str] = config.options[ATTR_DEVICE_ID]
 
@@ -186,10 +184,8 @@ class _EpexNegativeTrigger(_EpexBecameTrueTrigger):
     @override
     def _value(self, data: EngieBeEpexData, now: datetime) -> bool | None:
         """Return whether the current price has the watched sign."""
-        price = epex_current_price(data, self._granularity, now)
-        if price is None:
-            return None
-        return (price < 0) is self._negative
+        negative = epex_is_negative(data, self._granularity, now)
+        return None if negative is None else negative is self._negative
 
 
 class EpexHourBecameNegativeTrigger(_EpexNegativeTrigger):
@@ -226,8 +222,7 @@ class EpexTomorrowPricesPublishedTrigger(_EpexBecameTrueTrigger):
     @override
     def _value(self, data: EngieBeEpexData, now: datetime) -> bool:
         """Return whether both granularities cover tomorrow."""
-        tomorrow = now.astimezone(BRUSSELS_TIME_ZONE).date() + timedelta(days=1)
-        return epex_day_available(data, tomorrow)
+        return epex_day_available(data, epex_tomorrow(now))
 
 
 class _EpexCrossedThresholdTrigger(_EpexBecameTrueTrigger):
@@ -242,7 +237,7 @@ class _EpexCrossedThresholdTrigger(_EpexBecameTrueTrigger):
     @override
     def _value(self, data: EngieBeEpexData, now: datetime) -> bool | None:
         """Return whether the watched price is inside the range."""
-        price = (epex_next_price if self._next else epex_current_price)(
+        price = (epex_next_price if self._next else epex_price_at)(
             data, self._granularity, now
         )
         if price is None:

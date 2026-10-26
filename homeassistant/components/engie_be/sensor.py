@@ -3,10 +3,10 @@
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime
 from typing import TYPE_CHECKING, override
 
-from aioengiebelgium import EpexGranularity, EpexSlot, bare_ean
+from aioengiebelgium import EpexGranularity, bare_ean
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -21,13 +21,13 @@ from homeassistant.util import dt as dt_util
 
 from .const import ATTRIBUTION
 from .coordinator import (
-    BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
+    EngieBeEpexData,
     EngieBePricesCoordinator,
     EngieBePricesData,
-    epex_slot_covering,
-    epex_slots_cover_day,
-    epex_slots_for_day,
+    epex_extreme_price_today,
+    epex_next_price,
+    epex_price_at,
     normalize_slot_code,
 )
 
@@ -216,12 +216,21 @@ class EngieBeEpexSensorEntityDescription(SensorEntityDescription):
     """Describes an EPEX day-ahead price sensor entity."""
 
     granularity: EpexGranularity
-    value_fn: Callable[[EngieBeEpexPriceSensor], float | None]
+    value_fn: Callable[[EngieBeEpexData, EpexGranularity, datetime], float | None]
 
 
-def _epex_slot_value(slot: EpexSlot | None) -> float | None:
-    """Return the EUR/kWh value of a slot."""
-    return None if slot is None else slot.value_eur_per_kwh
+def _epex_lowest_today(
+    data: EngieBeEpexData, granularity: EpexGranularity, now: datetime
+) -> float | None:
+    """Return the lowest EPEX price of today."""
+    return epex_extreme_price_today(data, granularity, now, min)
+
+
+def _epex_highest_today(
+    data: EngieBeEpexData, granularity: EpexGranularity, now: datetime
+) -> float | None:
+    """Return the highest EPEX price of today."""
+    return epex_extreme_price_today(data, granularity, now, max)
 
 
 _EPEX_SENSORS: tuple[EngieBeEpexSensorEntityDescription, ...] = (
@@ -230,50 +239,50 @@ _EPEX_SENSORS: tuple[EngieBeEpexSensorEntityDescription, ...] = (
         translation_key="epex_current_hour",
         granularity=EpexGranularity.HOURLY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: _epex_slot_value(entity.current_slot()),
+        value_fn=epex_price_at,
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_next_hour",
         translation_key="epex_next_hour",
         granularity=EpexGranularity.HOURLY,
-        value_fn=lambda entity: _epex_slot_value(entity.next_slot()),
+        value_fn=epex_next_price,
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_low_today_hour",
         translation_key="epex_low_today_hour",
         granularity=EpexGranularity.HOURLY,
-        value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(min)),
+        value_fn=_epex_lowest_today,
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_high_today_hour",
         translation_key="epex_high_today_hour",
         granularity=EpexGranularity.HOURLY,
-        value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(max)),
+        value_fn=_epex_highest_today,
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_current_quarter_hour",
         translation_key="epex_current_quarter_hour",
         granularity=EpexGranularity.QUARTER_HOURLY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: _epex_slot_value(entity.current_slot()),
+        value_fn=epex_price_at,
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_next_quarter_hour",
         translation_key="epex_next_quarter_hour",
         granularity=EpexGranularity.QUARTER_HOURLY,
-        value_fn=lambda entity: _epex_slot_value(entity.next_slot()),
+        value_fn=epex_next_price,
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_low_today_quarter_hour",
         translation_key="epex_low_today_quarter_hour",
         granularity=EpexGranularity.QUARTER_HOURLY,
-        value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(min)),
+        value_fn=_epex_lowest_today,
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_high_today_quarter_hour",
         translation_key="epex_high_today_quarter_hour",
         granularity=EpexGranularity.QUARTER_HOURLY,
-        value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(max)),
+        value_fn=_epex_highest_today,
     ),
 )
 
@@ -302,32 +311,12 @@ class EngieBeEpexPriceSensor(CoordinatorEntity[EngieBeEpexCoordinator], SensorEn
         self._attr_device_info = device_info
         self._attr_unique_id = f"{ban}_{description.key}"
 
-    def _slots(self) -> tuple[EpexSlot, ...]:
-        """Return the merged slots of this sensor's granularity."""
-        return self.coordinator.data.slots(self.entity_description.granularity)
-
-    def current_slot(self) -> EpexSlot | None:
-        """Return the slot covering the current instant."""
-        return epex_slot_covering(self._slots(), dt_util.utcnow())
-
-    def next_slot(self) -> EpexSlot | None:
-        """Return the slot covering one granularity step from now."""
-        step = timedelta(minutes=self.entity_description.granularity.value)
-        return epex_slot_covering(self._slots(), dt_util.utcnow() + step)
-
-    def extreme_slot(self, choose: Callable[..., EpexSlot]) -> EpexSlot | None:
-        """Return today's cheapest or most expensive slot in Brussels."""
-        today = dt_util.now(BRUSSELS_TIME_ZONE).date()
-        slots = self._slots()
-        if not epex_slots_cover_day(slots, today, self.entity_description.granularity):
-            return None
-        return choose(
-            epex_slots_for_day(slots, today),
-            key=lambda slot: slot.value_eur_per_kwh,
-        )
-
     @property
     @override
     def native_value(self) -> float | None:
         """Return the EPEX day-ahead price."""
-        return self.entity_description.value_fn(self)
+        return self.entity_description.value_fn(
+            self.coordinator.data,
+            self.entity_description.granularity,
+            dt_util.utcnow(),
+        )

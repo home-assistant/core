@@ -279,6 +279,48 @@ def epex_day_available(data: EngieBeEpexData, day: date) -> bool:
     )
 
 
+def epex_tomorrow(now: datetime) -> date:
+    """Return the Brussels calendar day after the given moment."""
+    return now.astimezone(BRUSSELS_TIME_ZONE).date() + timedelta(days=1)
+
+
+def epex_price_at(
+    data: EngieBeEpexData, granularity: EpexGranularity, moment: datetime
+) -> float | None:
+    """Return the EPEX price of the slot that covers the moment."""
+    slot = epex_slot_covering(data.slots(granularity), moment)
+    return None if slot is None else slot.value_eur_per_kwh
+
+
+def epex_next_price(
+    data: EngieBeEpexData, granularity: EpexGranularity, now: datetime
+) -> float | None:
+    """Return the EPEX price of the slot after the current one."""
+    return epex_price_at(data, granularity, now + timedelta(minutes=granularity.value))
+
+
+def epex_is_negative(
+    data: EngieBeEpexData, granularity: EpexGranularity, now: datetime
+) -> bool | None:
+    """Return whether the current EPEX price is negative, or None when unknown."""
+    price = epex_price_at(data, granularity, now)
+    return None if price is None else price < 0
+
+
+def epex_extreme_price_today(
+    data: EngieBeEpexData,
+    granularity: EpexGranularity,
+    now: datetime,
+    choose: Callable[[Iterable[float]], float],
+) -> float | None:
+    """Return the lowest or highest EPEX price of today in Brussels."""
+    today = now.astimezone(BRUSSELS_TIME_ZONE).date()
+    slots = data.slots(granularity)
+    if not epex_slots_cover_day(slots, today, granularity):
+        return None
+    return choose(slot.value_eur_per_kwh for slot in epex_slots_for_day(slots, today))
+
+
 class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
     """Coordinator that fetches Belgian EPEX day-ahead prices for both granularities."""
 

@@ -222,8 +222,12 @@ async def test_condition_without_dynamic_tariff(
     )
 
 
+@pytest.mark.parametrize(
+    "other_integration",
+    [pytest.param(False, id="missing"), pytest.param(True, id="other_integration")],
+)
 async def test_condition_invalid_device(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, other_integration: bool
 ) -> None:
     """Test the conditions only accept ENGIE Belgium devices."""
     other_entry = MockConfigEntry(domain="other")
@@ -231,16 +235,16 @@ async def test_condition_invalid_device(
     other_device = device_registry.async_get_or_create(
         config_entry_id=other_entry.entry_id, identifiers={("other", "device")}
     )
+    device_id = other_device.id if other_integration else "missing"
 
-    for device_id in ("missing", other_device.id):
-        with pytest.raises(probatio.Invalid, match="is not an ENGIE Belgium device"):
-            await EpexHourPriceIsNegativeCondition.async_validate_complete_config(
-                hass,
-                {
-                    "condition": f"{DOMAIN}.epex_hour_price_is_negative",
-                    "options": {"device_id": device_id},
-                },
-            )
+    with pytest.raises(probatio.Invalid, match="is not an ENGIE Belgium device"):
+        await EpexHourPriceIsNegativeCondition.async_validate_complete_config(
+            hass,
+            {
+                "condition": f"{DOMAIN}.epex_hour_price_is_negative",
+                "options": {"device_id": device_id},
+            },
+        )
 
 
 async def test_condition_invalid_threshold(hass: HomeAssistant) -> None:
