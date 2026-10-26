@@ -85,7 +85,7 @@ class MockFixFlowContext(RepairsFlow):
 
     async def async_step_init(self, user_input: dict | None) -> RepairsFlowResult:
         """First step in mock flow."""
-        return self.async_show_form()
+        return self.async_show_form(step_id="init")
 
 
 @contextmanager
