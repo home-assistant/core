@@ -75,7 +75,7 @@
     'object_id_base': 'Water flowing',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Water flowing',
     'platform': 'watergate',
@@ -90,6 +90,7 @@
 # name: test_binary_sensor[binary_sensor.sonic_water_flowing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sonic Water flowing',
     }),
     'context': <ANY>,

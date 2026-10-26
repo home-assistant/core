@@ -35,6 +35,7 @@ DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
         value_fn=lambda data: data.state.water_flow_indicator if data.state else None,
         translation_key="water_flowing",
         key="water_flowing",
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     WatergateBinarySensorEntityDescription(
         value_fn=lambda data: (
