@@ -79,7 +79,7 @@ async def async_connect_or_timeout(
         async with asyncio.timeout(10):
             _LOGGER.debug("Initialize connection to vacuum")
             await roomba.connect()
-            while not roomba.connected:
+            while not roomba.connected or not roomba_reported_state(roomba):
                 await asyncio.sleep(1)
             # Some models (such as Roomba 980) omit the 'name' field in initial telemetry
             name = roomba_reported_state(roomba).get("name") or "Roomba"
