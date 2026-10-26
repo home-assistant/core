@@ -117,6 +117,9 @@
       "auto_empty": {
         "default": "mdi:delete-empty"
       },
+      "efficiency_mode": {
+        "default": "mdi:leaf"
+      },
       "water_amount": {
         "default": "mdi:water"
       },
