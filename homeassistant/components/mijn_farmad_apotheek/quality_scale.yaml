@@ -95,7 +95,7 @@ rules:
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
-    comment: Expired credentials start a reauthentication flow, so no repair issue is needed.
+    comment: The integration raises no repair issues.
   stale-devices:
     status: exempt
     comment: The integration has no devices.
