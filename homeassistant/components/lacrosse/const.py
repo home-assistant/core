@@ -15,6 +15,7 @@ CONF_NEW_ID = "new_id"
 CONF_TEMPERATURE = "temperature"
 CONF_TOGGLE_INTERVAL = "toggle_interval"
 CONF_TOGGLE_MASK = "toggle_mask"
+CONF_YAML_IMPORTED = "_yaml_imported"
 
 DEFAULT_BAUD = 57600
 DEFAULT_EXPIRE_AFTER = 300
