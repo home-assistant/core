@@ -18,6 +18,7 @@ from homeassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
     DEPRECATED_FIRMWARE_ISSUE_ID,
     DOMAIN,
+    FIRMWARE_UNSUPPORTED_ISSUE_ID,
     IR_RAW_RECEIVE_DISABLED_ISSUE_ID,
     OPEN_WIFI_AP_ISSUE_ID,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
@@ -101,6 +102,111 @@ async def test_unsupported_firmware_issue_update_not_available(
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 1
+
+
+async def test_rpc_device_unsupported_firmware_issue(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair issue for RPC device running unsupported firmware."""
+    issue_id = FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
+    monkeypatch.setattr(mock_rpc_device, "firmware_supported", False)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 2)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "confirm"
+
+    result = await process_repair_fix_flow(client, flow_id)
+    assert result["type"] == "create_entry"
+    assert mock_rpc_device.trigger_ota_update.call_count == 1
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_block_device_unsupported_firmware_issue(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair issue for block device running unsupported firmware."""
+    issue_id = FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
+    monkeypatch.delitem(mock_block_device.settings, "coiot")
+    monkeypatch.setattr(mock_block_device, "firmware_supported", False)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {
+        "device_name": "Test name",
+        "ip_address": "192.168.1.37",
+    }
+
+    result = await process_repair_fix_flow(client, flow_id)
+    assert result["type"] == "create_entry"
+    assert mock_block_device.trigger_ota_update.call_count == 1
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+@pytest.mark.parametrize(
+    ("has_update", "exception", "reason", "ota_calls"),
+    [
+        pytest.param(False, None, "update_not_available", 0, id="no_update"),
+        pytest.param(True, DeviceConnectionError, "cannot_connect", 1, id="exc"),
+    ],
+)
+async def test_block_device_unsupported_firmware_issue_abort(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
+    has_update: bool,
+    exception: type[Exception] | None,
+    reason: str,
+    ota_calls: int,
+) -> None:
+    """Test block device unsupported firmware repair flow aborts."""
+    issue_id = FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
+    monkeypatch.delitem(mock_block_device.settings, "coiot")
+    monkeypatch.setattr(mock_block_device, "firmware_supported", False)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "confirm"
+
+    monkeypatch.setitem(mock_block_device.status["update"], "has_update", has_update)
+    mock_block_device.trigger_ota_update.side_effect = exception
+    result = await process_repair_fix_flow(client, flow_id)
+    assert result["type"] == "abort"
+    assert result["reason"] == reason
+    assert mock_block_device.trigger_ota_update.call_count == ota_calls
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.parametrize(

@@ -257,7 +257,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
                 ): TextSelector(),
                 probatio.Required(
-                    CONF_PORT, default=reconfigure_entry.data[CONF_PORT]
+                    CONF_PORT,
+                    default=reconfigure_entry.data.get(CONF_PORT, DEFAULT_PORT),
                 ): probatio.Port(),
                 probatio.Optional(probatio.Secret(CONF_PIN)): TextSelector(
                     TextSelectorConfig(

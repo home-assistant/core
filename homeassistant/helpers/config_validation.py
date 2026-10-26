@@ -52,6 +52,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_EXCLUDE,
     CONF_FOR,
     CONF_FOR_EACH,
     CONF_ID,
@@ -1284,13 +1285,49 @@ PLATFORM_SCHEMA = probatio.Schema(
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=probatio.ALLOW_EXTRA)
 
 
-TARGET_FIELDS: VolDictType = {
+# The keys which select what a target refers to. A target may additionally
+# contain an exclude block, which uses the same keys.
+TARGET_ID_KEYS = (
+    ATTR_ENTITY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_AREA_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
+)
+
+TARGET_ID_FIELDS: VolDictType = {
     probatio.Optional(ATTR_ENTITY_ID): probatio.All(ensure_list, [strict_entity_id]),
     probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
     probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
     probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
     probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
 }
+
+TARGET_FIELDS: VolDictType = {
+    **TARGET_ID_FIELDS,
+    probatio.Optional(CONF_EXCLUDE): probatio.Schema(TARGET_ID_FIELDS),
+}
+
+
+def exclude_requires_target(value: dict[str, Any]) -> dict[str, Any]:
+    """Reject a target which only has an exclude block.
+
+    Not part of TARGET_FIELDS, which also validates partial targets while editing.
+    """
+    if CONF_EXCLUDE in value and not any(value.get(key) for key in TARGET_ID_KEYS):
+        raise probatio.Invalid("an exclude block requires a target to exclude from")
+    return value
+
+
+ENTITY_SERVICE_EXCLUDE_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(ATTR_ENTITY_ID): entity_ids,
+        probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
+        probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
+        probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
+        probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
+    }
+)
 
 ENTITY_SERVICE_FIELDS: VolDictType = {
     probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids,
@@ -1310,6 +1347,7 @@ ENTITY_SERVICE_FIELDS: VolDictType = {
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
+    probatio.Optional(CONF_EXCLUDE): ENTITY_SERVICE_EXCLUDE_SCHEMA,
 }
 
 TARGET_SERVICE_FIELDS: VolDictType = {
@@ -1317,6 +1355,15 @@ TARGET_SERVICE_FIELDS: VolDictType = {
     # by entity registry ID.
     **ENTITY_SERVICE_FIELDS,
     probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids_or_uuids,
+    probatio.Optional(CONF_EXCLUDE): probatio.Schema(
+        {
+            probatio.Optional(ATTR_ENTITY_ID): entity_ids_or_uuids,
+            probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
+            probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
+            probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
+            probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
+        }
+    ),
 }
 
 _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
@@ -1352,9 +1399,25 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
+    probatio.Optional(CONF_EXCLUDE): probatio.Schema(
+        {
+            probatio.Optional(ATTR_ENTITY_ID): probatio.Any(
+                entity_ids_or_uuids,
+                dynamic_template,
+                probatio.All(list, template_complex),
+            ),
+            **{
+                probatio.Optional(key): probatio.Any(
+                    dynamic_template,
+                    probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
+                )
+                for key in (ATTR_DEVICE_ID, ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID)
+            },
+        }
+    ),
 }
 
-_HAS_ENTITY_SERVICE_FIELD = probatio.AtLeastOne(*ENTITY_SERVICE_FIELDS)
+_HAS_ENTITY_SERVICE_FIELD = probatio.AtLeastOne(*TARGET_ID_KEYS)
 
 
 def is_entity_service_schema(validator: VolSchemaType) -> bool:
@@ -1492,7 +1555,8 @@ SERVICE_SCHEMA = probatio.All(
             ),
             probatio.Optional(CONF_ENTITY_ID): comp_entity_ids,
             probatio.Optional(CONF_TARGET): probatio.Any(
-                _TARGET_SERVICE_FIELDS_TEMPLATED, dynamic_template
+                probatio.All(_TARGET_SERVICE_FIELDS_TEMPLATED, exclude_requires_target),
+                dynamic_template,
             ),
             probatio.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.

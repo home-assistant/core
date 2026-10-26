@@ -120,6 +120,28 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.DGHSXJ: (
+        TuyaNumberEntityDescription(
+            key=DPCode.BASIC_DEVICE_VOLUME,
+            translation_key="volume",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaNumberEntityDescription(
+            key=DPCode.IPC_BRIGHT,
+            translation_key="video_brightness",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaNumberEntityDescription(
+            key=DPCode.IPC_CONTRAST,
+            translation_key="video_contrast",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaNumberEntityDescription(
+            key=DPCode.IPC_SHARP,
+            translation_key="video_sharpness",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.DGNBJ: (
         TuyaNumberEntityDescription(
             key=DPCode.ALARM_TIME,
@@ -491,9 +513,6 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
         ),
     ),
 }
-
-# Smart Camera - Low power consumption camera (duplicate of `sp`)
-NUMBERS[DeviceCategory.DGHSXJ] = NUMBERS[DeviceCategory.SP]
 
 
 async def async_setup_entry(

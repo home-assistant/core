@@ -1579,6 +1579,50 @@ async def test_statistics_during_period_display_inverse_unit(
     }
 
 
+@pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
+async def test_statistics_during_period_last_reset_not_converted(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test last_reset is not unit converted when converting statistics."""
+    start = dt_util.as_utc(dt_util.parse_datetime("2022-10-01 00:00:00"))
+    last_reset = dt_util.as_utc(dt_util.parse_datetime("2022-09-01 00:00:00"))
+    external_metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+    async_add_external_statistics(
+        hass,
+        external_metadata,
+        ({"start": start, "last_reset": last_reset, "state": 1, "sum": 2},),
+    )
+    await async_wait_recording_done(hass)
+
+    assert statistics_during_period(
+        hass,
+        start,
+        period="hour",
+        statistic_ids={"test:total_energy_import"},
+        types={"last_reset", "state", "sum"},
+        units={"energy": "Wh"},
+    ) == {
+        "test:total_energy_import": [
+            {
+                "start": start.timestamp(),
+                "end": (start + timedelta(hours=1)).timestamp(),
+                "last_reset": last_reset.timestamp(),
+                "state": pytest.approx(1000.0),
+                "sum": pytest.approx(2000.0),
+            }
+        ],
+    }
+
+
 @pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
