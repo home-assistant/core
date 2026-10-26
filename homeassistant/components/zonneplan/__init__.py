@@ -10,6 +10,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .coordinator import (
     ZonneplanBatteryControlCoordinator,
     ZonneplanBatteryCoordinator,
+    ZonneplanChargePointCoordinator,
     ZonneplanConfigEntry,
     ZonneplanCoordinator,
     ZonneplanRuntimeData,
@@ -43,10 +44,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZonneplanConfigEntry) ->
     # Not a first refresh: a failing control mode must not take down the sensors.
     await battery_control_coordinator.async_refresh()
 
+    charge_point_coordinator = ZonneplanChargePointCoordinator(
+        hass,
+        entry,
+        zonneplan,
+        {
+            contract.uuid: connection.uuid
+            for connection in coordinator.data.account.connections
+            for contract in connection.contracts_of_type(ContractType.CHARGE_POINT)
+        },
+    )
+    await charge_point_coordinator.async_config_entry_first_refresh()
+
     entry.runtime_data = ZonneplanRuntimeData(
         coordinator=coordinator,
         battery_coordinator=battery_coordinator,
         battery_control_coordinator=battery_control_coordinator,
+        charge_point_coordinator=charge_point_coordinator,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

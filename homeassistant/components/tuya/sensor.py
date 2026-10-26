@@ -36,6 +36,7 @@ from tuya_device_handlers.device_wrapper.sensor import (
     ElectricityVoltageHexStringWrapper,
     ElectricityVoltageJsonWrapper,
     ElectricityVoltageRawWrapper,
+    RemainingTimeTimestampWrapper,
     WindDirectionEnumWrapper,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -558,6 +559,27 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
     ),
+    DeviceCategory.DGHSXJ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.SENSOR_TEMPERATURE,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SENSOR_HUMIDITY,
+            translation_key="humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WIRELESS_ELECTRICITY,
+            translation_key="battery",
+            device_class=SensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
     DeviceCategory.DGNBJ: (
         TuyaSensorEntityDescription(
             key=DPCode.GAS_SENSOR_VALUE,
@@ -774,6 +796,24 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    DeviceCategory.HWSB: (
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_POWER,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SPEED_CURRENT,
+            translation_key="pump_speed",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ADD_ELE,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ),
     DeviceCategory.JQBJ: (
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
@@ -972,6 +1012,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     ),
     DeviceCategory.MC: BATTERY_SENSORS,
     DeviceCategory.MCS: BATTERY_SENSORS,
+    DeviceCategory.MJJ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.COUNTDOWN_LEFT,
+            translation_key="countdown_end",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            wrapper_class=(RemainingTimeTimestampWrapper,),
+        ),
+    ),
     DeviceCategory.MSP: (
         TuyaSensorEntityDescription(
             key=DPCode.CAT_WEIGHT,
@@ -1009,6 +1057,42 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.REMAIN_TIME,
             translation_key="remaining_time",
             native_unit_of_measurement=UnitOfTime.MINUTES,
+        ),
+    ),
+    DeviceCategory.PC: (
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_CURRENT,
+            translation_key="current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_POWER,
+            translation_key="power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_VOLTAGE,
+            translation_key="voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ADD_ELE,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PRO_ADD_ELE,
+            translation_key="total_production",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
     ),
     DeviceCategory.PIR: BATTERY_SENSORS,
@@ -1902,13 +1986,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
 }
 
 
-# Smart Camera - Low power consumption camera (duplicate of `sp`)
-SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
-
-# Power Socket (duplicate of `kg`)
-SENSORS[DeviceCategory.PC] = SENSORS[DeviceCategory.KG]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -2002,9 +2079,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
-        if (
-            device_class := self.entity_description.device_class
-        ) is SensorDeviceClass.ENUM:
+        if (device_class := self.entity_description.device_class) in (
+            SensorDeviceClass.ENUM,
+            SensorDeviceClass.TIMESTAMP,
+        ):
             self._attr_native_unit_of_measurement = None
             return
         if (

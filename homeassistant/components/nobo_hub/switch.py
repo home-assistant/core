@@ -5,7 +5,7 @@ from typing import Any, override
 from pynobo import PynoboError, nobo
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import ATTR_NAME, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -67,7 +67,7 @@ class NoboDisableGlobalOverrideSwitch(NoboBaseEntity, SwitchEntity):
         super().__init__(hass, hub, entry_id)
         self._id = zone_id
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}:disable_global_override"
-        zone_name = hub.zones[zone_id][ATTR_NAME]
+        zone_name = hub.zones[zone_id]["name"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
             name=zone_name,

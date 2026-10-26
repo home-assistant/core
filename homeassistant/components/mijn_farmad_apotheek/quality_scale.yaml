@@ -55,7 +55,7 @@ rules:
   devices:
     status: exempt
     comment: The integration has no devices.
-  diagnostics: todo
+  diagnostics: done
   discovery:
     status: exempt
     comment: The service cannot be discovered.
