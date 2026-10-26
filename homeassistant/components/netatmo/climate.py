@@ -30,7 +30,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_END_DATETIME,
-    ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
     ATTR_SELECTED_SCHEDULE_ID,
@@ -269,14 +268,6 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                     ]
                     if self._attr_native_target_temperature == DEFAULT_MAX_TEMP:
                         self._attr_hvac_mode = HVACMode.HEAT
-                if (
-                    self.device_type == NA_VALVE
-                    and (heating_power_request := room.get("heating_power_request"))
-                    is not None
-                ):
-                    self._attr_extra_state_attributes[ATTR_HEATING_POWER_REQUEST] = (
-                        heating_power_request
-                    )
                 self.async_write_ha_state()
                 return
 
@@ -417,11 +408,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             selected_schedule, "entity_id", None
         )
 
-        if self.device_type == NA_VALVE:
-            self._attr_extra_state_attributes[ATTR_HEATING_POWER_REQUEST] = (
-                self.device.heating_power_request
-            )
-        else:
+        if self.device_type != NA_VALVE:
             for module in self.device.modules.values():
                 if hasattr(module, "boiler_status"):
                     module = cast(NATherm1, module)

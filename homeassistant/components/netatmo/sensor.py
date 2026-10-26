@@ -8,7 +8,10 @@ from typing import Any, Final, cast, override
 
 import pyatmo
 from pyatmo.modules import PublicWeatherArea
-from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
+from pyatmo.modules.device_types import (
+    DeviceCategory as NetatmoDeviceCategory,
+    DeviceType,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -45,6 +48,7 @@ from .const import (
     CONF_URL_SECURITY,
     CONF_WEATHER_AREAS,
     DOMAIN,
+    NETATMO_CREATE_CLIMATE,
     NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
     NETATMO_CREATE_LEGACY_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
@@ -577,6 +581,19 @@ async def async_setup_entry(
         )
     )
 
+    @callback
+    def _create_heating_power_request_sensor(netatmo_device: NetatmoRoom) -> None:
+        if netatmo_device.room.climate_type != DeviceType.NRV:
+            return
+
+        async_add_entities([NetatmoHeatingPowerRequestSensor(netatmo_device)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NETATMO_CREATE_CLIMATE, _create_heating_power_request_sensor
+        )
+    )
+
     device_registry = dr.async_get(hass)
     data_handler = entry.runtime_data
 
@@ -914,6 +931,42 @@ class NetatmoRoomSensor(NetatmoRoomEntity, NetatmoLegacyReachableSensor):
 
         self._attr_available = True
         self._attr_native_value = getattr(self.device, self.entity_description.key)
+
+        self.async_write_ha_state()
+
+
+class NetatmoHeatingPowerRequestSensor(NetatmoRoomEntity, NetatmoLegacyReachableSensor):
+    """Implementation of a Netatmo valve heating power request sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "heating_power_request"
+
+    def __init__(self, netatmo_room: NetatmoRoom) -> None:
+        """Initialize the sensor."""
+        super().__init__(netatmo_room)
+
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: netatmo_room.signal_name,
+                },
+            ]
+        )
+
+        self._attr_unique_id = f"{self.device.entity_id}-heating_power_request"
+
+    @callback
+    @override
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if self._async_set_unavailable_if_unreachable():
+            return
+
+        self._attr_available = True
+        self._attr_native_value = self.device.heating_power_request
 
         self.async_write_ha_state()
 
