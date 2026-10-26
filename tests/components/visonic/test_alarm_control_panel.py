@@ -6,7 +6,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pyvisonic import AlPanelCommand
+from pyvisonic import AlCondition, AlPanelCommand, AlPanelStatus
 from pyvisonicalarm.alarm import AlarmSystem
 
 from homeassistant.components.alarm_control_panel import (
@@ -138,6 +138,60 @@ async def test_initial_entity_state(
         assert state.attributes["code_arm_required"] is code_arm_required
         assert state.attributes["panel_test_attribute"] == "initial snapshot"
         assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.parametrize("device_type", [DeviceType.ETHERNET, DeviceType.SERIAL])
+@pytest.mark.parametrize(
+    ("mock_visonic_client", "expected_format"),
+    [
+        pytest.param(True, None, id="powerlink"),
+        pytest.param(False, CodeFormat.NUMBER, id="standard-plus"),
+    ],
+    indirect=["mock_visonic_client"],
+)
+async def test_startup_success_waits_for_initial_snapshot(
+    hass: HomeAssistant,
+    mock_visonic_client: MagicMock,
+    device_type: DeviceType,
+    expected_format: CodeFormat | None,
+) -> None:
+    """An early startup notification cannot create an alarm with empty state."""
+    entry = create_mock_config_entry(
+        data={CONF_TYPE: device_type}, options={CONF_ARM_HOME_ENABLED: True}
+    )
+    entry.add_to_hass(hass)
+    entity_id = "alarm_control_panel.visonic_alarm_p1"
+    mock_visonic_client.get_partition_status.return_value = AlPanelStatus.ARMED_AWAY
+
+    async def connect(connection: VisonicDirectConnection) -> bool:
+        connection.callbacks.panel_ready()
+        await hass.async_block_till_done()
+        assert not hass.states.async_entity_ids("alarm_control_panel")
+        return True
+
+    with patch.object(
+        VisonicDirectConnection,
+        "async_panel_connect",
+        autospec=True,
+        side_effect=connect,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
+    assert state.attributes["supported_features"] == (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+    assert state.attributes["code_format"] == expected_format
+
+    mock_visonic_client.callbacks.panel_change(AlCondition.STARTUP_SUCCESS, None)
+    await hass.async_block_till_done()
+    assert hass.states.async_entity_ids("alarm_control_panel") == [entity_id]
+    assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")

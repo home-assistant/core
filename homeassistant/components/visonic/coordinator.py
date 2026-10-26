@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 from pyvisonic import ConnectionType, VisonicClientSettings
@@ -254,6 +254,8 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
         persistent_notification.async_dismiss(
             self.hass, f"visonic_recovery_failed_{self.panel_id}"
         )
+        if cast(VisonicCoordinatorData | None, self.data) is None:
+            return
         if TYPE_CHECKING:
             assert self.config_entry is not None
         self.config_entry.async_create_task(
