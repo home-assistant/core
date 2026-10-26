@@ -4932,8 +4932,8 @@ def async_get_device_and_config_entry_for_domain(
     device_id: str,
     *,
     domain: str,
-    include_child_devices: Literal[True] = True,
-    include_main_devices: Literal[True] = True,
+    include_child_devices: bool = True,
+    include_main_devices: bool = True,
 ) -> tuple[AnyDeviceEntry | None, ConfigEntry | None]: ...
 
 
