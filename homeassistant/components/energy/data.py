@@ -538,7 +538,7 @@ SOLAR_SOURCE_SCHEMA = probatio.Schema(
 HOME_SOURCE_SCHEMA = probatio.Schema(
     {
         probatio.Required("type"): "home",
-        probatio.Required("stat_energy_from"): str,
+        probatio.Required("stat_energy_to"): str,
         probatio.Optional("stat_rate"): str,
         probatio.Optional("name"): str,
     }
