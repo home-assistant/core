@@ -19,6 +19,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
+    FlowType,
     OptionsFlow,
     SubentryFlowResult,
 )
@@ -57,9 +58,18 @@ CONNECTION_SCHEMA = probatio.Schema(
     }
 )
 
-CODE_SCHEMA = probatio.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_CODE): cv.string,
+        probatio.Optional(CONF_CODE): probatio.All(
+            selector.TextSelector(
+                selector.TextSelectorConfig(
+                    type=selector.TextSelectorType.PASSWORD,
+                    autocomplete="current-password",
+                ),
+            ),
+            probatio.Match(r"^[0-9]+\Z", msg="invalid_code_format"),
+            probatio.Length(min=4, max=16, msg="invalid_code_length"),
+        ),
     }
 )
 
@@ -134,11 +144,6 @@ async def _async_validate_zone_temperature_sensor(
 class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Satel Integra config flow."""
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        super().__init__()
-        self.connection_data: dict[str, Any] = {}
-
     VERSION = 2
     MINOR_VERSION = 3
 
@@ -182,12 +187,14 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not errors:
-                self.connection_data = {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PORT: user_input[CONF_PORT],
-                    CONF_ENCRYPTION_KEY: user_input.get(CONF_ENCRYPTION_KEY),
-                }
-                return await self.async_step_code()
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST],
+                    data={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_ENCRYPTION_KEY: user_input.get(CONF_ENCRYPTION_KEY),
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -195,21 +202,17 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_code(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle code configuration."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.connection_data[CONF_HOST],
-                data=self.connection_data,
-                options={CONF_CODE: user_input.get(CONF_CODE)},
-            )
-
-        return self.async_show_form(
-            step_id="code",
-            data_schema=CODE_SCHEMA,
+    @override
+    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
+        """Start the options flow after creating the config entry."""
+        options_flow = await self.hass.config_entries.options.async_init(
+            result["result"].entry_id
         )
+        result["next_flow"] = (
+            FlowType.OPTIONS_FLOW,
+            options_flow["flow_id"],
+        )
+        return result
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -292,14 +295,14 @@ class SatelOptionsFlow(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Init step."""
+        """Handle the options flow."""
         if user_input is not None:
-            return self.async_create_entry(data={CONF_CODE: user_input.get(CONF_CODE)})
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                CODE_SCHEMA, self.config_entry.options
+                OPTIONS_SCHEMA, self.config_entry.options
             ),
         )
 

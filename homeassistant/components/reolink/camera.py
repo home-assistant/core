@@ -7,6 +7,7 @@ from typing import override
 
 from homeassistant.components.camera import (
     Camera,
+    CameraEntityCapabilities,
     CameraEntityDescription,
     CameraEntityFeature,
 )
@@ -157,6 +158,13 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
 
         if "snapshots" not in entity_description.stream:
             self._attr_supported_features = CameraEntityFeature.STREAM
+            self._attr_camera_entity_capabilities = CameraEntityCapabilities(
+                two_way_audio=(
+                    self._host.api.protocol == "rtsp"
+                    and self._host.api.supported(self._channel, "two_way_audio")
+                )
+            )
+
         # snapshot_past has no lens parameter, so telephoto streams are left out.
         if (
             self._host.api.supported(channel, "replay")

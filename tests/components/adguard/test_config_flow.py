@@ -90,7 +90,7 @@ async def test_connection_error(
     aioclient_mock.get(
         URL_STATUS, json=FIXTURE_STATUS, headers={"Content-Type": CONTENT_TYPE_JSON}
     )
-    with patch("homeassistant.components.adguard.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.adguard.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=FIXTURE_USER_INPUT
         )
@@ -129,7 +129,7 @@ async def test_flow_errors(
     aioclient_mock.get(
         URL_STATUS, json=FIXTURE_STATUS, headers={"Content-Type": CONTENT_TYPE_JSON}
     )
-    with patch("homeassistant.components.adguard.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.adguard.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=FIXTURE_USER_INPUT
         )
@@ -333,7 +333,7 @@ async def test_hassio_connection_error(
         json=FIXTURE_STATUS,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
-    with patch("homeassistant.components.adguard.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.adguard.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -352,7 +352,7 @@ async def test_reauth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("homeassistant.components.adguard.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.adguard.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_USERNAME: "frenck", CONF_PASSWORD: "zerocool"},
@@ -402,7 +402,7 @@ async def test_reauth_errors(
         URL_STATUS, json=FIXTURE_STATUS, headers={"Content-Type": CONTENT_TYPE_JSON}
     )
 
-    with patch("homeassistant.components.adguard.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.adguard.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_USERNAME: "frenck", CONF_PASSWORD: "zerocool"},

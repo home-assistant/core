@@ -1,8 +1,15 @@
 """Support for esphome devices."""
 
+import dataclasses
 import logging
 
-from aioesphomeapi import APIConnectionError
+from aioesphomeapi import (
+    APIConnectionError,
+    SerialProxyIdentity,
+    SerialProxyIdentityFlag,
+    SerialProxyIdentitySource,
+)
+from serialx import SerialPortInfo, is_non_unique_serial, udev_serial_by_id_stem
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import async_remove_scanner
@@ -10,6 +17,7 @@ from homeassistant.components.usb import (
     SerialDevice,
     USBDevice,
     async_register_serial_port_scanner,
+    usb_serial_device_from_port,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -35,6 +43,36 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
+USB_CLASS_VENDOR_SPEC = 0xFF
+
+
+def _identity_port_info(identity: SerialProxyIdentity) -> SerialPortInfo:
+    """Describe the device behind a serial proxy port."""
+    # Must agree with serialx's `identity_port_info` so both compute the same
+    # `udev_id`. A zero ID is never valid USB, so it means no USB descriptor was given.
+    has_usb = bool(identity.usb.vendor_id and identity.usb.product_id)
+
+    return SerialPortInfo(
+        device="",
+        resolved_device="",
+        vid=identity.usb.vendor_id if has_usb else None,
+        pid=identity.usb.product_id if has_usb else None,
+        serial_number=identity.serial_number or None,
+        manufacturer=identity.manufacturer or None,
+        product=identity.product or None,
+        bcd_device=identity.usb.bcd_device if has_usb else None,
+        interface_description=None,
+        interface_num=identity.usb.interface_number if has_usb else None,
+        # A vendor-specific interface is bound through a chip driver, which numbers its
+        # ports; a class interface (CDC ACM) is bound by the class driver itself
+        port_number=(
+            identity.usb.port_number
+            if has_usb and identity.usb.interface_class == USB_CLASS_VENDOR_SPEC
+            else None
+        ),
+    )
+
+
 @callback
 def _async_scan_serial_ports(
     hass: HomeAssistant,
@@ -51,19 +89,73 @@ def _async_scan_serial_ports(
         if device_info is None:
             continue
 
-        manufacturer, model = async_get_manufacturer_model(device_info)
+        identities = entry_data.serial_proxy_identities
 
-        ports.extend(
-            SerialDevice(
-                device=str(serial_proxy.build_url(entry.entry_id, proxy.name)),
-                serial_number=(
-                    device_info.mac_address.replace(":", "") + "-" + slugify(proxy.name)
-                ),
-                manufacturer=manufacturer,
-                description=f"{model} ({proxy.name})",
+        for instance, proxy in enumerate(device_info.serial_proxies):
+            # Older ESPHome devices send no identity, and a port without a configured
+            # identity carries none. Both fall back to less granular port info.
+            if (
+                instance not in identities
+                or identities[instance].source is SerialProxyIdentitySource.NONE
+            ):
+                manufacturer, model = async_get_manufacturer_model(device_info)
+
+                ports.append(
+                    SerialDevice(
+                        device=str(
+                            serial_proxy.build_url(entry.entry_id, port_name=proxy.name)
+                        ),
+                        serial_number=(
+                            device_info.mac_address.replace(":", "")
+                            + "-"
+                            + slugify(proxy.name)
+                        ),
+                        manufacturer=manufacturer,
+                        description=f"{model} ({proxy.name})",
+                    )
+                )
+                continue
+
+            identity = identities[instance]
+
+            # An empty USB socket, or a USB device whose descriptors cannot be read
+            if (
+                not identity.flags & SerialProxyIdentityFlag.CONNECTED
+                or identity.flags & SerialProxyIdentityFlag.ERROR
+            ):
+                continue
+
+            port_info = _identity_port_info(identity)
+
+            if (port_udev_id := udev_serial_by_id_stem(port_info)) is None:
+                # If a port has incomplete metadata, it cannot be given a `udev_id`. We
+                # try to match based on everything else, including the name of the
+                # serial proxy. This is like `/dev/serial/by-path/`.
+                filters = serial_proxy.SerialProxyFilters(
+                    port_name=proxy.name,
+                    port_manufacturer=port_info.manufacturer,
+                    port_product=port_info.product,
+                    port_serial_number=port_info.serial_number,
+                    port_usb_vid=port_info.vid,
+                    port_usb_pid=port_info.pid,
+                    port_usb_bcd_device=port_info.bcd_device,
+                    port_usb_interface_num=port_info.interface_num,
+                )
+            else:
+                # Otherwise, we match on `udev_id`, which is like `/dev/serial/by-id/`
+                filters = serial_proxy.SerialProxyFilters(port_udev_id=port_udev_id)
+
+                # Identical devices without a unique serial number share a `udev_id`
+                # so they are told apart by the port they are on
+                if is_non_unique_serial(port_info.serial_number):
+                    filters["port_name"] = proxy.name
+
+            url = str(serial_proxy.build_url(entry_id=entry.entry_id, **filters))
+            device = usb_serial_device_from_port(
+                dataclasses.replace(port_info, device=url, resolved_device=url)
             )
-            for proxy in device_info.serial_proxies
-        )
+
+            ports.append(device)
 
     return ports
 
@@ -121,7 +213,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> 
     await hass.config_entries.async_unload_platforms_or_raise(
         entry, entry.runtime_data.loaded_platforms
     )
-    await cleanup_instance(entry)
+    await cleanup_instance(hass, entry)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:

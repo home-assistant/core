@@ -40,9 +40,7 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SOURCE = "source"
 ATTR_USER_ID = "user_id"
-ATTR_DEVICE_TRACKERS = "device_trackers"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 2

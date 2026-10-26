@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -10,6 +12,20 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "credentials": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for your INDI Allsky user account.",
+          "username": "Username for your INDI Allsky user account."
+        },
+        "description": "Please enter credentials for INDI Allsky."
+      },
+      "discovery_confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -20,6 +36,9 @@
           "username": "Username for your INDI Allsky user account."
         },
         "description": "Please enter updated credentials for INDI Allsky."
+      },
+      "unverified_ssl": {
+        "description": "INDI Allsky servers use a self-signed SSL certificate by default. Connecting without certificate verification allows communication with {name}, but encrypted traffic cannot be verified against a trusted authority. Do you want to continue without certificate verification?"
       },
       "user": {
         "data": {

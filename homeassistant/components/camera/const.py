@@ -32,7 +32,6 @@ SERVICE_PLAY_STREAM: Final = "play_stream"
 
 ATTR_FILENAME: Final = "filename"
 ATTR_MEDIA_PLAYER: Final = "media_player"
-ATTR_TIMESTAMP: Final = "timestamp"
 ATTR_FORMAT: Final = "format"
 
 CONF_LOOKBACK: Final = "lookback"
@@ -42,6 +41,8 @@ CAMERA_STREAM_SOURCE_TIMEOUT: Final = 10
 CAMERA_IMAGE_TIMEOUT: Final = 10
 # Recorded history can take longer, e.g. a frame grab from a recording.
 CAMERA_PAST_IMAGE_TIMEOUT: Final = 30
+
+PREVIEW_FEATURE_TWO_WAY_AUDIO: Final = "two_way_audio"
 
 
 class CameraEntityStateAttribute(StrEnum):
@@ -82,3 +83,26 @@ class CameraEntityFeature(IntFlag):
     ON_OFF = 1
     STREAM = 2
     PAST_IMAGE = 4
+
+
+class CameraService(StrEnum):
+    """Store keys for camera services."""
+
+    DISABLE_MOTION_DETECTION = "disable_motion_detection"
+    ENABLE_MOTION_DETECTION = "enable_motion_detection"
+    PLAY_STREAM = "play_stream"
+    RECORD = "record"
+    SNAPSHOT = "snapshot"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class CameraServiceArgument(StrEnum):
+    """Store keys for camera service arguments."""
+
+    DURATION = "duration"
+    FILENAME = "filename"
+    FORMAT = "format"
+    LOOKBACK = "lookback"
+    MEDIA_PLAYER = "media_player"
+    TIMESTAMP = "timestamp"

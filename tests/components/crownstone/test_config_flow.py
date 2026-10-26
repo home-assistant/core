@@ -35,7 +35,7 @@ type MockFixture = Generator[MagicMock | AsyncMock]
 def crownstone_setup() -> MockFixture:
     """Mock Crownstone entry setup."""
     with patch(
-        "homeassistant.components.crownstone.async_setup_entry", return_value=True
+        "homeassistant.components.crownstone.async_setup_entry", return_value=None
     ) as setup_mock:
         yield setup_mock
 

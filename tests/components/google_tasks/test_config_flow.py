@@ -87,7 +87,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.google_tasks.async_setup_entry", return_value=True
+        "homeassistant.components.google_tasks.async_setup_entry", return_value=None
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -308,7 +308,7 @@ async def test_reauth(
     )
 
     with patch(
-        "homeassistant.components.google_tasks.async_setup_entry", return_value=True
+        "homeassistant.components.google_tasks.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

@@ -19,6 +19,7 @@ from homeassistant.components.repairs import (
     RepairsFlow,
     RepairsFlowResult,
 )
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
@@ -29,6 +30,7 @@ from .const import (
     DEPRECATED_FIRMWARE_ISSUE_ID,
     DEPRECATED_FIRMWARES,
     DOMAIN,
+    FIRMWARE_UNSUPPORTED_ISSUE_ID,
     IR_RAW_RECEIVE_DISABLED_ISSUE_ID,
     IR_RAW_RECEIVE_MIN_FIRMWARE,
     OPEN_WIFI_AP_ISSUE_ID,
@@ -36,7 +38,6 @@ from .const import (
     RTSP_DISABLED_ISSUE_ID,
     BLEScannerMode,
 )
-from .coordinator import ShellyConfigEntry
 from .utils import (
     get_coiot_address,
     get_coiot_port,
@@ -45,6 +46,53 @@ from .utils import (
     get_rpc_key_instances,
     get_rpc_ws_url,
 )
+
+if TYPE_CHECKING:
+    from .coordinator import ShellyConfigEntry
+
+
+@callback
+def _async_create_firmware_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+    issue_id: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+    *,
+    is_fixable: bool = True,
+    is_persistent: bool = True,
+    severity: ir.IssueSeverity = ir.IssueSeverity.WARNING,
+) -> None:
+    """Create an issue resolved by updating the device firmware."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=is_fixable,
+        is_persistent=is_persistent,
+        severity=severity,
+        translation_key=translation_key,
+        translation_placeholders=translation_placeholders,
+        data={"entry_id": entry.entry_id},
+        config_entry_id=entry.entry_id,
+    )
+
+
+@callback
+def async_create_issue_unsupported_firmware(
+    hass: HomeAssistant, entry: ShellyConfigEntry, is_fixable: bool = False
+) -> None:
+    """Create a repair issue if the device runs an unsupported firmware."""
+    _async_create_firmware_issue(
+        hass,
+        entry,
+        FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id),
+        "unsupported_firmware_fixable" if is_fixable else "unsupported_firmware",
+        {"device_name": entry.title, "ip_address": entry.data[CONF_HOST]},
+        is_fixable=is_fixable,
+        is_persistent=False,
+        severity=ir.IssueSeverity.ERROR,
+    )
 
 
 @callback
@@ -66,21 +114,16 @@ def async_manage_ble_scanner_firmware_unsupported_issue(
         if firmware < BLE_SCANNER_MIN_FIRMWARE and entry.options.get(
             CONF_BLE_SCANNER_MODE
         ) in (BLEScannerMode.ACTIVE, BLEScannerMode.AUTO):
-            ir.async_create_issue(
+            _async_create_firmware_issue(
                 hass,
-                DOMAIN,
+                entry,
                 issue_id,
-                is_fixable=True,
-                is_persistent=True,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="ble_scanner_firmware_unsupported",
-                translation_placeholders={
+                "ble_scanner_firmware_unsupported",
+                {
                     "device_name": device.name,
                     "ip_address": device.ip_address,
                     "firmware": firmware,
                 },
-                data={"entry_id": entry.entry_id},
-                config_entry_id=entry.entry_id,
             )
             return
 
@@ -107,22 +150,17 @@ def async_manage_deprecated_firmware_issue(
 
         firmware = AwesomeVersion(device.shelly["ver"])
         if firmware < min_firmware:
-            ir.async_create_issue(
+            _async_create_firmware_issue(
                 hass,
-                DOMAIN,
+                entry,
                 issue_id,
-                is_fixable=True,
-                is_persistent=True,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="deprecated_firmware",
-                translation_placeholders={
+                "deprecated_firmware",
+                {
                     "device_name": device.name,
                     "ip_address": device.ip_address,
                     "firmware": firmware,
                     "ha_version": ha_version,
                 },
-                data={"entry_id": entry.entry_id},
-                config_entry_id=entry.entry_id,
             )
             return
 
@@ -328,6 +366,7 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
             description_placeholders = issue.translation_placeholders
 
         return self.async_show_menu(
+            step_id="init",
             menu_options=["confirm", "ignore"],
             description_placeholders=description_placeholders,
         )
@@ -356,12 +395,8 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
         return self.async_abort(reason="issue_ignored")
 
 
-class ShellyRpcRepairsFlow(RepairsFlow):
-    """Handler for an issue fixing flow."""
-
-    def __init__(self, device: RpcDevice) -> None:
-        """Initialize."""
-        self._device = device
+class ShellyConfirmRepairsFlow(RepairsFlow):
+    """Handler for an issue fixing flow with a confirm step."""
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -392,8 +427,20 @@ class ShellyRpcRepairsFlow(RepairsFlow):
         raise NotImplementedError
 
 
-class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
+class ShellyRpcRepairsFlow(ShellyConfirmRepairsFlow):
+    """Handler for an issue fixing flow."""
+
+    def __init__(self, device: RpcDevice) -> None:
+        """Initialize."""
+        self._device = device
+
+
+class FirmwareUpdateFlow(ShellyConfirmRepairsFlow):
     """Handler for Firmware Update flow."""
+
+    def __init__(self, device: BlockDevice | RpcDevice) -> None:
+        """Initialize."""
+        self._device = device
 
     @override
     async def _async_step_confirm(self) -> RepairsFlowResult:
@@ -404,7 +451,7 @@ class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
-        if not self._device.status["sys"]["available_updates"]:
+        if not self._update_available():
             return self.async_abort(reason="update_not_available")
         try:
             await self._device.trigger_ota_update()
@@ -412,6 +459,19 @@ class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="", data={})
+
+    def _update_available(self) -> bool:
+        """Return if the device offers a firmware update."""
+        return bool(self._device.status["sys"]["available_updates"])
+
+
+class BlockFirmwareUpdateFlow(FirmwareUpdateFlow):
+    """Handler for block device Firmware Update flow."""
+
+    @override
+    def _update_available(self) -> bool:
+        """Return if the device offers a firmware update."""
+        return bool(self._device.status["update"]["has_update"])
 
 
 class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
@@ -456,6 +516,7 @@ class ShellyRpcMenuRepairsFlow(RepairsFlow):
             description_placeholders = issue.translation_placeholders
 
         return self.async_show_menu(
+            step_id="init",
             menu_options=["confirm", "ignore"],
             description_placeholders=description_placeholders,
         )
@@ -538,10 +599,10 @@ async def async_create_fix_flow(
     if "coiot_unconfigured" in issue_id:
         return CoiotConfigureFlow(device)
 
-    if (
-        "ble_scanner_firmware_unsupported" in issue_id
-        or "deprecated_firmware" in issue_id
-    ):
+    # Also matches ble_scanner_firmware_unsupported
+    if "firmware_unsupported" in issue_id or "deprecated_firmware" in issue_id:
+        if isinstance(device, BlockDevice):
+            return BlockFirmwareUpdateFlow(device)
         return FirmwareUpdateFlow(device)
 
     if "outbound_websocket_incorrectly_enabled" in issue_id:
