@@ -85,15 +85,19 @@ class MatterCover(MatterEntity, CoverEntity):
     @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed, None if no position."""
-        if self._entity_info.endpoint.has_attribute(
+        if self._tilt_only:
+            # tilt-only covers have no lift axis, so tilt is the only closure
+            # indicator, even if a non-conformant device reports a lift position
+            if not self._entity_info.endpoint.has_attribute(
+                None,
+                clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
+            ):
+                return None
+            position = self.current_cover_tilt_position
+        elif self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
         ):
             position = self.current_cover_position
-        elif self._tilt_only and self._entity_info.endpoint.has_attribute(
-            None, clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
-        ):
-            # tilt-only covers have no lift axis, so tilt is the only closure indicator
-            position = self.current_cover_tilt_position
         else:
             return None
 
@@ -249,7 +253,18 @@ class MatterCover(MatterEntity, CoverEntity):
             detection,
         )
 
-        if self._entity_info.endpoint.has_attribute(
+        feature_map = self.get_matter_attribute_value(
+            clusters.WindowCovering.Attributes.FeatureMap
+        )
+        self._tilt_only = bool(
+            feature_map & clusters.WindowCovering.Bitmaps.Feature.kTilt
+        ) and not (feature_map & clusters.WindowCovering.Bitmaps.Feature.kLift)
+
+        if self._tilt_only:
+            # a lift position reported by a non-conformant tilt-only device
+            # does not describe the covering
+            self._attr_current_cover_position = None
+        elif self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
         ):
             # current position is inverted in matter (100 is closed, 0 is open)
@@ -296,12 +311,6 @@ class MatterCover(MatterEntity, CoverEntity):
         )
         self._attr_device_class = TYPE_MAP.get(device_type, CoverDeviceClass.AWNING)
 
-        feature_map = self.get_matter_attribute_value(
-            clusters.WindowCovering.Attributes.FeatureMap
-        )
-        self._tilt_only = bool(
-            feature_map & clusters.WindowCovering.Bitmaps.Feature.kTilt
-        ) and not (feature_map & clusters.WindowCovering.Bitmaps.Feature.kLift)
         if self._tilt_only:
             # tilt-only covers expose the tilt button features instead,
             # so UIs derive the button state from the tilt position

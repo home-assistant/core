@@ -946,6 +946,42 @@ async def test_cover_feature_map(
     assert state.state == expected_state
 
 
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_full", "cover.mock_full_window_covering"),
+    ],
+)
+@pytest.mark.parametrize(
+    "lift_position",
+    [
+        pytest.param(None, id="null-lift"),
+        pytest.param(0, id="stale-open-lift"),
+    ],
+)
+async def test_cover_tilt_only_ignores_lift_position(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+    lift_position: int | None,
+) -> None:
+    """Test a lift position reported by a tilt-only cover is ignored."""
+    # Tilt and PositionAwareTilt only
+    set_node_attribute(matter_node, 1, 258, 65532, 0b10010)
+    set_node_attribute(matter_node, 1, 258, 14, lift_position)
+    # fully closed tilt
+    set_node_attribute(matter_node, 1, 258, 15, 10000)
+    set_node_attribute(matter_node, 1, 258, 10, 0b000000)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert "current_position" not in state.attributes
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
 async def test_cover_full_features(
     hass: HomeAssistant,
