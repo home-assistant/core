@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # ruff: noqa: T201
-"""List breaks_in_ha_version deprecations that are due, grouped per cleanup branch."""
+"""List breaks_in_ha_version deprecations that are due, one per cleanup branch."""
 
 import argparse
 import ast
+from collections import Counter
 from dataclasses import asdict, dataclass, field
 import json
 from pathlib import Path
@@ -19,6 +20,8 @@ POSITIONAL = {
     "DeprecatedAlias": 2,
     "DeferredDeprecatedAlias": 2,
 }
+# Repair issue registry calls and the positional index of their issue_id.
+ISSUE_CALLS = {"async_create_issue": 2, "create_issue": 2, "async_get_or_create": 1}
 _VERSION_MATCH = re.compile(r"^(\d{4})\.(\d{1,2})(?:\.\d+)?$")
 
 
@@ -30,30 +33,32 @@ class Item:
     line: int
     version: str | None
     source: str
+    issue_id: str | None = None
 
 
 @dataclass
-class Group:
-    """Due items that are cleaned up together on one branch."""
+class Deprecation:
+    """Due items of one deprecation, cleaned up together on one branch."""
 
     name: str
     kind: str
     version: str
-    branch: str
+    issue_id: str | None
+    branch: str = ""
     items: list[Item] = field(default_factory=list)
 
 
 @dataclass
 class Constants:
-    """Module-level string constants, per file and per group."""
+    """Module-level string constants, per file and per integration or module."""
 
     files: dict[str, dict[str, str]] = field(default_factory=dict)
-    groups: dict[str, dict[str, set[str]]] = field(default_factory=dict)
+    areas: dict[str, dict[str, set[str]]] = field(default_factory=dict)
 
     def add(self, file: str, constants: dict[str, str]) -> None:
         """Add the constants defined in a file."""
         self.files[file] = constants
-        values = self.groups.setdefault(group_name(file)[0], {})
+        values = self.areas.setdefault(area_of(file)[0], {})
         for name, value in constants.items():
             values.setdefault(name, set()).add(value)
 
@@ -61,11 +66,12 @@ class Constants:
         """Resolve a constant used in a file.
 
         A constant defined in the file itself wins. Otherwise it must have one
-        value across the group; names with several values are left unresolved.
+        value across the integration or module; names with several values are
+        left unresolved.
         """
         if name in self.files[file]:
             return self.files[file][name]
-        values = self.groups[group_name(file)[0]].get(name, set())
+        values = self.areas[area_of(file)[0]].get(name, set())
         return next(iter(values)) if len(values) == 1 else None
 
 
@@ -105,26 +111,63 @@ def module_constants(tree: ast.Module) -> dict[str, str]:
     return constants
 
 
-def find_values(tree: ast.Module) -> list[ast.expr]:
-    """Find breaks_in_ha_version keyword argument and dict key values."""
-    values: list[ast.expr] = []
+def call_name(call: ast.Call) -> str | None:
+    """Return the name of the called function or method."""
+    if isinstance(call.func, ast.Name):
+        return call.func.id
+    if isinstance(call.func, ast.Attribute):
+        return call.func.attr
+    return None
+
+
+def find_values(tree: ast.Module) -> list[tuple[ast.expr, ast.Call | None]]:
+    """Find breaks_in_ha_version values, with the call that takes each one."""
+    values: list[tuple[ast.expr, ast.Call | None]] = []
     for node in ast.walk(tree):
-        if isinstance(node, ast.keyword) and node.arg == KEY:
-            values.append(node.value)
-        elif (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and (index := POSITIONAL.get(node.func.id)) is not None
-            and len(node.args) > index
-        ):
-            values.append(node.args[index])
+        if isinstance(node, ast.Call):
+            values.extend(
+                (keyword.value, node) for keyword in node.keywords if keyword.arg == KEY
+            )
+            if (
+                isinstance(node.func, ast.Name)
+                and (index := POSITIONAL.get(node.func.id)) is not None
+                and len(node.args) > index
+            ):
+                values.append((node.args[index], node))
         elif isinstance(node, ast.Dict):
             values.extend(
-                value
+                (value, None)
                 for key, value in zip(node.keys, node.values, strict=True)
                 if isinstance(key, ast.Constant) and key.value == KEY
             )
     return values
+
+
+def static_text(node: ast.expr, constants: Constants, file: str) -> str:
+    """Return the fixed text of a string expression, leaving out the parts that vary."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.Name) and node.id.isupper():
+        return constants.resolve(file, node.id) or ""
+    if isinstance(node, ast.FormattedValue):
+        return static_text(node.value, constants, file)
+    if isinstance(node, ast.JoinedStr):
+        return "".join(static_text(value, constants, file) for value in node.values)
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        return static_text(node.left, constants, file) + static_text(
+            node.right, constants, file
+        )
+    return ""
+
+
+def issue_id(call: ast.Call | None, constants: Constants, file: str) -> str | None:
+    """Return the repair issue id a call creates, without its varying parts."""
+    if call is None or (index := ISSUE_CALLS.get(call_name(call) or "")) is None:
+        return None
+    argument = passed_argument(call, "issue_id", index)
+    if not isinstance(argument, ast.expr):
+        return None
+    return static_text(argument, constants, file).strip("_-/. ") or None
 
 
 def enclosing_functions(
@@ -193,6 +236,7 @@ def caller_items(
     func: ast.FunctionDef | ast.AsyncFunctionDef,
     func_file: str,
     parameter: str,
+    issue: str | None,
     files: list[tuple[str, str, ast.Module]],
     constants: Constants,
 ) -> list[Item] | None:
@@ -200,8 +244,8 @@ def caller_items(
 
     Only callers in the same integration or core module are searched. Returns
     None when there are none, when one of them can't be resolved, or when the
-    group defines more than one function with this name, since calls are
-    matched by name.
+    integration or module defines more than one function with this name, since
+    calls are matched by name.
     """
     if (found := find_parameter(func, parameter)) is None:
         return None
@@ -239,56 +283,68 @@ def caller_items(
                 source = ast.get_source_segment(text, argument) or ""
             if version is None:
                 return None
-            items.append(Item(rel, call.lineno, version, source))
+            items.append(Item(rel, call.lineno, version, source, issue))
     return items or None
 
 
-def group_name(file: str) -> tuple[str, str]:
-    """Return the group name and kind for a file under homeassistant/."""
+def area_of(file: str) -> tuple[str, str]:
+    """Return the integration or core module of a file, and its kind."""
     parts = file.split("/")
     if parts[1] == "components":
         return parts[2], "integration"
     return "/".join(parts[1:]), "core"
 
 
-def branch_name(name: str, version: str) -> str:
-    """Return the cleanup branch name for a group."""
-    slug = re.sub(r"[^a-z0-9_]+", "-", name.removesuffix(".py").lower()).strip("-")
-    return f"deprecation-cleanup/{slug}-{version}"
+def slugify(text: str) -> str:
+    """Return text as a branch name part."""
+    return re.sub(r"[^a-z0-9_]+", "-", text.lower()).strip("-")
 
 
-def _group_order(key: tuple[str, str]) -> tuple[str, int, int]:
-    """Sort groups by name, then by version."""
+def branch_name(name: str, version: str, suffix: str | None = None) -> str:
+    """Return the cleanup branch name for a deprecation."""
+    branch = f"deprecation-cleanup/{slugify(name.removesuffix('.py'))}-{version}"
+    return f"{branch}-{slugify(suffix)}" if suffix else branch
+
+
+def _deprecation_order(
+    key: tuple[str, str, str | None],
+) -> tuple[str, int, int, str]:
+    """Sort deprecations by name, version and issue id."""
     major, minor = key[1].split(".")
-    return key[0], int(major), int(minor)
+    return key[0], int(major), int(minor), key[2] or ""
 
 
 def scan(root: Path, current: tuple[int, int]) -> dict[str, Any]:
     """Find the deprecations under root/homeassistant that are due at current."""
     trees: dict[str, tuple[str, ast.Module]] = {}
-    group_files: dict[str, list[tuple[str, str, ast.Module]]] = {}
+    area_files: dict[str, list[tuple[str, str, ast.Module]]] = {}
     constants = Constants()
     for path in sorted((root / "homeassistant").rglob("*.py")):
         text = path.read_text()
         tree = ast.parse(text)
         rel = path.relative_to(root).as_posix()
-        name = group_name(rel)[0]
+        name = area_of(rel)[0]
         constants.add(rel, module_constants(tree))
-        group_files.setdefault(name, []).append((rel, text, tree))
+        area_files.setdefault(name, []).append((rel, text, tree))
         if KEY in text or any(cls in text for cls in POSITIONAL):
             trees[rel] = (text, tree)
 
-    groups: dict[tuple[str, str], Group] = {}
+    deprecations: dict[tuple[str, str, str | None], Deprecation] = {}
     unresolved: list[Item] = []
     passthrough: list[Item] = []
     for rel, (text, tree) in trees.items():
-        name, kind = group_name(rel)
+        name, kind = area_of(rel)
         owners = enclosing_functions(tree)
-        for value in find_values(tree):
+        for value, call in find_values(tree):
             if isinstance(value, ast.Constant) and value.value is None:
                 continue
+            issue = issue_id(call, constants, rel)
             item = Item(
-                rel, value.lineno, None, ast.get_source_segment(text, value) or ""
+                rel,
+                value.lineno,
+                None,
+                ast.get_source_segment(text, value) or "",
+                issue,
             )
             if isinstance(value, ast.Constant) or (
                 isinstance(value, ast.Name) and value.id.isupper()
@@ -300,14 +356,14 @@ def scan(root: Path, current: tuple[int, int]) -> dict[str, Any]:
                 and (func := owners.get(value)) is not None
                 and (
                     callers := caller_items(
-                        func, rel, value.id, group_files[name], constants
+                        func, rel, value.id, issue, area_files[name], constants
                     )
                 )
                 is not None
             ):
                 items = callers
             else:
-                # A variable or attribute forwarded from outside this group.
+                # A variable or attribute forwarded from outside this integration or module.
                 passthrough.append(item)
                 continue
             for found in items:
@@ -318,14 +374,23 @@ def scan(root: Path, current: tuple[int, int]) -> dict[str, Any]:
                 if parsed > current:
                     continue
                 version = f"{parsed[0]}.{parsed[1]}"
-                groups.setdefault(
-                    (name, version),
-                    Group(name, kind, version, branch_name(name, version)),
+                deprecations.setdefault(
+                    (name, version, found.issue_id),
+                    Deprecation(name, kind, version, found.issue_id),
                 ).items.append(found)
+
+    # Only a version with several deprecations needs the issue id in branch names.
+    per_version = Counter((name, version) for name, version, _ in deprecations)
+    for (name, version, issue), deprecation in deprecations.items():
+        suffix = issue if per_version[name, version] > 1 else None
+        deprecation.branch = branch_name(name, version, suffix)
 
     return {
         "current_version": f"{current[0]}.{current[1]}",
-        "groups": [asdict(groups[key]) for key in sorted(groups, key=_group_order)],
+        "deprecations": [
+            asdict(deprecations[key])
+            for key in sorted(deprecations, key=_deprecation_order)
+        ],
         "unresolved": [asdict(item) for item in unresolved],
         "passthrough": [asdict(item) for item in passthrough],
     }

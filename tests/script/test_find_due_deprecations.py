@@ -132,6 +132,30 @@ SAME_FUNCTION_NAME_FILES = {
     """,
 }
 
+# Several deprecations in one integration that all break in 2026.1.
+SAME_VERSION_FILES = {
+    "homeassistant/components/eta/__init__.py": """
+        DOMAIN = "eta"
+
+        def setup(hass, entry):
+            async_create_issue(
+                hass, DOMAIN, "deprecated_yaml", breaks_in_ha_version="2026.1.0"
+            )
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_option_{entry.entry_id}",
+                breaks_in_ha_version="2026.1.0",
+            )
+            issue_registry.async_get_or_create(
+                DOMAIN,
+                issue_id=f"{DOMAIN}_deprecated_service",
+                breaks_in_ha_version="2026.1",
+            )
+            report_usage("uses an old API", breaks_in_ha_version="2026.1.0")
+    """,
+}
+
 
 def write_repo(root: Path, files: dict[str, str]) -> Path:
     """Write a fake core checkout."""
@@ -149,7 +173,7 @@ def repo(tmp_path: Path) -> Path:
 
 
 def test_scan(repo: Path, snapshot: SnapshotAssertion) -> None:
-    """Test the groups, unresolved and passthrough items found in the fake repo."""
+    """Test the deprecations, unresolved and passthrough items in the fake repo."""
     assert find.scan(repo, find.dev_version(repo)) == snapshot
 
 
@@ -184,10 +208,28 @@ def test_scan(repo: Path, snapshot: SnapshotAssertion) -> None:
 def test_scan_due_rule(
     repo: Path, current: tuple[int, int], expected: list[str]
 ) -> None:
-    """Test there is one group per name and version due at or below current."""
-    assert [group["branch"] for group in find.scan(repo, current)["groups"]] == (
-        expected
-    )
+    """Test the deprecations due at or below the current version."""
+    assert [
+        deprecation["branch"]
+        for deprecation in find.scan(repo, current)["deprecations"]
+    ] == expected
+
+
+def test_scan_same_version(tmp_path: Path) -> None:
+    """Test each repair issue of a version is its own deprecation and branch."""
+    result = find.scan(write_repo(tmp_path, SAME_VERSION_FILES), (2026, 1))
+    assert [
+        (deprecation["branch"], deprecation["issue_id"])
+        for deprecation in result["deprecations"]
+    ] == [
+        ("deprecation-cleanup/eta-2026.1", None),
+        ("deprecation-cleanup/eta-2026.1-deprecated_option", "deprecated_option"),
+        ("deprecation-cleanup/eta-2026.1-deprecated_yaml", "deprecated_yaml"),
+        (
+            "deprecation-cleanup/eta-2026.1-eta_deprecated_service",
+            "eta_deprecated_service",
+        ),
+    ]
 
 
 def test_scan_same_constant_name(tmp_path: Path) -> None:
@@ -196,8 +238,11 @@ def test_scan_same_constant_name(tmp_path: Path) -> None:
     # Each file uses its own VERSION, and the default is resolved where it is
     # defined, not where make_issue() is called.
     assert [
-        (group["branch"], [(item["file"], item["line"]) for item in group["items"]])
-        for group in result["groups"]
+        (
+            deprecation["branch"],
+            [(item["file"], item["line"]) for item in deprecation["items"]],
+        )
+        for deprecation in result["deprecations"]
     ] == [
         (
             "deprecation-cleanup/epsilon-2025.1",
@@ -211,16 +256,16 @@ def test_scan_same_constant_name(tmp_path: Path) -> None:
             ],
         ),
     ]
-    # c.py doesn't define VERSION and the group has two values for it.
+    # c.py doesn't define VERSION and the integration has two values for it.
     assert [(item["file"], item["source"]) for item in result["unresolved"]] == [
         ("homeassistant/components/epsilon/c.py", "VERSION")
     ]
 
 
 def test_scan_same_function_name(tmp_path: Path) -> None:
-    """Test calls are not resolved when the group defines the name twice."""
+    """Test calls are not resolved when a function name is defined twice."""
     result = find.scan(write_repo(tmp_path, SAME_FUNCTION_NAME_FILES), (2099, 1))
-    assert result["groups"] == []
+    assert result["deprecations"] == []
     assert [(item["line"], item["source"]) for item in result["passthrough"]] == [
         (3, "version"),
         (10, "version"),
@@ -242,28 +287,50 @@ def test_parse_version(value: str, expected: tuple[int, int] | None) -> None:
 
 
 @pytest.mark.parametrize(
-    ("name", "version", "expected"),
+    ("name", "version", "suffix", "expected"),
     [
         pytest.param(
-            "tplink", "2025.4", "deprecation-cleanup/tplink-2025.4", id="integration"
+            "tplink",
+            "2025.4",
+            None,
+            "deprecation-cleanup/tplink-2025.4",
+            id="integration",
         ),
         pytest.param(
             "helpers/device_registry.py",
             "2025.12",
+            None,
             "deprecation-cleanup/helpers-device_registry-2025.12",
             id="core-module",
         ),
         pytest.param(
             "const.py",
             "2026.10",
+            None,
             "deprecation-cleanup/const-2026.10",
             id="top-level-module",
         ),
+        pytest.param(
+            "bayesian",
+            "2022.10",
+            "no_prob_given_false",
+            "deprecation-cleanup/bayesian-2022.10-no_prob_given_false",
+            id="issue-suffix",
+        ),
+        pytest.param(
+            "eta",
+            "2026.1",
+            "Deprecated/Option.X",
+            "deprecation-cleanup/eta-2026.1-deprecated-option-x",
+            id="suffix-slug",
+        ),
     ],
 )
-def test_branch_name(name: str, version: str, expected: str) -> None:
+def test_branch_name(
+    name: str, version: str, suffix: str | None, expected: str
+) -> None:
     """Test cleanup branch names."""
-    assert find.branch_name(name, version) == expected
+    assert find.branch_name(name, version, suffix) == expected
 
 
 @pytest.mark.parametrize(
