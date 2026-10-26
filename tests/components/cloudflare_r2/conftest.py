@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncIterator, Generator
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -13,7 +13,6 @@ from homeassistant.components.cloudflare_r2.backup import (
     suggested_filenames,
 )
 from homeassistant.components.cloudflare_r2.const import DOMAIN
-from homeassistant.const import CONF_PREFIX
 
 from .const import USER_INPUT
 
@@ -50,9 +49,12 @@ def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
         client = create_client.return_value
 
         tar_file, metadata_file = suggested_filenames(test_backup)
-        client.list_objects_v2.return_value = {
-            "Contents": [{"Key": tar_file}, {"Key": metadata_file}]
-        }
+        # Mock the paginator for list_objects_v2
+        client.get_paginator = MagicMock()
+        paginate = client.get_paginator.return_value.paginate
+        paginate.return_value.__aiter__.return_value = [
+            {"Contents": [{"Key": tar_file}, {"Key": metadata_file}]}
+        ]
         client.create_multipart_upload.return_value = {"UploadId": "upload_id"}
         client.upload_part.return_value = {"ETag": "etag"}
 
@@ -71,27 +73,17 @@ def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def config_entry_extra_data() -> dict:
+    """Extra config entry data, override in tests to change defaults."""
+    return {}
+
+
+@pytest.fixture
+def mock_config_entry(config_entry_extra_data: dict) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         entry_id="test",
         title="test",
         domain=DOMAIN,
-        data=USER_INPUT,
-    )
-
-
-@pytest.fixture
-def mock_config_entry_with_prefix(
-    mock_config_entry: MockConfigEntry,
-) -> MockConfigEntry:
-    """Return a mocked config entry with a prefix configured."""
-    data = dict(mock_config_entry.data)
-    data[CONF_PREFIX] = "ha/backups"
-
-    return MockConfigEntry(
-        entry_id=mock_config_entry.entry_id,
-        title=mock_config_entry.title,
-        domain=mock_config_entry.domain,
-        data=data,
+        data=USER_INPUT | config_entry_extra_data,
     )
