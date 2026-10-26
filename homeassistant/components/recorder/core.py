@@ -111,6 +111,7 @@ from .util import (
     build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
+    get_engine_db_url,
     is_second_sunday,
     move_away_broken_database,
     setup_connection_for_dialect,
@@ -1511,7 +1512,9 @@ class Recorder(threading.Thread):
             validate_or_move_away_sqlite_database(self.db_url)
 
         assert not self.engine
-        self.engine = create_engine(self.db_url, **kwargs, future=True)
+        self.engine = create_engine(
+            get_engine_db_url(self.db_url), **kwargs, future=True
+        )
         self._dialect_name = try_parse_enum(SupportedDialect, self.engine.dialect.name)
         self.__dict__.pop("dialect_name", None)
         sqlalchemy_event.listen(self.engine, "connect", self._setup_recorder_connection)

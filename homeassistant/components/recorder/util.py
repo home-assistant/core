@@ -17,8 +17,8 @@ from awesomeversion import (
 )
 import ciso8601
 import probatio
-from sqlalchemy import inspect, text
-from sqlalchemy.engine import Result, Row
+from sqlalchemy import inspect, make_url, text
+from sqlalchemy.engine import URL, Result, Row
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
@@ -39,7 +39,13 @@ from homeassistant.helpers.recorder import (  # noqa: F401
 )
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
+from .const import (
+    DEFAULT_MAX_BIND_VARS,
+    DOMAIN,
+    SQLITE_FILE_URL_PREFIX,
+    SQLITE_URL_PREFIX,
+    SupportedDialect,
+)
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -241,6 +247,23 @@ def execute_stmt_lambda_element(
 
     # Unreachable
     raise RuntimeError  # pragma: no cover
+
+
+def get_engine_db_url(db_url: str) -> URL:
+    """Return the URL to create a database engine with.
+
+    PostgreSQL URLs without a driver are pinned to psycopg2, the driver
+    installations ship, so they don't depend on the SQLAlchemy default driver.
+    SQLite file paths are used as written, without URL-decoding, so the engine
+    opens the same file that the recorder checks and moves away.
+    """
+    url = make_url(db_url)
+    if url.drivername == "postgresql":
+        url = url.set(drivername="postgresql+psycopg2")
+    if db_url.startswith(SQLITE_FILE_URL_PREFIX):
+        path = db_url.removeprefix(SQLITE_FILE_URL_PREFIX).partition("?")[0]
+        url = url.set(database=path)
+    return url
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:

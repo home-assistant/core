@@ -35,6 +35,7 @@ from pytest_homeassistant.typing import (
     RecorderInstanceContextManager,
     RecorderInstanceGenerator,
 )
+from sqlalchemy import make_url
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
 
@@ -2419,6 +2420,30 @@ async def test_mysql_missing_utf8mb4(
         connect_args = create_engine_mock.mock_calls[0][2].get("connect_args", {})
         for key, value in expected_connect_args.items():
             assert connect_args[key] == value
+
+
+async def test_postgresql_url_uses_psycopg2(hass: HomeAssistant) -> None:
+    """Test the engine for a driverless PostgreSQL URL uses psycopg2."""
+    recorder_helper.async_initialize_recorder(hass)
+
+    class MockEvent:
+        def listen(self, _, _2, callback):
+            callback(None, None)
+
+    mock_event = MockEvent()
+    with (
+        patch(
+            "homeassistant.components.recorder.core.create_engine"
+        ) as create_engine_mock,
+        patch("homeassistant.components.recorder.core.sqlalchemy_event", mock_event),
+    ):
+        await async_setup_component(
+            hass, DOMAIN, {DOMAIN: {CONF_DB_URL: "postgresql://user:pass@host/db"}}
+        )
+        create_engine_mock.assert_called_once()
+        assert create_engine_mock.mock_calls[0].args[0] == make_url(
+            "postgresql+psycopg2://user:pass@host/db"
+        )
 
 
 @pytest.mark.parametrize(

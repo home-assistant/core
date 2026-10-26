@@ -1747,11 +1747,15 @@ def recorder_db_url(
         drop_existing_db = True
         worker_db = True
 
+    from homeassistant.components.recorder import get_engine_db_url  # noqa: PLC0415
+
+    engine_db_url = get_engine_db_url(db_url)
+
     def drop_db(*, terminate: bool = False) -> None:
         import sqlalchemy as sa  # noqa: PLC0415
         import sqlalchemy_utils  # noqa: PLC0415
 
-        made_url = sa.make_url(db_url)
+        made_url = sa.make_url(engine_db_url)
         db = made_url.database
         if db_url.startswith("mysql://"):
             query = sa.text(
@@ -1759,7 +1763,7 @@ def recorder_db_url(
                 " WHERE db=:db and id != CONNECTION_ID()"
             )
             kill = "KILL {}"
-            engine = sa.create_engine(db_url)
+            engine = sa.create_engine(engine_db_url)
         else:
             query = sa.text(
                 "select pid FROM pg_stat_activity"
@@ -1790,7 +1794,7 @@ def recorder_db_url(
             raise RuntimeError(
                 f"Unable to drop database {db} because it is in use by {rows}"
             )
-        sqlalchemy_utils.drop_database(db_url)
+        sqlalchemy_utils.drop_database(engine_db_url)
 
     if db_url == "sqlite://" and persistent_database:
         tmp_path = tmp_path_factory.mktemp("recorder")
@@ -1798,17 +1802,17 @@ def recorder_db_url(
     elif db_url.startswith(("mysql://", "postgresql://")):
         import sqlalchemy_utils  # noqa: PLC0415
 
-        if drop_existing_db and sqlalchemy_utils.database_exists(db_url):
+        if drop_existing_db and sqlalchemy_utils.database_exists(engine_db_url):
             drop_db(terminate=worker_db)
 
-        if sqlalchemy_utils.database_exists(db_url):
+        if sqlalchemy_utils.database_exists(engine_db_url):
             raise RuntimeError(
                 f"Database {db_url} already exists. Use --drop-existing-db "
                 "to automatically drop existing database before start of test."
             )
 
         sqlalchemy_utils.create_database(
-            db_url,
+            engine_db_url,
             encoding="utf8mb4' COLLATE = 'utf8mb4_unicode_ci"
             if db_url.startswith("mysql://")
             else "utf8",

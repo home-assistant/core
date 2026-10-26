@@ -47,6 +47,7 @@ from homeassistant.components.recorder.util import (
     RETRYABLE_MYSQL_ERRORS,
     database_job_retry_wrapper,
     end_incomplete_runs,
+    get_engine_db_url,
     is_second_sunday,
     resolve_period,
     retryable_database_job,
@@ -118,6 +119,65 @@ async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -
         util.execute(mck1)
 
     assert e_mock.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("db_url", "drivername", "database", "query"),
+    [
+        pytest.param(
+            "postgresql://user:pass@host/db",
+            "postgresql+psycopg2",
+            "db",
+            {},
+            id="postgresql",
+        ),
+        pytest.param(
+            "postgresql+psycopg2://user:pass@host/db",
+            "postgresql+psycopg2",
+            "db",
+            {},
+            id="postgresql_psycopg2",
+        ),
+        pytest.param(
+            "postgresql+psycopg://user:pass@host/db",
+            "postgresql+psycopg",
+            "db",
+            {},
+            id="postgresql_psycopg",
+        ),
+        pytest.param(
+            "mysql://user:pass@host/db?charset=utf8mb4",
+            "mysql",
+            "db",
+            {"charset": "utf8mb4"},
+            id="mysql",
+        ),
+        pytest.param(
+            "sqlite:////config/home-assistant_v2.db",
+            "sqlite",
+            "/config/home-assistant_v2.db",
+            {},
+            id="sqlite",
+        ),
+        pytest.param(
+            "sqlite:////config/ha%20copy/home-assistant_v2.db?timeout=0.1",
+            "sqlite",
+            "/config/ha%20copy/home-assistant_v2.db",
+            {"timeout": "0.1"},
+            id="sqlite_percent",
+        ),
+        pytest.param("sqlite://", "sqlite", None, {}, id="sqlite_memory"),
+    ],
+)
+def test_get_engine_db_url(
+    db_url: str, drivername: str, database: str | None, query: dict[str, str]
+) -> None:
+    """Test the engine URL pins the PostgreSQL driver and keeps SQLite paths."""
+    url = get_engine_db_url(db_url)
+
+    assert url.drivername == drivername
+    assert url.database == database
+    assert url.query == query
 
 
 def test_validate_or_move_away_sqlite_database(
