@@ -126,8 +126,10 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_prepare_setup(self) -> None:
         """Register the unique ID, aborting if another flow is already in progress."""
+        # Not about existing entries, which single_config_entry already rules
+        # out: this stops every discovered plug from opening its own flow, and
+        # lets the user ignore a discovery.
         await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
         self.context.update({"title_placeholders": {"name": "Powersensor"}})
 
     @override

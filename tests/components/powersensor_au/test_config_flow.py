@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import config_entries
 import homeassistant.components.powersensor_au
@@ -28,6 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.setup import async_setup_component
 
 PLUG_MAC = "a4cf1218f158"
 SECOND_MAC = "a4cf1218f160"
@@ -146,6 +148,34 @@ async def test_zeroconf_second_plug_aborts_when_configured(hass: HomeAssistant) 
         data=_zc_info(SECOND_MAC, ip="192.168.0.37"),
     )
     assert result2["type"] is FlowResultType.ABORT
+
+
+@pytest.mark.usefixtures("bypass_setup")
+async def test_zeroconf_discovery_can_be_ignored(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """A discovered installation can be ignored, which needs the flow's unique ID."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=_zc_info(PLUG_MAC),
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    assert await async_setup_component(hass, "config", {})
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "config_entries/ignore_flow",
+            "flow_id": result["flow_id"],
+            "title": "Powersensor",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    entries = hass.config_entries.async_entries(DOMAIN, include_ignore=True)
+    assert [entry.source for entry in entries] == [config_entries.SOURCE_IGNORE]
 
 
 @pytest.mark.usefixtures("bypass_setup")
