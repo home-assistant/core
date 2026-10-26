@@ -27,7 +27,7 @@ from sqlalchemy import select
 from homeassistant import exceptions
 from homeassistant.components import recorder
 from homeassistant.components.recorder import DOMAIN, Recorder, history, statistics
-from homeassistant.components.recorder.db_schema import StatisticsShortTerm
+from homeassistant.components.recorder.db_schema import Statistics, StatisticsShortTerm
 from homeassistant.components.recorder.models import (
     StatisticMeanType,
     datetime_to_timestamp_or_none,
@@ -1225,6 +1225,53 @@ async def test_external_statistics_errors(
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
+
+
+@pytest.mark.parametrize(
+    ("imported", "expected"),
+    [
+        pytest.param([], [], id="empty"),
+        pytest.param(
+            [
+                {"mean": 1.0, "min": 0.0, "max": 2.0, "mean_weight": 3.0},
+                {"mean": 5.0, "min": 4.0, "max": 6.0, "mean_weight": 7.0},
+            ],
+            # mean_weight is only set when the row is inserted
+            [(5.0, 4.0, 6.0, 3.0)],
+            id="same_start_twice",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_import_statistics_batch(
+    hass: HomeAssistant,
+    imported: list[dict[str, float]],
+    expected: list[tuple[float, float, float, float]],
+) -> None:
+    """Test importing an empty batch and a batch with the same start twice."""
+    start = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
+    async_add_external_statistics(
+        hass,
+        {
+            "has_sum": False,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "name": "Outdoor temperature",
+            "source": "test",
+            "statistic_id": "test:outdoor_temperature",
+            "unit_class": "temperature",
+            "unit_of_measurement": "°C",
+        },
+        [{"start": start} | stat for stat in imported],
+    )
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        rows = session.execute(
+            select(
+                Statistics.mean, Statistics.min, Statistics.max, Statistics.mean_weight
+            )
+        ).all()
+    assert [tuple(row) for row in rows] == expected
 
 
 async def test_import_statistics_errors(
