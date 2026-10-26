@@ -20,7 +20,7 @@ from . import BoschConfigEntry
 from .const import DOMAIN
 
 PARALLEL_UPDATES = 1
-SCAN_INTERVAL = timedelta(hours=6)
+SCAN_INTERVAL = timedelta(minutes=15)
 
 IN_PROGRESS_STATES = {
     SHCInformation.UpdateState.DOWNLOADING,
