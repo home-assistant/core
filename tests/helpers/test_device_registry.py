@@ -5715,6 +5715,23 @@ async def test_update_suggested_area(
 
 
 @pytest.mark.usefixtures("hass")
+async def test_create_with_unknown_suggested_area(
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a suggested area that does not exist is not created for a new device."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "1")},
+        suggested_area="Pool",
+    )
+    assert entry.area_id is None
+    assert area_registry.async_get_area_by_name("Pool") is None
+    assert len(area_registry.areas) == 0
+
+
+@pytest.mark.usefixtures("hass")
 async def test_get_or_create_disabled_by_ignored_for_existing_device(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -10966,6 +10983,30 @@ async def test_child_device_create_with_suggested_area(
         suggested_area="Garage",
     )
     assert child_device_2.area_id == garden.id
+
+
+@pytest.mark.usefixtures("hass")
+async def test_child_device_create_with_unknown_suggested_area(
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a suggested area that does not exist is not created for a new child device."""
+    parent = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+        suggested_area="Garden",
+    )
+    assert child_device.area_id is None
+    assert area_registry.async_get_area_by_name("Garden") is None
+    assert len(area_registry.areas) == 0
 
 
 @pytest.mark.parametrize(
