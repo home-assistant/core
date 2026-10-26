@@ -2294,10 +2294,12 @@ async def test_visible_model_options_validation(
         context={"source": config_entries.SOURCE_USER},
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_NAME: "Claude", CONF_RECOMMENDED: False}
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CHAT_MODEL: "claude-sonnet-4-6"}
+        result["flow_id"],
+        {
+            CONF_NAME: "Claude",
+            CONF_RECOMMENDED: False,
+            CONF_CHAT_MODEL: "claude-sonnet-4-6",
+        },
     )
     with pytest.raises(InvalidData):
         await hass.config_entries.subentries.async_configure(
@@ -2352,10 +2354,8 @@ async def test_reconfigure_preserves_hidden_model_options(
         hass, subentry.subentry_id
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False}
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CHAT_MODEL: "claude-sonnet-4-6"}
+        result["flow_id"],
+        {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: "claude-sonnet-4-6"},
     )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
