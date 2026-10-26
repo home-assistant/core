@@ -1561,7 +1561,7 @@ class MqttEntityDeviceInfo(Entity):
 
     def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize the device mixin."""
-        self._set_device_specifications(config)
+        self._device_specifications = self._device_specifications_from_config(config)
         self._config_entry = config_entry
 
     @callback
@@ -1584,45 +1584,43 @@ class MqttEntityDeviceInfo(Entity):
         """
         await super().async_prepare_to_add_to_hass()
         if self._register_device_on_add:
-            self.async_register_device()
+            self.async_register_device(self._device_specifications)
 
-    def _set_device_specifications(self, config: ConfigType) -> None:
-        """Set the device specifications, a device requires a unique ID."""
-        self._device_specifications: dict[str, Any] | None = (
-            config.get(CONF_DEVICE) if self.unique_id is not None else None
-        )
-
-    @property
-    def _has_child_device(self) -> bool:
-        """Return if the device specifications include a child device."""
-        return (
-            self._device_specifications is not None
-            and CONF_CHILD_DEVICE in self._device_specifications
-        )
+    def _device_specifications_from_config(
+        self, config: ConfigType
+    ) -> dict[str, Any] | None:
+        """Return the device specifications, a device requires a unique ID."""
+        return config.get(CONF_DEVICE) if self.unique_id is not None else None
 
     @callback
-    def async_register_device(self) -> dr.AnyDeviceEntry | None:
+    def async_register_device(
+        self, device_specifications: dict[str, Any] | None
+    ) -> dr.AnyDeviceEntry | None:
         """Register the device, a parent device is registered before its child device.
 
-        Raises DeviceInfoError when the device can not be registered, which leaves
-        the registered devices of the entity unchanged.
+        The device specifications are only used for the entity when the device is
+        registered. Raises DeviceInfoError when it can not be registered.
         """
-        if (device_info := self._main_device_info()) is None:
+        if (device_info := self._main_device_info(device_specifications)) is None:
+            self._device_specifications = device_specifications
             self._parent_device_id = self._registered_device_id = None
             return None
+        if TYPE_CHECKING:
+            assert device_specifications is not None
         device_registry = dr.async_get(self.hass)
         config_entry_id = self._config_entry.entry_id
         device = device_registry.async_get_or_create_from_info(
             config_entry_id=config_entry_id, device_info=device_info
         )
-        if not self._has_child_device:
+        if CONF_CHILD_DEVICE not in device_specifications:
+            self._device_specifications = device_specifications
             self._parent_device_id = None
             self._registered_device_id = self._main_device_id = device.id
             return device
         try:
             child_device = device_registry.async_get_or_create_child_from_info(
                 config_entry_id=config_entry_id,
-                device_info=self._child_device_info(device.id),
+                device_info=self._child_device_info(device_specifications, device.id),
             )
         except dr.DeviceInfoError:
             # The parent device may have been registered for this child device only
@@ -1637,6 +1635,7 @@ class MqttEntityDeviceInfo(Entity):
                 "mqtt cleanup parent device",
             )
             raise
+        self._device_specifications = device_specifications
         self._parent_device_id = self._main_device_id = device.id
         self._registered_device_id = child_device.id
         return child_device
@@ -1671,22 +1670,24 @@ class MqttEntityDeviceInfo(Entity):
             "mqtt cleanup device of aborted entity",
         )
 
-    def _main_device_info(self) -> DeviceInfo | None:
+    def _main_device_info(
+        self, device_specifications: dict[str, Any] | None
+    ) -> DeviceInfo | None:
         """Return the device info from the device specifications."""
-        info = device_info_from_specifications(self._device_specifications)
+        info = device_info_from_specifications(device_specifications)
         if info is not None and (
             via_device_id := _resolve_via_device_id(
-                self.hass, self._device_specifications, self._config_entry
+                self.hass, device_specifications, self._config_entry
             )
         ):
             info.via_device_id = via_device_id
         return info
 
-    def _child_device_info(self, parent_device_id: str) -> ChildDeviceInfo:
+    def _child_device_info(
+        self, device_specifications: dict[str, Any], parent_device_id: str
+    ) -> ChildDeviceInfo:
         """Return the child device info from the device specifications."""
-        if TYPE_CHECKING:
-            assert self._device_specifications is not None
-        child_device = self._device_specifications[CONF_CHILD_DEVICE]
+        child_device = device_specifications[CONF_CHILD_DEVICE]
         info = ChildDeviceInfo(
             identifiers={(DOMAIN, id_) for id_ in child_device[CONF_IDENTIFIERS]},
             parent_device_id=parent_device_id,
@@ -1696,20 +1697,13 @@ class MqttEntityDeviceInfo(Entity):
         return info
 
     async def device_info_discovery_update(self, config: DiscoveryInfoType) -> None:
-        """Handle updated discovery message."""
-        previous_device_specifications = self._device_specifications
-        self._set_device_specifications(config)
-        ensure_via_device_exists(
-            self.hass, self._device_specifications, self._config_entry
-        )
+        """Handle updated discovery message.
 
-        try:
-            device = self.async_register_device()
-        except dr.DeviceInfoError as err:
-            # Cancel the device update, the entity keeps its current device
-            self._device_specifications = previous_device_specifications
-            _log_device_info_error(err)
-            return
+        Raises DeviceInfoError when the device can not be registered.
+        """
+        device_specifications = self._device_specifications_from_config(config)
+        ensure_via_device_exists(self.hass, device_specifications, self._config_entry)
+        device = self.async_register_device(device_specifications)
         # The entity platform only links the device when the entity is added
         if (
             device is None
@@ -1730,8 +1724,12 @@ class MqttEntityDeviceInfo(Entity):
     def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:
         """Return a device description for device registry."""
         if self._parent_device_id is not None:
-            return self._child_device_info(self._parent_device_id)
-        return self._main_device_info()
+            if TYPE_CHECKING:
+                assert self._device_specifications is not None
+            return self._child_device_info(
+                self._device_specifications, self._parent_device_id
+            )
+        return self._main_device_info(self._device_specifications)
 
 
 class MqttEntity(
@@ -1957,6 +1955,12 @@ class MqttEntity(
         except probatio.Invalid as err:
             async_handle_schema_error(discovery_payload, err)
             return
+        try:
+            await self.device_info_discovery_update(config)
+        except dr.DeviceInfoError as err:
+            # Cancel the update, the entity keeps its current config and device
+            _log_device_info_error(err)
+            return
         self._config = config
         self._setup_from_config(self._config)
         self._setup_common_attributes_from_config(self._config)
@@ -1965,7 +1969,6 @@ class MqttEntity(
         # Prepare MQTT subscriptions
         self.attributes_prepare_discovery_update(config)
         self.availability_prepare_discovery_update(config)
-        await self.device_info_discovery_update(config)
         self._subscriptions = {}
         self._prepare_subscribe_topics()
         if self._subscriptions:

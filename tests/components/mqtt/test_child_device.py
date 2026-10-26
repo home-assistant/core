@@ -1415,6 +1415,35 @@ async def test_discovery_update_registration_error_keeps_device_info(
     assert device_info.identifiers == {(DOMAIN, "sub")}
 
 
+async def test_discovery_update_registration_error_keeps_config(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed discovery update keeps the current config of the entity."""
+    mqtt_mock = await mqtt_mock_entry()
+    await _discover_switch(hass, "sw1", {**PARENT_DEVICE, "child_device": CHILD_DEVICE})
+
+    # Reparenting is not supported, so the update with a new topic is cancelled
+    update = json.loads(
+        _switch_config(
+            "sw1", {"identifiers": ["new_parent"], "child_device": CHILD_DEVICE}
+        )
+    )
+    update["command_topic"] = "new/set"
+    async_fire_mqtt_message(hass, SWITCH_TOPIC, json.dumps(update))
+    await hass.async_block_till_done()
+    assert REGISTRATION_WARNING in caplog.text
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": SWITCH_ENTITY_ID}, blocking=True
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "sw1/set", "ON", 0, False, message_expiry_interval=None
+    )
+
+
 async def test_device_registration_error(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
