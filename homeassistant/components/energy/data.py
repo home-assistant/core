@@ -162,10 +162,14 @@ class SolarSourceType(TypedDict):
 
 
 class HomeSourceType(TypedDict):
-    """Dictionary holding the whole-home consumption meter."""
+    """Dictionary holding the whole-home consumption meter.
+
+    It does not touch any other calculation,
+    and is intended to be used with a main panel sensor.
+    """
 
     type: Literal["home"]
-    stat_energy_from: str
+    stat_energy_to: str
     stat_rate: NotRequired[str]
     name: NotRequired[str]
 
