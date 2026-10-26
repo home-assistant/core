@@ -1585,8 +1585,6 @@ class EntityRegistry(BaseRegistry):
         # `suggested_object_id` has priority over `object_id_base`.
         object_id_base: str | UndefinedType | None = UNDEFINED,
         suggested_object_id: str | UndefinedType | None = UNDEFINED,
-        # To disable or hide an entity if it gets created, does not affect
-        # existing entities
         disabled_by: RegistryEntryDisabler | UndefinedType | None = UNDEFINED,
         hidden_by: RegistryEntryHider | None = None,
         # Function to generate initial entity options if it gets created
@@ -1609,6 +1607,11 @@ class EntityRegistry(BaseRegistry):
 
         domain: entity component domain (e.g. light, sensor)
         platform: integration domain (e.g. hue, zwave)
+        disabled_by: disables the entity if it gets created, does not affect an
+            existing entity. A derived value, including None, is not stored as
+            passed but derived again.
+        hidden_by: hides the entity if it gets created, does not affect an
+            existing entity.
         """
         config_entry_id: str | UndefinedType | None = UNDEFINED
         if not config_entry:
@@ -1725,7 +1728,7 @@ class EntityRegistry(BaseRegistry):
                 if config_entry is not None and config_entry.pref_disable_new_entities
                 else None
             )
-        # Not explicitly disabled, so derive disabled_by
+        # Derive disabled_by unless explicitly disabled
         if disabled_by in _DERIVED_DISABLED_BY:
             device = (
                 dr.async_get(self.hass).async_get(device_id)
@@ -2223,8 +2226,11 @@ class EntityRegistry(BaseRegistry):
         translation_key: str | UndefinedType | None = UNDEFINED,
         unit_of_measurement: str | UndefinedType | None = UNDEFINED,
     ) -> RegistryEntry:
-        """Update properties of an entity."""
-        # Not explicitly disabled, so derive disabled_by
+        """Update properties of an entity.
+
+        disabled_by: a derived value, including None, is not stored as passed but
+            derived again.
+        """
         if disabled_by in _DERIVED_DISABLED_BY:
             disabled_by = None
         return self._async_update_entity(
