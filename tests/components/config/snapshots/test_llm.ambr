@@ -34,21 +34,22 @@
       'additionalProperties': False,
       'properties': dict({
         'domain': dict({
-          'anyOf': list([
-            dict({
-              'format': 'strip',
-              'type': 'string',
-            }),
-            dict({
-              'items': dict({
-                'format': 'strip',
+          'description': "Filter by integration domain (e.g. 'hue', 'zwave_js'). Accepts a single domain or a list of domains.",
+          'items': dict({
+            'allOf': list([
+              dict({
                 'type': 'string',
               }),
-              'minItems': 1,
-              'type': 'array',
-            }),
-          ]),
-          'description': "Filter by integration domain (e.g. 'hue', 'zwave_js'). Accepts a single domain or a list of domains.",
+              dict({
+                'format': 'strip',
+              }),
+              dict({
+                'format': 'lower',
+              }),
+            ]),
+          }),
+          'minItems': 1,
+          'type': 'array',
         }),
         'status': dict({
           'description': "Filter by status: 'loaded' (working normally), 'error' (failed setup, retrying, migration error, or failed unload), or 'not_loaded' (including disabled or ignored entries).",
@@ -81,9 +82,18 @@
       'additionalProperties': False,
       'properties': dict({
         'domain': dict({
+          'allOf': list([
+            dict({
+              'type': 'string',
+            }),
+            dict({
+              'format': 'strip',
+            }),
+            dict({
+              'format': 'lower',
+            }),
+          ]),
           'description': "Integration domain to set up (e.g. 'local_todo', 'template').",
-          'format': 'strip',
-          'type': 'string',
         }),
       }),
       'required': list([
