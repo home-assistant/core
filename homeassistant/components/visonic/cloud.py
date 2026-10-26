@@ -229,7 +229,7 @@ class VisonicCloudConnection(VisonicConnection):
     async def _async_send_command(
         self, command: AlarmPanelCommand, code: str | None
     ) -> CommandResult:
-        """Submit and confirm a command using the same cloud session."""
+        """Renew an expired session once without replaying an accepted command."""
         is_valid, _ = self.get_panel_pin_code(code=code)
         if not is_valid:
             return CommandResult(
@@ -237,52 +237,42 @@ class VisonicCloudConnection(VisonicConnection):
             )
 
         acs = AlarmCommandStatus.FAIL_INVALID_RETURN
-        if self.cloud_alarm:
+        if self.cloud_alarm is not None:
+            submitted = False
+            renewed = False
             process_token = None
             user_settings_allowed = True
             LOGGER.debug("Sending panel command %s", str(command.name))
             try:
-                match command:
-                    case AlarmPanelCommand.DISARM:
-                        user_settings_allowed = self.options.enable_remote_disarm
-                        if user_settings_allowed:
-                            process_token = await self.cloud_alarm.disarm()
-                    case AlarmPanelCommand.ARM_AWAY:
-                        user_settings_allowed = self.options.enable_remote_arm
-                        if user_settings_allowed:
-                            process_token = await self.cloud_alarm.arm_away()
-                    case AlarmPanelCommand.ARM_HOME:
-                        user_settings_allowed = (
-                            self.options.enable_remote_arm
-                            and self.options.arm_home_enabled
-                        )
-                        if user_settings_allowed:
-                            process_token = await self.cloud_alarm.arm_home()
-                    case AlarmPanelCommand.ARM_AWAY_INSTANT:
-                        user_settings_allowed = self.options.enable_remote_arm
-                        if user_settings_allowed:
-                            process_token = await self.cloud_alarm.arm_away_instant()
-                    case AlarmPanelCommand.ARM_HOME_INSTANT:
-                        user_settings_allowed = (
-                            self.options.enable_remote_arm
-                            and self.options.arm_home_enabled
-                        )
-                        if user_settings_allowed:
-                            process_token = await self.cloud_alarm.arm_home_instant()
-
-                if not user_settings_allowed:
-                    # Command was not sent to the cloud server
-                    acs = AlarmCommandStatus.FAIL_USER_CONFIG_PREVENTED
-                elif process_token is not None:
-                    # Command was sent to the cloud server and we need to wait for the status
-                    acs = await self.wait_for_process_status(process_token)
+                while True:
+                    try:
+                        if not submitted:
+                            (
+                                user_settings_allowed,
+                                process_token,
+                            ) = await self._async_submit_command(command)
+                            submitted = True
+                        if not user_settings_allowed:
+                            acs = AlarmCommandStatus.FAIL_USER_CONFIG_PREVENTED
+                        elif process_token is not None:
+                            acs = await self.wait_for_process_status(process_token)
+                        break
+                    except UnauthorizedError, SessionTokenError:
+                        if renewed:
+                            raise
+                        renewed = True
+                        await self._async_panel_reconnect()
+            except (UnauthorizedError, SessionTokenError) as err:
+                raise HomeAssistantError(
+                    f"Unable to communicate with Visonic panel {self.settings.panel_id}"
+                ) from err
             except CLOUD_AUTH_ERRORS as ex:
                 raise VisonicAuthException(
                     "Cloud Authentication Error - panel connection failure"
                 ) from ex
             except VisonicAuthException:
                 raise
-            except Error as err:
+            except (Error, VisonicException) as err:
                 raise HomeAssistantError(
                     f"Unable to communicate with Visonic panel {self.settings.panel_id}"
                 ) from err
@@ -290,6 +280,40 @@ class VisonicCloudConnection(VisonicConnection):
         # schedule an update in 5 seconds time (if nothing else changes in between)
         self.callbacks.state_changed(5.0)
         return CommandResult(acs)
+
+    async def _async_submit_command(
+        self, command: AlarmPanelCommand
+    ) -> tuple[bool, str | None]:
+        """Check remote-control policy and submit once without confirming the result."""
+        if self.cloud_alarm is None:
+            return True, None
+        match command:
+            case AlarmPanelCommand.DISARM:
+                if not self.options.enable_remote_disarm:
+                    return False, None
+                return True, await self.cloud_alarm.disarm()
+            case AlarmPanelCommand.ARM_AWAY:
+                if not self.options.enable_remote_arm:
+                    return False, None
+                return True, await self.cloud_alarm.arm_away()
+            case AlarmPanelCommand.ARM_HOME:
+                if (
+                    not self.options.enable_remote_arm
+                    or not self.options.arm_home_enabled
+                ):
+                    return False, None
+                return True, await self.cloud_alarm.arm_home()
+            case AlarmPanelCommand.ARM_AWAY_INSTANT:
+                if not self.options.enable_remote_arm:
+                    return False, None
+                return True, await self.cloud_alarm.arm_away_instant()
+            case AlarmPanelCommand.ARM_HOME_INSTANT:
+                if (
+                    not self.options.enable_remote_arm
+                    or not self.options.arm_home_enabled
+                ):
+                    return False, None
+                return True, await self.cloud_alarm.arm_home_instant()
 
     @override
     async def async_panel_connect(self) -> bool:

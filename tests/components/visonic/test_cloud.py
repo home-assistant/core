@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pyvisonicalarm.alarm import AlarmSystem
-from pyvisonicalarm.classes import Alarm, PanelInfo, Partition, Status
+from pyvisonicalarm.classes import Alarm, PanelInfo, Partition, Process, Status
 from pyvisonicalarm.core import API
 from pyvisonicalarm.devices import PanelDevice
 from pyvisonicalarm.exceptions import (
@@ -283,7 +283,6 @@ async def test_command_library_failure(
 @pytest.mark.parametrize(
     "error",
     [
-        pytest.param(UnauthorizedError(), id="expired-session"),
         pytest.param(WrongUsernameOrPasswordError(), id="rejected-credentials"),
         pytest.param(InvalidUserCodeError(), id="rejected-panel-code"),
     ],
@@ -302,6 +301,251 @@ async def test_command_authentication_failure(
         await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
     assert raised.value.__cause__ is error
     request.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("command", "method"),
+    [
+        pytest.param(AlarmPanelCommand.ARM_AWAY, "arm_away", id="arm"),
+        pytest.param(AlarmPanelCommand.DISARM, "disarm", id="disarm"),
+    ],
+)
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(UnauthorizedError(), id="unauthorized"),
+        pytest.param(SessionTokenError(), id="session-token"),
+    ],
+)
+async def test_command_renews_session_before_submission(
+    cloud: VisonicCloudConnection,
+    command: AlarmPanelCommand,
+    method: str,
+    error: Error,
+) -> None:
+    """Retry a submission explicitly rejected by the expired session once."""
+    original = connected_cloud_alarm()
+    replacement = connected_cloud_alarm()
+    cloud.cloud_alarm = original
+    getattr(original, method).side_effect = error
+    getattr(replacement, method).return_value = "process-token"
+    replacement.get_process_status.return_value = [Process({"status": "succeeded"})]
+
+    async def connect() -> bool:
+        assert cloud._session_lock.locked()
+        cloud.cloud_alarm = replacement
+        cloud.login_success = True
+        return True
+
+    with (
+        patch.object(cloud, "_async_panel_connect", side_effect=connect) as login,
+        patch("homeassistant.components.visonic.cloud.asyncio.sleep"),
+    ):
+        result = await cloud.send_command(command, "1234")
+
+    assert result.status is AlarmCommandStatus.SUCCESS
+    login.assert_awaited_once_with()
+    original.panel_logout.assert_awaited_once_with()
+    getattr(original, method).assert_awaited_once_with()
+    getattr(replacement, method).assert_awaited_once_with()
+    replacement.get_process_status.assert_awaited_once_with("process-token")
+    cloud.callbacks.state_changed.assert_called_once_with(5.0)
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(UnauthorizedError(), id="unauthorized"),
+        pytest.param(SessionTokenError(), id="session-token"),
+    ],
+)
+async def test_command_renews_confirmation_without_resubmission(
+    cloud: VisonicCloudConnection, error: Error
+) -> None:
+    """Retain an accepted command's token when renewing the status-check session."""
+    original = connected_cloud_alarm()
+    replacement = connected_cloud_alarm()
+    cloud.cloud_alarm = original
+    original.arm_away.return_value = "accepted-token"
+    original.get_process_status.side_effect = error
+    replacement.get_process_status.return_value = [Process({"status": "succeeded"})]
+
+    async def connect() -> bool:
+        assert cloud._session_lock.locked()
+        cloud.cloud_alarm = replacement
+        cloud.login_success = True
+        return True
+
+    with (
+        patch.object(cloud, "_async_panel_connect", side_effect=connect) as login,
+        patch("homeassistant.components.visonic.cloud.asyncio.sleep"),
+    ):
+        result = await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+
+    assert result.status is AlarmCommandStatus.SUCCESS
+    login.assert_awaited_once_with()
+    original.arm_away.assert_awaited_once_with()
+    replacement.arm_away.assert_not_awaited()
+    original.get_process_status.assert_awaited_once_with("accepted-token")
+    replacement.get_process_status.assert_awaited_once_with("accepted-token")
+    cloud.callbacks.state_changed.assert_called_once_with(5.0)
+
+
+@pytest.mark.parametrize(
+    ("method", "replacement_submissions"),
+    [
+        pytest.param("arm_away", 1, id="submission"),
+        pytest.param("get_process_status", 0, id="confirmation"),
+    ],
+)
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(UnauthorizedError(), id="unauthorized"),
+        pytest.param(SessionTokenError(), id="session-token"),
+    ],
+)
+async def test_command_session_renewal_is_bounded(
+    cloud: VisonicCloudConnection,
+    method: str,
+    replacement_submissions: int,
+    error: Error,
+) -> None:
+    """Persistent session errors report a communication failure after one renewal."""
+    original = connected_cloud_alarm()
+    replacement = connected_cloud_alarm()
+    cloud.cloud_alarm = original
+    original.arm_away.return_value = "accepted-token"
+    getattr(original, method).side_effect = error
+    getattr(replacement, method).side_effect = error
+
+    async def connect() -> bool:
+        cloud.cloud_alarm = replacement
+        cloud.login_success = True
+        return True
+
+    with (
+        patch.object(cloud, "_async_panel_connect", side_effect=connect) as login,
+        patch("homeassistant.components.visonic.cloud.asyncio.sleep"),
+        pytest.raises(HomeAssistantError) as raised,
+    ):
+        await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+
+    assert type(raised.value) is HomeAssistantError
+    assert raised.value.__cause__ is error
+    login.assert_awaited_once_with()
+    original.arm_away.assert_awaited_once_with()
+    assert replacement.arm_away.await_count == replacement_submissions
+    getattr(replacement, method).assert_awaited_once()
+
+
+async def test_command_shares_renewal_limit_between_submission_and_confirmation(
+    cloud: VisonicCloudConnection,
+) -> None:
+    """Expiry while confirming a retried submission cannot renew or submit again."""
+    original = connected_cloud_alarm()
+    replacement = connected_cloud_alarm()
+    cloud.cloud_alarm = original
+    original.arm_away.side_effect = UnauthorizedError()
+    replacement.arm_away.return_value = "accepted-token"
+    replacement.get_process_status.side_effect = SessionTokenError()
+
+    async def connect() -> bool:
+        cloud.cloud_alarm = replacement
+        cloud.login_success = True
+        return True
+
+    with (
+        patch.object(cloud, "_async_panel_connect", side_effect=connect) as login,
+        patch("homeassistant.components.visonic.cloud.asyncio.sleep"),
+        pytest.raises(HomeAssistantError) as raised,
+    ):
+        await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+
+    assert type(raised.value) is HomeAssistantError
+    login.assert_awaited_once_with()
+    original.arm_away.assert_awaited_once_with()
+    replacement.arm_away.assert_awaited_once_with()
+    replacement.get_process_status.assert_awaited_once_with("accepted-token")
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(WrongUsernameOrPasswordError(), id="account-credentials"),
+        pytest.param(InvalidUserCodeError(), id="panel-code"),
+    ],
+)
+async def test_command_session_renewal_rejects_credentials(
+    cloud: VisonicCloudConnection, error: Error
+) -> None:
+    """Only rejected credentials during renewal request credential reauthentication."""
+    original = connected_cloud_alarm()
+    cloud.cloud_alarm = original
+    original.arm_away.side_effect = UnauthorizedError()
+    with (
+        patch.object(cloud, "authenticate", side_effect=error) as authenticate,
+        pytest.raises(VisonicAuthException),
+    ):
+        await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+
+    authenticate.assert_awaited_once_with()
+    original.arm_away.assert_awaited_once_with()
+    assert cloud.cloud_alarm is None
+    assert not cloud.login_success
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ConnectionTimeoutError(), id="library-timeout"),
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(OSError(), id="connection-error"),
+    ],
+)
+async def test_command_session_renewal_communication_failure(
+    cloud: VisonicCloudConnection, error: Exception
+) -> None:
+    """A failed session connection is a communication error, not rejected credentials."""
+    original = connected_cloud_alarm()
+    cloud.cloud_alarm = original
+    original.arm_away.side_effect = UnauthorizedError()
+    with (
+        patch.object(cloud, "authenticate", side_effect=error) as authenticate,
+        pytest.raises(HomeAssistantError) as raised,
+    ):
+        await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+
+    assert type(raised.value) is HomeAssistantError
+    assert str(raised.value) == "Unable to communicate with Visonic panel 1"
+    authenticate.assert_awaited_once_with()
+    original.arm_away.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(OSError(), id="connection-error"),
+        pytest.param(asyncio.CancelledError(), id="cancellation"),
+    ],
+)
+async def test_command_does_not_retry_ambiguous_submission(
+    cloud: VisonicCloudConnection, error: BaseException
+) -> None:
+    """Do not replay a command whose acceptance is unknown or whose caller cancelled."""
+    original = connected_cloud_alarm()
+    cloud.cloud_alarm = original
+    original.arm_away.side_effect = error
+    with (
+        patch.object(cloud, "_async_panel_reconnect") as reconnect,
+        pytest.raises(type(error)) as raised,
+    ):
+        await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+
+    assert raised.value is error
+    original.arm_away.assert_awaited_once_with()
+    reconnect.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
