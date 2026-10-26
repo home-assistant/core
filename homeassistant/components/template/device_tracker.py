@@ -277,10 +277,14 @@ class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity, RestoreEnti
     @override
     def restore_extra_data(self, extra_data: TrackerExtraStoredData) -> None:
         """Restore the extra data."""
-        self._attr_in_zones = extra_data.in_zones
-        self._attr_latitude = extra_data.latitude
-        self._attr_longitude = extra_data.longitude
-        self._attr_location_accuracy = extra_data.location_accuracy
+        if self.option_restorable(CONF_IN_ZONES):
+            self._attr_in_zones = extra_data.in_zones
+        if self.option_restorable(CONF_LATITUDE):
+            self._attr_latitude = extra_data.latitude
+        if self.option_restorable(CONF_LONGITUDE):
+            self._attr_longitude = extra_data.longitude
+        if self.option_restorable(CONF_LOCATION_ACCURACY):
+            self._attr_location_accuracy = extra_data.location_accuracy
 
 
 class StateTrackerEntity(TemplateEntity, AbstractTemplateTracker):

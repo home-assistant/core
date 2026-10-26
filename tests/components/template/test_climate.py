@@ -1959,7 +1959,8 @@ async def test_flow_preview(
                 "current_temperature": 35.0,
                 "fan_mode": None,
                 "fan_modes": None,
-                "hvac_action": HVACAction.IDLE,
+                # Not restored without an hvac_action template
+                "hvac_action": None,
                 "hvac_modes": [HVACMode.COOL],
                 "preset_mode": None,
                 "preset_modes": None,
@@ -2183,6 +2184,9 @@ async def test_restore_state(
         initial_state,
         initial_attributes,
     )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     await async_trigger(hass, "sensor.test_state", "x", {"hvac_modes": ["heat"]})
     await async_trigger(

@@ -239,6 +239,11 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
         # Do not restore native_unit_of_measurement, this is always pulled from the
         # sensor configuration.
         self._attr_native_value = extra_data.native_value
+        try:
+            _ = self.state
+        except ValueError:
+            # The restored value does not fit the current configuration
+            self._attr_native_value = None
 
 
 class StateSensorEntity(TemplateEntity, AbstractTemplateSensor):

@@ -807,6 +807,9 @@ async def test_restore_state(
         initial_attributes,
     )
 
+    await hass.async_start()
+    await hass.async_block_till_done()
+
     await async_trigger(
         hass, "sensor.test_state", "anything", {"in_zones": ["zone.home"]}
     )

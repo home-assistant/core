@@ -568,6 +568,9 @@ async def test_restore_state(
         RESTORE_STATE_SAVED_ATTRIBUTES,
     )
 
+    await hass.async_start()
+    await hass.async_block_till_done()
+
     await async_trigger(hass, TEST_STATE_ENTITY_ID, updated_state)
 
     assert_state_and_attributes(
@@ -601,6 +604,9 @@ async def test_restore_state_invalid_state(
     state = hass.states.get(TEST_PANEL.entity_id)
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, AlarmControlPanelState.DISARMED)
     assert_state_and_attributes(

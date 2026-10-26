@@ -643,6 +643,9 @@ async def test_restore_state(
     )
     assert "plus_two" not in state.attributes
 
+    await hass.async_start()
+    await hass.async_block_till_done()
+
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "double")
     await async_trigger(hass, TEST_ATTRIBUTE_ENTITY_ID, 2)
 
@@ -661,11 +664,12 @@ async def test_restore_state(
 
 
 def _make_trigger_event_entity(hass: HomeAssistant) -> TriggerEventEntity:
-    """Create a trigger event entity that renders fresh, static attributes."""
+    """Create a trigger event entity that renders fresh attributes."""
+    # Static name, icon and picture are never restored, so use real templates
     config = {
-        CONF_NAME: Template("fresh_name", hass),
-        CONF_ICON: Template("mdi:fresh", hass),
-        CONF_PICTURE: Template("/local/fresh.png", hass),
+        CONF_NAME: Template("{{ 'fresh_name' }}", hass),
+        CONF_ICON: Template("{{ 'mdi:fresh' }}", hass),
+        CONF_PICTURE: Template("{{ '/local/fresh.png' }}", hass),
         CONF_EVENT_TYPE: Template("fresh", hass),
         CONF_EVENT_TYPES: Template("{{ ['fresh'] }}", hass),
         CONF_ATTRIBUTES: {"attr": Template("fresh_attr", hass)},

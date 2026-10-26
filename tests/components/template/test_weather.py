@@ -741,6 +741,9 @@ async def test_restore_state(
         initial_state,
     )
 
+    await hass.async_start()
+    await hass.async_block_till_done()
+
     await async_trigger(hass, "sensor.condition", "cloudy")
     await async_trigger(hass, "sensor.temperature", 15)
     await async_trigger(hass, "sensor.humidity", 25)

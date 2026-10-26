@@ -398,6 +398,21 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     ) -> None:
         """Initialize the features."""
 
+        # Min/Max temperature, set up before all other templates as the
+        # temperature is validated against it, even when sharing a template
+        self.setup_template(
+            CONF_MAX_MIREDS,
+            "_attr_max_color_temp_kelvin",
+            tcv.number(self, CONF_MAX_MIREDS),
+            self._update_max_mireds,
+        )
+        self.setup_template(
+            CONF_MIN_MIREDS,
+            "_attr_min_color_temp_kelvin",
+            tcv.number(self, CONF_MIN_MIREDS),
+            self._update_min_mireds,
+        )
+
         # Setup state and brightness
         self.setup_state_template("_attr_is_on", tcv.boolean(self, CONF_STATE))
         self.setup_template(
@@ -472,20 +487,6 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             ),
         )
         self.add_assumed_attribute("_attr_effect", CONF_EFFECT, CONF_EFFECT_ACTION)
-
-        # Min/Max temperature templates
-        self.setup_template(
-            CONF_MAX_MIREDS,
-            "_attr_max_color_temp_kelvin",
-            tcv.number(self, CONF_MAX_MIREDS),
-            self._update_max_mireds,
-        )
-        self.setup_template(
-            CONF_MIN_MIREDS,
-            "_attr_min_color_temp_kelvin",
-            tcv.number(self, CONF_MIN_MIREDS),
-            self._update_min_mireds,
-        )
 
         # Transition
         self.setup_template(
@@ -869,19 +870,36 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     def restore_extra_data(self, extra_data: LightExtraStoredData) -> None:
         """Restore the extra data."""
         self._attr_is_on = extra_data.is_on
-        self._attr_brightness = extra_data.brightness
-        self._attr_color_mode = extra_data.color_mode
-        self._attr_color_temp_kelvin = extra_data.color_temp_kelvin
-        self._attr_effect_list = extra_data.effect_list
-        self._attr_effect = extra_data.effect
-        self._attr_hs_color = extra_data.hs_color
-        self._attr_max_color_temp_kelvin = extra_data.max_color_temp_kelvin
-        self._attr_min_color_temp_kelvin = extra_data.min_color_temp_kelvin
-        self._attr_rgb_color = extra_data.rgb_color
-        self._attr_rgbw_color = extra_data.rgbw_color
-        self._attr_rgbww_color = extra_data.rgbww_color
-        self._attr_supported_color_modes = extra_data.supported_color_modes
-        self._attr_xy_color = extra_data.xy_color
+        # Supported color modes are derived from the configured actions
+        if (
+            self._attr_supported_color_modes
+            and len(self._attr_supported_color_modes) > 1
+            and extra_data.color_mode in self._attr_supported_color_modes
+        ):
+            self._attr_color_mode = extra_data.color_mode
+        for option, attribute, value in (
+            (CONF_LEVEL, "_attr_brightness", extra_data.brightness),
+            (CONF_TEMPERATURE, "_attr_color_temp_kelvin", extra_data.color_temp_kelvin),
+            (CONF_EFFECT_LIST, "_attr_effect_list", extra_data.effect_list),
+            (CONF_EFFECT, "_attr_effect", extra_data.effect),
+            (CONF_HS, "_attr_hs_color", extra_data.hs_color),
+            (
+                CONF_MIN_MIREDS,
+                "_attr_max_color_temp_kelvin",
+                extra_data.max_color_temp_kelvin,
+            ),
+            (
+                CONF_MAX_MIREDS,
+                "_attr_min_color_temp_kelvin",
+                extra_data.min_color_temp_kelvin,
+            ),
+            (CONF_RGB, "_attr_rgb_color", extra_data.rgb_color),
+            (CONF_RGBW, "_attr_rgbw_color", extra_data.rgbw_color),
+            (CONF_RGBWW, "_attr_rgbww_color", extra_data.rgbww_color),
+            (CONF_XY, "_attr_xy_color", extra_data.xy_color),
+        ):
+            if self.option_restorable(option):
+                setattr(self, attribute, value)
 
 
 class StateLightEntity(TemplateEntity, AbstractTemplateLight):

@@ -855,11 +855,15 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
     @override
     def restore_extra_data(self, extra_data: ClimateExtraStoredData) -> None:
         """Restore the extra data."""
-        self._attr_current_humidity = extra_data.current_humidity
-        self._attr_native_current_temperature = extra_data.current_temperature
+        if self.option_restorable(CONF_CURRENT_HUMIDITY):
+            self._attr_current_humidity = extra_data.current_humidity
+        if self.option_restorable(CONF_CURRENT_TEMPERATURE):
+            self._attr_native_current_temperature = extra_data.current_temperature
         self._attr_fan_mode = extra_data.fan_mode
         self._attr_fan_modes = extra_data.fan_modes
-        self._attr_hvac_action = extra_data.hvac_action
+        # No action updates the assumed hvac_action, it requires its template
+        if CONF_HVAC_ACTION in self._config:
+            self._attr_hvac_action = extra_data.hvac_action
         self._attr_hvac_mode = extra_data.hvac_mode
         self._update_hvac_modes(extra_data.hvac_modes or [])
         self._attr_preset_mode = extra_data.preset_mode
