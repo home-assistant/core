@@ -47,7 +47,10 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.components.image_processing import DOMAIN as IMAGE_PROCESSING_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.input_number import (
+    DOMAIN as INPUT_NUMBER_DOMAIN,
+    InputNumberServiceArgument,
+)
 from homeassistant.components.light import LightEntityStateAttribute
 from homeassistant.components.lock import LockState
 from homeassistant.components.media_player import (
@@ -2022,7 +2025,7 @@ class AlexaRangeController(AlexaCapability):
             )
 
         # Input Number Value
-        if self.instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
+        if self.instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
             return float(self.entity.state)
 
         # Number Value
@@ -2112,7 +2115,7 @@ class AlexaRangeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Input Number Value
-        if self.instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
+        if self.instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
             min_value = float(self.entity.attributes[input_number.ATTR_MIN])
             max_value = float(self.entity.attributes[input_number.ATTR_MAX])
             precision = float(self.entity.attributes.get(input_number.ATTR_STEP, 1))

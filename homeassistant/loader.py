@@ -535,6 +535,7 @@ async def async_get_integration_descriptions(
             integration_key = "integration"
 
         metadata = {
+            "categories": integration.categories,
             "config_flow": integration.config_flow,
             "integration_type": integration.integration_type,
             "iot_class": integration.iot_class,

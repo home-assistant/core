@@ -9,6 +9,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
+    async_capture_events,
     async_fire_time_changed,
     async_mock_service,
     get_fixture_path,
@@ -4084,6 +4085,73 @@ async def test_configured_agents_unavailable_repair(
     await ws_client.send_json_auto_id({"type": "backup/config/info"})
     result = await ws_client.receive_json()
     assert result["result"]["config"]["create_backup"]["agent_ids"] == []
+
+
+async def test_configured_agents_unavailable_repair_keeps_ignore(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test an ignored unavailable agent issue is kept while still unavailable."""
+    issue_id = "automatic_backup_agents_unavailable_test.agent"
+    hass_storage["backup"] = {
+        "data": {
+            "backups": [],
+            "config": {
+                "agents": {},
+                "automatic_backups_configured": True,
+                "create_backup": {
+                    "agent_ids": ["test.agent"],
+                    "include_addons": None,
+                    "include_all_addons": False,
+                    "include_database": False,
+                    "include_folders": None,
+                    "name": None,
+                    "password": None,
+                },
+                "retention": {"copies": None, "days": None},
+                "last_attempted_automatic_backup": None,
+                "last_completed_automatic_backup": None,
+                "last_completed_automatic_backup_size": None,
+                "schedule": {"days": [], "recurrence": "never", "time": None},
+            },
+        },
+        "key": DOMAIN,
+        "version": store.STORAGE_VERSION,
+        "minor_version": store.STORAGE_VERSION_MINOR,
+    }
+    await setup_backup_integration(hass)
+    get_agents_mock = AsyncMock(return_value=[])
+    register_listener_mock = Mock()
+    await setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=get_agents_mock,
+            async_register_backup_agents_listener=register_listener_mock,
+        ),
+    )
+    await hass.async_block_till_done()
+    reload_backup_agents = register_listener_mock.call_args[1]["listener"]
+    ir.async_ignore_issue(hass, DOMAIN, issue_id, True)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    # Checking again while the agent is still unavailable keeps the issue as is
+    reload_backup_agents()
+    await hass.async_block_till_done()
+
+    assert get_agents_mock.call_count == 2
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) == issue
+    assert events == []
+
+    get_agents_mock.return_value = [mock_backup_agent("agent")]
+    reload_backup_agents()
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 async def test_subscribe_event(

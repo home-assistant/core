@@ -577,16 +577,16 @@ class HueOneLightChangeView(HomeAssistantView):
         elif entity.domain == cover.DOMAIN:
             domain = entity.domain
             if service == SERVICE_TURN_ON:
-                service = CoverService.OPEN_COVER
+                service = CoverService.OPEN
             else:
-                service = CoverService.CLOSE_COVER
+                service = CoverService.CLOSE
 
             if (
                 entity_features & CoverEntityFeature.SET_POSITION
                 and parsed[STATE_BRIGHTNESS] is not None
             ):
                 domain = entity.domain
-                service = CoverService.SET_COVER_POSITION
+                service = CoverService.SET_POSITION
                 data[CoverServiceArgument.POSITION] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a fan, convert to speed
