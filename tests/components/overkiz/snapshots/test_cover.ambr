@@ -8,7 +8,7 @@
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         'default',
-        'low',
+        'slow',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -51,7 +51,7 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 271>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         'default',
-        'low',
+        'slow',
       ]),
     }),
     'context': <ANY>,
@@ -71,7 +71,7 @@
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         'default',
-        'low',
+        'slow',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -114,7 +114,7 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 271>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         'default',
-        'low',
+        'slow',
       ]),
     }),
     'context': <ANY>,
@@ -134,7 +134,7 @@
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         'default',
-        'low',
+        'slow',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -177,7 +177,7 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 271>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         'default',
-        'low',
+        'slow',
       ]),
     }),
     'context': <ANY>,
@@ -3388,7 +3388,7 @@
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         'default',
-        'low',
+        'slow',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -3431,7 +3431,7 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 271>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         'default',
-        'low',
+        'slow',
       ]),
     }),
     'context': <ANY>,

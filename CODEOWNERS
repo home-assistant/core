@@ -2271,8 +2271,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/zodiac/ @JulienTant
 /homeassistant/components/zone/ @home-assistant/core
 /tests/components/zone/ @home-assistant/core
-/homeassistant/components/zoneminder/ @rohankapoorcom @nabbi
-/tests/components/zoneminder/ @rohankapoorcom @nabbi
+/homeassistant/components/zoneminder/ @SteveGilvarry @nabbi @rohankapoorcom
+/tests/components/zoneminder/ @SteveGilvarry @nabbi @rohankapoorcom
 /homeassistant/components/zonneplan/ @erwindouna
 /tests/components/zonneplan/ @erwindouna
 /homeassistant/components/zwave_js/ @home-assistant/z-wave

@@ -33,7 +33,7 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         io_lock: asyncio.Lock,
     ) -> None:
         """Initialize the coordinator."""
-        self._device = device
+        self.device = device
         self.io_lock = io_lock
         super().__init__(
             hass,
@@ -55,7 +55,7 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Besides BluettiModbusConnectionError, the library lets a device still
         # busy after its retry, or a failed teardown of the link, through unwrapped.
         try:
-            await self._device.async_update_with_retry()
+            await self.device.async_update_with_retry()
         except ModbusError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -63,7 +63,7 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        values = self._device.values
+        values = self.device.values
         # An address can be reassigned to a different physical unit after setup.
         serial = str(values["d_serial"])
         if serial != self.config_entry.unique_id:
