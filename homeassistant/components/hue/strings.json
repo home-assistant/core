@@ -165,6 +165,21 @@
     "duplicate_entry": {
       "message": "Another entry already exists for this Hue bridge, this entry will be removed"
     },
+    "flash_color_not_supported": {
+      "message": "Flashing in a color is not supported by: {entities}"
+    },
+    "flash_not_supported": {
+      "message": "Flashing is not supported by: {entities}"
+    },
+    "flash_two_colors_not_supported": {
+      "message": "Flashing in two colors is not supported by: {entities}"
+    },
+    "second_color_without_color": {
+      "message": "A second color can only be used together with a color"
+    },
+    "stop_flash_not_supported": {
+      "message": "Stopping a flash is not supported by: {entities}"
+    },
     "unload_failed": {
       "message": "Failed to unload the Hue bridge"
     }
@@ -215,6 +230,24 @@
         }
       }
     },
+    "flash": {
+      "description": "Flashes a Hue light, room, or zone without changing its state.",
+      "fields": {
+        "duration": {
+          "description": "How long the light flashes, from 1 second to 18 hours.",
+          "name": "Duration"
+        },
+        "rgb_color": {
+          "description": "The color to flash in.",
+          "name": "Color"
+        },
+        "second_rgb_color": {
+          "description": "A second color, to alternate between the two colors.",
+          "name": "Second color"
+        }
+      },
+      "name": "Flash"
+    },
     "hue_activate_scene": {
       "description": "Activates a Hue scene stored in the Hue hub.",
       "fields": {
@@ -232,6 +265,10 @@
         }
       },
       "name": "Activate scene"
+    },
+    "stop_flash": {
+      "description": "Stops flashing a Hue light, room, or zone before the duration of the flash has passed.",
+      "name": "Stop flash"
     }
   }
 }

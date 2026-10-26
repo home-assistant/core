@@ -21,6 +21,10 @@ ATTR_TRANSITION = "transition"
 ATTR_DYNAMIC = "dynamic"
 ATTR_SPEED = "speed"
 ATTR_BRIGHTNESS = "brightness"
+SERVICE_FLASH = "flash"
+SERVICE_STOP_FLASH = "stop_flash"
+ATTR_DURATION = "duration"
+ATTR_SECOND_RGB_COLOR = "second_rgb_color"
 
 
 # V1 API SPECIFIC CONSTANTS ##################
