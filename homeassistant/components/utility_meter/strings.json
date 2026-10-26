@@ -29,6 +29,11 @@
       }
     }
   },
+  "exceptions": {
+    "unknown_entity": {
+      "message": "Failed to set up utility_meter for unknown entity {entity_id}"
+    }
+  },
   "options": {
     "step": {
       "init": {

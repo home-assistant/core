@@ -1,7 +1,8 @@
 """Tests for init platform of Remote Calendar."""
 
-from httpx import HTTPError, InvalidURL, Response, TimeoutException
+from httpx2 import HTTPError, InvalidURL, Response, TimeoutException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import respx
 
 from homeassistant.components.remote_calendar.const import CONF_CALENDAR_NAME, DOMAIN
@@ -18,15 +19,13 @@ from homeassistant.core import HomeAssistant
 from . import setup_integration
 from .conftest import CALENDAR_NAME, CALENDER_URL, TEST_ENTITY
 
-from tests.common import MockConfigEntry
-
 
 @respx.mock
 async def test_load_unload(
     hass: HomeAssistant, config_entry: MockConfigEntry, ics_content: str
 ) -> None:
     """Test loading and unloading a config entry."""
-    respx.get(CALENDER_URL).mock(
+    route = respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,
             text=ics_content,
@@ -34,6 +33,8 @@ async def test_load_unload(
     )
     await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
+    # the calendar is downloaded and parsed once for the whole setup
+    assert route.call_count == 1
 
     state = hass.states.get(TEST_ENTITY)
     assert state

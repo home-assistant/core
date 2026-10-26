@@ -1,14 +1,15 @@
 """Onkyo coordinators."""
 
-import asyncio
+from datetime import datetime
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, cast, override
 
 from aioonkyo import Kind, Status, Zone, command, query, status
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -72,13 +73,13 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
 
         self._entities_added = False
 
-        self._query_state_task: asyncio.Task[None] | None = None
+        self._query_state_unsub: CALLBACK_TYPE | None = None
 
         manager.callbacks.connect.append(self._connect_callback)
         manager.callbacks.disconnect.append(self._disconnect_callback)
         manager.callbacks.update.append(self._update_callback)
 
-        config_entry.async_on_unload(self._cancel_tasks)
+        config_entry.async_on_unload(self._cancel_pending)
 
     async def _connect_callback(self, _reconnect: bool) -> None:
         """Receiver (re)connected."""
@@ -86,33 +87,35 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
 
     async def _disconnect_callback(self) -> None:
         """Receiver disconnected."""
-        self._cancel_tasks()
+        self._cancel_pending()
         self.async_set_updated_data(self.data)
 
-    def _cancel_tasks(self) -> None:
-        """Cancel the tasks."""
-        if self._query_state_task is not None:
-            self._query_state_task.cancel()
-            self._query_state_task = None
+    def _cancel_pending(self) -> None:
+        """Cancel the pending work."""
+        if self._query_state_unsub is not None:
+            self._query_state_unsub()
+            self._query_state_unsub = None
 
-    def _query_state(self, delay: float = 0) -> None:
+    async def _query_state(self) -> None:
         """Query the receiver for all the info, that we care about."""
-        if self._query_state_task is not None:
-            self._query_state_task.cancel()
-            self._query_state_task = None
+        await self.manager.write(query.ChannelMuting())
 
-        async def coro() -> None:
-            if delay:
-                await asyncio.sleep(delay)
-            await self.manager.write(query.ChannelMuting())
-            self._query_state_task = None
+    def _query_state_delayed(self, delay: float) -> None:
+        """Query the state after a delay, restarting any pending delay."""
+        if self._query_state_unsub is not None:
+            self._query_state_unsub()
+            self._query_state_unsub = None
 
-        self._query_state_task = asyncio.create_task(coro())
+        async def coro(_now: datetime) -> None:
+            self._query_state_unsub = None
+            await self._query_state()
+
+        self._query_state_unsub = async_call_later(self.hass, delay, coro)
 
     @override
     async def _async_update_data(self) -> ChannelMutingData:
         """Respond to a data update request."""
-        self._query_state()
+        await self._query_state()
         return self.data
 
     async def async_send_command(
@@ -132,7 +135,7 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
             case status.ChannelMuting():
                 not_available = False
             case status.Power(zone=Zone.MAIN, param=status.Power.Param.ON):
-                self._query_state(POWER_ON_QUERY_DELAY)
+                self._query_state_delayed(POWER_ON_QUERY_DELAY)
                 return
             case _:
                 return

@@ -1,6 +1,7 @@
 {
   "domain": "counter",
   "name": "Counter",
+  "categories": ["helpers.store_value"],
   "codeowners": ["@fabaff"],
   "documentation": "https://www.home-assistant.io/integrations/counter",
   "integration_type": "helper",

@@ -7,10 +7,11 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_has_entity_registry_updated_listeners
+from homeassistant.helpers.recorder import get_instance, session_scope
 
 from .core import Recorder
 from .statistics import async_update_statistics_metadata
-from .util import filter_unique_constraint_integrity_error, get_instance, session_scope
+from .util import filter_unique_constraint_integrity_error
 
 _LOGGER = logging.getLogger(__name__)
 

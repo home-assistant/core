@@ -7,6 +7,12 @@ from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.const import COVER, WATT
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.comelit.const import (
@@ -28,13 +34,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache,
-    snapshot_platform,
-)
 
 ENTITY_ID = "cover.cover0"
 

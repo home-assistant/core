@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import MeaterConfigEntry
+from .coordinator import MeaterConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

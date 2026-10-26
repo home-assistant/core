@@ -19,7 +19,10 @@
     "obstruction_interval": null,
     "direction_azimuth": -179.00344848632812,
     "direction_elevation": 68.67173767089844,
-    "is_snr_above_noise_floor": true
+    "is_snr_above_noise_floor": true,
+    "gps_ready": true,
+    "gps_enabled": true,
+    "gps_sats": 12
   },
   {
     "wedges_fraction_obstructed[]": [

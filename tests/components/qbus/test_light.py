@@ -4,6 +4,12 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import MqttMockHAClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -19,9 +25,6 @@ from homeassistant.components.qbus.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message, snapshot_platform
-from tests.typing import MqttMockHAClient
 
 # 186 = 73% (rounded)
 _BRIGHTNESS = 186

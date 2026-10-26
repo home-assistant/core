@@ -1,6 +1,5 @@
 """Provide functionality to keep track of devices."""
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, final, override
 
@@ -37,8 +36,7 @@ from homeassistant.helpers.device_registry import (
     EventDeviceRegistryUpdatedData,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.entity import CalculatedState, Entity, EntityDescription
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.hass_dict import HassKey
@@ -363,6 +361,19 @@ class TrackerEntity(
     @callback
     @override
     def _async_write_ha_state(self) -> None:
+        """Calculate active zones and write the state."""
+        self._async_update_zones()
+        super()._async_write_ha_state()
+
+    @callback
+    @override
+    def _async_calculate_state(self) -> CalculatedState:
+        """Calculate active zones for state previews."""
+        self._async_update_zones()
+        return super()._async_calculate_state()
+
+    @callback
+    def _async_update_zones(self) -> None:
         """Calculate active zones."""
         if (zones := self.in_zones) is not None:
             zone_states = sorted(
@@ -391,7 +402,6 @@ class TrackerEntity(
         else:
             self.__active_zone = None
             self.__in_zones = None
-        super()._async_write_ha_state()
 
     @property
     @override
@@ -463,6 +473,19 @@ class BaseScannerEntity(BaseTrackerEntity):
             self._scanner_option_associated_zone_unsub()
             self._scanner_option_associated_zone_unsub = None
         self._async_clear_associated_zone_issue()
+
+    @callback
+    @override
+    def async_internal_entity_id_changed(self, old_entity_id: str) -> None:
+        """Refresh the entity_id shown by an open associated-zone repair issue."""
+        super().async_internal_entity_id_changed(old_entity_id)
+        if (
+            ir.async_get(self.hass).async_get_issue(
+                DOMAIN, self._associated_zone_issue_id
+            )
+            is not None
+        ):
+            self._async_create_associated_zone_issue()
 
     @callback
     @override
@@ -657,26 +680,24 @@ class ScannerEntity(
             or self._async_mac_address_registered()
         )
 
-    @callback
     @override
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Start adding an entity to a platform."""
-        super().add_to_platform_start(hass, platform, parallel_updates)
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Run before the entity is added to hass.
+
+        Registers the MAC address before the entity is added so a tracker that is
+        created disabled can still be enabled later when its device becomes known.
+        """
+        await super().async_prepare_to_add_to_hass()
         if self.mac_address and self.unique_id:
             _async_register_mac(
-                hass,
-                platform.platform_name,
+                self.hass,
+                self.platform.platform_name,
                 self.mac_address,
                 self.unique_id,
             )
             if self.is_connected and self.ip_address:
                 _async_connected_device_registered(
-                    hass,
+                    self.hass,
                     self.mac_address,
                     self.ip_address,
                     self.hostname,

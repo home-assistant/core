@@ -10,6 +10,12 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from habiticalib import HabiticaGroupsResponse, HabiticaUserResponse
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 from syrupy.assertion import SnapshotAssertion
 
@@ -17,9 +23,6 @@ from homeassistant.components.habitica.const import ASSETS_URL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
