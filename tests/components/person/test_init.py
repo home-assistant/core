@@ -22,9 +22,9 @@ from homeassistant.components.person.const import (
     DATA_PERSON,
     PersonEntityStateAttribute,
 )
+from homeassistant.components.person.services import PersonService
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
-    SERVICE_RELOAD,
     STATE_UNKNOWN,
     EntityStateAttribute,
 )
@@ -1488,7 +1488,7 @@ async def test_reload(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            PersonService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
