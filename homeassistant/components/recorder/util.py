@@ -256,12 +256,15 @@ def execute_stmt_lambda_element(
 
 
 def get_engine_db_url(db_url: str) -> URL:
-    """Return the URL to create a database engine with.
+    """Return the SQLAlchemy URL to create a database engine for db_url.
 
-    PostgreSQL URLs without a driver are pinned to psycopg2, the driver
-    installations ship, so they don't depend on the SQLAlchemy default driver.
-    The database part is used as written, without URL-decoding, so the engine
-    connects to the database or file that the recorder checks and moves away.
+    The URL is parsed like SQLAlchemy does, except that:
+    - A PostgreSQL URL without a driver uses psycopg2, which Home Assistant
+      installations ship, instead of SQLAlchemy's default driver, which is
+      psycopg 3 from SQLAlchemy 2.1.
+    - The database name or SQLite file path is kept as written instead of
+      being URL-decoded, so a literal % in it can't make the engine use a
+      different database than the one the recorder works with.
     """
     url = make_url(db_url)
     if url.drivername == "postgresql":
