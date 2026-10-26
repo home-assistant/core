@@ -243,6 +243,20 @@ class BackupConfig:
 
         self._manager.store.save()
 
+    @callback
+    def rename_agent(self, old_agent_id: str, new_agent_id: str) -> None:
+        """Rename an agent in the agent settings and automatic backup agents."""
+        if (agent_config := self.data.agents.pop(old_agent_id, None)) is not None:
+            self.data.agents[new_agent_id] = agent_config
+        self.data.create_backup = replace(
+            self.data.create_backup,
+            agent_ids=[
+                new_agent_id if agent_id == old_agent_id else agent_id
+                for agent_id in self.data.create_backup.agent_ids
+            ],
+        )
+        self._manager.store.save()
+
 
 @dataclass(kw_only=True)
 class AgentConfig:

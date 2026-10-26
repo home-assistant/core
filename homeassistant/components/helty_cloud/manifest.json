@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pyheltycloud"],
   "quality_scale": "bronze",
-  "requirements": ["pyheltycloud==0.2.1"]
+  "requirements": ["pyheltycloud==0.2.2"]
 }
