@@ -33,7 +33,7 @@ from homeassistant.components.anthropic.const import (
 from homeassistant.config_entries import (
     ConfigEntryDisabler,
     ConfigEntryState,
-    ConfigSubentryData,
+    ConfigSubentryDataWithId,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import Context, HomeAssistant
@@ -987,28 +987,29 @@ async def test_migration_from_v2_1_to_v2_2(
         "prompt": "You are a helpful assistant",
         "chat_model": "claude-haiku-4-5",
     }
+    subentries_data: list[ConfigSubentryDataWithId] = [
+        {
+            "data": options,
+            "subentry_id": "mock_id_1",
+            "subentry_type": "conversation",
+            "title": "Claude",
+            "unique_id": None,
+        },
+        {
+            "data": options,
+            "subentry_id": "mock_id_2",
+            "subentry_type": "conversation",
+            "title": "Claude 2",
+            "unique_id": None,
+        },
+    ]
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={"api_key": "1234"},
         entry_id="mock_entry_id",
         version=2,
         minor_version=1,
-        subentries_data=[
-            ConfigSubentryData(
-                data=options,
-                subentry_id="mock_id_1",
-                subentry_type="conversation",
-                title="Claude",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data=options,
-                subentry_id="mock_id_2",
-                subentry_type="conversation",
-                title="Claude 2",
-                unique_id=None,
-            ),
-        ],
+        subentries_data=subentries_data,
         title="Claude",
     )
     mock_config_entry.add_to_hass(hass)

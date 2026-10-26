@@ -3,6 +3,7 @@
 import datetime as dt
 from functools import partial
 from types import SimpleNamespace
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from anthropic import (
@@ -128,6 +129,15 @@ def _model_info_without_xhigh_effort() -> ModelInfo:
     model_info = _copy_model_info("claude-haiku-5-5")
     assert model_info.capabilities
     model_info.capabilities.effort.xhigh = None
+    return model_info
+
+
+def _model_info_with_only_between_tools() -> ModelInfo:
+    """Return metadata for a model that only supports between-tools thinking."""
+    model_info = _copy_model_info("claude-sonnet-5-5")
+    if TYPE_CHECKING:
+        assert model_info.capabilities is not None
+    model_info.capabilities.thinking.types.adaptive.supported = False
     return model_info
 
 
@@ -545,8 +555,56 @@ async def test_repair_flow_no_deprecated_models(
             "claude-sonnet-5-5",
             _copy_model_info("claude-sonnet-5-5"),
             {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "low"},
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "low"},
+            id="between_tools_preserved",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5",
+            _copy_model_info("claude-sonnet-5-5"),
+            {
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_THINKING_BUDGET: 4096,
+                CONF_EFFORT: "high",
+            },
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "high"},
+            id="between_tools_removes_manual_budget",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5",
+            _copy_model_info("claude-sonnet-5-5"),
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "xhigh"},
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "high"},
+            id="between_tools_xhigh_effort",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5",
+            _copy_model_info("claude-sonnet-5-5"),
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "max"},
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "high"},
+            id="between_tools_max_effort",
+        ),
+        pytest.param(
+            "custom-model",
+            _copy_model_info("claude-sonnet-5-5").model_copy(
+                update={"id": "custom-model"}
+            ),
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "max"},
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "high"},
+            id="custom_between_tools_max_effort",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            _copy_model_info("claude-haiku-5-5"),
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "low"},
             {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "low"},
-            id="between_tools_excluded",
+            id="unsupported_between_tools",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5",
+            _model_info_with_only_between_tools(),
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "max"},
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "high"},
+            id="between_tools_only",
         ),
         pytest.param(
             "claude-opus-4-5",

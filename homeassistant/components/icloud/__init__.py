@@ -92,8 +92,12 @@ async def _async_first_refresh(account: IcloudAccount) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> None:
     """Unload a config entry."""
+    account = entry.runtime_data
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-    await hass.async_add_executor_job(entry.runtime_data.cancel_fetch)
+    for unsub in account.listeners:
+        unsub()
+    account.listeners.clear()
+    await hass.async_add_executor_job(account.cancel_fetch)
 
 
 async def async_remove_config_entry_device(

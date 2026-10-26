@@ -470,6 +470,71 @@ async def test_start_select_program_non_writtable_options_discarded(
     )
 
 
+@pytest.mark.parametrize(
+    "get_active_program_side_effect", [None, NoProgramActiveError("error.key")]
+)
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+async def test_start_selected_favorite_program(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    get_active_program_side_effect: NoProgramActiveError | None,
+) -> None:
+    """Test starting the selected favorite program."""
+    base_program = ProgramKey.DISHCARE_DISHWASHER_ECO_50
+    non_writable_options = [
+        Option(key=OptionKey.BSH_COMMON_BASE_PROGRAM, value=base_program)
+    ]
+    client.get_active_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.BSH_COMMON_FAVORITE_001,
+            options=non_writable_options,
+        ),
+        side_effect=get_active_program_side_effect,
+    )
+    client.get_selected_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.BSH_COMMON_FAVORITE_001,
+            options=non_writable_options,
+        )
+    )
+    client.start_program = AsyncMock()
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+        )
+    )
+
+    await hass.services.async_call(
+        domain=DOMAIN,
+        service="start_selected_program",
+        service_data={
+            "device_id": device_entry.id,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    client.get_available_program.assert_awaited_once_with(
+        appliance.ha_id, program_key=base_program
+    )
+    assert client.start_program.call_args.kwargs == {
+        "program_key": base_program,
+        "options": None,  # The base program option should not be added in this call
+    }
+
+
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 @pytest.mark.parametrize(
     ("mock_attr", "error_regex", "get_active_program_side_effect"),
@@ -618,6 +683,54 @@ async def test_no_program_error(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    "get_active_program_side_effect", [None, NoProgramActiveError("error.key")]
+)
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+async def test_start_selected_favorite_program_no_base_program(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    get_active_program_side_effect: NoProgramActiveError | None,
+) -> None:
+    """Test starting the selected favorite program without base program option."""
+    client.get_active_program = AsyncMock(
+        return_value=Program(key=ProgramKey.BSH_COMMON_FAVORITE_001),
+        side_effect=get_active_program_side_effect,
+    )
+    client.get_selected_program = AsyncMock(
+        return_value=Program(key=ProgramKey.BSH_COMMON_FAVORITE_001)
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client.get_available_program = AsyncMock()
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="The API cannot start a favorite program and the base program is missing for the selected favorite program",
+    ):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service="start_selected_program",
+            service_data={
+                "device_id": device_entry.id,
+            },
+            blocking=True,
+        )
+
+    client.get_available_program.assert_not_awaited()
+    client.start_program.assert_not_awaited()
 
 
 @pytest.mark.parametrize(

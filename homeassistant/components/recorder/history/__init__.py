@@ -123,7 +123,7 @@ def _stmt_and_join_attributes_for_start_state(
 
 
 def _select_from_subquery(
-    subquery: Subquery | CompoundSelect,
+    subquery: Subquery,
     no_attributes: bool,
     include_last_changed: bool,
     include_last_reported: bool,
