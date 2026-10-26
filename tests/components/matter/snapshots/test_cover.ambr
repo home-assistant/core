@@ -474,7 +474,7 @@
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock PA Tilt Window Covering',
-      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 139>,
     }),
     'context': <ANY>,
@@ -482,7 +482,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'open',
   })
 # ---
 # name: test_covers[mock_window_covering_tilt][cover.mock_tilt_window_covering-entry]
