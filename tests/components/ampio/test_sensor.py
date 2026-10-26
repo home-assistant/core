@@ -155,6 +155,39 @@ async def test_removed_object_becomes_unavailable(
     assert hass.states.get(CO2_ENTITY_ID).state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("typ", "interpretacja"),
+    [
+        pytest.param("lin_wej", 2, id="another-sensor-kind"),
+        pytest.param("przekaznik", 0, id="not-a-sensor"),
+    ],
+)
+async def test_reclassified_object_becomes_unavailable(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    typ: str,
+    interpretacja: int,
+) -> None:
+    """An object that Designer reclassifies leaves its entity unavailable."""
+    await setup_integration(hass, mock_config_entry)
+
+    obj = make_object(
+        37,
+        typ,
+        interpretacja,
+        leaf_id="0_cb8f_74_0_2",
+        funkcja=2,
+        name="Wilgotność",
+        state="1013.2",
+    )
+    mock_client.objects[37] = obj
+    emit(mock_client, ObjectUpdated(object=obj))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(HUMIDITY_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
 async def test_broker_availability_flips_entities(
     hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:

@@ -127,6 +127,16 @@ class AmpioSensor(AmpioEntity, SensorEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Available while the object still classifies as this sensor's kind."""
+        return (
+            super().available
+            and isinstance(kind := self._object.kind, SensorKind)
+            and kind.key == self.entity_description.key
+        )
+
+    @property
+    @override
     def native_value(self) -> float | None:
         """The current reading, or None when missing or non-numeric."""
         return self._object.numeric_value
