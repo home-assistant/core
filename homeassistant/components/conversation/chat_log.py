@@ -361,6 +361,7 @@ class ChatLog:
     content: list[Content] = field(default_factory=lambda: [SystemContent(content="")])
     extra_system_prompt: str | None = None
     llm_api: llm.APIInstance | None = None
+    _llm_api_key: tuple[Any, ...] | None = None
     delta_listener: Callable[[ChatLog, dict], None] | None = None
     llm_input_provided_index = 0
     created: datetime = field(init=False, default_factory=utcnow)
@@ -715,6 +716,32 @@ class ChatLog:
     ) -> None:
         """Set the LLM system prompt."""
         llm_api: llm.APIInstance | None = None
+        if isinstance(user_llm_hass_api, llm.API):
+            api_ids: tuple[str, ...] = (user_llm_hass_api.id,)
+        elif isinstance(user_llm_hass_api, str):
+            api_ids = (user_llm_hass_api,)
+        else:
+            api_ids = tuple(user_llm_hass_api or ())
+        llm_api_key = (
+            llm_context.agent_id,
+            llm_context.context.user_id if llm_context.context else None,
+            llm_context.device_id,
+            api_ids,
+        )
+
+        if (
+            user_llm_hass_api
+            and self.llm_api is not None
+            and llm_context.agent_id is not None
+            and llm_api_key == self._llm_api_key
+            and user_extra_system_prompt in (None, self.extra_system_prompt)
+        ):
+            # Keep the system prompt and tools static between turns, so LLM
+            # providers can cache them. Tool calls use the context of this turn.
+            self.llm_api.llm_context = llm_context
+            self.llm_input_provided_index = len(self.content)
+            self.async_trace({"messages": self.content, "tools": self.llm_api.tools})
+            return
 
         if not user_llm_hass_api:
             pass
@@ -796,6 +823,7 @@ class ChatLog:
 
         self.llm_input_provided_index = len(self.content)
         self.llm_api = llm_api
+        self._llm_api_key = llm_api_key
         self.extra_system_prompt = extra_system_prompt
         self.content[0] = SystemContent(content=prompt)
         _async_notify_subscribers(

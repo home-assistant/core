@@ -24,6 +24,7 @@ from boschshcpy.services_impl import (
     PowerSwitchConfigurationService,
     SmokeSensitivityService,
     SwitchConfiguration,
+    TerminalConfiguration,
     VibrationSensorService,
     WallThermostatConfiguration,
 )
@@ -255,6 +256,76 @@ SWITCH_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
 )
 
 
+def _terminal_type_select_option(device: SHCRoomThermostat2, option: str) -> None:
+    """Write the thermostat's terminal (external sensor) type."""
+    device.terminal_type = TerminalConfiguration.Type[option.upper()]
+
+
+TERMINAL_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCRoomThermostat2](
+    key="terminal_type",
+    translation_key="terminal_type",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "not_connected",
+        "floor_sensor_connected",
+        "floor_sensor_used_for_regulation",
+        "floor_sensor_displayed",
+        "floor_sensor_displayed_and_used_for_regulation",
+        "volt_free_sensor_connected",
+        "volt_free_sensor_connected_and_used_for_operation",
+        "outdoor_sensor_connected",
+    ],
+    current_option_fn=lambda device, options: (
+        terminal.name.lower() if (terminal := device.terminal_type) else None
+    ),
+    select_option_fn=_terminal_type_select_option,
+)
+
+
+def _actuator_type_select_option(device: SHCMicromoduleRelay, option: str) -> None:
+    """Write the relay's actuator type."""
+    device.actuator_type = SwitchConfiguration.ActuatorType[option.upper()]
+
+
+ACTUATOR_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
+    key="actuator_type",
+    translation_key="actuator_type",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "normally_closed",
+        "normally_open",
+        "unsupported",
+    ],
+    current_option_fn=lambda device, options: (
+        value.name.lower() if (value := device.actuator_type) else None
+    ),
+    select_option_fn=_actuator_type_select_option,
+)
+
+
+def _output_mode_select_option(device: SHCMicromoduleRelay, option: str) -> None:
+    """Write the relay's output mode."""
+    device.output_mode = SwitchConfiguration.OutputMode[option.upper()]
+
+
+OUTPUT_MODE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
+    key="output_mode",
+    translation_key="output_mode",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "attached",
+        "detached",
+        "detached_short_press",
+        "detached_long_press",
+        "unsupported",
+    ],
+    current_option_fn=lambda device, options: (
+        value.name.lower() if (value := device.output_mode) else None
+    ),
+    select_option_fn=_output_mode_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -413,6 +484,41 @@ async def async_setup_entry(
         )
         for relay in session.device_helper.micromodule_relays
         if relay.supports_switch_configuration and relay.switch_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=room_thermostat,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=TERMINAL_TYPE_DESCRIPTION,
+        )
+        for room_thermostat in session.device_helper.roomthermostats
+        if isinstance(room_thermostat, SHCRoomThermostat2)
+        and room_thermostat.supports_terminal_configuration
+        and room_thermostat.terminal_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=relay,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=ACTUATOR_TYPE_DESCRIPTION,
+        )
+        for relay in session.device_helper.micromodule_relays
+        if relay.supports_switch_configuration and relay.actuator_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=relay,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=OUTPUT_MODE_DESCRIPTION,
+        )
+        for relay in session.device_helper.micromodule_relays
+        if relay.supports_switch_configuration and relay.output_mode is not None
     )
 
     async_add_entities(entities)
