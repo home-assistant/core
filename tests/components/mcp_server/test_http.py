@@ -433,19 +433,21 @@ def mcp_client_fixture(mcp_protocol: str) -> Any:
     raise ValueError(f"Unknown MCP protocol: {mcp_protocol}")
 
 
-@pytest.mark.parametrize("url_type", ["internal", "external"])
 async def test_server_icons(
     hass: HomeAssistant,
-    mcp_url: str,
+    hass_client: ClientSessionGenerator,
+    mcp_protocol: str,
     mcp_client: MCPClientFactory,
     hass_supervisor_access_token: str,
-    url_type: str,
 ) -> None:
-    """Advertise the frontend icon using the URL of the current request."""
+    """Advertise a frontend icon that can be fetched without authentication."""
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_client()
+    mcp_url = str(
+        client.make_url({"sse": SSE_API, "streamable": STREAMABLE_API}[mcp_protocol])
+    )
     base_url = str(URL(mcp_url).origin())
-    hass.config.internal_url = "http://internal.example:8123"
-    hass.config.external_url = "https://external.example"
-    setattr(hass.config, f"{url_type}_url", base_url)
+    hass.config.internal_url = base_url
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         assert session.server_info is not None
@@ -456,6 +458,16 @@ async def test_server_icons(
                 sizes=["192x192"],
             )
         ]
+
+        async with (
+            aiohttp.ClientSession() as icon_client,
+            icon_client.get(
+                session.server_info.icons[0].src, allow_redirects=False
+            ) as response,
+        ):
+            assert response.status == HTTPStatus.OK
+            assert response.content_type == "image/png"
+            assert (await response.read()).startswith(b"\x89PNG\r\n\x1a\n")
 
 
 @pytest.mark.parametrize(
