@@ -1353,6 +1353,28 @@ def _has_own_area_without_own_name(hass: HomeAssistant, entry: RegistryEntry) ->
     )
 
 
+@callback
+def _async_get_child_device_accepting_area(
+    hass: HomeAssistant, entry: RegistryEntry
+) -> dr.ChildDeviceEntry | None:
+    """Return the child device which accepts the area of its new main entity.
+
+    An entity without a name of its own is the main entity of its device, so its
+    own area describes where the device is. A child device without an area, or
+    with the same area, accepts it.
+    """
+    if entry.device_id is None:
+        return None
+    device = dr.async_get(hass).async_get(
+        entry.device_id, include_main_devices=False, include_composite_devices=False
+    )
+    if device is None or (
+        device.area_id is not None and device.area_id != entry.area_id
+    ):
+        return None
+    return device
+
+
 class EntityRegistry(BaseRegistry):
     """Class to hold a registry of entities."""
 
@@ -1970,7 +1992,10 @@ class EntityRegistry(BaseRegistry):
         device_registry = dr.async_get(self.hass)
         if (
             device_registry.async_get(
-                device_id, include_main_devices=False, include_child_devices=False
+                device_id,
+                include_main_devices=False,
+                include_child_devices=False,
+                include_composite_devices=True,
             )
             is None
         ):
@@ -2167,14 +2192,26 @@ class EntityRegistry(BaseRegistry):
 
         new = attr.evolve(old, **new_values)
 
-        # Only user edits are rejected, integration updates surface as a repair issue
-        if (
-            "area_id" in new_values or "name" in new_values
-        ) and _has_own_area_without_own_name(self.hass, new):
-            raise ValueError(
-                "An entity without a name of its own cannot have an area of its own, "
-                "set the area on its device instead"
-            )
+        child_device: dr.ChildDeviceEntry | None = None
+        if _has_own_area_without_own_name(self.hass, new):
+            # The child device only takes the area over when the entity moved to it
+            if "device_id" in new_values:
+                child_device = _async_get_child_device_accepting_area(self.hass, new)
+
+            if child_device is not None:
+                child_device_new_area_id = new.area_id
+                new = attr.evolve(new, area_id=None)
+                old_values.pop("area_id", None)
+                new_values.pop("area_id", None)
+                if old.area_id is not None:
+                    old_values["area_id"] = old.area_id
+                    new_values["area_id"] = None
+            elif "area_id" in new_values or "name" in new_values:
+                # Only user edits are rejected, integration updates surface as a repair issue
+                raise ValueError(
+                    "An entity without a name of its own cannot have an area of its own, "
+                    "set the area on its device instead"
+                )
 
         if entity_id != old.entity_id:
             self.entities.pop(old.entity_id)
@@ -2193,6 +2230,12 @@ class EntityRegistry(BaseRegistry):
 
         if old.entity_id != entity_id:
             data["old_entity_id"] = old.entity_id
+
+        # Before the entity event, so listeners never see the entity without an area
+        if child_device is not None:
+            dr.async_get(self.hass).async_update_child_device(
+                child_device.id, area_id=child_device_new_area_id
+            )
 
         self.hass.bus.async_fire_internal(EVENT_ENTITY_REGISTRY_UPDATED, data)
 

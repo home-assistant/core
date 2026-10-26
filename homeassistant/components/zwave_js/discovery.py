@@ -130,6 +130,9 @@ class ZWaveDiscoverySchema:
     entity_registry_enabled_default: bool = True
     # [optional] the entity category for the discovered entity
     entity_category: EntityCategory | None = None
+    # [optional] if True, a value matching this schema is consumed but produces no
+    # entity (used to suppress redundant endpoint values while blocking fallthrough)
+    discovery_suppressed: bool = False
 
 
 DOOR_LOCK_CURRENT_MODE_SCHEMA = ZWaveValueDiscoverySchema(
@@ -375,9 +378,9 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # Fibaro Shutter Fibaro FGR223
-    # Disable endpoint 2 (slat),
-    # as these are either combined with endpoint one as shutter_tilt
-    # or it has no practical function.
+    # Suppress endpoint 2 (slat): it is either combined with endpoint 1 as shutter_tilt
+    # or has no practical function. The value is consumed to block fallthrough to a
+    # generic cover schema, but no entity is created.
     # CC: Switch_Multilevel
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
@@ -391,7 +394,7 @@ DISCOVERY_SCHEMAS = [
             endpoint={2},
             type={ValueType.NUMBER},
         ),
-        entity_registry_enabled_default=False,
+        discovery_suppressed=True,
     ),
     # Fibaro Nice BiDi-ZWave (IBT4ZWAVE)
     ZWaveDiscoverySchema(
@@ -440,9 +443,9 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # Shelly Qubino Wave Shutter QNSH-001P10
-    # Disable endpoint 2 (slat),
-    # as these are either combined with endpoint one as shutter_tilt
-    # or it has no practical function.
+    # Suppress endpoint 2 (slat): it is either combined with endpoint 1 as shutter_tilt
+    # or has no practical function. The value is consumed to block fallthrough to a
+    # generic cover schema, but no entity is created.
     # CC: Switch_Multilevel
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
@@ -456,7 +459,7 @@ DISCOVERY_SCHEMAS = [
             endpoint={2},
             type={ValueType.NUMBER},
         ),
-        entity_registry_enabled_default=False,
+        discovery_suppressed=True,
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
@@ -1457,6 +1460,7 @@ def async_discover_single_value(
                 additional_value_ids_to_watch=additional_value_ids_to_watch,
                 entity_registry_enabled_default=schema.entity_registry_enabled_default,
                 entity_category=schema.entity_category,
+                discovery_suppressed=schema.discovery_suppressed,
             )
 
         yield discovery_info
