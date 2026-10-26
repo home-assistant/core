@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
+    ATTR_TARGET_TEMP_STEP,
     PRESET_AWAY,
     PRESET_NONE,
     HVACAction,
@@ -29,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -87,6 +89,7 @@ async def test_temperature_write(
         )
     assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == expected
     mock_climate_api.async_set_target_temperature.assert_awaited_once_with(22.0)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TARGET_TEMP_STEP] == 0.5
 
 
 async def test_away_report(hass: HomeAssistant, mock_climate_api: MagicMock) -> None:
@@ -502,3 +505,39 @@ async def test_power_actions(
     )
     mock_climate_api.async_set_operation_mode.assert_awaited_once_with(expected)
     assert hass.states.get(ENTITY_ID).attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+
+@pytest.mark.parametrize(
+    ("direction", "native_target", "display_target"),
+    [
+        pytest.param(-1, 20.5, 69, id="decrement"),
+        pytest.param(1, 21.5, 71, id="increment"),
+    ],
+)
+async def test_fahrenheit_display_step(
+    hass: HomeAssistant,
+    mock_climate_api: MagicMock,
+    direction: int,
+    native_target: float,
+    display_target: int,
+) -> None:
+    """Fahrenheit controls move the target while writing only Celsius half degrees."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await async_update_entity(hass, ENTITY_ID)
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TEMPERATURE] == 70
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == 1.0
+    requested = (
+        state.attributes[ATTR_TEMPERATURE]
+        + direction * state.attributes[ATTR_TARGET_TEMP_STEP]
+    )
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: requested},
+        blocking=True,
+    )
+    mock_climate_api.async_set_target_temperature.assert_awaited_once_with(
+        native_target
+    )
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == display_target

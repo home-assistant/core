@@ -68,7 +68,6 @@ class ZentralyClimate(ClimateEntity):
 
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
-        self._attr_target_temperature_step = self._configuration.temperature_step
         self._attr_min_temp = self._configuration.minimum_temperature
         self._attr_max_temp = self._configuration.maximum_temperature
 
@@ -102,6 +101,14 @@ class ZentralyClimate(ClimateEntity):
         )
 
         self.async_schedule_update_ha_state(force_refresh=True)
+
+    @property
+    @override
+    def target_temperature_step(self) -> float:
+        """Return the display step without changing native Celsius writes."""
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+            return 1.0
+        return self._configuration.temperature_step
 
     @property
     @override
