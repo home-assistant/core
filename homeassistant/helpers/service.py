@@ -397,7 +397,7 @@ async def async_extract_entities[_EntityT: Entity](
 
     if data_ent_id == ENTITY_MATCH_ALL:
         excluded = target_helpers.async_extract_excluded_entity_ids(
-            service_call.hass, target_selection
+            service_call.hass, target_selection, expand_group
         )
         return [
             entity
