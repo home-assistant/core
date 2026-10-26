@@ -11,7 +11,7 @@ from dobiss_nxt import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -32,6 +32,7 @@ async def test_form(hass: HomeAssistant, mock_client: AsyncMock) -> None:
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == USER_INPUT
+    assert result["result"].state is ConfigEntryState.LOADED
     mock_client.discover_lights.assert_awaited_once()
     mock_client.light_states.assert_awaited_once()
 

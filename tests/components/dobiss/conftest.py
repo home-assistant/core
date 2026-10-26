@@ -40,5 +40,7 @@ def mock_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent platform setup while testing configuration flows."""
-    with patch("homeassistant.components.dobiss.async_setup_entry") as setup:
+    with patch(
+        "homeassistant.components.dobiss.async_setup_entry", return_value=None
+    ) as setup:
         yield setup
