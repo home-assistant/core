@@ -1115,7 +1115,7 @@ fritzconnection[qr]==1.15.1
 fronius-modbus==0.2.0
 
 # homeassistant.components.fronius
-fronius-solarapi==0.1.0
+fronius-solarapi==0.1.1
 
 # homeassistant.components.fumis
 fumis==0.4.2
@@ -3398,7 +3398,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==24.0.0
+uiprotect==25.0.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1

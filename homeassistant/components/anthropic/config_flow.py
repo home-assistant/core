@@ -416,8 +416,12 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
         if "enabled" in thinking_types:
             step_schema[
-                probatio.Optional(
-                    CONF_THINKING_BUDGET, default=self.options[CONF_THINKING_BUDGET]
+                data_entry_flow.Optional(
+                    CONF_THINKING_BUDGET,
+                    default=self.options[CONF_THINKING_BUDGET],
+                    visible={"field": CONF_THINKING_TYPE, "value": "enabled"}
+                    if len(thinking_types) > 1
+                    else True,
                 )
             ] = (
                 probatio.All(
@@ -461,19 +465,25 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             ] = bool
 
         if CONF_WEB_SEARCH not in unsupported_tool_options:
+            web_search_enabled: FieldCondition = {
+                "field": CONF_WEB_SEARCH,
+                "value": True,
+            }
             step_schema.update(
                 {
                     probatio.Optional(
                         CONF_WEB_SEARCH,
                         default=DEFAULT[CONF_WEB_SEARCH],
                     ): bool,
-                    probatio.Optional(
+                    data_entry_flow.Optional(
                         CONF_WEB_SEARCH_MAX_USES,
                         default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
+                        visible=web_search_enabled,
                     ): cv.positive_int,
-                    probatio.Optional(
+                    data_entry_flow.Optional(
                         CONF_WEB_SEARCH_USER_LOCATION,
                         default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
+                        visible=web_search_enabled,
                     ): bool,
                 }
             )
@@ -484,9 +494,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     CONF_WEB_FETCH,
                     default=DEFAULT[CONF_WEB_FETCH],
                 ): bool,
-                probatio.Optional(
+                data_entry_flow.Optional(
                     CONF_WEB_FETCH_MAX_USES,
                     default=DEFAULT[CONF_WEB_FETCH_MAX_USES],
+                    visible={"field": CONF_WEB_FETCH, "value": True},
                 ): cv.positive_int,
             }
         )
