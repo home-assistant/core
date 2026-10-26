@@ -1,6 +1,35 @@
 # serializer version: 1
 # name: test_parameters_openapi
   dict({
+    'config__configure_flow': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'abort': dict({
+          'default': False,
+          'description': 'Set to true to cancel and abort the flow (default: false).',
+          'type': 'boolean',
+        }),
+        'flow_id': dict({
+          'description': 'The flow_id of the in-progress flow.',
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'next_step_id': dict({
+          'description': "Menu option key to select when the current step has type 'menu'.",
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'user_input': dict({
+          'additionalProperties': True,
+          'description': "Field values to submit when the current step has type 'form' (pass {} to confirm an empty form). Omit to fetch the current step state.",
+          'type': 'object',
+        }),
+      }),
+      'required': list([
+        'flow_id',
+      ]),
+      'type': 'object',
+    }),
     'config__get_config_entries': dict({
       'additionalProperties': False,
       'properties': dict({
@@ -45,6 +74,20 @@
       }),
       'required': list([
         'entry_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__start_flow': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'domain': dict({
+          'description': "Integration domain to set up (e.g. 'local_todo', 'template').",
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'domain',
       ]),
       'type': 'object',
     }),

@@ -1,6 +1,8 @@
 """Tests for the config LLM tools."""
 
-from typing import Any
+import asyncio
+from collections.abc import Callable, Coroutine
+from typing import Any, override
 from unittest.mock import AsyncMock, patch
 
 import probatio
@@ -15,17 +17,24 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import config as config_component
 from homeassistant.components.config.llm import (
+    ConfigureFlowTool,
     GetConfigEntriesTool,
     ReloadConfigEntryTool,
+    StartFlowTool,
     async_get_tools,
 )
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.config_entries import (
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import llm
+from homeassistant.exceptions import ConfigEntryError, DependencyError
+from homeassistant.helpers import llm, selector
 from homeassistant.setup import async_setup_component
 
 TEST_DOMAIN = "test_llm_config"
@@ -54,13 +63,20 @@ async def test_async_get_tools(
     assert [tool.name for tool in ha_tools.tools] == [
         "config__get_config_entries",
         "config__reload_config_entry",
+        "config__start_flow",
+        "config__configure_flow",
     ]
     assert ha_tools.prompt is None
 
 
 def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
     """Test that tool schemas can be exported for LLM clients."""
-    tools = [GetConfigEntriesTool(), ReloadConfigEntryTool()]
+    tools = [
+        GetConfigEntriesTool(),
+        ReloadConfigEntryTool(),
+        StartFlowTool(),
+        ConfigureFlowTool(),
+    ]
     assert {
         tool.name: probatio.to_openapi(tool.parameters) for tool in tools
     } == snapshot
@@ -96,6 +112,20 @@ async def test_call_through_api(
     assert reload_tool.integration == config_component.DOMAIN
     assert reload_tool.annotations == llm.ToolAnnotations(
         read_only=False, destructive=False, idempotent=True, open_world=False
+    )
+
+    start_tool = next(tool for tool in api.tools if tool.name == "config__start_flow")
+    assert start_tool.integration == config_component.DOMAIN
+    assert start_tool.annotations == llm.ToolAnnotations(
+        read_only=False, destructive=False, idempotent=False, open_world=True
+    )
+
+    configure_tool = next(
+        tool for tool in api.tools if tool.name == "config__configure_flow"
+    )
+    assert configure_tool.integration == config_component.DOMAIN
+    assert configure_tool.annotations == llm.ToolAnnotations(
+        read_only=False, destructive=False, idempotent=False, open_world=True
     )
 
     result = await api.async_call_tool(
@@ -618,3 +648,680 @@ async def test_reload_config_entry_invalid_args(
     tool = ReloadConfigEntryTool()
     with pytest.raises(probatio.Invalid):
         await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
+
+
+async def test_start_and_configure_multi_step_config_flow(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test driving a real built-in multi-step MENU -> FORM -> CREATE_ENTRY config flow (random)."""
+    start_tool = StartFlowTool()
+    configure_tool = ConfigureFlowTool()
+
+    step1 = await start_tool.async_call(
+        hass,
+        llm.ToolInput(start_tool.name, {"domain": "random"}),
+        llm_context,
+    )
+    assert step1.error is False
+    assert isinstance(step1_res := step1.data["result"], dict)
+    assert isinstance(flow_id := step1_res["flow_id"], str)
+    assert step1_res["type"] == "menu"
+    assert step1_res["step_id"] == "user"
+    assert isinstance(menu_opts := step1_res["menu_options"], dict)
+    assert "sensor" in menu_opts
+
+    inspected = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(configure_tool.name, {"flow_id": flow_id}),
+        llm_context,
+    )
+    assert inspected.error is False
+    assert isinstance(inspected_res := inspected.data["result"], dict)
+    assert inspected_res["type"] == "menu"
+
+    both_err = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(
+            configure_tool.name,
+            {"flow_id": flow_id, "user_input": {}, "next_step_id": "sensor"},
+        ),
+        llm_context,
+    )
+    assert both_err == llm.ToolResult(
+        data={"error": "Cannot specify both 'user_input' and 'next_step_id'."},
+        error=True,
+    )
+
+    nested_next_err = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(
+            configure_tool.name,
+            {"flow_id": flow_id, "user_input": {"next_step_id": "sensor"}},
+        ),
+        llm_context,
+    )
+    assert nested_next_err == llm.ToolResult(
+        data={
+            "error": (
+                "Use the 'next_step_id' parameter instead of 'user_input' "
+                "to select a menu option."
+            )
+        },
+        error=True,
+    )
+
+    wrong_param_menu = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(
+            configure_tool.name,
+            {"flow_id": flow_id, "user_input": {}},
+        ),
+        llm_context,
+    )
+    assert wrong_param_menu == llm.ToolResult(
+        data={
+            "error": (
+                "Current step is a 'menu' step; pass the chosen option in "
+                "'next_step_id' instead of 'user_input'."
+            )
+        },
+        error=True,
+    )
+
+    invalid_menu_opt = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(
+            configure_tool.name,
+            {"flow_id": flow_id, "next_step_id": "not_an_option"},
+        ),
+        llm_context,
+    )
+    assert invalid_menu_opt.error is True
+    assert isinstance(invalid_menu_res := invalid_menu_opt.data["result"], dict)
+    assert invalid_menu_res["type"] == "menu"
+    assert invalid_menu_res["step_id"] == "user"
+    assert "fields" not in invalid_menu_res
+    assert isinstance(menu_errors := invalid_menu_res["errors"], dict)
+    assert "next_step_id" in menu_errors
+
+    step2 = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(
+            configure_tool.name,
+            {"flow_id": flow_id, "next_step_id": "sensor"},
+        ),
+        llm_context,
+    )
+    assert step2.error is False
+    assert isinstance(step2_res := step2.data["result"], dict)
+    assert step2_res["type"] == "form"
+    assert step2_res["step_id"] == "sensor"
+    assert isinstance(fields := step2_res["fields"], list)
+    field_names = [f["name"] for f in fields]
+    assert "name" in field_names
+    assert "minimum" in field_names
+    assert "maximum" in field_names
+
+    wrong_param_form = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(
+            configure_tool.name,
+            {"flow_id": flow_id, "next_step_id": "sensor"},
+        ),
+        llm_context,
+    )
+    assert wrong_param_form == llm.ToolResult(
+        data={
+            "error": (
+                "Current step is a 'form' step; pass field values in "
+                "'user_input' instead of 'next_step_id'."
+            )
+        },
+        error=True,
+    )
+
+    invalid_step = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(
+            configure_tool.name,
+            {"flow_id": flow_id, "user_input": {"minimum": "not_an_int"}},
+        ),
+        llm_context,
+    )
+    assert invalid_step.error is True
+    assert isinstance(invalid_res := invalid_step.data["result"], dict)
+    assert invalid_res["type"] == "form"
+    assert invalid_res["step_id"] == "sensor"
+    assert "fields" not in invalid_res
+    assert "errors" in invalid_res
+
+    step3 = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(
+            configure_tool.name,
+            {
+                "flow_id": flow_id,
+                "user_input": {
+                    "name": "Test Random Sensor",
+                    "minimum": 10,
+                    "maximum": 50,
+                },
+            },
+        ),
+        llm_context,
+    )
+    await hass.async_block_till_done()
+    assert step3.error is False
+    assert isinstance(step3_res := step3.data["result"], dict)
+    assert step3_res["type"] == "create_entry"
+    assert step3_res["title"] == "Test Random Sensor"
+    assert isinstance(created_entry_id := step3_res["entry_id"], str)
+    assert created_entry_id.startswith("random:")
+    random_entries = hass.config_entries.async_entries("random")
+    assert len(random_entries) == 1
+    assert created_entry_id == f"random:{random_entries[0].entry_id[-4:]}"
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains")
+async def test_config_flow_sections_selectors_and_progress(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test formatting form sections, select options, errors, and show_progress steps."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    translations: dict[str, dict[str, str]] = {
+        "config": {
+            f"component.{TEST_DOMAIN}.config.step.user.title": "Connect {device}",
+            f"component.{TEST_DOMAIN}.config.step.user.description": "Configure {device}",
+            f"component.{TEST_DOMAIN}.config.step.user.data.host": "Host address",
+            f"component.{TEST_DOMAIN}.config.step.user.data_description.host": "IP or hostname",
+            f"component.{TEST_DOMAIN}.config.step.user.sections.advanced.name": "Advanced settings",
+            f"component.{TEST_DOMAIN}.config.step.user.sections.advanced.description": "Extra options",
+            f"component.{TEST_DOMAIN}.config.step.user.sections.advanced.data.debug": "Enable debug",
+            f"component.{TEST_DOMAIN}.config.error.cannot_connect": "Cannot reach {device}",
+            f"component.{TEST_DOMAIN}.config.step.pairing.title": "Pairing {device}",
+            f"component.{TEST_DOMAIN}.config.progress.wait_for_button": "Press button on {device}",
+            f"component.{TEST_DOMAIN}.config.create_entry.default": "Created {device}",
+        },
+        "selector": {
+            f"component.{TEST_DOMAIN}.selector.host_choice.options.auto": "Auto-discover",
+            f"component.{TEST_DOMAIN}.selector.mode_choice.options.fast": "Fast mode",
+        },
+        "title": {
+            f"component.{TEST_DOMAIN}.title": "Test Integration",
+        },
+    }
+
+    async def _get_trans(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Any = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, str]:
+        return translations.get(category, {})
+
+    progress_event = asyncio.Event()
+    pairing_task: asyncio.Task[bool] | None = None
+    pairing_calls = 0
+
+    class RichConfigFlow(ConfigFlow):
+        """Test config flow exercising sections, selectors, and progress steps."""
+
+        VERSION = 1
+
+        @override
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            schema = self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required("host"): selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=["auto", "manual"],
+                                translation_key="host_choice",
+                            )
+                        ),
+                        probatio.Optional("mode"): selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=[
+                                    selector.SelectOptionDict(
+                                        value="fast", label="Fallback Fast"
+                                    ),
+                                    selector.SelectOptionDict(
+                                        value="slow", label="Slow mode"
+                                    ),
+                                ],
+                                translation_key="mode_choice",
+                            )
+                        ),
+                        probatio.Required("advanced"): data_entry_flow.section(
+                            probatio.Schema({probatio.Optional("debug"): bool}),
+                            {"collapsed": True},
+                        ),
+                    }
+                ),
+                {"host": "auto", "mode": None},
+            )
+            if user_input is None:
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=schema,
+                    description_placeholders={"device": "Bridge"},
+                    last_step=False,
+                )
+            if user_input["host"] == "manual":
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=schema,
+                    errors={"base": "cannot_connect"},
+                    description_placeholders={"device": "Bridge"},
+                    last_step=False,
+                )
+            return await self.async_step_pairing()
+
+        async def async_step_pairing(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            nonlocal pairing_task, pairing_calls
+            pairing_calls += 1
+            if pairing_task is None:
+                pairing_task = hass.async_create_task(progress_event.wait())
+            if not pairing_task.done():
+                return self.async_show_progress(
+                    step_id="pairing",
+                    progress_action="wait_for_button",
+                    description_placeholders={"device": "Bridge"},
+                    progress_task=pairing_task,
+                )
+            return self.async_show_progress_done(next_step_id="finish")
+
+        async def async_step_finish(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return self.async_create_entry(
+                title="Bridge",
+                data={},
+                description_placeholders={"device": "Bridge"},
+            )
+
+    with (
+        mock_config_flow(TEST_DOMAIN, RichConfigFlow),
+        patch(
+            "homeassistant.components.config.llm.translation.async_get_translations",
+            side_effect=_get_trans,
+        ),
+    ):
+        start_tool = StartFlowTool()
+        configure_tool = ConfigureFlowTool()
+
+        step1 = await start_tool.async_call(
+            hass,
+            llm.ToolInput(start_tool.name, {"domain": TEST_DOMAIN}),
+            llm_context,
+        )
+        assert step1.error is False
+        assert isinstance(res1 := step1.data["result"], dict)
+        flow_id = str(res1["flow_id"])
+        assert res1["title"] == "Connect Bridge"
+        assert res1["description"] == "Configure Bridge"
+        assert res1["last_step"] is False
+        assert isinstance(fields := res1["fields"], list)
+        assert isinstance(host_field := fields[0], dict)
+        assert host_field["label"] == "Host address"
+        assert host_field["description"] == "IP or hostname"
+        assert host_field["suggested_value"] == "auto"
+        assert host_field["selector"]["select"]["options"] == [
+            {"value": "auto", "label": "Auto-discover"},
+            "manual",
+        ]
+        assert isinstance(mode_field := fields[1], dict)
+        assert "suggested_value" not in mode_field
+        assert mode_field["selector"]["select"]["options"] == [
+            {"value": "fast", "label": "Fast mode"},
+            {"value": "slow", "label": "Slow mode"},
+        ]
+        assert isinstance(sec_field := fields[2], dict)
+        assert sec_field["type"] == "expandable"
+        assert sec_field["label"] == "Advanced settings"
+        assert sec_field["description"] == "Extra options"
+        assert sec_field["schema"][0]["label"] == "Enable debug"
+
+        err_step = await configure_tool.async_call(
+            hass,
+            llm.ToolInput(
+                configure_tool.name,
+                {
+                    "flow_id": flow_id,
+                    "user_input": {"host": "manual", "advanced": {}},
+                },
+            ),
+            llm_context,
+        )
+        assert err_step.error is False
+        assert isinstance(err_res := err_step.data["result"], dict)
+        assert err_res["errors"] == {"base": "Cannot reach Bridge"}
+
+        prog_step = await configure_tool.async_call(
+            hass,
+            llm.ToolInput(
+                configure_tool.name,
+                {
+                    "flow_id": flow_id,
+                    "user_input": {"host": "auto", "advanced": {"debug": True}},
+                },
+            ),
+            llm_context,
+        )
+        assert prog_step.error is False
+        assert isinstance(prog_res := prog_step.data["result"], dict)
+        assert prog_res["type"] == "progress"
+        assert prog_res["step_id"] == "pairing"
+        assert prog_res["progress_action"] == "wait_for_button"
+        assert prog_res["title"] == "Pairing Bridge"
+        assert prog_res["description"] == "Press button on Bridge"
+        assert pairing_calls == 1
+
+        # Polling while progress_task is still running should not re-invoke async_step_pairing
+        poll_step = await configure_tool.async_call(
+            hass,
+            llm.ToolInput(configure_tool.name, {"flow_id": flow_id}),
+            llm_context,
+        )
+        assert poll_step == prog_step
+        assert pairing_calls == 1
+
+        reject_input_on_progress = await configure_tool.async_call(
+            hass,
+            llm.ToolInput(
+                configure_tool.name,
+                {"flow_id": flow_id, "user_input": {}},
+            ),
+            llm_context,
+        )
+        assert reject_input_on_progress == llm.ToolResult(
+            data={
+                "error": ("Current step has type 'progress' and does not accept input.")
+            },
+            error=True,
+        )
+
+        progress_event.set()
+        await asyncio.sleep(0)
+        done_step = await configure_tool.async_call(
+            hass,
+            llm.ToolInput(configure_tool.name, {"flow_id": flow_id}),
+            llm_context,
+        )
+        await hass.async_block_till_done()
+        assert done_step.error is False
+        assert isinstance(done_res := done_step.data["result"], dict)
+        assert done_res["type"] == "create_entry"
+        assert done_res["title"] == "Bridge"
+        assert done_res["description"] == "Created Bridge"
+
+
+async def test_abort_flow_and_error_cases(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test aborting a flow and handling start_flow / configure_flow error cases."""
+    start_tool = StartFlowTool()
+    configure_tool = ConfigureFlowTool()
+
+    err_unknown = await start_tool.async_call(
+        hass,
+        llm.ToolInput(start_tool.name, {"domain": "nonexistent_domain"}),
+        llm_context,
+    )
+    assert err_unknown == llm.ToolResult(
+        data={
+            "error": (
+                "Integration 'nonexistent_domain' does not exist or does not "
+                "support config flows."
+            )
+        },
+        error=True,
+    )
+
+    with patch.object(
+        hass.config_entries.flow,
+        "async_init",
+        AsyncMock(side_effect=DependencyError(["mqtt", "http"])),
+    ):
+        dep_err = await start_tool.async_call(
+            hass,
+            llm.ToolInput(start_tool.name, {"domain": TEST_DOMAIN}),
+            llm_context,
+        )
+    assert dep_err == llm.ToolResult(
+        data={"error": "Failed dependencies: mqtt, http"},
+        error=True,
+    )
+
+    err_unknown_flow = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(configure_tool.name, {"flow_id": "unknown_flow"}),
+        llm_context,
+    )
+    assert err_unknown_flow == llm.ToolResult(
+        data={"error": "Flow 'unknown_flow' not found."},
+        error=True,
+    )
+
+    step1 = await start_tool.async_call(
+        hass,
+        llm.ToolInput(start_tool.name, {"domain": "random"}),
+        llm_context,
+    )
+    assert isinstance(step1_res := step1.data["result"], dict)
+    assert isinstance(flow_id := step1_res["flow_id"], str)
+
+    aborted = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(configure_tool.name, {"flow_id": flow_id, "abort": True}),
+        llm_context,
+    )
+    assert aborted == llm.ToolResult(
+        data={
+            "result": {
+                "flow_id": flow_id,
+                "type": "abort",
+                "reason": "aborted",
+            }
+        }
+    )
+
+    after_abort = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(configure_tool.name, {"flow_id": flow_id}),
+        llm_context,
+    )
+    assert after_abort.error is True
+
+
+class _BaseOAuthTestFlow(ConfigFlow):
+    """Base test flow providing auth and pick_implementation step methods."""
+
+    VERSION = 1
+
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        return self.async_external_step(
+            step_id="auth", url="https://example.com/oauth/authorize"
+        )
+
+    async def async_step_pick_implementation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        return self.async_show_form(step_id="pick_implementation")
+
+
+async def _step_external(flow: _BaseOAuthTestFlow) -> ConfigFlowResult:
+    """Return an external OAuth step."""
+    return await flow.async_step_auth()
+
+
+async def _step_pick_implementation(flow: _BaseOAuthTestFlow) -> ConfigFlowResult:
+    """Return a pick_implementation form step."""
+    return await flow.async_step_pick_implementation()
+
+
+async def _step_missing_credentials(flow: _BaseOAuthTestFlow) -> ConfigFlowResult:
+    """Return a missing_credentials abort step."""
+    return flow.async_abort(reason="missing_credentials")
+
+
+async def _step_oauth_runtime_error(flow: _BaseOAuthTestFlow) -> ConfigFlowResult:
+    """Raise an OAuth RuntimeError when no HTTP request is in context."""
+    raise RuntimeError("No header in request")
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains")
+@pytest.mark.parametrize(
+    "step_action",
+    [
+        pytest.param(_step_external, id="external_step"),
+        pytest.param(_step_pick_implementation, id="pick_implementation"),
+        pytest.param(_step_missing_credentials, id="missing_credentials"),
+        pytest.param(_step_oauth_runtime_error, id="oauth_runtime_error"),
+    ],
+)
+async def test_oauth_and_external_step_new_flow(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    step_action: Callable[[_BaseOAuthTestFlow], Coroutine[Any, Any, ConfigFlowResult]],
+) -> None:
+    """Test new user flows hitting OAuth/external steps abort cleanly and return a frontend URL."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    class OAuthUserFlow(_BaseOAuthTestFlow):
+        """Test user config flow delegating to step_action."""
+
+        @override
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return await step_action(self)
+
+    with mock_config_flow(TEST_DOMAIN, OAuthUserFlow):
+        start_tool = StartFlowTool()
+        res = await start_tool.async_call(
+            hass,
+            llm.ToolInput(start_tool.name, {"domain": TEST_DOMAIN}),
+            llm_context,
+        )
+        assert res.error is True
+        assert (
+            res.data["frontend_url"]
+            == f"/config/integrations/dashboard/add?domain={TEST_DOMAIN}"
+        )
+        assert (
+            hass.config_entries.flow.async_progress_by_handler(
+                TEST_DOMAIN, include_uninitialized=True
+            )
+            == []
+        )
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains")
+@pytest.mark.parametrize(
+    "step_action",
+    [
+        pytest.param(_step_external, id="external_step"),
+        pytest.param(_step_oauth_runtime_error, id="oauth_runtime_error"),
+    ],
+)
+async def test_oauth_and_external_step_on_configure_step(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    step_action: Callable[[_BaseOAuthTestFlow], Coroutine[Any, Any, ConfigFlowResult]],
+) -> None:
+    """Test flows hitting OAuth/external steps on step 2 abort cleanly and return a frontend URL."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    class TwoStepOAuthFlow(_BaseOAuthTestFlow):
+        """Test flow with a form step followed by an OAuth step."""
+
+        @override
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            if user_input is not None:
+                return await step_action(self)
+            return self.async_show_form(step_id="user")
+
+    with mock_config_flow(TEST_DOMAIN, TwoStepOAuthFlow):
+        start_tool = StartFlowTool()
+        configure_tool = ConfigureFlowTool()
+        init_res = await start_tool.async_call(
+            hass,
+            llm.ToolInput(start_tool.name, {"domain": TEST_DOMAIN}),
+            llm_context,
+        )
+        assert init_res.error is False
+        assert isinstance(step1 := init_res.data["result"], dict)
+
+        step2_res = await configure_tool.async_call(
+            hass,
+            llm.ToolInput(
+                configure_tool.name,
+                {"flow_id": step1["flow_id"], "user_input": {}},
+            ),
+            llm_context,
+        )
+        assert step2_res.error is True
+        assert (
+            step2_res.data["frontend_url"]
+            == f"/config/integrations/dashboard/add?domain={TEST_DOMAIN}"
+        )
+        assert (
+            hass.config_entries.flow.async_progress_by_handler(
+                TEST_DOMAIN, include_uninitialized=True
+            )
+            == []
+        )
+
+
+@pytest.mark.parametrize(
+    ("tool", "tool_args"),
+    [
+        pytest.param(
+            StartFlowTool(),
+            {},
+            id="start_flow_missing_domain",
+        ),
+        pytest.param(
+            StartFlowTool(),
+            {"domain": "   "},
+            id="start_flow_whitespace_domain",
+        ),
+        pytest.param(
+            ConfigureFlowTool(),
+            {"flow_id": ""},
+            id="configure_flow_empty_id",
+        ),
+        pytest.param(
+            ConfigureFlowTool(),
+            {"flow_id": "abc", "next_step_id": "   "},
+            id="configure_flow_whitespace_next_step_id",
+        ),
+    ],
+)
+async def test_flow_tools_invalid_parameters(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    tool: llm.Tool,
+    tool_args: dict[str, Any],
+) -> None:
+    """Test invalid arguments are rejected by StartFlowTool and ConfigureFlowTool."""
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
