@@ -170,6 +170,10 @@ DATA_RTC_SESSIONS: HassKey[dict[str, ha.CALLBACK_TYPE]] = HassKey(
     f"{DOMAIN}_rtc_sessions"
 )
 
+DATA_RTC_PENDING_DISCONNECTS: HassKey[dict[str, bool]] = HassKey(
+    f"{DOMAIN}_rtc_pending_disconnects"
+)
+
 MIN_MAX_TEMP: dict[str, dict[str, str]] = {
     CLIMATE_DOMAIN: {
         "min_temp": ClimateEntityCapabilityAttribute.MIN_TEMP,
@@ -2409,12 +2413,24 @@ async def async_api_initiate_session_with_offer(
         "Starting WebRTC session %s for %s", session_id, camera_entity.entity_id
     )
 
+    # The provider may only register the session late during negotiation, so
+    # a disconnect is recorded and handled once negotiation completes.
+    pending_disconnects = hass.data.setdefault(DATA_RTC_PENDING_DISCONNECTS, {})
+    pending_disconnects[session_id] = False
     start = hass.loop.time()
     try:
         answer = await _async_get_webrtc_answer(hass, camera_entity, offer, session_id)
     except asyncio.CancelledError:
         camera_entity.close_webrtc_session(session_id)
         raise
+    finally:
+        disconnected = pending_disconnects.pop(session_id, False)
+
+    if disconnected:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            "WebRTC session was disconnected during negotiation"
+        )
     _LOGGER.debug(
         "Generated WebRTC answer for session %s in %.2f s",
         session_id,
@@ -2473,6 +2489,9 @@ async def async_api_rtc_session_disconnected(
     _LOGGER.debug(
         "WebRTC session %s disconnected for %s", session_id, directive.entity_id
     )
+    pending_disconnects = hass.data.get(DATA_RTC_PENDING_DISCONNECTS, {})
+    if session_id in pending_disconnects:
+        pending_disconnects[session_id] = True
     if cancel_expiry := hass.data.get(DATA_RTC_SESSIONS, {}).pop(session_id, None):
         cancel_expiry()
     if camera_entity := async_get_camera_entity(hass, directive.entity.entity_id):

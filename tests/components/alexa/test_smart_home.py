@@ -6620,6 +6620,75 @@ async def test_rtc_session_renegotiated_expiry(
     mock_close.assert_called_once_with(RTC_SESSION_ID)
 
 
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_rtc_session_disconnected_during_negotiation(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test SessionDisconnected during negotiation closes the negotiated session."""
+    open_sessions: set[str] = set()
+    offer_received = asyncio.Event()
+    release_offer = asyncio.Event()
+
+    async def async_handle_async_webrtc_offer(
+        offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
+    ) -> None:
+        # Like go2rtc, the session only becomes known to the provider after an
+        # await, so closing it before then has no effect.
+        offer_received.set()
+        await release_offer.wait()
+        open_sessions.add(session_id)
+        send_message(camera.WebRTCAnswer(WEBRTC_ANSWER))
+        send_message(camera.WebRTCCandidate(RTCIceCandidateInit("")))
+
+    offer_request = get_new_request(
+        "Alexa.RTCSessionController", "InitiateSessionWithOffer", DEMO_CAMERA_ENDPOINT
+    )
+    offer_request["directive"]["payload"] = {
+        "sessionId": RTC_SESSION_ID,
+        "offer": {"format": "SDP", "value": WEBRTC_OFFER},
+    }
+    disconnect_request = get_new_request(
+        "Alexa.RTCSessionController", "SessionDisconnected", DEMO_CAMERA_ENDPOINT
+    )
+    disconnect_request["directive"]["payload"] = {"sessionId": RTC_SESSION_ID}
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+            side_effect=async_handle_async_webrtc_offer,
+        ),
+        patch(
+            "homeassistant.components.camera.Camera.close_webrtc_session",
+            side_effect=open_sessions.discard,
+        ),
+    ):
+        offer_task = hass.async_create_task(
+            smart_home.async_handle_message(
+                hass, get_default_config(hass), offer_request
+            )
+        )
+        await offer_received.wait()
+        await smart_home.async_handle_message(
+            hass, get_default_config(hass), disconnect_request
+        )
+        release_offer.set()
+        msg = await offer_task
+
+        assert msg["event"]["payload"]["type"] == "ENDPOINT_UNREACHABLE"
+        assert not open_sessions
+
+        # No expiry may be left behind for the disconnected session.
+        open_sessions.add(RTC_SESSION_ID)
+        freezer.tick(RTC_MAX_SESSION_DURATION)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert open_sessions == {RTC_SESSION_ID}
+
+
 async def test_alexa_config_migrate_entity_names(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
