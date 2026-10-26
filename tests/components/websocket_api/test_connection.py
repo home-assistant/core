@@ -370,3 +370,20 @@ async def test_credential_redaction(
     assert send_messages[1]["error"]["message"] == "Message incorrectly formatted."
     assert test_input[2] not in caplog.text
     assert REDACTED in caplog.text
+
+
+async def test_subscription_registered_after_close_is_unsubscribed(
+    revocable_connection: tuple[websocket_api.ActiveConnection, Mock],
+) -> None:
+    """Test a subscription registered after the close is unsubscribed at once."""
+    connection, _ = revocable_connection
+    registered_before = Mock()
+    connection.subscriptions[1] = registered_before
+
+    connection.async_handle_close()
+    registered_before.assert_called_once()
+
+    registered_after = Mock()
+    connection.subscriptions[2] = registered_after
+    registered_after.assert_called_once()
+    assert 2 not in connection.subscriptions

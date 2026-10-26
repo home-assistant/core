@@ -862,6 +862,7 @@ class TrackTemplateResultInfo:
         self._info: dict[Template, RenderInfo] = {}
         self._track_state_changes: _TrackStateChangeFiltered | None = None
         self._time_listeners: dict[Template, Callable[[], None]] = {}
+        self._removed = False
 
     @override
     def __repr__(self) -> str:
@@ -972,6 +973,7 @@ class TrackTemplateResultInfo:
     @callback
     def async_remove(self) -> None:
         """Cancel the listener."""
+        self._removed = True
         assert self._track_state_changes
         self._track_state_changes.async_remove()
         self._rate_limit.async_remove()
@@ -1092,6 +1094,9 @@ class TrackTemplateResultInfo:
         replayed is True if the event is being replayed because the
         rate limit was hit.
         """
+        if self._removed:
+            return
+
         updates: list[TrackTemplateResult] = []
         info_changed = False
         now = event.time_fired_timestamp if not replayed and event else time.time()
