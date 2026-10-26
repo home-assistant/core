@@ -2,9 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "http_api_disabled": "Enable the HTTP API under SETTINGS > Wi-Fi on your bar, then try again.",
-      "wrong_device": "The device at this address does not match the discovered BUSY Bar."
+      "http_api_disabled": "Enable HTTP API access in the Network settings of the BUSY Bar web interface, then try again."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -13,12 +11,11 @@
     "step": {
       "key": {
         "data": {
-          "password": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "password": "The HTTP API key configured on the bar."
-        },
-        "description": "Enter the Wi-Fi access key shown under SETTINGS > Wi-Fi on your bar."
+          "api_key": "Enter the password configured under Network > HTTP API in the BUSY Bar web interface."
+        }
       },
       "user": {
         "data": {
@@ -42,6 +39,11 @@
       "wifi_ssid": {
         "name": "Wi-Fi network"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "BUSY Bar rejected the access token. Remove and add the integration again."
     }
   }
 }

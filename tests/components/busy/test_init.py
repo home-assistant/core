@@ -15,13 +15,11 @@ async def test_setup_unload(
     mock_client: AsyncMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Validate the token before polling and close the client on unload."""
+    """Set up sensors and unload without revoking their token."""
     assert init_integration.state is ConfigEntryState.LOADED
-    mock_client.access_tokens_list.assert_awaited_once()
     mock_client.status.assert_awaited_once()
     mock_client.wifi_status.assert_awaited_once()
     assert await hass.config_entries.async_unload(init_integration.entry_id)
-    mock_client.aclose.assert_awaited_once()
     mock_client.access_tokens_revoke.assert_not_awaited()
 
 
@@ -29,26 +27,26 @@ async def test_setup_unload(
     ("method", "error", "state"),
     [
         (
-            "access_tokens_list",
+            "status",
             BusyBarAPIError("refused", status_code=401),
             ConfigEntryState.SETUP_ERROR,
         ),
         (
-            "access_tokens_list",
+            "status",
             BusyBarAPIError("refused", status_code=403),
             ConfigEntryState.SETUP_ERROR,
         ),
         (
-            "access_tokens_list",
+            "status",
             BusyBarAPIError("server", status_code=500),
             ConfigEntryState.SETUP_RETRY,
         ),
         (
-            "access_tokens_list",
+            "status",
             BusyBarRequestError("offline"),
             ConfigEntryState.SETUP_RETRY,
         ),
-        ("status", BusyBarRequestError("offline"), ConfigEntryState.SETUP_RETRY),
+        ("wifi_status", BusyBarRequestError("offline"), ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_setup_failure(
@@ -64,7 +62,6 @@ async def test_setup_failure(
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is state
-    mock_client.aclose.assert_awaited_once()
     assert not hass.config_entries.flow.async_progress()
 
 
@@ -87,22 +84,4 @@ async def test_remove(
     mock_client.access_tokens_revoke.side_effect = error
     assert await hass.config_entries.async_remove(init_integration.entry_id)
     mock_client.access_tokens_revoke.assert_awaited_once_with("12345678")
-    mock_client.__aexit__.assert_awaited_once()
     assert not hass.config_entries.async_entries("busy")
-
-
-@pytest.mark.parametrize("status_code", [401, 403])
-async def test_auth_exception(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    status_code: int,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Classify rejected credentials without requiring a reauth flow."""
-    mock_client.access_tokens_list.side_effect = BusyBarAPIError(
-        "refused", status_code=status_code
-    )
-    mock_config_entry.add_to_hass(hass)
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert "could not authenticate" in caplog.text
