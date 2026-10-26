@@ -14,11 +14,15 @@
       "user": {
         "data": {
           "language": "Weather information language",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "location": "[%key:common::config_flow::data::location%]",
           "station": "Weather station"
         },
-        "description": "Select a weather station from the dropdown, or specify coordinates to use the closest station. The default coordinates are from your Home Assistant installation. Weather information can be retrieved in English or French.",
+        "data_description": {
+          "language": "Weather information is available in English and French.",
+          "location": "Used to find the nearest weather station when no station is selected. Ignored when a station is selected. Defaults to the home location configured in Home Assistant.",
+          "station": "Select a specific weather station, or leave unselected to use the nearest station based on the specified coordinates."
+        },
+        "description": "Select a weather station, or specify coordinates to use the closest station.",
         "title": "Environment Canada: weather location and language"
       }
     }

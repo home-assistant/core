@@ -15,6 +15,7 @@ from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
+    CONF_ENCRYPTION_PASSWORD,
     CONF_FFMPEG_ARGUMENTS,
     CONF_RFSESSION_ID,
     CONF_SESSION_ID,
@@ -241,6 +242,47 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_FFMPEG_ARGUMENTS] == "/H.264"
     assert result["data"][CONF_TIMEOUT] == 25
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow_camera_encryption_password(
+    hass: HomeAssistant, mock_camera_config_entry: MockConfigEntry
+) -> None:
+    """Test setting the image encryption password of a camera entry."""
+    mock_camera_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(
+        mock_camera_config_entry.entry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert CONF_ENCRYPTION_PASSWORD in result["data_schema"].schema
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_FFMPEG_ARGUMENTS: DEFAULT_FFMPEG_ARGUMENTS,
+            CONF_TIMEOUT: DEFAULT_TIMEOUT,
+            CONF_ENCRYPTION_PASSWORD: "encryption-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        mock_camera_config_entry.options[CONF_ENCRYPTION_PASSWORD]
+        == "encryption-password"
+    )
+
+
+@pytest.mark.usefixtures("mock_ezviz_client")
+async def test_options_flow_cloud_has_no_encryption_password(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the cloud account options do not offer an encryption password."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert CONF_ENCRYPTION_PASSWORD not in result["data_schema"].schema
 
 
 @pytest.mark.parametrize(
