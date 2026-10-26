@@ -113,6 +113,151 @@ async def test_llm_api(
     assert chat_log.llm_api.api.id == "assist"
 
 
+class CountingAPI(llm.API):
+    """Test API that counts the created instances."""
+
+    instances = 0
+
+    async def async_get_api_instance(
+        self, llm_context: llm.LLMContext
+    ) -> llm.APIInstance:
+        """Return the API instance."""
+        self.instances += 1
+        return llm.APIInstance(self, "Counting API Prompt", llm_context, [])
+
+
+@pytest.mark.parametrize(
+    (
+        "agent_id",
+        "user_id",
+        "device_id",
+        "llm_hass_api",
+        "extra_system_prompt",
+        "instances",
+    ),
+    [
+        pytest.param(
+            "mock-agent-id", None, None, ["counting"], None, 1, id="same_agent"
+        ),
+        pytest.param(
+            "mock-agent-id",
+            None,
+            None,
+            ["counting"],
+            "Be brief",
+            1,
+            id="same_extra_prompt",
+        ),
+        pytest.param(
+            "other-agent-id", None, None, ["counting"], None, 2, id="other_agent"
+        ),
+        pytest.param(
+            "mock-agent-id",
+            "other-user-id",
+            None,
+            ["counting"],
+            None,
+            2,
+            id="other_user",
+        ),
+        pytest.param(
+            "mock-agent-id",
+            None,
+            "other-device-id",
+            ["counting"],
+            None,
+            2,
+            id="other_device",
+        ),
+        pytest.param(
+            "mock-agent-id",
+            None,
+            None,
+            ["counting", "assist"],
+            None,
+            2,
+            id="other_apis",
+        ),
+        pytest.param(
+            "mock-agent-id",
+            None,
+            None,
+            ["counting"],
+            "Be long",
+            2,
+            id="new_extra_prompt",
+        ),
+        pytest.param(None, None, None, ["counting"], None, 2, id="no_agent"),
+    ],
+)
+async def test_llm_api_reuse(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    agent_id: str | None,
+    user_id: str | None,
+    device_id: str | None,
+    llm_hass_api: list[str],
+    extra_system_prompt: str | None,
+    instances: int,
+) -> None:
+    """Test the LLM API instance is reused only for the same agent and user."""
+    api = CountingAPI(hass=hass, id="counting", name="Counting")
+    llm.async_register_api(hass, api)
+
+    with chat_session.async_get_chat_session(hass, context=None) as session:
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api=["counting"],
+                user_extra_system_prompt="Be brief",
+            )
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+            system_prompt = chat_log.content[0]
+
+        llm_context = mock_conversation_input.as_llm_context("test")
+        llm_context.agent_id = agent_id
+        llm_context.context = Context(user_id=user_id)
+        llm_context.device_id = device_id
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                llm_context,
+                user_llm_hass_api=llm_hass_api,
+                user_extra_system_prompt=extra_system_prompt,
+            )
+
+    assert api.instances == instances
+    # A reused instance keeps the system prompt as it was.
+    assert (chat_log.content[0] is system_prompt) == (instances == 1)
+    assert chat_log.llm_api is not None
+    assert chat_log.llm_api.llm_context is llm_context
+
+
+async def test_llm_api_cleared(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test the LLM API instance is cleared when no LLM API is requested."""
+    with chat_session.async_get_chat_session(hass, context=None) as session:
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api="assist",
+            )
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            assert chat_log.llm_api is not None
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("other")
+            )
+
+    assert chat_log.llm_api is None
+
+
 async def test_unknown_llm_api(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,

@@ -40,6 +40,6 @@
     'name_by_user': None,
     'serial_number': '42581',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
