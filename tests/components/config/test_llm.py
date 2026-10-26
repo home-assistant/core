@@ -35,7 +35,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, DependencyError
-from homeassistant.helpers import llm, selector
+from homeassistant.helpers import config_entry_oauth2_flow, llm, selector
 from homeassistant.setup import async_setup_component
 
 TEST_DOMAIN = "test_llm_config"
@@ -1282,6 +1282,12 @@ async def _step_missing_credentials(flow: _BaseOAuthTestFlow) -> ConfigFlowResul
     return flow.async_abort(reason="missing_credentials")
 
 
+async def _step_redirect_runtime_error(flow: _BaseOAuthTestFlow) -> ConfigFlowResult:
+    """Raise redirect-context RuntimeError via async_get_redirect_uri."""
+    url = config_entry_oauth2_flow.async_get_redirect_uri(flow.hass)
+    return flow.async_external_step(step_id="auth", url=url)
+
+
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
 @pytest.mark.usefixtures("ignore_translations_for_mock_domains")
 @pytest.mark.parametrize(
@@ -1290,6 +1296,7 @@ async def _step_missing_credentials(flow: _BaseOAuthTestFlow) -> ConfigFlowResul
         pytest.param(_step_external, id="external_step"),
         pytest.param(_step_pick_implementation, id="pick_implementation"),
         pytest.param(_step_missing_credentials, id="missing_credentials"),
+        pytest.param(_step_redirect_runtime_error, id="redirect_runtime_error"),
     ],
 )
 async def test_oauth_and_external_step_new_flow(

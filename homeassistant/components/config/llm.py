@@ -48,6 +48,7 @@ _STATUS_STATES: dict[str, set[ConfigEntryState]] = {
 _NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
 _DOMAIN_STRING = probatio.All(str, probatio.Strip, probatio.Lower, probatio.NonEmpty())
 _MIN_SHORT_ID_LEN = 4
+_OAUTH_RUNTIME_ERRORS = ("No current request in context", "No header in request")
 
 
 def _resolve_language(hass: HomeAssistant, language: str | None) -> str:
@@ -170,12 +171,12 @@ def _iter_searchable_matches(
         name = (
             meta.get("name") or title_trans.get(f"component.{domain}.title") or domain
         )
-        name_f = name.casefold()
-        if query in (domain, name_f):
+        dom_f, name_f = domain.casefold(), name.casefold()
+        if query in (dom_f, name_f):
             rank = 0
         elif query == brand:
             rank = 1
-        elif query in domain or query in name_f:
+        elif query in dom_f or query in name_f:
             rank = 2
         elif brand and query in brand:
             rank = 3
@@ -236,11 +237,13 @@ class GetConfigEntriesTool(Tool):
         )
         if domain_filter is not None:
             entries = [entry for entry in entries if entry.domain in domain_filter]
+
+        short_ids = _format_short_entry_ids(entries)
+
         if status_filter is not None:
             allowed_states = _STATUS_STATES[status_filter]
             entries = [entry for entry in entries if entry.state in allowed_states]
 
-        short_ids = _format_short_entry_ids(entries)
         return ToolResult(
             data={
                 "result": list[JsonValueType](
@@ -631,8 +634,9 @@ class StartFlowTool(Tool):
         """Start the requested config flow and return its formatted initial step."""
         args = self.parameters(tool_input.tool_args)
         domain: str = args["domain"]
+        flow_mgr = hass.config_entries.flow
         try:
-            result = await hass.config_entries.flow.async_init(
+            result = await flow_mgr.async_init(
                 domain,
                 context={"source": config_entries.SOURCE_USER},
             )
@@ -646,6 +650,15 @@ class StartFlowTool(Tool):
             )
         except HomeAssistantError as err:
             return _error_result(str(err))
+        except RuntimeError as err:
+            if str(err) not in _OAUTH_RUNTIME_ERRORS:
+                raise
+            for flw in flow_mgr.async_progress_by_handler(
+                domain, include_uninitialized=True
+            ):
+                if "step_id" not in flw:
+                    flow_mgr.async_abort(flw["flow_id"])
+            return _build_external_step_error(domain)
 
         return await _async_finalize_flow_step(
             hass, result, domain, llm_context.language
@@ -778,6 +791,11 @@ class ConfigureFlowTool(Tool):
                 return _error_result(f"Flow '{short_flow_id}' not found.")
             except HomeAssistantError as err:
                 return _error_result(str(err))
+            except RuntimeError as err:
+                if str(err) not in _OAUTH_RUNTIME_ERRORS:
+                    raise
+                flow_mgr.async_abort(flow_id)
+                return _build_external_step_error(domain)
 
         return await _async_finalize_flow_step(
             hass, result, domain, llm_context.language
