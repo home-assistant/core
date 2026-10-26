@@ -22,19 +22,12 @@ ATTR_BITRATE = "bitrate"
 ATTR_CHANNEL_ID = "channel_id"
 ATTR_MESSAGE = "message"
 ATTR_DURATION = "duration"
-ATTR_ANONYMIZE = "anonymize"
 
 CONF_DISABLE_RTSP = "disable_rtsp"
 CONF_ALL_UPDATES = "all_updates"
 CONF_OVERRIDE_CHOST = "override_connection_host"
 CONF_MAX_MEDIA = "max_media"
 CONF_ALLOW_EA = "allow_ea_channel"
-
-CONFIG_OPTIONS = [
-    CONF_ALL_UPDATES,
-    CONF_DISABLE_RTSP,
-    CONF_OVERRIDE_CHOST,
-]
 
 DEFAULT_PORT = 443
 DEFAULT_ATTRIBUTION = "Powered by UniFi Protect Server"
