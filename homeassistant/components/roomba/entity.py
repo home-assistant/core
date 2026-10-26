@@ -18,18 +18,22 @@ class IRobotEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
+    @property
+    def vacuum_state(self) -> dict[str, Any]:
+        """Return the current reported state."""
+        return roomba_reported_state(self.vacuum)
+
     def __init__(self, roomba, blid) -> None:
         """Initialize the iRobot handler."""
         self.vacuum = roomba
         self._blid = blid
-        self.vacuum_state = roomba_reported_state(roomba)
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.robot_unique_id)},
             serial_number=self.vacuum_state.get("hwPartsRev", {}).get("navSerialNo"),
             manufacturer="iRobot",
-            model=self.vacuum_state.get("sku"),
-            name=str(self.vacuum_state.get("name")),
+            model=self.vacuum_state.get("sku") or "Roomba",
+            name=str(self.vacuum_state.get("name") or "Roomba"),
             sw_version=self.vacuum_state.get("softwareVer"),
             hw_version=(
                 str(hw_rev)
