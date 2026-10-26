@@ -296,7 +296,10 @@ async def test_invalid_json(
 
         async_fire_mqtt_message(hass, discovery_topic, "not json")
         await hass.async_block_till_done()
-        assert "Unable to parse JSON" in caplog.text
+        assert (
+            f"Unable to parse JSON discovery payload on topic '{discovery_topic}': "
+            "'not json'" in caplog.text
+        )
         assert not mock_dispatcher_send.called
 
 

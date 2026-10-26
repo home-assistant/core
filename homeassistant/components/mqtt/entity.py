@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
 from functools import partial
+import hashlib
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final, override
 
@@ -96,6 +97,7 @@ from .const import (
     CONF_VIA_DEVICE,
     CONF_VISIBLE_BY_DEFAULT,
     DOMAIN,
+    INVALID_PLATFORM_CONFIG_ISSUE_PREFIX,
     MQTT_CONNECTION_STATE,
 )
 from .debug_info import log_message
@@ -473,12 +475,17 @@ def async_setup_entity_entry_helper(  # noqa: C901
                 error = str(exc)
                 config_file = getattr(yaml_config, "__config_file__", "?")
                 line = getattr(yaml_config, "__line__", "?")
-                issue_id = hex(hash(frozenset(yaml_config)))
                 yaml_config_str = yaml_dump(yaml_config)
+                # A stable id lets a reload keep a still invalid item's issue
+                digest = hashlib.sha256(
+                    f"{domain}\n{yaml_config_str}".encode()
+                ).hexdigest()[:16]
+                issue_id = f"{INVALID_PLATFORM_CONFIG_ISSUE_PREFIX}{digest}"
                 async_create_issue(
                     hass,
                     DOMAIN,
                     issue_id,
+                    config_entry_id=entry.entry_id,
                     issue_domain=domain,
                     is_fixable=False,
                     severity=IssueSeverity.ERROR,

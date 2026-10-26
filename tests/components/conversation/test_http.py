@@ -833,7 +833,7 @@ async def test_ws_chat_log_index_subscription(
         now = utcnow().isoformat()
 
         with (
-            chat_session.async_get_chat_session(hass) as session,
+            chat_session.async_get_chat_session(hass, context=None) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
             before_sub_conversation_id = session.conversation_id
@@ -876,7 +876,7 @@ async def test_ws_chat_log_index_subscription(
         }
 
         with (
-            chat_session.async_get_chat_session(hass) as session,
+            chat_session.async_get_chat_session(hass, context=None) as session,
             async_get_chat_log(hass, session, mock_conversation_input),
         ):
             conversation_id = session.conversation_id
@@ -968,7 +968,7 @@ async def test_ws_chat_log_subscription(
         now = utcnow().isoformat()
 
         with (
-            chat_session.async_get_chat_session(hass) as session,
+            chat_session.async_get_chat_session(hass, context=None) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
             conversation_id = session.conversation_id
@@ -1012,7 +1012,9 @@ async def test_ws_chat_log_subscription(
         }
 
         with (
-            chat_session.async_get_chat_session(hass, conversation_id) as session,
+            chat_session.async_get_chat_session(
+                hass, conversation_id, context=None
+            ) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
             chat_log.async_add_assistant_content_without_tools(

@@ -46,8 +46,9 @@ from .const import (
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
+    INVALID_PLATFORM_CONFIG_ISSUE_PREFIX,
 )
-from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, MqttData, ReceiveMessage
+from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
 
 AVAILABILITY_TIMEOUT = 50.0
 
@@ -527,16 +528,11 @@ async def async_cleanup_device_registry(
 
 
 @callback
-def async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
-    """Unregister open config issues."""
-    issue_registry = ir.async_get(hass)
-    open_issues = [
-        issue_id
-        for (domain, issue_id), issue_entry in issue_registry.issues.items()
-        if domain == DOMAIN and issue_entry.translation_key == "invalid_platform_config"
-    ]
-    for issue in open_issues:
-        ir.async_delete_issue(hass, DOMAIN, issue)
+def async_begin_mqtt_issues_refresh(hass: HomeAssistant) -> ir.IssuesRefresh:
+    """Begin a refresh of the issues for invalid manually configured items."""
+    return ir.async_begin_issues_refresh(
+        hass, DOMAIN, issue_id_pattern=INVALID_PLATFORM_CONFIG_ISSUE_PREFIX
+    )
 
 
 async def async_check_config_schema(

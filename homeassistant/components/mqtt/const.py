@@ -377,6 +377,7 @@ DEFAULT_WILL = {
 }
 
 DOMAIN = "mqtt"
+INVALID_PLATFORM_CONFIG_ISSUE_PREFIX = "invalid_platform_config_"
 LOGGER = logging.getLogger(__package__)
 
 MQTT_CONNECTION_STATE = "mqtt_connection_state"
