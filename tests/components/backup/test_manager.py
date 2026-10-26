@@ -4604,6 +4604,20 @@ async def test_rename_agent_same_id(
             True,
             id="new_agent_loaded_replace_existing",
         ),
+        pytest.param(
+            {"test.new": {"protected": True, "retention": None}},
+            ["test.new"],
+            ["test.new"],
+            False,
+            id="old_agent_not_configured_new_agent_loaded",
+        ),
+        pytest.param(
+            {"test.new": {"protected": True, "retention": None}},
+            ["test.new"],
+            ["test.new"],
+            True,
+            id="old_agent_not_configured_new_agent_loaded_replace_existing",
+        ),
     ],
 )
 async def test_rename_agent_already_exists(

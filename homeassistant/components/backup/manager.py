@@ -423,9 +423,9 @@ class BackupManager:
         replace_existing to replace settings left behind for it, for example by a
         removed config entry.
 
-        Raises ValueError if the agent IDs belong to different integrations, or if
-        the old agent ID is configured and the new agent ID is loaded, or is
-        configured and replace_existing is not set.
+        Raises ValueError if the agent IDs belong to different integrations, if
+        the new agent ID is loaded, or if both agent IDs are configured and
+        replace_existing is not set.
         """
         if old_agent_id.partition(".")[0] != new_agent_id.partition(".")[0]:
             raise ValueError(
@@ -435,17 +435,15 @@ class BackupManager:
         if old_agent_id == new_agent_id:
             return
         config = self.config.data
-        if (
-            old_agent_id in config.agents
-            or old_agent_id in config.create_backup.agent_ids
-        ) and (
-            new_agent_id in self.backup_agents
-            or (
-                not replace_existing
-                and (
-                    new_agent_id in config.agents
-                    or new_agent_id in config.create_backup.agent_ids
-                )
+        if new_agent_id in self.backup_agents or (
+            not replace_existing
+            and (
+                old_agent_id in config.agents
+                or old_agent_id in config.create_backup.agent_ids
+            )
+            and (
+                new_agent_id in config.agents
+                or new_agent_id in config.create_backup.agent_ids
             )
         ):
             raise ValueError(f"Backup agent {new_agent_id} already exists")
