@@ -39,6 +39,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_simple_nws) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -65,7 +66,9 @@ async def test_setup_with_location_entity(
         {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
     )
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data=location_entity_config["config"])
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=location_entity_config["config"], version=2
+    )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -91,7 +94,9 @@ async def test_setup_with_location_entity_auto_station(
         {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
     )
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data=location_entity_config["config"])
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=location_entity_config["config"], version=2
+    )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -106,7 +111,9 @@ async def test_setup_with_location_entity_unavailable(
     hass: HomeAssistant, mock_simple_nws, location_entity_config: dict
 ) -> None:
     """Test setup raises ConfigEntryNotReady when entity is unavailable."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=location_entity_config["config"])
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=location_entity_config["config"], version=2
+    )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -126,6 +133,7 @@ async def test_setup_with_location_entity_not_in_registry(
             CONF_API_KEY: "test",
             CONF_LOCATION_ENTITY: "nonexistent_registry_id",
         },
+        version=2,
     )
     config_entry.add_to_hass(hass)
 
@@ -152,6 +160,7 @@ async def test_setup_with_location_entity_disabled(
             CONF_API_KEY: "test",
             CONF_LOCATION_ENTITY: entry.id,
         },
+        version=2,
     )
     config_entry.add_to_hass(hass)
 
@@ -173,7 +182,9 @@ async def test_location_change_updates_coordinates(
         {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
     )
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data=location_entity_config["config"])
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=location_entity_config["config"], version=2
+    )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -216,7 +227,9 @@ async def test_location_change_does_not_log_coordinates(
         {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
     )
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data=location_entity_config["config"])
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=location_entity_config["config"], version=2
+    )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -246,7 +259,9 @@ async def test_location_change_resets_api_success_time(
         {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
     )
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data=location_entity_config["config"])
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=location_entity_config["config"], version=2
+    )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -291,7 +306,9 @@ async def test_no_update_without_significant_move(
         {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
     )
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data=location_entity_config["config"])
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=location_entity_config["config"], version=2
+    )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -325,7 +342,9 @@ async def test_listener_filters_jitter(
         {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
     )
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data=location_entity_config["config"])
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=location_entity_config["config"], version=2
+    )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -356,7 +375,9 @@ async def test_location_entity_becomes_unavailable_no_update(
         {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
     )
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data=location_entity_config["config"])
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=location_entity_config["config"], version=2
+    )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -385,6 +406,7 @@ async def _setup_tracked_entity(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_API_KEY: "test", CONF_LOCATION_ENTITY: entry.id},
+        version=2,
     )
     config_entry.add_to_hass(hass)
 
@@ -436,7 +458,9 @@ async def test_unload_with_location_entity(
         {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
     )
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data=location_entity_config["config"])
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=location_entity_config["config"], version=2
+    )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
