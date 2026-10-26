@@ -40,7 +40,7 @@
         "name": "Grid power"
       },
       "legionella_days": {
-        "name": "Legionella days"
+        "name": "Days since last legionella prevention"
       },
       "saved_this_month": {
         "name": "Saved this month"

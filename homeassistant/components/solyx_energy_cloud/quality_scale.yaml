@@ -66,7 +66,9 @@ rules:
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration does not have any entities that are noisy or rarely used.
   entity-translations: done
   exception-translations: todo
   icon-translations:
