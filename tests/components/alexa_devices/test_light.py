@@ -3,7 +3,12 @@
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
-from aioamazondevices.exceptions import CannotSetFeature
+from aioamazondevices.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+    CannotSetFeature,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -81,6 +86,18 @@ async def test_all_entities(
                 instance=None,
             ),
             id="brightness",
+        ),
+        pytest.param(
+            SERVICE_TURN_ON,
+            {ATTR_BRIGHTNESS: 1},
+            call(
+                TEST_DEVICE_GLOW,
+                "brightness",
+                "setBrightness",
+                command_payload={"brightness": 1},
+                instance=None,
+            ),
+            id="brightness_minimum",
         ),
         pytest.param(
             SERVICE_TURN_ON,
@@ -191,17 +208,36 @@ async def test_unknown_state(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_set_feature_error(
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        pytest.param(
+            CannotSetFeature("rejected"),
+            "cannot_set_feature_with_error",
+            id="set_feature",
+        ),
+        pytest.param(CannotAuthenticate("expired"), "invalid_auth", id="authenticate"),
+        pytest.param(
+            CannotConnect("timeout"), "cannot_connect_with_error", id="connect"
+        ),
+        pytest.param(
+            CannotRetrieveData("bad response"),
+            "cannot_retrieve_data_with_error",
+            id="retrieve_data",
+        ),
+    ],
+)
+async def test_feature_operation_error(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    translation_key: str,
 ) -> None:
-    """Test a rejected feature operation raises an error."""
+    """Test a failed feature operation raises an error."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_amazon_devices_client.call_feature_operation.side_effect = CannotSetFeature(
-        "rejected"
-    )
+    mock_amazon_devices_client.call_feature_operation.side_effect = side_effect
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
@@ -211,7 +247,7 @@ async def test_set_feature_error(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "cannot_set_feature_with_error"
+    assert exc_info.value.translation_key == translation_key
 
 
 async def test_partial_state(

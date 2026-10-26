@@ -2,8 +2,6 @@
 
 from typing import Any, override
 
-from aioamazondevices.structures import AmazonDeviceFeature
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -47,16 +45,11 @@ async def async_setup_entry(
             async_add_entities(
                 AmazonLightEntity(coordinator, serial_num, LIGHT_DESCRIPTION)
                 for serial_num in new_devices
-                if _is_light(coordinator.data[serial_num].features)
+                if coordinator.data[serial_num].primary_display_category == "LIGHT"
             )
 
     _check_device()
     entry.async_on_unload(coordinator.async_add_listener(_check_device))
-
-
-def _is_light(features: dict[str, dict[str, AmazonDeviceFeature]]) -> bool:
-    """Return True if the device features describe a light."""
-    return {"power", "brightness", "color"} <= features.keys()
 
 
 class AmazonLightEntity(AmazonEntity, LightEntity):
@@ -113,7 +106,7 @@ class AmazonLightEntity(AmazonEntity, LightEntity):
         instance: str | None = None,
     ) -> None:
         """Invoke a feature operation on the light."""
-        async with alexa_api_call():
+        async with alexa_api_call(self.coordinator):
             await self.coordinator.api.call_feature_operation(
                 self.device,
                 feature_name,
@@ -169,8 +162,13 @@ class AmazonLightEntity(AmazonEntity, LightEntity):
                 "brightness",
                 "setBrightness",
                 {
-                    "brightness": round(
-                        brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
+                    "brightness": max(
+                        1,
+                        round(
+                            brightness_to_value(
+                                BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS]
+                            )
+                        ),
                     )
                 },
             )
