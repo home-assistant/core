@@ -411,7 +411,7 @@ async def test_form_reauth_two_factor_errors(
     mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
     auth_client: MagicMock,
-    error_type: Exception,
+    error_type: type[Exception],
     error_string: str,
 ) -> None:
     """Test a failed two factor code during reauth returns to the reauth form."""
