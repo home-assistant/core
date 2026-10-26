@@ -18,11 +18,6 @@ class IRobotEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    @property
-    def vacuum_state(self) -> dict[str, Any]:
-        """Return the current reported state."""
-        return roomba_reported_state(self.vacuum)
-
     def __init__(self, roomba, blid) -> None:
         """Initialize the iRobot handler."""
         self.vacuum = roomba
@@ -48,6 +43,11 @@ class IRobotEntity(Entity):
             self._attr_device_info.connections = {
                 (dr.CONNECTION_NETWORK_MAC, mac_address)
             }
+
+    @property
+    def vacuum_state(self) -> dict[str, Any]:
+        """Return the current reported state."""
+        return roomba_reported_state(self.vacuum)
 
     @property
     def robot_unique_id(self):
