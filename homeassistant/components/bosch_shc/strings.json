@@ -76,6 +76,12 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "comfort_temperature": {
+        "name": "Comfort temperature"
+      },
+      "eco_temperature": {
+        "name": "Eco temperature"
+      },
       "energy_saving_enter_duration": {
         "name": "Energy-saving enter duration"
       },
