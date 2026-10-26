@@ -28,7 +28,7 @@ from pyoverkiz.models import (
     Place,
 )
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     OAuth2TokenRequestError,
@@ -41,7 +41,14 @@ from homeassistant.util.decorator import Registry
 if TYPE_CHECKING:
     from . import OverkizDataConfigEntry
 
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    IGNORED_OVERKIZ_DEVICES,
+    LOGGER,
+    RATE_LIMIT_RETRY_AFTER,
+    UPDATE_INTERVAL,
+    UPDATE_INTERVAL_EXECUTION,
+)
 
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
@@ -104,7 +111,10 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         except TooManyConcurrentRequestsError as exception:
             raise UpdateFailed("Too many concurrent requests.") from exception
         except TooManyRequestsError as exception:
-            raise UpdateFailed("Too many requests, try again later.") from exception
+            raise UpdateFailed(
+                "Too many requests, try again later.",
+                retry_after=RATE_LIMIT_RETRY_AFTER.total_seconds(),
+            ) from exception
         except MaintenanceError as exception:
             raise UpdateFailed("Server is down for maintenance.") from exception
         except ServiceUnavailableError as exception:
@@ -158,6 +168,14 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 areas.update(self._places_to_area(sub_place))
 
         return areas
+
+    @callback
+    def async_execution_started(self) -> None:
+        """Show the in-progress state and poll fast until executions finish."""
+        self.async_update_listeners()
+        if not self.is_stateless and self.update_interval != UPDATE_INTERVAL_EXECUTION:
+            self.update_interval = UPDATE_INTERVAL_EXECUTION
+            self._schedule_refresh()
 
     def set_update_interval(self, update_interval: timedelta) -> None:
         """Set the update interval and store this value."""
@@ -234,7 +252,7 @@ async def on_execution_registered(
         coordinator.executions[event.exec_id] = []
 
     if not coordinator.is_stateless:
-        coordinator.update_interval = timedelta(seconds=1)
+        coordinator.update_interval = UPDATE_INTERVAL_EXECUTION
 
 
 @EVENT_HANDLERS.register(EventName.EXECUTION_STATE_CHANGED)

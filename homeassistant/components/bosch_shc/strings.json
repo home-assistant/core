@@ -85,11 +85,22 @@
       "impulse_length": {
         "name": "Pulse length"
       },
+      "led_brightness": {
+        "name": "LED brightness"
+      },
       "offset": {
         "name": "Temperature offset"
       }
     },
     "select": {
+      "actuator_type": {
+        "name": "Actuator type",
+        "state": {
+          "normally_closed": "Normally closed",
+          "normally_open": "Normally open",
+          "unsupported": "Unsupported"
+        }
+      },
       "display_direction": {
         "name": "Display orientation",
         "state": {
@@ -123,6 +134,16 @@
           "middle": "[%key:common::state::medium%]"
         }
       },
+      "output_mode": {
+        "name": "Output mode",
+        "state": {
+          "attached": "Coupled",
+          "detached": "Disconnected on any key press",
+          "detached_long_press": "Disconnected on long press",
+          "detached_short_press": "Disconnected on short press",
+          "unsupported": "Unsupported"
+        }
+      },
       "siren_sound_level": {
         "name": "Siren volume",
         "state": {
@@ -154,6 +175,19 @@
           "none": "None",
           "pushbutton": "Push button",
           "switch": "Rocker switch"
+        }
+      },
+      "terminal_type": {
+        "name": "Sensor connection",
+        "state": {
+          "floor_sensor_connected": "Floor sensor connected",
+          "floor_sensor_displayed": "Cable temperature sensor (without regulation)",
+          "floor_sensor_displayed_and_used_for_regulation": "Cable temperature sensor (with regulation)",
+          "floor_sensor_used_for_regulation": "Floor sensor used for regulation",
+          "not_connected": "Not used",
+          "outdoor_sensor_connected": "Outdoor temperature sensor",
+          "volt_free_sensor_connected": "Volt-free sensor connected",
+          "volt_free_sensor_connected_and_used_for_operation": "Potential-free contact"
         }
       },
       "valve_type": {
