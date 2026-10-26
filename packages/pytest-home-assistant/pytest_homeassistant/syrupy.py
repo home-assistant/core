@@ -216,7 +216,9 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         )
         serialized["config_entry_id"] = ANY
         serialized["config_subentry_id"] = ANY
-        serialized["parent_device_id"] = ANY
+        serialized["parent_device_id"] = cls._serializable_device_id(
+            data.parent_device_id
+        )
 
         return cls._remove_created_and_modified_at(serialized)
 
