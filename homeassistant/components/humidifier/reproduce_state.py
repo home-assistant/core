@@ -5,29 +5,22 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_MODE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
-    ATTR_HUMIDITY,
     DOMAIN,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_MODE,
     HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 # Maps a state attribute to the service call argument used to restore it.
 _STATE_ATTRIBUTE_TO_SERVICE_ARG: dict[HumidifierEntityStateAttribute, str] = {
-    HumidifierEntityStateAttribute.MODE: ATTR_MODE,
-    HumidifierEntityStateAttribute.HUMIDITY: ATTR_HUMIDITY,
+    HumidifierEntityStateAttribute.MODE: HumidifierServiceArgument.MODE,
+    HumidifierEntityStateAttribute.HUMIDITY: HumidifierServiceArgument.HUMIDITY,
 }
 
 
@@ -61,7 +54,7 @@ async def _async_reproduce_states(
     if state.state == STATE_OFF:
         # Ensure the device is off if it needs to be and exit
         if cur_state.state != STATE_OFF:
-            await call_service(SERVICE_TURN_OFF, [])
+            await call_service(HumidifierService.TURN_OFF, [])
         return
 
     if state.state != STATE_ON:
@@ -74,7 +67,7 @@ async def _async_reproduce_states(
     # First of all, turn on if needed, because the device might not
     # be able to set mode and humidity while being off
     if cur_state.state != STATE_ON:
-        await call_service(SERVICE_TURN_ON, [])
+        await call_service(HumidifierService.TURN_ON, [])
         # refetch the state as turning on might allow us to see some more values
         if (cur_state := hass.states.get(state.entity_id)) is None:
             _LOGGER.warning("Unable to find entity %s", state.entity_id)
@@ -85,14 +78,16 @@ async def _async_reproduce_states(
     if HumidifierEntityStateAttribute.MODE in state.attributes and state.attributes[
         HumidifierEntityStateAttribute.MODE
     ] != cur_state.attributes.get(HumidifierEntityStateAttribute.MODE):
-        await call_service(SERVICE_SET_MODE, [HumidifierEntityStateAttribute.MODE])
+        await call_service(
+            HumidifierService.SET_MODE, [HumidifierEntityStateAttribute.MODE]
+        )
 
     # Next, restore target humidity for the current mode
     if HumidifierEntityStateAttribute.HUMIDITY in state.attributes and state.attributes[
         HumidifierEntityStateAttribute.HUMIDITY
     ] != cur_state.attributes.get(HumidifierEntityStateAttribute.HUMIDITY):
         await call_service(
-            SERVICE_SET_HUMIDITY, [HumidifierEntityStateAttribute.HUMIDITY]
+            HumidifierService.SET_HUMIDITY, [HumidifierEntityStateAttribute.HUMIDITY]
         )
 
 

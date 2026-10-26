@@ -81,12 +81,18 @@ def get_models_pager():
     )
     model_31_flash_tts.name = "models/gemini-3.1-flash-tts-preview"
 
+    model_38_flash_tts = Mock(
+        supported_actions=["generateContent"],
+    )
+    model_38_flash_tts.name = "models/gemini-3.8-flash-tts"
+
     async def models_pager():
         yield model_25_flash
         yield model_20_flash
         yield model_15_flash
         yield model_15_pro
         yield model_31_flash_tts
+        yield model_38_flash_tts
 
     return models_pager()
 
@@ -132,7 +138,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -356,19 +362,8 @@ async def test_creating_subentry_custom_options(
     assert result["step_id"] == "set_options"
     assert not result["errors"]
 
-    # Uncheck recommended to show custom options
-    with patch(
-        "google.genai.models.AsyncModels.list",
-        return_value=get_models_pager(),
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            result["data_schema"]({CONF_RECOMMENDED: False}),
-        )
-    assert result2["type"] is FlowResultType.FORM
-
     # Find the schema key for CONF_CHAT_MODEL and check its default
-    schema_dict = result2["data_schema"].schema
+    schema_dict = result["data_schema"].schema
     chat_model_key = next(key for key in schema_dict if key.schema == CONF_CHAT_MODEL)
     assert chat_model_key.default() == recommended_model
     models_in_selector = [
@@ -381,18 +376,18 @@ async def test_creating_subentry_custom_options(
         "google.genai.models.AsyncModels.list",
         return_value=get_models_pager(),
     ):
-        result3 = await hass.config_entries.subentries.async_configure(
-            result2["flow_id"],
-            result2["data_schema"]({CONF_NAME: "Mock name", **options}),
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            result["data_schema"]({CONF_NAME: "Mock name", **options}),
         )
         await hass.async_block_till_done()
 
     expected_options = options.copy()
     if CONF_PROMPT in expected_options:
         expected_options[CONF_PROMPT] = expected_options[CONF_PROMPT].strip()
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Mock name"
-    assert result3["data"] == expected_options
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Mock name"
+    assert result2["data"] == expected_options
 
     assert len(mock_config_entry.subentries) == len(old_subentries) + 1
 
@@ -402,6 +397,55 @@ async def test_creating_subentry_custom_options(
     assert new_subentry.subentry_type == subentry_type
     assert new_subentry.data == expected_options
     assert new_subentry.title == "Mock name"
+
+
+async def test_creating_conversation_subentry_google_search_error(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Google Search tool cannot be combined with an LLM API."""
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+    user_input = {
+        CONF_NAME: "Mock name",
+        CONF_PROMPT: "You are Mario",
+        CONF_LLM_HASS_API: ["assist"],
+        CONF_RECOMMENDED: False,
+        CONF_USE_GOOGLE_SEARCH_TOOL: True,
+    }
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {
+        CONF_USE_GOOGLE_SEARCH_TOOL: "invalid_google_search_option"
+    }
+    name_key = next(key for key in result["data_schema"].schema if key == CONF_NAME)
+    assert name_key.default() == "Mock name"
+
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {**user_input, CONF_USE_GOOGLE_SEARCH_TOOL: False}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Mock name"
+    assert result["data"][CONF_USE_GOOGLE_SEARCH_TOOL] is False
 
 
 async def test_creating_conversation_subentry_not_loaded(
@@ -423,11 +467,6 @@ async def test_creating_conversation_subentry_not_loaded(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "entry_not_loaded"
-
-
-def will_options_be_rendered_again(current_options, new_options) -> bool:
-    """Determine if options will be rendered again."""
-    return current_options.get(CONF_RECOMMENDED) != new_options.get(CONF_RECOMMENDED)
 
 
 @pytest.mark.parametrize(
@@ -478,6 +517,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT: "",
+                CONF_TEMPERATURE: 0.3,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
             },
             {
                 CONF_RECOMMENDED: True,
@@ -650,19 +691,6 @@ async def test_subentry_options_switching(
         options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
             hass, subentry.subentry_id
         )
-    if will_options_be_rendered_again(current_options, new_options):
-        retry_options = {
-            **current_options,
-            CONF_RECOMMENDED: new_options[CONF_RECOMMENDED],
-        }
-        with patch(
-            "google.genai.models.AsyncModels.list",
-            return_value=get_models_pager(),
-        ):
-            options_flow = await hass.config_entries.subentries.async_configure(
-                options_flow["flow_id"],
-                retry_options,
-            )
     with patch(
         "google.genai.models.AsyncModels.list",
         return_value=get_models_pager(),
@@ -726,7 +754,7 @@ async def test_form_errors(
         ),
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -770,11 +798,11 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_unload_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -862,18 +890,6 @@ async def test_subentry_chat_model_labels_keep_the_full_model_id(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "set_options"
-
-    # Uncheck recommended so the model selector is built
-    with patch(
-        "google.genai.models.AsyncModels.list",
-        return_value=get_prefix_collision_models_pager(),
-    ):
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            result["data_schema"]({CONF_RECOMMENDED: False}),
-        )
-
-    assert result["type"] is FlowResultType.FORM
     schema_dict = result["data_schema"].schema
     chat_model_key = next(key for key in schema_dict if key.schema == CONF_CHAT_MODEL)
     assert [opt["label"] for opt in schema_dict[chat_model_key].config["options"]] == [
@@ -976,9 +992,6 @@ async def test_sampling_options_model_switch_and_reset(
         flow = await mock_config_entry.start_subentry_reconfigure_flow(
             hass, subentry_id
         )
-        flow = await hass.config_entries.subentries.async_configure(
-            flow["flow_id"], {CONF_RECOMMENDED: True}
-        )
         result = await hass.config_entries.subentries.async_configure(
             flow["flow_id"], {CONF_RECOMMENDED: True}
         )
@@ -1010,30 +1023,25 @@ async def test_tts_sampling_options_model_switch_and_reset(
 ) -> None:
     """TTS keeps dormant temperature through actual reconfigure/reload requests."""
 
-    async def sampling_models_pager() -> AsyncGenerator[Mock]:
-        async for model in get_models_pager():
-            yield model
-        model = Mock(supported_actions=["generateContent"])
-        model.name = "models/gemini-3.8-flash-tts"
-        yield model
+    sampling_model = "models/gemini-3.1-flash-tts-preview"
 
     subentry = mock_config_entry.subentries["ulid-tts"]
     advanced = {
         CONF_RECOMMENDED: False,
         CONF_TEMPERATURE: 0.2,
-        CONF_CHAT_MODEL: RECOMMENDED_TTS_MODEL,
+        CONF_CHAT_MODEL: sampling_model,
     }
     hass.config_entries.async_update_subentry(
         mock_config_entry, subentry, data=advanced
     )
     await hass.async_block_till_done()
     for model, expected in (
-        (RECOMMENDED_TTS_MODEL, {"temperature": 0.2}),
-        ("models/gemini-3.8-flash-tts", {}),
-        (RECOMMENDED_TTS_MODEL, {"temperature": 0.2}),
+        (sampling_model, {"temperature": 0.2}),
+        (RECOMMENDED_TTS_MODEL, {}),
+        (sampling_model, {"temperature": 0.2}),
     ):
         with patch(
-            "google.genai.models.AsyncModels.list", return_value=sampling_models_pager()
+            "google.genai.models.AsyncModels.list", return_value=get_models_pager()
         ):
             flow = await mock_config_entry.start_subentry_reconfigure_flow(
                 hass, subentry.subentry_id
@@ -1077,14 +1085,9 @@ async def test_tts_sampling_options_model_switch_and_reset(
             key: config[key] for key in ("temperature", "topP", "topK") if key in config
         } == expected
         assert "thinkingConfig" not in config
-    with patch(
-        "google.genai.models.AsyncModels.list", return_value=sampling_models_pager()
-    ):
+    with patch("google.genai.models.AsyncModels.list", return_value=get_models_pager()):
         flow = await mock_config_entry.start_subentry_reconfigure_flow(
             hass, subentry.subentry_id
-        )
-        flow = await hass.config_entries.subentries.async_configure(
-            flow["flow_id"], {CONF_RECOMMENDED: True}
         )
         result = await hass.config_entries.subentries.async_configure(
             flow["flow_id"], {CONF_RECOMMENDED: True}
@@ -1121,5 +1124,5 @@ async def test_tts_sampling_options_model_switch_and_reset(
     config = mock_genai_transport.call_args.kwargs["http_request"].data[
         "generationConfig"
     ]
-    assert config["temperature"] == 1.0
+    assert "temperature" not in config
     assert "thinkingConfig" not in config

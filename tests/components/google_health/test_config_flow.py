@@ -482,7 +482,7 @@ async def test_reauth_flow(
     )
 
     with patch(
-        "homeassistant.components.google_health.async_setup_entry", return_value=True
+        "homeassistant.components.google_health.async_setup_entry", return_value=None
     ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -559,7 +559,7 @@ async def test_reconfigure_flow(
     )
 
     with patch(
-        "homeassistant.components.google_health.async_setup_entry", return_value=True
+        "homeassistant.components.google_health.async_setup_entry", return_value=None
     ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
 

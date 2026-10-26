@@ -11,18 +11,14 @@ from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-)
+from homeassistant.helpers.selector import SelectOptionDict, SelectSelector
 
-from .config_flow import reconcile_model_options
 from .const import CONF_CHAT_MODEL, DOMAIN
 from .coordinator import model_alias
+from .model_options import reconcile_model_options
 
 if TYPE_CHECKING:
-    from . import AnthropicConfigEntry
+    from .coordinator import AnthropicConfigEntry
 
 
 class ModelDeprecatedRepairFlow(RepairsFlow):
@@ -96,11 +92,8 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             and model_alias(model.id) not in DEPRECATED_MODELS
             and model.id not in DEPRECATED_MODELS
         ]
-        model_list = [
-            SelectOptionDict(
-                label=model.display_name,
-                value=model_alias(model.id),
-            )
+        model_list: list[SelectOptionDict] = [
+            {"label": model.display_name, "value": model_alias(model.id)}
             for model in active_models
         ]
 
@@ -118,9 +111,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                 probatio.Required(
                     CONF_CHAT_MODEL,
                     default=suggested_model,
-                ): SelectSelector(
-                    SelectSelectorConfig(options=model_list, custom_value=True)
-                ),
+                ): SelectSelector({"options": model_list, "custom_value": True}),
             }
         )
 
