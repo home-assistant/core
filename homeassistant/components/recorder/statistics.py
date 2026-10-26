@@ -901,33 +901,42 @@ def _insert_statistics(
     return stat
 
 
-def _update_statistics(
+def _statistic_ids_by_start(
     session: Session,
     table: type[StatisticsBase],
-    stat_id: int,
-    statistic: StatisticData,
-) -> None:
-    """Insert statistics in the database."""
-    try:
-        session.query(table).filter_by(id=stat_id).update(
-            {
-                table.mean: statistic.get("mean"),
-                table.min: statistic.get("min"),
-                table.max: statistic.get("max"),
-                table.last_reset_ts: datetime_to_timestamp_or_none(
-                    statistic.get("last_reset")
-                ),
-                table.state: statistic.get("state"),
-                table.sum: statistic.get("sum"),
-            },
-            synchronize_session=False,
+    metadata_id: int,
+    start_timestamps: list[float],
+    max_bind_vars: int,
+) -> dict[float | None, int]:
+    """Return the ids of existing statistics rows by start timestamp."""
+    ids: dict[float | None, int] = {}
+    if not start_timestamps:
+        return ids
+    # One bind variable is used by metadata_id
+    for start_ts_chunk in chunked_or_all(start_timestamps, max_bind_vars - 1):
+        ids.update(
+            session.execute(
+                select(table.start_ts, table.id).where(
+                    table.metadata_id == metadata_id,
+                    table.start_ts.in_(start_ts_chunk),
+                )
+            )
+            .tuples()
+            .all()
         )
-    except SQLAlchemyError:
-        _LOGGER.exception(
-            "Unexpected exception when updating statistics %s:%s ",
-            stat_id,
-            statistic,
-        )
+    return ids
+
+
+def _statistic_update_values(statistic: StatisticData) -> dict[str, Any]:
+    """Return the columns to update when importing an existing statistic."""
+    return {
+        "mean": statistic.get("mean"),
+        "min": statistic.get("min"),
+        "max": statistic.get("max"),
+        "last_reset_ts": datetime_to_timestamp_or_none(statistic.get("last_reset")),
+        "state": statistic.get("state"),
+        "sum": statistic.get("sum"),
+    }
 
 
 def get_metadata_with_session(
@@ -2785,22 +2794,6 @@ def update_statistics_issues(hass: HomeAssistant) -> None:
                 )
 
 
-def _statistics_exists(
-    session: Session,
-    table: type[StatisticsBase],
-    metadata_id: int,
-    start: datetime,
-) -> int | None:
-    """Return id if a statistics entry already exists."""
-    start_ts = start.timestamp()
-    result = (
-        session.query(table.id)
-        .filter((table.metadata_id == metadata_id) & (table.start_ts == start_ts))
-        .first()
-    )
-    return result.id if result else None
-
-
 @callback
 def _async_import_statistics(
     hass: HomeAssistant,
@@ -2951,11 +2944,26 @@ def _import_statistics_with_session(
         session, metadata, old_metadata_dict
     )
     now_timestamp = time_time()
-    for stat in statistics:
-        if stat_id := _statistics_exists(session, table, metadata_id, stat["start"]):
-            _update_statistics(session, table, stat_id, stat)
-        else:
-            _insert_statistics(session, table, metadata_id, stat, now_timestamp)
+    statistics = list(statistics)
+    start_timestamps = [stat["start"].timestamp() for stat in statistics]
+    existing_ids = _statistic_ids_by_start(
+        session, table, metadata_id, start_timestamps, instance.max_bind_vars
+    )
+    updates: dict[int, dict[str, Any]] = {}
+    inserted: dict[float, StatisticsBase] = {}
+    for start_ts, stat in zip(start_timestamps, statistics, strict=True):
+        if (stat_id := existing_ids.get(start_ts)) is not None:
+            updates[stat_id] = {"id": stat_id, **_statistic_update_values(stat)}
+        elif (row := inserted.get(start_ts)) is not None:
+            # The same start twice in one batch, the later one updates the new row
+            for key, value in _statistic_update_values(stat).items():
+                setattr(row, key, value)
+        elif new_row := _insert_statistics(
+            session, table, metadata_id, stat, now_timestamp
+        ):
+            inserted[start_ts] = new_row
+    if updates:
+        session.execute(update(table), list(updates.values()))
 
     if table != StatisticsShortTerm:
         return True
