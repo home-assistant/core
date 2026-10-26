@@ -38,6 +38,7 @@ ATTR_STYLE = "style"
 VOICES_PAGE_SIZE = 1000
 VOICES_MAX_PAGES = 10
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
