@@ -40,11 +40,9 @@ class BusyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, object] | None = None
     ) -> ConfigFlowResult:
-        """Ask for the bar's local address without scanning the network.
-
-        Forward a submitted address to pairing or show the address form.
-        """
+        """Ask for the bar's local address without scanning the network."""
         if user_input is not None:
+            await self.async_set_unique_id(None)
             self._host = str(user_input[CONF_HOST])
             return await self._async_pair("user")
         return self.async_show_form(step_id="user", data_schema=SCHEMAS["user"])
@@ -53,10 +51,7 @@ class BusyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
-        """Update an existing address or request discovery confirmation.
-
-        Use the service identity for deduplication and refresh the stored address.
-        """
+        """Update an existing address or request discovery confirmation."""
         self._host = discovery_info.host
         self._name = discovery_info.properties.get("name") or "BUSY Bar"
         await self.async_set_unique_id(
@@ -69,10 +64,7 @@ class BusyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, object] | None = None
     ) -> ConfigFlowResult:
-        """Confirm the discovered device before issuing a token.
-
-        Pair only after the discovery has been confirmed.
-        """
+        """Confirm the discovered device before issuing a token."""
         if user_input is not None:
             return await self._async_pair("zeroconf_confirm")
         return self.async_show_form(
@@ -82,10 +74,7 @@ class BusyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_key(
         self, user_input: dict[str, object] | None = None
     ) -> ConfigFlowResult:
-        """Ask for the API key and allow retries after refusal.
-
-        Use the supplied key for pairing and preserve the form on failure.
-        """
+        """Ask for the API key and allow retries after refusal."""
         if user_input is not None:
             return await self._async_pair("key", str(user_input[CONF_PASSWORD]))
         return self.async_show_form(step_id="key", data_schema=SCHEMAS["key"])
@@ -93,10 +82,7 @@ class BusyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_pair(
         self, step_id: str, password: str | None = None
     ) -> ConfigFlowResult:
-        """Check access mode, issue a token and verify the stable identity.
-
-        Exchange a key for a token and identify the bar with its USB MAC.
-        """
+        """Check access mode, issue a token and verify the stable identity."""
         errors: dict[str, str] = {}
         try:
             async with await async_create_client(

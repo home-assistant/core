@@ -40,6 +40,7 @@ async def start_flow(
         context={"source": source},
         data={SOURCE_USER: None, SOURCE_ZEROCONF: discovery()}[source],
     )
+    assert result["type"] is FlowResultType.FORM
     return await hass.config_entries.flow.async_configure(
         result["flow_id"], {SOURCE_USER: {"host": HOST}, SOURCE_ZEROCONF: {}}[source]
     )
@@ -52,15 +53,7 @@ async def test_pair(
     source: str,
 ) -> None:
     """Confirm manual and discovered pairing share one stable identity."""
-    result = await hass.config_entries.flow.async_init(
-        "busy",
-        context={"source": source},
-        data={SOURCE_USER: None, SOURCE_ZEROCONF: discovery()}[source],
-    )
-    assert result["type"] is FlowResultType.FORM
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {SOURCE_USER: {"host": HOST}, SOURCE_ZEROCONF: {}}[source]
-    )
+    result = await start_flow(hass, source)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"host": HOST, "token": "12345678-token"}
     assert result["result"].unique_id == DEVICE_ID
@@ -214,3 +207,20 @@ async def test_missing_token_cleanup(
     result = await start_flow(hass)
     assert result["reason"] == "cannot_connect"
     mock_client.access_tokens_revoke.assert_awaited_once_with("12345678")
+
+
+async def test_manual_host_change(hass: HomeAssistant, mock_client: AsyncMock) -> None:
+    """Allow another bar after minting fails in a manual flow."""
+    mock_client.access_token_mint.side_effect = BusyBarRequestError("offline")
+    result = await start_flow(hass)
+    assert result["errors"] == {"base": "cannot_connect"}
+    mock_client.access_token_mint.side_effect = None
+    mock_client.status_device.return_value = types.StatusDevice(
+        usb_mac="00:11:22:33:44:55"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.50.21"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "001122334455"
+    assert result["data"]["host"] == "192.168.50.21"
