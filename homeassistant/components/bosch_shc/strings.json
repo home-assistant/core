@@ -49,6 +49,9 @@
   },
   "entity": {
     "button": {
+      "reset_energy_summation": {
+        "name": "Reset consumption value"
+      },
       "reset_tamper": {
         "name": "Reset tamper"
       },
