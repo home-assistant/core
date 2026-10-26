@@ -59,6 +59,9 @@ async def test_manual(hass: HomeAssistant, mock_client: AsyncMock) -> None:
 
 async def test_zeroconf(hass: HomeAssistant, mock_client: AsyncMock) -> None:
     """Confirm a discovered bar before pairing."""
+    mock_client.status_device.return_value = types.StatusDevice(
+        usb_mac="00:11:22:33:44:55"
+    )
     result = await hass.config_entries.flow.async_init(
         "busy", context={"source": SOURCE_ZEROCONF}, data=discovery()
     )
