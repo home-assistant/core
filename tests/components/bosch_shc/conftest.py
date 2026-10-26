@@ -67,11 +67,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_shc.const import (
+    CONF_HOSTNAME,
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 
@@ -89,6 +90,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: "1.1.1.1",
             CONF_SSL_CERTIFICATE: "cert",
             CONF_SSL_KEY: "key",
+            CONF_TOKEN: "token:hostname",
+            CONF_HOSTNAME: "hostname",
         },
         unique_id="test-mac",
     )

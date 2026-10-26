@@ -3,16 +3,18 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from . import BoschConfigEntry
-from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY
+from .const import CONF_HOSTNAME, CONF_SSL_CERTIFICATE, CONF_SSL_KEY
 
 TO_REDACT = {
     CONF_HOST,
+    CONF_HOSTNAME,
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
+    CONF_TOKEN,
     "device_id",
     "ip",
     "macAddress",

@@ -33,6 +33,8 @@ async def test_diagnostics(
     assert diagnostics["entry"]["host"] == REDACTED
     assert diagnostics["entry"]["ssl_certificate"] == REDACTED
     assert diagnostics["entry"]["ssl_key"] == REDACTED
+    assert diagnostics["entry"]["token"] == REDACTED
+    assert diagnostics["entry"]["hostname"] == REDACTED
     assert diagnostics["shc"] == {
         "version": "2.0",
         "update_state": "UP_TO_DATE",
