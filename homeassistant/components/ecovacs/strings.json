@@ -136,6 +136,9 @@
       },
       "station_action_empty_dustbin": {
         "name": "Empty dustbin"
+      },
+      "station_action_wash_mop": {
+        "name": "Wash mop"
       }
     },
     "event": {

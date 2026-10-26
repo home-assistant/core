@@ -122,6 +122,7 @@ __all__ = [
     "add_extra_js_url",
     "add_manifest_json_key",
     "async_get_theme_names",
+    "async_get_version",
     "async_panel_exists",
     "async_register_built_in_panel",
     "async_remove_panel",
@@ -827,21 +828,22 @@ async def websocket_get_translations(
     )
 
 
+async def async_get_version(hass: HomeAssistant) -> str | None:
+    """Return the version of the frontend package."""
+    integration = await async_get_integration(hass, DOMAIN)
+    for req in integration.requirements:
+        if req.startswith("home-assistant-frontend=="):
+            return req.removeprefix("home-assistant-frontend==")
+    return None
+
+
 @websocket_api.websocket_command({"type": "frontend/get_version"})
 @websocket_api.async_response
 async def websocket_get_version(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get version command."""
-    integration = await async_get_integration(hass, "frontend")
-
-    frontend = None
-
-    for req in integration.requirements:
-        if req.startswith("home-assistant-frontend=="):
-            frontend = req.removeprefix("home-assistant-frontend==")
-
-    if frontend is None:
+    if (frontend := await async_get_version(hass)) is None:
         connection.send_error(msg["id"], "unknown_version", "Version not found")
     else:
         connection.send_result(msg["id"], {"version": frontend})

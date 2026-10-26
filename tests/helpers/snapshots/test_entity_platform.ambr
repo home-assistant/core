@@ -30,7 +30,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'test-sw',
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('hue', 'via-id')]>,
   })
 # ---
 # name: test_device_info_called.1
@@ -64,6 +64,6 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'test-sw',
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('hue', 'via-id')]>,
   })
 # ---
