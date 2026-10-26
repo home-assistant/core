@@ -1,5 +1,6 @@
 """Test the ENGIE Belgium conditions."""
 
+from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -249,11 +250,16 @@ async def test_condition_without_dynamic_tariff(
 
 
 @pytest.mark.parametrize(
-    "other_integration",
-    [pytest.param(False, id="missing"), pytest.param(True, id="other_integration")],
+    "device_id_of",
+    [
+        pytest.param(lambda other_device: "missing", id="missing"),
+        pytest.param(lambda other_device: other_device.id, id="other_integration"),
+    ],
 )
 async def test_condition_invalid_device(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, other_integration: bool
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    device_id_of: Callable[[dr.DeviceEntry], str],
 ) -> None:
     """Test the conditions only accept ENGIE Belgium devices."""
     other_entry = MockConfigEntry(domain="other")
@@ -261,7 +267,7 @@ async def test_condition_invalid_device(
     other_device = device_registry.async_get_or_create(
         config_entry_id=other_entry.entry_id, identifiers={("other", "device")}
     )
-    device_id = other_device.id if other_integration else "missing"
+    device_id = device_id_of(other_device)
 
     with pytest.raises(probatio.Invalid, match="is not an ENGIE Belgium device"):
         await EpexHourPriceIsNegativeCondition.async_validate_complete_config(
