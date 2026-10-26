@@ -36,7 +36,8 @@ async def async_get_config_entry_diagnostics(
     raw: dict[str, dict[int, int | bool]] | None = None
     raw_error: str | None = None
     try:
-        raw = await device.async_read_raw(notify=False)
+        async with coordinator.io_lock:
+            raw = await device.async_read_raw(notify=False)
     except ModbusError as err:
         raw_error = str(err)
 
