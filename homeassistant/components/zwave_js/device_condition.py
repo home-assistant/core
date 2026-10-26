@@ -121,12 +121,11 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Z-Wave JS devices."""
-    conditions: list[dict] = []
-
     # Conditions are node-scoped; endpoint child devices don't expose any.
-    dev_reg = dr.async_get(hass)
-    if isinstance(dev_reg.async_get(device_id), dr.ChildDeviceEntry):
-        return conditions
+    if isinstance(dr.async_get(hass).async_get(device_id), dr.ChildDeviceEntry):
+        return []
+
+    conditions: list[dict] = []
 
     base_condition = {
         CONF_CONDITION: "device",

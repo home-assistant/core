@@ -173,11 +173,7 @@ async def async_get_actions(
         CONF_DOMAIN: DOMAIN,
     }
 
-    is_child_device = isinstance(
-        dr.async_get(hass).async_get(device_id), dr.ChildDeviceEntry
-    )
-
-    if not is_child_device:
+    if not isinstance(dr.async_get(hass).async_get(device_id), dr.ChildDeviceEntry):
         # Node-scoped actions are only available on the main node device, not on
         # endpoint child devices which would otherwise duplicate the parent's list.
         actions.extend(
