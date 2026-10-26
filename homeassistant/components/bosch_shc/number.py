@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
+    SHCMicromoduleDimmer,
     SHCMicromoduleRelay,
     SHCRoomThermostat2,
     SHCShutterContact2,
@@ -22,6 +23,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import (
+    PERCENTAGE,
     EntityCategory,
     UnitOfPower,
     UnitOfTemperature,
@@ -112,6 +114,42 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         value_fn=lambda device: float(device.bypass_timeout),
         set_value_fn=lambda device, value: device.set_bypass_configuration(
             timeout=round(value)
+        ),
+    ),
+    "dimmer_min": SHCNumberEntityDescription[SHCMicromoduleDimmer](
+        key="dimmer_min",
+        translation_key="dimmer_min",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        native_min_value=0.0,
+        native_max_value=100.0,
+        native_step=1.0,
+        mode=NumberMode.SLIDER,
+        value_fn=lambda device: (
+            float(config.min_brightness)
+            if (config := device.dimmer_configuration)
+            else None
+        ),
+        set_value_fn=lambda device, value: device.set_brightness_range(
+            min_brightness=round(value)
+        ),
+    ),
+    "dimmer_max": SHCNumberEntityDescription[SHCMicromoduleDimmer](
+        key="dimmer_max",
+        translation_key="dimmer_max",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        native_min_value=0.0,
+        native_max_value=100.0,
+        native_step=1.0,
+        mode=NumberMode.SLIDER,
+        value_fn=lambda device: (
+            float(config.max_brightness)
+            if (config := device.dimmer_configuration)
+            else None
+        ),
+        set_value_fn=lambda device, value: device.set_brightness_range(
+            max_brightness=round(value)
         ),
     ),
     "power_threshold": SHCNumberEntityDescription[SHCSmartPlug | SHCSmartPlugCompact](
@@ -262,6 +300,19 @@ async def async_setup_entry(
         if isinstance(device, SHCThermostat | SHCWallThermostat | SHCRoomThermostat2)
         and device.supports_temperature_offset
     )
+
+    for key in ("dimmer_min", "dimmer_max"):
+        entities.extend(
+            SHCNumber(
+                hass=hass,
+                device=device,
+                parent_id=shc_info.unique_id,
+                entry_id=config_entry.entry_id,
+                description=NUMBER_TYPES[key],
+            )
+            for device in session.device_helper.micromodule_dimmers
+            if device.supports_dimmer_configuration
+        )
 
     async_add_entities(entities)
 
