@@ -15,6 +15,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.daikin_onecta.config_flow import FlowHandler
 from homeassistant.components.daikin_onecta.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -191,7 +192,7 @@ async def test_invalid_oauth_token(
     hass: HomeAssistant,
 ) -> None:
     """Abort when the OAuth access token is not a valid JWT."""
-    flow = config_entries.HANDLERS[DOMAIN]()
+    flow = FlowHandler()
     flow.hass = hass
 
     result = await flow.async_oauth_create_entry({"token": {"access_token": "invalid"}})
@@ -219,7 +220,7 @@ async def test_oauth_create_entry_validates_gateway_access(
     hass: HomeAssistant, error: Exception, reason: str
 ) -> None:
     """Abort setup when the gateway API cannot be accessed."""
-    flow = config_entries.HANDLERS[DOMAIN]()
+    flow = FlowHandler()
     flow.hass = hass
     flow.context = {"source": config_entries.SOURCE_USER}
 

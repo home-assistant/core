@@ -1,5 +1,6 @@
 """Test the Daikin Onecta coordinator."""
 
+import asyncio
 from copy import deepcopy
 from datetime import UTC, datetime, time, timedelta
 import logging
@@ -530,6 +531,26 @@ class TestOnectaDataUpdateCoordinator:
             cooldown=timedelta(seconds=30)
         )
         assert coordinator._polling_backoff_until is None
+
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
+    async def test_poll_rechecks_backoff_after_acquiring_cloud_lock(
+        self, mock_utcnow, hass: HomeAssistant, coordinator
+    ) -> None:
+        """Skip a poll if a rate-limited command sets backoff while it waits."""
+        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
+        mock_utcnow.return_value = now
+        coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
+        await coordinator._cloud_lock.acquire()
+        poll_task = hass.async_create_task(coordinator._async_update_data_from_cloud())
+
+        # Let the poll pass its initial check and wait to acquire the lock.
+        await asyncio.sleep(0)
+        coordinator._polling_backoff_until = now + timedelta(seconds=60)
+        coordinator._cloud_lock.release()
+
+        assert await poll_task == {}
+        coordinator.client.get_gateway_devices.assert_not_awaited()
+        assert coordinator.update_interval == timedelta(seconds=60)
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_successful_write_clears_polling_backoff(

@@ -93,6 +93,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     ) -> list[GatewayDevice] | None:
         """Get typed device data from the Daikin cloud, respecting cooldown."""
         async with self._cloud_lock:
+            if self._polling_backoff_remaining() is not None:
+                return None
             if (
                 cooldown is not None
                 and self._last_patch_call is not None
@@ -100,6 +102,16 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             ):
                 return None
             return await self._client.get_gateway_devices()
+
+    def _polling_backoff_remaining(self) -> timedelta | None:
+        """Return the remaining polling backoff, if any."""
+        if self._polling_backoff_until is None:
+            return None
+        remaining = self._polling_backoff_until - dt_util.utcnow()
+        if remaining <= timedelta(0):
+            self._polling_backoff_until = None
+            return None
+        return remaining
 
     async def async_execute_command(
         self, command: Callable[[OnectaClient], Awaitable[None]]
@@ -189,12 +201,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         """Fetch the latest device state from Daikin."""
 
         devices = self.data or {}
-        if self._polling_backoff_until is not None:
-            remaining = self._polling_backoff_until - dt_util.utcnow()
-            if remaining > timedelta(0):
-                self.update_interval = remaining
-                return devices
-            self._polling_backoff_until = None
+        if (remaining := self._polling_backoff_remaining()) is not None:
+            self.update_interval = remaining
+            return devices
 
         if (
             self.last_patch_call is not None
@@ -238,7 +247,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 ) from err
 
             if cloud_devices is None:
-                self.update_interval = _POST_WRITE_COOLDOWN
+                self.update_interval = (
+                    self._polling_backoff_remaining() or _POST_WRITE_COOLDOWN
+                )
             else:
                 cloud_device_ids = {device.id for device in cloud_devices}
                 for device_id, device in devices.items():
