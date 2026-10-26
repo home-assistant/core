@@ -11,7 +11,7 @@ from sofar_modbus.modern.faults import FAULTS, FaultLogEntry
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
@@ -77,8 +77,8 @@ class SofarFaultEvent(SofarEntity, EventEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Resume from the entries handled before, or take all as known."""
-        await super().async_added_to_hass()
         self._store = fault_log_store(self.hass, self.coordinator.config_entry.entry_id)
+        # Before subscribing: an update during the load would mark all known.
         if (stored := await self._store.async_load()) is not None:
             self._known = {
                 (fault_id, datetime.fromisoformat(occurred_at))
@@ -86,6 +86,7 @@ class SofarFaultEvent(SofarEntity, EventEntity):
             }
         elif self.available:
             self._remember(self._logged())
+        await super().async_added_to_hass()
 
     @callback
     @override
@@ -95,6 +96,9 @@ class SofarFaultEvent(SofarEntity, EventEntity):
         super()._handle_coordinator_update()
         # A failed read says nothing about what the log holds.
         if not self.available:
+            return
+        # Automations arm their triggers only once Home Assistant runs.
+        if self.hass.state is not CoreState.running:
             return
         if (known := self._known) is None:
             self._remember(self._logged())

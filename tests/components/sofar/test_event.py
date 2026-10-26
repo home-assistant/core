@@ -21,8 +21,9 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.components.sofar.const import DOMAIN, HAS_FAULT_LOG, SCAN_INTERVAL
 from homeassistant.const import EVENT_STATE_CHANGED, Platform
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant
+from homeassistant.core import CoreState, Event, EventStateChangedData, HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.storage import Store
 
 from . import MOCK_ENTRY_DATA, MOCK_MODEL, MOCK_SERIAL
 
@@ -218,6 +219,63 @@ async def test_setup_fires_only_entries_logged_since_last_run(
     await _poll(hass, freezer)
 
     assert _fired(events) == expected
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_entries_wait_until_home_assistant_runs(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+    hass_storage: dict[str, Any],
+    stored_entry: MockConfigEntry,
+) -> None:
+    """Test entries logged while down fire once triggers can see them."""
+    hass_storage.update(_stored(GRID_OVER_VOLTAGE))
+    _seed_log(mock_connection.for_unit(1), GRID_OVERFREQUENCY, GRID_OVER_VOLTAGE)
+    hass.set_state(CoreState.starting)
+    stored_entry.add_to_hass(hass)
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    await hass.config_entries.async_setup(stored_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await _poll(hass, freezer)
+
+    assert _fired(events) == []
+
+    hass.set_state(CoreState.running)
+    await _poll(hass, freezer)
+
+    assert _fired(events) == [("grid_overfrequency", 3, "2026-10-09T18:30:05-07:00")]
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_update_while_loading_keeps_pending_entries(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+    hass_storage: dict[str, Any],
+    stored_entry: MockConfigEntry,
+) -> None:
+    """Test an update during the checkpoint load does not mark all known."""
+    hass_storage.update(_stored(GRID_OVER_VOLTAGE))
+    _seed_log(mock_connection.for_unit(1), GRID_OVERFREQUENCY, GRID_OVER_VOLTAGE)
+    stored_entry.add_to_hass(hass)
+    load = Store.async_load
+
+    async def load_after_update(store: Store[Any]) -> Any:
+        """Notify listeners as a poll would while the checkpoint loads."""
+        if store.key == STORE_KEY:
+            stored_entry.runtime_data.coordinator_for(
+                "fault_log"
+            ).async_update_listeners()
+        return await load(store)
+
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    with patch.object(Store, "async_load", load_after_update):
+        await hass.config_entries.async_setup(stored_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    await _poll(hass, freezer)
+
+    assert _fired(events) == [("grid_overfrequency", 3, "2026-10-09T18:30:05-07:00")]
 
 
 @pytest.mark.usefixtures("mock_get_unit")
