@@ -70,6 +70,9 @@ _TRACK_STATE_REMOVED_DOMAIN_DATA: HassKey[_KeyedEventData[EventStateChangedData]
 _TRACK_ENTITY_REGISTRY_UPDATED_DATA: HassKey[
     _KeyedEventData[EventEntityRegistryUpdatedData]
 ] = HassKey("track_entity_registry_updated_data")
+_TRACK_ENTITY_REGISTRY_ENTRY_UPDATED_DATA: HassKey[
+    _KeyedEventData[EventEntityRegistryUpdatedData]
+] = HassKey("track_entity_registry_entry_updated_data")
 _TRACK_DEVICE_REGISTRY_UPDATED_DATA: HassKey[
     _KeyedEventData[EventDeviceRegistryUpdatedData]
 ] = HassKey("track_device_registry_updated_data")
@@ -406,18 +409,68 @@ _KEYED_TRACK_ENTITY_REGISTRY_UPDATED = _KeyedEventTracker(
 
 
 @callback
+def _async_dispatch_entity_registry_entry_event(
+    hass: HomeAssistant,
+    callbacks: dict[str, list[HassJob[[Event[EventEntityRegistryUpdatedData]], Any]]],
+    event: Event[EventEntityRegistryUpdatedData],
+) -> None:
+    """Dispatch to listeners."""
+    entry_id = event.data["id"]
+    if not (callbacks_list := callbacks.get(entry_id)):
+        return
+    for job in callbacks_list.copy():
+        try:
+            hass.async_run_hass_job(job, event)
+        except Exception:
+            _LOGGER.exception(
+                "Error while dispatching event for %s to %s", entry_id, job
+            )
+
+
+@callback
+def _async_entity_registry_entry_updated_filter(
+    hass: HomeAssistant,
+    callbacks: dict[str, list[HassJob[[Event[EventEntityRegistryUpdatedData]], Any]]],
+    event_data: EventEntityRegistryUpdatedData,
+) -> bool:
+    """Filter entity registry updates by entity registry entry id."""
+    # Events fired by other code than the entity registry may lack the id
+    return event_data.get("id") in callbacks
+
+
+_KEYED_TRACK_ENTITY_REGISTRY_ENTRY_UPDATED = _KeyedEventTracker(
+    key=_TRACK_ENTITY_REGISTRY_ENTRY_UPDATED_DATA,
+    event_type=EVENT_ENTITY_REGISTRY_UPDATED,
+    dispatcher_callable=_async_dispatch_entity_registry_entry_event,
+    filter_callable=_async_entity_registry_entry_updated_filter,
+)
+
+
+@callback
 def async_track_entity_registry_updated_event(
     hass: HomeAssistant,
-    entity_ids: str | Iterable[str],
+    entry_ids: str | Iterable[str],
     action: Callable[[Event[EventEntityRegistryUpdatedData]], Any],
     job_type: HassJobType | None = None,
 ) -> CALLBACK_TYPE:
-    """Track specific entity registry updated events indexed by entity_id.
+    """Track specific entity registry updated events indexed by registry entry id.
 
-    Entities must be lower case.
+    The tracking follows the entity registry entry when its entity_id is changed.
 
-    Similar to async_track_state_change_event.
+    Passing entity_ids instead of entity registry entry ids is deprecated. Entity
+    ids must be lower case, and the tracking does not follow the entry when its
+    entity_id is changed.
     """
+    keys = [entry_ids] if isinstance(entry_ids, str) else list(entry_ids)
+    # Entity registry entry ids never contain a dot
+    if not (entity_ids := [key for key in keys if "." in key]):
+        return _async_track_event(
+            _KEYED_TRACK_ENTITY_REGISTRY_ENTRY_UPDATED, hass, keys, action, job_type
+        )
+    if len(entity_ids) != len(keys):
+        raise ValueError(
+            f"Can't track both entity_ids and entity registry entry ids: {keys}"
+        )
     return _async_track_event(
         _KEYED_TRACK_ENTITY_REGISTRY_UPDATED, hass, entity_ids, action, job_type
     )
@@ -425,8 +478,11 @@ def async_track_entity_registry_updated_event(
 
 @callback
 def async_has_entity_registry_updated_listeners(hass: HomeAssistant) -> bool:
-    """Check if async_track_entity_registry_updated_event has been called yet."""
-    return _KEYED_TRACK_ENTITY_REGISTRY_UPDATED.key in hass.data
+    """Check if any entity registry updated event tracker has been created yet."""
+    return (
+        _KEYED_TRACK_ENTITY_REGISTRY_UPDATED.key in hass.data
+        or _KEYED_TRACK_ENTITY_REGISTRY_ENTRY_UPDATED.key in hass.data
+    )
 
 
 @callback

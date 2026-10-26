@@ -198,6 +198,7 @@ class _EventEntityRegistryUpdatedData_CreateRemove(TypedDict):
 
     action: Literal["create", "remove"]
     entity_id: str
+    id: str
 
 
 class _EventEntityRegistryUpdatedData_Update(TypedDict):
@@ -205,6 +206,7 @@ class _EventEntityRegistryUpdatedData_Update(TypedDict):
 
     action: Literal["update"]
     entity_id: str
+    id: str
     changes: dict[str, Any]  # Required with action == "update"
     old_entity_id: NotRequired[str]
 
@@ -1778,7 +1780,7 @@ class EntityRegistry(BaseRegistry):
         self.hass.bus.async_fire_internal(
             EVENT_ENTITY_REGISTRY_UPDATED,
             _EventEntityRegistryUpdatedData_CreateRemove(
-                action="create", entity_id=entity_id
+                action="create", entity_id=entity_id, id=entry.id
             ),
         )
 
@@ -1829,7 +1831,7 @@ class EntityRegistry(BaseRegistry):
         self.hass.bus.async_fire_internal(
             EVENT_ENTITY_REGISTRY_UPDATED,
             _EventEntityRegistryUpdatedData_CreateRemove(
-                action="remove", entity_id=entity_id
+                action="remove", entity_id=entity_id, id=entity.id
             ),
         )
         self.async_schedule_save()
@@ -2188,6 +2190,7 @@ class EntityRegistry(BaseRegistry):
         data: _EventEntityRegistryUpdatedData_Update = {
             "action": "update",
             "entity_id": entity_id,
+            "id": new.id,
             "changes": old_values,
         }
 

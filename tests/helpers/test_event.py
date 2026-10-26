@@ -4555,8 +4555,130 @@ async def test_async_track_point_in_time_cancel_in_job(
     assert len(times) == 1
 
 
-async def test_async_track_entity_registry_updated_event(hass: HomeAssistant) -> None:
-    """Test tracking entity registry updates for an entity_id."""
+async def test_async_track_entity_registry_updated_event(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test tracking entity registry updates for a registry entry id."""
+    entry_id = "b92c0f06fbc911edacc9eea8ae14f866"
+    untracked_entry_id = "bda93f86fbc911edacc9eea8ae14f866"
+    event_data = []
+
+    @ha.callback
+    def run_callback(event: ha.Event) -> None:
+        event_data.append(event.data)
+
+    assert async_has_entity_registry_updated_listeners(hass) is False
+
+    unsub = async_track_entity_registry_updated_event(
+        hass, entry_id, run_callback, job_type=ha.HassJobType.Callback
+    )
+
+    assert async_has_entity_registry_updated_listeners(hass) is True
+
+    renamed = {
+        "action": "update",
+        "entity_id": "switch.dog_feeder",
+        "id": entry_id,
+        "old_entity_id": "switch.puppy_feeder",
+        "changes": {},
+    }
+    renamed_again = {
+        "action": "update",
+        "entity_id": "switch.cat_feeder",
+        "id": entry_id,
+        "old_entity_id": "switch.dog_feeder",
+        "changes": {},
+    }
+    removed = {"action": "remove", "entity_id": "switch.cat_feeder", "id": entry_id}
+    hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, renamed)
+    hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, renamed_again)
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        {
+            "action": "create",
+            "entity_id": "switch.dog_feeder",
+            "id": untracked_entry_id,
+        },
+    )
+    # Events fired by other code than the entity registry may lack the id
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        {"action": "create", "entity_id": "switch.cat_feeder"},
+    )
+    hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, removed)
+    await hass.async_block_till_done()
+
+    unsub()
+    hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, renamed)
+    await hass.async_block_till_done()
+
+    assert event_data == [renamed, renamed_again, removed]
+    assert "Error in event filter" not in caplog.text
+
+
+async def test_async_track_entity_registry_updated_event_with_a_callback_that_throws(
+    hass: HomeAssistant,
+) -> None:
+    """Test tracking entity registry updates when one callback throws."""
+    entry_id = "b92c0f06fbc911edacc9eea8ae14f866"
+    event_data = []
+
+    @ha.callback
+    def run_callback(event: ha.Event) -> None:
+        event_data.append(event.data)
+
+    @ha.callback
+    def failing_callback(event: ha.Event) -> None:
+        raise ValueError
+
+    unsub1 = async_track_entity_registry_updated_event(hass, entry_id, failing_callback)
+    unsub2 = async_track_entity_registry_updated_event(hass, entry_id, run_callback)
+    created = {"action": "create", "entity_id": "switch.puppy_feeder", "id": entry_id}
+    hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, created)
+    await hass.async_block_till_done()
+    unsub1()
+    unsub2()
+
+    assert event_data == [created]
+
+
+async def test_async_track_entity_registry_updated_event_with_empty_list(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_track_entity_registry_updated_event with empty list."""
+    unsub_single = async_track_entity_registry_updated_event(
+        hass, [], ha.callback(lambda event: None)
+    )
+    unsub_single2 = async_track_entity_registry_updated_event(
+        hass, [], ha.callback(lambda event: None)
+    )
+
+    unsub_single2()
+    unsub_single()
+
+    assert async_has_entity_registry_updated_listeners(hass) is False
+
+
+async def test_async_track_entity_registry_updated_event_mixed_keys(
+    hass: HomeAssistant,
+) -> None:
+    """Test tracking both entity_ids and registry entry ids is rejected."""
+    with pytest.raises(
+        ValueError, match="Can't track both entity_ids and entity registry entry ids"
+    ):
+        async_track_entity_registry_updated_event(
+            hass,
+            ["switch.puppy_feeder", "b92c0f06fbc911edacc9eea8ae14f866"],
+            ha.callback(lambda event: None),
+        )
+
+    assert async_has_entity_registry_updated_listeners(hass) is False
+
+
+async def test_async_track_entity_registry_updated_event_entity_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test tracking entity registry updates for an entity_id is deprecated."""
 
     entity_id = "switch.puppy_feeder"
     new_entity_id = "switch.dog_feeder"
@@ -4626,10 +4748,10 @@ async def test_async_track_entity_registry_updated_event(hass: HomeAssistant) ->
     assert event_data[2] == {"action": "remove", "entity_id": "switch.dog_feeder"}
 
 
-async def test_async_track_entity_registry_updated_event_with_a_callback_that_throws(
+async def test_async_track_entity_registry_updated_event_entity_id_callback_throws(
     hass: HomeAssistant,
 ) -> None:
-    """Test tracking entity registry updates when one callback throws."""
+    """Test tracking entity registry updates for an entity_id when a callback throws."""
 
     entity_id = "switch.puppy_feeder"
 
@@ -4657,21 +4779,6 @@ async def test_async_track_entity_registry_updated_event_with_a_callback_that_th
     unsub2()
 
     assert event_data[0] == {"action": "create", "entity_id": "switch.puppy_feeder"}
-
-
-async def test_async_track_entity_registry_updated_event_with_empty_list(
-    hass: HomeAssistant,
-) -> None:
-    """Test async_track_entity_registry_updated_event with empty entity list."""
-    unsub_single = async_track_entity_registry_updated_event(
-        hass, [], ha.callback(lambda event: None)
-    )
-    unsub_single2 = async_track_entity_registry_updated_event(
-        hass, [], ha.callback(lambda event: None)
-    )
-
-    unsub_single2()
-    unsub_single()
 
 
 async def test_async_track_device_registry_updated_event(hass: HomeAssistant) -> None:
