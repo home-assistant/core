@@ -9,7 +9,7 @@
   },
   "conditions": {
     "epex_hour_price_is_negative": {
-      "description": "True when the current EPEX hour day-ahead price is negative (you are paid to consume).",
+      "description": "True when the current EPEX hour day-ahead price is negative.",
       "fields": {
         "device_id": {
           "description": "[%key:component::engie_be::common::device_description%]",
@@ -37,7 +37,7 @@
       "name": "EPEX hour price is in range"
     },
     "epex_quarter_hour_price_is_negative": {
-      "description": "True when the current quarter-hourly EPEX day-ahead price is negative (you are paid to consume).",
+      "description": "True when the current quarter-hourly EPEX day-ahead price is negative.",
       "fields": {
         "device_id": {
           "description": "[%key:component::engie_be::common::device_description%]",
@@ -524,7 +524,7 @@
       "name": "EPEX highest quarter-hourly price today updated"
     },
     "epex_hour_became_negative": {
-      "description": "Fires when the hourly EPEX day-ahead price turns negative (you are paid to consume).",
+      "description": "Fires when the hourly EPEX day-ahead price turns negative.",
       "fields": {
         "device_id": {
           "description": "[%key:component::engie_be::common::device_description%]",
@@ -600,7 +600,7 @@
       "name": "EPEX next quarter-hourly price crossed threshold"
     },
     "epex_quarter_hour_became_negative": {
-      "description": "Fires when the quarter-hourly EPEX day-ahead price turns negative (you are paid to consume).",
+      "description": "Fires when the quarter-hourly EPEX day-ahead price turns negative.",
       "fields": {
         "device_id": {
           "description": "[%key:component::engie_be::common::device_description%]",
