@@ -98,9 +98,6 @@
     },
     "invalid_response": {
       "message": "Invalid response received from the Hot Spring API."
-    },
-    "salt_output_level_not_whole": {
-      "message": "Salt output level must be a whole number, got {value}."
     }
   }
 }

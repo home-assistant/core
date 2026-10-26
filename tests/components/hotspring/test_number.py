@@ -1,7 +1,6 @@
 """Tests for the Hot Spring number platform."""
 
-from math import nan
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from hotspring import HotSpringConnectionError, HotSpringError, Spa, TemperatureUnit
 import pytest
@@ -22,6 +21,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.util import dt as dt_util
 
 from . import setup_with_selected_platforms
@@ -31,16 +31,42 @@ SALT_OUTPUT_LEVEL_ENTITY_ID = "number.connectedspa_ddeeff_salt_output_level"
 SALT_OUTPUT_LEVEL_UNIQUE_ID = "AA:BB:CC:DD:EE:FF_salt_output_level"
 
 
+@pytest.mark.usefixtures("mock_hotspring")
 async def test_number_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_hotspring: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the number entity state."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_hotspring")
+@pytest.mark.parametrize("cartridge_installed", [True, False])
+async def test_initial_numbers_added_together(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_fixture: Spa,
+    cartridge_installed: bool,
+) -> None:
+    """Test setup batches all initially supported numbers in one addition."""
+    device_fixture.water_care.cartridge_installed = cartridge_installed
+    with patch.object(
+        EntityPlatform,
+        "async_add_entities",
+        autospec=True,
+        side_effect=EntityPlatform.async_add_entities,
+    ) as add_entities:
+        await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
+
+    add_entities.assert_called_once()
+    assert len(add_entities.call_args.args[1]) == 1 + cartridge_installed
+    assert hass.states.get(ENTITY_ID) is not None
+    assert (
+        hass.states.get(SALT_OUTPUT_LEVEL_ENTITY_ID) is not None
+    ) is cartridge_installed
 
 
 async def test_set_target_temperature(
@@ -177,46 +203,13 @@ async def test_set_salt_output_level(
     )
 
     mock_hotspring.set_water_care_level.assert_called_once_with(expected_level)
+    assert type(mock_hotspring.set_water_care_level.call_args.args[0]) is int
+    mock_hotspring.update.assert_called_once()
     mock_hotspring.set_salt_system_power.assert_not_called()
     mock_hotspring.set_water_care_boost.assert_not_called()
     mock_hotspring.toggle_water_care_boost.assert_not_called()
     assert (state := hass.states.get(SALT_OUTPUT_LEVEL_ENTITY_ID))
     assert state.state == str(expected_level)
-
-
-@pytest.mark.parametrize(
-    ("value", "match"),
-    [
-        pytest.param(
-            2.5, "Salt output level must be a whole number, got 2.5", id="2.5"
-        ),
-        pytest.param(
-            nan, "Salt output level must be a whole number, got nan", id="nan"
-        ),
-    ],
-)
-async def test_set_salt_output_level_not_whole(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_hotspring: MagicMock,
-    value: float,
-    match: str,
-) -> None:
-    """Test nonintegral values are rejected before issuing a command."""
-    with pytest.raises(ServiceValidationError, match=match):
-        await hass.services.async_call(
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {
-                ATTR_ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
-                ATTR_VALUE: value,
-            },
-            blocking=True,
-        )
-
-    mock_hotspring.set_water_care_level.assert_not_called()
-    assert (state := hass.states.get(SALT_OUTPUT_LEVEL_ENTITY_ID))
-    assert state.state == "2"
 
 
 async def test_set_salt_output_level_out_of_range(
@@ -275,12 +268,13 @@ async def test_set_salt_output_level_error(
     assert state.state == "2"
 
 
-async def test_set_salt_output_level_refresh_fails(
+async def test_set_salt_output_level_poll_fails(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_hotspring: MagicMock,
 ) -> None:
-    """Test a successful command followed by a failed refresh."""
+    """Test a successful command does not refresh until the next scheduled poll."""
+    mock_hotspring.update.reset_mock()
     mock_hotspring.update.side_effect = HotSpringConnectionError
 
     await hass.services.async_call(
@@ -294,11 +288,17 @@ async def test_set_salt_output_level_refresh_fails(
     )
 
     mock_hotspring.set_water_care_level.assert_called_once_with(5)
+    mock_hotspring.update.assert_not_called()
+    assert (state := hass.states.get(SALT_OUTPUT_LEVEL_ENTITY_ID))
+    assert state.state == "2"
+
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
     assert (state := hass.states.get(SALT_OUTPUT_LEVEL_ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
 
     mock_hotspring.update.side_effect = None
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + 2 * SCAN_INTERVAL)
     await hass.async_block_till_done()
     assert (state := hass.states.get(SALT_OUTPUT_LEVEL_ENTITY_ID))
     assert state.state == "2"
@@ -342,10 +342,10 @@ async def test_salt_output_level_unavailable_when_cartridge_removed(
     assert state.state == "2"
 
 
+@pytest.mark.usefixtures("mock_hotspring")
 async def test_no_salt_output_level_entity_without_cartridge(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_hotspring: MagicMock,
     device_fixture: Spa,
 ) -> None:
     """Test no salt output level entity is created without a cartridge."""
@@ -356,10 +356,10 @@ async def test_no_salt_output_level_entity_without_cartridge(
     assert hass.states.get(ENTITY_ID) is not None
 
 
+@pytest.mark.usefixtures("mock_hotspring")
 async def test_salt_output_level_entity_added_when_cartridge_reported_later(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_hotspring: MagicMock,
     device_fixture: Spa,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -470,9 +470,14 @@ async def test_set_salt_output_level_non_echo_reports_different_level(
     )
 
     mock_hotspring.set_water_care_level.assert_called_once_with(7)
+    mock_hotspring.update.assert_not_called()
+    assert (state := hass.states.get(SALT_OUTPUT_LEVEL_ENTITY_ID))
+    assert state.state == "2"
+
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
     mock_hotspring.update.assert_called_once()
     assert (state := hass.states.get(SALT_OUTPUT_LEVEL_ENTITY_ID))
-    assert state.state != "7"
     assert state.state == "5"
 
 

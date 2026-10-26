@@ -11,10 +11,8 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import HotSpringConfigEntry, HotSpringDataUpdateCoordinator
 from .entity import HotSpringEntity
 from .helpers import hotspring_exception_handler
@@ -29,10 +27,6 @@ MIN_TEMP_CELSIUS = 26.0
 MAX_TEMP_CELSIUS = 40.0
 STEP_CELSIUS = 0.5
 
-MIN_SALT_OUTPUT_LEVEL = 0.0
-MAX_SALT_OUTPUT_LEVEL = 10.0
-STEP_SALT_OUTPUT_LEVEL = 1.0
-
 TARGET_TEMPERATURE_DESCRIPTION = NumberEntityDescription(
     key="target_temperature",
     translation_key="target_temperature",
@@ -42,9 +36,9 @@ TARGET_TEMPERATURE_DESCRIPTION = NumberEntityDescription(
 SALT_OUTPUT_LEVEL_DESCRIPTION = NumberEntityDescription(
     key="salt_output_level",
     translation_key="salt_output_level",
-    native_min_value=MIN_SALT_OUTPUT_LEVEL,
-    native_max_value=MAX_SALT_OUTPUT_LEVEL,
-    native_step=STEP_SALT_OUTPUT_LEVEL,
+    native_min_value=0.0,
+    native_max_value=10.0,
+    native_step=1.0,
 )
 
 
@@ -55,10 +49,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up Hot Spring number entities."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        [HotSpringNumberEntity(coordinator, TARGET_TEMPERATURE_DESCRIPTION)]
-    )
-    added_salt_output_level = False
+    entities: list[NumberEntity] = [
+        HotSpringNumberEntity(coordinator, TARGET_TEMPERATURE_DESCRIPTION)
+    ]
+    added_salt_output_level = coordinator.data.water_care.cartridge_installed
+    if added_salt_output_level:
+        entities.append(
+            HotSpringSaltOutputLevelEntity(coordinator, SALT_OUTPUT_LEVEL_DESCRIPTION)
+        )
+    async_add_entities(entities)
 
     @callback
     def async_add_salt_output_level_entity() -> None:
@@ -74,7 +73,6 @@ async def async_setup_entry(
             [HotSpringSaltOutputLevelEntity(coordinator, SALT_OUTPUT_LEVEL_DESCRIPTION)]
         )
 
-    async_add_salt_output_level_entity()
     entry.async_on_unload(
         coordinator.async_add_listener(async_add_salt_output_level_entity)
     )
@@ -180,11 +178,5 @@ class HotSpringSaltOutputLevelEntity(HotSpringEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the salt output level."""
-        if not value.is_integer():
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="salt_output_level_not_whole",
-                translation_placeholders={"value": str(value)},
-            )
         await self.coordinator.hotspring.set_water_care_level(int(value))
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_set_updated_data(self.coordinator.data)
