@@ -2228,12 +2228,13 @@ class EntityRegistry(BaseRegistry):
         if old.entity_id != entity_id:
             data["old_entity_id"] = old.entity_id
 
-        self.hass.bus.async_fire_internal(EVENT_ENTITY_REGISTRY_UPDATED, data)
-
+        # Before the entity event, so listeners never see the entity without an area
         if child_device is not None:
             dr.async_get(self.hass).async_update_child_device(
                 child_device.id, area_id=child_device_new_area_id
             )
+
+        self.hass.bus.async_fire_internal(EVENT_ENTITY_REGISTRY_UPDATED, data)
 
         return new
 

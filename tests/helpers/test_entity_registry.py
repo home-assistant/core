@@ -3309,6 +3309,15 @@ async def test_move_to_child_device_takes_over_own_area(
     )
     entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
     events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
+    child_area_ids_at_event: list[str | None] = []
+
+    @callback
+    def _record_child_area(event: Event) -> None:
+        child_area_ids_at_event.append(
+            device_registry.async_get(child_device.id).area_id
+        )
+
+    hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, _record_child_area)
 
     entry = entity_registry.async_get_or_create(
         "light",
@@ -3324,6 +3333,8 @@ async def test_move_to_child_device_takes_over_own_area(
     assert entry.device_id == child_device.id
     assert entry.area_id == expected_entity_area_id
     assert device_registry.async_get(child_device.id).area_id == expected_child_area_id
+    # The child device already has the area when the entity event is dispatched
+    assert child_area_ids_at_event == [expected_child_area_id]
     assert len(events) == 1
     assert events[0].data["changes"] == {
         "device_id": device_entry.id,
