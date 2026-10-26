@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from chip.clusters.Objects import (
     CameraAvStreamManagement,
+    Globals,
     WebRtcTransportProvider,
     ZoneManagement,
 )
@@ -447,9 +448,24 @@ class MatterCamera(MatterEntity, Camera):
         """Remove a zone from the camera."""
         self._zone_features()
         self._check_zone_editable(zone_id, remove=True)
-        await self.send_device_command(
-            ZoneManagement.Commands.RemoveZone(zoneID=zone_id)
-        )
+        try:
+            await self.matter_client.send_device_command(
+                node_id=self._endpoint.node.node_id,
+                endpoint_id=self._endpoint.endpoint_id,
+                command=ZoneManagement.Commands.RemoveZone(zoneID=zone_id),
+            )
+        except MatterError as err:
+            # The camera refuses to remove a zone that a trigger uses
+            if err.status == Globals.Enums.status.kInvalidInState:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="camera_zone_has_trigger",
+                    translation_placeholders={
+                        "entity_id": self.entity_id,
+                        "zone_id": str(zone_id),
+                    },
+                ) from err
+            raise HomeAssistantError(str(err) or type(err).__name__) from err
 
 
 def _vertex_to_percent(

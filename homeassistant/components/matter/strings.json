@@ -789,10 +789,13 @@
       "message": "{entity_id} does not support focus zones."
     },
     "camera_motion_zone_not_editable": {
-      "message": "Home Assistant cannot change motion zones. Zone {zone_id} of {entity_id} can only be removed."
+      "message": "Home Assistant cannot change motion zones. Zone {zone_id} of {entity_id} can only be removed, and only if no camera trigger uses it."
     },
     "camera_user_zones_not_supported": {
       "message": "{entity_id} does not allow changing its zones."
+    },
+    "camera_zone_has_trigger": {
+      "message": "Zone {zone_id} of {entity_id} is used by a camera trigger. Remove the trigger first in the app that set it up, for example the camera's app."
     },
     "camera_zone_not_editable": {
       "message": "Zone {zone_id} of {entity_id} is not a user zone and cannot be changed."
@@ -928,7 +931,7 @@
           "name": "Use"
         },
         "vertices": {
-          "description": "The corners of the zone, in percent of the camera sensor from the top left. 3 to 12 corners.",
+          "description": "The corners of the zone, in percent of the camera sensor from the top left, in order around the zone so that its edges don't cross. 3 to 12 corners.",
           "name": "Corners"
         },
         "zone_id": {

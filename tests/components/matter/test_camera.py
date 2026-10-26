@@ -7,7 +7,7 @@ import dataclasses
 from typing import Any
 from unittest.mock import MagicMock, call, patch
 
-from chip.clusters.Objects import ZoneManagement
+from chip.clusters.Objects import ClusterCommand, ZoneManagement
 from matter_server.client.exceptions import NotConnected
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import CameraPrivacyMode, MatterError
@@ -847,7 +847,7 @@ async def test_set_camera_zone(
     data: dict[str, Any],
     response: dict[str, Any] | None,
     zone_id: int,
-    command: Any,
+    command: ClusterCommand,
 ) -> None:
     """Test setting a zone converts percent to camera coordinates."""
     matter_client.send_device_command.return_value = response
@@ -1076,22 +1076,72 @@ async def test_set_camera_zone_longest_name(
     )
 
 
+def _status_error(message: str, status: int) -> MatterError:
+    """Return a Matter error with the status the camera answered."""
+    err = MatterError(message)
+    err.status = status
+    return err
+
+
+@pytest.mark.parametrize(
+    ("action", "data", "error", "message"),
+    [
+        pytest.param(
+            "set_camera_zone",
+            ZONE_DATA,
+            _status_error("Resource exhausted (code 137)", 0x89),
+            "Resource exhausted",
+            id="set",
+        ),
+        pytest.param(
+            "set_camera_zone",
+            {**ZONE_DATA, "zone_id": 2},
+            _status_error("Invalid in state (code 203)", 0xCB),
+            "Invalid in state",
+            id="set_invalid_in_state",
+        ),
+        pytest.param(
+            "clear_camera_zone",
+            {"zone_id": 2},
+            _status_error("Not found (code 139)", 0x8B),
+            "Not found",
+            id="clear",
+        ),
+        pytest.param(
+            "clear_camera_zone",
+            {"zone_id": 2},
+            MatterError(),
+            "MatterError",
+            id="clear_no_message",
+        ),
+        pytest.param(
+            "clear_camera_zone",
+            {"zone_id": 3},
+            _status_error("Invalid in state (code 203)", 0xCB),
+            "Zone 3 of camera.mock_camera is used by a camera trigger. Remove the trigger "
+            "first in the app that set it up, for example the camera's app",
+            id="clear_zone_with_trigger",
+        ),
+    ],
+)
 @pytest.mark.parametrize("node_fixture", ["mock_camera"])
 @pytest.mark.parametrize("attributes", [ZONE_ATTRIBUTES])
 @pytest.mark.usefixtures("matter_node")
 async def test_camera_zone_command_error(
-    hass: HomeAssistant, matter_client: MagicMock
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    action: str,
+    data: dict[str, Any],
+    error: MatterError,
+    message: str,
 ) -> None:
     """Test a camera refusing a zone command."""
-    matter_client.send_device_command.side_effect = MatterError("RESOURCE_EXHAUSTED")
-    with pytest.raises(HomeAssistantError, match="RESOURCE_EXHAUSTED"):
+    matter_client.send_device_command.side_effect = error
+    with pytest.raises(HomeAssistantError, match=message) as exc_info:
         await hass.services.async_call(
-            DOMAIN,
-            "set_camera_zone",
-            ZONE_DATA,
-            target={"entity_id": ENTITY_ID},
-            blocking=True,
+            DOMAIN, action, data, target={"entity_id": ENTITY_ID}, blocking=True
         )
+    assert not isinstance(exc_info.value, ServiceValidationError)
 
 
 @pytest.mark.parametrize(
