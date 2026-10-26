@@ -131,6 +131,18 @@
       "temp_trend": {
         "name": "Temperature trend"
       },
+      "therm_setpoint_mode": {
+        "name": "Setpoint mode",
+        "state": {
+          "away": "Away",
+          "hg": "Frost guard",
+          "home": "Home",
+          "manual": "Manual",
+          "max": "Max",
+          "off": "Off",
+          "schedule": "Schedule"
+        }
+      },
       "wifi_strength": {
         "name": "Wi-Fi strength"
       },

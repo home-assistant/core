@@ -92,7 +92,6 @@ ATTR_SCHEDULE_NAME = "schedule_name"
 ATTR_SELECTED_SCHEDULE = "selected_schedule"
 ATTR_SELECTED_SCHEDULE_ID = "selected_schedule_id"
 ATTR_TARGET_TEMPERATURE = "target_temperature"
-ATTR_THERM_SETPOINT_MODE = "therm_setpoint_mode"
 ATTR_TIME_PERIOD = "time_period"
 
 SERVICE_CLEAR_TEMPERATURE_SETTING = "clear_temperature_setting"

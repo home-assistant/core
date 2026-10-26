@@ -29,7 +29,6 @@ from homeassistant.components.netatmo.const import (
     ATTR_END_DATETIME,
     ATTR_SCHEDULE_NAME,
     ATTR_TARGET_TEMPERATURE,
-    ATTR_THERM_SETPOINT_MODE,
     ATTR_TIME_PERIOD,
     DOMAIN,
     SERVICE_CLEAR_TEMPERATURE_SETTING,
@@ -164,10 +163,6 @@ async def test_webhook_event_handling_thermostats(
         hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
     )
     assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 21
-    assert (
-        hass.states.get(climate_entity_livingroom).attributes[ATTR_THERM_SETPOINT_MODE]
-        == "manual"
-    )
 
     # Test service setting the HVAC mode to "heat"
     await hass.services.async_call(
@@ -206,10 +201,6 @@ async def test_webhook_event_handling_thermostats(
 
     assert hass.states.get(climate_entity_livingroom).state == "heat"
     assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 30
-    assert (
-        hass.states.get(climate_entity_livingroom).attributes[ATTR_THERM_SETPOINT_MODE]
-        == "max"
-    )
 
     # Test service setting the HVAC mode to "off"
     await hass.services.async_call(
@@ -245,10 +236,6 @@ async def test_webhook_event_handling_thermostats(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_livingroom).state == "off"
-    assert (
-        hass.states.get(climate_entity_livingroom).attributes[ATTR_THERM_SETPOINT_MODE]
-        == "off"
-    )
 
     # Test service setting the HVAC mode to "auto"
     await hass.services.async_call(
