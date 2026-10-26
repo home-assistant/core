@@ -35,8 +35,7 @@ from .const import (
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
-from .event import fault_log_store
-from .helpers import create_modbus_params
+from .helpers import create_modbus_params, fault_log_store
 from .sensor import TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
 

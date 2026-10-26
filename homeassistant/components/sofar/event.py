@@ -14,20 +14,17 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
+from .helpers import StoredEntries, fault_log_store
 
 PARALLEL_UPDATES = 0
 
 ATTR_FAULT_ID = "fault_id"
 ATTR_OCCURRED_AT = "occurred_at"
 
-STORAGE_VERSION = 1
-
 # A log entry as (fault id, inverter clock), free of any time zone.
 type EntryKey = tuple[int, datetime]
-type StoredEntries = list[tuple[int, str]]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,11 +55,6 @@ async def async_setup_entry(
         for description in EVENT_DESCRIPTIONS
         if description.component in runtime_data.served_components
     )
-
-
-def fault_log_store(hass: HomeAssistant, entry_id: str) -> Store[StoredEntries]:
-    """Return the store of the log entries an entry has handled."""
-    return Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry_id}.fault_log")
 
 
 def _key(entry: FaultLogEntry) -> EntryKey:
