@@ -34,5 +34,19 @@
       }),
       'type': 'object',
     }),
+    'config__reload_config_entry': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'entry_id': dict({
+          'description': "The entry_id of the config entry to reload (e.g. 'hue:8K2M').",
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'entry_id',
+      ]),
+      'type': 'object',
+    }),
   })
 # ---

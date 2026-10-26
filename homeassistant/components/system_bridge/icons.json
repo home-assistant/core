@@ -68,6 +68,15 @@
       "load": {
         "default": "mdi:percent"
       },
+      "load_average": {
+        "default": "mdi:gauge"
+      },
+      "load_average_15": {
+        "default": "mdi:gauge"
+      },
+      "load_average_5": {
+        "default": "mdi:gauge"
+      },
       "memory_free": {
         "default": "mdi:memory"
       },

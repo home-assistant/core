@@ -1299,6 +1299,15 @@
     "command_reason": {
       "message": "Command was rejected: {reason}"
     },
+    "local_command_failed": {
+      "message": "The Powerwall gateway could not complete the command, check the logs for details"
+    },
+    "local_command_not_supported": {
+      "message": "The Powerwall gateway firmware does not support this command"
+    },
+    "local_command_out_of_range": {
+      "message": "The Powerwall gateway rejected the requested power, change the power value and try again"
+    },
     "local_update_failed": {
       "message": "Error fetching data from the local Powerwall gateway: {message}"
     },
@@ -1310,6 +1319,9 @@
     },
     "no_energy_site_data_for_device": {
       "message": "No energy site data for device ID: {device_id}"
+    },
+    "no_local_powerwall": {
+      "message": "{name} is not connected to its Powerwall for local control, add it as a local energy site or restore its local connection"
     },
     "no_vehicle_data_for_device": {
       "message": "No vehicle data for device ID: {device_id}"
@@ -1506,6 +1518,24 @@
       },
       "name": "Add precondition schedule"
     },
+    "dispatch_battery_power": {
+      "description": "Charges or discharges the Powerwall at a set power for a set time over the local gateway connection.",
+      "fields": {
+        "device_id": {
+          "description": "Energy site paired with its local Powerwall gateway.",
+          "name": "Energy site"
+        },
+        "duration": {
+          "description": "How long to hold the power. When it ends, the Powerwall returns to its normal operation by itself. A new call replaces the power and duration of the previous one.",
+          "name": "Duration"
+        },
+        "power": {
+          "description": "Battery power to hold. A positive value discharges the battery, a negative value charges it.",
+          "name": "Power"
+        }
+      },
+      "name": "Dispatch battery power"
+    },
     "navigation_gps_request": {
       "description": "Sets vehicle navigation to the provided latitude/longitude coordinates.",
       "fields": {
@@ -1551,6 +1581,16 @@
         }
       },
       "name": "Remove precondition schedule"
+    },
+    "resume_battery_operation": {
+      "description": "Ends a battery power dispatch early and returns the Powerwall to its normal operation.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::teslemetry::services::dispatch_battery_power::fields::device_id::description%]",
+          "name": "[%key:component::teslemetry::services::dispatch_battery_power::fields::device_id::name%]"
+        }
+      },
+      "name": "Resume battery operation"
     },
     "set_scheduled_charging": {
       "description": "Sets a time at which charging should be started.",
