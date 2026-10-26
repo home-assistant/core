@@ -21,14 +21,26 @@ from aioesphomeapi import (
     SwitchInfo,
     UnsupportedWizardVersionError,
 )
-from aioesphomeapi.model import SerialProxyPortType, SubDeviceInfo
+from aioesphomeapi.model import (
+    SendspinPairingTokenResponse,
+    SendspinPairingTokenStatus,
+    SerialProxyPortType,
+    SubDeviceInfo,
+)
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.typing import WebSocketGenerator
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.esphome.const import CONF_NOISE_PSK, DOMAIN
 from homeassistant.components.esphome.serial_proxy import build_url
-from homeassistant.components.esphome.websocket_api import DEVICE_ID, ENTRY_ID, TYPE
+from homeassistant.components.esphome.websocket_api import (
+    CLIENT_ID,
+    CLIENT_IDS,
+    DEVICE_ID,
+    ENTRY_ID,
+    TYPE,
+)
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntryDisabler
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -769,3 +781,438 @@ async def test_get_device_wizard_restored(
     response = await websocket_client.receive_json()
     assert response["result"] == {"pages": expected_pages}
     assert mock_client.disconnect.await_count == disconnects
+
+
+SENDSPIN_CLIENT_ID = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+SENDSPIN_TOKEN = "SP:1AAAQEAYEAUDAOCAJBIFQYDIOB4IBCEQTCQKRMFYYDENBWHA5DYPSA"
+
+
+def _sendspin_capabilities(
+    *, supported: bool = True, client_id: str = SENDSPIN_CLIENT_ID
+) -> dict[str, Any]:
+    """Return device capabilities for a device with (or without) Sendspin."""
+    if not supported:
+        return {}
+    return {
+        "sendspin": {
+            "feature_flags": SendspinFeature.PAIRING_TOKEN,
+            "client_id": client_id,
+        }
+    }
+
+
+def _mock_sendspin_pairing_token(
+    mock_client: APIClient,
+    *,
+    status: SendspinPairingTokenStatus | None = SendspinPairingTokenStatus.OK,
+    token: str = SENDSPIN_TOKEN,
+) -> None:
+    """Make the mock device answer the pairing token request."""
+    mock_client.sendspin_pairing_token = AsyncMock(
+        return_value=SendspinPairingTokenResponse(status=status, token=token)
+    )
+
+
+async def _get_sendspin_pairing_token(
+    hass_ws_client: WebSocketGenerator, client_id: str = SENDSPIN_CLIENT_ID
+) -> dict[str, Any]:
+    """Ask for the pairing token of a Sendspin client id."""
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json_auto_id(
+        {TYPE: "sendspin/get_pairing_token", CLIENT_ID: client_id}
+    )
+    return await websocket_client.receive_json()
+
+
+async def _subscribe_sendspin_clients(
+    hass_ws_client: WebSocketGenerator,
+) -> tuple[MockHAClientWebSocket, list[str]]:
+    """Subscribe to the Sendspin client ids and return the first snapshot."""
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json_auto_id({TYPE: "sendspin/subscribe_clients"})
+    response = await websocket_client.receive_json()
+    assert response["success"] is True
+    return websocket_client, await _receive_sendspin_clients(websocket_client)
+
+
+async def _receive_sendspin_clients(
+    websocket_client: MockHAClientWebSocket,
+) -> list[str]:
+    """Receive the next client id snapshot."""
+    message = await websocket_client.receive_json()
+    assert message["type"] == "event"
+    return message["event"][CLIENT_IDS]
+
+
+async def _assert_nothing_received(websocket_client: MockHAClientWebSocket) -> None:
+    """Check that no event is pending by making a round trip to the server."""
+    await websocket_client.send_json_auto_id({TYPE: "ping"})
+    assert (await websocket_client.receive_json())["type"] == "pong"
+
+
+async def _retry_client_id_fetch(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, delay: float
+) -> None:
+    """Let the capabilities fetch scheduled after this delay run."""
+    freezer.tick(delay + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+async def test_get_sendspin_pairing_token(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """The token of the device whose client id matches is returned."""
+    await mock_esphome_device(
+        mock_client=mock_client, device_capabilities=_sendspin_capabilities()
+    )
+    _mock_sendspin_pairing_token(mock_client)
+
+    for _ in range(2):
+        response = await _get_sendspin_pairing_token(hass_ws_client)
+        assert response["success"] is True
+        assert response["result"] == {"token": SENDSPIN_TOKEN}
+    # The client id comes from the capabilities fetched on connect
+    assert mock_client.device_capabilities_compat.await_count == 1
+    assert mock_client.sendspin_pairing_token.await_count == 2
+
+
+@pytest.mark.parametrize(
+    "device_capabilities",
+    [
+        pytest.param(_sendspin_capabilities(supported=False), id="no_sendspin"),
+        pytest.param(_sendspin_capabilities(), id="other_client_id"),
+        pytest.param(_sendspin_capabilities(client_id=""), id="client_id_unknown"),
+    ],
+)
+async def test_get_sendspin_pairing_token_not_found(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+    device_capabilities: dict[str, Any],
+) -> None:
+    """A client id no connected device is known to carry is not found."""
+    await mock_esphome_device(
+        mock_client=mock_client, device_capabilities=device_capabilities
+    )
+    _mock_sendspin_pairing_token(mock_client)
+
+    response = await _get_sendspin_pairing_token(hass_ws_client, "other-client")
+    assert response["success"] is False
+    assert response["error"]["code"] == "not_found"
+    mock_client.sendspin_pairing_token.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("status", "reason"),
+    [
+        (SendspinPairingTokenStatus.NOT_READY, "not ready"),
+        (SendspinPairingTokenStatus.ENCRYPTION_REQUIRED, "encryption required"),
+        (SendspinPairingTokenStatus.DISABLED, "disabled"),
+        (SendspinPairingTokenStatus.FAILED, "failed"),
+        pytest.param(None, "unknown status", id="unknown_status"),
+    ],
+)
+async def test_get_sendspin_pairing_token_status_without_token(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+    status: SendspinPairingTokenStatus | None,
+    reason: str,
+) -> None:
+    """A matched device that hands out no token is an error that says why."""
+    await mock_esphome_device(
+        mock_client=mock_client, device_capabilities=_sendspin_capabilities()
+    )
+    _mock_sendspin_pairing_token(mock_client, status=status, token="")
+
+    response = await _get_sendspin_pairing_token(hass_ws_client)
+    assert response["success"] is False
+    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["message"] == f"test hands out no pairing token: {reason}"
+
+
+async def test_get_sendspin_pairing_token_connection_error(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A device that fails to answer is reported as an error."""
+    await mock_esphome_device(
+        mock_client=mock_client, device_capabilities=_sendspin_capabilities()
+    )
+    mock_client.sendspin_pairing_token = AsyncMock(
+        side_effect=APIConnectionError("boom")
+    )
+
+    response = await _get_sendspin_pairing_token(hass_ws_client)
+    assert response["success"] is False
+    assert response["error"]["code"] == "unknown_error"
+    assert "boom" in response["error"]["message"]
+
+
+async def test_get_sendspin_pairing_token_unavailable_device(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A disconnected device is not asked, even though its capabilities are kept."""
+    device = await mock_esphome_device(
+        mock_client=mock_client, device_capabilities=_sendspin_capabilities()
+    )
+    _mock_sendspin_pairing_token(mock_client)
+    await device.mock_disconnect(False)
+
+    response = await _get_sendspin_pairing_token(hass_ws_client)
+    assert response["success"] is False
+    assert response["error"]["code"] == "not_found"
+    mock_client.sendspin_pairing_token.assert_not_awaited()
+
+
+async def test_subscribe_sendspin_clients(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """The client ids are sent on subscribe and whenever a device comes or goes."""
+    device = await mock_esphome_device(
+        mock_client=mock_client, device_capabilities=_sendspin_capabilities()
+    )
+    websocket_client, client_ids = await _subscribe_sendspin_clients(hass_ws_client)
+    assert client_ids == [SENDSPIN_CLIENT_ID]
+
+    await device.mock_disconnect(False)
+    assert await _receive_sendspin_clients(websocket_client) == []
+
+    await device.mock_connect()
+    assert await _receive_sendspin_clients(websocket_client) == [SENDSPIN_CLIENT_ID]
+    await _assert_nothing_received(websocket_client)
+
+
+@pytest.mark.parametrize(
+    "device_capabilities",
+    [
+        pytest.param(_sendspin_capabilities(supported=False), id="no_sendspin"),
+        pytest.param(_sendspin_capabilities(client_id=""), id="client_id_unknown"),
+    ],
+)
+async def test_subscribe_sendspin_clients_without_client_ids(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+    device_capabilities: dict[str, Any],
+) -> None:
+    """A device without a known client id is not announced."""
+    device = await mock_esphome_device(
+        mock_client=mock_client, device_capabilities=device_capabilities
+    )
+    websocket_client, client_ids = await _subscribe_sendspin_clients(hass_ws_client)
+    assert client_ids == []
+
+    await device.mock_disconnect(False)
+    await _assert_nothing_received(websocket_client)
+
+
+async def test_subscribe_sendspin_clients_unsubscribe(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """After unsubscribing no more snapshots arrive."""
+    device = await mock_esphome_device(
+        mock_client=mock_client, device_capabilities=_sendspin_capabilities()
+    )
+    websocket_client, _ = await _subscribe_sendspin_clients(hass_ws_client)
+    await websocket_client.send_json_auto_id(
+        {TYPE: "unsubscribe_events", "subscription": 1}
+    )
+    assert (await websocket_client.receive_json())["success"] is True
+
+    await device.mock_disconnect(False)
+    await _assert_nothing_received(websocket_client)
+
+
+def _mock_client_id_refresh(mock_client: APIClient, **kwargs: Any) -> AsyncMock:
+    """Make the mock device answer the capabilities request a refresh sends.
+
+    A refresh asks a device that reported Sendspin, so it skips the compat path
+    the connect-time request uses.
+    """
+    mock_client.device_capabilities = AsyncMock(**kwargs)
+    return mock_client.device_capabilities
+
+
+async def test_subscribe_sendspin_clients_client_id_learned_later(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+) -> None:
+    """A device whose Sendspin client had not started on connect is asked again."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_capabilities=_sendspin_capabilities(client_id=""),
+    )
+    _mock_sendspin_pairing_token(mock_client)
+    websocket_client, client_ids = await _subscribe_sendspin_clients(hass_ws_client)
+    assert client_ids == []
+
+    # Still not started: asked again later, with a growing delay
+    refresh = _mock_client_id_refresh(
+        mock_client,
+        return_value=DeviceCapabilities.from_dict(_sendspin_capabilities(client_id="")),
+    )
+    await _retry_client_id_fetch(hass, freezer, 5)
+    assert refresh.await_count == 1
+    await _assert_nothing_received(websocket_client)
+
+    refresh.return_value = DeviceCapabilities.from_dict(_sendspin_capabilities())
+    await _retry_client_id_fetch(hass, freezer, 10)
+    assert refresh.await_count == 2
+    assert await _receive_sendspin_clients(websocket_client) == [SENDSPIN_CLIENT_ID]
+
+    response = await _get_sendspin_pairing_token(hass_ws_client)
+    assert response["result"] == {"token": SENDSPIN_TOKEN}
+    capabilities = device.entry.runtime_data.device_capabilities
+    assert capabilities.sendspin.client_id == SENDSPIN_CLIENT_ID
+
+    # Once known, the device is left alone; the refreshed capabilities are saved
+    await _retry_client_id_fetch(hass, freezer, 300)
+    assert refresh.await_count == 2
+    assert mock_client.device_capabilities_compat.await_count == 1
+    stored = hass_storage[f"{DOMAIN}.{device.entry.entry_id}"]["data"]
+    assert stored["device_capabilities"] == capabilities.to_dict()
+
+
+async def test_subscribe_sendspin_clients_client_id_refresh_stops(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A disconnected device is not asked again; a connected one that fails is."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_capabilities=_sendspin_capabilities(client_id=""),
+    )
+    websocket_client, _ = await _subscribe_sendspin_clients(hass_ws_client)
+
+    refresh = _mock_client_id_refresh(
+        mock_client, side_effect=APIConnectionError("boom")
+    )
+    await device.mock_disconnect(False)
+    await _retry_client_id_fetch(hass, freezer, 5)
+    refresh.assert_not_awaited()
+
+    await device.mock_connect()
+    assert mock_client.device_capabilities_compat.await_count == 2
+    # A request that times out while connected is retried with a longer delay
+    await _retry_client_id_fetch(hass, freezer, 5)
+    assert refresh.await_count == 1
+    await _retry_client_id_fetch(hass, freezer, 10)
+    assert refresh.await_count == 2
+    await _assert_nothing_received(websocket_client)
+
+    refresh.side_effect = None
+    refresh.return_value = DeviceCapabilities.from_dict(_sendspin_capabilities())
+    await _retry_client_id_fetch(hass, freezer, 20)
+    assert await _receive_sendspin_clients(websocket_client) == [SENDSPIN_CLIENT_ID]
+
+
+async def test_subscribe_sendspin_clients_refresh_survives_capabilities_update(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A cache update in the same connection, like a Z-Wave home id, is kept by the refresh."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_capabilities=_sendspin_capabilities(client_id=""),
+    )
+    websocket_client, _ = await _subscribe_sendspin_clients(hass_ws_client)
+
+    fetch_started = asyncio.Event()
+    release_fetch = asyncio.Event()
+
+    async def _slow_fetch() -> DeviceCapabilities:
+        fetch_started.set()
+        await release_fetch.wait()
+        return DeviceCapabilities.from_dict(_sendspin_capabilities())
+
+    _mock_client_id_refresh(mock_client, side_effect=_slow_fetch)
+    freezer.tick(6)
+    async_fire_time_changed(hass)
+    await fetch_started.wait()
+
+    # The device reports a new Z-Wave home id while the request is out
+    entry_data = device.entry.runtime_data
+    updated = entry_data.device_capabilities.to_dict()
+    updated["zwave_proxy"]["home_id"] = 3551671779
+    entry_data.device_capabilities = DeviceCapabilities.from_dict(updated)
+    release_fetch.set()
+    await hass.async_block_till_done()
+    assert await _receive_sendspin_clients(websocket_client) == [SENDSPIN_CLIENT_ID]
+    capabilities = entry_data.device_capabilities
+    assert capabilities.sendspin.client_id == SENDSPIN_CLIENT_ID
+    assert capabilities.zwave_proxy.home_id == 3551671779
+
+
+async def test_subscribe_sendspin_clients_refresh_after_reconnect(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A refresh answered after the device reconnected does not clobber the new state."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_capabilities=_sendspin_capabilities(client_id=""),
+    )
+    websocket_client, _ = await _subscribe_sendspin_clients(hass_ws_client)
+
+    fetch_started = asyncio.Event()
+    release_fetch = asyncio.Event()
+    stale_capabilities = DeviceCapabilities.from_dict(
+        _sendspin_capabilities(client_id="stale")
+    )
+
+    async def _slow_fetch() -> DeviceCapabilities:
+        fetch_started.set()
+        await release_fetch.wait()
+        return stale_capabilities
+
+    _mock_client_id_refresh(mock_client, side_effect=_slow_fetch)
+    freezer.tick(6)
+    async_fire_time_changed(hass)
+    await fetch_started.wait()
+
+    # The device reconnects while the refresh is in flight
+    mock_client.device_capabilities_compat.return_value = DeviceCapabilities.from_dict(
+        _sendspin_capabilities()
+    )
+    await device.mock_disconnect(False)
+    await device.mock_connect()
+    assert await _receive_sendspin_clients(websocket_client) == [SENDSPIN_CLIENT_ID]
+
+    release_fetch.set()
+    await hass.async_block_till_done()
+    assert device.entry.runtime_data.device_capabilities.sendspin.client_id == (
+        SENDSPIN_CLIENT_ID
+    )
+    await _assert_nothing_received(websocket_client)
