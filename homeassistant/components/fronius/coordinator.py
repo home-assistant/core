@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, cast, override
 
@@ -25,14 +24,11 @@ from fronius_solarapi import (
 )
 from modbus_connection import ModbusError
 
-from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .binary_sensor import POWER_FLOW_BINARY_SENSOR_DESCRIPTIONS
 from .const import (
     AUTO_REVERT_SECONDS,
     CONF_AUTO_REVERT_POWER_LIMIT,
@@ -43,23 +39,7 @@ from .const import (
     FroniusDeviceInfo,
     SolarNetId,
 )
-from .entity import (
-    FroniusEntity,
-    FroniusEntityDescription,
-    ModbusComponentFn,
-    ModbusValues,
-)
-from .number import MODBUS_NUMBER_ENTITY_DESCRIPTIONS
-from .sensor import (
-    INVERTER_ENTITY_DESCRIPTIONS,
-    LOGGER_ENTITY_DESCRIPTIONS,
-    METER_ENTITY_DESCRIPTIONS,
-    MODBUS_INVERTER_ENTITY_DESCRIPTIONS,
-    OHMPILOT_ENTITY_DESCRIPTIONS,
-    POWER_FLOW_ENTITY_DESCRIPTIONS,
-    STORAGE_ENTITY_DESCRIPTIONS,
-)
-from .switch import MODBUS_SWITCH_ENTITY_DESCRIPTIONS
+from .entity import ModbusComponentFn, ModbusValues
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry, FroniusSolarNet
@@ -68,7 +48,7 @@ if TYPE_CHECKING:
 class FroniusCoordinatorBase[_DataT](
     ABC, DataUpdateCoordinator[dict[SolarNetId, _DataT]]
 ):
-    """Query Fronius endpoint and keep track of seen conditions.
+    """Query a Fronius endpoint.
 
     The data holds one `_DataT` per SolarNet device.
     """
@@ -76,7 +56,6 @@ class FroniusCoordinatorBase[_DataT](
     config_entry: FroniusConfigEntry
     default_interval: timedelta
     error_interval: timedelta
-    valid_descriptions: Mapping[Platform, Sequence[FroniusEntityDescription[_DataT]]]
     update_exceptions: tuple[type[Exception], ...] = (FroniusError,)
 
     MAX_FAILED_UPDATES = 3
@@ -85,10 +64,6 @@ class FroniusCoordinatorBase[_DataT](
         """Set up the FroniusCoordinatorBase class."""
         self._failed_update_count = 0
         self.solar_net = solar_net
-        # unregistered_descriptors are used to create entities in platform module
-        self.unregistered_descriptors: dict[
-            SolarNetId, dict[Platform, list[FroniusEntityDescription[_DataT]]]
-        ] = {}
         super().__init__(*args, update_interval=self.default_interval, **kwargs)
 
     @abstractmethod
@@ -102,7 +77,7 @@ class FroniusCoordinatorBase[_DataT](
             return await self._do_update()
 
     async def _do_update(self) -> dict[SolarNetId, _DataT]:
-        """Fetch the latest data and keep track of seen conditions."""
+        """Fetch the latest data and adapt the interval to failing updates."""
         try:
             data = await self._update_method()
         except self.update_exceptions as err:
@@ -118,71 +93,18 @@ class FroniusCoordinatorBase[_DataT](
         if self._failed_update_count != 0:
             self._failed_update_count = 0
             self.update_interval = self.default_interval
-
-        for solar_net_id in data:
-            if solar_net_id not in self.unregistered_descriptors:
-                # id seen for the first time
-                self.unregistered_descriptors[solar_net_id] = {
-                    platform: list(descriptions)
-                    for platform, descriptions in self.valid_descriptions.items()
-                }
         return data
 
-    def _is_identifiable(self, device_data: _DataT) -> bool:
+    def is_identifiable(self, device_data: _DataT) -> bool:
         """Return whether the device data carries what its entities' IDs use."""
         return True
 
-    @callback
-    def add_entities_for_seen_keys[_FroniusEntityT: FroniusEntity](
-        self,
-        async_add_entities: AddEntitiesCallback,
-        platform: Platform,
-        entity_constructor: type[_FroniusEntityT],
-    ) -> None:
-        """Add entities for received keys and registers listener for future seen keys.
-
-        Called from a platforms `async_setup_entry`.
-        """
-
-        @callback
-        def _add_entities_for_unregistered_descriptors() -> None:
-            """Add entities for keys seen for the first time."""
-            new_entities: list[_FroniusEntityT] = []
-            for solar_net_id, device_data in self.data.items():
-                if not self._is_identifiable(device_data):
-                    # keep the descriptions pending for a later response
-                    continue
-                remaining_unregistered_descriptors = []
-                for description in self.unregistered_descriptors[solar_net_id][
-                    platform
-                ]:
-                    if not description.exists(device_data):
-                        remaining_unregistered_descriptors.append(description)
-                        continue
-                    new_entities.append(
-                        entity_constructor(
-                            coordinator=self,
-                            description=description,
-                            solar_net_id=solar_net_id,
-                        )
-                    )
-                self.unregistered_descriptors[solar_net_id][platform] = (
-                    remaining_unregistered_descriptors
-                )
-            async_add_entities(new_entities)
-
-        _add_entities_for_unregistered_descriptors()
-        self.solar_net.config_entry.async_on_unload(
-            self.async_add_listener(_add_entities_for_unregistered_descriptors)
-        )
-
 
 class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase[CommonInverterData]):
-    """Query Fronius device inverter endpoint and keep track of seen conditions."""
+    """Query Fronius device inverter endpoint."""
 
     default_interval = timedelta(minutes=1)
     error_interval = timedelta(minutes=10)
-    valid_descriptions = {Platform.SENSOR: INVERTER_ENTITY_DESCRIPTIONS}
 
     def __init__(
         self, *args: Any, inverter_info: FroniusDeviceInfo, **kwargs: Any
@@ -253,7 +175,6 @@ class FroniusModbusInverterUpdateCoordinator(FroniusModbusCoordinatorBase):
     """Query SunSpec MPPT data from an inverters Modbus interface."""
 
     default_interval = timedelta(minutes=1)
-    valid_descriptions = {Platform.SENSOR: MODBUS_INVERTER_ENTITY_DESCRIPTIONS}
 
     @override
     async def _refresh_components(self) -> None:
@@ -289,10 +210,6 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
     """
 
     default_interval = timedelta(minutes=5)
-    valid_descriptions = {
-        Platform.NUMBER: MODBUS_NUMBER_ENTITY_DESCRIPTIONS,
-        Platform.SWITCH: MODBUS_SWITCH_ENTITY_DESCRIPTIONS,
-    }
 
     _heartbeat_unsub: CALLBACK_TYPE | None = None
     _heartbeat_stopped = False
@@ -502,11 +419,10 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
 
 
 class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase[LoggerInfo]):
-    """Query Fronius logger info endpoint and keep track of seen conditions."""
+    """Query Fronius logger info endpoint."""
 
     default_interval = timedelta(hours=1)
     error_interval = timedelta(hours=1)
-    valid_descriptions = {Platform.SENSOR: LOGGER_ENTITY_DESCRIPTIONS}
 
     @override
     async def _update_method(self) -> dict[SolarNetId, LoggerInfo]:
@@ -521,14 +437,13 @@ def _has_serial(details: DeviceDetails | None) -> bool:
 
 
 class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase[MeterData]):
-    """Query Fronius system meter endpoint and keep track of seen conditions."""
+    """Query Fronius system meter endpoint."""
 
     default_interval = timedelta(minutes=1)
     error_interval = timedelta(minutes=10)
-    valid_descriptions = {Platform.SENSOR: METER_ENTITY_DESCRIPTIONS}
 
     @override
-    def _is_identifiable(self, device_data: MeterData) -> bool:
+    def is_identifiable(self, device_data: MeterData) -> bool:
         """Return whether the meter reports its details.
 
         Datamanagers before 3.3.6-14 don't report them.
@@ -542,14 +457,13 @@ class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase[MeterData]):
 
 
 class FroniusOhmpilotUpdateCoordinator(FroniusCoordinatorBase[OhmpilotData]):
-    """Query Fronius Ohmpilots and keep track of seen conditions."""
+    """Query Fronius Ohmpilots."""
 
     default_interval = timedelta(minutes=1)
     error_interval = timedelta(minutes=10)
-    valid_descriptions = {Platform.SENSOR: OHMPILOT_ENTITY_DESCRIPTIONS}
 
     @override
-    def _is_identifiable(self, device_data: OhmpilotData) -> bool:
+    def is_identifiable(self, device_data: OhmpilotData) -> bool:
         """Return whether the Ohmpilot reports its serial number."""
         return _has_serial(device_data.details)
 
@@ -560,14 +474,10 @@ class FroniusOhmpilotUpdateCoordinator(FroniusCoordinatorBase[OhmpilotData]):
 
 
 class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase[PowerFlow]):
-    """Query Fronius power flow endpoint and keep track of seen conditions."""
+    """Query Fronius power flow endpoint."""
 
     default_interval = timedelta(seconds=10)
     error_interval = timedelta(minutes=3)
-    valid_descriptions = {
-        Platform.SENSOR: POWER_FLOW_ENTITY_DESCRIPTIONS,
-        Platform.BINARY_SENSOR: POWER_FLOW_BINARY_SENSOR_DESCRIPTIONS,
-    }
 
     @override
     async def _update_method(self) -> dict[SolarNetId, PowerFlow]:
@@ -577,14 +487,13 @@ class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase[PowerFlow]):
 
 
 class FroniusStorageUpdateCoordinator(FroniusCoordinatorBase[StorageController]):
-    """Query Fronius system storage endpoint and keep track of seen conditions."""
+    """Query Fronius system storage endpoint."""
 
     default_interval = timedelta(minutes=1)
     error_interval = timedelta(minutes=10)
-    valid_descriptions = {Platform.SENSOR: STORAGE_ENTITY_DESCRIPTIONS}
 
     @override
-    def _is_identifiable(self, device_data: StorageController) -> bool:
+    def is_identifiable(self, device_data: StorageController) -> bool:
         """Return whether the storage reports its serial number."""
         return _has_serial(device_data.details)
 
