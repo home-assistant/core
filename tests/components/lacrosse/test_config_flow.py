@@ -26,9 +26,7 @@ from homeassistant.helpers import (
 RECEIVER_DATA = {"device": "/dev/ttyUSB0", "baud": 57600}
 TEMPERATURE_SENSOR = {
     "id": 1,
-    "temperature": True,
-    "humidity": False,
-    "battery": False,
+    "type": "temperature",
     "expire_after": 300,
     "friendly_name": "Outdoor",
 }
@@ -414,12 +412,22 @@ async def test_update_sensor(
         if key.description and "suggested_value" in key.description
     }
     assert suggestions["id"] == sensor_id
-    assert suggestions["temperature"] is True
-    assert suggestions["humidity"] == (sensor_id == 1)
-    assert suggestions["battery"] is False
+    assert (
+        suggestions["type"]
+        == {
+            1: "temperature_humidity",
+            2: "temperature",
+        }[sensor_id]
+    )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"id": 7, "temperature": True, "humidity": sensor_id == 1, "battery": True},
+        {
+            "id": 7,
+            "type": {
+                1: "temperature_humidity_battery",
+                2: "temperature_battery",
+            }[sensor_id],
+        },
     )
     assert result["reason"] == "reconfigure_successful"
     assert subentry.unique_id == "7"
@@ -445,16 +453,10 @@ async def test_update_sensor(
             {
                 **TEMPERATURE_SENSOR,
                 "id": 2,
-                "temperature": False,
-                "humidity": True,
+                "type": "humidity",
             },
             "sensor_already_configured",
             id="duplicate-different-type",
-        ),
-        pytest.param(
-            {**TEMPERATURE_SENSOR, "temperature": False, "battery": True},
-            "value_type_required",
-            id="battery-only",
         ),
     ],
 )
@@ -545,7 +547,7 @@ async def test_update_sensor_preserves_entity_keys(
             **TEMPERATURE_SENSOR,
             "id": new_id,
             "friendly_name": friendly_name,
-            "battery": True,
+            "type": "temperature_battery",
         },
     )
 
@@ -578,7 +580,7 @@ async def test_update_sensor_new_type_unique_key(
     )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {**TEMPERATURE_SENSOR, "id": 3, "battery": True},
+        {**TEMPERATURE_SENSOR, "id": 3, "type": "temperature_battery"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     other_subentry = next(
@@ -591,7 +593,12 @@ async def test_update_sensor_new_type_unique_key(
     result = await config_entry.start_subentry_reconfigure_flow(hass, "sensor_1")
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {**TEMPERATURE_SENSOR, "id": 7, "friendly_name": "Renamed", "battery": True},
+        {
+            **TEMPERATURE_SENSOR,
+            "id": 7,
+            "friendly_name": "Renamed",
+            "type": "temperature_battery",
+        },
     )
 
     assert result["reason"] == "reconfigure_successful"
@@ -602,7 +609,37 @@ async def test_update_sensor_new_type_unique_key(
     assert other_subentry.data == original_data
 
 
-async def test_add_sensor(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+@pytest.mark.parametrize(
+    ("sensor_type", "expected_types"),
+    [
+        pytest.param("temperature", {"temperature"}, id="temperature"),
+        pytest.param("humidity", {"humidity"}, id="humidity"),
+        pytest.param(
+            "temperature_humidity",
+            {"temperature", "humidity"},
+            id="temperature-humidity",
+        ),
+        pytest.param(
+            "temperature_battery",
+            {"temperature", "battery"},
+            id="temperature-battery",
+        ),
+        pytest.param(
+            "humidity_battery", {"humidity", "battery"}, id="humidity-battery"
+        ),
+        pytest.param(
+            "temperature_humidity_battery",
+            {"temperature", "humidity", "battery"},
+            id="temperature-humidity-battery",
+        ),
+    ],
+)
+async def test_add_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    sensor_type: str,
+    expected_types: set[str],
+) -> None:
     """Test Add Sensor creates a device subentry under the selected hub."""
     original = dict(config_entry.subentries)
     result = await hass.config_entries.subentries.async_init(
@@ -611,9 +648,22 @@ async def test_add_sensor(hass: HomeAssistant, config_entry: MockConfigEntry) ->
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    fields = probatio.to_field_list(
+        result["data_schema"], custom_serializer=cv.custom_serializer
+    )
+    type_field = next(field for field in fields if field["name"] == "type")
+    assert type_field["selector"]["select"]["mode"] == "dropdown"
+    assert set(type_field["selector"]["select"]["options"]) == {
+        "temperature",
+        "humidity",
+        "temperature_humidity",
+        "temperature_battery",
+        "humidity_battery",
+        "temperature_humidity_battery",
+    }
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {**TEMPERATURE_SENSOR, "id": 3, "humidity": True, "battery": True},
+        {**TEMPERATURE_SENSOR, "id": 3, "type": sensor_type},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.data == RECEIVER_DATA
@@ -625,11 +675,10 @@ async def test_add_sensor(hass: HomeAssistant, config_entry: MockConfigEntry) ->
     )
     assert subentry.unique_id == "3"
     assert subentry.title == "Outdoor"
-    assert set(subentry.data["sensors"]) == {
-        "temperature",
-        "humidity",
-        "battery",
-    }
+    assert set(subentry.data["sensors"]) == expected_types
+    assert all(
+        sensor["type"] == key for key, sensor in subentry.data["sensors"].items()
+    )
     assert all(
         "unique_id" not in sensor for sensor in subentry.data["sensors"].values()
     )
@@ -643,16 +692,10 @@ async def test_add_sensor(hass: HomeAssistant, config_entry: MockConfigEntry) ->
         pytest.param(
             {
                 **TEMPERATURE_SENSOR,
-                "temperature": False,
-                "humidity": True,
+                "type": "humidity",
             },
             "sensor_already_configured",
             id="duplicate-different-type",
-        ),
-        pytest.param(
-            {**TEMPERATURE_SENSOR, "id": 3, "temperature": False, "battery": True},
-            "value_type_required",
-            id="battery-only",
         ),
     ],
 )
