@@ -1,8 +1,10 @@
 """Helpers to help coordinate updates."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
+from time import monotonic
 from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
@@ -19,6 +21,8 @@ from pyoverkiz.exceptions import (
     TooManyRequestsError,
 )
 from pyoverkiz.models import (
+    Action,
+    Command,
     Device,
     DeviceEvent,
     DeviceRemovedEvent,
@@ -31,6 +35,7 @@ from pyoverkiz.models import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    HomeAssistantError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
@@ -45,6 +50,7 @@ from .const import (
     DOMAIN,
     IGNORED_OVERKIZ_DEVICES,
     LOGGER,
+    MIN_WRITE_INTERVAL,
     RATE_LIMIT_RETRY_AFTER,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_EXECUTION,
@@ -84,7 +90,15 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
-        self.executions: dict[str, list[dict[str, str]]] = {}
+        self.executions: dict[str, list[dict[str, Any]]] = {}
+        # Commands waiting for the running write of the same settings to end.
+        self.pending_commands: dict[tuple[str, tuple[str, ...]], list[Command]] = {}
+        # Writes that wait their turn, not yet registered as executions.
+        self.writes_waiting: set[tuple[str, tuple[str, ...]]] = set()
+        self._write_lock = asyncio.Lock()
+        self._last_write_at: float | None = None
+        # Once the config entry unloads, nothing deferred is sent any more.
+        self._shutting_down = False
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
 
@@ -138,6 +152,10 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             except TooManyRequestsError as exception:
                 raise UpdateFailed("Too many requests, try again later.") from exception
 
+            # What waited for a running write, which is forgotten now, is sent.
+            for key in list(self.pending_commands):
+                self.async_create_write_task(_send_pending_commands(self, key))
+
             return self.devices
 
         for event in events:
@@ -168,6 +186,90 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 areas.update(self._places_to_area(sub_place))
 
         return areas
+
+    async def async_execute_throttled(self, actions: list[Action]) -> str:
+        """Execute actions, at least MIN_WRITE_INTERVAL after the previous write."""
+        async with self._write_lock:
+            if (
+                self._last_write_at is not None
+                and (
+                    wait := MIN_WRITE_INTERVAL.total_seconds()
+                    - (monotonic() - self._last_write_at)
+                )
+                > 0
+            ):
+                await asyncio.sleep(wait)
+
+            try:
+                return await self.client.execute_action_group(
+                    label="Home Assistant", actions=actions
+                )
+            finally:
+                self._last_write_at = monotonic()
+
+    def is_execution_running(self, key: tuple[str, tuple[str, ...]]) -> bool:
+        """Return whether a write of the same settings waits or runs."""
+        return key in self.writes_waiting or any(
+            record.get("key") == key and monotonic() - record["started"] < 60
+            for records in self.executions.values()
+            for record in records
+        )
+
+    def is_same_as_running(
+        self, key: tuple[str, tuple[str, ...]], commands: list[Command]
+    ) -> bool:
+        """Return whether the last running write of these settings has these values."""
+        running = [
+            record
+            for records in self.executions.values()
+            for record in records
+            if record.get("key") == key and monotonic() - record["started"] < 60
+        ]
+        if not running or not (sent := running[-1].get("commands")):
+            return False
+
+        def values(commands: list[Command]) -> list[tuple[str, tuple[Any, ...]]]:
+            return [
+                (str(command.name), tuple(command.parameters or ()))
+                for command in commands
+                if not str(command.name).startswith("refresh")
+            ]
+
+        return values(sent) == values(commands)
+
+    def discard_pending_commands(
+        self, device_url: str, command_names: set[str]
+    ) -> None:
+        """Forget the writes of these commands that wait for a device."""
+        for key in [
+            key
+            for key in self.pending_commands
+            if key[0] == device_url and command_names.intersection(key[1])
+        ]:
+            del self.pending_commands[key]
+
+    @callback
+    def async_create_write_task(self, target: Coroutine[Any, Any, None]) -> None:
+        """Run a deferred write, canceled when the config entry is unloaded."""
+        if self._shutting_down:
+            target.close()
+            return
+        self.config_entry.async_create_background_task(
+            self.hass, target, "overkiz deferred write"
+        )
+
+    @callback
+    def async_send_pending_commands(self, key: tuple[str, tuple[str, ...]]) -> None:
+        """Send what waits for a write of these settings, if anything."""
+        if key in self.pending_commands:
+            self.async_create_write_task(_send_pending_commands(self, key))
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Forget the writes still waiting, then shut down."""
+        self._shutting_down = True
+        self.pending_commands.clear()
+        await super().async_shutdown()
 
     @callback
     def async_execution_started(self) -> None:
@@ -260,8 +362,30 @@ async def on_execution_state_changed(
     coordinator: OverkizDataUpdateCoordinator, event: ExecutionStateChangedEvent
 ) -> None:
     """Handle execution changed event."""
-    if event.exec_id in coordinator.executions and event.new_state in [
-        ExecutionState.COMPLETED,
-        ExecutionState.FAILED,
-    ]:
-        del coordinator.executions[event.exec_id]
+    if event.new_state not in (ExecutionState.COMPLETED, ExecutionState.FAILED):
+        return
+
+    # The write is over: what waited for it is sent now.
+    for record in coordinator.executions.pop(event.exec_id, None) or ():
+        if (key := record.get("key")) is not None:
+            coordinator.async_send_pending_commands(key)
+
+
+async def _send_pending_commands(
+    coordinator: OverkizDataUpdateCoordinator,
+    key: tuple[str, tuple[str, ...]],
+) -> None:
+    """Send the commands that waited for the write of the same settings."""
+    if (commands := coordinator.pending_commands.pop(key, None)) is None:
+        return
+
+    # Local import: the executor imports this module.
+    from .executor import OverkizExecutor  # noqa: PLC0415
+
+    try:
+        await OverkizExecutor(key[0], coordinator).async_execute_commands(
+            commands, coalesce=True
+        )
+    except HomeAssistantError:
+        # The service call that gave these commands returned long ago.
+        LOGGER.warning("Sending the waiting Overkiz commands failed", exc_info=True)
