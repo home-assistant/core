@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
+    SHCMicromoduleDimmer,
     SHCMicromoduleRelay,
     SHCRoomThermostat2,
     SHCShutterContact2,
@@ -113,6 +114,19 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         set_value_fn=lambda device, value: device.set_bypass_configuration(
             timeout=round(value)
         ),
+    ),
+    "dimmer_speed": SHCNumberEntityDescription[SHCMicromoduleDimmer](
+        key="dimmer_speed",
+        translation_key="dimmer_speed",
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=1.0,
+        native_max_value=10.0,
+        native_step=1.0,
+        mode=NumberMode.BOX,
+        value_fn=lambda device: (
+            float(speed) if (speed := device.dimming_speed) is not None else None
+        ),
+        set_value_fn=lambda device, value: device.set_dimming_speed(round(value)),
     ),
     "power_threshold": SHCNumberEntityDescription[SHCSmartPlug | SHCSmartPlugCompact](
         key="power_threshold",
@@ -261,6 +275,18 @@ async def async_setup_entry(
         )
         if isinstance(device, SHCThermostat | SHCWallThermostat | SHCRoomThermostat2)
         and device.supports_temperature_offset
+    )
+
+    entities.extend(
+        SHCNumber(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=NUMBER_TYPES["dimmer_speed"],
+        )
+        for device in session.device_helper.micromodule_dimmers
+        if device.supports_dimmer_configuration and device.dimming_speed is not None
     )
 
     async_add_entities(entities)
