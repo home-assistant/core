@@ -28,7 +28,7 @@ PLATFORMS = [Platform.SENSOR]
 type LaCrosseConfigEntry = ConfigEntry[pylacrosse.LaCrosse]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> None:
     """Set up LaCrosse from a config entry."""
     try:
         lacrosse = await hass.async_add_executor_job(_create_lacrosse, dict(entry.data))
@@ -46,7 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-    return True
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> None:
@@ -68,9 +67,9 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> None:
     """Unload a LaCrosse config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def _create_lacrosse(config: dict[str, Any]) -> pylacrosse.LaCrosse:
