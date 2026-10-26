@@ -906,21 +906,25 @@ def _statistic_ids_by_start(
     table: type[StatisticsBase],
     metadata_id: int,
     start_timestamps: list[float],
+    max_bind_vars: int,
 ) -> dict[float | None, int]:
     """Return the ids of existing statistics rows by start timestamp."""
+    ids: dict[float | None, int] = {}
     if not start_timestamps:
-        return {}
-    return dict(
-        session.execute(
-            select(table.start_ts, table.id).where(
-                table.metadata_id == metadata_id,
-                table.start_ts >= min(start_timestamps),
-                table.start_ts <= max(start_timestamps),
+        return ids
+    # One bind variable is used by metadata_id
+    for start_ts_chunk in chunked_or_all(start_timestamps, max_bind_vars - 1):
+        ids.update(
+            session.execute(
+                select(table.start_ts, table.id).where(
+                    table.metadata_id == metadata_id,
+                    table.start_ts.in_(start_ts_chunk),
+                )
             )
+            .tuples()
+            .all()
         )
-        .tuples()
-        .all()
-    )
+    return ids
 
 
 def _statistic_update_values(statistic: StatisticData) -> dict[str, Any]:
@@ -2943,7 +2947,7 @@ def _import_statistics_with_session(
     statistics = list(statistics)
     start_timestamps = [stat["start"].timestamp() for stat in statistics]
     existing_ids = _statistic_ids_by_start(
-        session, table, metadata_id, start_timestamps
+        session, table, metadata_id, start_timestamps, instance.max_bind_vars
     )
     updates: dict[int, dict[str, Any]] = {}
     inserted: dict[float, StatisticsBase] = {}
