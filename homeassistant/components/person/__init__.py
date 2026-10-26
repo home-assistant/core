@@ -14,7 +14,7 @@ from homeassistant.components.image_upload import (
     DOMAIN as IMAGE_UPLOAD_DOMAIN,
     ImageStorageCollection,
 )
-from homeassistant.const import ATTR_ID, ATTR_NAME, CONF_ID, CONF_NAME, SERVICE_RELOAD
+from homeassistant.const import ATTR_ID, CONF_ID, CONF_NAME, SERVICE_RELOAD
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -96,8 +96,8 @@ async def async_create_person(
     """Create a new person."""
     await hass.data[DATA_PERSON].storage_collection.async_create_item(
         {
-            ATTR_NAME: name,
-            ATTR_USER_ID: user_id,
+            CONF_NAME: name,
+            CONF_USER_ID: user_id,
             CONF_DEVICE_TRACKERS: device_trackers or [],
         }
     )
@@ -110,7 +110,7 @@ async def async_add_user_device_tracker(
     coll = hass.data[DATA_PERSON].storage_collection
 
     for person in coll.async_items():
-        if person.get(ATTR_USER_ID) != user_id:
+        if person.get(CONF_USER_ID) != user_id:
             continue
 
         device_trackers = person[CONF_DEVICE_TRACKERS]
@@ -453,7 +453,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _handle_user_removed(event: Event) -> None:
         """Handle a user being removed."""
-        user_id = event.data[ATTR_USER_ID]
+        user_id = event.data["user_id"]
         for person in storage_collection.async_items():
             if person[CONF_USER_ID] == user_id:
                 await storage_collection.async_update_item(

@@ -51,37 +51,10 @@ class OverkizExecutor:
         """
         parameters = [arg for arg in args if arg is not None]
 
-        try:
-            exec_id = await self.coordinator.client.execute_action_group(
-                label="Home Assistant",
-                actions=[
-                    Action(
-                        device_url=self.device.device_url,
-                        commands=[Command(name=command_name, parameters=parameters)],
-                    )
-                ],
-            )
-        # Catch Overkiz exceptions to support `continue_on_error` functionality
-        except BaseOverkizError as exception:
-            raise HomeAssistantError(exception) from exception
-        except (
-            TimeoutError,
-            ClientConnectorError,
-            ServerDisconnectedError,
-        ) as exception:
-            raise HomeAssistantError("Failed to connect") from exception
-
-        # ExecutionRegisteredEvent doesn't contain the device_url, thus we need
-        # to register it here. The action queue can merge concurrent action
-        # groups under one exec_id, so accumulate rather than overwrite.
-        self.coordinator.executions.setdefault(exec_id, []).append(
-            {
-                "device_url": self.device.device_url,
-                "command_name": command_name,
-            }
+        await self.async_execute_commands(
+            [Command(name=command_name, parameters=parameters)],
+            refresh_afterwards=refresh_afterwards,
         )
-        if refresh_afterwards:
-            self.coordinator.async_execution_started()
 
     async def async_execute_commands(
         self, commands: list[Command], refresh_afterwards: bool = True
@@ -113,6 +86,9 @@ class OverkizExecutor:
         ) as exception:
             raise HomeAssistantError("Failed to connect") from exception
 
+        # ExecutionRegisteredEvent doesn't contain the device_url, thus we need
+        # to register it here. The action queue can merge concurrent action
+        # groups under one exec_id, so accumulate rather than overwrite.
         self.coordinator.executions.setdefault(exec_id, []).append(
             {
                 "device_url": self.device.device_url,

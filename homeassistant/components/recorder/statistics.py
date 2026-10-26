@@ -2636,6 +2636,9 @@ def _build_stats(
     ]
 
 
+_NOT_CONVERTED_COLUMNS = {"last_reset", "mean_weight"}
+
+
 def _build_converted_stats(
     db_rows: list[Row],
     table_duration_seconds: float,
@@ -2644,13 +2647,21 @@ def _build_converted_stats(
     convert: Callable[[float | None], float | None],
 ) -> list[StatisticsRow]:
     """Build a list of statistics with unit conversion."""
+    # last_reset is a timestamp and mean_weight a weight, they have no unit
+    convert_mapping = tuple(
+        item for item in row_mapping if item[0] not in _NOT_CONVERTED_COLUMNS
+    )
+    keep_mapping = tuple(
+        item for item in row_mapping if item[0] in _NOT_CONVERTED_COLUMNS
+    )
     return [
         {
             "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
+            **{key: db_row[idx] for key, idx in keep_mapping},  # type: ignore[typeddict-item]
             **{
-                key: None if (v := db_row[idx]) is None else convert(v)  # type: ignore[typeddict-item]
-                for key, idx in row_mapping
+                key: None if (v := db_row[idx]) is None else convert(v)
+                for key, idx in convert_mapping
             },
         }
         for db_row in db_rows
