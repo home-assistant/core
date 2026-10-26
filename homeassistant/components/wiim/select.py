@@ -25,7 +25,12 @@ from .entity import WiimBaseEntity
 
 PARALLEL_UPDATES = 1
 
-OTHER_OUTPUT = "Other Out"
+OTHER_OUTPUT = "other_out"
+
+
+def _normalize_output_mode(mode: str | None) -> str | None:
+    """Map the SDK fallback label to its translation key."""
+    return OTHER_OUTPUT if mode == "Other Out" else mode
 
 
 async def async_setup_entry(
@@ -52,11 +57,12 @@ class WiimOutputSelect(WiimBaseEntity, SelectEntity):
         super().__init__(device)
         self._attr_unique_id = f"{device.udn}_audio_output"
         self._attr_options = [
-            mode for mode in device.supported_output_modes if mode != OTHER_OUTPUT
+            mode
+            for mode in device.supported_output_modes
+            if _normalize_output_mode(mode) != OTHER_OUTPUT
         ]
-        self._attr_current_option = (
-            device.output_mode if device.output_mode in self._attr_options else None
-        )
+        current = _normalize_output_mode(device.output_mode)
+        self._attr_current_option = current if current in self._attr_options else None
 
     @property
     @override
@@ -84,19 +90,25 @@ class WiimOutputSelect(WiimBaseEntity, SelectEntity):
     def _async_handle_device_update(self, *_args: object) -> None:
         """Publish current output and availability from the SDK cache."""
         self._attr_options = [
-            mode for mode in self._device.supported_output_modes if mode != OTHER_OUTPUT
+            mode
+            for mode in self._device.supported_output_modes
+            if _normalize_output_mode(mode) != OTHER_OUTPUT
         ]
-        current = self._device.output_mode
+        current = _normalize_output_mode(self._device.output_mode)
         self._attr_current_option = current if current in self._attr_options else None
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Refresh available outputs and the active output."""
         self._attr_options = [
-            mode for mode in self._device.supported_output_modes if mode != OTHER_OUTPUT
+            mode
+            for mode in self._device.supported_output_modes
+            if _normalize_output_mode(mode) != OTHER_OUTPUT
         ]
         try:
-            current = await self._device.get_audio_output_hw_mode()
+            current = _normalize_output_mode(
+                await self._device.get_audio_output_hw_mode()
+            )
         except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
             LOGGER.debug(
                 "Unable to read audio output for %s: %s", self._device.name, err

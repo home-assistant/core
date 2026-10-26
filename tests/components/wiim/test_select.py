@@ -51,18 +51,24 @@ def mock_audio_output(mock_wiim_device: AsyncMock) -> None:
 
 
 @pytest.mark.parametrize(
-    ("current", "expected"),
-    [("Line Out", "Line Out"), ("Other Out", STATE_UNKNOWN)],
+    ("fallback", "current", "expected"),
+    [
+        ("Other Out", "Line Out", "Line Out"),
+        ("Other Out", "Other Out", STATE_UNKNOWN),
+        ("other_out", "other_out", STATE_UNKNOWN),
+    ],
 )
 async def test_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: AsyncMock,
     entity_registry: er.EntityRegistry,
+    fallback: str,
     current: str,
     expected: str,
 ) -> None:
     """Initialize the selector from device capabilities and active output."""
+    mock_wiim_device.supported_output_modes = ("Line Out", "Optical Out", fallback)
     mock_wiim_device.output_mode = current
     mock_wiim_device.get_audio_output_hw_mode.return_value = current
     await setup_integration(hass, mock_config_entry)
@@ -149,7 +155,7 @@ async def test_non_selectable_output_rejected(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Other Out"},
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "other_out"},
             blocking=True,
         )
     mock_wiim_device.async_set_output_mode.assert_not_awaited()
@@ -222,10 +228,12 @@ async def test_select_failure(
     [
         (OPTIONS, "Optical Out", "Optical Out", ["Line Out", "Optical Out"]),
         (OPTIONS, "Other Out", STATE_UNKNOWN, ["Line Out", "Optical Out"]),
+        (["Line Out", "other_out"], "other_out", STATE_UNKNOWN, ["Line Out"]),
         (OPTIONS, "Unknown output", STATE_UNKNOWN, ["Line Out", "Optical Out"]),
         (["USB Out", "Other Out"], "USB Out", "USB Out", ["USB Out"]),
         ([], None, STATE_UNAVAILABLE, []),
         (["Other Out"], "Other Out", STATE_UNAVAILABLE, []),
+        (["other_out"], "other_out", STATE_UNAVAILABLE, []),
     ],
 )
 async def test_output_event(
