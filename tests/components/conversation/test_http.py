@@ -988,13 +988,14 @@ async def test_ws_chat_log_subscription_during_turn(
         msg = await client.receive_json()
         assert msg["success"]
 
-        # The initial state is the stored chat log, without the open turn.
+        # The initial state includes the message of the open turn.
         msg = await client.receive_json()
         assert msg["event"]["event_type"] == "initial_state"
         assert [content["role"] for content in msg["event"]["data"]["content"]] == [
             "system",
             "user",
             "assistant",
+            "user",
         ]
 
 

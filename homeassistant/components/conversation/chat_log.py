@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable, Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -24,7 +24,6 @@ from .const import DOMAIN, ChatLogEventType
 from .models import ConversationInput, ConversationResult
 
 DATA_CHAT_LOGS: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_logs")
-DATA_ACTIVE_CHAT_LOGS: HassKey[set[str]] = HassKey("conversation_active_chat_logs")
 DATA_SUBSCRIPTIONS: HassKey[
     list[Callable[[str, ChatLogEventType, dict[str, Any]], None]]
 ] = HassKey("conversation_chat_log_subscriptions")
@@ -103,29 +102,22 @@ def async_get_chat_log(
             raise
         return
 
-    # Each turn works on a copy and stores it at the end, so a concurrent turn
-    # would overwrite the messages of this one.
-    active_chat_logs = hass.data.setdefault(DATA_ACTIVE_CHAT_LOGS, set())
-    if session.conversation_id in active_chat_logs:
-        raise ConversationBusyError(session.conversation_id)
-
     all_chat_logs = hass.data.get(DATA_CHAT_LOGS)
     if all_chat_logs is None:
         all_chat_logs = {}
         hass.data[DATA_CHAT_LOGS] = all_chat_logs
 
-    is_new_log = session.conversation_id not in all_chat_logs
-
+    # A turn changes the stored chat log in place, so a conversation handles
+    # one turn at a time.
     if chat_log := all_chat_logs.get(session.conversation_id):
-        chat_log = replace(chat_log, content=chat_log.content.copy())
+        if chat_log.turn_active:
+            raise ConversationBusyError(session.conversation_id)
+        is_new_log = False
     else:
         chat_log = ChatLog(hass, session.conversation_id)
-
-    if chat_log_delta_listener:
-        chat_log.delta_listener = chat_log_delta_listener
-
-    # Fire CREATED event for new chat logs before any content is added
-    if is_new_log:
+        all_chat_logs[session.conversation_id] = chat_log
+        is_new_log = True
+        # Fire CREATED event for new chat logs before any content is added
         _async_notify_subscribers(
             hass,
             session.conversation_id,
@@ -133,13 +125,17 @@ def async_get_chat_log(
             {"chat_log": chat_log.as_dict()},
         )
 
+    if chat_log_delta_listener:
+        chat_log.delta_listener = chat_log_delta_listener
+
+    turn_start = len(chat_log.content)
     if user_input is not None:
         chat_log.async_add_user_content(UserContent(content=user_input.text))
 
     last_message = chat_log.content[-1]
 
     token = current_chat_log.set(chat_log)
-    active_chat_logs.add(session.conversation_id)
+    chat_log.turn_active = True
     try:
         yield chat_log
     except (Exception, asyncio.CancelledError) as err:
@@ -150,31 +146,33 @@ def async_get_chat_log(
         )
         raise
     finally:
-        active_chat_logs.discard(session.conversation_id)
+        chat_log.turn_active = False
         current_chat_log.reset(token)
-        _async_store_chat_log(
-            hass, session, chat_log, last_message, is_new_log=is_new_log
+        _async_end_turn(
+            hass, session, chat_log, last_message, turn_start, is_new_log=is_new_log
         )
 
 
 @callback
-def _async_store_chat_log(
+def _async_end_turn(
     hass: HomeAssistant,
     session: chat_session.ChatSession,
     chat_log: ChatLog,
     last_message: Content,
+    turn_start: int,
     *,
     is_new_log: bool,
 ) -> None:
-    """Store the chat log of a turn that added content."""
+    """End a turn, and remove it when it added no assistant message."""
     chat_log.delta_listener = None
 
     if chat_log.content[-1] is last_message:
         LOGGER.debug(
-            "Chat Log opened but no assistant message was added, ignoring update"
+            "Chat Log opened but no assistant message was added, removing the turn"
         )
-        # If this was a new log but nothing was added, fire DELETED to clean up
+        del chat_log.content[turn_start:]
         if is_new_log:
+            hass.data[DATA_CHAT_LOGS].pop(session.conversation_id)
             _async_notify_subscribers(
                 hass,
                 session.conversation_id,
@@ -183,9 +181,8 @@ def _async_store_chat_log(
             )
         return
 
-    all_chat_logs = hass.data[DATA_CHAT_LOGS]
-
     if is_new_log:
+        all_chat_logs = hass.data[DATA_CHAT_LOGS]
 
         @callback
         def do_cleanup() -> None:
@@ -199,18 +196,14 @@ def _async_store_chat_log(
             )
 
         session.async_on_cleanup(do_cleanup)
+        return
 
-    all_chat_logs[session.conversation_id] = chat_log
-
-    # For new logs, CREATED was already fired before content was added
-    # For existing logs, fire UPDATED
-    if not is_new_log:
-        _async_notify_subscribers(
-            hass,
-            session.conversation_id,
-            ChatLogEventType.UPDATED,
-            {"chat_log": chat_log.as_dict()},
-        )
+    _async_notify_subscribers(
+        hass,
+        session.conversation_id,
+        ChatLogEventType.UPDATED,
+        {"chat_log": chat_log.as_dict()},
+    )
 
 
 class ConverseError(HomeAssistantError):
@@ -413,6 +406,7 @@ class ChatLog:
     delta_listener: Callable[[ChatLog, dict], None] | None = None
     llm_input_provided_index = 0
     created: datetime = field(init=False, default_factory=utcnow)
+    turn_active: bool = field(default=False, init=False, repr=False)
     _last_error: BaseException | None = field(default=None, repr=False)
 
     def as_dict(self) -> dict[str, Any]:

@@ -311,6 +311,30 @@ async def test_concurrent_turn_busy(
     await run_turn()
 
 
+async def test_turn_without_reply_removed(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test a turn that adds no assistant message is removed from the chat log."""
+    with (
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id="mock-agent-id", content="Hi")
+        )
+
+    with async_get_chat_log(hass, session, mock_conversation_input) as chat_log2:
+        assert chat_log2 is chat_log
+        assert chat_log.content[-1].role == "user"
+
+    assert hass.data[DATA_CHAT_LOGS]["koala"] is chat_log
+    assert [item.role for item in chat_log.content] == [
+        "system",
+        "user",
+        "assistant",
+    ]
+
+
 async def test_failed_turn_stored(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:

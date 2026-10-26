@@ -322,7 +322,7 @@ def websocket_subscribe_chat_log(
     connection.subscriptions[msg_id] = unsubscribe
     connection.send_result(msg_id)
 
-    # Read the stored chat log, because a turn may be in progress.
+    # Read the chat log directly, because opening it fails during a turn.
     with async_get_chat_session(hass, subscribed_conversation, context=None):
         connection.send_event(
             msg_id,
