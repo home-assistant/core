@@ -1,6 +1,6 @@
 """Base class for iRobot devices."""
 
-from typing import override
+from typing import Any, override
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
