@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 
 from pycoolbot import CoolbotAuthError, CoolbotError
 
-from homeassistant.components.coolbot.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.coolbot.const import DOMAIN, MAINTENANCE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def _tick(hass: HomeAssistant) -> None:
     async_fire_time_changed(
-        hass, dt_util.utcnow() + UPDATE_INTERVAL + timedelta(seconds=1)
+        hass, dt_util.utcnow() + MAINTENANCE_INTERVAL + timedelta(seconds=1)
     )
     await hass.async_block_till_done()
 
@@ -64,7 +64,7 @@ async def test_an_aborted_first_refresh_closes_the_socket(
     already closed by the refresh itself, but runtime_data is never assigned,
     so an unhandled one would otherwise leave the connection open for good.
     """
-    mock_client.async_get_devices.side_effect = RuntimeError("surprise")
+    mock_client.get_devices.side_effect = RuntimeError("surprise")
 
     assert not await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -85,11 +85,12 @@ async def test_setup_succeeds_for_an_account_with_no_devices(
 async def test_setup_fails_as_an_auth_error_on_bad_credentials(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Rejected credentials fail setup as an auth error instead of retrying.
+    """Rejected credentials fail setup outright instead of retrying.
 
-    ConfigEntryAuthFailed marks the entry SETUP_ERROR rather than scheduling
-    retries; the reauth flow that would let the user fix the password in place
-    arrives in a follow-up PR.
+    ConfigEntryError marks the entry SETUP_ERROR rather than scheduling retries,
+    which a wrong password would never satisfy. Deliberately not
+    ConfigEntryAuthFailed: that starts a reauth flow, and the flow that would
+    let the user fix the password in place arrives in a follow-up PR.
     """
     mock_client.async_connect.side_effect = CoolbotAuthError("rejected")
 

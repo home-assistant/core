@@ -1,5 +1,7 @@
 """Tests for the CoolBot Pro integration."""
 
+from unittest.mock import AsyncMock
+
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -13,3 +15,10 @@ async def setup_integration(
     result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return result
+
+
+async def push(hass: HomeAssistant, mock_client: AsyncMock) -> None:
+    """Deliver a push the way the client does, by calling its listeners."""
+    for listener in list(mock_client.listeners):
+        listener()
+    await hass.async_block_till_done()

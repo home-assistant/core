@@ -5,10 +5,13 @@ rules:
     comment: |
       The integration is read-only and defines no actions.
   appropriate-polling:
-    status: done
+    status: exempt
     comment: |
-      The cloud pushes over an open socket; the 10s interval only republishes
-      already-received client state to entities and doubles as the keepalive.
+      The integration does not poll. The coordinator has no update interval:
+      the library calls back over an open socket as each reading lands and the
+      new state is published then. A 30s timer keeps the socket alive and
+      re-examines staleness, which is time-based rather than message-driven,
+      but it fetches nothing.
   brands: done
   common-modules:
     status: done

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pycoolbot import CoolbotDevice
 import pytest
@@ -48,10 +48,36 @@ def make_device(
 
 @pytest.fixture
 def mock_client() -> Generator[AsyncMock]:
-    """Return a CoolbotClient double, patched into both call sites."""
+    """Return a CoolbotClient double, patched into both call sites.
+
+    Readings are set through ``async_get_devices.return_value``; the real
+    ``get_devices`` is the synchronous accessor the async one delegates to, so
+    the double mirrors it rather than holding a second copy that could drift.
+
+    Listeners registered by the coordinator are kept on ``client.listeners``,
+    and ``push()`` fires them the way an arriving reading would.
+    """
     client = AsyncMock()
     client.connected = True
     client.async_get_devices.return_value = [make_device()]
+    client.get_devices = MagicMock(
+        side_effect=lambda: client.async_get_devices.return_value
+    )
+
+    listeners: list[Callable[[], None]] = []
+
+    def add_listener(listener: Callable[[], None]) -> Callable[[], None]:
+        listeners.append(listener)
+
+        def remove() -> None:
+            if listener in listeners:
+                listeners.remove(listener)
+
+        return remove
+
+    client.add_listener = MagicMock(side_effect=add_listener)
+    client.listeners = listeners
+
     with (
         patch(
             "homeassistant.components.coolbot.config_flow.CoolbotClient",

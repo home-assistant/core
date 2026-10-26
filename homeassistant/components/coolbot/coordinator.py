@@ -8,18 +8,19 @@ from pycoolbot import CoolbotAuthError, CoolbotClient, CoolbotDevice, CoolbotErr
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
+    MAINTENANCE_INTERVAL,
     PROFILE_REFRESH_INTERVAL,
     STALE_AFTER_SECONDS,
-    UPDATE_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,9 +31,13 @@ type CoolbotConfigEntry = ConfigEntry[CoolbotCoordinator]
 class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
     """Maintains one socket to the CoolBot cloud for a config entry.
 
-    The cloud pushes readings continuously, so this does not poll the service. It
-    reads the client's already-received state on a short interval and hands it to
-    entities, which also serves as the keepalive.
+    The service pushes, so this has no update interval: the client calls back as
+    each reading lands and the new state is published there and then.
+
+    A timer still runs, but not to fetch anything. It keeps the socket alive and
+    notices when it has died, and it re-examines staleness, which is a function
+    of time rather than of any message: a cooler that stops reporting sends
+    nothing to say so, and its entities have to go unavailable regardless.
 
     Reconnection is handled here rather than in the library: a CoolBot drops off
     and returns every few minutes, and the socket does not always survive that.
@@ -42,14 +47,12 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
 
     def __init__(self, hass: HomeAssistant, entry: CoolbotConfigEntry) -> None:
         """Initialize the coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=UPDATE_INTERVAL,
-            config_entry=entry,
-        )
+        super().__init__(hass, _LOGGER, name=DOMAIN, config_entry=entry)
         self._client: CoolbotClient | None = None
+        #: Removes the client callback; held so a replaced client does not leave
+        #: a listener behind that publishes from a socket no longer in use.
+        self._remove_listener: CALLBACK_TYPE | None = None
+        self._cancel_maintenance: CALLBACK_TYPE | None = None
         #: Last known name and reporting state per device, keyed by unique id;
         #: absent until a device first reports. The name is kept so a device
         #: that drops out of the profile can still be named in a log line.
@@ -62,10 +65,30 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
 
     @override
     async def _async_setup(self) -> None:
-        """Establish the first connection, before the initial refresh."""
-        await self._async_connect()
+        """Connect and start the timer, before the initial refresh."""
+        try:
+            await self._async_connect()
+        except CoolbotAuthError as err:
+            raise self._auth_error(err) from err
+        except CoolbotError as err:
+            raise self._connection_error(err) from err
+
+        self._cancel_maintenance = async_track_time_interval(
+            self.hass, self._async_maintain, MAINTENANCE_INTERVAL
+        )
+        # Registered on the entry, not left to unload alone: a first refresh
+        # that fails never assigns runtime_data, so the unload path cannot
+        # reach this coordinator, and the timer and socket would outlive the
+        # attempt. Home Assistant runs these when a setup fails too.
+        self.config_entry.async_on_unload(self._async_teardown)
 
     async def _async_connect(self) -> None:
+        """Open a socket and listen to it.
+
+        Raises the library's own errors; callers decide what each one means,
+        because the same failure aborts setup in one place and only marks the
+        entities unavailable in another.
+        """
         session = async_get_clientsession(self.hass)
         client = CoolbotClient(
             self.config_entry.data[CONF_EMAIL],
@@ -76,66 +99,109 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         try:
             await client.async_connect()
             connected = True
-        except CoolbotAuthError as err:
-            # Prompts the user to re-enter credentials rather than retrying forever.
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_failed",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except CoolbotError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="connection_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
         finally:
             if not connected:
                 # Nothing else holds this client yet, and its socket is already
-                # open, so every way of leaving without it has to close it here
-                # — cancellation included.
+                # open, so every way of leaving without it has to close it here,
+                # cancellation included.
                 await client.async_close()
 
         # Connecting reads the profile, so the clock starts here.
         self._profile_read_at = dt_util.utcnow()
         self._client = client
+        self._remove_listener = client.add_listener(self._handle_push)
+
+    @callback
+    def _handle_push(self) -> None:
+        """Publish the moment a cooler reports.
+
+        This is the whole point of the integration being push: nothing here
+        waits for a timer, so a reading reaches entities as it lands.
+        """
+        if self._client is None:
+            return
+        self.async_set_updated_data(self._build(self._client.get_devices()))
 
     @override
     async def _async_update_data(self) -> dict[str, CoolbotDevice]:
-        if self._client is None or not self._client.connected:
-            _LOGGER.debug("Socket is down, reconnecting")
-            await self._async_shutdown_client()
-            await self._async_connect()
+        """Build the current state.
+
+        Pushes publish directly, so this runs for the first refresh and for
+        anything that asks for one explicitly, not on a schedule.
+        """
+        try:
+            await self._async_ensure_connected()
+        except CoolbotAuthError as err:
+            raise self._auth_error(err) from err
+        except CoolbotError as err:
+            raise self._connection_error(err) from err
 
         assert self._client is not None
-        try:
-            await self._async_reread_profile_if_due()
-            # Never block a refresh waiting for a push; freshness is conveyed by
-            # each device's data_age_seconds instead.
-            devices = await self._client.async_get_devices(wait_for_live=False)
-            await self._client.async_ping()
-        except CoolbotAuthError as err:
-            # Refreshes stop until the credentials are fixed; the socket must
-            # not be left open for that whole time.
-            await self._async_shutdown_client()
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_failed",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except CoolbotError as err:
-            # Drop the socket so the next refresh reconnects from scratch.
-            await self._async_shutdown_client()
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="connection_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        return self._build(self._client.get_devices())
 
-        # An empty list is a valid answer, not a failure: the profile is
-        # authoritative, and treating it as an error would retain the previous
-        # devices forever, leaving the last removed cooler undeletable and a
-        # reload stuck retrying.
+    async def _async_ensure_connected(self) -> None:
+        """Reconnect if the socket has gone."""
+        if self._client is not None and self._client.connected:
+            return
+        _LOGGER.debug("Socket is down, reconnecting")
+        await self._async_shutdown_client()
+        await self._async_connect()
+
+    async def _async_maintain(self, _now: datetime) -> None:
+        """Hold the connection open and re-examine what has gone quiet.
+
+        No readings are fetched here. They arrive by push; this keeps the socket
+        usable and republishes so that a cooler which has stopped reporting is
+        noticed, since silence produces no callback to notice it by.
+        """
+        try:
+            await self._async_ensure_connected()
+            assert self._client is not None
+            await self._client.async_ping()
+            await self._async_reread_profile_if_due()
+            devices = self._client.get_devices()
+        except CoolbotAuthError as err:
+            # The socket must not be left open while the credentials are wrong.
+            await self._async_shutdown_client()
+            self.async_set_update_error(self._auth_error(err))
+            return
+        except CoolbotError as err:
+            # Dropped so the next pass reconnects from scratch.
+            await self._async_shutdown_client()
+            self.async_set_update_error(self._connection_error(err))
+            return
+
+        self.async_set_updated_data(self._build(devices))
+
+    def _auth_error(self, err: CoolbotError) -> ConfigEntryError:
+        """Wrap a rejected login.
+
+        Not ConfigEntryAuthFailed: that asks Home Assistant to start a reauth
+        flow, and this integration has none yet. Raising it would offer the user
+        a repair that cannot open. Swap it back when reauth lands.
+        """
+        return ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
+            translation_placeholders={"error": str(err)},
+        )
+
+    def _connection_error(self, err: CoolbotError) -> UpdateFailed:
+        """Wrap a failure to reach the service."""
+        return UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+            translation_placeholders={"error": str(err)},
+        )
+
+    def _build(self, devices: list[CoolbotDevice]) -> dict[str, CoolbotDevice]:
+        """Turn the client's device list into what entities read.
+
+        An empty list is a valid answer, not a failure: the profile is
+        authoritative, and treating it as an error would retain the previous
+        devices forever, leaving the last removed cooler undeletable and a
+        reload stuck retrying.
+        """
         data: dict[str, CoolbotDevice] = {}
         for device in devices:
             if device.is_provisioned and not device.mac_address:
@@ -253,11 +319,23 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
 
     @override
     async def async_shutdown(self) -> None:
-        """Stop refreshing and close the socket."""
+        """Stop the timer and close the socket."""
         await super().async_shutdown()
+        await self._async_teardown()
+
+    async def _async_teardown(self) -> None:
+        """Release everything setup acquired. Safe to call more than once."""
+        if self._cancel_maintenance is not None:
+            self._cancel_maintenance()
+            self._cancel_maintenance = None
         await self._async_shutdown_client()
 
     async def _async_shutdown_client(self) -> None:
+        if self._remove_listener is not None:
+            # Before the client goes: a listener left on a discarded client
+            # would publish readings from a socket nothing is maintaining.
+            self._remove_listener()
+            self._remove_listener = None
         if self._client is not None:
             client, self._client = self._client, None
             # async_close is guaranteed by the library not to raise, so a

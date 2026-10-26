@@ -7,13 +7,16 @@ DOMAIN: Final = "coolbot"
 
 MANUFACTURER: Final = "Store It Cold"
 
-#: How often already-received client state is handed to entities; doubles as the
-#: keepalive cadence. The cloud pushes every 12-15 seconds; this never polls it.
-UPDATE_INTERVAL: Final = timedelta(seconds=10)
-
 #: A device that has not pushed within this window is treated as unavailable,
 #: regardless of what the account profile's status field claims.
 STALE_AFTER_SECONDS: Final = 120
+
+#: How often the socket is checked and pinged. Readings are not fetched on this
+#: schedule: they arrive by push and are published the moment they land. This
+#: exists because a long-lived socket has to be kept alive and noticed when it
+#: dies, and because staleness is a function of time, so a device that goes
+#: silent only becomes unavailable when something re-examines it.
+MAINTENANCE_INTERVAL: Final = timedelta(seconds=30)
 
 #: How often the account profile is re-read, to notice coolers added to or
 #: removed from the account. The profile is otherwise only read on connect, and

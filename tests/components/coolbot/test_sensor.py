@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from homeassistant.components.coolbot.const import UPDATE_INTERVAL
+from homeassistant.components.coolbot.const import MAINTENANCE_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -25,7 +25,7 @@ async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
 
 async def _tick(hass: HomeAssistant) -> None:
     async_fire_time_changed(
-        hass, dt_util.utcnow() + UPDATE_INTERVAL + timedelta(seconds=1)
+        hass, dt_util.utcnow() + MAINTENANCE_INTERVAL + timedelta(seconds=1)
     )
     await hass.async_block_till_done()
 

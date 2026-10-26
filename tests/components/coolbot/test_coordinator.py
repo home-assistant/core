@@ -13,14 +13,16 @@ import pytest
 
 from homeassistant.components.coolbot.const import (
     DOMAIN,
+    MAINTENANCE_INTERVAL,
     PROFILE_REFRESH_INTERVAL,
-    UPDATE_INTERVAL,
 )
+from homeassistant.components.coolbot.coordinator import device_is_fresh
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import setup_integration
+from . import push, setup_integration
 from .conftest import make_device
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -28,15 +30,111 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def _tick(hass: HomeAssistant) -> None:
     async_fire_time_changed(
-        hass, dt_util.utcnow() + UPDATE_INTERVAL + timedelta(seconds=1)
+        hass, dt_util.utcnow() + MAINTENANCE_INTERVAL + timedelta(seconds=1)
     )
     await hass.async_block_till_done()
 
 
-async def test_refresh_pings_to_keep_the_socket_alive(
+async def test_the_coordinator_does_not_poll(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Every refresh pings, doubling as the keepalive."""
+    """Readings arrive by push, so there is no update interval to drive them.
+
+    An interval here would make the integration a poller wearing a cloud_push
+    manifest, which is what the service's own protocol makes unnecessary.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.runtime_data.update_interval is None
+    mock_client.add_listener.assert_called_once()
+
+
+async def test_a_push_publishes_without_waiting_for_the_timer(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A reading reaches entities as it lands, not on the next tick."""
+    # Assert wire values as-is rather than through metric conversion.
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    assert await setup_integration(hass, mock_config_entry)
+
+    mock_client.async_get_devices.return_value = [make_device(room_temp_f=41.5)]
+    await push(hass, mock_client)
+
+    assert hass.states.get("sensor.walk_in_cooler_room_temperature").state == "41.5"
+
+
+async def test_a_push_after_the_client_is_gone_is_ignored(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A listener firing during teardown must not publish from a dead socket."""
+    assert await setup_integration(hass, mock_config_entry)
+    listeners = list(mock_client.listeners)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for listener in listeners:
+        listener()  # must not raise
+    await hass.async_block_till_done()
+
+
+async def test_unloading_removes_the_listener(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A listener left behind would publish from a socket nobody maintains."""
+    assert await setup_integration(hass, mock_config_entry)
+    assert mock_client.listeners
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not mock_client.listeners
+
+
+async def test_a_refresh_that_cannot_reconnect_fails(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """An explicit refresh has to reconnect too, and can fail doing it.
+
+    Nothing refreshes on a schedule any more, but a reload or a caller asking
+    for one still arrives here, and the socket may have died meanwhile.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+
+    mock_client.connected = False
+    mock_client.async_connect.side_effect = CoolbotError("unreachable")
+    await mock_config_entry.runtime_data.async_refresh()
+
+    assert not mock_config_entry.runtime_data.last_update_success
+
+
+async def test_a_refresh_rejected_by_the_service_fails(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Credentials rejected while reconnecting for a refresh stop the updates."""
+    assert await setup_integration(hass, mock_config_entry)
+
+    mock_client.connected = False
+    mock_client.async_connect.side_effect = CoolbotAuthError("rejected")
+    await mock_config_entry.runtime_data.async_refresh()
+
+    assert not mock_config_entry.runtime_data.last_update_success
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+def test_an_unprovisioned_device_is_never_fresh() -> None:
+    """An empty slot has no readings to trust, however recently it answered.
+
+    The service keeps serving plausible values for slots no cooler occupies, so
+    this guard is what stops them being published as a live temperature.
+    """
+    device = make_device(is_provisioned=False, last_data_at=dt_util.utcnow())
+    assert not device_is_fresh(device)
+
+
+async def test_maintenance_pings_to_keep_the_socket_alive(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """The timer exists to hold the connection open, not to fetch readings."""
     assert await setup_integration(hass, mock_config_entry)
     mock_client.async_ping.reset_mock()
 
@@ -44,7 +142,7 @@ async def test_refresh_pings_to_keep_the_socket_alive(
     mock_client.async_ping.assert_awaited()
 
 
-async def test_dropped_socket_reconnects_on_next_refresh(
+async def test_dropped_socket_reconnects_on_next_maintenance(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """A dead socket is replaced transparently on the next cycle."""
@@ -58,37 +156,37 @@ async def test_dropped_socket_reconnects_on_next_refresh(
     assert mock_config_entry.runtime_data.last_update_success
 
 
-async def test_failed_refresh_marks_data_stale_then_recovers(
+async def test_failed_maintenance_marks_data_stale_then_recovers(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """A failed refresh drops the client so the next cycle starts clean."""
+    """A failed cycle drops the client so the next one starts clean."""
     assert await setup_integration(hass, mock_config_entry)
 
-    mock_client.async_get_devices.side_effect = CoolbotError("socket lost")
+    mock_client.async_ping.side_effect = CoolbotError("socket lost")
     await _tick(hass)
     assert not mock_config_entry.runtime_data.last_update_success
-    # The failure dropped the client so the next cycle starts clean.
     mock_client.async_close.assert_awaited()
 
-    mock_client.async_get_devices.side_effect = None
+    mock_client.async_ping.side_effect = None
     mock_client.connected = False  # the old socket is gone
     await _tick(hass)
     assert mock_config_entry.runtime_data.last_update_success
 
 
-async def test_auth_failure_during_refresh_closes_the_socket(
+async def test_auth_failure_during_maintenance_closes_the_socket(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Credentials failing mid-flight stop the refreshes and drop the socket.
+    """Credentials failing mid-flight stop the updates and drop the socket.
 
     Nothing useful can happen until the password is fixed, so the socket must
     not be left open for however long that takes. No reauth flow starts yet;
-    that arrives in a follow-up PR.
+    that arrives in a follow-up PR, which is also why this does not raise
+    ConfigEntryAuthFailed: it would offer a repair that cannot open.
     """
     assert await setup_integration(hass, mock_config_entry)
     mock_client.async_close.reset_mock()
 
-    mock_client.async_get_devices.side_effect = CoolbotAuthError("expired")
+    mock_client.async_ping.side_effect = CoolbotAuthError("expired")
     await _tick(hass)
 
     assert not mock_config_entry.runtime_data.last_update_success
@@ -131,7 +229,7 @@ async def test_a_cancelled_first_refresh_closes_the_client(
     shutdown that cancels setup after the socket opened, but before
     runtime_data is assigned, leaves no unload path to close it.
     """
-    mock_client.async_ping.side_effect = asyncio.CancelledError()
+    mock_client.get_devices.side_effect = asyncio.CancelledError()
     mock_config_entry.add_to_hass(hass)
 
     with suppress(Exception, asyncio.CancelledError):
@@ -310,7 +408,7 @@ async def test_the_account_profile_is_reread_periodically(
 
     # Well inside the interval: the profile is a whole-account document, so it
     # is not re-read on every ten-second refresh.
-    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(MAINTENANCE_INTERVAL + timedelta(seconds=1))
     await _tick(hass)
     mock_client.async_refresh_profile.assert_not_awaited()
 
