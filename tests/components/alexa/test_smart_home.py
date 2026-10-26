@@ -1,7 +1,8 @@
 """Test for smart home alexa support."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
+from itertools import count
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
@@ -6503,7 +6504,20 @@ async def test_rtc_session_disconnected_unknown_camera(hass: HomeAssistant) -> N
     assert response["payload"] == {"sessionId": RTC_SESSION_ID}
 
 
-async def _async_negotiate_rtc_session(hass: HomeAssistant) -> None:
+async def _async_answer_webrtc_offer(
+    offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
+) -> None:
+    """Answer a WebRTC offer without additional ICE candidates."""
+    send_message(camera.WebRTCAnswer(WEBRTC_ANSWER))
+    send_message(camera.WebRTCCandidate(RTCIceCandidateInit("")))
+
+
+async def _async_negotiate_rtc_session(
+    hass: HomeAssistant,
+    handle_offer: Callable[
+        [str, str, camera.WebRTCSendMessage], Awaitable[None]
+    ] = _async_answer_webrtc_offer,
+) -> None:
     """Negotiate a WebRTC session with the demo camera."""
     request = get_new_request(
         "Alexa.RTCSessionController",
@@ -6515,15 +6529,9 @@ async def _async_negotiate_rtc_session(hass: HomeAssistant) -> None:
         "offer": {"format": "SDP", "value": WEBRTC_OFFER},
     }
 
-    async def async_handle_async_webrtc_offer(
-        offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
-    ) -> None:
-        send_message(camera.WebRTCAnswer(WEBRTC_ANSWER))
-        send_message(camera.WebRTCCandidate(RTCIceCandidateInit("")))
-
     with patch(
         "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
-        side_effect=async_handle_async_webrtc_offer,
+        side_effect=handle_offer,
     ):
         msg = await smart_home.async_handle_message(
             hass, get_default_config(hass), request
@@ -6597,27 +6605,45 @@ async def test_rtc_session_disconnected_cancels_expiry(
 async def test_rtc_session_renegotiated_expiry(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test negotiating the same session again replaces its expiry."""
+    """Test negotiating the same session again replaces the previous session."""
     renegotiate_after = RTC_MAX_SESSION_DURATION / 2
+    stream_ids = count()
+    provider_sessions: dict[str, int] = {}
+    closed_streams: list[int] = []
+
+    async def async_handle_async_webrtc_offer(
+        offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
+    ) -> None:
+        # Like go2rtc, a new offer replaces the stream without closing it.
+        provider_sessions[session_id] = next(stream_ids)
+        await _async_answer_webrtc_offer(offer_sdp, session_id, send_message)
+
+    def close_webrtc_session(session_id: str) -> None:
+        if (stream_id := provider_sessions.pop(session_id, None)) is not None:
+            closed_streams.append(stream_id)
+
     with patch(
-        "homeassistant.components.camera.Camera.close_webrtc_session"
-    ) as mock_close:
-        await _async_negotiate_rtc_session(hass)
+        "homeassistant.components.camera.Camera.close_webrtc_session",
+        side_effect=close_webrtc_session,
+    ):
+        # Renegotiating the same session must close the previous stream.
+        await _async_negotiate_rtc_session(hass, async_handle_async_webrtc_offer)
         freezer.tick(renegotiate_after)
         async_fire_time_changed(hass)
-        await _async_negotiate_rtc_session(hass)
+        await _async_negotiate_rtc_session(hass, async_handle_async_webrtc_offer)
+        assert closed_streams == [0]
 
         # The expiry of the first negotiation must not close the new session.
         freezer.tick(RTC_MAX_SESSION_DURATION - renegotiate_after)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        mock_close.assert_not_called()
+        assert closed_streams == [0]
 
         freezer.tick(renegotiate_after)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    mock_close.assert_called_once_with(RTC_SESSION_ID)
+    assert closed_streams == [0, 1]
 
 
 @pytest.mark.parametrize(

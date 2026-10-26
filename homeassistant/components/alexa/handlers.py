@@ -2413,6 +2413,12 @@ async def async_api_initiate_session_with_offer(
         "Starting WebRTC session %s for %s", session_id, camera_entity.entity_id
     )
 
+    sessions = hass.data.setdefault(DATA_RTC_SESSIONS, {})
+    # Providers like go2rtc replace a renegotiated session without closing it.
+    if cancel_expiry := sessions.pop(session_id, None):
+        cancel_expiry()
+        camera_entity.close_webrtc_session(session_id)
+
     # The provider may only register the session late during negotiation, so
     # a disconnect is recorded and handled once negotiation completes.
     pending_disconnects = hass.data.setdefault(DATA_RTC_PENDING_DISCONNECTS, {})
@@ -2446,7 +2452,6 @@ async def async_api_initiate_session_with_offer(
         )
         camera_entity.close_webrtc_session(session_id)
 
-    sessions = hass.data.setdefault(DATA_RTC_SESSIONS, {})
     if cancel_expiry := sessions.pop(session_id, None):
         cancel_expiry()
     sessions[session_id] = async_call_later(
