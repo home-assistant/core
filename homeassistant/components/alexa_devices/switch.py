@@ -47,6 +47,15 @@ def _update_communication_state(
     )
 
 
+def _has_feature_sensor(device: AmazonDevice, sensor_key: str) -> bool:
+    """Return if a supported feature of the device provides the sensor."""
+    return any(
+        sensor_key in feature.sensor_keys.values()
+        for instances in device.features.values()
+        for feature in instances.values()
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class AmazonSwitchEntityDescription(SwitchEntityDescription):
     """Alexa Devices switch entity description."""
@@ -190,7 +199,7 @@ async def async_setup_entry(
                 AmazonSwitchEntity(coordinator, serial_num, switch_desc)
                 for switch_desc in FEATURE_SWITCHES
                 for serial_num in new_devices
-                if coordinator.device_sensor(serial_num, switch_desc.key) is not None
+                if _has_feature_sensor(coordinator.data[serial_num], switch_desc.key)
             ]
         )
         known_dnd_devices.update(new_dnd_devices)

@@ -395,6 +395,38 @@ async def test_switch_led_unavailable_on_sensor_error(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_switch_led_created_without_sensor_value(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the AQM LED switch is created from the feature before a value arrives."""
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_AQM_SN: deepcopy(TEST_DEVICE_AQM)
+    }
+    del mock_amazon_devices_client.sensors[TEST_DEVICE_AQM_SN]["AQM-LED"]
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(LED_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_switch_led_not_created_without_feature(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the AQM LED switch is not created when the feature is unsupported."""
+    device = deepcopy(TEST_DEVICE_AQM)
+    device.features = {}
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_AQM_SN: device
+    }
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(LED_ENTITY_ID) is None
+
+
 async def test_switch_led_cannot_set_feature(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,

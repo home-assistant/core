@@ -160,7 +160,25 @@ TEST_DEVICE_AQM = AmazonDevice(
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=False,
-    features={},
+    features={
+        "toggle": {
+            "11": AmazonDeviceFeature(
+                properties=["toggleState"],
+                supported_operations=["turnOn", "turnOff"],
+                supported_modes=[],
+                friendly_name="Enable LED Indicator",
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={
+                    "__typename": "ToggleConfiguration",
+                    "friendlyName": {"value": {"text": "Enable LED Indicator"}},
+                },
+                sensor_keys={"toggleState": "AQM-LED"},
+            )
+        }
+    },
     unsupported_features={},
 )
 
