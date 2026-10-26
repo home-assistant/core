@@ -12,12 +12,28 @@
             'source': '"2025.1"',
             'version': '2025.1',
           }),
+        ]),
+        'kind': 'integration',
+        'name': 'alpha',
+        'version': '2025.1',
+      }),
+      dict({
+        'branch': 'deprecation-cleanup/alpha-2026.9',
+        'items': list([
           dict({
             'file': 'homeassistant/components/alpha/__init__.py',
             'line': 4,
             'source': '"2026.9.0"',
             'version': '2026.9.0',
           }),
+        ]),
+        'kind': 'integration',
+        'name': 'alpha',
+        'version': '2026.9',
+      }),
+      dict({
+        'branch': 'deprecation-cleanup/alpha-2026.11',
+        'items': list([
           dict({
             'file': 'homeassistant/components/alpha/__init__.py',
             'line': 6,
@@ -27,17 +43,11 @@
         ]),
         'kind': 'integration',
         'name': 'alpha',
-        'oldest_version': '2025.1',
+        'version': '2026.11',
       }),
       dict({
         'branch': 'deprecation-cleanup/beta-2025.6',
         'items': list([
-          dict({
-            'file': 'homeassistant/components/beta/sensor.py',
-            'line': 4,
-            'source': "deprecate_entity() default version='2026.9.0'",
-            'version': '2026.9.0',
-          }),
           dict({
             'file': 'homeassistant/components/beta/sensor.py',
             'line': 6,
@@ -47,7 +57,49 @@
         ]),
         'kind': 'integration',
         'name': 'beta',
-        'oldest_version': '2025.6',
+        'version': '2025.6',
+      }),
+      dict({
+        'branch': 'deprecation-cleanup/beta-2026.9',
+        'items': list([
+          dict({
+            'file': 'homeassistant/components/beta/sensor.py',
+            'line': 4,
+            'source': "deprecate_entity() default version='2026.9.0'",
+            'version': '2026.9.0',
+          }),
+        ]),
+        'kind': 'integration',
+        'name': 'beta',
+        'version': '2026.9',
+      }),
+      dict({
+        'branch': 'deprecation-cleanup/const-2025.6',
+        'items': list([
+          dict({
+            'file': 'homeassistant/const.py',
+            'line': 6,
+            'source': '"2025.6"',
+            'version': '2025.6',
+          }),
+        ]),
+        'kind': 'core',
+        'name': 'const.py',
+        'version': '2025.6',
+      }),
+      dict({
+        'branch': 'deprecation-cleanup/const-2026.10',
+        'items': list([
+          dict({
+            'file': 'homeassistant/const.py',
+            'line': 4,
+            'source': '"2026.10"',
+            'version': '2026.10',
+          }),
+        ]),
+        'kind': 'core',
+        'name': 'const.py',
+        'version': '2026.10',
       }),
       dict({
         'branch': 'deprecation-cleanup/gamma-2026.1',
@@ -61,27 +113,7 @@
         ]),
         'kind': 'integration',
         'name': 'gamma',
-        'oldest_version': '2026.1',
-      }),
-      dict({
-        'branch': 'deprecation-cleanup/const-2025.6',
-        'items': list([
-          dict({
-            'file': 'homeassistant/const.py',
-            'line': 4,
-            'source': '"2026.10"',
-            'version': '2026.10',
-          }),
-          dict({
-            'file': 'homeassistant/const.py',
-            'line': 6,
-            'source': '"2025.6"',
-            'version': '2025.6',
-          }),
-        ]),
-        'kind': 'core',
-        'name': 'const.py',
-        'oldest_version': '2025.6',
+        'version': '2026.1',
       }),
       dict({
         'branch': 'deprecation-cleanup/helpers-device_registry-2025.12',
@@ -95,7 +127,7 @@
         ]),
         'kind': 'core',
         'name': 'helpers/device_registry.py',
-        'oldest_version': '2025.12',
+        'version': '2025.12',
       }),
     ]),
     'passthrough': list([

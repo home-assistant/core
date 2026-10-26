@@ -1,6 +1,6 @@
 ---
 name: ha-deprecation-cleanup
-description: Finds Home Assistant deprecations whose breaks_in_ha_version has been reached on dev and prepares one cleanup branch per integration or core module, with the deprecated code removed, tests passing and a ready-to-paste PR description. Use when asked to scan for due or overdue deprecations, find breaks_in_ha_version cleanups, or create deprecation cleanup branches.
+description: Finds Home Assistant deprecations whose breaks_in_ha_version has been reached on dev and prepares one cleanup branch per integration or core module and version, with the deprecated code removed, tests passing and a ready-to-paste PR description. Use when asked to scan for due or overdue deprecations, find breaks_in_ha_version cleanups, or create deprecation cleanup branches.
 ---
 
 # Clean Up Due Deprecations
@@ -24,25 +24,29 @@ uv run --no-sync python3 ./.claude/skills/ha-deprecation-cleanup/scripts/find_du
 It finds `breaks_in_ha_version` keyword arguments and dict keys, plus the positional
 version of `DeprecatedConstant`, `DeprecatedConstantEnum`, `DeprecatedAlias` and
 `DeferredDeprecatedAlias`. Values held in an upper-case constant are resolved within the
-same integration or core module. When the value is a parameter of the enclosing function,
-such as a `deprecate_entity(..., version="2026.9.0")` helper, it resolves each caller in
-the same integration or module: the version the caller passes, or the parameter's default
-when it passes none. Those items point at the call site. It prints JSON with:
+file, or else in the same integration or core module when the name has only one value
+there. When the value is a parameter of the enclosing function, such as a
+`deprecate_entity(..., version="2026.9.0")` helper, it resolves each caller in the same
+integration or module: the version the caller passes, or the parameter's default when it
+passes none. Those items point at the call site. It prints JSON with:
 
 - `current_version`: the X.Y compared against.
-- `groups`: the due groups. Each has a `name` (integration domain, or module path such as
-  `helpers/device_registry.py`), `kind` (`integration` or `core`), `oldest_version`, the
-  `branch` name to use, and its `items` (file, line, version, source).
-- `unresolved`: constants the script could not resolve. Read them by hand and add any
-  that are due to the matching group.
+- `groups`: the due groups, one per integration or core module and `breaks_in_ha_version`
+  X.Y, because each version is usually a separate deprecation that needs its own
+  decision. Each has a `name` (integration domain, or module path such as
+  `helpers/device_registry.py`), `kind` (`integration` or `core`), `version`, the `branch`
+  name to use, and its `items` (file, line, version, source).
+- `unresolved`: constants the script could not resolve, for example a name with
+  different values in different files of the group. Read them by hand and add any that
+  are due to the matching group.
 - `passthrough`: values the script could not follow, such as an attribute, a variable
   unpacked from a tuple, or a helper with no callers in the same group. Helpers in
   `homeassistant/helpers/` just forward the value and can be ignored. For one inside an
   integration, find where the value comes from and check it by hand (for example
   `smartthings` keeps its versions in tuples in its entity descriptions).
 
-Branch names are `deprecation-cleanup/<group-slug>-<X.Y>`. The script derives them, using the
-group's oldest due X.Y, so that the same group gets the same name on every run.
+Branch names are `deprecation-cleanup/<group-slug>-<X.Y>`. The script derives them, so the
+same group gets the same name on every run.
 
 ## 2. Decide per group
 
@@ -58,8 +62,9 @@ attribute, a helper API, a repair issue, …) and what removing it means. Then p
   that custom integrations still use widely (the `custom-integration-sources` skill can
   measure that). Don't create a branch.
 - **Branch exists**: if the group's branch already exists on the push remote
-  (`git ls-remote --heads <remote> <branch>`), don't touch it. Report whether a PR is open
-  from it, and when its base is more than one release behind `dev`, say it needs a merge of
+  (`git ls-remote --heads <remote> <branch>`) or locally (`git branch --list <branch>`),
+  don't touch it. Report whether a PR is open from it, whether it is only local and not
+  pushed, and when its base is more than one release behind `dev`, say it needs a merge of
   `dev` or a fresh branch.
 - **Prepare a branch** otherwise.
 
@@ -72,9 +77,12 @@ edit an issue. On a rate limit, wait for the reset and retry once.
 
 ## 3. Prepare a branch
 
-Set up the environment once with `script/setup`. For each group:
+Prepare each branch in its own worktree, so a group's changes never end up on another
+group's branch. For each group:
 
-1. `git checkout -B <branch> origin/dev`
+1. `git worktree add -b <branch> ../deprecation-cleanup/<group-slug>-<X.Y> origin/dev`.
+   This refuses to touch a branch that already exists. Work inside that directory and run
+   `script/setup` there.
 2. Remove the deprecated code path completely: the issue creation or warning,
    compatibility shims, old schema keys, constants, now-unused strings in `strings.json`
    (then run `python3 -m script.translations develop --integration <domain>`), and the
@@ -83,7 +91,9 @@ Set up the environment once with `script/setup`. For each group:
 3. Validate: `uv run --no-sync pytest tests/components/<domain>` (or the matching core
    tests) and `uv run --no-sync prek run --files <changed files>`. If they still fail after
    a reasonable attempt, don't commit or push. Report the group as needs decision, with
-   what failed.
+   what failed and the worktree path, and leave the worktree for a human to look at. In
+   an unattended run, remove it instead (`git worktree remove --force <path>` and
+   `git branch -D <branch>`; the branch only has the uncommitted attempt).
 4. Commit as "Remove deprecated <thing> from <domain>". In the body, name the
    `breaks_in_ha_version` and the PR that added the deprecation (find it with `git log -S`
    or `git blame`). Keep the PR template out of the commit message.
@@ -97,6 +107,7 @@ Set up the environment once with `script/setup`. For each group:
    `https://github.com/home-assistant/core/compare/dev...<branch>?expand=1` for an upstream
    branch, or `https://github.com/home-assistant/core/compare/dev...<owner>:<repo>:<branch>?expand=1`
    for a fork.
+7. Remove the worktree with `git worktree remove <path>`. The branch stays.
 
 ## 4. Stale branches
 
@@ -116,7 +127,8 @@ stale branches.
 - Never open pull requests, comment, review, or edit issues. Per `AI_POLICY.md`, a human
   reviews each branch and opens the PR.
 - Only create new `deprecation-cleanup/` branches. Never force-push, never push to a branch
-  that already exists on the remote, never delete branches, and never push to `dev`, `rc`,
-  `master` or anything outside `deprecation-cleanup/`.
+  that already exists on the remote, and never push to `dev`, `rc`, `master` or anything
+  outside `deprecation-cleanup/`. Never delete a remote branch, or a local branch that
+  this run didn't create.
 - If a push is rejected (for example by a branch ruleset), stop pushing for the rest of
   the run and report why.

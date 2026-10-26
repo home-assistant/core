@@ -38,9 +38,35 @@ class Group:
 
     name: str
     kind: str
-    oldest_version: str = ""
-    branch: str = ""
+    version: str
+    branch: str
     items: list[Item] = field(default_factory=list)
+
+
+@dataclass
+class Constants:
+    """Module-level string constants, per file and per group."""
+
+    files: dict[str, dict[str, str]] = field(default_factory=dict)
+    groups: dict[str, dict[str, set[str]]] = field(default_factory=dict)
+
+    def add(self, file: str, constants: dict[str, str]) -> None:
+        """Add the constants defined in a file."""
+        self.files[file] = constants
+        values = self.groups.setdefault(group_name(file)[0], {})
+        for name, value in constants.items():
+            values.setdefault(name, set()).add(value)
+
+    def resolve(self, file: str, name: str) -> str | None:
+        """Resolve a constant used in a file.
+
+        A constant defined in the file itself wins. Otherwise it must have one
+        value across the group; names with several values are left unresolved.
+        """
+        if name in self.files[file]:
+            return self.files[file][name]
+        values = self.groups[group_name(file)[0]].get(name, set())
+        return next(iter(values)) if len(values) == 1 else None
 
 
 def parse_version(value: str) -> tuple[int, int] | None:
@@ -154,20 +180,21 @@ def passed_argument(
     return False
 
 
-def resolve_version(value: ast.expr, constants: dict[str, str]) -> str | None:
+def resolve_version(value: ast.expr, constants: Constants, file: str) -> str | None:
     """Return the version string of a literal or an upper-case constant."""
     if isinstance(value, ast.Constant) and isinstance(value.value, str):
         return value.value
     if isinstance(value, ast.Name) and value.id.isupper():
-        return constants.get(value.id)
+        return constants.resolve(file, value.id)
     return None
 
 
 def caller_items(
     func: ast.FunctionDef | ast.AsyncFunctionDef,
+    func_file: str,
     parameter: str,
     files: list[tuple[str, str, ast.Module]],
-    constants: dict[str, str],
+    constants: Constants,
 ) -> list[Item] | None:
     """Resolve a forwarded parameter to the versions its callers end up using.
 
@@ -195,11 +222,12 @@ def caller_items(
             if argument is False:
                 if default is None:
                     return None
-                argument = default
+                version = resolve_version(default, constants, func_file)
                 source = f"{func.name}() default {parameter}={ast.unparse(default)}"
             else:
+                version = resolve_version(argument, constants, rel)
                 source = ast.get_source_segment(text, argument) or ""
-            if (version := resolve_version(argument, constants)) is None:
+            if version is None:
                 return None
             items.append(Item(rel, call.lineno, version, source))
     return items or None
@@ -219,23 +247,28 @@ def branch_name(name: str, version: str) -> str:
     return f"deprecation-cleanup/{slug}-{version}"
 
 
+def _group_order(key: tuple[str, str]) -> tuple[str, int, int]:
+    """Sort groups by name, then by version."""
+    major, minor = key[1].split(".")
+    return key[0], int(major), int(minor)
+
+
 def scan(root: Path, current: tuple[int, int]) -> dict[str, Any]:
     """Find the deprecations under root/homeassistant that are due at current."""
     trees: dict[str, tuple[str, ast.Module]] = {}
     group_files: dict[str, list[tuple[str, str, ast.Module]]] = {}
-    constants: dict[str, dict[str, str]] = {}
+    constants = Constants()
     for path in sorted((root / "homeassistant").rglob("*.py")):
         text = path.read_text()
         tree = ast.parse(text)
         rel = path.relative_to(root).as_posix()
         name = group_name(rel)[0]
-        constants.setdefault(name, {}).update(module_constants(tree))
+        constants.add(rel, module_constants(tree))
         group_files.setdefault(name, []).append((rel, text, tree))
         if KEY in text or any(cls in text for cls in POSITIONAL):
             trees[rel] = (text, tree)
 
-    groups: dict[str, Group] = {}
-    oldest: dict[str, tuple[int, int]] = {}
+    groups: dict[tuple[str, str], Group] = {}
     unresolved: list[Item] = []
     passthrough: list[Item] = []
     for rel, (text, tree) in trees.items():
@@ -250,14 +283,14 @@ def scan(root: Path, current: tuple[int, int]) -> dict[str, Any]:
             if isinstance(value, ast.Constant) or (
                 isinstance(value, ast.Name) and value.id.isupper()
             ):
-                item.version = resolve_version(value, constants[name])
+                item.version = resolve_version(value, constants, rel)
                 items = [item]
             elif (
                 isinstance(value, ast.Name)
                 and (func := owners.get(value)) is not None
                 and (
                     callers := caller_items(
-                        func, value.id, group_files[name], constants[name]
+                        func, rel, value.id, group_files[name], constants
                     )
                 )
                 is not None
@@ -274,16 +307,15 @@ def scan(root: Path, current: tuple[int, int]) -> dict[str, Any]:
                     continue
                 if parsed > current:
                     continue
-                groups.setdefault(name, Group(name, kind)).items.append(found)
-                oldest[name] = min(oldest.get(name, parsed), parsed)
-
-    for name, group in groups.items():
-        group.oldest_version = f"{oldest[name][0]}.{oldest[name][1]}"
-        group.branch = branch_name(group.name, group.oldest_version)
+                version = f"{parsed[0]}.{parsed[1]}"
+                groups.setdefault(
+                    (name, version),
+                    Group(name, kind, version, branch_name(name, version)),
+                ).items.append(found)
 
     return {
         "current_version": f"{current[0]}.{current[1]}",
-        "groups": [asdict(group) for group in groups.values()],
+        "groups": [asdict(groups[key]) for key in sorted(groups, key=_group_order)],
         "unresolved": [asdict(item) for item in unresolved],
         "passthrough": [asdict(item) for item in passthrough],
     }

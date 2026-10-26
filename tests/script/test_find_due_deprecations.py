@@ -90,14 +90,43 @@ FILES = {
 }
 
 
+# Three files using a VERSION constant that two of them define differently.
+SAME_NAME_FILES = {
+    "homeassistant/components/epsilon/a.py": """
+        VERSION = "2025.1.0"
+
+        async_create_issue(breaks_in_ha_version=VERSION)
+    """,
+    "homeassistant/components/epsilon/b.py": """
+        VERSION = "2099.1.0"
+
+        async_create_issue(breaks_in_ha_version=VERSION)
+
+        def make_issue(version=VERSION):
+            async_create_issue(breaks_in_ha_version=version)
+    """,
+    "homeassistant/components/epsilon/c.py": """
+        from .b import make_issue
+
+        async_create_issue(breaks_in_ha_version=VERSION)
+        make_issue()
+    """,
+}
+
+
+def write_repo(root: Path, files: dict[str, str]) -> Path:
+    """Write a fake core checkout."""
+    for name, content in files.items():
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(dedent(content).lstrip())
+    return root
+
+
 @pytest.fixture
 def repo(tmp_path: Path) -> Path:
     """Create a fake core checkout with deprecations of every supported kind."""
-    for name, content in FILES.items():
-        path = tmp_path / name
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(dedent(content).lstrip())
-    return tmp_path
+    return write_repo(tmp_path, FILES)
 
 
 def test_scan(repo: Path, snapshot: SnapshotAssertion) -> None:
@@ -108,15 +137,26 @@ def test_scan(repo: Path, snapshot: SnapshotAssertion) -> None:
 @pytest.mark.parametrize(
     ("current", "expected"),
     [
-        pytest.param((2025, 1), ["alpha"], id="only-the-oldest"),
+        pytest.param(
+            (2025, 1),
+            ["deprecation-cleanup/alpha-2025.1"],
+            id="only-the-oldest",
+        ),
         pytest.param(
             (2027, 1),
             [
-                "const.py",
-                "helpers/device_registry.py",
-                "alpha",
-                "beta",
-                "gamma",
+                "deprecation-cleanup/alpha-2025.1",
+                "deprecation-cleanup/alpha-2026.9",
+                "deprecation-cleanup/alpha-2026.11",
+                "deprecation-cleanup/alpha-2026.12",
+                "deprecation-cleanup/beta-2025.6",
+                "deprecation-cleanup/beta-2026.9",
+                "deprecation-cleanup/beta-2026.12",
+                "deprecation-cleanup/const-2025.6",
+                "deprecation-cleanup/const-2026.10",
+                "deprecation-cleanup/const-2027.1",
+                "deprecation-cleanup/gamma-2026.1",
+                "deprecation-cleanup/helpers-device_registry-2025.12",
             ],
             id="everything-resolvable",
         ),
@@ -125,9 +165,37 @@ def test_scan(repo: Path, snapshot: SnapshotAssertion) -> None:
 def test_scan_due_rule(
     repo: Path, current: tuple[int, int], expected: list[str]
 ) -> None:
-    """Test deprecations are due at or below the current version."""
-    groups = [group["name"] for group in find.scan(repo, current)["groups"]]
-    assert sorted(groups) == sorted(expected)
+    """Test there is one group per name and version due at or below current."""
+    assert [group["branch"] for group in find.scan(repo, current)["groups"]] == (
+        expected
+    )
+
+
+def test_scan_same_constant_name(tmp_path: Path) -> None:
+    """Test constants with the same name in several files are not mixed up."""
+    result = find.scan(write_repo(tmp_path, SAME_NAME_FILES), (2099, 1))
+    # Each file uses its own VERSION, and the default is resolved where it is
+    # defined, not where make_issue() is called.
+    assert [
+        (group["branch"], [(item["file"], item["line"]) for item in group["items"]])
+        for group in result["groups"]
+    ] == [
+        (
+            "deprecation-cleanup/epsilon-2025.1",
+            [("homeassistant/components/epsilon/a.py", 3)],
+        ),
+        (
+            "deprecation-cleanup/epsilon-2099.1",
+            [
+                ("homeassistant/components/epsilon/b.py", 3),
+                ("homeassistant/components/epsilon/c.py", 4),
+            ],
+        ),
+    ]
+    # c.py doesn't define VERSION and the group has two values for it.
+    assert [(item["file"], item["source"]) for item in result["unresolved"]] == [
+        ("homeassistant/components/epsilon/c.py", "VERSION")
+    ]
 
 
 @pytest.mark.parametrize(
