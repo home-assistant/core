@@ -33,6 +33,7 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
+    area_registry as ar,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
@@ -577,14 +578,15 @@ async def test_zha_group_cleanup_legacy_coordinator_entities(
     )
 
 
-async def test_zha_group_device_kept_when_group_shrinks(
+async def test_zha_group_device_removed_when_group_shrinks(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[Any, Any, None]],
     zigpy_app_controller_with_group: ControllerApplication,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a shrinking group loses its entities but keeps its device."""
+    """Test a group's device goes with its entities and comes back with them."""
     await setup_zha()
 
     app_controller = zigpy_app_controller_with_group
@@ -593,6 +595,8 @@ async def test_zha_group_device_kept_when_group_shrinks(
 
     device_id = group_proxy.device_id
     assert device_id is not None
+    area = area_registry.async_create("Kitchen")
+    device_registry.async_update_device(device_id, area_id=area.id)
     entity_entries = er.async_entries_for_device(
         entity_registry, device_id, include_disabled_entities=True
     )
@@ -607,16 +611,21 @@ async def test_zha_group_device_kept_when_group_shrinks(
     assert not group_proxy.group.group_entities
     for entry in entity_entries:
         assert entity_registry.async_get(entry.entity_id) is None
-    # the group itself still exists, so its device stays
-    assert device_registry.async_get(device_id) is not None
-    assert group_proxy.device_id == device_id
+    assert device_registry.async_get(device_id) is None
+    assert group_proxy.device_id is None
 
     group.add_member(member)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert group_proxy.group.group_entities
+    # the device and its entities are restored, with their settings
     assert group_proxy.device_id == device_id
-    assert er.async_entries_for_device(entity_registry, device_id)
+    device = device_registry.async_get(device_id)
+    assert device is not None
+    assert device.area_id == area.id
+    for entry in entity_entries:
+        restored_entry = entity_registry.async_get(entry.entity_id)
+        assert restored_entry is not None
+        assert restored_entry.device_id == device_id
 
 
 def _remove_group_while_stopped(app_controller: ControllerApplication) -> None:
@@ -631,10 +640,10 @@ def _shrink_group_while_stopped(app_controller: ControllerApplication) -> None:
 
 
 @pytest.mark.parametrize(
-    ("change_group", "device_removed"),
+    "change_group",
     [
-        pytest.param(_remove_group_while_stopped, True, id="group_removed"),
-        pytest.param(_shrink_group_while_stopped, False, id="group_shrunk"),
+        pytest.param(_remove_group_while_stopped, id="group_removed"),
+        pytest.param(_shrink_group_while_stopped, id="group_shrunk"),
     ],
 )
 async def test_zha_group_device_reconciled_on_startup(
@@ -645,7 +654,6 @@ async def test_zha_group_device_reconciled_on_startup(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     change_group: Callable[[ControllerApplication], None],
-    device_removed: bool,
 ) -> None:
     """Test group changes made while ZHA was not running are cleaned up on setup."""
     await setup_zha()
@@ -673,9 +681,9 @@ async def test_zha_group_device_reconciled_on_startup(
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    # resetting the removed device must not re-enable entities and reload ZHA
+    # removing the device must not re-enable entities and reload ZHA
     mock_reload.assert_not_called()
-    assert (device_registry.async_get(device_id) is None) is device_removed
+    assert device_registry.async_get(device_id) is None
     for entry in entity_entries:
         assert entity_registry.async_get(entry.entity_id) is None
 
@@ -744,18 +752,14 @@ async def test_zha_group_entity_registry_disable_propagates(
     assert group_entity.enabled
 
 
-async def test_zha_group_entity_enabled_after_regrow_of_disabled_device(
+async def test_zha_group_regrown_with_disabled_device(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[Any, Any, None]],
     zigpy_app_controller_with_group: ControllerApplication,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a group entity is enabled again after its device was disabled.
-
-    The group shrinks while its device is disabled and grows back after the
-    device was enabled again.
-    """
+    """Test a group that shrinks and grows back keeps its disabled device."""
     await setup_zha()
 
     group_proxy = get_zha_gateway_proxy(hass).group_proxies[
@@ -774,17 +778,24 @@ async def test_zha_group_entity_enabled_after_regrow_of_disabled_device(
     member = next(iter(group.values()))
     group.remove_member(member)
     await hass.async_block_till_done(wait_background_tasks=True)
-
-    device_registry.async_update_device(device_id, disabled_by=None)
-    await hass.async_block_till_done()
+    assert device_registry.async_get(device_id) is None
 
     group.add_member(member)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    device = device_registry.async_get(device_id)
+    assert device is not None
+    assert device.disabled_by is dr.DeviceEntryDisabler.USER
+    regrown_entry = entity_registry.async_get(entry.entity_id)
+    assert regrown_entry is not None
+    assert regrown_entry.disabled_by is er.RegistryEntryDisabler.DEVICE
+
+    # enabling the device enables its entity again
+    device_registry.async_update_device(device_id, disabled_by=None)
+    await hass.async_block_till_done()
     regrown_entry = entity_registry.async_get(entry.entity_id)
     assert regrown_entry is not None
     assert regrown_entry.disabled_by is None
-    assert hass.states.get(entry.entity_id) is not None
 
 
 async def test_zha_group_entity_migrated_from_coordinator_device(

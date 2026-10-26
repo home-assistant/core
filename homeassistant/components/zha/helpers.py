@@ -1259,9 +1259,9 @@ class ZHAGatewayProxy(EventBase):
         """Remove registry entries for group entities the group no longer has.
 
         A group entity disappears when the group, or the group's members of
-        that platform, drop below two. The group device stays until the group
-        itself is removed, so a group that grows back keeps its device
-        customizations.
+        that platform, drop below two. Once the group has no entities left, its
+        device is removed too; growing the group again restores both from the
+        registries' deleted entries.
         """
         if (device_id := zha_group_proxy.device_id) is None:
             return
@@ -1281,6 +1281,15 @@ class ZHAGatewayProxy(EventBase):
                 entry.entity_id,
             )
             entity_registry.async_remove(entry.entity_id)
+
+        if zha_group_proxy.group.group_entities:
+            return
+
+        # Entities of other integrations on the device are detached, not removed
+        device_registry = dr.async_get(self.hass)
+        if device_registry.async_get(device_id) is not None:
+            device_registry.async_remove_device(device_id)
+        zha_group_proxy.device_id = None
 
     def _update_group_entities(self, group_event: GroupEvent) -> None:
         """Update group entities when a group event is received."""
