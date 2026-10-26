@@ -364,14 +364,14 @@ def test_zha_group_proxy_device_info() -> None:
     ) as mock_get_device_id:
         device_info = ZHAGroupProxy(mock_group, gateway_proxy).device_info
 
-    assert device_info == {
-        "identifiers": {(zha_const.DOMAIN, "test_entry_id_group_0x1001")},
-        "name": "Test Group",
-        "manufacturer": "Zigbee",
-        "model": "Group",
-        "entry_type": dr.DeviceEntryType.SERVICE,
-        "via_device_id": "coordinator_device_id",
-    }
+    assert device_info == dr.DeviceInfo(
+        identifiers={(zha_const.DOMAIN, "test_entry_id_group_0x1001")},
+        name="Test Group",
+        manufacturer="Zigbee",
+        model="Group",
+        entry_type=dr.DeviceEntryType.SERVICE,
+        via_device_id="coordinator_device_id",
+    )
     assert mock_get_device_id.mock_calls[0].args[1] == (
         zha_const.DOMAIN,
         coordinator_ieee,

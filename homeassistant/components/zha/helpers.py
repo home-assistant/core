@@ -1142,9 +1142,9 @@ class ZHAGatewayProxy(EventBase):
 
         if zha_group_proxy.device_id is None and zha_group_proxy.group.group_entities:
             device_registry = dr.async_get(self.hass)
-            device_registry_device = device_registry.async_get_or_create(
+            device_registry_device = device_registry.async_get_or_create_from_info(
                 config_entry_id=self.config_entry.entry_id,
-                **zha_group_proxy.device_info,
+                device_info=zha_group_proxy.device_info,
             )
             zha_group_proxy.device_id = device_registry_device.id
         return zha_group_proxy
