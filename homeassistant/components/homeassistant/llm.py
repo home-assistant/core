@@ -452,11 +452,6 @@ class CallActionTool(Tool):
         """Call the action."""
         args = self.parameters(tool_input.tool_args)
         domain, action = args["action"].split(".", 1)
-        if not hass.services.has_service(domain, action):
-            return ToolResult(
-                data={"error": f"Action {args['action']} does not exist."},
-                error=True,
-            )
         try:
             config = cv.SERVICE_SCHEMA(args)
         except probatio.Invalid as err:
@@ -477,6 +472,12 @@ class CallActionTool(Tool):
                     },
                     error=True,
                 )
+        # Checked after rendering, which awaits, so a reload cannot remove the action
+        if not hass.services.has_service(domain, action):
+            return ToolResult(
+                data={"error": f"Action {args['action']} does not exist."},
+                error=True,
+            )
         return_response = (
             hass.services.supports_response(domain, action) is not SupportsResponse.NONE
         )

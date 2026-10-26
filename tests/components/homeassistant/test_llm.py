@@ -298,6 +298,28 @@ async def test_call_action_unknown(hass: HomeAssistant) -> None:
     )
 
 
+async def test_call_action_removed_while_rendering(hass: HomeAssistant) -> None:
+    """Test the call action tool reports an action removed while templates render."""
+    hass.services.async_register("test", "action", lambda call: None)
+
+    async def remove_action(*args: Any, **kwargs: Any) -> bool:
+        hass.services.async_remove("test", "action")
+        return False
+
+    with patch(
+        "homeassistant.components.homeassistant.llm.Template.async_render_will_timeout",
+        side_effect=remove_action,
+    ):
+        response = await _async_call_tool(
+            hass,
+            CALL_ACTION_TOOL,
+            {"action": "test.action", "data": {"value": "{{ 1 }}"}},
+        )
+    assert response == llm.ToolResult(
+        data={"error": "Action test.action does not exist."}, error=True
+    )
+
+
 async def test_call_action_error(hass: HomeAssistant) -> None:
     """Test the call action tool reports an error of the action."""
 
