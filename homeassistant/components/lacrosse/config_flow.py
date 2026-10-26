@@ -10,7 +10,6 @@ from serial import SerialException
 
 from homeassistant.components import usb
 from homeassistant.config_entries import (
-    SOURCE_IMPORT,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -48,6 +47,7 @@ from .const import (
     CONF_JEELINK_LED,
     CONF_TOGGLE_INTERVAL,
     CONF_TOGGLE_MASK,
+    CONF_YAML_IMPORTED,
     DEFAULT_BAUD,
     DOMAIN,
     LaCrosseSensorType,
@@ -157,7 +157,7 @@ def sensor_subentries(
         grouped.setdefault(sensor[CONF_ID], {})[key] = sensor
     return [
         ConfigSubentryData(
-            data={CONF_SENSORS: sensor_data},
+            data={CONF_SENSORS: sensor_data, CONF_YAML_IMPORTED: True},
             subentry_type="sensor",
             title=next(iter(sensor_data.values())).get(CONF_FRIENDLY_NAME)
             or f"LaCrosse sensor {sensor_id}",
@@ -358,6 +358,7 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
         entry = self._get_entry()
         reconfigure_subentry = self._get_reconfigure_subentry()
         sensors = reconfigure_subentry.data[CONF_SENSORS]
+        preserve_entity_keys = reconfigure_subentry.data.get(CONF_YAML_IMPORTED, False)
         sensor = next(iter(sensors.values()))
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -381,25 +382,16 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                     for key, configured in sensors.items()
                     if LaCrosseSensorType[configured[CONF_TYPE].upper()] in selected
                 }
-                used_keys = {
-                    sensor_entity_key(other.subentry_id, configured[CONF_TYPE])
-                    if entry.source != SOURCE_IMPORT and key == configured[CONF_TYPE]
-                    else key
+                used_keys = set(updated)
+                used_keys.update(
+                    key
                     for other in entry.subentries.values()
                     if other.subentry_id != reconfigure_subentry.subentry_id
-                    for key, configured in other.data[CONF_SENSORS].items()
-                }
-                used_keys.update(
-                    sensor_entity_key(
-                        reconfigure_subentry.subentry_id, configured[CONF_TYPE]
-                    )
-                    if entry.source != SOURCE_IMPORT and key == configured[CONF_TYPE]
-                    else key
-                    for key, configured in updated.items()
+                    for key in other.data[CONF_SENSORS]
                 )
                 entity_registry = er.async_get(self.hass)
                 removed_ids = {
-                    f"{entry.entry_id}_{sensor_entity_key(reconfigure_subentry.subentry_id, configured[CONF_TYPE]) if key == configured[CONF_TYPE] else key}"
+                    f"{entry.entry_id}_{sensor_entity_key(reconfigure_subentry.subentry_id, configured[CONF_TYPE]) if not preserve_entity_keys and key == configured[CONF_TYPE] else key}"
                     for key, configured in sensors.items()
                     if key not in updated
                 }
@@ -414,22 +406,19 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                         for configured in updated.values()
                     ):
                         continue
-                    key = sensor_type.key
-                    suffix = 2
-                    entity_key = (
-                        sensor_entity_key(reconfigure_subentry.subentry_id, key)
-                        if entry.source != SOURCE_IMPORT
-                        else key
+                    entity_key = sensor_entity_key(
+                        reconfigure_subentry.subentry_id, sensor_type.key
                     )
-                    while entity_key in used_keys:
-                        key = f"{sensor_type.key}_{suffix}"
-                        entity_key = key
+                    key = entity_key
+                    suffix = 2
+                    while key in used_keys:
+                        key = f"{entity_key}_{suffix}"
                         suffix += 1
                     updated[key] = {
                         **details,
                         CONF_TYPE: sensor_type.key,
                     }
-                    used_keys.add(entity_key)
+                    used_keys.add(key)
                 receiver = entry.data[CONF_DEVICE]
                 device_registry = dr.async_get(self.hass)
                 name = user_input.get(CONF_FRIENDLY_NAME)
@@ -447,7 +436,7 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                     reconfigure_subentry,
                     unique_id=str(new_id),
                     title=name or f"LaCrosse sensor {new_id}",
-                    data={CONF_SENSORS: updated},
+                    data={**reconfigure_subentry.data, CONF_SENSORS: updated},
                 )
 
         defaults = {
