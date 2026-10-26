@@ -1,6 +1,6 @@
 """LLM tools for the homeassistant integration."""
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from decimal import Decimal
 from enum import Enum
 from operator import attrgetter
@@ -39,7 +39,6 @@ from homeassistant.helpers.llm import (
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util, yaml as yaml_util
-from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN
 from .exposed_entities import async_should_expose
@@ -421,57 +420,43 @@ def _action_fields(fields: dict[str, Any]) -> Iterator[tuple[str, dict[str, Any]
             yield field, config
 
 
-def _fill_placeholders(text: str, placeholders: Mapping[str, str]) -> str:
-    """Return the text with the description placeholders of an action filled in."""
-    for key, value in placeholders.items():
-        text = text.replace(f"{{{key}}}", value)
-    return text
-
-
 def _describe_action(
-    action_id: str,
-    name: str,
-    description: str,
-    action_description: dict[str, Any],
-    translations: dict[str, str],
-) -> JsonObjectType:
-    """Return the description of an action for the LLM."""
+    action_id: str, action_description: dict[str, Any], translations: dict[str, str]
+) -> dict[str, Any]:
+    """Return the name, description, target and fields of an action."""
     domain, action = action_id.split(".", 1)
-    key = f"component.{domain}.services.{action}.fields"
-    result: JsonObjectType = {
+    key = f"component.{domain}.services.{action}"
+    placeholders = action_description.get("description_placeholders", {})
+
+    def text(config: dict[str, Any], item: str, translation_key: str) -> str:
+        """Return a text of the description, else its translation."""
+        value = config.get(item) or translations.get(translation_key, "")
+        for placeholder, replacement in placeholders.items():
+            value = value.replace(f"{{{placeholder}}}", replacement)
+        return value
+
+    fields: dict[str, dict[str, Any]] = {}
+    for field, config in _action_fields(action_description["fields"]):
+        field_info: dict[str, Any] = {}
+        if description := text(
+            config, "description", f"{key}.fields.{field}.description"
+        ):
+            field_info["description"] = description
+        if config.get("required"):
+            field_info["required"] = True
+        if "selector" in config:
+            field_info["selector"] = config["selector"]
+        fields[field] = field_info
+
+    result: dict[str, Any] = {
         "action": action_id,
-        "name": name,
-        "description": description,
+        "name": text(action_description, "name", f"{key}.name"),
+        "description": text(action_description, "description", f"{key}.description"),
+        "fields": fields,
     }
     if "target" in action_description:
         # An empty target accepts any entity, device, area, floor or label
         result["target"] = action_description["target"] or {}
-    fields: JsonObjectType = {}
-    field_infos: list[JsonObjectType] = []
-    for field, config in _action_fields(action_description["fields"]):
-        field_info: JsonObjectType = {}
-        if field_description := (
-            config.get("description")
-            or translations.get(f"{key}.{field}.description")
-            or config.get("name")
-            or translations.get(f"{key}.{field}.name")
-        ):
-            field_info["description"] = _fill_placeholders(
-                field_description,
-                action_description.get("description_placeholders", {}),
-            )
-        if config.get("required"):
-            field_info["required"] = True
-        if selector_config := config.get("selector"):
-            field_info["selector"] = selector_config
-        fields[field] = field_info
-        field_infos.append(field_info)
-    result["fields"] = fields
-    # Some actions list so many select options that they would fill the context
-    if len(json_dumps(result)) > ACTION_DESCRIPTION_MAX_SIZE:
-        for field_info in field_infos:
-            field_info.pop("selector", None)
-        result["note"] = "The selectors of the fields are left out to save space."
     return result
 
 
@@ -510,40 +495,30 @@ class SearchActionsTool(Tool):
             hass, "en", "services", descriptions
         )
 
-        matches: list[tuple[int, str, str, str, dict[str, Any]]] = []
-        for domain, actions in descriptions.items():
-            for action, action_description in actions.items():
-                action_id = f"{domain}.{action}"
-                key = f"component.{domain}.services.{action}"
-                name = action_description.get("name") or translations.get(
-                    f"{key}.name", ""
+        matches: list[tuple[bool, str, dict[str, Any]]] = []
+        for domain, domain_actions in descriptions.items():
+            for action, action_description in domain_actions.items():
+                found = _describe_action(
+                    f"{domain}.{action}", action_description, translations
                 )
-                description = action_description.get("description") or translations.get(
-                    f"{key}.description", ""
-                )
-                placeholders = action_description.get("description_placeholders", {})
-                name = _fill_placeholders(name, placeholders)
-                description = _fill_placeholders(description, placeholders)
-                # Actions that match on ID and name rank above description matches
-                head = f"{action_id} {name}".replace("_", " ").casefold()
-                text = f"{head} {description.casefold()}"
-                if all(word in head for word in words):
-                    rank = 0
-                elif all(word in text for word in words):
-                    rank = 1
-                else:
-                    continue
-                matches.append((rank, action_id, name, description, action_description))
-
+                head = f"{found['action']} {found['name']}".replace("_", " ").casefold()
+                text = f"{head} {found['description'].casefold()}"
+                if all(word in text for word in words):
+                    # Actions that match on ID and name rank above description matches
+                    in_head = all(word in head for word in words)
+                    matches.append((not in_head, found["action"], found))
         matches.sort(key=lambda match: match[:2])
-        result: JsonObjectType = {
-            "actions": [
-                _describe_action(action_id, name, description, desc, translations)
-                for _, action_id, name, description, desc in matches[
-                    :ACTION_SEARCH_LIMIT
-                ]
-            ]
-        }
+
+        actions = [found for _, _, found in matches[:ACTION_SEARCH_LIMIT]]
+        for found in actions:
+            # Some actions list so many select options that they would fill the context
+            if len(json_dumps(found)) > ACTION_DESCRIPTION_MAX_SIZE:
+                for field_info in found["fields"].values():
+                    field_info.pop("selector", None)
+                found["note"] = (
+                    "The selectors of the fields are left out to save space."
+                )
+        result: dict[str, Any] = {"actions": actions}
         if len(matches) > ACTION_SEARCH_LIMIT:
             result["more"] = (
                 f"{len(matches)} actions match. Use a more specific query to "

@@ -236,7 +236,9 @@ async def test_search_actions(
     translations = {
         "component.test.services.translated.name": "Translated",
         "component.test.services.translated.description": "Translated action.",
-        "component.test.services.turn_on.fields.transition.name": "Transition",
+        "component.test.services.turn_on.fields.transition.description": (
+            "Duration of the transition."
+        ),
     }
     with patch(
         "homeassistant.components.homeassistant.llm.translation.async_get_translations",

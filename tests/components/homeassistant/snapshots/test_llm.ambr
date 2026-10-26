@@ -79,7 +79,7 @@
               }),
             }),
             'transition': dict({
-              'description': 'Transition',
+              'description': 'Duration of the transition.',
               'selector': dict({
                 'number': dict({
                   'max': 300,
