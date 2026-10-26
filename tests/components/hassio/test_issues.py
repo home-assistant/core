@@ -24,7 +24,11 @@ from aiohasupervisor.models import (
     UnsupportedReason,
 )
 import pytest
-from pytest_homeassistant.common import async_capture_events, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.hassio.const import DOMAIN, HASSIO_ISSUES_UPDATE_INTERVAL
@@ -53,6 +57,14 @@ def fixture_supervisor_environ() -> Generator[None]:
     """Mock os environ for supervisor."""
     with patch.dict(os.environ, MOCK_ENVIRON):
         yield
+
+
+@pytest.fixture(autouse=True)
+def auto_update_chosen(hass: HomeAssistant) -> None:
+    """Keep the question about automatic updates out of the Supervisor issues."""
+    MockConfigEntry(
+        domain=DOMAIN, data={}, options={"core_auto_update": False}, unique_id=DOMAIN
+    ).add_to_hass(hass)
 
 
 def mock_resolution_info(
@@ -1484,7 +1496,7 @@ async def test_issue_repair_recreated_when_registry_entry_missing(
     assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_uuid.hex)
 
     async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_uuid.hex)
 

@@ -18,6 +18,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
@@ -28,6 +33,8 @@ from .const import (
     DEFAULT_CORE_AUTO_UPDATE_DELAY,
     DEFAULT_CORE_AUTO_UPDATE_WINDOW_END,
     DEFAULT_CORE_AUTO_UPDATE_WINDOW_START,
+    DOMAIN,
+    ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE,
     JOBS_COORDINATOR,
     OPTION_CORE_AUTO_UPDATE,
     OPTION_CORE_AUTO_UPDATE_DELAY,
@@ -248,6 +255,10 @@ class AutoUpdateManager:
         self._entry.async_on_unload(
             self._coordinator.async_add_listener(self._async_record_offered_version)
         )
+        self._async_update_choice_issue()
+        self._entry.async_on_unload(
+            self._entry.add_update_listener(self._async_entry_updated)
+        )
         self._entry.async_on_unload(
             async_at_started(self._hass, self._async_start_checking)
         )
@@ -270,6 +281,41 @@ class AutoUpdateManager:
         """Run a check as a background task, so unloading cancels it."""
         self._entry.async_create_background_task(
             self._hass, self._async_check(), "hassio automatic update check"
+        )
+
+    @callback
+    def _async_update_choice_issue(self) -> None:
+        """Ask the user to choose, until they do.
+
+        The issue is not persistent, so a resolved one comes back on the
+        next setup as long as no choice is stored.
+        """
+        if self.settings.enabled is not None or self.unavailable_reason is not None:
+            async_delete_issue(self._hass, DOMAIN, ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE)
+            return
+
+        async_create_issue(
+            self._hass,
+            DOMAIN,
+            ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE,
+            is_fixable=True,
+            is_persistent=False,
+            severity=IssueSeverity.WARNING,
+            translation_key=ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE,
+        )
+
+    async def _async_entry_updated(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Drop the question once a choice is stored, from the settings too."""
+        self._async_update_choice_issue()
+
+    @callback
+    def async_set_enabled(self, enabled: bool) -> None:
+        """Store the user's choice."""
+        self._hass.config_entries.async_update_entry(
+            self._entry,
+            options={**self._entry.options, OPTION_CORE_AUTO_UPDATE: enabled},
         )
 
     @property

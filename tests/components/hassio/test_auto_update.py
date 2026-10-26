@@ -33,11 +33,12 @@ from homeassistant.components.hassio.const import (
     DATA_AUTO_UPDATE,
     EVENT_SUPERVISOR_EVENT,
     HASSIO_MAIN_UPDATE_INTERVAL,
+    ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE,
     MAIN_COORDINATOR,
 )
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -310,6 +311,69 @@ async def test_available(hass: HomeAssistant) -> None:
     await _setup_hassio(hass)
 
     assert hass.data[DATA_AUTO_UPDATE].unavailable_reason is None
+
+
+async def test_choice_asked(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test an installation that has not chosen yet is asked through a repair."""
+    await _setup_hassio(hass)
+
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE)
+    assert issue is not None
+    assert issue.is_fixable
+    assert not issue.is_persistent
+
+
+@pytest.mark.parametrize("enabled", [True, False])
+async def test_choice_not_asked_once_made(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, enabled: bool
+) -> None:
+    """Test an installation that has chosen is not asked."""
+    await _setup_hassio(hass, {"core_auto_update": enabled})
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE)
+        is None
+    )
+
+
+async def test_choice_not_asked_when_unavailable(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    supervisor_root_info: AsyncMock,
+) -> None:
+    """Test an installation without the feature is not asked."""
+    supervisor_root_info.return_value = replace(
+        supervisor_root_info.return_value, hassos=None
+    )
+    await _setup_hassio(hass)
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE)
+        is None
+    )
+
+
+async def test_choice_made_in_settings(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the question goes away when the choice is stored another way."""
+    entry = await _setup_hassio(hass)
+    assert (
+        issue_registry.async_get_issue(DOMAIN, ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE)
+        is not None
+    )
+
+    hass.config_entries.async_update_entry(
+        entry, options={**entry.options, "core_auto_update": False}
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE)
+        is None
+    )
 
 
 async def test_unavailable_not_home_assistant_os(

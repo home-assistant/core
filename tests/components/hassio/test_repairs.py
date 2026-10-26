@@ -14,10 +14,12 @@ from aiohasupervisor.models import (
     Suggestion,
     SuggestionType,
 )
+from aiohttp.test_utils import TestClient
 import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.hassio import DOMAIN
+from homeassistant.components.hassio.const import ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -1892,3 +1894,112 @@ async def test_supervisor_issue_deprecated_arch_addon(
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id=issue_uuid.hex)
     supervisor_client.resolution.apply_suggestion.assert_called_once_with(sugg_uuid)
+
+
+async def _start_choice_flow(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> tuple[TestClient, str]:
+    """Set up hassio without a choice made and open the repair for it."""
+    mock_resolution_info(supervisor_client)
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE)
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": DOMAIN, "issue_id": ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE},
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "type": "menu",
+        "flow_id": data["flow_id"],
+        "handler": DOMAIN,
+        "step_id": "init",
+        "data_schema": [
+            {
+                "type": "select",
+                "options": [
+                    ["turn_on", "turn_on"],
+                    ["keep_off", "keep_off"],
+                ],
+                "required": False,
+                "name": "next_step_id",
+            }
+        ],
+        "menu_options": ["turn_on", "keep_off"],
+        "description_placeholders": {"settings_url": "/config/updates"},
+    }
+    return client, data["flow_id"]
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+@pytest.mark.parametrize(
+    ("choice", "enabled"),
+    [
+        pytest.param("turn_on", True, id="turn_on"),
+        pytest.param("keep_off", False, id="keep_off"),
+    ],
+)
+async def test_auto_update_choice_stored(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+    choice: str,
+    enabled: bool,
+) -> None:
+    """Test turning automatic updates on or off from the repair."""
+    client, flow_id = await _start_choice_flow(
+        hass, supervisor_client, hass_client, issue_registry
+    )
+
+    resp = await client.post(
+        f"/api/repairs/issues/fix/{flow_id}", json={"next_step_id": choice}
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "type": "form",
+        "flow_id": flow_id,
+        "handler": DOMAIN,
+        "step_id": choice,
+        "data_schema": [],
+        "errors": None,
+        "description_placeholders": {"settings_url": "/config/updates"},
+        "last_step": True,
+        "preview": None,
+    }
+
+    # Nothing is stored until the choice is confirmed
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert "core_auto_update" not in entry.options
+
+    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "type": "create_entry",
+        "flow_id": flow_id,
+        "handler": DOMAIN,
+        "description": None,
+        "description_placeholders": None,
+    }
+
+    assert entry.options["core_auto_update"] is enabled
+    assert (
+        issue_registry.async_get_issue(DOMAIN, ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE)
+        is None
+    )
+
+    # The choice is kept, so the question does not come back
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE)
+        is None
+    )

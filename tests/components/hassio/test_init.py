@@ -1448,7 +1448,7 @@ async def test_deprecated_installation_issue_os_armv7(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert len(issue_registry.issues) == 1
+    assert len([key for key in issue_registry.issues if key[0] == "homeassistant"]) == 1
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue.domain == "homeassistant"
     assert issue.severity == ir.IssueSeverity.WARNING
@@ -1511,7 +1511,7 @@ async def test_deprecated_installation_issue_32bit_os(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert len(issue_registry.issues) == 1
+    assert len([key for key in issue_registry.issues if key[0] == "homeassistant"]) == 1
     issue = issue_registry.async_get_issue("homeassistant", "deprecated_architecture")
     assert issue.domain == "homeassistant"
     assert issue.severity == ir.IssueSeverity.WARNING
@@ -1572,7 +1572,7 @@ async def test_deprecated_installation_issue_32bit_supervised(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert len(issue_registry.issues) == 1
+    assert len([key for key in issue_registry.issues if key[0] == "homeassistant"]) == 1
     issue = issue_registry.async_get_issue(
         "homeassistant", "deprecated_method_architecture"
     )
@@ -1637,7 +1637,7 @@ async def test_deprecated_installation_issue_64bit_supervised(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert len(issue_registry.issues) == 1
+    assert len([key for key in issue_registry.issues if key[0] == "homeassistant"]) == 1
     issue = issue_registry.async_get_issue("homeassistant", "deprecated_method")
     assert issue.domain == "homeassistant"
     assert issue.severity == ir.IssueSeverity.WARNING
@@ -1698,7 +1698,7 @@ async def test_deprecated_installation_issue_supported_board(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert len(issue_registry.issues) == 0
+    assert len([key for key in issue_registry.issues if key[0] == "homeassistant"]) == 0
 
 
 async def mount_reload_test_setup(

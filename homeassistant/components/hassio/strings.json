@@ -55,6 +55,28 @@
     }
   },
   "issues": {
+    "core_auto_update_choose": {
+      "fix_flow": {
+        "step": {
+          "init": {
+            "description": "Home Assistant can install bug fix updates automatically, a few days after they are released and at night. Bug fix updates are the small updates within the monthly release you are already on, for example from 2026.10.1 to 2026.10.2. The monthly feature releases, for example 2026.11.0, still wait for you to install them. Home Assistant restarts during an update and is unavailable for a short while.\n\nChoose here, or turn automatic updates on and set the schedule in [Settings > System > Updates]({settings_url}).",
+            "menu_options": {
+              "keep_off": "Keep off",
+              "turn_on": "Turn on"
+            }
+          },
+          "keep_off": {
+            "description": "Select **Keep off** to keep installing updates yourself. You can turn automatic updates on later in [Settings > System > Updates]({settings_url}).",
+            "submit": "[%key:component::hassio::issues::core_auto_update_choose::fix_flow::step::init::menu_options::keep_off%]"
+          },
+          "turn_on": {
+            "description": "Select **Turn on** to let Home Assistant install bug fix updates automatically. By default they install three days after release, between 03:00 and 05:00 on any day of the week. You can change the schedule and turn this off again in [Settings > System > Updates]({settings_url}).",
+            "submit": "[%key:common::action::turn_on%]"
+          }
+        }
+      },
+      "title": "Automatic bug fix updates for Home Assistant"
+    },
     "issue_addon_app_port_conflict": {
       "fix_flow": {
         "abort": {
