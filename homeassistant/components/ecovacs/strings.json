@@ -167,6 +167,9 @@
       "cut_direction": {
         "name": "Cut direction"
       },
+      "mop_wash_interval": {
+        "name": "Mop wash interval"
+      },
       "volume": {
         "name": "Volume"
       },
