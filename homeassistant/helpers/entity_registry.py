@@ -1970,7 +1970,10 @@ class EntityRegistry(BaseRegistry):
         device_registry = dr.async_get(self.hass)
         if (
             device_registry.async_get(
-                device_id, include_main_devices=False, include_child_devices=False
+                device_id,
+                include_main_devices=False,
+                include_child_devices=False,
+                include_composite_devices=True,
             )
             is None
         ):

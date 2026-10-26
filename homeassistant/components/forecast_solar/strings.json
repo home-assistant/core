@@ -9,10 +9,9 @@
         "data": {
           "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
           "azimuth_sensor": "Azimuth sensor",
+          "coordinates": "[%key:common::config_flow::data::location%]",
           "declination": "Declination (0 = Horizontal, 90 = Vertical)",
           "declination_sensor": "Declination sensor",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
           "modules_power": "Total Watt peak power of your solar modules"
         },
         "data_description": {
@@ -23,14 +22,13 @@
       },
       "reconfigure": {
         "data": {
-          "location": "[%key:component::forecast_solar::config::step::user::data::location%]"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "description": "Choose how the location of your solar panels is determined."
       },
       "reconfigure_fixed_location": {
         "data": {
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "coordinates": "[%key:common::config_flow::data::location%]"
         },
         "description": "Enter the coordinates of your solar panels."
       },
@@ -38,7 +36,7 @@
         "data": {
           "azimuth_source": "Azimuth",
           "declination_source": "Declination",
-          "location": "Location"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "description": "Choose where the location and the panel angles come from. The next step only asks for what you choose here. Sensors are read each time the forecast updates. A change of the Home Assistant location triggers an update, at most once per update interval."
       }

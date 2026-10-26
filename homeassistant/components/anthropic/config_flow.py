@@ -29,10 +29,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.selector import (
     NumberSelector,
-    NumberSelectorConfig,
     SelectOptionDict,
     SelectSelector,
-    SelectSelectorConfig,
     SelectSelectorMode,
     TemplateSelector,
 )
@@ -254,10 +252,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="entry_not_loaded")
 
         hass_apis: list[SelectOptionDict] = [
-            SelectOptionDict(
-                label=api.name,
-                value=api.id,
-            )
+            {"label": api.name, "value": api.id}
             for api in llm.async_get_apis(self.hass)
         ]
         if suggested_llm_apis := self.options.get(CONF_LLM_HASS_API):
@@ -284,9 +279,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     probatio.Optional(CONF_PROMPT): TemplateSelector(),
                     probatio.Optional(
                         CONF_LLM_HASS_API,
-                    ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
-                    ),
+                    ): SelectSelector({"options": hass_apis, "multiple": True}),
                 }
             )
 
@@ -346,17 +339,17 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_CHAT_MODEL,
                 default=DEFAULT[CONF_CHAT_MODEL],
             ): SelectSelector(
-                SelectSelectorConfig(options=self._get_model_list(), custom_value=True)
+                {"options": self._get_model_list(), "custom_value": True}
             ),
             probatio.Optional(
                 CONF_PROMPT_CACHING,
                 default=DEFAULT[CONF_PROMPT_CACHING],
             ): SelectSelector(
-                SelectSelectorConfig(
-                    options=[x.value for x in PromptCaching],
-                    translation_key=CONF_PROMPT_CACHING,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
+                {
+                    "options": [x.value for x in PromptCaching],
+                    "translation_key": CONF_PROMPT_CACHING,
+                    "mode": SelectSelectorMode.DROPDOWN,
+                }
             ),
         }
 
@@ -410,9 +403,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_MAX_TOKENS,
                 default=self.options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
             ): probatio.All(
-                NumberSelector(
-                    NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
-                ),
+                NumberSelector({"min": 0, "max": self.model_info.max_tokens}),
                 probatio.Coerce(int),
             )
             if self.model_info.max_tokens
@@ -426,11 +417,11 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     CONF_THINKING_TYPE, default=self.options[CONF_THINKING_TYPE]
                 )
             ] = SelectSelector(
-                SelectSelectorConfig(
-                    options=thinking_types,
-                    translation_key=CONF_THINKING_TYPE,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
+                {
+                    "options": thinking_types,
+                    "translation_key": CONF_THINKING_TYPE,
+                    "mode": SelectSelectorMode.DROPDOWN,
+                }
             )
 
         if "enabled" in thinking_types:
@@ -441,9 +432,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             ] = (
                 probatio.All(
                     NumberSelector(
-                        NumberSelectorConfig(
-                            min=MIN_THINKING_BUDGET, max=self.model_info.max_tokens
-                        )
+                        {
+                            "min": MIN_THINKING_BUDGET,
+                            "max": self.model_info.max_tokens,
+                        }
                     ),
                     probatio.Coerce(int),
                 )
@@ -460,11 +452,11 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     default=self.options[CONF_EFFORT],
                 )
             ] = SelectSelector(
-                SelectSelectorConfig(
-                    options=effort_options,
-                    translation_key=CONF_EFFORT,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
+                {
+                    "options": effort_options,
+                    "translation_key": CONF_EFFORT,
+                    "mode": SelectSelectorMode.DROPDOWN,
+                }
             )
 
         unsupported_tool_options = get_unsupported_tool_options(
@@ -572,10 +564,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         """Get list of available models."""
         coordinator = self._get_entry().runtime_data
         return [
-            SelectOptionDict(
-                label=model_info.display_name,
-                value=model_alias(model_info.id),
-            )
+            {
+                "label": model_info.display_name,
+                "value": model_alias(model_info.id),
+            }
             for model_info in coordinator.data or []
             if coordinator.get_model_info(model_alias(model_info.id))[0].lifecycle
             != "retired"
