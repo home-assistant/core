@@ -4,6 +4,7 @@ from math import floor
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Objects import ClusterCommand
 from freezegun.api import FrozenDateTimeFactory
 from matter_server.client.models.node import MatterNode
 import pytest
@@ -980,6 +981,98 @@ async def test_cover_tilt_only_ignores_lift_position(
     assert state
     assert state.state == CoverState.CLOSED
     assert "current_position" not in state.attributes
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_tilt", "cover.mock_tilt_window_covering"),
+    ],
+)
+async def test_cover_tilt_only_toggle(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test toggling the tilt of a tilt-only cover without a tilt position."""
+
+    async def toggle_tilt_and_assert(command: ClusterCommand) -> None:
+        await hass.services.async_call(
+            "cover", "toggle_cover_tilt", {"entity_id": entity_id}, blocking=True
+        )
+        assert matter_client.send_device_command.call_count == 1
+        assert matter_client.send_device_command.call_args == call(
+            node_id=matter_node.node_id, endpoint_id=1, command=command
+        )
+        matter_client.send_device_command.reset_mock()
+
+    # closing
+    set_node_attribute(matter_node, 1, 258, 10, 0b100010)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    await toggle_tilt_and_assert(clusters.WindowCovering.Commands.StopMotion())
+
+    # stopped after closing, so the toggle reverses the direction
+    set_node_attribute(matter_node, 1, 258, 10, 0b000000)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    await toggle_tilt_and_assert(clusters.WindowCovering.Commands.UpOrOpen())
+
+    # opening
+    set_node_attribute(matter_node, 1, 258, 10, 0b010001)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    set_node_attribute(matter_node, 1, 258, 10, 0b000000)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    await toggle_tilt_and_assert(clusters.WindowCovering.Commands.DownOrClose())
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_pa_tilt", "cover.mock_pa_tilt_window_covering"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("tilt_position", "expected_command"),
+    [
+        pytest.param(10000, clusters.WindowCovering.Commands.UpOrOpen(), id="closed"),
+        pytest.param(
+            5000, clusters.WindowCovering.Commands.DownOrClose(), id="partial"
+        ),
+        pytest.param(0, clusters.WindowCovering.Commands.DownOrClose(), id="open"),
+    ],
+)
+async def test_cover_position_aware_tilt_only_toggle(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+    tilt_position: int,
+    expected_command: ClusterCommand,
+) -> None:
+    """Test toggling the tilt of a tilt-only cover follows its tilt position."""
+    # a closing movement must not reverse the toggle once a position is known
+    set_node_attribute(matter_node, 1, 258, 15, 0)
+    set_node_attribute(matter_node, 1, 258, 12, 10000)
+    set_node_attribute(matter_node, 1, 258, 10, 0b100010)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
+
+    set_node_attribute(matter_node, 1, 258, 15, tilt_position)
+    set_node_attribute(matter_node, 1, 258, 12, tilt_position)
+    set_node_attribute(matter_node, 1, 258, 10, 0b000000)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    await hass.services.async_call(
+        "cover", "toggle_cover_tilt", {"entity_id": entity_id}, blocking=True
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id, endpoint_id=1, command=expected_command
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
