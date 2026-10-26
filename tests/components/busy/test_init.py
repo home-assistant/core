@@ -89,3 +89,20 @@ async def test_remove(
     mock_client.access_tokens_revoke.assert_awaited_once_with("12345678")
     mock_client.__aexit__.assert_awaited_once()
     assert not hass.config_entries.async_entries("busy")
+
+
+@pytest.mark.parametrize("status_code", [401, 403])
+async def test_auth_exception(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    status_code: int,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Classify rejected credentials without requiring a reauth flow."""
+    mock_client.access_tokens_list.side_effect = BusyBarAPIError(
+        "refused", status_code=status_code
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert "could not authenticate" in caplog.text

@@ -9,7 +9,7 @@ from busylib.transports import AiohttpTransport
 
 from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import BusyConfigEntry, BusyCoordinator
@@ -21,10 +21,7 @@ PLATFORMS = [Platform.SENSOR]
 async def async_create_client(
     hass: HomeAssistant, host: str, token: str | None = None
 ) -> AsyncBusyBar:
-    """Create a client using Home Assistant's shared session.
-
-    Build the transport on the event loop and construct the client in an executor.
-    """
+    """Create a client using Home Assistant's shared session."""
     transport = AiohttpTransport(async_get_clientsession(hass))
     return await hass.async_add_executor_job(
         partial(AsyncBusyBar, host, token=token, transport=transport, timeout=10)
@@ -32,10 +29,7 @@ async def async_create_client(
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BusyConfigEntry) -> None:
-    """Validate the token and start polling the bar.
-
-    Verify credentials, refresh shared state, then forward entity setup.
-    """
+    """Validate the token and start polling the bar."""
     client = await async_create_client(
         hass, entry.data[CONF_HOST], entry.data[CONF_TOKEN]
     )
@@ -44,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BusyConfigEntry) -> None
     except BusyBarError as err:
         await client.aclose()
         if isinstance(err, BusyBarAPIError) and err.status_code in (401, 403):
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 "BUSY Bar token rejected; remove and add the bar"
             ) from err
         raise ConfigEntryNotReady("Cannot connect to BUSY Bar") from err
@@ -59,19 +53,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: BusyConfigEntry) -> None
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: BusyConfigEntry) -> None:
-    """Unload sensors before closing their client.
-
-    Keep the client open until all entity platforms have unloaded.
-    """
+    """Unload sensors before closing their client."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
     await entry.runtime_data.client.aclose()
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: BusyConfigEntry) -> None:
-    """Revoke this entry's credential when it is removed.
-
-    A token may revoke itself; unreachable devices must not prevent removal.
-    """
+    """Revoke this entry's credential when it is removed."""
     try:
         async with await async_create_client(
             hass, entry.data[CONF_HOST], entry.data[CONF_TOKEN]
