@@ -69,7 +69,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent the created entry from actually setting up during flow tests."""
     with patch(
         "homeassistant.components.aerosmart.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
