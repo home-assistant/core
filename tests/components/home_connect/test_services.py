@@ -529,7 +529,10 @@ async def test_start_selected_favorite_program(
     client.get_available_program.assert_awaited_once_with(
         appliance.ha_id, program_key=base_program
     )
-    assert client.start_program.call_args.kwargs["program_key"] == base_program
+    assert client.start_program.call_args.kwargs == {
+        "program_key": base_program,
+        "options": None,  # The base program option should not be added in this call
+    }
 
 
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
