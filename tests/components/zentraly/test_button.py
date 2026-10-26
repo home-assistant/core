@@ -60,3 +60,61 @@ async def test_refresh_failure(
             BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
     assert error.value.translation_key == "cannot_connect"
+
+
+@pytest.mark.parametrize(
+    ("info", "error_key", "firmware", "hardware"),
+    [
+        pytest.param(
+            ZentralyDeviceInfo(None, "2.1"),
+            "firmware_read_failed",
+            "1.0",
+            "2.1",
+            id="firmware",
+        ),
+        pytest.param(
+            ZentralyDeviceInfo("1.1", None),
+            "hardware_read_failed",
+            "1.1",
+            "2.0",
+            id="hardware",
+        ),
+        pytest.param(
+            ZentralyDeviceInfo(), "versions_read_failed", "1.0", "2.0", id="both"
+        ),
+        pytest.param(
+            ZentralyDeviceInfo(None, "2.0"),
+            "firmware_read_failed",
+            "1.0",
+            "2.0",
+            id="unchanged-hardware",
+        ),
+    ],
+)
+async def test_incomplete_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device_info: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    info: ZentralyDeviceInfo,
+    error_key: str,
+    firmware: str,
+    hardware: str,
+) -> None:
+    """Report failed fields while retaining cached and successfully read versions."""
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.BUTTON, DOMAIN, f"{DEVICE_ID}_refresh_device_info"
+    )
+    mock_device_info.return_value = info
+    with pytest.raises(HomeAssistantError) as error:
+        await hass.services.async_call(
+            BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == error_key
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
+    )
+    assert device.sw_version == firmware
+    assert device.hw_version == hardware

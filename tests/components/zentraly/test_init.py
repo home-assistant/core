@@ -272,3 +272,28 @@ async def test_disabled_periodic_polling(
     await hass.async_block_till_done()
     mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
     mock_device_info.assert_awaited_once_with()
+
+
+async def test_setup_and_reconnect_without_versions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device_info: AsyncMock,
+    connection_state: Callable[[bool], None],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Missing metadata never prevents a new device from loading or reconnecting."""
+    mock_device_info.return_value = ZentralyDeviceInfo()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
+    )
+    assert device.sw_version is None
+    assert device.hw_version is None
+    connection_state(False)
+    connection_state(True)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(ENTITY_ID).state == "heat"
+    assert mock_device_info.await_count == 2

@@ -26,6 +26,7 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
+    HomeAssistantError,
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -89,21 +90,32 @@ async def _async_refresh_device_info(
         device.hardware_version = hardware_version
         changed = True
 
-    if not changed:
-        return
+    if changed:
+        device_registry.async_update_device(
+            registry_device_id,
+            sw_version=firmware_version if firmware_version is not None else UNDEFINED,
+            hw_version=hardware_version if hardware_version is not None else UNDEFINED,
+        )
 
-    device_registry.async_update_device(
-        registry_device_id,
-        sw_version=firmware_version if firmware_version is not None else UNDEFINED,
-        hw_version=hardware_version if hardware_version is not None else UNDEFINED,
-    )
+        _LOGGER.debug(
+            "Updated Zentraly device information: device_id=%s firmware=%s hardware=%s",
+            device.device_id,
+            device.firmware_version,
+            device.hardware_version,
+        )
 
-    _LOGGER.debug(
-        "Updated Zentraly device information: device_id=%s firmware=%s hardware=%s",
-        device.device_id,
-        device.firmware_version,
-        device.hardware_version,
-    )
+    if firmware_version is None and hardware_version is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="versions_read_failed"
+        )
+    if firmware_version is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="firmware_read_failed"
+        )
+    if hardware_version is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="hardware_read_failed"
+        )
 
 
 def _register_device_info_refresh(
@@ -134,7 +146,7 @@ def _register_device_info_refresh(
         """Preserve known metadata when an automatic read fails."""
         try:
             await async_refresh()
-        except ZentralyApiError:
+        except ZentralyApiError, HomeAssistantError:
             _LOGGER.debug(
                 "Unable to refresh Zentraly device information for %s", device.device_id
             )
