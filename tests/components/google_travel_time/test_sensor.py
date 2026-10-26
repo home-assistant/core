@@ -175,7 +175,7 @@ async def test_sensor_arrival_time(hass: HomeAssistant) -> None:
     ("travel_routing_preference", "expected_option"),
     [
         (None, RoutingPreference.TRAFFIC_AWARE_OPTIMAL),
-        ("traffic_unaware", RoutingPreference.ROUTING_PREFERENCE_UNSPECIFIED),
+        ("traffic_unaware", RoutingPreference.TRAFFIC_UNAWARE),
         ("traffic_aware", RoutingPreference.TRAFFIC_AWARE),
         ("traffic_aware_optimal", RoutingPreference.TRAFFIC_AWARE_OPTIMAL),
     ],

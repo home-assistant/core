@@ -103,7 +103,7 @@ TRAVEL_PREFS = ["traffic_aware", "traffic_aware_optimal", "traffic_unaware"]
 TRAVEL_PREFS_TO_API_ENUM = {
     "traffic_aware_optimal": RoutingPreference.TRAFFIC_AWARE_OPTIMAL,
     "traffic_aware": RoutingPreference.TRAFFIC_AWARE,
-    "traffic_unaware": RoutingPreference.ROUTING_PREFERENCE_UNSPECIFIED,
+    "traffic_unaware": RoutingPreference.TRAFFIC_UNAWARE,
 }
 TRAVEL_MODES = ["driving", "walking", "bicycling", "transit"]
 TRAVEL_MODES_WITHOUT_TRANSIT = ["driving", "walking", "bicycling"]
