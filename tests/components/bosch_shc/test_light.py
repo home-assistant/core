@@ -163,6 +163,14 @@ async def test_motion_light_turn_on_off(
     assert device.binaryswitch is True
 
     await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 1},
+        blocking=True,
+    )
+    assert device.multi_level_switch == 1
+
+    await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     assert device.binaryswitch is False
