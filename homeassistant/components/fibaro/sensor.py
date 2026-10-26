@@ -145,7 +145,8 @@ async def async_setup_entry(
     # Battery sensors are reported sometimes on main device and sometimes on child device
     # Ensure each device gets only one battery sensor
     battery_added: list[DeviceInfo] = []
-    for device in controller.get_all_devices():
+    sorted_devices = sorted(controller.get_all_devices(), key=lambda d: d.fibaro_id)
+    for device in sorted_devices:
         device_info = controller.get_device_info(device)
         if device.has_battery_level and device_info not in battery_added:
             battery_added.append(device_info)
