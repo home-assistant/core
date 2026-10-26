@@ -408,25 +408,51 @@ class BackupManager:
         await self.load_platforms()
 
     @callback
-    def async_rename_agent(self, old_agent_id: str, new_agent_id: str) -> None:
+    def async_rename_agent(
+        self,
+        old_agent_id: str,
+        new_agent_id: str,
+        *,
+        replace_existing: bool = False,
+    ) -> None:
         """Rename a backup agent in the backup config and known backups.
 
         Integrations call this when the ID of one of their backup agents changes,
-        for example when migrating the unique ID of a config entry. Settings
-        left behind for the new agent ID, for example by a removed config entry,
-        are replaced. Raises ValueError if the old agent ID is configured and an
-        agent with the new agent ID is loaded.
+        for example when migrating the unique ID of a config entry. Integrations
+        which know that none of their config entries provide the new agent ID pass
+        replace_existing to replace settings left behind for it, for example by a
+        removed config entry.
+
+        Raises ValueError if the agent IDs belong to different integrations, or if
+        the old agent ID is configured and the new agent ID is loaded, or is
+        configured and replace_existing is not set.
         """
+        if old_agent_id.partition(".")[0] != new_agent_id.partition(".")[0]:
+            raise ValueError(
+                f"Can't rename backup agent {old_agent_id} to {new_agent_id} of"
+                " another integration"
+            )
         if old_agent_id == new_agent_id:
             return
         config = self.config.data
         if (
             old_agent_id in config.agents
             or old_agent_id in config.create_backup.agent_ids
+        ) and (
+            new_agent_id in self.backup_agents
+            or (
+                not replace_existing
+                and (
+                    new_agent_id in config.agents
+                    or new_agent_id in config.create_backup.agent_ids
+                )
+            )
         ):
-            if new_agent_id in self.backup_agents:
-                raise ValueError(f"Backup agent {new_agent_id} already exists")
-            self.config.rename_agent(old_agent_id, new_agent_id)
+            raise ValueError(f"Backup agent {new_agent_id} already exists")
+        if replace_existing:
+            self.config.remove_agent(new_agent_id)
+            self.known_backups.remove_failed_agent(new_agent_id)
+        self.config.rename_agent(old_agent_id, new_agent_id)
         self.known_backups.rename_failed_agent(old_agent_id, new_agent_id)
 
     @property
@@ -1707,6 +1733,16 @@ class KnownBackups:
                     for agent_id in backup.failed_agent_ids
                 )
             )
+        self._manager.store.save()
+
+    def remove_failed_agent(self, agent_id: str) -> None:
+        """Remove an agent from the failed agents of known backups."""
+        for backup in self._backups.values():
+            backup.failed_agent_ids = [
+                failed_agent_id
+                for failed_agent_id in backup.failed_agent_ids
+                if failed_agent_id != agent_id
+            ]
         self._manager.store.save()
 
     def get(self, backup_id: str) -> KnownBackup | None:

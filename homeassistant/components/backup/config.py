@@ -245,18 +245,34 @@ class BackupConfig:
 
     @callback
     def rename_agent(self, old_agent_id: str, new_agent_id: str) -> None:
-        """Rename an agent, replacing any settings left behind for the new ID."""
-        self.data.agents.pop(new_agent_id, None)
+        """Rename an agent in the agent settings and automatic backup agents."""
         if (agent_config := self.data.agents.pop(old_agent_id, None)) is not None:
             self.data.agents[new_agent_id] = agent_config
         self.data.create_backup = replace(
             self.data.create_backup,
-            # A left behind new agent ID is dropped, the old agent's selection wins
             agent_ids=[
                 new_agent_id if agent_id == old_agent_id else agent_id
                 for agent_id in self.data.create_backup.agent_ids
-                if agent_id != new_agent_id
             ],
+        )
+        self._manager.store.save()
+
+    @callback
+    def remove_agent(self, agent_id: str) -> None:
+        """Remove an agent from the agent settings and automatic backup agents."""
+        self.data.agents.pop(agent_id, None)
+        self.data.create_backup = replace(
+            self.data.create_backup,
+            agent_ids=[
+                configured_agent_id
+                for configured_agent_id in self.data.create_backup.agent_ids
+                if configured_agent_id != agent_id
+            ],
+        )
+        ir.async_delete_issue(
+            self._hass,
+            DOMAIN,
+            f"{AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID}_{agent_id}",
         )
         self._manager.store.save()
 
