@@ -447,7 +447,7 @@ class IntentResponseDict(dict):
 
 
 class NamespacedTool(Tool):
-    """A tool wrapper for merged API names.
+    """A tool that wraps another tool, prepending a namespace.
 
     This is used to support tools from multiple API. This tool dispatches
     the original tool with the original non-namespaced name.
@@ -507,40 +507,39 @@ class MergedAPI(API):
             await llm_api.async_get_api_instance(llm_context)
             for llm_api in self.llm_apis
         ]
-        tools_by_name: dict[str, list[NamespacedTool]] = {}
-        api_tools: list[list[NamespacedTool]] = []
+        tools_by_name: dict[str, list[tuple[str, Tool]]] = {}
         for api_instance in llm_apis:
             namespace = unicode_slug.slugify(api_instance.api.id)
-            instance_tools = []
             for tool in api_instance.tools:
-                candidates = tools_by_name.setdefault(tool.name, [])
-                merged_tool = next(
-                    (candidate for candidate in candidates if candidate.tool == tool),
-                    None,
-                )
-                if merged_tool is None:
-                    merged_tool = NamespacedTool(namespace, tool)
-                    candidates.append(merged_tool)
-                instance_tools.append(merged_tool)
-            api_tools.append(instance_tools)
+                entries = tools_by_name.setdefault(tool.name, [])
+                if all(candidate != tool for _, candidate in entries):
+                    entries.append((namespace, tool))
 
-        tools = [tool for group in tools_by_name.values() for tool in group]
-        for name, group in tools_by_name.items():
-            if len({tool.namespace for tool in group}) != len(group):
-                raise ValueError("Tools within an API must have unique names")
-            if len(group) == 1:
-                group[0].name = name
+        tools = [
+            tool if len(entries) == 1 else NamespacedTool(namespace, tool)
+            for entries in tools_by_name.values()
+            for namespace, tool in entries
+        ]
 
         if len({tool.name for tool in tools}) != len(tools):
             raise ValueError("Merged tool names must be unique")
 
         prompt_parts = []
-        for api_instance, instance_tools in zip(llm_apis, api_tools, strict=True):
+        for api_instance in llm_apis:
             namespace = unicode_slug.slugify(api_instance.api.id)
-            tool_names = ", ".join(tool.name for tool in instance_tools)
+            tool_names = []
+            for tool in api_instance.tools:
+                entries = tools_by_name[tool.name]
+                if len(entries) == 1:
+                    tool_names.append(tool.name)
+                else:
+                    tool_namespace = next(
+                        ns for ns, candidate in entries if candidate == tool
+                    )
+                    tool_names.append(f"{tool_namespace}__{tool.name}")
             prompt_parts.append(
                 f'Follow these instructions for tools from "{namespace}" '
-                f"({tool_names}):\n"
+                f"({', '.join(tool_names)}):\n"
             )
             prompt_parts.append(api_instance.api_prompt)
             prompt_parts.append("\n\n")
@@ -549,7 +548,7 @@ class MergedAPI(API):
             api=self,
             api_prompt="".join(prompt_parts),
             llm_context=llm_context,
-            tools=list(tools),
+            tools=tools,
             custom_serializer=self._custom_serializer(llm_apis),
         )
 

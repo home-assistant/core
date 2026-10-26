@@ -1764,6 +1764,50 @@ async def test_merged_api_equal_tools(
     assert "time" in result.data
 
 
+async def test_merged_api_equal_tools_with_conflict(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Prompts reference the shared tool's namespace when another tool conflicts."""
+    first = MyAPI(hass=hass, id="first", name="First")
+    first.tools = (
+        await llm_component.async_get_tools(hass, llm_context, "first")
+    ).tools
+    first.prompt = "First instructions"
+    second = MyAPI(hass=hass, id="second", name="Second")
+    second.tools = (
+        await llm_component.async_get_tools(hass, llm_context, "second")
+    ).tools
+    second.prompt = "Second instructions"
+    third = MyAPI(hass=hass, id="third", name="Third")
+    conflicting_tool = llm.Tool()
+    conflicting_tool.name = "llm__GetDateTime"
+    conflicting_tool.integration = "test"
+    third.tools = [conflicting_tool]
+    third.prompt = "Third instructions"
+
+    instance = await llm.MergedAPI([first, second, third]).async_get_api_instance(
+        llm_context
+    )
+
+    assert [tool.name for tool in instance.tools] == [
+        "first__llm__GetDateTime",
+        "third__llm__GetDateTime",
+    ]
+    assert instance.api_prompt == (
+        'Follow these instructions for tools from "first" (first__llm__GetDateTime):\n'
+        "First instructions\n\n"
+        'Follow these instructions for tools from "second" (first__llm__GetDateTime):\n'
+        "Second instructions\n\n"
+        'Follow these instructions for tools from "third" (third__llm__GetDateTime):\n'
+        "Third instructions\n\n"
+    )
+    result = await instance.async_call_tool(
+        llm.ToolInput("first__llm__GetDateTime", {})
+    )
+    assert "date" in result.data
+    assert "time" in result.data
+
+
 async def test_merged_api_generated_name_collision(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
