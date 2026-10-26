@@ -467,7 +467,8 @@ class SearchActionsTool(Tool):
     title = "Search actions"
     description = (
         "Search the actions that Home Assistant can perform. Each word of the query "
-        "must appear in the action ID, name or description. Returns the "
+        "must appear in the action ID, name or description. An exact action ID or "
+        "name ranks first. Returns the "
         f"{ACTION_SEARCH_LIMIT} best matches with their target and fields."
     )
     annotations = ToolAnnotations(
@@ -489,13 +490,14 @@ class SearchActionsTool(Tool):
     ) -> ToolResult:
         """Search the actions."""
         args = self.parameters(tool_input.tool_args)
-        words = args["query"].replace("_", " ").casefold().split()
+        query = args["query"].strip().casefold()
+        words = query.replace("_", " ").split()
         descriptions = await async_get_all_descriptions(hass)
         translations = await translation.async_get_translations(
             hass, "en", "services", descriptions
         )
 
-        matches: list[tuple[bool, str, dict[str, Any]]] = []
+        matches: list[tuple[int, str, dict[str, Any]]] = []
         for domain, domain_actions in descriptions.items():
             for action, action_description in domain_actions.items():
                 found = _describe_action(
@@ -503,10 +505,16 @@ class SearchActionsTool(Tool):
                 )
                 head = f"{found['action']} {found['name']}".replace("_", " ").casefold()
                 text = f"{head} {found['description'].casefold()}"
-                if all(word in text for word in words):
-                    # Actions that match on ID and name rank above description matches
-                    in_head = all(word in head for word in words)
-                    matches.append((not in_head, found["action"], found))
+                if not all(word in text for word in words):
+                    continue
+                # Exact matches first, then matches on ID and name, then description
+                if query in (found["action"], found["name"].casefold()):
+                    rank = 0
+                elif all(word in head for word in words):
+                    rank = 1
+                else:
+                    rank = 2
+                matches.append((rank, found["action"], found))
         matches.sort(key=lambda match: match[:2])
 
         actions = [found for _, _, found in matches[:ACTION_SEARCH_LIMIT]]

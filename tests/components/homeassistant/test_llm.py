@@ -226,6 +226,7 @@ def mock_actions(hass: HomeAssistant) -> None:
         pytest.param("test device", id="more"),
         pytest.param("test translated", id="translated"),
         pytest.param("test large", id="too_large"),
+        pytest.param("restart", id="exact_name_first"),
         pytest.param("test missing", id="no_match"),
     ],
 )
