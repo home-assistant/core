@@ -131,7 +131,9 @@ class WyomingConversationEntity(
                 )
                 with (
                     chat_session.async_get_chat_session(
-                        self.hass, user_input.conversation_id
+                        self.hass,
+                        user_input.conversation_id,
+                        context=user_input.context,
                     ) as session,
                     conversation.async_get_chat_log(
                         self.hass, session, user_input

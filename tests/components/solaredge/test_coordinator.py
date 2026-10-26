@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
@@ -28,6 +28,7 @@ from homeassistant.components.solaredge.const import (
     DEFAULT_NAME,
     DOMAIN,
     OVERVIEW_UPDATE_DELAY,
+    POWER_FLOW_UPDATE_DELAY,
 )
 from homeassistant.components.solaredge.coordinator import SolarEdgeModulesCoordinator
 from homeassistant.config_entries import ConfigEntryState
@@ -140,6 +141,34 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     state = hass.states.get("sensor.solaredge_lifetime_energy")
     assert state
     assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
+
+
+async def test_power_flow_null_response(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    solaredge_api: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a null power flow response raises UpdateFailed, not TypeError.
+
+    The API returns "siteCurrentPowerFlow": null for sites without
+    power flow reporting. Regression test for
+    https://github.com/home-assistant/core/issues/188399 .
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    solaredge_api.get_current_power_flow = AsyncMock(
+        return_value={"siteCurrentPowerFlow": None}
+    )
+
+    freezer.tick(POWER_FLOW_UPDATE_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Missing power flow data, skipping update" in caplog.text
+    assert "Unexpected error" not in caplog.text
 
 
 async def _trigger_and_wait_for_refresh(

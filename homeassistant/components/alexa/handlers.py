@@ -12,11 +12,8 @@ from homeassistant.components import (
     camera,
     cover,
     fan,
-    input_button,
     input_number,
     media_player,
-    timer,
-    vacuum,
     valve,
 )
 from homeassistant.components.alarm_control_panel import (
@@ -52,8 +49,15 @@ from homeassistant.components.humidifier import (
     HumidifierService,
     HumidifierServiceArgument,
 )
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.input_button import (
+    DOMAIN as INPUT_BUTTON_DOMAIN,
+    InputButtonService,
+)
+from homeassistant.components.input_number import (
+    DOMAIN as INPUT_NUMBER_DOMAIN,
+    InputNumberService,
+    InputNumberServiceArgument,
+)
 from homeassistant.components.light import (
     LightEntityCapabilityAttribute,
     LightEntityStateAttribute,
@@ -79,7 +83,7 @@ from homeassistant.components.remote import (
     RemoteService,
     RemoteServiceArgument,
 )
-from homeassistant.components.timer import DOMAIN as TIMER_DOMAIN
+from homeassistant.components.timer import DOMAIN as TIMER_DOMAIN, TimerService
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     VacuumEntityCapabilityAttribute,
@@ -262,7 +266,7 @@ async def async_api_turn_on(
 
     service = SERVICE_TURN_ON
     if domain == COVER_DOMAIN:
-        service = CoverService.OPEN_COVER
+        service = CoverService.OPEN
     elif domain == CLIMATE_DOMAIN:
         service = ClimateService.TURN_ON
     elif domain == FAN_DOMAIN:
@@ -272,14 +276,9 @@ async def async_api_turn_on(
     elif domain == REMOTE_DOMAIN:
         service = RemoteService.TURN_ON
     elif domain == VACUUM_DOMAIN:
-        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
-        if (
-            not supported & vacuum.VacuumEntityFeature.TURN_ON
-            and supported & vacuum.VacuumEntityFeature.START
-        ):
-            service = VacuumService.START
+        service = VacuumService.START
     elif domain == TIMER_DOMAIN:
-        service = timer.SERVICE_START
+        service = TimerService.START
     elif domain == MEDIA_PLAYER_DOMAIN:
         supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         power_features = (
@@ -317,7 +316,7 @@ async def async_api_turn_off(
 
     service = SERVICE_TURN_OFF
     if entity.domain == COVER_DOMAIN:
-        service = CoverService.CLOSE_COVER
+        service = CoverService.CLOSE
     elif domain == CLIMATE_DOMAIN:
         service = ClimateService.TURN_OFF
     elif domain == FAN_DOMAIN:
@@ -327,14 +326,9 @@ async def async_api_turn_off(
     elif domain == HUMIDIFIER_DOMAIN:
         service = HumidifierService.TURN_OFF
     elif domain == VACUUM_DOMAIN:
-        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
-        if (
-            not supported & vacuum.VacuumEntityFeature.TURN_OFF
-            and supported & vacuum.VacuumEntityFeature.RETURN_HOME
-        ):
-            service = VacuumService.RETURN_TO_BASE
+        service = VacuumService.RETURN_TO_BASE
     elif domain == TIMER_DOMAIN:
-        service = timer.SERVICE_CANCEL
+        service = TimerService.CANCEL
     elif domain == MEDIA_PLAYER_DOMAIN:
         supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         power_features = (
@@ -544,7 +538,7 @@ async def async_api_activate(
     if domain == BUTTON_DOMAIN:
         service = ButtonService.PRESS
     elif domain == INPUT_BUTTON_DOMAIN:
-        service = input_button.SERVICE_PRESS
+        service = InputButtonService.PRESS
 
     await _async_call_service(
         hass,
@@ -936,8 +930,8 @@ async def async_api_stop(
             EntityStateAttribute.SUPPORTED_FEATURES, 0
         )
         feature_services: dict[int, str] = {
-            cover.CoverEntityFeature.STOP.value: CoverService.STOP_COVER,
-            cover.CoverEntityFeature.STOP_TILT.value: CoverService.STOP_COVER_TILT,
+            cover.CoverEntityFeature.STOP.value: CoverService.STOP,
+            cover.CoverEntityFeature.STOP_TILT.value: CoverService.STOP_TILT,
         }
         await asyncio.gather(
             *(
@@ -1315,11 +1309,11 @@ async def async_api_arm(
         raise AlexaSecurityPanelAuthorizationRequired(msg)
 
     if arm_state == "ARMED_AWAY":
-        service = AlarmControlPanelService.ALARM_ARM_AWAY
+        service = AlarmControlPanelService.ARM_AWAY
     elif arm_state == "ARMED_NIGHT":
-        service = AlarmControlPanelService.ALARM_ARM_NIGHT
+        service = AlarmControlPanelService.ARM_NIGHT
     elif arm_state == "ARMED_STAY":
-        service = AlarmControlPanelService.ALARM_ARM_HOME
+        service = AlarmControlPanelService.ARM_HOME
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
@@ -1373,7 +1367,7 @@ async def async_api_disarm(
         hass,
         directive,
         entity.domain,
-        AlarmControlPanelService.ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         data,
         blocking=True,
         context=context,
@@ -1482,20 +1476,20 @@ async def async_api_set_mode(
         position = mode.split(".")[1]
 
         if position == cover.CoverState.CLOSED:
-            service = CoverService.CLOSE_COVER
+            service = CoverService.CLOSE
         elif position == cover.CoverState.OPEN:
-            service = CoverService.OPEN_COVER
+            service = CoverService.OPEN
         elif position == "custom":
-            service = CoverService.STOP_COVER
+            service = CoverService.STOP
 
     # Valve position state
     elif instance == f"{VALVE_DOMAIN}.state":
         position = mode.split(".")[1]
 
         if position == valve.STATE_CLOSED:
-            service = ValveService.CLOSE_VALVE
+            service = ValveService.CLOSE
         elif position == valve.STATE_OPEN:
-            service = ValveService.OPEN_VALVE
+            service = ValveService.OPEN
 
     if not service:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
@@ -1557,7 +1551,7 @@ async def async_api_toggle_on(
             FanServiceArgument.OSCILLATING: True,
         }
     elif instance == f"{VALVE_DOMAIN}.stop":
-        service = ValveService.STOP_VALVE
+        service = ValveService.STOP
         data = {
             ATTR_ENTITY_ID: entity.entity_id,
         }
@@ -1640,22 +1634,22 @@ async def async_api_set_range(
     if instance == f"{COVER_DOMAIN}.{CoverServiceArgument.POSITION}":
         range_value = int(range_value)
         if supported & cover.CoverEntityFeature.CLOSE and range_value == 0:
-            service = CoverService.CLOSE_COVER
+            service = CoverService.CLOSE
         elif supported & cover.CoverEntityFeature.OPEN and range_value == 100:
-            service = CoverService.OPEN_COVER
+            service = CoverService.OPEN
         else:
-            service = CoverService.SET_COVER_POSITION
+            service = CoverService.SET_POSITION
             data[CoverServiceArgument.POSITION] = range_value
 
     # Cover Tilt
     elif instance == f"{COVER_DOMAIN}.tilt":
         range_value = int(range_value)
         if supported & cover.CoverEntityFeature.CLOSE_TILT and range_value == 0:
-            service = CoverService.CLOSE_COVER_TILT
+            service = CoverService.CLOSE_TILT
         elif supported & cover.CoverEntityFeature.OPEN_TILT and range_value == 100:
-            service = CoverService.OPEN_COVER_TILT
+            service = CoverService.OPEN_TILT
         else:
-            service = CoverService.SET_COVER_TILT_POSITION
+            service = CoverService.SET_TILT_POSITION
             data[CoverServiceArgument.TILT_POSITION] = range_value
 
     # Fan Speed
@@ -1676,12 +1670,14 @@ async def async_api_set_range(
         data[HumidifierServiceArgument.HUMIDITY] = range_value
 
     # Input Number Value
-    elif instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
+    elif instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
         range_value = float(range_value)
-        service = input_number.SERVICE_SET_VALUE
+        service = InputNumberService.SET_VALUE
         min_value = float(entity.attributes[input_number.ATTR_MIN])
         max_value = float(entity.attributes[input_number.ATTR_MAX])
-        data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
+        data[InputNumberServiceArgument.VALUE] = min(
+            max_value, max(min_value, range_value)
+        )
 
     # Input Number Value
     elif instance == f"{NUMBER_DOMAIN}.{NumberServiceArgument.VALUE}":
@@ -1709,11 +1705,11 @@ async def async_api_set_range(
     elif instance == f"{VALVE_DOMAIN}.{ValveServiceArgument.POSITION}":
         range_value = int(range_value)
         if supported & valve.ValveEntityFeature.CLOSE and range_value == 0:
-            service = ValveService.CLOSE_VALVE
+            service = ValveService.CLOSE
         elif supported & valve.ValveEntityFeature.OPEN and range_value == 100:
-            service = ValveService.OPEN_VALVE
+            service = ValveService.OPEN
         else:
-            service = ValveService.SET_VALVE_POSITION
+            service = ValveService.SET_POSITION
             data[ValveServiceArgument.POSITION] = range_value
 
     else:
@@ -1756,7 +1752,7 @@ async def async_api_adjust_range(
     # Cover Position
     if instance == f"{COVER_DOMAIN}.{CoverServiceArgument.POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
-        service = CoverService.SET_COVER_POSITION
+        service = CoverService.SET_POSITION
         if (
             current := entity.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION)
         ) is None:
@@ -1764,25 +1760,25 @@ async def async_api_adjust_range(
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))
         if position == 100:
-            service = CoverService.OPEN_COVER
+            service = CoverService.OPEN
         elif position == 0:
-            service = CoverService.CLOSE_COVER
+            service = CoverService.CLOSE
         else:
             data[CoverServiceArgument.POSITION] = position
 
     # Cover Tilt
     elif instance == f"{COVER_DOMAIN}.tilt":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
-        service = CoverService.SET_COVER_TILT_POSITION
+        service = CoverService.SET_TILT_POSITION
         current = entity.attributes.get(CoverEntityStateAttribute.CURRENT_TILT_POSITION)
         if current is None:
             msg = f"Unable to determine {entity.entity_id} current tilt position"
             raise AlexaInvalidValueError(msg)
         tilt_position = response_value = min(100, max(0, range_delta + current))
         if tilt_position == 100:
-            service = CoverService.OPEN_COVER_TILT
+            service = CoverService.OPEN_TILT
         elif tilt_position == 0:
-            service = CoverService.CLOSE_COVER_TILT
+            service = CoverService.CLOSE_TILT
         else:
             data[CoverServiceArgument.TILT_POSITION] = tilt_position
 
@@ -1833,13 +1829,13 @@ async def async_api_adjust_range(
             data[HumidifierServiceArgument.HUMIDITY] = percentage
 
     # Input Number Value
-    elif instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
+    elif instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
         range_delta = float(range_delta)
-        service = input_number.SERVICE_SET_VALUE
+        service = InputNumberService.SET_VALUE
         min_value = float(entity.attributes[input_number.ATTR_MIN])
         max_value = float(entity.attributes[input_number.ATTR_MAX])
         current = float(entity.state)
-        data[input_number.ATTR_VALUE] = response_value = min(
+        data[InputNumberServiceArgument.VALUE] = response_value = min(
             max_value, max(min_value, range_delta + current)
         )
 
@@ -1874,7 +1870,7 @@ async def async_api_adjust_range(
     # Valve Position
     elif instance == f"{VALVE_DOMAIN}.{ValveServiceArgument.POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
-        service = ValveService.SET_VALVE_POSITION
+        service = ValveService.SET_POSITION
         if (
             current := entity.attributes.get(ValveEntityStateAttribute.CURRENT_POSITION)
         ) is None:
@@ -1882,9 +1878,9 @@ async def async_api_adjust_range(
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))
         if position == 100:
-            service = ValveService.OPEN_VALVE
+            service = ValveService.OPEN
         elif position == 0:
-            service = ValveService.CLOSE_VALVE
+            service = ValveService.CLOSE
         else:
             data[ValveServiceArgument.POSITION] = position
 
@@ -2124,7 +2120,7 @@ async def async_api_hold(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == TIMER_DOMAIN:
-        service = timer.SERVICE_PAUSE
+        service: str = TimerService.PAUSE
 
     elif entity.domain == VACUUM_DOMAIN:
         service = VacuumService.PAUSE
@@ -2151,7 +2147,7 @@ async def async_api_resume(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == TIMER_DOMAIN:
-        service = timer.SERVICE_START
+        service: str = TimerService.START
 
     elif entity.domain == VACUUM_DOMAIN:
         service = VacuumService.START

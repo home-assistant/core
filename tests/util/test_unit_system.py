@@ -21,6 +21,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
@@ -526,6 +527,43 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.VOLUME, UnitOfVolume.LITERS, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, None),
         (SensorDeviceClass.VOLUME, "very_much", None),
+        # Test volume flow rate conversion
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.GALLONS_PER_DAY,
+            UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+            UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            None,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            None,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+            None,
+        ),
+        (SensorDeviceClass.VOLUME_FLOW_RATE, "very_much", None),
         # Test water meter conversion
         (
             SensorDeviceClass.WATER,
@@ -627,6 +665,15 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfVolume.LITERS,
         UnitOfVolume.MILLILITERS,
     ),
+    SensorDeviceClass.VOLUME_FLOW_RATE: (
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        UnitOfVolumeFlowRate.LITERS_PER_SECOND,
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+    ),
     SensorDeviceClass.WATER: (
         UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.LITERS,
@@ -647,6 +694,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         SensorDeviceClass.RADON,
         SensorDeviceClass.SPEED,
         SensorDeviceClass.VOLUME,
+        SensorDeviceClass.VOLUME_FLOW_RATE,
         SensorDeviceClass.WATER,
     ],
 )
@@ -795,6 +843,53 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCES, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.GALLONS, None),
         (SensorDeviceClass.VOLUME, "very_much", None),
+        # Test volume flow rate conversion
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.LITERS_PER_SECOND,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+            UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            None,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+            None,
+        ),
+        (SensorDeviceClass.VOLUME_FLOW_RATE, "very_much", None),
         # Test water meter conversion
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.WATER, UnitOfVolume.LITERS, UnitOfVolume.GALLONS),
@@ -878,6 +973,12 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfVolume.FLUID_OUNCES,
         UnitOfVolume.GALLONS,
     ),
+    SensorDeviceClass.VOLUME_FLOW_RATE: (
+        UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+        UnitOfVolumeFlowRate.GALLONS_PER_DAY,
+        UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+    ),
     SensorDeviceClass.WATER: (
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.MILLE_CUBIC_FEET,
@@ -899,6 +1000,7 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         SensorDeviceClass.RADON,
         SensorDeviceClass.SPEED,
         SensorDeviceClass.VOLUME,
+        SensorDeviceClass.VOLUME_FLOW_RATE,
         SensorDeviceClass.WATER,
     ],
 )

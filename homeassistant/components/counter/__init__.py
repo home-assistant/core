@@ -29,6 +29,8 @@ from .const import (
     SERVICE_RESET,
     SERVICE_SET_VALUE,
     CounterEntityStateAttribute,
+    CounterService,
+    CounterServiceArgument,
 )
 from .entity import Counter
 from .services import async_setup_services
@@ -69,6 +71,8 @@ __all__ = [
     "SERVICE_SET_VALUE",
     "STORAGE_FIELDS",
     "CounterEntityStateAttribute",
+    "CounterService",
+    "CounterServiceArgument",
 ]
 
 
