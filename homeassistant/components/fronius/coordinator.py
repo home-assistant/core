@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, cast, override
 
@@ -10,6 +10,7 @@ from fronius_modbus import (
     Controls,
     FroniusModbusInverter,
     Mppt,
+    Storage,
     SunSpecError,
     SunSpecMapShiftError,
 )
@@ -18,7 +19,7 @@ from pyfronius import BadStatusError, FroniusError
 
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -34,14 +35,8 @@ from .const import (
     FroniusDeviceInfo,
     SolarNetId,
 )
-from .entity import (
-    FroniusEntity,
-    FroniusEntityDescription,
-    ModbusComponent,
-    ModbusComponentFn,
-)
+from .entity import FroniusEntity, FroniusEntityDescription, ModbusComponentFn
 from .number import MODBUS_NUMBER_ENTITY_DESCRIPTIONS
-from .select import MODBUS_SELECT_ENTITY_DESCRIPTIONS
 from .sensor import (
     INVERTER_ENTITY_DESCRIPTIONS,
     LOGGER_ENTITY_DESCRIPTIONS,
@@ -243,7 +238,7 @@ class FroniusModbusCoordinatorBase(FroniusCoordinatorBase):
             await self._refresh_components()
 
     def _as_device_data(
-        self, values: Mapping[str, float | bool | str | None]
+        self, values: Mapping[str, float | bool | None]
     ) -> dict[SolarNetId, Any]:
         """Wrap values in the SolarAPI's {"value": ...} shape entities read."""
         return {
@@ -295,7 +290,6 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
     default_interval = timedelta(minutes=5)
     valid_descriptions = {
         Platform.NUMBER: MODBUS_NUMBER_ENTITY_DESCRIPTIONS,
-        Platform.SELECT: MODBUS_SELECT_ENTITY_DESCRIPTIONS,
         Platform.SWITCH: MODBUS_SWITCH_ENTITY_DESCRIPTIONS,
     }
 
@@ -439,6 +433,14 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
     ) -> None:
         """Write a setpoint to the device and refresh what it reports back.
 
+        The model is refreshed first so its header check catches a shifted
+        register map before anything is written - the register addresses
+        move when the data type setting is changed on the device.
+
+        A device holding a different fallback period than the configured one
+        is corrected first, so an output power limit the user sets reverts on
+        the schedule they chose.
+
         ``enable_field`` names the register that puts a setpoint into effect.
         It is written again after a change, because the device only picks up a
         change to an active mode when the mode is enabled again - but only
@@ -447,29 +449,6 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         setpoint change should not quietly take it back.
         """
         component = component_fn(self.modbus_inverter)
-
-        async def write(component: ModbusComponent) -> None:
-            await component.write(field, value)
-            if enable_field is not None and getattr(component, enable_field):
-                await component.write(enable_field, True)
-
-        await self.async_write_component(component, write)
-
-    async def async_write_component[_ComponentT: ModbusComponent](
-        self,
-        component: _ComponentT | None,
-        write: Callable[[_ComponentT], Awaitable[None]],
-    ) -> None:
-        """Run writes to a model of the device and refresh what it reports back.
-
-        The model is refreshed first so its header check catches a shifted
-        register map before anything is written - the register addresses
-        move when the data type setting is changed on the device.
-
-        A device holding a different fallback period than the configured one
-        is corrected first, so an output power limit the user sets reverts on
-        the schedule they chose.
-        """
         if component is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -483,10 +462,21 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                     and component.revert_seconds != self._revert_seconds
                 ):
                     await component.write("revert_seconds", self._revert_seconds)
-                await write(component)
+                if isinstance(component, Storage) and (
+                    refused := _refused_battery_limits(component, field, value)
+                ):
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="battery_limits_conflict",
+                        translation_placeholders={
+                            "charge_limit": f"{refused[0]:g}",
+                            "discharge_limit": f"{refused[1]:g}",
+                        },
+                    )
+                await component.write(field, value)
+                if enable_field is not None and getattr(component, enable_field):
+                    await component.write(enable_field, True)
         except (ModbusError, SunSpecError) as err:
-            # writes before the failing one may have gone through
-            await self.async_refresh()
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="modbus_write_failed",
@@ -503,7 +493,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         """Return the settings per solar net id from the Modbus interface."""
         await self._refresh()
         inverter = self.modbus_inverter
-        values: dict[str, float | bool | str | None] = {}
+        values: dict[str, float | bool | None] = {}
 
         if (controls := inverter.controls) is not None:
             values["ac_power_limit"] = controls.power_limit
@@ -517,9 +507,37 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
             )
             values["battery_minimum_reserve"] = storage.minimum_reserve
             values["battery_grid_charging"] = storage.grid_charging
-            values["battery_forced_mode"] = storage.forced_mode
 
         return self._as_device_data(values)
+
+
+def _refused_battery_limits(
+    storage: Storage, field: str, value: float | bool
+) -> tuple[float, float] | None:
+    """Return the charge and discharge limit a write would leave refused.
+
+    With both limits enabled, battery power has to fit between the negated
+    discharge rate and the charge rate. A Gen24 refuses an empty window -
+    both rates negative, or a charge limit below a forced charging rate -
+    when the second limit is enabled, and answers with a bare Modbus error.
+    """
+    limits = {
+        "charge_limit": storage.charge_limit,
+        "discharge_limit": storage.discharge_limit,
+        "charge_limit_enabled": storage.charge_limit_enabled,
+        "discharge_limit_enabled": storage.discharge_limit_enabled,
+        field: value,
+    }
+    charge, discharge = limits["charge_limit"], limits["discharge_limit"]
+    if (
+        limits["charge_limit_enabled"] is True
+        and limits["discharge_limit_enabled"] is True
+        and charge is not None
+        and discharge is not None
+        and charge + discharge < 0
+    ):
+        return charge, discharge
+    return None
 
 
 class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):

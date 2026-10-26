@@ -17,7 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import mock_responses, setup_fronius_integration
 from .test_modbus import GEN24_HYBRID_MODULES, assert_state
@@ -131,6 +131,33 @@ async def test_turning_a_limit_on_asserts_its_setpoint(
 
     assert_state(hass, POWER_LIMITING, STATE_ON)
     assert controls.power_limit == 100.0
+
+
+async def test_enabling_a_limit_into_an_empty_window_is_refused(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+) -> None:
+    """Test turning on a limit the device would refuse with the other one."""
+    config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
+    coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
+    storage = coordinator.modbus_inverter.storage
+    for field, value in (
+        ("charge_limit", -50),
+        ("discharge_limit", -50),
+        ("charge_limit_enabled", True),
+    ):
+        await coordinator.async_write(lambda inverter: inverter.storage, field, value)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: DISCHARGE_LIMITING},
+            blocking=True,
+        )
+
+    assert storage.discharge_limit_enabled is False
 
 
 async def test_a_refused_write_raises(
