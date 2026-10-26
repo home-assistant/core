@@ -918,7 +918,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "utility_meter",
     "uvc",
     "v2c",
-    "vallox",
     "vasttrafik",
     "venstar",
     "vera",
