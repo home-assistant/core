@@ -48,6 +48,20 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "call_for_heat": {
+        "name": "Call for heat"
+      },
+      "schedule_override_active": {
+        "name": "Schedule override active"
+      },
+      "summer_mode": {
+        "name": "Heating break"
+      },
+      "ventilation_mode": {
+        "name": "Sustainable ventilation"
+      }
+    },
     "button": {
       "reset_tamper": {
         "name": "Reset tamper"
