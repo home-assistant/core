@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 from aioengiebelgium import EpexGranularity
 import probatio
 
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_ABOVE, CONF_BELOW
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, async_noop, callback
 from homeassistant.helpers import device_registry as dr
@@ -97,7 +98,7 @@ class _EpexTrigger(Trigger):
             if device is None or entry is None:
                 continue
             unsubscribes.append(
-                self._async_track_device(device_id, device, entry.entry_id, run_action)
+                self._async_track_device(device_id, device, entry, run_action)
             )
 
         @callback
@@ -113,7 +114,7 @@ class _EpexTrigger(Trigger):
         self,
         device_id: str,
         device: dr.AnyDeviceEntry,
-        entry_id: str,
+        entry: ConfigEntry,
         run_action: TriggerActionRunner,
     ) -> CALLBACK_TYPE:
         """Track the EPEX prices for a single device."""
@@ -152,14 +153,27 @@ class _EpexTrigger(Trigger):
                 run_action({ATTR_DEVICE_ID: device_id}, description)
             previous = current
 
+        @callback
+        def async_entry_state_changed() -> None:
+            """Take the first comparison value once a reloaded entry is loaded.
+
+            The first update of a new coordinator arrives before the entry
+            is loaded, so it can not provide a value to compare against.
+            """
+            nonlocal previous
+            if entry.state is ConfigEntryState.LOADED and previous is UNDEFINED:
+                previous = self._device_value(device_id)
+
         remove_dispatcher = async_dispatcher_connect(
-            self._hass, SIGNAL_EPEX_UPDATED.format(entry_id), async_epex_updated
+            self._hass, SIGNAL_EPEX_UPDATED.format(entry.entry_id), async_epex_updated
         )
+        remove_state_listener = entry.async_on_state_change(async_entry_state_changed)
 
         @callback
         def async_remove() -> None:
             """Stop tracking the device."""
             remove_dispatcher()
+            remove_state_listener()
             if remove_coordinator_listener is not None:
                 remove_coordinator_listener()
 

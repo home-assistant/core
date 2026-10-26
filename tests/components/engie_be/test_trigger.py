@@ -277,12 +277,13 @@ async def test_trigger_after_reload(
         {"device_id": device_id, "above": 0.156},
     )
 
+    await _async_move_to(hass, freezer, _brussels(3, 14, 30))
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert await _async_count_calls_along(
-        hass, freezer, service_calls, [_brussels(3, 14, 30), _brussels(3, 14, 45)]
-    ) == [0, 1]
+        hass, freezer, service_calls, [_brussels(3, 14, 45)]
+    ) == [1]
 
 
 @pytest.mark.parametrize(
