@@ -254,17 +254,46 @@ def test_scan_branch_name_after_sibling_removed(tmp_path: Path) -> None:
     ]
 
 
-def test_scan_forwarded_issue_id(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "helper",
+    [
+        pytest.param(
+            """
+            def deprecate(hass, issue_id, version="2026.1.0"):
+                async_create_issue(
+                    hass, "theta", issue_id, breaks_in_ha_version=version
+                )
+            """,
+            id="forwarded-version",
+        ),
+        pytest.param(
+            """
+            def deprecate(hass, issue_id):
+                async_create_issue(
+                    hass, "theta", issue_id, breaks_in_ha_version="2026.1.0"
+                )
+            """,
+            id="literal-version",
+        ),
+        pytest.param(
+            """
+            REMOVAL_VERSION = "2026.1.0"
+
+            def deprecate(hass, issue_id):
+                async_create_issue(
+                    hass, "theta", issue_id, breaks_in_ha_version=REMOVAL_VERSION
+                )
+            """,
+            id="constant-version",
+        ),
+    ],
+)
+def test_scan_forwarded_issue_id(tmp_path: Path, helper: str) -> None:
     """Test issue ids passed through a helper split the deprecations."""
     write_repo(
         tmp_path,
         {
-            "homeassistant/components/theta/util.py": """
-                def deprecate(hass, issue_id, version="2026.1.0"):
-                    async_create_issue(
-                        hass, "theta", issue_id, breaks_in_ha_version=version
-                    )
-            """,
+            "homeassistant/components/theta/util.py": helper,
             "homeassistant/components/theta/sensor.py": """
                 def setup(hass, entry):
                     deprecate(hass, "deprecated_yaml")

@@ -245,20 +245,25 @@ def resolve_version(value: ast.expr, constants: Constants, file: str) -> str | N
 def caller_items(
     func: ast.FunctionDef | ast.AsyncFunctionDef,
     func_file: str,
-    parameter: str,
+    version_arg: ast.expr,
     issue_arg: ast.expr | None,
     files: list[tuple[str, str, ast.Module]],
     constants: Constants,
 ) -> list[Item] | None:
-    """Resolve a forwarded parameter to the versions its callers end up using.
+    """Resolve a helper's version and issue id at each of its callers.
 
-    Only callers in the same integration or core module are searched. Returns
-    None when there are none, when one of them can't be resolved, or when the
-    integration or module defines more than one function with this name, since
-    calls are matched by name.
+    Either can be forwarded from the callers through a parameter. Only callers
+    in the same integration or core module are searched. Returns None when
+    there are none, when one of them can't be resolved, or when the integration
+    or module defines more than one function with this name, since calls are
+    matched by name.
     """
-    if (found := find_parameter(func, parameter)) is None:
-        return None
+    found = (
+        find_parameter(func, version_arg.id)
+        if isinstance(version_arg, ast.Name)
+        else None
+    )
+    parameter = version_arg.id if found and isinstance(version_arg, ast.Name) else None
     definitions = sum(
         isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         and node.name == func.name
@@ -267,7 +272,7 @@ def caller_items(
     )
     if definitions > 1:
         return None
-    index, default = found
+    index, default = found or (None, None)
     is_method = bool(func.args.args) and func.args.args[0].arg in ("self", "cls")
     # The issue id can be forwarded from the callers too.
     issue_parameter = (
@@ -285,18 +290,22 @@ def caller_items(
                 shift = 1 if is_method else 0
             else:
                 continue
-            call_index = None if index is None else index - shift
-            argument = passed_argument(call, parameter, call_index)
-            if argument is None:
-                return None
-            if argument is False:
-                if default is None:
-                    return None
-                version = resolve_version(default, constants, func_file)
-                source = f"{func.name}() default {parameter}={ast.unparse(default)}"
+            if parameter is None:
+                version = resolve_version(version_arg, constants, func_file)
+                source = f"{func.name}() {ast.unparse(version_arg)}"
             else:
-                version = resolve_version(argument, constants, rel)
-                source = ast.get_source_segment(text, argument) or ""
+                call_index = None if index is None else index - shift
+                argument = passed_argument(call, parameter, call_index)
+                if argument is None:
+                    return None
+                if argument is False:
+                    if default is None:
+                        return None
+                    version = resolve_version(default, constants, func_file)
+                    source = f"{func.name}() default {parameter}={ast.unparse(default)}"
+                else:
+                    version = resolve_version(argument, constants, rel)
+                    source = ast.get_source_segment(text, argument) or ""
             if version is None:
                 return None
             if issue_parameter and isinstance(issue_arg, ast.Name):
@@ -390,22 +399,30 @@ def scan(root: Path, current: tuple[int, int]) -> dict[str, Any]:
                 ast.get_source_segment(text, value) or "",
                 issue,
             )
-            if isinstance(value, ast.Constant) or (
+            fixed = isinstance(value, ast.Constant) or (
                 isinstance(value, ast.Name) and value.id.isupper()
-            ):
-                item.version = resolve_version(value, constants, rel)
-                items = [item]
-            elif (
-                isinstance(value, ast.Name)
-                and (func := owners.get(value)) is not None
+            )
+            func = owners.get(value)
+            # A helper's callers can pass the version, the issue id, or both.
+            forwards_issue = (
+                func is not None
+                and isinstance(issue_arg, ast.Name)
+                and find_parameter(func, issue_arg.id) is not None
+            )
+            if (
+                func is not None
+                and (forwards_issue or not fixed)
                 and (
                     callers := caller_items(
-                        func, rel, value.id, issue_arg, area_files[name], constants
+                        func, rel, value, issue_arg, area_files[name], constants
                     )
                 )
                 is not None
             ):
                 items = callers
+            elif fixed:
+                item.version = resolve_version(value, constants, rel)
+                items = [item]
             else:
                 # A variable or attribute forwarded from outside this integration or module.
                 passthrough.append(item)
