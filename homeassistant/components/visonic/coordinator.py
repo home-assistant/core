@@ -164,7 +164,6 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
         self._device_type = device_type
         self._entry_data = dict(entry.data)
         self._cloud_settings: VisonicCloudSettings | None = None
-        self._remove_polling_listener: Callable[[], None] | None = None
         callbacks = VisonicConnectionCallbacks(
             state_changed=self.state_changed_callback,
             panel_ready=self._handle_panel_ready,
@@ -189,9 +188,6 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
             )
             self.connection = VisonicCloudConnection(
                 self._cloud_settings, options, callbacks, async_get_clientsession(hass)
-            )
-            self._remove_polling_listener = self.async_add_listener(
-                self._polling_listener
             )
         else:
             settings = VisonicClientSettings(
@@ -235,10 +231,6 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
             return
         self.connection.update_options(options)
         await self.async_request_refresh()
-
-    @callback
-    def _polling_listener(self) -> None:
-        """Keep cloud polling active before the alarm entity subscribes."""
 
     @callback
     def _handle_recovery_failed(self) -> None:
@@ -518,9 +510,6 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
         self.async_set_updated_data(
             VisonicCoordinatorData(connected=False, mode="stopped")
         )
-        if self._remove_polling_listener is not None:
-            self._remove_polling_listener()
-            self._remove_polling_listener = None
         await self.connection.async_panel_stop()
 
     # the return value indicates whether any sensors needed to be bypassed

@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from datetime import timedelta
 from pathlib import Path
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -299,6 +299,7 @@ async def test_loaded_cloud_reauth_with_unchanged_credentials(
         | {CONF_TYPE: DeviceType.CLOUD, CONF_CLOUD_APP_ID: "existing-app-id"}
     )
     coordinator = entry.runtime_data.coordinator
+    entry.async_on_unload(coordinator.async_add_listener(MagicMock()))
     with (
         patch.object(
             coordinator,

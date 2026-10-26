@@ -65,7 +65,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -204,6 +204,63 @@ async def test_cloud_polling_system_option(
             blocking=True,
         )
         assert snapshot.await_count == scheduled_polls + 1
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_panel_connect", "mock_async_zeroconf")
+async def test_cloud_polling_follows_enabled_alarm(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Only an enabled alarm entity keeps scheduled cloud polling active."""
+    entry = create_mock_config_entry(data={CONF_TYPE: DeviceType.CLOUD})
+    entry.add_to_hass(hass)
+    entity_id = "alarm_control_panel.visonic_alarm_p1"
+    with patch.object(
+        VisonicCloudConnection,
+        "create_state_snapshot",
+        return_value=VisonicCoordinatorData(
+            connected=True, armcode=AlarmPanelStatus.DISARMED
+        ),
+    ) as snapshot:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == AlarmControlPanelState.DISARMED
+        freezer.tick(timedelta(seconds=21))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        snapshot.reset_mock()
+        freezer.tick(timedelta(seconds=21))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        snapshot.assert_awaited_once_with()
+
+        entity_registry.async_update_entity(
+            entity_id, disabled_by=er.RegistryEntryDisabler.USER
+        )
+        await hass.async_block_till_done()
+        snapshot.reset_mock()
+        freezer.tick(timedelta(seconds=61))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        snapshot.assert_not_awaited()
+
+        entity_registry.async_update_entity(entity_id, disabled_by=None)
+        await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=61))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == AlarmControlPanelState.DISARMED
+        snapshot.reset_mock()
+        freezer.tick(timedelta(seconds=21))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        snapshot.assert_awaited_once_with()
         assert await hass.config_entries.async_unload(entry.entry_id)
 
 

@@ -630,6 +630,80 @@ async def test_snapshot_keeps_alarm_in_another_partition(
     assert snapshot.siren_active
 
 
+@pytest.mark.parametrize(
+    "alarm_type",
+    [
+        pytest.param("FIRE", id="fire"),
+        pytest.param("PANIC", id="panic"),
+        pytest.param("EMERGENCY", id="emergency"),
+    ],
+)
+@pytest.mark.parametrize(
+    "alarm_order",
+    [pytest.param((0, 1), id="oldest-first"), pytest.param((1, 0), id="newest-first")],
+)
+@pytest.mark.parametrize(
+    "alarm_date",
+    [
+        pytest.param("2026-10-19T10:00:00", id="dated"),
+        pytest.param(None, id="undated"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("partition_id", "expected_siren"),
+    [
+        pytest.param(1, True, id="active-partition"),
+        pytest.param(2, False, id="inactive-partition"),
+        pytest.param(3, False, id="unrelated-partition"),
+    ],
+)
+async def test_snapshot_aggregates_triggering_alarms(
+    cloud: VisonicCloudConnection,
+    alarm_type: str,
+    alarm_order: tuple[int, int],
+    alarm_date: str | None,
+    partition_id: int,
+    expected_siren: bool,
+) -> None:
+    """A newer memory record cannot hide a triggering alarm in an active partition."""
+    cloud.cloud_alarm = connected_cloud_alarm()
+    cloud.cloud_alarm.get_panel_info.return_value = PanelInfo(
+        {"partitions": [{"id": 1, "active": True}, {"id": 2, "active": False}]}
+    )
+    cloud.cloud_alarm.get_status.return_value = Status(
+        {
+            "connected": True,
+            "partitions": [
+                {"id": 1, "state": "DISARM", "status": ""},
+                {"id": 2, "state": "DISARM", "status": ""},
+            ],
+        }
+    )
+    alarms = [
+        Alarm(
+            {
+                "alarm_type": alarm_type,
+                "partitions": [partition_id],
+                "datetime": alarm_date,
+            }
+        ),
+        Alarm(
+            {
+                "alarm_type": "ALARM_IN_MEMORY",
+                "partitions": [1],
+                "datetime": "2026-10-19T10:01:00",
+            }
+        ),
+    ]
+    cloud.cloud_alarm.get_alarms.return_value = [alarms[index] for index in alarm_order]
+
+    snapshot = await cloud.create_state_snapshot()
+
+    assert snapshot.connected
+    assert snapshot.armcode is AlarmPanelStatus.DISARMED
+    assert snapshot.siren_active is expected_siren
+
+
 async def test_snapshot_reconnects_if_cloud_alarm_absent(
     cloud: VisonicCloudConnection,
     caplog: pytest.LogCaptureFixture,
@@ -1535,96 +1609,6 @@ async def test_async_panel_connect_generic_exception(
         pytest.raises(VisonicException),
     ):
         await coordinator.async_panel_connect()
-
-
-def make_alarm(datetime_value: str | None) -> Alarm:
-    """Create an Alarm for testing."""
-    alarm = object.__new__(Alarm)
-    alarm._data = {"datetime": datetime_value}
-    return alarm
-
-
-@pytest.mark.parametrize(
-    ("alarms", "expected"),
-    [
-        ([], None),
-        (
-            [make_alarm("2026-09-20T10:00:00")],
-            0,
-        ),
-        (
-            [
-                make_alarm("2026-09-20T10:00:00"),
-                make_alarm("2026-09-21T10:00:00"),
-            ],
-            1,
-        ),
-        (
-            [
-                make_alarm("2026-09-21T10:00:00"),
-                make_alarm("2026-09-20T10:00:00"),
-            ],
-            0,
-        ),
-    ],
-)
-@pytest.mark.asyncio
-async def test_determine_most_recent(
-    setup_cloud_integration: SetupIntegration, alarms: list[Alarm], expected: int
-) -> None:
-    """Test determining the most recent alarm."""
-    ok, entry = await setup_cloud_integration()
-    assert ok
-    coordinator: VisonicCloudConnection = entry.runtime_data.coordinator.connection
-
-    result = coordinator._determine_most_recent(alarms)
-
-    if expected is None:
-        assert result is None
-    else:
-        assert result is alarms[expected]
-
-
-@pytest.mark.parametrize(
-    ("alarms", "expected"),
-    [
-        pytest.param(
-            [
-                make_alarm(None),
-                make_alarm("2026-09-21T10:00:00"),
-            ],
-            1,
-            id="undated-first",
-        ),
-        pytest.param(
-            [
-                make_alarm("2026-09-21T10:00:00"),
-                make_alarm(None),
-            ],
-            0,
-            id="dated-first",
-        ),
-        pytest.param(
-            [
-                make_alarm(None),
-                make_alarm(None),
-            ],
-            0,
-            id="both-undated",
-        ),
-    ],
-)
-@pytest.mark.asyncio
-async def test_determine_most_recent_missing_dates(
-    setup_cloud_integration: SetupIntegration, alarms: list[Alarm], expected: int
-) -> None:
-    """Test determining most recent alarm with missing dates."""
-    ok, entry = await setup_cloud_integration()
-    assert ok
-    coordinator: VisonicCloudConnection = entry.runtime_data.coordinator.connection
-    result = coordinator._determine_most_recent(alarms)
-
-    assert result is alarms[expected]
 
 
 @pytest.mark.parametrize(

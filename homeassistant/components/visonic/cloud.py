@@ -360,23 +360,6 @@ class VisonicCloudConnection(VisonicConnection):
             return (al != TriggerAlarmType.NONE, zone, al)
         return (False, -1, TriggerAlarmType.NONE)
 
-    def _determine_most_recent(
-        self, alarms: list[Alarm], partition_id: int | None = None
-    ) -> Alarm | None:
-        # The alarms list is not in date/time order, so determine the most recent
-        retval: Alarm | None = None
-        for alarm in alarms:
-            if partition_id is not None and partition_id not in (
-                alarm.partitions or []
-            ):
-                continue
-            if retval is None or (
-                alarm.date_time is not None
-                and (retval.date_time is None or retval.date_time < alarm.date_time)
-            ):
-                retval = alarm
-        return retval
-
     @override
     async def create_state_snapshot(self) -> VisonicCoordinatorData:
         """Fetch data from Visonic API with auto-reauth."""
@@ -484,22 +467,23 @@ class VisonicCloudConnection(VisonicConnection):
         alarms: list[Alarm] = await self.cloud_alarm.get_alarms()
         siren_active = False
         for part in partitions:
-            most_recent_alarm = self._determine_most_recent(
-                alarms,
-                part.id
-                if panel_info is not None and panel_info.multi_partitions
-                else None,
-            )
-            if most_recent_alarm is None or most_recent_alarm.alarm_type is None:
-                continue
-            alarm_type = MAP_ALARM_TYPE.get(
-                most_recent_alarm.alarm_type, TriggerAlarmType.NONE
-            )
-            zone = most_recent_alarm.zone if most_recent_alarm.zone is not None else -1
-            if self._determine_siren_state(
-                self._determine_armcode(part), alarm_type, zone
-            )[0]:
-                siren_active = True
+            for alarm in alarms:
+                if (
+                    panel_info is not None
+                    and panel_info.multi_partitions
+                    and part.id not in (alarm.partitions or [])
+                ):
+                    continue
+                if alarm.alarm_type is None:
+                    continue
+                alarm_type = MAP_ALARM_TYPE.get(alarm.alarm_type, TriggerAlarmType.NONE)
+                zone = alarm.zone if alarm.zone is not None else -1
+                if self._determine_siren_state(
+                    self._determine_armcode(part), alarm_type, zone
+                )[0]:
+                    siren_active = True
+                    break
+            if siren_active:
                 break
 
         new_data = VisonicCoordinatorData(
