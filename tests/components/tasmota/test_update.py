@@ -21,8 +21,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .conftest import setup_tasmota_helper
 from .test_common import DEFAULT_CONFIG
 
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
 
 
 @pytest.fixture
