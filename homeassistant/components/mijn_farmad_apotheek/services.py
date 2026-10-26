@@ -1,7 +1,5 @@
 """Actions for the Mijn Farmad Apotheek integration."""
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 import logging
 import re
 from typing import TYPE_CHECKING, Any, Final
@@ -114,18 +112,6 @@ def _translate_error(
         translation_key=translation_key,
         translation_placeholders={ATTR_APB: apb},
     )
-
-
-@asynccontextmanager
-async def _reauthenticate_on_rejection(
-    hass: HomeAssistant, entry: FarmadConfigEntry
-) -> AsyncIterator[None]:
-    """Start reauthentication when Farmad rejects the session of the entry."""
-    try:
-        yield
-    except FarmadAuthenticationError:
-        entry.async_start_reauth(hass)
-        raise
 
 
 def _product_description(product: CatalogProduct) -> str:
@@ -254,11 +240,12 @@ async def _async_search_medication(call: ServiceCall) -> ServiceResponse:
     data = entry.runtime_data
     apb = call.data[ATTR_APB]
     try:
-        async with _reauthenticate_on_rejection(call.hass, entry):
-            products = await data.client.async_search_products_in_apb(
-                apb, call.data[ATTR_QUERY], limit=SEARCH_RESULT_LIMIT
-            )
+        products = await data.client.async_search_products_in_apb(
+            apb, call.data[ATTR_QUERY], limit=SEARCH_RESULT_LIMIT
+        )
     except FarmadError as err:
+        if isinstance(err, FarmadAuthenticationError):
+            entry.async_start_reauth(call.hass)
         raise _translate_error(err, apb, "search_failed") from err
     return {ATTR_PRODUCTS: [_serialize_product(product) for product in products]}
 
@@ -269,16 +256,17 @@ async def _async_order_medication(call: ServiceCall) -> ServiceResponse:
     data = entry.runtime_data
     apb = call.data[ATTR_APB]
     try:
-        async with _reauthenticate_on_rejection(call.hass, entry):
-            cnk, description = await _async_resolve_product(
-                data, apb, call.data[ATTR_PRODUCT]
-            )
-            basket_id = await _async_place_order(
-                data,
-                apb,
-                (DraftProduct(product_cnk=cnk, quantity=call.data[ATTR_QUANTITY]),),
-                call.data.get(ATTR_COMMENT),
-            )
+        cnk, description = await _async_resolve_product(
+            data, apb, call.data[ATTR_PRODUCT]
+        )
+        basket_id = await _async_place_order(
+            data,
+            apb,
+            (DraftProduct(product_cnk=cnk, quantity=call.data[ATTR_QUANTITY]),),
+            call.data.get(ATTR_COMMENT),
+        )
     except FarmadError as err:
+        if isinstance(err, FarmadAuthenticationError):
+            entry.async_start_reauth(call.hass)
         raise _translate_error(err, apb, "order_failed") from err
     return {ATTR_BASKET_ID: basket_id, ATTR_DESCRIPTION: description}
