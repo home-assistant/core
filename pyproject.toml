@@ -50,7 +50,7 @@ dependencies = [
   "hass-nabucasa==2.8.0",
   # When bumping httpx2, please check the version pins of
   # anyio and h11 in gen_requirements_all
-  "httpx2==2.13.1",
+  "httpx2==2.14.0",
   "home-assistant-bluetooth==2.0.0",
   "ifaddr==0.2.0",
   "Jinja2==3.1.6",

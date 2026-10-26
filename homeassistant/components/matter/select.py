@@ -780,4 +780,24 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.WindowCovering.Attributes.WagoManualMode,),
         vendor_id=(5428,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoBlindType",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="blind_type",
+            options=["roller_shutter", "venetian_blind"],
+            device_to_ha={
+                0: "roller_shutter",
+                1: "venetian_blind",
+            }.get,
+            ha_to_device={
+                "roller_shutter": 0,
+                "venetian_blind": 1,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.WindowCovering.Attributes.WagoBlindType,),
+        vendor_id=(5428,),
+    ),
 ]

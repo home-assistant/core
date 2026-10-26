@@ -5203,6 +5203,39 @@ async def test_entity_trigger_duration_each_cancelled_when_entity_leaves_target(
     unsub()
 
 
+async def test_trigger_target_exclude_only_invalid(hass: HomeAssistant) -> None:
+    """Test a trigger target consisting of only an exclude block is rejected."""
+
+    class MockTrigger(Trigger):
+        """Mock trigger."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {"_": MockTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    with pytest.raises(
+        probatio.Invalid, match="an exclude block requires a target to exclude from"
+    ):
+        await async_validate_trigger_config(
+            hass,
+            [
+                {
+                    CONF_PLATFORM: "test",
+                    CONF_TARGET: {CONF_EXCLUDE: {CONF_ENTITY_ID: "test.excluded"}},
+                }
+            ],
+        )
+
+
 _INCLUDED_ENTITY_ID = "test.included"
 _EXCLUDED_ENTITY_ID = "test.excluded"
 
