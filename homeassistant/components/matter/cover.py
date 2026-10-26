@@ -341,7 +341,12 @@ class MatterCover(MatterEntity, CoverEntity):
         ):
             self._attr_device_class = CoverDeviceClass.SHUTTER
             self._attr_current_cover_tilt_position = None
-            supported_features &= ~CoverEntityFeature.SET_TILT_POSITION
+            supported_features &= ~(
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
+                | CoverEntityFeature.SET_TILT_POSITION
+            )
         self._attr_supported_features = supported_features
 
 
