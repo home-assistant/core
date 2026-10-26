@@ -15,7 +15,6 @@ from homeassistant.components.comelit.config_flow import (
 from homeassistant.components.comelit.const import (
     CONF_TRAVEL_TIME,
     CONF_VEDO_PIN,
-    DEFAULT_PORT,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
@@ -277,31 +276,6 @@ async def test_reconfigure_successful(
     assert mock_serial_bridge_config_entry.data[CONF_HOST] == new_host
 
 
-async def test_reconfigure_legacy_entry_without_port(
-    hass: HomeAssistant,
-    mock_serial_bridge: AsyncMock,
-) -> None:
-    """Test reconfiguring an entry created before the port field existed."""
-    legacy_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: BRIDGE_HOST,
-            CONF_PIN: BRIDGE_PIN,
-            CONF_TYPE: BRIDGE,
-        },
-        entry_id="legacy_serial_bridge_config_entry_id",
-    )
-    legacy_entry.add_to_hass(hass)
-
-    result = await legacy_entry.start_reconfigure_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    port_marker = next(key for key in result["data_schema"].schema if key == CONF_PORT)
-    assert port_marker.default() == DEFAULT_PORT
-
-
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
@@ -541,6 +515,8 @@ async def test_options_flow_cover_travel_time(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+    entity_selector = result["data_schema"].schema[CONF_ENTITY_ID]
+    assert entity_selector.config["include_entities"] == ["cover.cover0"]
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -554,9 +530,9 @@ async def test_options_flow_cover_travel_time(
         user_input={CONF_TRAVEL_TIME: 40},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_TRAVEL_TIME: {"cover.cover0": 40}}
+    assert result["data"] == {CONF_TRAVEL_TIME: {"serial_bridge_config_entry_id-0": 40}}
     assert mock_serial_bridge_config_entry.options == {
-        CONF_TRAVEL_TIME: {"cover.cover0": 40}
+        CONF_TRAVEL_TIME: {"serial_bridge_config_entry_id-0": 40}
     }
 
 
@@ -569,7 +545,7 @@ async def test_options_flow_cover_travel_time_update_preserves_others(
     await setup_integration(hass, mock_serial_bridge_config_entry)
     hass.config_entries.async_update_entry(
         mock_serial_bridge_config_entry,
-        options={CONF_TRAVEL_TIME: {"cover.cover1": 50}},
+        options={CONF_TRAVEL_TIME: {"serial_bridge_config_entry_id-1": 50}},
     )
 
     result = await hass.config_entries.options.async_init(
@@ -585,5 +561,29 @@ async def test_options_flow_cover_travel_time_update_preserves_others(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_TRAVEL_TIME: {"cover.cover1": 50, "cover.cover0": 40}
+        CONF_TRAVEL_TIME: {
+            "serial_bridge_config_entry_id-1": 50,
+            "serial_bridge_config_entry_id-0": 40,
+        }
     }
+
+
+@pytest.mark.parametrize(
+    ("config_entry_fixture", "supports_options"),
+    [
+        pytest.param("mock_serial_bridge_config_entry", True, id="bridge"),
+        pytest.param("mock_vedo_config_entry", False, id="vedo"),
+    ],
+)
+@pytest.mark.usefixtures("mock_serial_bridge", "mock_vedo")
+async def test_options_flow_support(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    config_entry_fixture: str,
+    supports_options: bool,
+) -> None:
+    """Test the options flow is only offered for bridge entries."""
+    config_entry: MockConfigEntry = request.getfixturevalue(config_entry_fixture)
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.supports_options is supports_options

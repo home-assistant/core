@@ -3,8 +3,9 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from aiocomelit import CannotConnect
 from aiocomelit.api import ComelitDeviceObject
-from aiocomelit.const import COVER, WATT
+from aiocomelit.const import COVER, STATE_COVER, WATT
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -16,6 +17,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.comelit.const import (
+    CONF_TRAVEL_TIME,
     DEFAULT_COVER_TRAVEL_TIME,
     SCAN_INTERVAL,
 )
@@ -31,20 +33,22 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
 ENTITY_ID = "cover.cover0"
+UNIQUE_ID = "serial_bridge_config_entry_id-0"
 
 
-def _stopped_cover_device(index: int, name: str) -> ComelitDeviceObject:
-    """Return a cover device reporting the stopped status."""
+def _cover_device(index: int, name: str, status: int = 0) -> ComelitDeviceObject:
+    """Return a cover device reporting the given status."""
     return ComelitDeviceObject(
         index=index,
         name=name,
-        status=0,
-        human_status="stopped",
+        status=status,
+        human_status=STATE_COVER[status],
         type="cover",
         val=0,
         protected=0,
@@ -102,10 +106,10 @@ async def test_cover_open(
 
     # Finish opening, update status
     mock_serial_bridge.get_all_devices.return_value[COVER] = {
-        0: _stopped_cover_device(0, "Cover0"),
+        0: _cover_device(0, "Cover0"),
     }
 
-    freezer.tick(SCAN_INTERVAL)
+    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -184,10 +188,13 @@ async def test_cover_stop_if_stopped(
 
 
 @pytest.mark.parametrize(
-    ("cover_state", "cover_position"),
+    ("cover_state", "attributes", "cover_position"),
     [
-        (CoverState.OPEN, 100),
-        (CoverState.CLOSED, 0),
+        pytest.param(CoverState.OPEN, {}, 100, id="open"),
+        pytest.param(CoverState.CLOSED, {}, 0, id="closed"),
+        pytest.param(
+            CoverState.OPEN, {ATTR_CURRENT_POSITION: 40}, 40, id="partially_open"
+        ),
     ],
 )
 async def test_cover_restore_state(
@@ -195,11 +202,12 @@ async def test_cover_restore_state(
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
     cover_state: CoverState,
+    attributes: dict[str, int],
     cover_position: int,
 ) -> None:
     """Test cover restore state on reload."""
 
-    mock_restore_cache(hass, [State(ENTITY_ID, cover_state)])
+    mock_restore_cache(hass, [State(ENTITY_ID, cover_state, attributes)])
     await setup_integration(hass, mock_serial_bridge_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
@@ -278,10 +286,10 @@ async def test_cover_position_estimation(
 
     # Device reports it finished opening on its own
     mock_serial_bridge.get_all_devices.return_value[COVER] = {
-        0: _stopped_cover_device(0, "Cover0"),
+        0: _cover_device(0, "Cover0"),
     }
 
-    freezer.tick(SCAN_INTERVAL)
+    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME / 2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -372,19 +380,100 @@ async def test_cover_set_position_noop(
 ) -> None:
     """Test setting the cover to its current position does nothing."""
 
+    mock_restore_cache(
+        hass, [State(ENTITY_ID, CoverState.OPEN, {ATTR_CURRENT_POSITION: 40})]
+    )
     mock_serial_bridge.reset_mock()
     await setup_integration(hass, mock_serial_bridge_config_entry)
-
-    assert (state := hass.states.get(ENTITY_ID))
-    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 0},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 40},
         blocking=True,
     )
     mock_serial_bridge.set_device_status.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("restored_states", "target_position", "transient_state"),
+    [
+        pytest.param([], 0, CoverState.CLOSING, id="unknown_close"),
+        pytest.param(
+            [State(ENTITY_ID, CoverState.OPEN)], 0, CoverState.CLOSING, id="close"
+        ),
+        pytest.param(
+            [State(ENTITY_ID, CoverState.CLOSED)], 100, CoverState.OPENING, id="open"
+        ),
+    ],
+)
+async def test_cover_set_position_full_travel(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+    restored_states: list[State],
+    target_position: int,
+    transient_state: CoverState,
+) -> None:
+    """Test fully opening or closing leaves stopping to the motor end stop."""
+
+    mock_restore_cache(hass, restored_states)
+    mock_serial_bridge.reset_mock()
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: target_position},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == transient_state
+
+    # No stop command is scheduled, even well past the estimated travel time
+    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME * 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_serial_bridge.set_device_status.call_count == 1
+
+
+async def test_cover_set_position_already_stopped(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test no stop command is sent if the cover stopped before the timer fired."""
+
+    mock_restore_cache(hass, [State(ENTITY_ID, CoverState.CLOSED)])
+    mock_serial_bridge.reset_mock()
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 10},
+        blocking=True,
+    )
+
+    # Stopped before any poll saw it, e.g. at its end stop
+    mock_serial_bridge.get_all_devices.return_value[COVER] = {
+        0: _cover_device(0, "Cover0"),
+    }
+
+    # Shorter than the poll interval, so only the scheduled stop sees it
+    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME / 10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_serial_bridge.set_device_status.call_count == 1
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 10
 
 
 async def test_cover_set_position_cancels_previous_timer(
@@ -426,6 +515,123 @@ async def test_cover_set_position_cancels_previous_timer(
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
 
 
+async def test_cover_external_movement(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test movements started outside Home Assistant are tracked."""
+
+    mock_restore_cache(hass, [State(ENTITY_ID, CoverState.OPEN)])
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    # Closed from the wall switch
+    mock_serial_bridge.get_all_devices.return_value[COVER] = {
+        0: _cover_device(0, "Cover0", STATE_COVER.index("closing")),
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == CoverState.CLOSING
+    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+
+    # Stopped from the wall switch partway through
+    mock_serial_bridge.get_all_devices.return_value[COVER] = {
+        0: _cover_device(0, "Cover0"),
+    }
+
+    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME * 0.4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 60
+
+    # Closed fully from the wall switch
+    mock_serial_bridge.get_all_devices.return_value[COVER] = {
+        0: _cover_device(0, "Cover0", STATE_COVER.index("closing")),
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_serial_bridge.get_all_devices.return_value[COVER] = {
+        0: _cover_device(0, "Cover0"),
+    }
+
+    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+
+async def test_cover_command_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failed command does not record a movement."""
+
+    mock_restore_cache(hass, [State(ENTITY_ID, CoverState.CLOSED)])
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    mock_serial_bridge.set_device_status.side_effect = CannotConnect
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+
+async def test_cover_configured_travel_time(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test the travel time configured for the cover unique ID is used."""
+
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+    hass.config_entries.async_update_entry(
+        mock_serial_bridge_config_entry,
+        options={CONF_TRAVEL_TIME: {UNIQUE_ID: DEFAULT_COVER_TRAVEL_TIME * 2}},
+    )
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_CURRENT_POSITION] == 50
+
+
 async def test_cover_dynamic(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -442,8 +648,8 @@ async def test_cover_dynamic(
     entity_id_2 = "cover.cover1"
 
     mock_serial_bridge.get_all_devices.return_value[COVER] = {
-        0: _stopped_cover_device(0, "Cover0"),
-        1: _stopped_cover_device(1, "Cover1"),
+        0: _cover_device(0, "Cover0"),
+        1: _cover_device(1, "Cover1"),
     }
 
     freezer.tick(SCAN_INTERVAL)
