@@ -191,6 +191,75 @@ async def test_symo_meter_forged(
     )
 
 
+@pytest.mark.parametrize(
+    ("fixture_set", "is_logger", "fixture", "keys", "details", "entity_id"),
+    [
+        pytest.param(
+            "symo",
+            True,
+            "symo/GetMeterRealtimeData.json",
+            ["Body", "Data", "0", "Details"],
+            None,
+            "sensor.smart_meter_63a_real_power",
+            id="meter_without_details",
+        ),
+        pytest.param(
+            "symo",
+            True,
+            "symo/GetMeterRealtimeData.json",
+            ["Body", "Data", "0", "Details"],
+            {"Manufacturer": "Fronius", "Model": "Smart Meter 63A"},
+            "sensor.smart_meter_63a_real_power",
+            id="meter_without_serial",
+        ),
+        pytest.param(
+            "gen24_storage",
+            False,
+            "gen24_storage/GetOhmPilotRealtimeData.json",
+            ["Body", "Data", "0", "Details"],
+            None,
+            "sensor.ohmpilot_power",
+            id="ohmpilot_without_details",
+        ),
+        pytest.param(
+            "gen24_storage",
+            False,
+            "gen24_storage/GetStorageRealtimeData.json",
+            ["Body", "Data", "0", "Controller", "Details"],
+            None,
+            "sensor.byd_battery_box_premium_hv_state_of_charge",
+            id="storage_without_details",
+        ),
+    ],
+)
+async def test_device_without_serial(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    fixture_set: str,
+    is_logger: bool,
+    fixture: str,
+    keys: list[str],
+    details: dict[str, str] | None,
+    entity_id: str,
+) -> None:
+    """Test entities are only added once a device reports its serial number."""
+    mock_responses(
+        aioclient_mock,
+        fixture_set=fixture_set,
+        override_data={fixture: [(keys, details)]},
+    )
+    await setup_fronius_integration(hass, is_logger=is_logger)
+    # without a serial number the unique IDs would collide between devices
+    assert hass.states.get(entity_id) is None
+
+    mock_responses(aioclient_mock, fixture_set=fixture_set)
+    freezer.tick(FroniusMeterUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is not None
+
+
 async def test_symo_meter_gone(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,

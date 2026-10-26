@@ -1027,16 +1027,16 @@ class _FroniusSensorEntity(FroniusEntity, SensorEntity):
 def _child_device_info(
     coordinator: FroniusCoordinatorBase[Any],
     identifier: str,
-    details: DeviceDetails | None,
+    details: DeviceDetails,
     model: str | None = None,
 ) -> DeviceInfo:
     """Return the info of a device connected to the SolarNet logging device."""
     return DeviceInfo(
         identifiers={(DOMAIN, identifier)},
-        manufacturer=details.manufacturer if details else None,
-        model=model if model is not None else (details.model if details else None),
-        name=details.model if details else None,
-        sw_version=details.software if details else None,
+        manufacturer=details.manufacturer,
+        model=model if model is not None else details.model,
+        name=details.model,
+        sw_version=details.software,
         via_device_id=dr.async_get_device_id_by_identifier(
             coordinator.hass,
             (DOMAIN, coordinator.solar_net.solar_net_device_id),
@@ -1111,15 +1111,13 @@ class MeterSensor(_FroniusSensorEntity):
     ) -> None:
         """Set up an individual Fronius meter sensor."""
         super().__init__(coordinator, description, solar_net_id)
-        details = cast(MeterData, self._device_data()).details
-        meter_uid = details.serial if details else None
+        # the coordinator only adds entities for meters reporting a serial
+        details = cast(DeviceDetails, cast(MeterData, self._device_data()).details)
+        meter_uid = cast(str, details.serial)
         # S0 meters connected directly to inverters respond "n.a." as serial number
         # `model` contains the inverter id: "S0 Meter at inverter 1"
-        if meter_uid is None or meter_uid == "n.a.":
-            meter_uid = (
-                f"{coordinator.solar_net.solar_net_device_id}:"
-                f"{details.model if details else None}"
-            )
+        if meter_uid == "n.a.":
+            meter_uid = f"{coordinator.solar_net.solar_net_device_id}:{details.model}"
         self._attr_device_info = _child_device_info(coordinator, meter_uid, details)
         self._attr_unique_id = f"{meter_uid}-{description.key}"
 
@@ -1135,13 +1133,14 @@ class OhmpilotSensor(_FroniusSensorEntity):
     ) -> None:
         """Set up an individual Fronius Ohmpilot sensor."""
         super().__init__(coordinator, description, solar_net_id)
-        details = cast(OhmpilotData, self._device_data()).details
-        serial = details.serial if details else None
+        # the coordinator only adds entities for Ohmpilots reporting a serial
+        details = cast(DeviceDetails, cast(OhmpilotData, self._device_data()).details)
+        serial = cast(str, details.serial)
         self._attr_device_info = _child_device_info(
             coordinator,
-            str(serial),
+            serial,
             details,
-            model=f"{details.model} {details.hardware}" if details else None,
+            model=f"{details.model} {details.hardware}",
         )
         self._attr_unique_id = f"{serial}-{description.key}"
 
@@ -1175,7 +1174,10 @@ class StorageSensor(_FroniusSensorEntity):
     ) -> None:
         """Set up an individual Fronius storage sensor."""
         super().__init__(coordinator, description, solar_net_id)
-        details = cast(StorageController, self._device_data()).details
-        serial = details.serial if details else None
+        # the coordinator only adds entities for storages reporting a serial
+        details = cast(
+            DeviceDetails, cast(StorageController, self._device_data()).details
+        )
+        serial = cast(str, details.serial)
         self._attr_unique_id = f"{serial}-{description.key}"
-        self._attr_device_info = _child_device_info(coordinator, str(serial), details)
+        self._attr_device_info = _child_device_info(coordinator, serial, details)

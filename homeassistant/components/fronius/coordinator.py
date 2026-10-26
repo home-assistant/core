@@ -15,6 +15,7 @@ from fronius_modbus import (
 )
 from fronius_solarapi import (
     CommonInverterData,
+    DeviceDetails,
     FroniusError,
     LoggerInfo,
     MeterData,
@@ -127,6 +128,10 @@ class FroniusCoordinatorBase[_DataT](
                 }
         return data
 
+    def _is_identifiable(self, device_data: _DataT) -> bool:
+        """Return whether the device data carries what its entities' IDs use."""
+        return True
+
     @callback
     def add_entities_for_seen_keys[_FroniusEntityT: FroniusEntity](
         self,
@@ -144,6 +149,9 @@ class FroniusCoordinatorBase[_DataT](
             """Add entities for keys seen for the first time."""
             new_entities: list[_FroniusEntityT] = []
             for solar_net_id, device_data in self.data.items():
+                if not self._is_identifiable(device_data):
+                    # keep the descriptions pending for a later response
+                    continue
                 remaining_unregistered_descriptors = []
                 for description in self.unregistered_descriptors[solar_net_id][
                     platform
@@ -507,12 +515,25 @@ class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase[LoggerInfo]):
         return {SOLAR_NET_ID_SYSTEM: response.data}
 
 
+def _has_serial(details: DeviceDetails | None) -> bool:
+    """Return whether device details carry a serial number."""
+    return details is not None and details.serial is not None
+
+
 class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase[MeterData]):
     """Query Fronius system meter endpoint and keep track of seen conditions."""
 
     default_interval = timedelta(minutes=1)
     error_interval = timedelta(minutes=10)
     valid_descriptions = {Platform.SENSOR: METER_ENTITY_DESCRIPTIONS}
+
+    @override
+    def _is_identifiable(self, device_data: MeterData) -> bool:
+        """Return whether the meter reports its details.
+
+        Datamanagers before 3.3.6-14 don't report them.
+        """
+        return _has_serial(device_data.details)
 
     @override
     async def _update_method(self) -> dict[SolarNetId, MeterData]:
@@ -526,6 +547,11 @@ class FroniusOhmpilotUpdateCoordinator(FroniusCoordinatorBase[OhmpilotData]):
     default_interval = timedelta(minutes=1)
     error_interval = timedelta(minutes=10)
     valid_descriptions = {Platform.SENSOR: OHMPILOT_ENTITY_DESCRIPTIONS}
+
+    @override
+    def _is_identifiable(self, device_data: OhmpilotData) -> bool:
+        """Return whether the Ohmpilot reports its serial number."""
+        return _has_serial(device_data.details)
 
     @override
     async def _update_method(self) -> dict[SolarNetId, OhmpilotData]:
@@ -556,6 +582,11 @@ class FroniusStorageUpdateCoordinator(FroniusCoordinatorBase[StorageController])
     default_interval = timedelta(minutes=1)
     error_interval = timedelta(minutes=10)
     valid_descriptions = {Platform.SENSOR: STORAGE_ENTITY_DESCRIPTIONS}
+
+    @override
+    def _is_identifiable(self, device_data: StorageController) -> bool:
+        """Return whether the storage reports its serial number."""
+        return _has_serial(device_data.details)
 
     @override
     async def _update_method(self) -> dict[SolarNetId, StorageController]:
