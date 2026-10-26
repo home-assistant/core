@@ -27,8 +27,7 @@ async def test_entry_diagnostics(
             "data": {
                 "api_key": REDACTED,
                 "elevation": 0,
-                "latitude": REDACTED,
-                "longitude": REDACTED,
+                "location": {"latitude": REDACTED, "longitude": REDACTED},
             },
             "options": {"from_window": 3.5, "to_window": 3.5},
             "pref_disable_new_entities": False,
