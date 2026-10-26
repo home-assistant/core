@@ -215,6 +215,9 @@
       "communication_quality": {
         "name": "Communication quality"
       },
+      "floor_temperature": {
+        "name": "Floor temperature"
+      },
       "humidity_rating": {
         "name": "Humidity rating"
       },

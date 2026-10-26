@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 from boschshcpy import (
     SHCLightSwitchBSM,
     SHCMicromoduleShutterControl,
+    SHCRoomThermostat2,
     SHCSession,
     SHCSmartPlug,
     SHCSmartPlugCompact,
@@ -66,6 +67,7 @@ PURITY_RATING_SENSOR = "purity_rating"
 POWER_SENSOR = "power"
 ENERGY_SENSOR = "energy"
 COMMUNICATION_QUALITY_SENSOR = "communication_quality"
+FLOOR_TEMPERATURE_SENSOR = "floor_temperature"
 
 
 def _valve_tappet_state_value(device: SHCThermostat) -> str | None:
@@ -146,6 +148,16 @@ _WALLTHERMOSTAT_HUMIDITY_DESCRIPTION: SHCSensorEntityDescription[SHCWallThermost
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda device: device.humidity,
+    )
+)
+_FLOOR_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCRoomThermostat2] = (
+    SHCSensorEntityDescription(
+        key=FLOOR_TEMPERATURE_SENSOR,
+        translation_key=FLOOR_TEMPERATURE_SENSOR,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda device: device.terminal_temperature,
     )
 )
 _TWINGUARD_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCTwinguard] = (
@@ -289,6 +301,25 @@ async def async_setup_entry(
             _WALLTHERMOSTAT_HUMIDITY_DESCRIPTION,
         )
     )
+
+    for room_thermostat in session.device_helper.roomthermostats:
+        room_thermostat_descriptions: list[SHCSensorEntityDescription[Any]] = [
+            _WALLTHERMOSTAT_TEMPERATURE_DESCRIPTION
+        ]
+        if room_thermostat.supports_humidity:
+            room_thermostat_descriptions.append(_WALLTHERMOSTAT_HUMIDITY_DESCRIPTION)
+        if room_thermostat.terminal_temperature is not None:
+            room_thermostat_descriptions.append(_FLOOR_TEMPERATURE_DESCRIPTION)
+        entities.extend(
+            SHCSensor(
+                hass,
+                room_thermostat,
+                description,
+                shc_info.unique_id,
+                config_entry.entry_id,
+            )
+            for description in room_thermostat_descriptions
+        )
 
     entities.extend(
         SHCSensor(
