@@ -3474,6 +3474,9 @@ voip-utils==0.5.0
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
 
+# homeassistant.components.voltie_charger
+voltie==1.0.0
+
 # homeassistant.components.volvo
 volvocarsapi==0.4.4
 

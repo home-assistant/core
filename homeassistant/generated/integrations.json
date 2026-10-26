@@ -12450,6 +12450,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "voltie_charger": {
+      "name": "Voltie Charger",
+      "integration_type": "device",
+      "categories": [
+        "energy.ev_charging"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "volumio": {
       "name": "Volumio",
       "integration_type": "device",

@@ -2127,6 +2127,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/voip/ @home-assistant/core @jaminh
 /homeassistant/components/volkszaehler/ @StefanSchoof
 /tests/components/volkszaehler/ @StefanSchoof
+/homeassistant/components/voltie_charger/ @lmate @voltie-eu
+/tests/components/voltie_charger/ @lmate @voltie-eu
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvo/ @thomasddn
