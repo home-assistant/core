@@ -28,6 +28,12 @@ REVERSE_MOTOR_DIRECTION_ENTITY_ID = (
 )
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.SWITCH
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_switches(
     hass: HomeAssistant,

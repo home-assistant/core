@@ -8,5 +8,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "loggers": ["luftdaten"],
-  "requirements": ["luftdaten==0.7.4"]
+  "requirements": ["luftdaten==0.8.0"]
 }

@@ -745,6 +745,11 @@ ZEROCONF = {
             "domain": "homewizard",
         },
     ],
+    "_indi-allsky._tcp.local.": [
+        {
+            "domain": "indi_allsky",
+        },
+    ],
     "_iometer._tcp.local.": [
         {
             "domain": "iometer",

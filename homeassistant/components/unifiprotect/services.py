@@ -15,6 +15,7 @@ from uiprotect.exceptions import ClientError
 from uiprotect.utils import normalize_mac
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.event import EventDeviceClass
 from homeassistant.const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_DEVICE_ID,
@@ -296,6 +297,13 @@ def _async_get_public_chime(
     raise _async_device_not_available(hass, device_id, macs[0] if macs else device_id)
 
 
+# The deprecated doorbell binary sensor stays accepted until it is removed.
+_DOORBELL_ENTITY_CLASSES = {
+    (Platform.BINARY_SENSOR, BinarySensorDeviceClass.OCCUPANCY),
+    (Platform.EVENT, EventDeviceClass.DOORBELL),
+}
+
+
 async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     """Set paired doorbells on chime."""
     chime_device_id: str = call.data[ATTR_DEVICE_ID]
@@ -314,9 +322,8 @@ async def set_chime_paired_doorbells(call: ServiceCall) -> None:
         assert doorbell_sensor is not None
         if (
             doorbell_sensor.platform != DOMAIN
-            or doorbell_sensor.domain != Platform.BINARY_SENSOR
-            or doorbell_sensor.original_device_class
-            != BinarySensorDeviceClass.OCCUPANCY
+            or (doorbell_sensor.domain, doorbell_sensor.original_device_class)
+            not in _DOORBELL_ENTITY_CLASSES
         ):
             continue
         doorbell_mac = _async_unique_id_to_mac(doorbell_sensor.unique_id)
