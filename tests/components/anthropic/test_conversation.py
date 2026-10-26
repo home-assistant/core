@@ -91,7 +91,7 @@ from homeassistant.components.conversation import trace
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.llm import LLMTools
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -120,6 +120,10 @@ from . import (
 )
 
 ENTITY_ID = "conversation.claude_conversation"
+THINKING_RESET_LOG = (
+    "Removed {removed} thinking blocks from the request "
+    "after a system prompt or tools change"
+)
 
 
 @pytest.fixture
@@ -295,6 +299,89 @@ def mock_llm_tool() -> Generator[AsyncMock]:
         return_value=LLMTools(tools=[mock_tool]),
     ):
         yield mock_tool
+
+
+@pytest.fixture
+def mock_thinking_prefix(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Render a system prompt whose prefix can change between turns."""
+    hass.states.async_set("sensor.thinking_prefix", "A")
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_CHAT_MODEL: "claude-opus-4-7",
+            CONF_CODE_EXECUTION: True,
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_PROMPT: "{{ states('sensor.thinking_prefix') }}",
+            CONF_WEB_SEARCH: True,
+        },
+    )
+
+
+@pytest.fixture
+async def thinking_history(
+    hass: HomeAssistant,
+    mock_thinking_prefix: None,
+    mock_init_component: None,
+    mock_llm_tool: AsyncMock,
+    mock_create_stream: AsyncMock,
+    captured_requests: list[MessageCreateParamsStreaming],
+    code_execution_container: Container,
+) -> conversation.ChatLog:
+    """Create history with thinking and metadata through a conversation turn."""
+    mock_create_stream.return_value = [
+        [
+            *create_thinking_block(0, ["Old thought"]),
+            *create_redacted_thinking_block(1),
+            *create_server_tool_use_block(
+                2, "srvtoolu_prefix", "web_search", ['{"query": "old answer"}']
+            ),
+            *create_web_search_result_block(
+                3,
+                "srvtoolu_prefix",
+                [
+                    WebSearchResultBlock(
+                        type="web_search_result",
+                        title="Example",
+                        url="https://example.com",
+                        encrypted_content="old_search_result",
+                    )
+                ],
+            ),
+            *create_content_block(
+                4,
+                ["Old answer"],
+                citations=[
+                    CitationsWebSearchResultLocation(
+                        type="web_search_result_location",
+                        cited_text="Old answer",
+                        encrypted_index="old_index",
+                        title="Example",
+                        url="https://example.com",
+                    )
+                ],
+            ),
+            RawMessageDeltaEvent(
+                type="message_delta",
+                delta=Delta(stop_reason="end_turn", container=code_execution_container),
+                usage=MessageDeltaUsage(output_tokens=10),
+            ),
+        ]
+    ]
+    result = await conversation.async_converse(
+        hass, "Start", None, Context(), agent_id=ENTITY_ID
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    with (
+        chat_session.async_get_chat_session(
+            hass, result.conversation_id, context=None
+        ) as session,
+        conversation.async_get_chat_log(hass, session) as chat_log,
+    ):
+        return chat_log
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -2022,6 +2109,356 @@ async def test_redacted_thinking(
     assert chat_log.content[1:] == snapshot
 
 
+@pytest.mark.freeze_time("2026-04-04T12:00:00Z")
+@pytest.mark.parametrize(
+    (
+        "prefixes",
+        "expected_hash_matches",
+        "expected_marker_counts",
+        "expected_removed_blocks",
+    ),
+    [
+        pytest.param(("A", "A"), (True, True), (1, 1), (), id="unchanged_prefix"),
+        pytest.param(
+            ("B", "B"), (False, False), (2, 2), (2, 2), id="retain_fresh_thinking"
+        ),
+        pytest.param(
+            ("B", "A"), (False, True), (2, 3), (2, 4), id="never_restore_old_thinking"
+        ),
+        pytest.param(
+            ("B", "A", "A"),
+            (False, True, True),
+            (2, 3, 3),
+            (2, 4, 4),
+            id="retain_latest_matching_epoch",
+        ),
+    ],
+)
+async def test_thinking_prefix_changes(
+    hass: HomeAssistant,
+    thinking_history: conversation.ChatLog,
+    mock_create_stream: AsyncMock,
+    captured_requests: list[MessageCreateParamsStreaming],
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+    prefixes: tuple[str, ...],
+    expected_hash_matches: tuple[bool, ...],
+    expected_marker_counts: tuple[int, ...],
+    expected_removed_blocks: tuple[int, ...],
+) -> None:
+    """Replay only the latest matching thinking epoch without changing history."""
+    anchor = thinking_history.content[2]
+    assert isinstance(anchor, conversation.AssistantContent)
+    assert isinstance(anchor.native, ContentDetails)
+    initial_hash = anchor.native.prefix_hash
+    assert initial_hash is not None
+    original_history = deepcopy(thinking_history.content[1:])
+    mock_create_stream.return_value = [
+        [
+            *create_thinking_block(0, ["Fresh thought"]),
+            *create_redacted_thinking_block(1),
+            *create_content_block(2, ["Fresh answer"]),
+        ],
+        [
+            *create_thinking_block(0, ["Latest thought"]),
+            *create_redacted_thinking_block(1),
+            *create_content_block(2, ["Latest answer"]),
+        ],
+        create_content_block(0, ["Done"]),
+    ]
+
+    hash_matches: list[bool] = []
+    marker_counts: list[int] = []
+    for prefix in prefixes:
+        hass.states.async_set("sensor.thinking_prefix", prefix)
+        result = await conversation.async_converse(
+            hass,
+            "Continue",
+            thinking_history.conversation_id,
+            Context(),
+            agent_id=ENTITY_ID,
+        )
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+        with (
+            chat_session.async_get_chat_session(
+                hass, thinking_history.conversation_id, context=None
+            ) as session,
+            conversation.async_get_chat_log(hass, session) as chat_log,
+        ):
+            assert chat_log.content[1 : len(original_history) + 1] == original_history
+            markers = [
+                content.native.prefix_hash
+                for content in chat_log.content
+                if isinstance(content, conversation.AssistantContent)
+                and isinstance(content.native, ContentDetails)
+                and content.native.prefix_hash is not None
+            ]
+        hash_matches.append(markers[-1] == initial_hash)
+        marker_counts.append(len(markers))
+
+    assert tuple(hash_matches) == expected_hash_matches
+    assert tuple(marker_counts) == expected_marker_counts
+    assert [
+        message for message in caplog.messages if message.startswith("Removed ")
+    ] == [
+        THINKING_RESET_LOG.format(removed=removed)
+        for removed in expected_removed_blocks
+    ]
+    assert [request["messages"] for request in captured_requests[1:]] == snapshot
+
+
+@pytest.mark.freeze_time("2026-04-04T12:00:00Z")
+async def test_thinking_prefix_unknown_history(
+    hass: HomeAssistant,
+    thinking_history: conversation.ChatLog,
+    mock_create_stream: AsyncMock,
+    captured_requests: list[MessageCreateParamsStreaming],
+    code_execution_container: Container,
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Omit legacy thinking without changing stored history or metadata."""
+    anchor = thinking_history.content[2]
+    assert isinstance(anchor, conversation.AssistantContent)
+    assert isinstance(anchor.native, ContentDetails)
+    anchor.native.prefix_hash = None
+    original_history = deepcopy(thinking_history.content[1:])
+    mock_create_stream.return_value = [create_content_block(0, ["Done"])]
+
+    result = await conversation.async_converse(
+        hass,
+        "Continue",
+        thinking_history.conversation_id,
+        Context(),
+        agent_id=ENTITY_ID,
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    with (
+        chat_session.async_get_chat_session(
+            hass, thinking_history.conversation_id, context=None
+        ) as session,
+        conversation.async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert chat_log.content[1 : len(original_history) + 1] == original_history
+        last_content = chat_log.content[-1]
+        assert isinstance(last_content, conversation.AssistantContent)
+        assert isinstance(last_content.native, ContentDetails)
+        assert last_content.native.prefix_hash is not None
+    assert captured_requests[1]["container"] == code_execution_container.id
+    assert caplog.messages.count(THINKING_RESET_LOG.format(removed=2)) == 1
+    assert captured_requests[1]["messages"] == snapshot
+
+
+@pytest.mark.freeze_time("2026-04-04T12:00:00Z")
+async def test_thinking_prefix_tools_change(
+    hass: HomeAssistant,
+    thinking_history: conversation.ChatLog,
+    mock_llm_tool: AsyncMock,
+    mock_create_stream: AsyncMock,
+    captured_requests: list[MessageCreateParamsStreaming],
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Reset old thinking when a formatted tool changes with the same prompt."""
+    mock_llm_tool.description = "Changed function"
+    mock_create_stream.return_value = [create_content_block(0, ["Done"])]
+
+    result = await conversation.async_converse(
+        hass,
+        "Continue",
+        thinking_history.conversation_id,
+        Context(),
+        agent_id=ENTITY_ID,
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert captured_requests[0]["system"] == captured_requests[1]["system"]
+    assert captured_requests[0]["tools"] != captured_requests[1]["tools"]
+    assert caplog.messages.count(THINKING_RESET_LOG.format(removed=2)) == 1
+    assert captured_requests[1]["messages"] == snapshot
+
+
+@pytest.mark.freeze_time("2026-04-04T12:00:00Z")
+async def test_thinking_prefix_reset_tool_loop(
+    hass: HomeAssistant,
+    thinking_history: conversation.ChatLog,
+    mock_llm_tool: AsyncMock,
+    mock_create_stream: AsyncMock,
+    captured_requests: list[MessageCreateParamsStreaming],
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Replay thinking generated after a reset when continuing a local tool call."""
+    hass.states.async_set("sensor.thinking_prefix", "B")
+    mock_create_stream.return_value = [
+        [
+            *create_thinking_block(0, ["Fresh thought"]),
+            *create_redacted_thinking_block(1),
+            *create_tool_use_block(2, "toolu_fresh", "test_tool", ["{}"]),
+        ],
+        create_content_block(0, ["Done"]),
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Call the test tool",
+        thinking_history.conversation_id,
+        Context(),
+        agent_id=ENTITY_ID,
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    mock_llm_tool.async_call.assert_awaited_once()
+    assert caplog.messages.count(THINKING_RESET_LOG.format(removed=2)) == 1
+    assert [request["messages"] for request in captured_requests[1:]] == snapshot
+
+
+@pytest.mark.freeze_time("2026-04-04T12:00:00Z")
+async def test_thinking_prefix_interrupted_stream(
+    hass: HomeAssistant,
+    thinking_history: conversation.ChatLog,
+    mock_create_stream: AsyncMock,
+    captured_requests: list[MessageCreateParamsStreaming],
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Keep a new prefix marker when its thinking is saved before stream failure."""
+    original_history = deepcopy(thinking_history.content[1:])
+    hass.states.async_set("sensor.thinking_prefix", "B")
+
+    async def interrupted_events() -> AsyncGenerator[RawMessageStreamEvent]:
+        for event in (
+            RawMessageStartEvent(
+                type="message_start",
+                message=Message(
+                    type="message",
+                    id="msg_partial_prefix",
+                    model="claude-opus-4-7",
+                    role="assistant",
+                    content=[],
+                    usage=Usage(input_tokens=0, output_tokens=0),
+                ),
+            ),
+            *create_thinking_block(0, ["Partial B thought"]),
+            *create_redacted_thinking_block(1),
+            create_redacted_thinking_block(2)[0],
+        ):
+            yield event
+        raise APIConnectionError(request=Request("POST", "https://api.anthropic.com"))
+
+    interrupted_stream = MagicMock(spec=AsyncStream)
+    interrupted_stream.__aenter__.return_value = interrupted_stream
+    interrupted_stream.__aiter__.side_effect = interrupted_events
+    mock_create_stream.return_value = interrupted_stream
+
+    result = await conversation.async_converse(
+        hass,
+        "Continue under B",
+        thinking_history.conversation_id,
+        Context(),
+        agent_id=ENTITY_ID,
+    )
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+
+    with (
+        chat_session.async_get_chat_session(
+            hass, thinking_history.conversation_id, context=None
+        ) as session,
+        conversation.async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert chat_log.content[1 : len(original_history) + 1] == original_history
+        partial_content = next(
+            content
+            for content in chat_log.content
+            if isinstance(content, conversation.AssistantContent)
+            and content.thinking_content == "Partial B thought"
+        )
+        assert isinstance(partial_content.native, ContentDetails)
+        assert partial_content.native.prefix_hash is not None
+        assert partial_content.native.thinking_signature is not None
+        interrupted_history = deepcopy(chat_log.content[1:])
+
+    hass.states.async_set("sensor.thinking_prefix", "A")
+    mock_create_stream.return_value = [create_content_block(0, ["Done"])]
+    result = await conversation.async_converse(
+        hass,
+        "Return to A",
+        thinking_history.conversation_id,
+        Context(),
+        agent_id=ENTITY_ID,
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    with (
+        chat_session.async_get_chat_session(
+            hass, thinking_history.conversation_id, context=None
+        ) as session,
+        conversation.async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert chat_log.content[1 : len(interrupted_history) + 1] == interrupted_history
+
+    assert caplog.messages.count(THINKING_RESET_LOG.format(removed=2)) == 1
+    assert caplog.messages.count(THINKING_RESET_LOG.format(removed=4)) == 1
+    assert captured_requests[-1]["messages"] == snapshot
+
+
+@pytest.mark.freeze_time("2026-04-04T12:00:00Z")
+async def test_thinking_prefix_shared_agents(
+    hass: HomeAssistant,
+    thinking_history: conversation.ChatLog,
+    mock_create_stream: AsyncMock,
+    captured_requests: list[MessageCreateParamsStreaming],
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Share the prefix baseline when Anthropic agents use the same history."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Other Claude",
+        data={"api_key": "other_key"},
+        version=2,
+        subentries_data=[
+            {
+                "data": {CONF_PROMPT: "Another system prompt"},
+                "subentry_type": "conversation",
+                "title": "Other Claude",
+                "unique_id": None,
+            }
+        ],
+    )
+    other_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(other_entry.entry_id)
+    await hass.async_block_till_done()
+    other_entity_id = entity_registry.async_get_entity_id(
+        "conversation", DOMAIN, next(iter(other_entry.subentries))
+    )
+    assert other_entity_id is not None
+    mock_create_stream.return_value = [
+        [
+            *create_thinking_block(0, ["Other agent thought"]),
+            *create_redacted_thinking_block(1),
+            *create_content_block(2, ["Other answer"]),
+        ],
+        create_content_block(0, ["Done"]),
+    ]
+
+    for agent_id in (other_entity_id, ENTITY_ID):
+        result = await conversation.async_converse(
+            hass,
+            "Continue",
+            thinking_history.conversation_id,
+            Context(),
+            agent_id=agent_id,
+        )
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    assert caplog.messages.count(THINKING_RESET_LOG.format(removed=2)) == 1
+    assert caplog.messages.count(THINKING_RESET_LOG.format(removed=4)) == 1
+    assert [request["messages"] for request in captured_requests[1:]] == snapshot
+
+
 @patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 @pytest.mark.usefixtures("mock_init_component")
 async def test_extended_thinking_tool_call(
@@ -3569,15 +4006,6 @@ async def test_pause_turn_followed_by_local_tool(
                 conversation.chat_log.AssistantContent(
                     agent_id="conversation.claude_conversation",
                     content="To get today's news, I'll perform a web search",
-                    thinking_content=(
-                        "The user is asking about today's news,"
-                        " which requires current, real-time"
-                        " information. This is clearly something"
-                        " that requires recent information beyond"
-                        " my knowledge cutoff. I should use the"
-                        " web_search tool to find today's news."
-                    ),
-                    native=ContentDetails(thinking_signature="ErU/V+ayA=="),
                     tool_calls=[
                         llm.ToolInput(
                             id="srvtoolu_12345ABC",
@@ -3676,8 +4104,6 @@ async def test_pause_turn_followed_by_local_tool(
                 conversation.chat_log.AssistantContent(
                     agent_id="conversation.claude_conversation",
                     content="Sure, let me check that for you!",
-                    thinking_content="I need to use the web_fetch tool to fetch the latest release notes from the Home Assistant website.",
-                    native=ContentDetails(thinking_signature="ErU/V+ayA=="),
                     tool_calls=[
                         llm.ToolInput(
                             id="srvtoolu_12345ABC",
@@ -3780,7 +4206,6 @@ async def test_pause_turn_followed_by_local_tool(
                 conversation.chat_log.UserContent("Set humidity to 50%"),
                 conversation.chat_log.AssistantContent(
                     agent_id="conversation.claude_conversation",
-                    thinking_content="Let me search for a tool to set humidity.",
                     tool_calls=[
                         llm.ToolInput(
                             tool_name="tool_search_tool_bm25",
@@ -3789,7 +4214,6 @@ async def test_pause_turn_followed_by_local_tool(
                             external=True,
                         )
                     ],
-                    native=ContentDetails(thinking_signature="EuQBClkIDBE="),
                 ),
                 conversation.chat_log.ToolResultContent(
                     agent_id="conversation.claude_conversation",
@@ -3949,7 +4373,7 @@ def test_convert_content_whitespace_with_attachments() -> None:
     )
 
     # Not the last entry: dropped, surrounding user messages are combined
-    messages, _ = _convert_content(
+    messages, _, _ = _convert_content(
         [
             conversation.chat_log.UserContent("Take a look"),
             conversation.chat_log.UserContent(" ", attachments=[attachment]),
@@ -3968,7 +4392,7 @@ def test_convert_content_whitespace_with_attachments() -> None:
 
     # Last entry preceded by a user message: no text block is added, the
     # attachments are appended to the preceding message afterwards
-    messages, _ = _convert_content(
+    messages, _, _ = _convert_content(
         [
             conversation.chat_log.UserContent("Take a look"),
             conversation.chat_log.UserContent(" ", attachments=[attachment]),
@@ -3980,7 +4404,7 @@ def test_convert_content_whitespace_with_attachments() -> None:
 
     # Last entry with no preceding user message: an empty message is created
     # for the attachments to be appended to afterwards
-    messages, _ = _convert_content(
+    messages, _, _ = _convert_content(
         [
             conversation.chat_log.UserContent(" ", attachments=[attachment]),
         ]

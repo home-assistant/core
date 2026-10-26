@@ -4,6 +4,7 @@ import base64
 from collections import deque
 from collections.abc import AsyncIterator, Callable, Iterable
 from dataclasses import dataclass, field
+from hashlib import sha256
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
@@ -101,7 +102,7 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
-from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.json import json_bytes_sorted, json_dumps
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
@@ -176,6 +177,7 @@ class ContentDetails:
     redacted_thinking: str | None = None
     container: Container | None = None
     message_id: str | None = None
+    prefix_hash: str | None = None
 
     def has_content(self) -> bool:
         """Check if there is any text content."""
@@ -188,6 +190,7 @@ class ContentDetails:
             or self.redacted_thinking is not None
             or self.container is not None
             or self.message_id is not None
+            or self.prefix_hash is not None
             or self.has_citations()
         )
 
@@ -222,13 +225,63 @@ class ContentDetails:
         ]
 
 
+type AnthropicTool = (
+    ToolParam
+    | CodeExecutionTool20250825Param
+    | WebSearchTool20250305Param
+    | WebSearchTool20260209Param
+    | WebFetchTool20250910Param
+    | WebFetchTool20260209Param
+    | ToolSearchToolBm25_20251119Param
+)
+
+
 def _convert_content(  # noqa: C901
     chat_content: Iterable[conversation.Content],
-) -> tuple[list[MessageParam], str | None]:
+    *,
+    system: str | None = None,
+    tools: Iterable[AnthropicTool] = (),
+) -> tuple[list[MessageParam], str | None, str | None]:
     """Transform HA chat_log content into Anthropic API format."""
     messages: list[MessageParam] = []
     container_id: str | None = None
     contents = list(chat_content)
+    updated_prefix_hash: str | None = None
+    thinking_start = 0
+
+    if system is not None:
+        prefix_hash = sha256(
+            json_bytes_sorted(
+                {
+                    "system": system,
+                    "tools": [
+                        {
+                            key: value
+                            for key, value in tool.items()
+                            if key != "cache_control"
+                        }
+                        for tool in sorted(tools, key=lambda tool: tool["name"])
+                    ],
+                }
+            )
+        ).hexdigest()
+        previous_prefix_hash: str | None = None
+        for index, content in enumerate(contents):
+            if (
+                isinstance(content, conversation.AssistantContent)
+                and isinstance(content.native, ContentDetails)
+                and content.native.prefix_hash is not None
+                and content.native.prefix_hash != previous_prefix_hash
+            ):
+                previous_prefix_hash = content.native.prefix_hash
+                thinking_start = index
+
+        # Earlier thinking stays excluded even if the prefix changes back.
+        if previous_prefix_hash != prefix_hash:
+            thinking_start = len(contents)
+            updated_prefix_hash = prefix_hash
+
+    removed_blocks = 0
 
     for index, content in enumerate(contents):
         if isinstance(content, conversation.ToolResultContent):
@@ -354,7 +407,11 @@ def _convert_content(  # noqa: C901
                 ]
 
             if isinstance(content.native, ContentDetails):
-                if content.native.thinking_signature:
+                if index < thinking_start:
+                    removed_blocks += bool(content.native.thinking_signature) + bool(
+                        content.native.redacted_thinking
+                    )
+                elif content.native.thinking_signature:
                     messages[-1]["content"].append(  # type: ignore[union-attr]
                         ThinkingBlockParam(
                             type="thinking",
@@ -362,7 +419,7 @@ def _convert_content(  # noqa: C901
                             signature=content.native.thinking_signature,
                         )
                     )
-                if content.native.redacted_thinking:
+                if index >= thinking_start and content.native.redacted_thinking:
                     messages[-1]["content"].append(  # type: ignore[union-attr]
                         RedactedThinkingBlockParam(
                             type="redacted_thinking",
@@ -475,7 +532,13 @@ def _convert_content(  # noqa: C901
                 translation_placeholders={"type": type(content).__name__},
             )
 
-    return messages, container_id
+    if removed_blocks:
+        LOGGER.debug(
+            "Removed %s thinking blocks from the request after a system prompt or tools change",
+            removed_blocks,
+        )
+
+    return messages, container_id, updated_prefix_hash
 
 
 class AnthropicDeltaStream:
@@ -510,13 +573,16 @@ class AnthropicDeltaStream:
     Each message could contain multiple blocks of the same type.
     """
 
-    def __init__(self, stream: AsyncStream[MessageStreamEvent]) -> None:
+    def __init__(
+        self, stream: AsyncStream[MessageStreamEvent], prefix_hash: str | None = None
+    ) -> None:
         """Initialize the delta stream."""
         if not hasattr(stream, "__aiter__"):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unexpected_stream_object"
             )
         self._stream: AsyncStream[MessageStreamEvent] = stream
+        self.prefix_hash = prefix_hash
         self.message_id: str | None = None
         self.stop_reason: StopReason | None = None
         self.tool_args_error: json.JSONDecodeError | None = None
@@ -671,9 +737,7 @@ class AnthropicDeltaStream:
                 and self._content_details.has_content()
             )
         ):
-            if self._content_details:
-                self._content_details.delete_empty()
-                self._buffer.append({"native": self._content_details})
+            self._flush_content_details()
             self._content_details = ContentDetails()
             self._buffer.append({"role": "assistant"})
             self._first_block = False
@@ -685,9 +749,7 @@ class AnthropicDeltaStream:
     def on_thinking_block(self, thinking: str, signature: str) -> None:
         """Handle ThinkingBlock."""
         if self._first_block or self._content_details.thinking_signature:
-            if self._content_details:
-                self._content_details.delete_empty()
-                self._buffer.append({"native": self._content_details})
+            self._flush_content_details()
             self._content_details = ContentDetails()
             self._content_details.add_citation_detail()
             self._buffer.append({"role": "assistant"})
@@ -701,9 +763,7 @@ class AnthropicDeltaStream:
             "responses"
         )
         if self._first_block or self._content_details.redacted_thinking:
-            if self._content_details:
-                self._content_details.delete_empty()
-                self._buffer.append({"native": self._content_details})
+            self._flush_content_details()
             self._content_details = ContentDetails()
             self._content_details.add_citation_detail()
             self._buffer.append({"role": "assistant"})
@@ -754,9 +814,7 @@ class AnthropicDeltaStream:
         caller: Caller | None,
     ) -> None:
         """Handle various server tool result blocks."""
-        if self._content_details:
-            self._content_details.delete_empty()
-            self._buffer.append({"native": self._content_details})
+        self._flush_content_details()
         self._content_details = ContentDetails()
         self._content_details.add_citation_detail()
         self._buffer.append(
@@ -866,11 +924,18 @@ class AnthropicDeltaStream:
             self._buffer.append({"role": "assistant", "content": ""})
         if self._has_content or self.stop_reason == "end_turn":
             self._content_details.message_id = self.message_id
-        if self._content_details:
-            self._content_details.delete_empty()
-            self._buffer.append({"native": self._content_details})
+        self._flush_content_details()
         self._content_details = ContentDetails()
         self._content_details.add_citation_detail()
+
+    def _flush_content_details(self) -> None:
+        """Emit native data, recording a prefix change on its first occurrence."""
+        if not self._content_details:
+            return
+        self._content_details.prefix_hash = self.prefix_hash
+        self.prefix_hash = None
+        self._content_details.delete_empty()
+        self._buffer.append({"native": self._content_details})
 
     def trace_usage(self, chat_log: conversation.ChatLog) -> None:
         """Trace accumulated response usage and cache diagnostics."""
@@ -934,7 +999,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         self,
         chat_log: conversation.ChatLog,
         structure: probatio.Schema | None = None,
-    ) -> MessageCreateParamsStreaming:
+    ) -> tuple[MessageCreateParamsStreaming, str | None]:
         """Get the model arguments."""
         options: dict[str, Any] = DEFAULT | self.subentry.data
         reconcile_model_options(options, self.model_info)
@@ -954,17 +1019,14 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 translation_domain=DOMAIN, translation_key="system_message_not_found"
             )
 
-        messages, container_id = _convert_content(chat_log.content[1:])
-
         model = options[CONF_CHAT_MODEL]
 
         model_args: MessageCreateParamsStreaming = {
             "model": model,
-            "messages": messages,
+            "messages": [],
             "max_tokens": options[CONF_MAX_TOKENS],
             "system": system.content,
             "stream": True,
-            "container": container_id,
         }
 
         if options[CONF_PROMPT_CACHING] != PromptCaching.OFF:
@@ -1014,15 +1076,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         if effort := options.get(CONF_EFFORT):
             model_args["output_config"] = OutputConfigParam(effort=effort)
 
-        tools: list[
-            ToolParam
-            | CodeExecutionTool20250825Param
-            | WebSearchTool20250305Param
-            | WebSearchTool20260209Param
-            | WebFetchTool20250910Param
-            | WebFetchTool20260209Param
-            | ToolSearchToolBm25_20251119Param
-        ] = []
+        tools: list[AnthropicTool] = []
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
@@ -1098,26 +1152,6 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     )
                 )
 
-        # Handle attachments by adding them to the last user message
-        last_content = chat_log.content[-1]
-        if last_content.role == "user" and last_content.attachments:
-            last_message = messages[-1]
-            if last_message["role"] != "user":
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="user_message_not_found"
-                )
-            if isinstance(last_message["content"], str):
-                last_message["content"] = [
-                    TextBlockParam(type="text", text=last_message["content"])
-                ]
-            last_message["content"].extend(  # type: ignore[union-attr]
-                await async_prepare_files_for_prompt(
-                    self.hass,
-                    self.model_info,
-                    [(a.path, a.mime_type) for a in last_content.attachments],
-                )
-            )
-
         if structure:
             model_args.setdefault("output_config", {})["format"] = (
                 JSONOutputFormatParam(
@@ -1151,7 +1185,32 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
             model_args["tools"] = tools
 
-        return model_args
+        messages, model_args["container"], prefix_hash = _convert_content(
+            chat_log.content[1:], system=system.content, tools=tools
+        )
+        model_args["messages"] = messages
+
+        # Handle attachments by adding them to the last user message
+        last_content = chat_log.content[-1]
+        if last_content.role == "user" and last_content.attachments:
+            last_message = messages[-1]
+            if last_message["role"] != "user":
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="user_message_not_found"
+                )
+            if isinstance(last_message["content"], str):
+                last_message["content"] = [
+                    TextBlockParam(type="text", text=last_message["content"])
+                ]
+            last_message["content"].extend(  # type: ignore[union-attr]
+                await async_prepare_files_for_prompt(
+                    self.hass,
+                    self.model_info,
+                    [(a.path, a.mime_type) for a in last_content.attachments],
+                )
+            )
+
+        return model_args, prefix_hash
 
     async def _async_handle_chat_log(
         self,
@@ -1160,7 +1219,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
-        model_args = await self._get_model_args(chat_log, structure)
+        model_args, prefix_hash = await self._get_model_args(chat_log, structure)
         coordinator = self.entry.runtime_data
         client = coordinator.client
 
@@ -1168,11 +1227,11 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         for iteration in range(max_iterations):
             try:
                 stream = await client.messages.create(**model_args)
-                delta_stream = AnthropicDeltaStream(stream)
+                delta_stream = AnthropicDeltaStream(stream, prefix_hash)
 
                 try:
                     async with stream:
-                        new_messages, model_args["container"] = _convert_content(
+                        new_messages, model_args["container"], _ = _convert_content(
                             [
                                 content
                                 async for content in chat_log.async_add_delta_content_stream(
@@ -1180,6 +1239,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                                 )
                             ]
                         )
+                        prefix_hash = delta_stream.prefix_hash
                 finally:
                     delta_stream.trace_usage(chat_log)
                 cast(list[MessageParam], model_args["messages"]).extend(new_messages)

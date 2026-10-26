@@ -25,6 +25,8 @@ from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from anthropic.types.raw_message_delta_event import Delta
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.anthropic.const import (
     DEFAULT_AI_TASK_NAME,
@@ -38,6 +40,12 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import model_list
+
+
+@pytest.fixture
+def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
+    """Keep internal prompt fingerprints out of snapshots."""
+    return snapshot.with_defaults(exclude=props("prefix_hash"))
 
 
 @pytest.fixture

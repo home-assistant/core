@@ -1215,11 +1215,6 @@
     dict({
       'content': list([
         dict({
-          'signature': 'ErU/V+ayA==',
-          'thinking': "The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
-          'type': 'thinking',
-        }),
-        dict({
           'text': "To get today's news, I'll perform a web search",
           'type': 'text',
         }),
@@ -1326,11 +1321,6 @@
     }),
     dict({
       'content': list([
-        dict({
-          'signature': 'ErU/V+ayA==',
-          'thinking': 'I need to use the web_fetch tool to fetch the latest release notes from the Home Assistant website.',
-          'type': 'thinking',
-        }),
         dict({
           'text': 'Sure, let me check that for you!',
           'type': 'text',
@@ -1466,11 +1456,6 @@
     }),
     dict({
       'content': list([
-        dict({
-          'signature': 'EuQBClkIDBE=',
-          'thinking': 'Let me search for a tool to set humidity.',
-          'type': 'thinking',
-        }),
         dict({
           'id': 'srvtoolu_015vXmtZNASLa7n9RsoDfcBC',
           'input': dict({
@@ -3878,6 +3863,961 @@
         }),
       ]),
       'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_thinking_prefix_changes[never_restore_old_thinking]
+  list([
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+    ]),
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+      dict({
+        'content': 'Fresh answer',
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+    ]),
+  ])
+# ---
+# name: test_thinking_prefix_changes[retain_fresh_thinking]
+  list([
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+    ]),
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+            'thinking': 'Fresh thought',
+            'type': 'thinking',
+          }),
+          dict({
+            'data': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
+            'type': 'redacted_thinking',
+          }),
+          dict({
+            'text': 'Fresh answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+    ]),
+  ])
+# ---
+# name: test_thinking_prefix_changes[unchanged_prefix]
+  list([
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+            'thinking': 'Old thought',
+            'type': 'thinking',
+          }),
+          dict({
+            'data': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
+            'type': 'redacted_thinking',
+          }),
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+    ]),
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+            'thinking': 'Old thought',
+            'type': 'thinking',
+          }),
+          dict({
+            'data': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
+            'type': 'redacted_thinking',
+          }),
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+            'thinking': 'Fresh thought',
+            'type': 'thinking',
+          }),
+          dict({
+            'data': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
+            'type': 'redacted_thinking',
+          }),
+          dict({
+            'text': 'Fresh answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+    ]),
+  ])
+# ---
+# name: test_thinking_prefix_reset_tool_loop
+  list([
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Call the test tool',
+        'role': 'user',
+      }),
+    ]),
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Call the test tool',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+            'thinking': 'Fresh thought',
+            'type': 'thinking',
+          }),
+          dict({
+            'data': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
+            'type': 'redacted_thinking',
+          }),
+          dict({
+            'id': 'toolu_fresh',
+            'input': dict({
+            }),
+            'name': 'test_tool',
+            'type': 'tool_use',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'content': '"Test response"',
+            'is_error': False,
+            'tool_use_id': 'toolu_fresh',
+            'type': 'tool_result',
+          }),
+        ]),
+        'role': 'user',
+      }),
+    ]),
+  ])
+# ---
+# name: test_thinking_prefix_shared_agents
+  list([
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+    ]),
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+      dict({
+        'content': 'Other answer',
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+    ]),
+  ])
+# ---
+# name: test_thinking_prefix_tools_change
+  list([
+    dict({
+      'content': 'Start',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'id': 'srvtoolu_prefix',
+          'input': dict({
+            'query': 'old answer',
+          }),
+          'name': 'web_search',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': list([
+            dict({
+              'encrypted_content': 'old_search_result',
+              'title': 'Example',
+              'type': 'web_search_result',
+              'url': 'https://example.com',
+            }),
+          ]),
+          'tool_use_id': 'srvtoolu_prefix',
+          'type': 'web_search_tool_result',
+        }),
+        dict({
+          'citations': list([
+            dict({
+              'cited_text': 'Old answer',
+              'encrypted_index': 'old_index',
+              'title': 'Example',
+              'type': 'web_search_result_location',
+              'url': 'https://example.com',
+            }),
+          ]),
+          'text': 'Old answer',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': 'Continue',
+      'role': 'user',
+    }),
+  ])
+# ---
+# name: test_thinking_prefix_unknown_history
+  list([
+    dict({
+      'content': 'Start',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'id': 'srvtoolu_prefix',
+          'input': dict({
+            'query': 'old answer',
+          }),
+          'name': 'web_search',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': list([
+            dict({
+              'encrypted_content': 'old_search_result',
+              'title': 'Example',
+              'type': 'web_search_result',
+              'url': 'https://example.com',
+            }),
+          ]),
+          'tool_use_id': 'srvtoolu_prefix',
+          'type': 'web_search_tool_result',
+        }),
+        dict({
+          'citations': list([
+            dict({
+              'cited_text': 'Old answer',
+              'encrypted_index': 'old_index',
+              'title': 'Example',
+              'type': 'web_search_result_location',
+              'url': 'https://example.com',
+            }),
+          ]),
+          'text': 'Old answer',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': 'Continue',
+      'role': 'user',
+    }),
+  ])
+# ---
+# name: test_thinking_prefix_changes[retain_latest_matching_epoch]
+  list([
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+    ]),
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+      dict({
+        'content': 'Fresh answer',
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+    ]),
+    list([
+      dict({
+        'content': 'Start',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'id': 'srvtoolu_prefix',
+            'input': dict({
+              'query': 'old answer',
+            }),
+            'name': 'web_search',
+            'type': 'server_tool_use',
+          }),
+          dict({
+            'content': list([
+              dict({
+                'encrypted_content': 'old_search_result',
+                'title': 'Example',
+                'type': 'web_search_result',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'tool_use_id': 'srvtoolu_prefix',
+            'type': 'web_search_tool_result',
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Old answer',
+                'encrypted_index': 'old_index',
+                'title': 'Example',
+                'type': 'web_search_result_location',
+                'url': 'https://example.com',
+              }),
+            ]),
+            'text': 'Old answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+      dict({
+        'content': 'Fresh answer',
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+            'thinking': 'Latest thought',
+            'type': 'thinking',
+          }),
+          dict({
+            'data': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
+            'type': 'redacted_thinking',
+          }),
+          dict({
+            'text': 'Latest answer',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+      dict({
+        'content': 'Continue',
+        'role': 'user',
+      }),
+    ]),
+  ])
+# ---
+# name: test_thinking_prefix_interrupted_stream
+  list([
+    dict({
+      'content': 'Start',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'id': 'srvtoolu_prefix',
+          'input': dict({
+            'query': 'old answer',
+          }),
+          'name': 'web_search',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': list([
+            dict({
+              'encrypted_content': 'old_search_result',
+              'title': 'Example',
+              'type': 'web_search_result',
+              'url': 'https://example.com',
+            }),
+          ]),
+          'tool_use_id': 'srvtoolu_prefix',
+          'type': 'web_search_tool_result',
+        }),
+        dict({
+          'citations': list([
+            dict({
+              'cited_text': 'Old answer',
+              'encrypted_index': 'old_index',
+              'title': 'Example',
+              'type': 'web_search_result_location',
+              'url': 'https://example.com',
+            }),
+          ]),
+          'text': 'Old answer',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Continue under B',
+          'type': 'text',
+        }),
+        dict({
+          'text': 'Return to A',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'user',
     }),
   ])
 # ---
