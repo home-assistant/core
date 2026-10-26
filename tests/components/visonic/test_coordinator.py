@@ -5,14 +5,15 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from datetime import timedelta
 import logging
 from typing import cast
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from pyvisonicalarm.alarm import AlarmSystem, PanelState as CloudPanelState
-from pyvisonicalarm.classes import Status
+from pyvisonicalarm.classes import Partition, Status
+from pyvisonicalarm.devices import PanelDevice
 from pyvisonicalarm.exceptions import ConnectionTimeoutError, UnauthorizedError
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
@@ -842,6 +843,88 @@ async def test_pushed_session_renewal_failure_and_recovery(
         assert coordinator.data.connected
         assert listener.call_count == 2
         reauth.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_device_conversion_failure_preserves_faults_and_recovers(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A failed conversion makes the entity unavailable without clearing faults."""
+    entry = create_mock_config_entry(data={CONF_TYPE: DeviceType.CLOUD})
+    entry.add_to_hass(hass)
+    alarm = MagicMock(spec=AlarmSystem)
+    alarm.get_panel_state.return_value = CloudPanelState(
+        status=Status({"connected": True}),
+        connected=True,
+        partitions=(Partition({"id": 1, "state": "DISARM", "status": ""}),),
+        devices=(
+            PanelDevice(
+                {
+                    "low_battery": "true",
+                    "tamper": "true",
+                    "trouble": "communication failure",
+                }
+            ),
+        ),
+    )
+
+    async def connect(connection: VisonicCloudConnection) -> bool:
+        connection.cloud_alarm = alarm
+        connection.login_success = True
+        return True
+
+    with patch.object(
+        VisonicCloudConnection,
+        "async_panel_connect",
+        autospec=True,
+        side_effect=connect,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data.coordinator
+    snapshot = coordinator.data
+    entity_id = "alarm_control_panel.visonic_alarm_p1"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == AlarmControlPanelState.DISARMED
+    assert state.attributes["battery_level"] == 0
+    assert state.attributes["tamper"] is True
+    assert state.attributes["trouble"] == "communication failure"
+
+    error = ValueError("malformed panel device")
+    with patch.object(
+        PanelDevice, "tamper", new_callable=PropertyMock, side_effect=error
+    ):
+        freezer.tick(timedelta(seconds=21))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.__cause__ is error
+    assert coordinator.data is snapshot
+    assert snapshot.panelstate is not None
+    assert snapshot.panelstate.battery_level == 0
+    assert snapshot.panelstate.tamper is True
+    assert snapshot.panelstate.trouble == "communication failure"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    freezer.tick(timedelta(seconds=21))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == AlarmControlPanelState.DISARMED
+    assert state.attributes["battery_level"] == 0
+    assert state.attributes["tamper"] is True
+    assert state.attributes["trouble"] == "communication failure"
+    assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_cloud_panel_setup_from_snapshot(

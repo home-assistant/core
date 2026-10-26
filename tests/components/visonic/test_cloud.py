@@ -629,20 +629,18 @@ def setup_cloud_integration_full_connection(
     return _setup
 
 
-def test_process_devices_recovers_from_invalid_device(
-    cloud: VisonicCloudConnection, caplog: pytest.LogCaptureFixture
+def test_process_devices_propagates_invalid_device(
+    cloud: VisonicCloudConnection,
 ) -> None:
-    """Fall back to default panel data if reading a panel device fails."""
-    with patch(
-        "homeassistant.components.visonic.cloud.to_bool",
-        side_effect=RuntimeError("malformed panel device"),
+    """A failed conversion must not return apparently healthy panel data."""
+    with (
+        patch(
+            "homeassistant.components.visonic.cloud.to_bool",
+            side_effect=RuntimeError("malformed panel device"),
+        ),
+        pytest.raises(RuntimeError, match="malformed panel device"),
     ):
-        state = cloud.process_devices([PanelDevice({})])
-
-    assert state.battery_level == 100
-    assert state.tamper is False
-    assert "Exception in processing cloud device data" in caplog.text
-    assert "malformed panel device" in caplog.text
+        cloud.process_devices([PanelDevice({})])
 
 
 @pytest.mark.parametrize(

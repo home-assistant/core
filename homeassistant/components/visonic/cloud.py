@@ -5,7 +5,6 @@ from collections.abc import Sequence
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import traceback
 from typing import Any, override
 import uuid
 
@@ -466,28 +465,15 @@ class VisonicCloudConnection(VisonicConnection):
 
     def process_devices(self, devices: Sequence[Device]) -> PanelState:
         """Process the devices from the panel."""
-        try:
-            # Set default values, att
-            panelstate = PanelState(
-                emulationmode="cloud",
-                trouble="none",
-                battery_level=100,
-                tamper=False,
-            )
-            # In this version, only process the panel device
-            for device in devices:
-                if isinstance(device, PanelDevice):
-                    panel: PanelDevice = device
-                    panelstate.battery_level = 0 if panel.low_battery else 100
-                    panelstate.tamper = to_bool(panel.tamper)
-                    panelstate.trouble = panel.trouble
-            return panelstate  # noqa: TRY300
-        except Exception as ex:  # noqa: BLE001
-            tb_str = "".join(traceback.format_exception(type(ex), ex, ex.__traceback__))
-            LOGGER.error("Exception in processing cloud device data. %s", tb_str)
-        return PanelState(
+        panelstate = PanelState(
             emulationmode="cloud",
             trouble="none",
             battery_level=100,
             tamper=False,
         )
+        for device in devices:
+            if isinstance(device, PanelDevice):
+                panelstate.battery_level = 0 if device.low_battery else 100
+                panelstate.tamper = to_bool(device.tamper)
+                panelstate.trouble = device.trouble
+        return panelstate
