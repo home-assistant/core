@@ -765,13 +765,18 @@
       'username': '**REDACTED**',
     }),
     'settings': dict({
+      'address': '**REDACTED**',
+      'available_ssids': '**REDACTED**',
+      'city': '**REDACTED**',
       'homee_name': 'TestHomee',
       'latitude': '**REDACTED**',
       'longitude': '**REDACTED**',
       'mac_address': '00:05:55:11:ee:cc',
       'uid': '00055511EECC',
       'version': '1.2.3',
+      'webhooks_key': '**REDACTED**',
       'wlan_ssid': '**REDACTED**',
+      'zip': '**REDACTED**',
     }),
   })
 # ---

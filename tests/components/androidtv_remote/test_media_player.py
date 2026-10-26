@@ -4,14 +4,13 @@ from unittest.mock import MagicMock, call
 
 from androidtvremote2 import ConnectionClosed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 MEDIA_PLAYER_ENTITY = "media_player.my_android_tv"
 
@@ -359,6 +358,7 @@ async def test_browse_media(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "not_shown": 0,
         "children": [
@@ -371,6 +371,7 @@ async def test_browse_media(
                 "can_play": False,
                 "can_expand": False,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": "https://www.youtube.com/icon.png",
             },
             {
@@ -382,6 +383,7 @@ async def test_browse_media(
                 "can_play": False,
                 "can_expand": False,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": "",
             },
         ],

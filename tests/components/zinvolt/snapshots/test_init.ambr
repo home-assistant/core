@@ -26,7 +26,7 @@
     'name_by_user': None,
     'serial_number': 'BAT002',
     'sw_version': 'V1.20',
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('zinvolt', 'ZVG011025120088')]>,
   })
 # ---
 # name: test_device[ZVG011025120088]

@@ -1,8 +1,10 @@
 {
   "domain": "fronius",
   "name": "Fronius",
+  "categories": ["energy.solar_batteries", "energy.meters_monitoring"],
   "codeowners": ["@farmio"],
   "config_flow": true,
+  "dependencies": ["modbus"],
   "dhcp": [
     {
       "macaddress": "0003AC*"
@@ -11,7 +13,7 @@
   "documentation": "https://www.home-assistant.io/integrations/fronius",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["pyfronius"],
+  "loggers": ["fronius_modbus", "fronius_solarapi", "modbus_connection"],
   "quality_scale": "platinum",
-  "requirements": ["PyFronius==0.8.2"]
+  "requirements": ["fronius-modbus==0.2.0", "fronius-solarapi==0.1.0"]
 }

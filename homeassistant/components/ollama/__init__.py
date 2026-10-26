@@ -4,7 +4,7 @@ import asyncio
 import logging
 from types import MappingProxyType
 
-import httpx
+import httpx2
 import ollama
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -65,7 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> None:
     """Set up Ollama from a config entry."""
     settings = {**entry.data, **entry.options}
     api_key = settings.get(CONF_API_KEY)
@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
         # in the UI, instead of ConfigEntryNotReady which would
         # just keep retrying.
         raise ConfigEntryError(err) from err
-    except (TimeoutError, httpx.ConnectError, ConnectionError) as err:
+    except (TimeoutError, httpx2.ConnectError, ConnectionError) as err:
         raise ConfigEntryNotReady(err) from err
 
     entry.runtime_data = client
@@ -101,14 +101,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload Ollama."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
-    return True
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_options(hass: HomeAssistant, entry: OllamaConfigEntry) -> None:
@@ -161,8 +157,8 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             DOMAIN,
             entry.entry_id,
         )
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, entry.entry_id)}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, entry.entry_id), entry.entry_id
         )
 
         if conversation_entity_id is not None:
@@ -221,22 +217,14 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> None:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
     if entry.version == 2 and entry.minor_version == 1:
-        # Correct broken device migration in Home Assistant Core 2025.7.0b0-2025.7.0b1
-        device_registry = dr.async_get(hass)
-        for device in dr.async_entries_for_config_entry(
-            device_registry, entry.entry_id
-        ):
-            device_registry.async_update_device(
-                device.id,
-                remove_config_entry_id=entry.entry_id,
-                remove_config_subentry_id=None,
-            )
-
+        # Devices left in both the config entry and its subentry by Home Assistant Core
+        # 2025.7.0b0-2025.7.0b1 are collapsed onto the subentry by the device registry
+        # migration, so there's nothing to correct here.
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     if entry.version == 2 and entry.minor_version == 2:
@@ -297,8 +285,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> 
     _LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
     )
-
-    return True
 
 
 def _add_ai_task_subentry(hass: HomeAssistant, entry: OllamaConfigEntry) -> None:

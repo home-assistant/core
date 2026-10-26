@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from bleak.backends.device import BLEDevice
 from motionblindsble.const import DISPLAY_NAME, SETTING_DISCONNECT_TIME, MotionBlindType
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -36,7 +36,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_MAC_CODE): str})
+CONFIG_SCHEMA = probatio.Schema({probatio.Required(CONF_MAC_CODE): str})
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -121,9 +121,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_BLIND_TYPE): SelectSelector(
+                    probatio.Required(CONF_BLIND_TYPE): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 blind_type.name.lower()
@@ -200,9 +200,9 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         OPTION_PERMANENT_CONNECTION,
                         default=(
                             self.config_entry.options.get(
@@ -210,14 +210,14 @@ class OptionsFlowHandler(OptionsFlow):
                             )
                         ),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         OPTION_DISCONNECT_TIME,
                         default=(
                             self.config_entry.options.get(
                                 OPTION_DISCONNECT_TIME, SETTING_DISCONNECT_TIME
                             )
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    ): probatio.All(probatio.Coerce(int), probatio.Range(min=0)),
                 }
             ),
         )

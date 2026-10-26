@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "dali_line_status": {
+        "default": "mdi:current-ac"
+      }
+    }
+  }
+}

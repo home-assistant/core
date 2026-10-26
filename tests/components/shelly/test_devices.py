@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_2PM_G3, MODEL_BLU_GATEWAY_G3, MODEL_PRO_EM3
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.shelly.const import (
@@ -15,9 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import force_uptime_value, init_integration, snapshot_device_entities
-
-from tests.common import async_load_json_object_fixture
+from . import MOCK_MAC, force_uptime_value, init_integration, snapshot_device_entities
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -473,12 +472,21 @@ async def test_shelly_pro_3em_with_emeter_name(
     assert device_entry.name == "Test name Phase C"
 
 
+@pytest.mark.parametrize(
+    "initialized",
+    [
+        pytest.param(True, id="initialized"),
+        # Device reconnecting during setup keeps the last known config
+        pytest.param(False, id="reinitializing"),
+    ],
+)
 async def test_shelly_fk_06x_with_zone_names(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    initialized: bool,
 ) -> None:
     """Test Shelly Irrigation controller FK-06X with zone names.
 
@@ -490,6 +498,7 @@ async def test_shelly_fk_06x_with_zone_names(
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
     monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+    monkeypatch.setattr(mock_rpc_device, "initialized", initialized)
 
     await init_integration(hass, gen=3, model=MODEL_FRANKEVER_IRRIGATION_CONTROLLER)
 
@@ -579,7 +588,7 @@ async def test_blu_trv_device_info(
     device_registry: DeviceRegistry,
 ) -> None:
     """Test BLU TRV device info."""
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+    config_entry = await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     entry = entity_registry.async_get("climate.trv_name")
     assert entry
@@ -590,6 +599,12 @@ async def test_blu_trv_device_info(
     assert device_entry.model_id == "SBTR-001AEU"
     assert device_entry.sw_version == "v1.2.10"
 
+    gateway_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_MAC), config_entry.entry_id
+    )
+    assert gateway_device_entry
+    assert device_entry.via_device_id == gateway_device_entry.id
+
 
 @pytest.mark.parametrize(
     "fixture",
@@ -598,6 +613,7 @@ async def test_blu_trv_device_info(
         "duo_bulb_gen3",
         "power_strip_gen4",
         "presence_gen4",
+        "pro1cb_gen2",
         "wall_display_xl",
     ],
 )

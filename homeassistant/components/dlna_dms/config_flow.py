@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 from urllib.parse import urlparse
 
 from async_upnp_client.profiles.dlna import DmsDevice
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -67,7 +67,9 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
             host: f"{discovery.upnp.get(ATTR_UPNP_FRIENDLY_NAME)} ({host})"
             for host, discovery in self._discoveries.items()
         }
-        data_schema = vol.Schema({vol.Optional(CONF_HOST): vol.In(discovery_choices)})
+        data_schema = probatio.Schema(
+            {probatio.Optional(CONF_HOST): probatio.In(discovery_choices)}
+        )
         return self.async_show_form(step_id="user", data_schema=data_schema)
 
     @override

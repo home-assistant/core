@@ -1,0 +1,11 @@
+{
+  "id": "dev_camera_001",
+  "name": "Front Door Camera",
+  "type": "camera",
+  "model": "XT-CM100",
+  "version": "1.0.0",
+  "online": true,
+  "status": {
+    "snapshot_url": "https://example.com/snapshot.jpg"
+  }
+}

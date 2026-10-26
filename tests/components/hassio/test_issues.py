@@ -1,6 +1,6 @@
 """Test issues from supervisor issues."""
 
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 import os
 from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
@@ -24,6 +24,8 @@ from aiohasupervisor.models import (
     UnsupportedReason,
 )
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_fire_time_changed
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.hassio.const import DOMAIN, HASSIO_ISSUES_UPDATE_INTERVAL
 from homeassistant.components.hassio.coordinator import (
@@ -33,13 +35,11 @@ from homeassistant.components.hassio.coordinator import (
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir, system_state
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .test_init import MOCK_ENVIRON
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -378,6 +378,7 @@ async def test_reset_issues_supervisor_restart(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(uuid := uuid4()),
+                reference_extra=None,
             )
         ],
         suggestions_by_issue={
@@ -388,6 +389,7 @@ async def test_reset_issues_supervisor_restart(
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },
@@ -626,18 +628,21 @@ async def test_supervisor_issues(
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(uuid_issue1 := uuid4()),
+                reference_extra=None,
             ),
             Issue(
                 type=IssueType.MULTIPLE_DATA_DISKS,
                 context=ContextType.SYSTEM,
                 reference="/dev/sda1",
                 uuid=(uuid_issue2 := uuid4()),
+                reference_extra=None,
             ),
             Issue(
                 type="should_not_be_repair",
                 context=ContextType.OS,
                 reference=None,
                 uuid=uuid4(),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -648,6 +653,7 @@ async def test_supervisor_issues(
                     reference="/dev/sda1",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },
@@ -669,7 +675,7 @@ async def test_supervisor_issues(
         type_="detached_addon_missing",
         fixable=False,
         reference="test",
-        placeholders={"addon_url": "/hassio/addon/test", "addon": "test"},
+        placeholders={"addon_url": "/config/app/test", "addon": "test"},
     )
     assert_issue_repair_in_list(
         msg["result"]["issues"],
@@ -699,6 +705,7 @@ async def test_supervisor_issues_initial_failure(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(uuid := uuid4()),
+                reference_extra=None,
             )
         ],
         suggestions_by_issue={
@@ -709,6 +716,7 @@ async def test_supervisor_issues_initial_failure(
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },
@@ -753,12 +761,14 @@ async def test_supervisor_issues_add_remove(
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                     "suggestions": [
                         {
                             "uuid": uuid4().hex,
                             "type": "execute_reboot",
                             "context": "system",
                             "reference": None,
+                            "reference_extra": None,
                         }
                     ],
                 },
@@ -793,6 +803,7 @@ async def test_supervisor_issues_add_remove(
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -823,6 +834,7 @@ async def test_supervisor_issues_suggestions_fail(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=uuid4(),
+                reference_extra=None,
             )
         ],
     )
@@ -864,6 +876,7 @@ async def test_supervisor_remove_missing_issue_without_error(
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -887,6 +900,143 @@ async def test_system_is_not_ready(
     issues_coordinator = get_issues_info(hass)
     assert issues_coordinator is not None
     assert not issues_coordinator.issues
+
+
+@pytest.mark.parametrize(
+    "all_setup_requests", [{"include_addons": True}], indirect=True
+)
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_app_port_conflict_single(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for app port conflict with single execute_start suggestion."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "app_port_conflict",
+                    "context": "addon",
+                    "reference": "test",
+                    "reference_extra": {"port": 11443},
+                    "suggestions": [
+                        {
+                            "uuid": uuid4().hex,
+                            "type": "execute_start",
+                            "context": "addon",
+                            "reference": "test",
+                            "reference_extra": {"port": 11443},
+                        }
+                    ],
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="addon",
+        type_="app_port_conflict",
+        fixable=True,
+        placeholders={
+            "reference": "test",
+            "addon": "test",
+            "addon_url": "/config/app/test",
+            "port": "11443",
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "all_setup_requests", [{"include_addons": True}], indirect=True
+)
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_app_port_conflict_menu(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for app port conflict with two suggestions."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "app_port_conflict",
+                    "context": "addon",
+                    "reference": "test",
+                    "reference_extra": {"port": 11443},
+                    "suggestions": [
+                        {
+                            "uuid": uuid4().hex,
+                            "type": "execute_start",
+                            "context": "addon",
+                            "reference": "test",
+                            "reference_extra": {"port": 11443},
+                        },
+                        {
+                            "uuid": uuid4().hex,
+                            "type": "clear_port_config",
+                            "context": "addon",
+                            "reference": "test",
+                            "reference_extra": {"port": 11443},
+                        },
+                    ],
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="addon",
+        type_="app_port_conflict",
+        fixable=True,
+        placeholders={
+            "reference": "test",
+            "addon": "test",
+            "addon_url": "/config/app/test",
+            "port": "11443",
+        },
+    )
 
 
 @pytest.mark.parametrize(
@@ -917,6 +1067,7 @@ async def test_supervisor_issues_detached_addon_missing(
                     "type": "detached_addon_missing",
                     "context": "addon",
                     "reference": "test",
+                    "reference_extra": None,
                 },
             },
         }
@@ -938,7 +1089,7 @@ async def test_supervisor_issues_detached_addon_missing(
         placeholders={
             "reference": "test",
             "addon": "test",
-            "addon_url": "/hassio/addon/test",
+            "addon_url": "/config/app/test",
         },
     )
 
@@ -968,12 +1119,14 @@ async def test_supervisor_issues_ntp_sync_failed(
                     "type": "ntp_sync_failed",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                     "suggestions": [
                         {
                             "uuid": uuid4().hex,
                             "type": "enable_ntp",
                             "context": "system",
                             "reference": None,
+                            "reference_extra": None,
                         }
                     ],
                 },
@@ -1023,6 +1176,7 @@ async def test_supervisor_issues_disk_lifetime(
                     "type": "disk_lifetime",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -1070,6 +1224,7 @@ async def test_supervisor_issues_free_space(
                     "type": "free_space",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -1124,6 +1279,7 @@ async def test_supervisor_issues_addon_pwned(
                     "type": "pwned",
                     "context": "addon",
                     "reference": "test",
+                    "reference_extra": None,
                 },
             },
         }
@@ -1145,7 +1301,7 @@ async def test_supervisor_issues_addon_pwned(
         placeholders={
             "reference": "test",
             "addon": "test",
-            "addon_url": "/hassio/addon/test",
+            "addon_url": "/config/app/test",
             "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
         },
     )
@@ -1192,6 +1348,7 @@ async def test_supervisor_issues_subscription_events(
                     "type": "should_not_be_repair",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -1212,6 +1369,7 @@ async def test_supervisor_issues_subscription_events(
                     "type": "should_not_be_repair",
                     "context": "system",
                     "reference": "updated",
+                    "reference_extra": None,
                 },
             },
         }
@@ -1232,6 +1390,7 @@ async def test_supervisor_issues_subscription_events(
                     "type": "should_not_be_repair",
                     "context": "system",
                     "reference": "updated",
+                    "reference_extra": None,
                 },
             },
         }
@@ -1258,6 +1417,7 @@ async def test_supervisor_issues_periodic_refresh_backstop(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=uuid4(),
+                reference_extra=None,
             )
         ],
     )
@@ -1274,6 +1434,59 @@ async def test_supervisor_issues_periodic_refresh_backstop(
     await hass.async_block_till_done()
 
     supervisor_client.resolution.info.assert_called_once()
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_issue_repair_recreated_when_registry_entry_missing(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a repair deleted from the registry is re-created for an unchanged issue.
+
+    A finished repair flow deletes the issue registry entry even when applying
+    the suggestion failed in Supervisor. The issue then comes back unchanged on
+    the next refresh and must be re-created instead of skipped as known.
+    """
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type=IssueType.MOUNT_FAILED,
+                context=ContextType.MOUNT,
+                reference="m1",
+                uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
+            )
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    SuggestionType.EXECUTE_RELOAD,
+                    context=ContextType.MOUNT,
+                    reference="m1",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                )
+            ]
+        },
+    )
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    assert issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_uuid.hex)
+
+    # Simulate a finished repair flow whose suggestion failed to apply in
+    # Supervisor: the registry entry is gone, the supervisor issue unchanged
+    ir.async_delete_issue(hass, DOMAIN, issue_uuid.hex)
+    assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_uuid.hex)
+
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_uuid.hex)
 
 
 @pytest.mark.usefixtures("all_setup_requests")
@@ -1300,6 +1513,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=issue_uuid,
+                reference_extra=None,
             )
         ],
         suggestions=[
@@ -1309,6 +1523,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
                 reference=None,
                 uuid=uuid4(),
                 auto=False,
+                reference_extra=None,
             )
         ],
         checks=[
@@ -1323,6 +1538,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
             reference=None,
             uuid=uuid4(),
             auto=False,
+            reference_extra=None,
         )
     ]
 
@@ -1353,6 +1569,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
                     "type": "should_not_be_repair",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -1362,8 +1579,8 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
     await hass.async_block_till_done()
     assert events == ["changed"]
 
-    await issues_coordinator.async_refresh()
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert events == ["changed", "changed"]
 
     unsubscribe()
@@ -1385,6 +1602,7 @@ async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=issue_uuid,
+                reference_extra=None,
             )
         ],
         suggestions_by_issue={
@@ -1395,6 +1613,7 @@ async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },
@@ -1411,8 +1630,8 @@ async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure
     assert issues_coordinator is not None
     assert len(issues_coordinator.issues) == 0
 
-    await issues_coordinator.async_refresh()
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert len(issues_coordinator.issues) == 1
 
 
@@ -1478,3 +1697,236 @@ async def test_supervisor_issues_unload_disconnects_listener(
     await hass.async_block_till_done()
     # unhealthy_reasons unchanged — listener did not fire.
     assert "docker" in issues.unhealthy_reasons
+
+
+def _reboot_required_event(event: str, issue_uuid: str) -> dict[str, Any]:
+    """Return a Supervisor event for a reboot required issue."""
+    return {
+        "type": "supervisor/event",
+        "data": {
+            "event": event,
+            "data": {
+                "uuid": issue_uuid,
+                "type": "reboot_required",
+                "context": "system",
+                "reference": None,
+                "reference_extra": None,
+                "suggestions": [
+                    {
+                        "uuid": uuid4().hex,
+                        "type": "execute_reboot",
+                        "context": "system",
+                        "reference": None,
+                        "reference_extra": None,
+                    }
+                ],
+            },
+        },
+    }
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_host_reboot_required(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the host reboot flag mirrors the Supervisor reboot issues."""
+    mock_resolution_info(supervisor_client)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_supervisor_ws_client()
+
+    assert not system_state.async_get(hass).host_reboot_required
+
+    # Supervisor raises one issue per cause, like an OS update and a swap change.
+    first_issue, second_issue = uuid4().hex, uuid4().hex
+    for event, issue_uuid, expected in (
+        ("issue_changed", first_issue, True),
+        ("issue_changed", second_issue, True),
+        ("issue_removed", first_issue, True),
+        ("issue_removed", second_issue, False),
+    ):
+        await client.send_json_auto_id(_reboot_required_event(event, issue_uuid))
+        assert (await client.receive_json())["success"]
+        await hass.async_block_till_done()
+
+        assert system_state.async_get(hass).host_reboot_required is expected
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_host_reboot_required_on_startup(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """Test a reboot issue already known to Supervisor sets the host reboot flag."""
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type=IssueType.REBOOT_REQUIRED,
+                context=ContextType.SYSTEM,
+                reference=None,
+                reference_extra=None,
+                uuid=(issue_uuid := uuid4()),
+            )
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    type=SuggestionType.EXECUTE_REBOOT,
+                    context=ContextType.SYSTEM,
+                    reference=None,
+                    reference_extra=None,
+                    uuid=uuid4(),
+                    auto=False,
+                )
+            ]
+        },
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert system_state.async_get(hass).host_reboot_required
+
+
+async def _poll_reasons(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    client: MockHAClientWebSocket,
+    unhealthy: list[str],
+) -> None:
+    """Report unhealthy reasons through a periodic poll."""
+    mock_resolution_info(supervisor_client, unhealthy=unhealthy)
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+
+async def _push_reasons(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    client: MockHAClientWebSocket,
+    unhealthy: list[str],
+) -> None:
+    """Report unhealthy reasons through a supervisor event."""
+    await client.send_json_auto_id(
+        {
+            "type": "supervisor/event",
+            "data": {
+                "event": "health_changed",
+                "data": {"healthy": False, "unhealthy_reasons": unhealthy},
+            },
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+@pytest.mark.parametrize(
+    "report_reasons",
+    [pytest.param(_poll_reasons, id="poll"), pytest.param(_push_reasons, id="push")],
+)
+async def test_unhealthy_issue_ignore_kept_on_update(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    report_reasons: Callable[
+        [HomeAssistant, AsyncMock, MockHAClientWebSocket, list[str]],
+        Awaitable[None],
+    ],
+) -> None:
+    """Test an ignored issue still valid is kept and a resolved one is deleted."""
+    mock_resolution_info(
+        supervisor_client, unhealthy=[UnhealthyReason.DOCKER, UnhealthyReason.SETUP]
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    client = await hass_supervisor_ws_client()
+
+    ir.async_ignore_issue(hass, DOMAIN, "unhealthy_system_docker", True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    await report_reasons(hass, supervisor_client, client, ["docker"])
+
+    issue = issue_registry.async_get_issue(DOMAIN, "unhealthy_system_docker")
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    assert issue_registry.async_get_issue(DOMAIN, "unhealthy_system_setup") is None
+    assert [event.data for event in events] == [
+        {"action": "remove", "domain": DOMAIN, "issue_id": "unhealthy_system_setup"}
+    ]
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_stale_persisted_reason_issues_deleted_on_first_update(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    supervisor_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test issues stored before a restart are deleted once their reason is gone."""
+    stored_issue = {
+        "config_entry_id": None,
+        "created": "2026-01-01T00:00:00+00:00",
+        "domain": DOMAIN,
+        "is_persistent": False,
+    }
+    hass_storage[ir.STORAGE_KEY] = {
+        "version": ir.STORAGE_VERSION_MAJOR,
+        "minor_version": ir.STORAGE_VERSION_MINOR,
+        "data": {
+            "issues": [
+                stored_issue
+                | {"issue_id": "unhealthy_system_docker", "dismissed_version": None},
+                stored_issue
+                | {"issue_id": "unhealthy_system_setup", "dismissed_version": "2026.1"},
+                stored_issue
+                | {"issue_id": "unsupported_system_os", "dismissed_version": None},
+                stored_issue | {"issue_id": "other_issue", "dismissed_version": None},
+            ]
+        },
+    }
+    # Simulate a restart: stored issues are loaded inactive until created again
+    await issue_registry.async_load()
+    mock_resolution_info(supervisor_client, unhealthy=[UnhealthyReason.SETUP])
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "unhealthy_system_docker") is None
+    assert issue_registry.async_get_issue(DOMAIN, "unsupported_system_os") is None
+    issue = issue_registry.async_get_issue(DOMAIN, "unhealthy_system_setup")
+    assert issue is not None
+    assert issue.active
+    assert issue.dismissed_version == "2026.1"
+    assert issue_registry.async_get_issue(DOMAIN, "other_issue") is not None
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_health_push_without_data_keeps_unsupported_issues(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    resolution_info: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a health push before any successful poll keeps unsupported issues."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "unsupported_system_os",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="unsupported_os",
+    )
+    resolution_info.side_effect = SupervisorBadRequestError("System is not ready")
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    client = await hass_supervisor_ws_client()
+
+    await _push_reasons(hass, supervisor_client, client, ["docker"])
+
+    assert issue_registry.async_get_issue(DOMAIN, "unhealthy_system_docker")
+    assert issue_registry.async_get_issue(DOMAIN, "unsupported_system_os")

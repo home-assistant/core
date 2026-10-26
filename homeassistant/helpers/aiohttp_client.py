@@ -16,6 +16,7 @@ from aiohttp import ClientMiddlewareType, hdrs, web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver
+from multidict import CIMultiDict
 from yarl import URL
 
 from homeassistant import config_entries
@@ -156,6 +157,10 @@ async def _async_is_blocked_host(
 MAXIMUM_CONNECTIONS = 4096
 MAXIMUM_CONNECTIONS_PER_HOST = 100
 
+# aiohttp's 8190 byte default is too small for some servers, e.g. GitHub's
+# release download redirects carry a ~9 KiB Content-Security-Policy header.
+MAXIMUM_HEADER_SIZE = 65536
+
 
 class HassAsyncDNSResolver(AsyncDualMDNSResolver):
     """Home Assistant AsyncDNSResolver.
@@ -289,6 +294,9 @@ def _async_create_clientsession(
         *kwargs.pop("middlewares", ()),
     )
 
+    kwargs.setdefault("max_line_size", MAXIMUM_HEADER_SIZE)
+    kwargs.setdefault("max_field_size", MAXIMUM_HEADER_SIZE)
+
     clientsession = aiohttp.ClientSession(
         connector=_async_get_connector(hass, verify_ssl, family, ssl_cipher),
         json_serialize=json_dumps,
@@ -300,8 +308,10 @@ def _async_create_clientsession(
     # It's important that we identify as Home Assistant
     # If a package requires a different user agent, override it by passing a headers
     # dictionary to the request method.
+    default_headers = CIMultiDict(clientsession.headers)
+    default_headers[USER_AGENT] = SERVER_SOFTWARE
     clientsession._default_headers = MappingProxyType(  # type: ignore[assignment]  # noqa: SLF001
-        {USER_AGENT: SERVER_SOFTWARE},
+        default_headers
     )
 
     clientsession.close = warn_use(  # type: ignore[method-assign]

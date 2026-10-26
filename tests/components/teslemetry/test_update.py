@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
 from syrupy.assertion import SnapshotAssertion
 from teslemetry_stream import Signal
 
@@ -17,8 +18,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, reload_platform, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA, VEHICLE_DATA_ALT
-
-from tests.common import async_fire_time_changed, mock_restore_cache
 
 
 async def test_update(
@@ -279,6 +278,88 @@ async def test_update_streaming_restore(
     state = hass.states.get(entity_id)
     assert state.attributes["in_progress"] is True
     assert state.attributes["update_percentage"] == 42
+
+
+async def test_update_streaming_restore_completed_not_in_progress(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test a stored in-progress flag is dropped when installed == latest.
+
+    Reproduces a stuck "Installing" tile: the completion event never streamed
+    because the vehicle went offline mid-install, so the last state kept
+    in_progress with no percentage while the versions already matched.
+    """
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    entity_id = "update.test_update"
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                entity_id,
+                STATE_ON,
+                attributes={
+                    "in_progress": True,
+                    "update_percentage": None,
+                    "installed_version": "2026.26.1",
+                    "latest_version": "2026.26.1",
+                },
+            ),
+        ),
+    )
+
+    await setup_platform(hass, [Platform.UPDATE])
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["in_progress"] is False
+    assert state.attributes["update_percentage"] is None
+
+
+async def test_update_streaming_completed_while_scheduled(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test a scheduled flag does not strand in_progress once installed == latest."""
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    await setup_platform(hass, [Platform.UPDATE])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.SOFTWARE_UPDATE_DOWNLOAD_PERCENT_COMPLETE: None,
+                Signal.SOFTWARE_UPDATE_INSTALLATION_PERCENT_COMPLETE: None,
+                Signal.SOFTWARE_UPDATE_SCHEDULED_START_TIME: 1735689600,
+                Signal.SOFTWARE_UPDATE_VERSION: "2025.2.1",
+                Signal.VERSION: "2025.1.1",
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("update.test_update")
+    assert state.attributes["in_progress"] is True
+
+    # Install finishes while offline: only the new installed version streams,
+    # matching latest. The lingering scheduled flag must not keep it in progress.
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.SOFTWARE_UPDATE_DOWNLOAD_PERCENT_COMPLETE: None,
+                Signal.SOFTWARE_UPDATE_INSTALLATION_PERCENT_COMPLETE: None,
+                Signal.VERSION: "2025.2.1",
+            },
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("update.test_update")
+    assert state.attributes["in_progress"] is False
+    assert state.attributes["update_percentage"] is None
 
 
 @pytest.mark.parametrize(

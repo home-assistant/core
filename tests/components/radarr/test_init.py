@@ -1,6 +1,7 @@
 """Test Radarr integration."""
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -8,8 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import create_entry, mock_connection_invalid_auth, setup_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
@@ -56,7 +55,9 @@ async def test_device_info(
     """Test device info."""
     entry = await setup_integration(hass, aioclient_mock)
     await hass.async_block_till_done()
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
 
     assert device.configuration_url == "http://192.168.1.189:7887/test"
     assert device.identifiers == {(DOMAIN, entry.entry_id)}

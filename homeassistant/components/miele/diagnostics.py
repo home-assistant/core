@@ -1,13 +1,13 @@
 """Diagnostics support for Miele."""
 
 import hashlib
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pymiele import completed_warnings
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
 from .coordinator import MieleConfigEntry
 
@@ -69,9 +69,13 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: MieleConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, config_entry: MieleConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
+    if TYPE_CHECKING:
+        # miele does not create child devices
+        assert isinstance(device, DeviceEntry)
+
     info = {
         "manufacturer": device.manufacturer,
         "model": device.model,

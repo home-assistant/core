@@ -3,6 +3,6 @@
     "key": "backend_service",
     "name": "Backend Service",
     "group": "Core",
-    "results": [{ "success": false, "status": 500 }]
+    "results": [{ "success": false, "status": 500, "duration": 45000000 }]
   }
 ]

@@ -5,10 +5,10 @@ import threading
 from typing import override
 from uuid import UUID
 
+import probatio
 from pygatt import BLEAddressType
 from pygatt.backends import Characteristic, GATTToolBackend
 from pygatt.exceptions import BLEError, NotConnectedError, NotificationTimeout
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -45,8 +45,8 @@ SKIP_HANDLE_LOOKUP = True
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_MAC): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -63,8 +63,7 @@ def setup_platform(
     _LOGGER.debug("Setting up")
 
     mon = Monitor(hass, mac, name)
-    add_entities([SkybeaconTemp(name, mon)])
-    add_entities([SkybeaconHumid(name, mon)])
+    add_entities([SkybeaconTemp(name, mon), SkybeaconHumid(name, mon)])
 
     def monitor_stop(_service_or_event):
         """Stop the monitor thread."""

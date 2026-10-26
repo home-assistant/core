@@ -1,13 +1,22 @@
 """Test websocket API."""
 
 from dataclasses import replace
+import logging
 import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import HomeAssistantUpdateOptions, StoreAddonUpdate
+from aiohasupervisor.models import (
+    CreateSessionOptions,
+    HomeAssistantUpdateOptions,
+    IngressPanel,
+    StoreAddonUpdate,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser, async_mock_signal
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import BackupManagerError, ManagerBackup
@@ -31,10 +40,6 @@ from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockUser, async_mock_signal
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -256,6 +261,54 @@ async def test_websocket_supervisor_api_error(
     assert msg["error"]["message"] == "example error"
 
 
+@pytest.mark.parametrize(
+    ("endpoint", "method", "level"),
+    [
+        pytest.param("/ping", "get", logging.ERROR, id="ping"),
+        pytest.param(
+            "/ingress/validate_session", "post", logging.DEBUG, id="validate_session"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hassio_env")
+async def test_websocket_supervisor_api_error_log_level(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    endpoint: str,
+    method: str,
+    level: int,
+) -> None:
+    """Test the log level of failed Supervisor websocket api calls."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.request(
+        method,
+        f"http://127.0.0.1{endpoint}",
+        json={"result": "error", "message": "example error"},
+        status=401,
+    )
+    caplog.set_level(logging.DEBUG)
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: endpoint,
+            ATTR_METHOD: method,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["error"]["message"] == "example error"
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.getMessage() == f"Failed to call {endpoint} - example error"
+    ] == [level]
+
+
 @pytest.mark.usefixtures("hassio_env")
 async def test_websocket_supervisor_api_error_without_msg(
     hass: HomeAssistant,
@@ -375,14 +428,196 @@ async def test_websocket_non_admin_user(
     assert msg["error"]["message"] == "Unauthorized"
 
 
-async def test_websocket_store_reload_refreshes_update_entities(
+@pytest.fixture(name="ingress_panel_admin")
+def ingress_panel_admin_fixture(
+    ingress_panels: AsyncMock, request: pytest.FixtureRequest
+) -> None:
+    """Register a test add-on ingress panel with the given admin flag."""
+    ingress_panels.return_value = {
+        "test": IngressPanel(
+            title="Test", icon="mdi:test", admin=request.param, enable=True
+        )
+    }
+
+
+@pytest.fixture(name="ingress_addon")
+def ingress_addon_fixture(addon_info: AsyncMock, supervisor_client: AsyncMock) -> None:
+    """Mock a started add-on with ingress and session creation."""
+    addon_info.return_value.state = "started"
+    addon_info.return_value.version = "1.0.0"
+    addon_info.return_value.ingress_url = "/api/hassio_ingress/token/"
+    supervisor_client.ingress.create_session.return_value = "abc"
+
+
+@pytest.fixture(name="ws_user")
+def ws_user_fixture(
+    request: pytest.FixtureRequest,
+    hass_access_token: str,
+    hass_admin_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_read_only_user: MockUser,
+) -> tuple[str, MockUser]:
+    """Return the access token and user for the role given as parameter."""
+    return {
+        "admin": (hass_access_token, hass_admin_user),
+        "user": (hass_read_only_access_token, hass_read_only_user),
+    }[request.param]
+
+
+@pytest.mark.usefixtures("hassio_env", "ingress_addon", "ingress_panel_admin")
+@pytest.mark.parametrize(
+    ("ws_user", "ingress_panel_admin"),
+    [
+        pytest.param("admin", True, id="admin_user_admin_panel"),
+        pytest.param("admin", False, id="admin_user_user_panel"),
+        pytest.param("user", False, id="user_user_panel"),
+    ],
+    indirect=True,
+)
+async def test_websocket_ingress_commands(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
+    ws_user: tuple[str, MockUser],
+) -> None:
+    """Test the ingress commands for users allowed to open the add-on."""
+    token, user = ws_user
+    assert await async_setup_component(hass, DOMAIN, {})
+    websocket_client = await hass_ws_client(hass, token)
+
+    await websocket_client.send_json(
+        {WS_ID: 1, WS_TYPE: "supervisor/ingress/info", "slug": "test"}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["result"] == {
+        "name": "test",
+        "slug": "test",
+        "version": "1.0.0",
+        "state": "started",
+        "ingress_url": "/api/hassio_ingress/token/",
+    }
+
+    await websocket_client.send_json(
+        {WS_ID: 2, WS_TYPE: "supervisor/ingress/session", "slug": "test"}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["result"] == {"session": "abc"}
+    supervisor_client.ingress.create_session.assert_awaited_once_with(
+        CreateSessionOptions(user_id=user.id)
+    )
+
+    await websocket_client.send_json(
+        {WS_ID: 3, WS_TYPE: "supervisor/ingress/validate_session", "session": "abc"}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    supervisor_client.ingress.validate_session.assert_awaited_once_with("abc")
+
+
+@pytest.mark.usefixtures("hassio_env", "ingress_addon", "ingress_panel_admin")
+@pytest.mark.parametrize(
+    ("ingress_panel_admin", "slug"),
+    [
+        pytest.param(True, "test", id="admin_panel"),
+        pytest.param(False, "unknown", id="unknown_addon"),
+    ],
+    indirect=["ingress_panel_admin"],
+)
+@pytest.mark.parametrize(
+    "command", ["supervisor/ingress/info", "supervisor/ingress/session"]
+)
+async def test_websocket_ingress_commands_unauthorized(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+    supervisor_client: AsyncMock,
+    slug: str,
+    command: str,
+) -> None:
+    """Test non-admin users are rejected for add-ons they may not open."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    websocket_client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await websocket_client.send_json({WS_ID: 1, WS_TYPE: command, "slug": slug})
+    msg = await websocket_client.receive_json()
+    assert msg["error"]["message"] == "Unauthorized"
+    supervisor_client.addons.addon_info.assert_not_awaited()
+    supervisor_client.ingress.create_session.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("hassio_env")
+@pytest.mark.parametrize(
+    ("command", "payload", "expected_message"),
+    [
+        pytest.param(
+            "supervisor/ingress/info", {"slug": "test"}, "info failed", id="info"
+        ),
+        pytest.param(
+            "supervisor/ingress/session",
+            {"slug": "test"},
+            "session failed",
+            id="session",
+        ),
+        pytest.param(
+            "supervisor/ingress/validate_session",
+            {"session": "abc"},
+            "invalid session",
+            id="validate_session",
+        ),
+    ],
+)
+async def test_websocket_ingress_commands_supervisor_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    addon_info: AsyncMock,
+    supervisor_client: AsyncMock,
+    command: str,
+    payload: dict[str, str],
+    expected_message: str,
+) -> None:
+    """Test Supervisor errors are reported for the ingress commands."""
+    addon_info.side_effect = SupervisorError("info failed")
+    supervisor_client.ingress.create_session.side_effect = SupervisorError(
+        "session failed"
+    )
+    supervisor_client.ingress.validate_session.side_effect = SupervisorError(
+        "invalid session"
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    websocket_client = await hass_ws_client(hass)
+
+    await websocket_client.send_json({WS_ID: 1, WS_TYPE: command, **payload})
+    msg = await websocket_client.receive_json()
+    assert msg["error"] == {"code": "unknown_error", "message": expected_message}
+
+
+@pytest.mark.usefixtures("hassio_env", "ingress_addon")
+@pytest.mark.parametrize(
+    "command", ["supervisor/ingress/info", "supervisor/ingress/session"]
+)
+async def test_websocket_ingress_commands_panels_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+    ingress_panels: AsyncMock,
+    command: str,
+) -> None:
+    """Test a failed panel lookup for a non-admin user is reported as an error."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ingress_panels.side_effect = SupervisorError("panels failed")
+    websocket_client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await websocket_client.send_json({WS_ID: 1, WS_TYPE: command, "slug": "test"})
+    msg = await websocket_client.receive_json()
+    assert msg["error"] == {"code": "unknown_error", "message": "panels failed"}
+
+
+async def test_store_reloaded_event_refreshes_update_entities(
+    hass: HomeAssistant,
     supervisor_client: AsyncMock,
     addons_list: AsyncMock,
 ) -> None:
-    """Test add-on update entities refresh after a store reload via the API proxy."""
+    """Test add-on update entities refresh on a Supervisor store_reloaded event."""
     addons_list.return_value = [
         replace(
             addons_list.return_value[0],
@@ -406,23 +641,43 @@ async def test_websocket_store_reload_refreshes_update_entities(
             version_latest="2.0.1",
         )
     ]
-    aioclient_mock.post(
-        "http://127.0.0.1/store/reload", json={"result": "ok", "data": {}}
-    )
 
-    websocket_client = await hass_ws_client(hass)
-    await websocket_client.send_json_auto_id(
-        {
-            WS_TYPE: WS_TYPE_API,
-            ATTR_ENDPOINT: "/store/reload",
-            ATTR_METHOD: "post",
-        }
+    async_dispatcher_send(
+        hass,
+        EVENT_SUPERVISOR_EVENT,
+        {"event": "store_reloaded", "data": {"repositories": ["core"]}},
     )
-    msg = await websocket_client.receive_json()
-    assert msg["success"]
+    await hass.async_block_till_done()
 
     assert hass.states.get("update.test_update").state == "on"
+    # Supervisor already reloaded the store, so we must not reload it again.
     supervisor_client.store.reload.assert_not_called()
+
+
+async def test_store_reloaded_event_ignored_without_listeners(
+    hass: HomeAssistant,
+    addons_list: AsyncMock,
+) -> None:
+    """Test a store_reloaded event does not refresh without add-on entities."""
+    addons_list.return_value = []
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    # Without add-on entities the coordinator has no listeners,
+    # so the event must not trigger an add-on data fetch.
+    addons_list.reset_mock()
+    async_dispatcher_send(
+        hass,
+        EVENT_SUPERVISOR_EVENT,
+        {"event": "store_reloaded", "data": {"repositories": ["core"]}},
+    )
+    await hass.async_block_till_done()
+
+    addons_list.assert_not_called()
 
 
 async def test_update_addon(
@@ -1019,6 +1274,9 @@ async def test_read_update_config(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test read and update config."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
     assert await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
 
@@ -1037,3 +1295,27 @@ async def test_read_update_config(
 
     await websocket_client.send_json_auto_id({"type": "hassio/update/config/info"})
     assert await websocket_client.receive_json() == snapshot
+
+
+@pytest.mark.usefixtures("hassio_env")
+async def test_update_config_keeps_other_options(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test updating the backup options keeps the other options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, options={"core_auto_update": True}, unique_id=DOMAIN
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    websocket_client = await hass_ws_client(hass)
+
+    await websocket_client.send_json_auto_id(
+        {"type": "hassio/update/config/update", "core_backup_before_update": True}
+    )
+    assert (await websocket_client.receive_json())["success"]
+
+    assert config_entry.options["core_auto_update"] is True
+    assert config_entry.options["core_backup_before_update"] is True

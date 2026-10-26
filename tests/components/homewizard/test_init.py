@@ -7,6 +7,7 @@ import weakref
 from freezegun.api import FrozenDateTimeFactory
 from homewizard_energy.errors import DisabledError, UnauthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.homewizard import get_main_device
 from homeassistant.components.homewizard.const import (
@@ -14,10 +15,9 @@ from homeassistant.components.homewizard.const import (
     battery_mode_cloud_issue_id,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_v1(
@@ -130,6 +130,7 @@ async def test_load_detect_invalid_token(
 @pytest.mark.usefixtures("mock_homewizardenergy")
 async def test_load_creates_repair_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
 ) -> None:
@@ -142,20 +143,31 @@ async def test_load_creates_repair_issue(
 
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
-
     issue = issue_registry.async_get_issue(
         domain=DOMAIN, issue_id=f"migrate_to_v2_api_{mock_config_entry.entry_id}"
     )
     assert issue is not None
 
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
     # Make sure title placeholder is set correctly
     assert issue.translation_placeholders["title"] == "Device"
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN, issue_id=f"migrate_to_v2_api_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
 
 
 @pytest.mark.usefixtures("mock_homewizardenergy")
 async def test_load_creates_repair_issue_when_name_is_updated(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
 ) -> None:
@@ -168,7 +180,6 @@ async def test_load_creates_repair_issue_when_name_is_updated(
 
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     issue_id = f"migrate_to_v2_api_{mock_config_entry.entry_id}"
 
     issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
@@ -178,7 +189,6 @@ async def test_load_creates_repair_issue_when_name_is_updated(
     assert issue.translation_placeholders["title"] == "Device"
 
     # Update the device name
-    device_registry = dr.async_get(hass)
     device = get_main_device(hass, mock_config_entry)
 
     # Update device name
@@ -306,6 +316,7 @@ async def test_battery_cloud_issue_updates_only_on_state_transition(
 @pytest.mark.usefixtures("mock_homewizardenergy")
 async def test_battery_cloud_issue_stale_issue_cleared_on_reload(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
 ) -> None:
@@ -318,9 +329,43 @@ async def test_battery_cloud_issue_stale_issue_cleared_on_reload(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
 
     combined_data.system.cloud_enabled = True
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_main_device_registered_before_platform_forwarding(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test the main device is registered before platforms are set up.
+
+    Restricting setup to the sensor platform removes the button platform,
+    whose main-device entity would otherwise register the main device
+    before the external sensor needs it, masking a missing up-front
+    registration.
+    """
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.homewizard.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "5c2fafabcdef"), mock_config_entry.entry_id
+    )
+    assert main_device is not None
+
+    gas_meter_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "gas_meter_G001"), mock_config_entry.entry_id
+    )
+    assert gas_meter_device is not None
+    assert gas_meter_device.via_device_id == main_device.id

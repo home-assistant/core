@@ -1,6 +1,7 @@
 """The tests for the Traccar device tracker platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_restore_cache
-
 DEVICE_ID = "device_1"
 ENTITY_ID = f"{DEVICE_TRACKER_DOMAIN}.{DEVICE_ID}"
 
@@ -29,13 +28,15 @@ def mock_dev_track(mock_device_tracker_conf: list[Device]) -> None:
     """Mock device tracker config loading."""
 
 
-async def test_restore_state(hass: HomeAssistant) -> None:
+async def test_restore_state(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that the previous location is restored for a known device."""
     assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, {})
 
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_WEBHOOK_ID: "webhook_id"})
     entry.add_to_hass(hass)
-    dr.async_get(hass).async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, DEVICE_ID)},
     )

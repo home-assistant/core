@@ -24,6 +24,23 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "advanced": {
+        "name": "Advanced control"
+      },
+      "boost": {
+        "name": "Boost"
+      },
+      "filter_cleaning": {
+        "name": "Filter cleaning required"
+      },
+      "night": {
+        "name": "Night mode"
+      },
+      "profiled": {
+        "name": "Automatic speed control"
+      }
+    },
     "select": {
       "fan_mode": {
         "name": "Fan direction mode",

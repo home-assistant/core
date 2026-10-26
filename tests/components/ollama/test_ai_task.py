@@ -4,8 +4,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 import ollama
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.ollama import CONF_KEEP_ALIVE
@@ -13,8 +14,6 @@ from homeassistant.components.ollama.const import KEEP_ALIVE_FOREVER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -180,9 +179,9 @@ async def test_generate_structured_data(
             task_name="Test Task",
             entity_id=entity_id,
             instructions="Generate test data",
-            structure=vol.Schema(
+            structure=probatio.Schema(
                 {
-                    vol.Required("characters"): selector.selector(
+                    probatio.Required("characters"): selector.selector(
                         {
                             "text": {
                                 "multiple": True,
@@ -199,6 +198,7 @@ async def test_generate_structured_data(
         "type": "object",
         "properties": {"characters": {"items": {"type": "string"}, "type": "array"}},
         "required": ["characters"],
+        "additionalProperties": False,
     }
 
 
@@ -235,9 +235,9 @@ async def test_generate_invalid_structured_data(
             task_name="Test Task",
             entity_id=entity_id,
             instructions="Generate test data",
-            structure=vol.Schema(
+            structure=probatio.Schema(
                 {
-                    vol.Required("characters"): selector.selector(
+                    probatio.Required("characters"): selector.selector(
                         {
                             "text": {
                                 "multiple": True,

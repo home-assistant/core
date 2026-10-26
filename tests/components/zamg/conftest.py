@@ -1,16 +1,14 @@
 """Fixtures for Zamg integration tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from zamg import ZamgData as ZamgDevice
 
 from homeassistant.components.zamg.const import CONF_STATION_ID, DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 TEST_STATION_ID = "11240"
 TEST_STATION_NAME = "Graz/Flughafen"
@@ -32,7 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.zamg.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.zamg.async_setup_entry", return_value=None):
         yield
 
 
@@ -44,7 +42,7 @@ def mock_zamg_config_flow() -> Generator[MagicMock]:
     ) as zamg_mock:
         zamg = zamg_mock.return_value
         zamg.update.return_value = ZamgDevice(
-            json.loads(load_fixture("zamg/data.json"))
+            load_json_object_fixture("zamg/data.json")
         )
         zamg.get_data.return_value = zamg.get_data(TEST_STATION_ID)
         yield zamg

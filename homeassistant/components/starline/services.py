@@ -1,6 +1,6 @@
 """Services for the StarLine integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -13,12 +13,20 @@ from .const import (
     SERVICE_UPDATE_STATE,
 )
 
-SET_SCAN_INTERVAL_SCHEMA = vol.Schema(
-    {vol.Required(CONF_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=10))}
+SET_SCAN_INTERVAL_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_SCAN_INTERVAL): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=10)
+        )
+    }
 )
 
-SET_SCAN_OBD_INTERVAL_SCHEMA = vol.Schema(
-    {vol.Required(CONF_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=180))}
+SET_SCAN_OBD_INTERVAL_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_SCAN_INTERVAL): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=180)
+        )
+    }
 )
 
 

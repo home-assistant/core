@@ -33,6 +33,7 @@ class ToloLight(ToloSaunaCoordinatorEntity, LightEntity):
         """Initialize TOLO Sauna Light entity."""
         super().__init__(coordinator, entry)
 
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{entry.entry_id}_light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
@@ -42,11 +43,11 @@ class ToloLight(ToloSaunaCoordinatorEntity, LightEntity):
         return self.coordinator.data.status.lamp_on
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on TOLO Sauna lamp."""
-        self.coordinator.client.set_lamp_on(True)
+        await self._async_send_command(lambda client: client.set_lamp_on(True))
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off TOLO Sauna lamp."""
-        self.coordinator.client.set_lamp_on(False)
+        await self._async_send_command(lambda client: client.set_lamp_on(False))

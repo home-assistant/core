@@ -3,7 +3,24 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.components.common import (
+    ConditionStateDescription,
+    TargetSupport,
+    assert_condition_behavior_all,
+    assert_condition_behavior_any,
+    assert_condition_options_supported,
+    assert_conditions_target_support,
+    assert_numerical_condition_unit_conversion,
+    other_states,
+    parametrize_condition_states_all,
+    parametrize_condition_states_any,
+    parametrize_numerical_attribute_condition_above_below_all,
+    parametrize_numerical_attribute_condition_above_below_any,
+    parametrize_target_entities,
+    target_entities,
+)
 
+from homeassistant.components.climate.condition import CONDITIONS
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
@@ -16,21 +33,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
-    ConditionStateDescription,
-    assert_condition_behavior_all,
-    assert_condition_behavior_any,
-    assert_condition_options_supported,
-    assert_numerical_condition_unit_conversion,
-    other_states,
-    parametrize_condition_states_all,
-    parametrize_condition_states_any,
-    parametrize_numerical_attribute_condition_above_below_all,
-    parametrize_numerical_attribute_condition_above_below_any,
-    parametrize_target_entities,
-    target_entities,
-)
 
 
 @pytest.fixture
@@ -45,6 +47,18 @@ _TEMPERATURE_THRESHOLD = {
         "type": "above",
         "value": {"number": 20, "unit_of_measurement": UnitOfTemperature.CELSIUS},
     }
+}
+
+
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_hvac_mode": TargetSupport.STANDARD,
+    "is_off": TargetSupport.STANDARD,
+    "is_on": TargetSupport.STANDARD,
+    "is_cooling": TargetSupport.STANDARD,
+    "is_drying": TargetSupport.STANDARD,
+    "is_heating": TargetSupport.STANDARD,
+    "is_target_humidity": TargetSupport.STANDARD,
+    "is_target_temperature": TargetSupport.STANDARD,
 }
 
 
@@ -76,6 +90,11 @@ async def test_climate_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

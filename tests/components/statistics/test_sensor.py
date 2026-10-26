@@ -10,6 +10,13 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_fire_time_changed_exact,
+    get_fixture_path,
+)
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant import config as hass_config
 from homeassistant.components.recorder import Recorder, history
@@ -45,9 +52,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
-from tests.components.recorder.common import async_wait_recording_done
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
 VALUES_NUMERIC = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
@@ -492,6 +496,37 @@ async def test_sampling_size_1(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.state == str(new_mean)
     assert state.attributes.get("buffer_usage_ratio") == round(1 / 1, 2)
+
+
+async def test_scheduled_update_cancelled_on_remove(hass: HomeAssistant) -> None:
+    """Test the scheduled purge update is cancelled when the sensor is removed."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
+                    "max_age": {"minutes": 4},
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_monitored", "10")
+    await hass.async_block_till_done()
+
+    entity = hass.data["sensor"].get_entity("sensor.test")
+    await entity.async_remove()
+
+    with patch.object(entity, "_async_purge_update_and_schedule") as mock_purge:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+        await hass.async_block_till_done()
+    mock_purge.assert_not_called()
 
 
 async def test_age_limit_expiry(hass: HomeAssistant) -> None:
@@ -1694,14 +1729,14 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get("sensor.mock_title") is not None
 
     statistics_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "Statistics",
-            "entity_id": "sensor.test_source",
+            "entity_id": "sensor.mock_title",
             "state_characteristic": "mean",
             "keep_last_sample": False,
             "percentile": 50.0,
@@ -1715,9 +1750,54 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(statistics_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    statistics_entity = entity_registry.async_get("sensor.statistics")
+    statistics_entity = entity_registry.async_get("sensor.mock_title_statistics")
     assert statistics_entity is not None
     assert statistics_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured Statistics."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "statistics",
+                "name": "Statistics",
+                "entity_id": "sensor.test_source",
+                "state_characteristic": "mean",
+                "sampling_size": 20,
+                "unique_id": "statistics_yaml",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    statistics_entity = entity_registry.async_get("sensor.statistics")
+    assert statistics_entity is not None
+    assert statistics_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
 
 
 async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -1876,6 +1956,71 @@ async def test_average_linear_unevenly_timed(
 
     await hass.async_block_till_done()
     assert [event.data["new_state"].state for event in events] == expected_states
+
+
+@pytest.mark.parametrize(
+    ("source_entity_id", "source_values", "state_characteristic", "expected_state"),
+    [
+        pytest.param(
+            "sensor.test_monitored",
+            ["10", "20"],
+            "average_linear",
+            "15.0",
+            id="average_linear",
+        ),
+        pytest.param(
+            "sensor.test_monitored",
+            ["10", "20"],
+            "average_step",
+            "15.0",
+            id="average_step",
+        ),
+        pytest.param(
+            "binary_sensor.test_monitored",
+            ["on", "off"],
+            "average_step",
+            "50.0",
+            id="binary_average_step",
+        ),
+    ],
+)
+async def test_time_weighted_average_samples_with_same_timestamp(
+    hass: HomeAssistant,
+    source_entity_id: str,
+    source_values: list[str],
+    state_characteristic: str,
+    expected_state: str,
+) -> None:
+    """Test time-weighted averages when all buffered samples share a timestamp."""
+    with freeze_time(dt_util.utcnow()):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": source_entity_id,
+                        "state_characteristic": state_characteristic,
+                        "sampling_size": 20,
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        for value in source_values:
+            hass.states.async_set(
+                source_entity_id,
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+            )
+            await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == expected_state
 
 
 async def test_sensor_unit_gets_removed(hass: HomeAssistant) -> None:
@@ -2134,3 +2279,118 @@ async def test_attributes_remains(recorder_mock: Recorder, hass: HomeAssistant) 
             "state_class": SensorStateClass.MEASUREMENT,
             "unit_of_measurement": "°C",
         }
+
+
+async def test_max_age_purge_coalesces_burst(hass: HomeAssistant) -> None:
+    """Test that samples expiring close together are purged in one update."""
+    now = dt_util.utcnow()
+    current_time = datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
+
+    with freeze_time(current_time) as freezer:
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
+                        "max_age": {"minutes": 1},
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        # A burst of four samples within 30 ms, then one more 10 s later
+        for value in (10, 20, 30, 40):
+            hass.states.async_set("sensor.test_monitored", str(value))
+            current_time += timedelta(milliseconds=10)
+            freezer.move_to(current_time)
+        current_time += timedelta(seconds=10)
+        freezer.move_to(current_time)
+        hass.states.async_set("sensor.test_monitored", "100")
+        await hass.async_block_till_done()
+
+        writes: list[str] = []
+
+        @callback
+        def _capture(event: Event[EventStateChangedData]) -> None:
+            if new_state := event.data["new_state"]:
+                writes.append(new_state.state)
+
+        async_track_state_change_event(hass, ["sensor.test"], _capture)
+
+        # Step through the expiry of the burst in small increments, offset so a
+        # step never lands exactly on an expiry (a real timer fires just after)
+        current_time += timedelta(seconds=49, milliseconds=5)
+        for _ in range(100):
+            current_time += timedelta(milliseconds=10)
+            freezer.move_to(current_time)
+            async_fire_time_changed_exact(hass, current_time)
+            await hass.async_block_till_done()
+
+        # The whole burst expired in a single state write
+        assert writes == ["100.0"]
+
+        # The last sample still expires on its own
+        current_time += timedelta(seconds=10)
+        freezer.move_to(current_time)
+        async_fire_time_changed_exact(hass, current_time)
+        await hass.async_block_till_done()
+        assert writes == ["100.0", STATE_UNKNOWN]
+
+
+async def test_max_age_purge_coalesce_window_boundary(hass: HomeAssistant) -> None:
+    """Test that only samples within the coalesce window are purged together."""
+    now = dt_util.utcnow()
+    current_time = datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
+
+    with freeze_time(current_time) as freezer:
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
+                        "max_age": {"minutes": 1},
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        # Samples at 0 s, 0.9 s (inside the window) and 1.1 s (outside it),
+        # then one more 10 s later
+        for value, step in ((10, 900), (20, 200), (30, 10000)):
+            hass.states.async_set("sensor.test_monitored", str(value))
+            current_time += timedelta(milliseconds=step)
+            freezer.move_to(current_time)
+        hass.states.async_set("sensor.test_monitored", "100")
+        await hass.async_block_till_done()
+
+        writes: list[str] = []
+
+        @callback
+        def _capture(event: Event[EventStateChangedData]) -> None:
+            if new_state := event.data["new_state"]:
+                writes.append(new_state.state)
+
+        async_track_state_change_event(hass, ["sensor.test"], _capture)
+
+        # Step through the expiry of the first three samples
+        current_time += timedelta(seconds=48, milliseconds=905)
+        for _ in range(300):
+            current_time += timedelta(milliseconds=10)
+            freezer.move_to(current_time)
+            async_fire_time_changed_exact(hass, current_time)
+            await hass.async_block_till_done()
+
+        # The 0 s and 0.9 s samples went together, the 1.1 s one on its own
+        assert writes == ["65.0", "100.0"]

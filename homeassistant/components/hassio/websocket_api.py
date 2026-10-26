@@ -3,9 +3,11 @@
 import logging
 from numbers import Number
 import re
-from typing import Any, cast
+from typing import Any
 
-import voluptuous as vol
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import CreateSessionOptions
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
@@ -18,35 +20,37 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from .config import HassioUpdateParametersDict
+from .config_entry import async_get_hassio_entry, async_get_update_options
 from .const import (
-    ADDONS_COORDINATOR,
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
     ATTR_PARAMS,
+    ATTR_SESSION,
     ATTR_SESSION_DATA_USER_ID,
     ATTR_SLUG,
     ATTR_TIMEOUT,
     ATTR_VERSION,
     ATTR_WS_EVENT,
     DATA_COMPONENT,
-    DATA_CONFIG_STORE,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
     WS_TYPE,
     WS_TYPE_API,
     WS_TYPE_EVENT,
+    WS_TYPE_INGRESS_INFO,
+    WS_TYPE_INGRESS_SESSION,
+    WS_TYPE_INGRESS_VALIDATE_SESSION,
     WS_TYPE_SUBSCRIBE,
 )
 from .coordinator import get_addons_list
 from .exceptions import HassioNotReadyError
-from .handler import HassioAPIError
+from .handler import HassioAPIError, get_supervisor_client
 from .update_helper import update_addon, update_core
 
-SCHEMA_WEBSOCKET_EVENT = vol.Schema(
-    {vol.Required(ATTR_WS_EVENT): cv.string},
-    extra=vol.ALLOW_EXTRA,
+SCHEMA_WEBSOCKET_EVENT = probatio.Schema(
+    {probatio.Required(ATTR_WS_EVENT): cv.string},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 # Endpoints needed for ingress can't require admin because
@@ -60,10 +64,6 @@ WS_NO_ADMIN_ENDPOINTS = re.compile(
     r")$"
 )
 
-# Endpoint that reloads the add-on store. Afterwards the add-on update
-# entities must be refreshed so they don't report stale update information.
-STORE_RELOAD_ENDPOINT = "/store/reload"
-
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
@@ -72,6 +72,9 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
     """Set up the websocket API."""
     websocket_api.async_register_command(hass, websocket_supervisor_event)
     websocket_api.async_register_command(hass, websocket_supervisor_api)
+    websocket_api.async_register_command(hass, websocket_ingress_info)
+    websocket_api.async_register_command(hass, websocket_ingress_session)
+    websocket_api.async_register_command(hass, websocket_ingress_validate_session)
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_update_addon)
     websocket_api.async_register_command(hass, websocket_update_core)
@@ -81,7 +84,7 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
 
 @callback
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
+@websocket_api.websocket_command({probatio.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
 def websocket_subscribe(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
@@ -102,8 +105,8 @@ def websocket_subscribe(
 @websocket_api.ws_require_user(only_supervisor=True)
 @websocket_api.websocket_command(
     {
-        vol.Required(WS_TYPE): WS_TYPE_EVENT,
-        vol.Required(ATTR_DATA): SCHEMA_WEBSOCKET_EVENT,
+        probatio.Required(WS_TYPE): WS_TYPE_EVENT,
+        probatio.Required(ATTR_DATA): SCHEMA_WEBSOCKET_EVENT,
     }
 )
 def websocket_supervisor_event(
@@ -116,12 +119,12 @@ def websocket_supervisor_event(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(WS_TYPE): WS_TYPE_API,
-        vol.Required(ATTR_ENDPOINT): cv.string,
-        vol.Required(ATTR_METHOD): cv.string,
-        vol.Optional(ATTR_DATA): dict,
-        vol.Optional(ATTR_PARAMS): dict,
-        vol.Optional(ATTR_TIMEOUT): vol.Any(Number, None),
+        probatio.Required(WS_TYPE): WS_TYPE_API,
+        probatio.Required(ATTR_ENDPOINT): cv.string,
+        probatio.Required(ATTR_METHOD): cv.string,
+        probatio.Optional(ATTR_DATA): dict,
+        probatio.Optional(ATTR_PARAMS): dict,
+        probatio.Optional(ATTR_TIMEOUT): probatio.Any(Number, None),
     }
 )
 @websocket_api.async_response
@@ -154,7 +157,9 @@ async def websocket_supervisor_api(
             params=msg.get(ATTR_PARAMS),
         )
     except HassioAPIError as err:
-        _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
+        # The frontend renews the ingress session when validation fails
+        log = _LOGGER.debug if command == "/ingress/validate_session" else _LOGGER.error
+        log("Failed to call %s - %s", command, err)
         connection.send_error(
             msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
         )
@@ -164,24 +169,106 @@ async def websocket_supervisor_api(
         # sensitive information and the frontend does not require it for ingress.
         if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
             data.pop("options", None)
-        # Await so the frontend only sees the reload finish once the add-on
-        # update entities reflect the reloaded store.
-        if (
-            command == STORE_RELOAD_ENDPOINT
-            and msg[ATTR_METHOD] == "post"
-            and (coordinator := hass.data.get(ADDONS_COORDINATOR))
-        ):
-            await coordinator.async_refresh_after_store_reload()
-
         connection.send_result(msg[WS_ID], data)
+
+
+async def _async_check_ingress_access(
+    hass: HomeAssistant, connection: ActiveConnection, slug: str
+) -> None:
+    """Raise Unauthorized if the user may not open the add-on's ingress panel."""
+    if connection.user.is_admin:
+        return
+    panels = await get_supervisor_client(hass).ingress.panels()
+    if (panel := panels.get(slug)) is None or panel.admin:
+        raise Unauthorized
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required(WS_TYPE): WS_TYPE_INGRESS_INFO,
+        probatio.Required(ATTR_SLUG): cv.string,
+    }
+)
+@websocket_api.async_response
+async def websocket_ingress_info(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return the add-on details the ingress panel needs."""
+    slug = msg[ATTR_SLUG]
+    try:
+        await _async_check_ingress_access(hass, connection, slug)
+        addon = await get_supervisor_client(hass).addons.addon_info(slug)
+    except SupervisorError as err:
+        connection.send_error(
+            msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
+        )
+        return
+    connection.send_result(
+        msg[WS_ID],
+        {
+            ATTR_NAME: addon.name,
+            ATTR_SLUG: addon.slug,
+            ATTR_VERSION: addon.version,
+            "state": addon.state,
+            "ingress_url": addon.ingress_url,
+        },
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required(WS_TYPE): WS_TYPE_INGRESS_SESSION,
+        probatio.Required(ATTR_SLUG): cv.string,
+    }
+)
+@websocket_api.async_response
+async def websocket_ingress_session(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Create an ingress session for the add-on."""
+    client = get_supervisor_client(hass)
+    try:
+        await _async_check_ingress_access(hass, connection, msg[ATTR_SLUG])
+        # Supervisor resolves the user's role from the ID and forwards the
+        # identity to the add-on
+        session = await client.ingress.create_session(
+            CreateSessionOptions(user_id=connection.user.id)
+        )
+    except SupervisorError as err:
+        connection.send_error(
+            msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
+        )
+        return
+    connection.send_result(msg[WS_ID], {ATTR_SESSION: session})
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required(WS_TYPE): WS_TYPE_INGRESS_VALIDATE_SESSION,
+        probatio.Required(ATTR_SESSION): cv.string,
+    }
+)
+@websocket_api.async_response
+async def websocket_ingress_validate_session(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Validate and extend an ingress session."""
+    try:
+        await get_supervisor_client(hass).ingress.validate_session(msg[ATTR_SESSION])
+    except SupervisorError as err:
+        connection.send_error(
+            msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
+        )
+        return
+    connection.send_result(msg[WS_ID])
 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(WS_TYPE): "hassio/update/addon",
-        vol.Required("addon"): str,
-        vol.Required("backup"): bool,
+        probatio.Required(WS_TYPE): "hassio/update/addon",
+        probatio.Required("addon"): str,
+        probatio.Required("backup"): bool,
     }
 )
 @websocket_api.async_response
@@ -217,8 +304,8 @@ async def websocket_update_addon(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(WS_TYPE): "hassio/update/core",
-        vol.Required("backup"): bool,
+        probatio.Required(WS_TYPE): "hassio/update/core",
+        probatio.Required("backup"): bool,
     }
 )
 @websocket_api.async_response
@@ -232,26 +319,28 @@ async def websocket_update_core(
 
 @callback
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "hassio/update/config/info"})
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "hassio/update/config/info"}
+)
 def websocket_update_config_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Send the stored backup config."""
-    connection.send_result(
-        msg["id"], hass.data[DATA_CONFIG_STORE].data.update_config.to_dict()
-    )
+    connection.send_result(msg["id"], async_get_update_options(hass))
 
 
 @callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hassio/update/config/update",
-        vol.Optional("add_on_backup_before_update"): bool,
-        vol.Optional("add_on_backup_retain_copies"): vol.All(int, vol.Range(min=1)),
-        vol.Optional("core_backup_before_update"): bool,
+        probatio.Required("type"): "hassio/update/config/update",
+        probatio.Optional("add_on_backup_before_update"): bool,
+        probatio.Optional("add_on_backup_retain_copies"): probatio.All(
+            int, probatio.Range(min=1)
+        ),
+        probatio.Optional("core_backup_before_update"): bool,
     }
 )
 def websocket_update_config_update(
@@ -260,10 +349,24 @@ def websocket_update_config_update(
     msg: dict[str, Any],
 ) -> None:
     """Update the stored backup config."""
+    entry = async_get_hassio_entry(hass)
+    if entry is None:
+        connection.send_error(
+            msg["id"],
+            code=websocket_api.ERR_UNKNOWN_ERROR,
+            message="Hassio config entry is not available",
+        )
+        return
+
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    hass.data[DATA_CONFIG_STORE].update(
-        update_config=cast(HassioUpdateParametersDict, changes)
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            **entry.options,
+            **async_get_update_options(hass, entry),
+            **changes,
+        },
     )
     connection.send_result(msg["id"])

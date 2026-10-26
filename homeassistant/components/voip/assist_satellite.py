@@ -46,7 +46,7 @@ from .entity import VoIPEntity
 _LOGGER = logging.getLogger(__name__)
 
 _PIPELINE_TIMEOUT_SEC: Final = 30
-_HANGUP_SEC: Final = 0.5
+_HANGUP_SEC: Final = 2.0
 _ANNOUNCEMENT_BEFORE_DELAY: Final = 0.5
 _ANNOUNCEMENT_AFTER_DELAY: Final = 1.0
 _ANNOUNCEMENT_RING_TIMEOUT: Final = 30
@@ -297,6 +297,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             # Stop ringing
             _LOGGER.debug("Caller did not pick up in time")
             sip_protocol.cancel_call(call_info)
+            self.disconnect()
             raise
 
     async def _check_announcement_pickup(self) -> None:
@@ -340,12 +341,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 ):
                     # Caller hung up
                     _LOGGER.debug("Hang up")
-                    self._announcement = None
-                    if self._run_pipeline_task is not None:
-                        _LOGGER.debug("Cancelling running pipeline")
-                        self._run_pipeline_task.cancel()
-                    if not self._call_end_future.done():
-                        self._call_end_future.set_result(None)
                     self.disconnect()
                     break
 
@@ -370,15 +365,36 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     def disconnect(self):
         """Server disconnected."""
         super().disconnect()
+        if self._check_announcement_pickup_task is not None:
+            self._check_announcement_pickup_task.cancel()
+            self._check_announcement_pickup_task = None
         if self._check_hangup_task is not None:
             self._check_hangup_task.cancel()
             self._check_hangup_task = None
+        self.voip_device.set_is_active(False)
+        self._announcement = None
+        if self._run_pipeline_task is not None:
+            _LOGGER.debug("Cancelling running pipeline")
+            self._run_pipeline_task.cancel()
+            # Clear it now rather than relying on the task's own cleanup, which
+            # never runs if it is cancelled before reaching its try block (e.g.
+            # a hang-up during the listening tone). A stale reference stops
+            # on_chunk() from starting a pipeline for the next call.
+            self._run_pipeline_task = None
+        if not self._call_end_future.done():
+            self._call_end_future.set_result(None)
+        self._last_chunk_time = None
         self._rtp_port = None
+        _LOGGER.debug("VoIP disconnected")
 
     def connection_made(self, transport):
         """Server is ready."""
         super().connection_made(transport)
-        self._last_chunk_time = time.monotonic()
+        self.voip_device.set_is_active(True)
+        # If announcement isn't set, assume it was an incoming call and
+        # initialize the chunk time for checking if the caller hung up
+        if self._announcement is None:
+            self._last_chunk_time = time.monotonic()
         # Check if caller hung up
         self._check_hangup_task = self.config_entry.async_create_background_task(
             self.hass,
@@ -418,9 +434,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Run a pipeline with STT input and TTS output."""
         _LOGGER.debug("Starting pipeline")
 
-        self.async_set_context(Context(user_id=self.config_entry.data["user"]))
-        self.voip_device.set_is_active(True)
-
         async def stt_stream():
             retry: bool = True
             while True:
@@ -445,6 +458,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         try:
             await self.async_accept_pipeline_from_satellite(
                 audio_stream=stt_stream(),
+                context=Context(user_id=self.config_entry.data["user"]),
             )
 
             if self._pipeline_had_error:
@@ -468,11 +482,13 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             if (current_task := asyncio.current_task()) and current_task.cancelling():
                 raise
         finally:
-            # Stop audio stream
-            await self._audio_queue.put(None)
+            # disconnect() may already have cleared this and a new call may
+            # have started its own pipeline, so only clear our own reference.
+            if self._run_pipeline_task is asyncio.current_task():
+                self._run_pipeline_task = None
 
-            self.voip_device.set_is_active(False)
-            self._run_pipeline_task = None
+                # Stop audio stream
+                await self._audio_queue.put(None)
             _LOGGER.debug("Pipeline finished")
 
     async def _play_announcement(
@@ -501,13 +517,15 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             self._announcement = None
             raise
         finally:
-            self._run_pipeline_task = None
-            _LOGGER.debug("Announcement finished")
+            if self._run_pipeline_task is asyncio.current_task():
+                self._run_pipeline_task = None
 
-            if self._run_pipeline_after_announce:
-                # Clear announcement to allow pipeline to run
-                _LOGGER.debug("Clearing announcement")
-                self._announcement = None
+                if self._run_pipeline_after_announce:
+                    # Clear announcement to allow pipeline to run
+                    _LOGGER.debug("Clearing announcement")
+                    self._announcement = None
+
+            _LOGGER.debug("Announcement finished")
 
     def _clear_audio_queue(self) -> None:
         """Ensure audio queue is empty."""

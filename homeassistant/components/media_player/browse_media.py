@@ -19,7 +19,7 @@ from homeassistant.helpers.network import (
     is_hass_url,
 )
 
-from .const import CONTENT_AUTH_EXPIRY_TIME, MediaClass, MediaType
+from .const import CONTENT_AUTH_EXPIRY_TIME, DOMAIN, MediaClass, MediaType
 
 # Paths that we don't need to sign
 PATHS_WITHOUT_AUTH = (
@@ -79,14 +79,17 @@ def async_process_play_media_url(
             try:
                 base_url = get_url(hass)
             except NoURLAvailableError as err:
-                msg = "Unable to determine Home Assistant URL to send to device"
+                translation_key = "no_url_available"
                 if (
                     hass.config.api
                     and hass.config.api.use_ssl
                     and (not hass.config.external_url or not hass.config.internal_url)
                 ):
-                    msg += ". Configure internal and external URL in general settings."
-                raise HomeAssistantError(msg) from err
+                    translation_key = "no_url_available_configure_urls"
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key=translation_key,
+                ) from err
 
         media_content_id = f"{base_url}{media_content_id}"
 
@@ -110,6 +113,7 @@ class BrowseMedia:
         thumbnail: str | None = None,
         not_shown: int = 0,
         can_search: bool = False,
+        search_media_classes: list[MediaClass] | None = None,
     ) -> None:
         """Initialize browse media item."""
         self.media_class = media_class
@@ -123,6 +127,7 @@ class BrowseMedia:
         self.thumbnail = thumbnail
         self.not_shown = not_shown
         self.can_search = can_search
+        self.search_media_classes = search_media_classes
 
     def as_dict(self, *, parent: bool = True) -> dict[str, Any]:
         """Convert Media class to browse media dictionary."""
@@ -138,6 +143,7 @@ class BrowseMedia:
             "can_play": self.can_play,
             "can_expand": self.can_expand,
             "can_search": self.can_search,
+            "search_media_classes": self.search_media_classes,
             "thumbnail": self.thumbnail,
         }
 

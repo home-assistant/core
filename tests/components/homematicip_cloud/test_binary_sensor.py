@@ -1,6 +1,7 @@
 """Tests for HomematicIP Cloud binary sensor."""
 
 from typing import Any
+from unittest.mock import patch
 
 from homematicip.base.enums import (
     BinaryBehaviorType,
@@ -9,7 +10,13 @@ from homematicip.base.enums import (
     WindowState,
 )
 import pytest
+from pytest_homeassistant.common import (
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_ACCELERATION_SENSOR_MODE,
     ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION,
@@ -23,6 +30,7 @@ from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_WINDOW_STATE,
     SIMPLE_BINARY_SENSOR_DESCRIPTIONS,
 )
+from homeassistant.components.homematicip_cloud.const import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_EVENT_DELAY,
     ATTR_GROUP_MEMBER_UNREACHABLE,
@@ -30,8 +38,15 @@ from homeassistant.components.homematicip_cloud.entity import (
     ATTR_RSSI_DEVICE,
     ATTR_SABOTAGE,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
 
@@ -68,6 +83,9 @@ async def test_hmip_full_flush_lock_controller_binary_sensors(
         "HmIP-FLC",
     )
     assert glass_state.state == STATE_ON
+    assert (
+        glass_state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.GLASS_BREAK
+    )
 
     assert hmip_device is not None
     await async_manipulate_test_data(hass, hmip_device, "lockState", "UNLOCKED")
@@ -226,6 +244,31 @@ async def test_hmip_tilt_vibration_sensor(
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
     assert len(hmip_device.mock_calls) == service_call_counter + 2
+
+
+async def test_hmip_temperature_tilt_vibration_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test the ELV-SH-TACO, whose tilt channel sits at index 2, not 1."""
+    entity_id = "binary_sensor.wassertemperatursensor_moving"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wassertemperatursensor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, "Wassertemperatursensor Moving", "ELV-SH-TACO"
+    )
+    assert ha_state.state == STATE_ON
+
+    entity = entity_registry.async_get(entity_id)
+    assert entity.unique_id == "3014F711000000000000TACO_2_tilt_vibration"
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "accelerationSensorTriggered", False
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_hmip_contact_interface(
@@ -504,6 +547,83 @@ async def test_hmip_storm_sensor(
     await async_manipulate_test_data(hass, hmip_device, "storm", True)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
+
+
+async def test_hmip_heating_output_sensor(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the heating output of a wall thermostat."""
+    entity_id = "binary_sensor.bwth_1_heating"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["BWTH 1"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass, hmip_device, "valvePosition", 0.0, channel_real_index=2
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "valvePosition", None, channel_real_index=2
+    )
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+async def test_hmip_heating_output_sensor_output_disabled(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test that a wall thermostat with its output disabled has no heating sensor."""
+    fixture = await async_load_json_object_fixture(
+        hass, "homematicip_cloud.json", DOMAIN
+    )
+    device = next(
+        device for device in fixture["devices"].values() if device["label"] == "BWTH 1"
+    )
+    device["functionalChannels"]["2"]["internalSwitchOutputEnabled"] = False
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["BWTH 1"], extra_devices=[device]
+    )
+
+    assert hass.states.get("binary_sensor.bwth_1_heating") is None
+
+
+async def test_hmip_motion_detector_switch_outdoor(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the motion sensor of a motion detector with switching actuator."""
+    entity_id = "binary_sensor.bewegungsmelder_haustur_motion"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Bewegungsmelder Haustür"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass, hmip_device, "motionDetected", True, channel=0, channel_real_index=1
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
 
 
 async def test_hmip_rain_sensor(

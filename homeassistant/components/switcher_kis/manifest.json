@@ -1,6 +1,7 @@
 {
   "domain": "switcher_kis",
   "name": "Switcher",
+  "categories": ["plugs_switches", "climate.water_heaters", "blinds_curtains"],
   "codeowners": ["@thecode", "@YogevBokobza"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/switcher_kis",
@@ -8,6 +9,6 @@
   "iot_class": "local_push",
   "loggers": ["aioswitcher"],
   "quality_scale": "silver",
-  "requirements": ["aioswitcher==6.1.1"],
+  "requirements": ["aioswitcher==6.3.0"],
   "single_config_entry": true
 }

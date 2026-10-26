@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
-    async_remove_helper_config_entry_from_source_device,
+    async_remove_helper_devices,
 )
 from homeassistant.helpers.template import Template
 
@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: HistoryStatsConfigEntry
-) -> bool:
+) -> None:
     """Set up History stats from a config entry."""
 
     entity_id: str = entry.options[CONF_ENTITY_ID]
@@ -90,10 +90,8 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
@@ -106,7 +104,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             if source_device_id := async_entity_id_to_device_id(
                 hass, options[CONF_ENTITY_ID]
             ):
-                async_remove_helper_config_entry_from_source_device(
+                async_remove_helper_devices(
                     hass,
                     helper_config_entry_id=config_entry.entry_id,
                     source_device_id=source_device_id,
@@ -133,11 +131,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.minor_version,
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: HistoryStatsConfigEntry
-) -> bool:
+) -> None:
     """Unload History stats config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

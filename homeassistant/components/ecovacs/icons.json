@@ -21,8 +21,20 @@
       "reset_lifespan_brush": {
         "default": "mdi:broom"
       },
+      "reset_lifespan_cleaning_solution": {
+        "default": "mdi:flask-outline"
+      },
       "reset_lifespan_dust_bag": {
         "default": "mdi:delete-outline"
+      },
+      "reset_lifespan_dust_bucket": {
+        "default": "mdi:bucket-outline"
+      },
+      "reset_lifespan_dust_case_heap": {
+        "default": "mdi:air-filter"
+      },
+      "reset_lifespan_dust_container_filter": {
+        "default": "mdi:air-filter"
       },
       "reset_lifespan_filter": {
         "default": "mdi:air-filter"
@@ -30,11 +42,20 @@
       "reset_lifespan_hand_filter": {
         "default": "mdi:air-filter"
       },
+      "reset_lifespan_heavy_duty_cleaning_solution": {
+        "default": "mdi:flask-outline"
+      },
       "reset_lifespan_lens_brush": {
         "default": "mdi:broom"
       },
+      "reset_lifespan_mop_washing_tray": {
+        "default": "mdi:tray"
+      },
       "reset_lifespan_round_mop": {
         "default": "mdi:broom"
+      },
+      "reset_lifespan_sewage_box": {
+        "default": "mdi:trash-can-outline"
       },
       "reset_lifespan_side_brush": {
         "default": "mdi:broom"
@@ -42,11 +63,23 @@
       "reset_lifespan_station_filter": {
         "default": "mdi:air-filter"
       },
+      "reset_lifespan_strainer": {
+        "default": "mdi:filter-outline"
+      },
+      "reset_lifespan_trimmer_brush": {
+        "default": "mdi:broom"
+      },
       "reset_lifespan_unit_care": {
         "default": "mdi:robot-vacuum"
       },
       "reset_lifespan_uv_sanitizer": {
         "default": "mdi:lightbulb-on-outline"
+      },
+      "reset_lifespan_water_sink": {
+        "default": "mdi:water-outline"
+      },
+      "reset_lifespan_weed_rope": {
+        "default": "mdi:grass"
       },
       "station_action_clean_base": {
         "default": "mdi:home"
@@ -56,6 +89,9 @@
       },
       "station_action_empty_dustbin": {
         "default": "mdi:delete-restore"
+      },
+      "station_action_wash_mop": {
+        "default": "mdi:water-sync"
       }
     },
     "event": {
@@ -70,6 +106,9 @@
       "cut_direction": {
         "default": "mdi:angle-acute"
       },
+      "mop_wash_interval": {
+        "default": "mdi:timer-refresh-outline"
+      },
       "volume": {
         "default": "mdi:volume-high",
         "state": {
@@ -83,6 +122,9 @@
       },
       "auto_empty": {
         "default": "mdi:delete-empty"
+      },
+      "efficiency_mode": {
+        "default": "mdi:leaf"
       },
       "water_amount": {
         "default": "mdi:water"
@@ -104,8 +146,20 @@
       "lifespan_brush": {
         "default": "mdi:broom"
       },
+      "lifespan_cleaning_solution": {
+        "default": "mdi:flask-outline"
+      },
       "lifespan_dust_bag": {
         "default": "mdi:delete-outline"
+      },
+      "lifespan_dust_bucket": {
+        "default": "mdi:bucket-outline"
+      },
+      "lifespan_dust_case_heap": {
+        "default": "mdi:air-filter"
+      },
+      "lifespan_dust_container_filter": {
+        "default": "mdi:air-filter"
       },
       "lifespan_filter": {
         "default": "mdi:air-filter"
@@ -113,11 +167,20 @@
       "lifespan_hand_filter": {
         "default": "mdi:air-filter"
       },
+      "lifespan_heavy_duty_cleaning_solution": {
+        "default": "mdi:flask-outline"
+      },
       "lifespan_lens_brush": {
         "default": "mdi:broom"
       },
+      "lifespan_mop_washing_tray": {
+        "default": "mdi:tray"
+      },
       "lifespan_round_mop": {
         "default": "mdi:broom"
+      },
+      "lifespan_sewage_box": {
+        "default": "mdi:trash-can-outline"
       },
       "lifespan_side_brush": {
         "default": "mdi:broom"
@@ -125,11 +188,23 @@
       "lifespan_station_filter": {
         "default": "mdi:air-filter"
       },
+      "lifespan_strainer": {
+        "default": "mdi:filter-outline"
+      },
+      "lifespan_trimmer_brush": {
+        "default": "mdi:broom"
+      },
       "lifespan_unit_care": {
         "default": "mdi:robot-vacuum"
       },
       "lifespan_uv_sanitizer": {
         "default": "mdi:lightbulb-on-outline"
+      },
+      "lifespan_water_sink": {
+        "default": "mdi:water-outline"
+      },
+      "lifespan_weed_rope": {
+        "default": "mdi:grass"
       },
       "network_ip": {
         "default": "mdi:ip-network-outline"
@@ -146,22 +221,40 @@
       "stats_area": {
         "default": "mdi:floor-plan"
       },
+      "stats_area_mower": {
+        "default": "mdi:floor-plan"
+      },
       "stats_time": {
+        "default": "mdi:timer-outline"
+      },
+      "stats_time_mower": {
         "default": "mdi:timer-outline"
       },
       "total_stats_area": {
         "default": "mdi:floor-plan"
       },
+      "total_stats_area_mower": {
+        "default": "mdi:floor-plan"
+      },
       "total_stats_cleanings": {
         "default": "mdi:counter"
       },
+      "total_stats_cleanings_mower": {
+        "default": "mdi:counter"
+      },
       "total_stats_time": {
+        "default": "mdi:timer-outline"
+      },
+      "total_stats_time_mower": {
         "default": "mdi:timer-outline"
       }
     },
     "switch": {
       "advanced_mode": {
         "default": "mdi:tune"
+      },
+      "auto_empty": {
+        "default": "mdi:delete-empty"
       },
       "border_spin": {
         "default": "mdi:rotate-right"

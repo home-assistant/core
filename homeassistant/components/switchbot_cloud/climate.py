@@ -15,6 +15,7 @@ from switchbot_api import (
 
 from homeassistant.components import climate as FanState
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TEMPERATURE,
     PRESET_BOOST,
     PRESET_COMFORT,
@@ -25,6 +26,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
     HVACMode,
+    RestoreClimate,
 )
 from homeassistant.const import (
     PRECISION_TENTHS,
@@ -34,13 +36,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
+from . import SwitchbotCloudConfigEntry
 from .const import (
     CLIMATE_PRESET_SCHEDULE,
     SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH,
 )
+from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 _LOGGER = getLogger(__name__)
@@ -78,7 +80,7 @@ async def async_setup_entry(
     )
 
 
-class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreEntity):
+class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, RestoreClimate):
     """Representation of a SwitchBot air conditioner.
 
     As it is an IR device, we don't know the actual state.
@@ -107,8 +109,8 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         HVACMode.OFF,
     ]
     _attr_hvac_mode = HVACMode.FAN_ONLY
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_target_temperature = 21
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_target_temperature = 21.0
     _attr_target_temperature_step = 1
     _attr_precision = 1
     _attr_name = None
@@ -130,22 +132,27 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         self._attr_fan_mode = last_state.attributes.get(
             ClimateEntityStateAttribute.FAN_MODE, self._attr_fan_mode
         )
-        self._attr_target_temperature = last_state.attributes.get(
-            ClimateEntityStateAttribute.TEMPERATURE, self._attr_target_temperature
-        )
+        if (
+            climate_data := await self.async_get_last_climate_data(validate_range=True)
+        ) is not None and (
+            temperature := climate_data.native_target_temperature
+        ) is not None:
+            self._attr_native_target_temperature = round(temperature)
 
-    def _get_mode(self, hvac_mode: HVACMode | None) -> int:
-        new_hvac_mode = hvac_mode or self._attr_hvac_mode
+    def _get_mode(self, hvac_mode: HVACMode) -> int:
+        """Return the SwitchBot mode for the command.
+
+        Every command carries a mode, so one that turns the device off carries
+        the mode it was last running in.
+        """
         _LOGGER.debug(
-            "Received hvac_mode: %s (Currently set as %s)",
+            "Resolving mode for hvac_mode: %s (Currently set as %s)",
             hvac_mode,
             self._attr_hvac_mode,
         )
-        if new_hvac_mode == HVACMode.OFF:
-            return _SWITCHBOT_HVAC_MODES.get(
-                self._attr_hvac_mode, _DEFAULT_SWITCHBOT_HVAC_MODE
-            )
-        return _SWITCHBOT_HVAC_MODES.get(new_hvac_mode, _DEFAULT_SWITCHBOT_HVAC_MODE)
+        if hvac_mode == HVACMode.OFF:
+            hvac_mode = self._attr_hvac_mode
+        return _SWITCHBOT_HVAC_MODES.get(hvac_mode, _DEFAULT_SWITCHBOT_HVAC_MODE)
 
     async def _do_send_command(
         self,
@@ -153,12 +160,15 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         fan_mode: str | None = None,
         temperature: float | None = None,
     ) -> None:
-        new_temperature = temperature or self._attr_target_temperature
-        new_mode = self._get_mode(hvac_mode)
+        new_temperature = temperature or self._attr_native_target_temperature
+        # A command without a mode of its own follows the mode the entity is
+        # already in, so it cannot power a device on that is off
+        new_hvac_mode = hvac_mode or self._attr_hvac_mode
+        new_mode = self._get_mode(new_hvac_mode)
         new_fan_speed = _SWITCHBOT_FAN_MODES.get(
             fan_mode or self._attr_fan_mode, _DEFAULT_SWITCHBOT_FAN_MODE
         )
-        new_power_state = "on" if hvac_mode != HVACMode.OFF else "off"
+        new_power_state = "on" if new_hvac_mode != HVACMode.OFF else "off"
         command = f"{int(new_temperature)},{new_mode},{new_fan_speed},{new_power_state}"
         _LOGGER.debug("Sending command to %s: %s", self._attr_unique_id, command)
         await self.send_api_command(
@@ -185,8 +195,14 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         """Set target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        await self._do_send_command(temperature=temperature)
-        self._attr_target_temperature = temperature
+        hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        if hvac_mode is not None:
+            self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
+
+        await self._do_send_command(hvac_mode=hvac_mode, temperature=temperature)
+        self._attr_native_target_temperature = temperature
+        if hvac_mode is not None:
+            self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
     @override
@@ -232,7 +248,7 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
     _attr_max_temp = 35
     _attr_min_temp = 4
     _attr_target_temperature_step = PRECISION_TENTHS
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     _attr_preset_modes = list(RADIATOR_PRESET_MODE_MAP)
 
@@ -248,10 +264,10 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
-        self._attr_target_temperature = kwargs["temperature"]
+        self._attr_native_target_temperature = kwargs["temperature"]
         await self.send_api_command(
             command=SmartRadiatorThermostatCommands.SET_MANUAL_MODE_TEMPERATURE,
-            parameters=str(self._attr_target_temperature),
+            parameters=str(self._attr_native_target_temperature),
         )
 
         await asyncio.sleep(SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH)
@@ -267,9 +283,9 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
         self._attr_preset_mode = preset_mode
 
         if self.preset_mode == PRESET_HOME:
-            self._attr_target_temperature = self.current_temperature
+            self._attr_native_target_temperature = self.native_current_temperature
         else:
-            self._attr_target_temperature = None
+            self._attr_native_target_temperature = None
 
         await asyncio.sleep(SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
@@ -289,7 +305,7 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
                 parameters=RADIATOR_PRESET_MODE_MAP[PRESET_BOOST].value,
             )
             self._attr_preset_mode = PRESET_BOOST
-        self._attr_target_temperature = None
+        self._attr_native_target_temperature = None
         self._attr_hvac_mode = hvac_mode
         await asyncio.sleep(SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
@@ -301,7 +317,7 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
             return
         mode: int = self.coordinator.data["mode"]
         temperature: str = self.coordinator.data["temperature"]
-        self._attr_current_temperature = float(temperature)
+        self._attr_native_current_temperature = float(temperature)
         self._attr_preset_mode = RADIATOR_HA_PRESET_MODE_MAP[
             SmartRadiatorThermostatMode(mode)
         ]
@@ -311,7 +327,9 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
         else:
             self._attr_hvac_mode = HVACMode.HEAT
             if self.preset_mode == PRESET_HOME:
-                self._attr_target_temperature = self._attr_current_temperature
+                self._attr_native_target_temperature = (
+                    self._attr_native_current_temperature
+                )
         self.async_write_ha_state()
 
 

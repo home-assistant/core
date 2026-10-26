@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for WeatherKit integration."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
+import time
 from typing import override
 
 from apple_weatherkit import DataSetType
@@ -20,7 +21,7 @@ REQUESTED_DATA_SETS = [
     DataSetType.HOURLY_FORECAST,
 ]
 
-STALE_DATA_THRESHOLD = timedelta(hours=1)
+STALE_DATA_THRESHOLD = timedelta(hours=1).total_seconds()
 
 HOURLY_FORECAST_DURATION = timedelta(days=7)
 
@@ -32,7 +33,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
 
     config_entry: WeatherKitConfigEntry
     supported_data_sets: list[DataSetType] | None = None
-    last_updated_at: datetime | None = None
+    last_updated_at: float | None = None
 
     def __init__(
         self,
@@ -83,12 +84,12 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
         except WeatherKitApiClientError as exception:
             if self.data is None or (
                 self.last_updated_at is not None
-                and datetime.now() - self.last_updated_at > STALE_DATA_THRESHOLD  # pylint: disable=home-assistant-enforce-naive-now
+                and time.time() - self.last_updated_at > STALE_DATA_THRESHOLD
             ):
                 raise UpdateFailed(exception) from exception
 
             LOGGER.debug("Using stale data because update failed: %s", exception)
             return self.data
         else:
-            self.last_updated_at = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+            self.last_updated_at = time.time()
             return updated_data

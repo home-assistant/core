@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_MODE,
-    CONF_NAME,
     EntityStateAttribute,
     UnitOfLength,
     UnitOfTime,
@@ -47,7 +46,6 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
     """Construct SensorEntityDescriptions."""
     return (
         SensorEntityDescription(
-            translation_key="duration",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION,
             state_class=SensorStateClass.MEASUREMENT,
@@ -65,7 +63,6 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             suggested_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
-            translation_key="distance",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -83,7 +80,7 @@ async def async_setup_entry(
     """Add HERE travel time entities from a config_entry."""
 
     entry_id = config_entry.entry_id
-    name = config_entry.data[CONF_NAME]
+    name = config_entry.title
     coordinator = config_entry.runtime_data
 
     sensors: list[HERETravelTimeSensor] = [

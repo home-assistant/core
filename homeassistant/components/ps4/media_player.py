@@ -186,7 +186,7 @@ class PS4Device(MediaPlayerEntity):
                         self._attr_source = self._attr_media_title
                         self._attr_media_content_type = None
                         # Get data from PS Store.
-                        self.hass.async_create_background_task(
+                        self.hass.create_task(
                             self.async_get_title_data(title_id, name),
                             "ps4.media_player-get_title_data",
                         )
@@ -282,7 +282,12 @@ class PS4Device(MediaPlayerEntity):
             self._attr_media_content_type = media_type
 
             await self.hass.async_add_executor_job(self.update_list)
-            self.async_write_ha_state()
+
+            # Entities are added with update_before_add, so the poll that
+            # started this fetch can run before the entity has an entity_id.
+            # The platform writes the state it collected once it adds us.
+            if self.entity_id:
+                self.async_write_ha_state()
 
     def update_list(self) -> None:
         """Update Game List, Correct data if different."""
@@ -350,9 +355,7 @@ class PS4Device(MediaPlayerEntity):
                 self._attr_unique_id = entry.unique_id
                 self.entity_id = entry.entity_id
                 break
-            for device in d_registry.devices.get_devices_for_config_entry_id(
-                self._entry_id
-            ):
+            for device in dr.async_entries_for_config_entry(d_registry, self._entry_id):
                 # Rebuilt from the existing device entry, which already carries
                 # the network MAC connection added by the live-status branch.
                 self._attr_device_info = DeviceInfo(

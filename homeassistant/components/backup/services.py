@@ -1,6 +1,6 @@
 """The Backup integration."""
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service import async_register_admin_service
 
@@ -28,6 +28,7 @@ async def _async_handle_create_automatic_service(call: ServiceCall) -> None:
     await call.hass.data[DATA_MANAGER].async_create_automatic_backup()
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services."""
     if not is_hassio(hass):

@@ -8,10 +8,12 @@ from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 from pyoverkiz.models import Event
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
     HVACAction,
@@ -31,8 +33,6 @@ from .helpers import (
     device_unavailable_event,
 )
 
-from tests.common import snapshot_platform
-
 # io:HeatingValveIOComponent
 VALVE = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
@@ -44,6 +44,12 @@ COZYTOUCH = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
     "modbuslink://1234-5678-5643/1#1",
     "climate.living_room_heater",
+)
+# Atlantic Calissia (io:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointIOComponent)
+ELECTRICAL_HEATER_ADJUSTABLE = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "io://1234-5678-5643/11009627#1",
+    "climate.my_home_living_room_heater",
 )
 
 # Hitachi Yutaki 2-zone air-to-water heat pump
@@ -63,12 +69,19 @@ THERMOSTAT_HEATING = FixtureDevice(
     "io://1234-5678-5010/386310#1",
     "climate.study_thermostat",
 )
+# io:AtlanticHeatRecoveryVentilationIOComponent without io:VentilationModeState value
+HEAT_RECOVERY_VENTILATION = FixtureDevice(
+    "setup/local_somfy_tahoma_switch_europe.json",
+    "io://1234-5678-6508/2840629#1",
+    "climate.ventilation",
+)
 
 SNAPSHOT_FIXTURES = [
     VALVE,
     COZYTOUCH,
     YUTAKI_ZONE_1,
     THERMOSTAT_HEATING,
+    HEAT_RECOVERY_VENTILATION,
 ]
 
 
@@ -171,6 +184,145 @@ async def test_events_for_unknown_device_url(
     assert state is not None
 
 
+async def test_electrical_heater_adjustable_target_temperature(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test target_temperature tracks the effective setpoint only in auto mode."""
+    await setup_overkiz_integration(fixture=ELECTRICAL_HEATER_ADJUSTABLE.fixture)
+
+    # Fixture starts in auto (external) mode with the eco preset active.
+    state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == 16.5
+
+    # The preset changes to comfort while still scheduled (auto).
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=ELECTRICAL_HEATER_ADJUSTABLE.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.IO_TARGET_HEATING_LEVEL,
+                        "type": 3,
+                        "value": "comfort",
+                    },
+                    {
+                        "name": OverkizState.IO_EFFECTIVE_TEMPERATURE_SETPOINT,
+                        "type": 2,
+                        "value": 20.0,
+                    },
+                ],
+            )
+        ],
+    )
+    state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == 20.0
+
+    # While scheduled (auto), setting a temperature derogates the active
+    # preset instead of overwriting the comfort setpoint.
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": ELECTRICAL_HEATER_ADJUSTABLE.entity_id, ATTR_TEMPERATURE: 19.0},
+        blocking=True,
+    )
+    assert_command_call(
+        mock_client,
+        device_url=ELECTRICAL_HEATER_ADJUSTABLE.device_url,
+        command_name="setDerogatedTargetTemperature",
+        parameters=[19.0],
+    )
+
+    # The device reports the derogation by updating the effective setpoint.
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=ELECTRICAL_HEATER_ADJUSTABLE.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.IO_EFFECTIVE_TEMPERATURE_SETPOINT,
+                        "type": 2,
+                        "value": 19.0,
+                    },
+                ],
+            )
+        ],
+    )
+    state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == 19.0
+
+    mock_client.execute_action_group.reset_mock()
+
+    # Leaving auto (scheduled) mode for manual falls back to
+    # core:TargetTemperatureState, and setting a temperature now targets
+    # that state directly instead of derogating.
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=ELECTRICAL_HEATER_ADJUSTABLE.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_OPERATING_MODE,
+                        "type": 3,
+                        "value": "manual",
+                    },
+                ],
+            )
+        ],
+    )
+    state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == 20.0
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": ELECTRICAL_HEATER_ADJUSTABLE.entity_id, ATTR_TEMPERATURE: 21.0},
+        blocking=True,
+    )
+    assert_command_call(
+        mock_client,
+        device_url=ELECTRICAL_HEATER_ADJUSTABLE.device_url,
+        command_name="setTargetTemperature",
+        parameters=[21.0],
+    )
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=ELECTRICAL_HEATER_ADJUSTABLE.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_TARGET_TEMPERATURE,
+                        "type": 2,
+                        "value": 21.0,
+                    },
+                ],
+            )
+        ],
+    )
+    state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == 21.0
+
+
 async def test_hitachi_air_to_water_heating_zone_2(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
@@ -244,4 +396,28 @@ async def test_thermostat_heating_set_preset_mode(
         device_url=THERMOSTAT_HEATING.device_url,
         command_name="setDerogation",
         parameters=parameters,
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param("set_fan_mode", {ATTR_FAN_MODE: "bypass_boost"}, id="fan_mode"),
+        pytest.param("set_preset_mode", {ATTR_PRESET_MODE: "prog"}, id="preset_mode"),
+    ],
+)
+async def test_heat_recovery_ventilation_without_ventilation_mode(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    service: str,
+    service_data: dict[str, str],
+) -> None:
+    """Test setting modes does not fail without an io:VentilationModeState value."""
+    await setup_overkiz_integration(fixture=HEAT_RECOVERY_VENTILATION.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        service,
+        {"entity_id": HEAT_RECOVERY_VENTILATION.entity_id, **service_data},
+        blocking=True,
     )

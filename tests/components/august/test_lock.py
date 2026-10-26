@@ -1,11 +1,12 @@
 """The lock tests for the august platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import Mock
 
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from yalexs.manager.activity import INITIAL_LOCK_RESYNC_TIME
 from yalexs.pubnub_async import AugustPubNub
@@ -34,18 +35,16 @@ from .mocks import (
     _mock_operative_august_lock_detail,
 )
 
-from tests.common import async_fire_time_changed
-
 
 async def test_lock_device_registry(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, snapshot: SnapshotAssertion
 ) -> None:
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
-    await _create_august_with_devices(hass, [lock_one])
+    entry, _ = await _create_august_with_devices(hass, [lock_one])
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("august", "online_with_doorsense")}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("august", "online_with_doorsense"), entry.entry_id
     )
     assert reg_device == snapshot
 
@@ -491,7 +490,7 @@ async def test_lock_update_via_pubnub(hass: HomeAssistant) -> None:
         == LockState.LOCKING
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=30))
     await hass.async_block_till_done()
     assert (
         hass.states.get(
@@ -501,7 +500,7 @@ async def test_lock_update_via_pubnub(hass: HomeAssistant) -> None:
     )
 
     pubnub.connected = True
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=30))
     await hass.async_block_till_done()
     assert (
         states.get("lock.online_with_doorsense_name_online_with_doorsense_name").state
@@ -509,7 +508,7 @@ async def test_lock_update_via_pubnub(hass: HomeAssistant) -> None:
     )
 
     # Ensure pubnub status is always preserved
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=2))
     await hass.async_block_till_done()
     assert (
         states.get("lock.online_with_doorsense_name_online_with_doorsense_name").state
@@ -534,7 +533,7 @@ async def test_lock_update_via_pubnub(hass: HomeAssistant) -> None:
         == LockState.UNLOCKING
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=4))
     await hass.async_block_till_done()
     assert (
         states.get("lock.online_with_doorsense_name_online_with_doorsense_name").state

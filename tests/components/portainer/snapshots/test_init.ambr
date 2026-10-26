@@ -5,6 +5,34 @@
       'area_id': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Server',
+      'model_id': None,
+      'name': 'Portainer test',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/dashboard',
       'connections': set({
       }),
@@ -55,7 +83,7 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_2')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -83,7 +111,7 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -111,7 +139,7 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -139,7 +167,7 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -167,7 +195,7 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -195,7 +223,7 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -223,7 +251,7 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -251,7 +279,7 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -279,7 +307,7 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -307,7 +335,7 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -335,7 +363,7 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
   ])
 # ---

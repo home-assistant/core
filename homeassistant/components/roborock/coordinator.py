@@ -20,7 +20,6 @@ from roborock.roborock_message import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -166,7 +165,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         self.properties_api = properties_api
         self.device_info = get_device_info(device)
         if mac := properties_api.network_info.mac:
-            self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+            self.device_info.connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
         self.last_update_state: str | None = None
         # Keep track of last attempt to refresh maps/rooms to know when to try again.
         self._last_home_update_attempt = dt_util.utcnow()
@@ -237,6 +236,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
                 self._handle_trait_update
             )
         )
+        self._unsubs.append(
+            self.properties_api.home.add_update_listener(self._handle_trait_update)
+        )
 
     async def update_map(self) -> None:
         """Update the currently selected map."""
@@ -269,6 +271,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
                     severity=IssueSeverity.WARNING,
                     translation_key="cloud_api_used",
                     translation_placeholders={"device_name": self._device.name},
+                    config_entry_id=self.config_entry.entry_id,
                     learn_more_url="https://www.home-assistant.io/integrations/roborock/#the-integration-tells-me-it-cannot-reach-my-vacuum-and-is-using-the-cloud-api-and-that-this-is-not-supported-or-i-am-having-any-networking-issues",
                 )
 
@@ -390,6 +393,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         try:
             return await self.properties_api.routines.get_routines()
         except RoborockException as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Failed to get routines %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -404,7 +408,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         try:
             await self.properties_api.routines.execute_routine(routine_id)
         except RoborockException as err:
-            _LOGGER.error("Failed to execute routines %s %s", routine_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
@@ -571,6 +574,7 @@ class RoborockWetDryVacUpdateCoordinator(
         """Initialize."""
         super().__init__(hass, config_entry, device)
         self.api = api
+        self._unsub_update = api.add_update_listener(self._handle_update)
         supported_schema_ids = device.product.supported_schema_ids
         self.request_protocols = [
             protocol
@@ -583,13 +587,41 @@ class RoborockWetDryVacUpdateCoordinator(
         self,
     ) -> dict[RoborockDyadDataProtocol, StateType]:
         try:
-            return await self.api.query_values(self.request_protocols)
+            await self.api.query_values(self.request_protocols)
         except RoborockException as ex:
             _LOGGER.debug("Failed to update wet dry vac data: %s", ex)
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_data_fail",
-            ) from ex
+            if not self._should_suppress_update_failure():
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_data_fail",
+                ) from ex
+        return self.api.values
+
+    def _should_suppress_update_failure(self) -> bool:
+        """Determine if we should suppress update failure reporting.
+
+        The device leaves the network while it sleeps on its dock, so a poll can
+        fail while the device is still reporting its state on its own.
+        """
+        if (last_message_time := self.api.last_message_time) is None:
+            return False
+        failure_duration = dt_util.utcnow() - last_message_time
+        _LOGGER.debug("Update failure duration: %s", failure_duration)
+        return failure_duration < MIN_UNAVAILABLE_DURATION
+
+    @callback
+    def _handle_update(self) -> None:
+        """Apply the state the device reported on its own."""
+        _LOGGER.debug("Wet dry vac state updated, updating coordinator data")
+        self.data = self.api.values
+        self.last_update_success = True
+        self.async_update_listeners()
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Stop following the device state on shutdown."""
+        self._unsub_update()
+        await super().async_shutdown()
 
 
 class RoborockDataUpdateCoordinatorB01(DataUpdateCoordinator[B01Props]):
@@ -658,6 +690,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.MODE,
             RoborockB01Props.CLEAN_PATH_PREFERENCE,
             RoborockB01Props.QUANTITY,
+            RoborockB01Props.REPEAT_STATE,
         ]
 
     @override
@@ -677,7 +710,23 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             )
+        await self.async_refresh_q7_map()
         return data
+
+    async def async_refresh_q7_map(self) -> bool:
+        """Refresh the Q7 map list and map content traits.
+
+        Returns True when the traits were refreshed without errors.
+        Never raises; callers fall back to the cached trait values on failure.
+        """
+        try:
+            await self.api.map.refresh()
+            if self.api.map.current_map_id is not None:
+                await self.api.map_content.refresh()
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to refresh Q7 map: %s", ex)
+            return False
+        return True
 
 
 class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):

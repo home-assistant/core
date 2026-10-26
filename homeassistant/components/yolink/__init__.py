@@ -20,7 +20,6 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -80,8 +79,8 @@ class YoLinkHomeMessageListener(MessageListener):
             and msg_data.get("event") is not None
         ):
             device_registry = dr.async_get(self._hass)
-            device_entry = device_registry.async_get_device(
-                identifiers={(DOMAIN, device_coordinator.device.device_id)}
+            device_entry = device_registry.async_get_device_by_identifier(
+                (DOMAIN, device_coordinator.device.device_id), self._entry.entry_id
             )
             if device_entry is None:
                 return
@@ -106,15 +105,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> None:
     """Set up yolink from a config entry."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     session = OAuth2Session(hass, entry, implementation)
 
@@ -181,11 +174,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> bo
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_yolink_unload)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.home_instance.async_unload()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.home_instance.async_unload()

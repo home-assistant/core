@@ -1,5 +1,10 @@
 """Tests for the diagnostics data provided by the VeSync integration."""
 
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
 
@@ -9,12 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_async_get_config_entry_diagnostics__no_devices(
@@ -72,8 +71,8 @@ async def test_async_get_device_diagnostics__single_fan(
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "fan")},
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "fan"), config_entry.entry_id
     )
     assert device is not None
 
