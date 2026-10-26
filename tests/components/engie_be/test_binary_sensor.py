@@ -177,7 +177,7 @@ async def test_tomorrow_prices_with_stretched_slot(
 @pytest.mark.usefixtures("frozen_afternoon")
 @pytest.mark.parametrize(
     "unique_id",
-    [f"{BAN}_epex_negative", f"{BAN}_epex_negative_quarter_hour"],
+    [f"{BAN}_epex_hour_negative", f"{BAN}_epex_quarter_hour_negative"],
     ids=["hour", "quarter_hour"],
 )
 async def test_negative_price_off(
@@ -200,7 +200,7 @@ async def test_negative_price_off(
 @pytest.mark.usefixtures("frozen_afternoon")
 @pytest.mark.parametrize(
     "unique_id",
-    [f"{BAN}_epex_negative", f"{BAN}_epex_negative_quarter_hour"],
+    [f"{BAN}_epex_hour_negative", f"{BAN}_epex_quarter_hour_negative"],
     ids=["hour", "quarter_hour"],
 )
 async def test_negative_price_on(
@@ -236,7 +236,7 @@ async def test_negative_price_unknown_without_covering_slot(
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
     hourly_entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{BAN}_epex_negative"
+        "binary_sensor", DOMAIN, f"{BAN}_epex_hour_negative"
     )
     assert hourly_entity_id is not None
 
@@ -245,7 +245,7 @@ async def test_negative_price_unknown_without_covering_slot(
     assert state.state == STATE_UNKNOWN
 
     quarter_hour_entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{BAN}_epex_negative_quarter_hour"
+        "binary_sensor", DOMAIN, f"{BAN}_epex_quarter_hour_negative"
     )
     assert quarter_hour_entity_id is not None
 

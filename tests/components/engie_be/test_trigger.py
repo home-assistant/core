@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from aioengiebelgium import EngieBeCommunicationError
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
@@ -357,6 +358,40 @@ async def test_trigger_after_reload(
     assert await _async_count_calls_along(
         hass, freezer, service_calls, [_brussels(3, 14, 45)]
     ) == [1]
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_counts"),
+    [
+        pytest.param(build_epex_payload_with_negative_current, [1], id="fetched"),
+        pytest.param(EngieBeCommunicationError("boom"), [0], id="fetch_failed"),
+    ],
+)
+async def test_trigger_after_failed_fetch(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    side_effect: Callable[..., Any] | Exception,
+    expected_counts: list[int],
+) -> None:
+    """Test the trigger does not fire while the EPEX fetch fails."""
+    freezer.move_to(_brussels(3, 13, 45))
+    mock_engie_client.return_value.async_get_epex_prices.side_effect = side_effect
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    device_id = household_device_id(device_registry, mock_config_entry)
+    await _async_setup_trigger_automation(
+        hass, "epex_hour_became_negative", {"device_id": device_id}
+    )
+
+    assert (
+        await _async_count_calls_along(
+            hass, freezer, service_calls, [_brussels(3, 14, 0)]
+        )
+        == expected_counts
+    )
 
 
 @pytest.mark.parametrize(

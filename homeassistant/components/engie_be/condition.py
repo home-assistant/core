@@ -19,12 +19,11 @@ from homeassistant.util import dt as dt_util
 
 from .coordinator import epex_price_at
 from .helpers import (
-    DEVICE_IDS_SCHEMA,
-    THRESHOLD_SCHEMA,
-    async_get_device_epex,
+    DEVICE_IDS_OPTIONS_SCHEMA,
+    THRESHOLD_OPTIONS_SCHEMA,
+    async_get_device_epex_data,
     async_validate_epex_options,
     price_in_range,
-    validate_threshold,
 )
 
 
@@ -35,7 +34,7 @@ class _EpexCondition(Condition):
     known EPEX prices and a current price that passes the check.
     """
 
-    _options_schema: probatio.Schema = probatio.Schema(DEVICE_IDS_SCHEMA)
+    _options_schema: probatio.Schema = DEVICE_IDS_OPTIONS_SCHEMA
     _granularity: EpexGranularity
 
     @classmethod
@@ -60,10 +59,10 @@ class _EpexCondition(Condition):
 
     def _check_device(self, device_id: str, now: datetime) -> bool:
         """Return True when the current price of one device passes the check."""
-        epex = async_get_device_epex(self._hass, device_id)
-        if epex is None or not epex.last_update_success:
+        data = async_get_device_epex_data(self._hass, device_id)
+        if data is None:
             return False
-        price = epex_price_at(epex.data, self._granularity, now)
+        price = epex_price_at(data, self._granularity, now)
         return price is not None and self._check_price(price)
 
     @override
@@ -85,9 +84,7 @@ class _EpexNegativeCondition(_EpexCondition):
 class _EpexThresholdCondition(_EpexCondition):
     """Base for conditions that pass while the current EPEX price is in a range."""
 
-    _options_schema = probatio.Schema(
-        probatio.All({**DEVICE_IDS_SCHEMA, **THRESHOLD_SCHEMA}, validate_threshold)
-    )
+    _options_schema = THRESHOLD_OPTIONS_SCHEMA
 
     @override
     def _check_price(self, price: float) -> bool:

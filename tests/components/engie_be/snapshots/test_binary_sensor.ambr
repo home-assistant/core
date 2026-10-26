@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensors_snapshot[binary_sensor.main_street_1_1000_brussels_epex_current_hour_price_is_negative-entry]
+# name: test_binary_sensors_snapshot[binary_sensor.main_street_1_1000_brussels_epex_current_hourly_price_is_negative-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.main_street_1_1000_brussels_epex_current_hour_price_is_negative',
+    'entity_id': 'binary_sensor.main_street_1_1000_brussels_epex_current_hourly_price_is_negative',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,29 +21,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'EPEX current hour price is negative',
+    'object_id_base': 'EPEX current hourly price is negative',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'EPEX current hour price is negative',
+    'original_name': 'EPEX current hourly price is negative',
     'platform': 'engie_be',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'epex_negative',
-    'unique_id': '000000000001_epex_negative',
+    'translation_key': 'epex_hour_negative',
+    'unique_id': '000000000001_epex_hour_negative',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors_snapshot[binary_sensor.main_street_1_1000_brussels_epex_current_hour_price_is_negative-state]
+# name: test_binary_sensors_snapshot[binary_sensor.main_street_1_1000_brussels_epex_current_hourly_price_is_negative-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels EPEX current hour price is negative',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels EPEX current hourly price is negative',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.main_street_1_1000_brussels_epex_current_hour_price_is_negative',
+    'entity_id': 'binary_sensor.main_street_1_1000_brussels_epex_current_hourly_price_is_negative',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -82,8 +82,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'epex_negative_quarter_hour',
-    'unique_id': '000000000001_epex_negative_quarter_hour',
+    'translation_key': 'epex_quarter_hour_negative',
+    'unique_id': '000000000001_epex_quarter_hour_negative',
     'unit_of_measurement': None,
   })
 # ---

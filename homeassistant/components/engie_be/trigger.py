@@ -1,6 +1,7 @@
 """Automation triggers for the ENGIE Belgium integration."""
 
 from abc import abstractmethod
+from collections.abc import Callable
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, override
 
@@ -33,12 +34,12 @@ from .coordinator import (
     epex_tomorrow,
 )
 from .helpers import (
-    DEVICE_IDS_SCHEMA,
-    THRESHOLD_SCHEMA,
+    DEVICE_IDS_OPTIONS_SCHEMA,
+    THRESHOLD_OPTIONS_SCHEMA,
     async_get_device_epex,
+    async_get_device_epex_data,
     async_validate_epex_options,
     price_in_range,
-    validate_threshold,
 )
 
 
@@ -49,7 +50,7 @@ class _EpexTrigger(Trigger):
     computes a check per device and fires when it goes from false to true.
     """
 
-    _options_schema: probatio.Schema = probatio.Schema(DEVICE_IDS_SCHEMA)
+    _options_schema: probatio.Schema = DEVICE_IDS_OPTIONS_SCHEMA
 
     @classmethod
     @override
@@ -73,10 +74,10 @@ class _EpexTrigger(Trigger):
 
     def _device_value(self, device_id: str) -> Any:
         """Return the value for one device, or UNDEFINED when it is not known."""
-        epex = async_get_device_epex(self._hass, device_id)
-        if epex is None or not epex.last_update_success:
+        data = async_get_device_epex_data(self._hass, device_id)
+        if data is None:
             return UNDEFINED
-        return self._value(epex.data, dt_util.utcnow())
+        return self._value(data, dt_util.utcnow())
 
     @override
     async def async_attach_runner(
@@ -208,18 +209,14 @@ class EpexTomorrowPricesPublishedTrigger(_EpexTrigger):
 class _EpexCrossedThresholdTrigger(_EpexTrigger):
     """Base for triggers that fire when an EPEX price enters a range."""
 
-    _options_schema = probatio.Schema(
-        probatio.All({**DEVICE_IDS_SCHEMA, **THRESHOLD_SCHEMA}, validate_threshold)
-    )
+    _options_schema = THRESHOLD_OPTIONS_SCHEMA
     _granularity: EpexGranularity
-    _next: bool
+    _price_fn: Callable[[EngieBeEpexData, EpexGranularity, datetime], float | None]
 
     @override
     def _value(self, data: EngieBeEpexData, now: datetime) -> bool | None:
         """Return whether the watched price is inside the range."""
-        price = (epex_next_price if self._next else epex_price_at)(
-            data, self._granularity, now
-        )
+        price = self._price_fn(data, self._granularity, now)
         if price is None:
             return None
         return price_in_range(
@@ -231,28 +228,28 @@ class EpexCurrentHourCrossedThresholdTrigger(_EpexCrossedThresholdTrigger):
     """Trigger that fires when the current hourly EPEX price crosses a threshold."""
 
     _granularity = EpexGranularity.HOURLY
-    _next = False
+    _price_fn = staticmethod(epex_price_at)
 
 
 class EpexNextHourCrossedThresholdTrigger(_EpexCrossedThresholdTrigger):
     """Trigger that fires when the next hourly EPEX price crosses a threshold."""
 
     _granularity = EpexGranularity.HOURLY
-    _next = True
+    _price_fn = staticmethod(epex_next_price)
 
 
 class EpexCurrentQuarterHourCrossedThresholdTrigger(_EpexCrossedThresholdTrigger):
     """Trigger that fires when the current quarter-hourly EPEX price crosses a threshold."""
 
     _granularity = EpexGranularity.QUARTER_HOURLY
-    _next = False
+    _price_fn = staticmethod(epex_price_at)
 
 
 class EpexNextQuarterHourCrossedThresholdTrigger(_EpexCrossedThresholdTrigger):
     """Trigger that fires when the next quarter-hourly EPEX price crosses a threshold."""
 
     _granularity = EpexGranularity.QUARTER_HOURLY
-    _next = True
+    _price_fn = staticmethod(epex_next_price)
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

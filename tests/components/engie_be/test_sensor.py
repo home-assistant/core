@@ -1035,8 +1035,8 @@ async def test_epex_entities_on_household_device(
             "epex_low_today_quarter_hour",
             "epex_next_hour",
             "epex_next_quarter_hour",
-            "epex_negative",
-            "epex_negative_quarter_hour",
+            "epex_hour_negative",
+            "epex_quarter_hour_negative",
             "epex_tomorrow_available",
         )
     }

@@ -12,7 +12,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .coordinator import EngieBeEpexCoordinator
+from .coordinator import EngieBeEpexCoordinator, EngieBeEpexData
 
 if TYPE_CHECKING:
     from . import EngieBeRuntimeData
@@ -23,13 +23,8 @@ DEVICE_IDS_SCHEMA: dict[probatio.Marker, Any] = {
     ),
 }
 
-THRESHOLD_SCHEMA: dict[probatio.Marker, Any] = {
-    probatio.Optional(CONF_ABOVE): probatio.Coerce(float),
-    probatio.Optional(CONF_BELOW): probatio.Coerce(float),
-}
 
-
-def validate_threshold(options: dict[str, Any]) -> dict[str, Any]:
+def _validate_threshold(options: dict[str, Any]) -> dict[str, Any]:
     """Require at least one bound and a range that is not empty."""
     above = options.get(CONF_ABOVE)
     below = options.get(CONF_BELOW)
@@ -38,6 +33,20 @@ def validate_threshold(options: dict[str, Any]) -> dict[str, Any]:
     if above is not None and below is not None and above >= below:
         raise probatio.Invalid("Above must be lower than below")
     return options
+
+
+DEVICE_IDS_OPTIONS_SCHEMA = probatio.Schema(DEVICE_IDS_SCHEMA)
+
+THRESHOLD_OPTIONS_SCHEMA = probatio.Schema(
+    probatio.All(
+        {
+            **DEVICE_IDS_SCHEMA,
+            probatio.Optional(CONF_ABOVE): probatio.Coerce(float),
+            probatio.Optional(CONF_BELOW): probatio.Coerce(float),
+        },
+        _validate_threshold,
+    )
+)
 
 
 def price_in_range(price: float, above: float | None, below: float | None) -> bool:
@@ -87,3 +96,14 @@ def async_get_device_epex(
     ):
         return None
     return runtime_data.epex
+
+
+@callback
+def async_get_device_epex_data(
+    hass: HomeAssistant, device_id: str
+) -> EngieBeEpexData | None:
+    """Return the EPEX prices of the device when the last fetch succeeded."""
+    epex = async_get_device_epex(hass, device_id)
+    if epex is None or not epex.last_update_success:
+        return None
+    return epex.data

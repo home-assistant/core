@@ -15,10 +15,10 @@
   },
   "entity": {
     "binary_sensor": {
-      "epex_negative": {
+      "epex_hour_negative": {
         "default": "mdi:cash-off"
       },
-      "epex_negative_quarter_hour": {
+      "epex_quarter_hour_negative": {
         "default": "mdi:cash-off"
       },
       "epex_tomorrow_available": {

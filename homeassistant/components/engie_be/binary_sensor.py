@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 PARALLEL_UPDATES = 0
 
 _EPEX_NEGATIVE_TRANSLATION_KEYS: Mapping[EpexGranularity, str] = {
-    EpexGranularity.HOURLY: "epex_negative",
-    EpexGranularity.QUARTER_HOURLY: "epex_negative_quarter_hour",
+    EpexGranularity.HOURLY: "epex_hour_negative",
+    EpexGranularity.QUARTER_HOURLY: "epex_quarter_hour_negative",
 }
 
 

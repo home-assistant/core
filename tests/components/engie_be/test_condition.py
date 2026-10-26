@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from aioengiebelgium import EnergyContractsResponse
+from aioengiebelgium import EnergyContractsResponse, EngieBeCommunicationError
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
@@ -152,6 +152,40 @@ async def test_threshold_condition(
     assert (
         await _async_condition_passes(
             hass, service_calls, condition_key, {"device_id": device_id, **options}
+        )
+        is expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected"),
+    [
+        pytest.param(build_epex_payload_with_negative_current, True, id="fetched"),
+        pytest.param(EngieBeCommunicationError("boom"), False, id="fetch_failed"),
+    ],
+)
+async def test_condition_after_failed_fetch(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    side_effect: Callable[..., Any] | Exception,
+    expected: bool,
+) -> None:
+    """Test the condition fails while the EPEX fetch fails."""
+    freezer.move_to(_brussels(14, 0))
+    mock_engie_client.return_value.async_get_epex_prices.side_effect = side_effect
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    device_id = household_device_id(device_registry, mock_config_entry)
+
+    assert (
+        await _async_condition_passes(
+            hass,
+            service_calls,
+            "epex_hour_price_is_negative",
+            {"device_id": device_id},
         )
         is expected
     )

@@ -113,10 +113,10 @@
   },
   "entity": {
     "binary_sensor": {
-      "epex_negative": {
-        "name": "EPEX current hour price is negative"
+      "epex_hour_negative": {
+        "name": "EPEX current hourly price is negative"
       },
-      "epex_negative_quarter_hour": {
+      "epex_quarter_hour_negative": {
         "name": "EPEX current quarter-hourly price is negative"
       },
       "epex_tomorrow_available": {
