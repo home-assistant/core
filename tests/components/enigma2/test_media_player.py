@@ -7,6 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from openwebif.api import OpenWebIfServiceEvent, OpenWebIfStatus
 from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 from homeassistant.components.enigma2.const import DOMAIN
 from homeassistant.components.enigma2.media_player import ATTR_MEDIA_CURRENTLY_RECORDING
@@ -33,12 +38,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
 
 
 @pytest.mark.parametrize(

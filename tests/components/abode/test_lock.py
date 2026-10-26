@@ -4,6 +4,7 @@ import json
 from unittest.mock import patch
 
 from jaraco.abode.helpers import urls as URL
+from pytest_homeassistant.common import async_load_json_array_fixture, snapshot_platform
 from requests_mock import Mocker
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
-
-from tests.common import async_load_json_array_fixture, snapshot_platform
 
 DEVICE_ID = "lock.test_lock"
 

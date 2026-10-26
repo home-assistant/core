@@ -82,13 +82,15 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         self._attr_force_update = static_info.force_update
         # protobuf doesn't support nullable strings so we need to check
         # if the string is empty
-        if unit_of_measurement := static_info.unit_of_measurement:
-            self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = static_info.unit_of_measurement or None
         self._attr_suggested_display_precision = static_info.accuracy_decimals
         self._attr_device_class = try_parse_enum(
             SensorDeviceClass, static_info.device_class
         )
         if not (state_class := static_info.state_class):
+            # Static info also updates an existing entity on reconnect, where a
+            # state class the firmware no longer sets must not linger.
+            self._attr_state_class = None
             return
         if (
             state_class == EsphomeSensorStateClass.MEASUREMENT

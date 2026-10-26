@@ -7,6 +7,11 @@ from pyimouapi.const import PARAM_STATE, PARAM_STATUS
 from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -20,8 +25,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .const import UNKNOWN_BUTTON_KEY, create_online_device
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize("platforms", [[Platform.BUTTON]], indirect=True)
@@ -198,11 +201,12 @@ async def test_press_unavailable_offline_device_via_service(
         if entry.unique_id == "d1$mute"
     )
 
-    async def set_device_offline(device: ImouHaDevice) -> None:
-        device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.OFFLINE.value}
+    async def set_devices_offline(devices: list[ImouHaDevice]) -> None:
+        for device in devices:
+            device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.OFFLINE.value}
 
-    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
-        set_device_offline
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = (
+        set_devices_offline
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

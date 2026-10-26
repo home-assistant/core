@@ -321,7 +321,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_CREATE_TOKEN): bool,
-                    probatio.Optional(CONF_TOKEN): str,
+                    probatio.Optional(probatio.Secret(CONF_TOKEN)): str,
                 }
             ),
             errors=errors,
@@ -349,6 +349,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         self._request_token_task = self.hass.async_create_task(
             self._request_token_task_func(self._auth_id), eager_start=False
         )
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_external_step(
             step_id="create_token_external", url=self._get_hyperion_url()
         )
@@ -482,9 +483,7 @@ class HyperionOptionsFlow(OptionsFlowWithReload):
                         default=self.config_entry.options.get(
                             CONF_PRIORITY, DEFAULT_PRIORITY
                         ),
-                    ): probatio.All(
-                        probatio.Coerce(int), probatio.Range(min=0, max=255)
-                    ),
+                    ): probatio.All(probatio.Coerce(int), probatio.Byte()),
                     probatio.Optional(
                         CONF_EFFECT_SHOW_LIST,
                         default=default_effect_show_list,

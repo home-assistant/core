@@ -25,8 +25,8 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .const import KNOWN_DEVICES
 from .entity import HomeKitEntity
 
 # 0 is clockwise, 1 is counter-clockwise. The match to forward and reverse is so that

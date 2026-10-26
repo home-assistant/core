@@ -8,27 +8,35 @@ from unittest.mock import MagicMock
 from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import EventType, MatterNodeData
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.matter import DOMAIN
+from homeassistant.components.matter.const import ID_TYPE_DEVICE_ID
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, load_fixture
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 FIXTURES = [
     "air_quality_sensor",
+    "aqara_camera_hub_g350",
     "aqara_door_window_p2",
+    "aqara_light_switch_h2_us_4099",
+    "aqara_light_switch_h2_us_4100",
+    "aqara_light_switch_h2_us_4101",
     "aqara_motion_p2",
     "aqara_multi_state_p100",
     "aqara_presence_fp300",
     "aqara_sensor_w100",
     "aqara_shutter_switch_h2",
     "aqara_thermostat_w500",
+    "aqara_thermostat_w500_presets",
     "aqara_u200",
     "atios_knx_bridge",
     "color_temperature_light",
+    "cync_keypad_dimmer",
+    "dewenwils_3_zone_transformer",
+    "ductech_smartwings_levitate",
     "eberle_ute3000",
     "ecovacs_deebot",
     "eufy_vacuum_omni_e28",
@@ -50,9 +58,12 @@ FIXTURES = [
     "ikea_scroll_wheel",
     "inovelli_vtm30",
     "inovelli_vtm31",
+    "lifx_switch_115",
+    "lifx_switch_89",
     "longan_link_thermostat",
     "mock_air_purifier",
     "mock_battery_storage",
+    "mock_camera",
     "mock_chime",
     "mock_closure_covering_lift",
     "mock_closure_roof_window",
@@ -85,6 +96,7 @@ FIXTURES = [
     "mock_pump",
     "mock_room_airconditioner",
     "mock_soil_sensor",
+    "mock_solar_battery_storage",
     "mock_solar_inverter",
     "mock_speaker",
     "mock_switch_unit",
@@ -98,6 +110,7 @@ FIXTURES = [
     "mock_window_covering_pa_lift_null_tilt",
     "mock_window_covering_pa_tilt",
     "mock_window_covering_tilt",
+    "nanoleaf_nl77k1",
     "onoff_light_with_levelcontrol_present",
     "resideo_x2s_thermostat",
     "roborock_saros_10",
@@ -112,6 +125,12 @@ FIXTURES = [
     "silabs_water_heater",
     "switchbot_k11_plus",
     "tado_smart_radiator_thermostat_x",
+    "tapo_smart_outdoor_plug_in_dimmer",
+    "tapo_smart_wi_fi_outlet",
+    "tapo_smart_wi_fi_plug_265",
+    "tapo_smart_wi_fi_power_strip",
+    "tp_link_smart_outdoor_plug",
+    "uascent_smart_switch",
     "wago_home_blind_control",
     "wago_home_relay_16a",
     "yandex_smart_socket",
@@ -260,14 +279,12 @@ async def set_node_attribute_and_notify(
 
 
 @cache
-def _get_fixture_name(node_id: int) -> dict[int, str]:
-    """Get the fixture name for a given node ID."""
-    for fixture_name in FIXTURES:
-        fixture_data = load_and_parse_node_fixture(fixture_name)
-        if fixture_data["node_id"] == node_id:
-            return fixture_name
-
-    raise KeyError(f"Fixture for node id {node_id} not found")
+def _get_fixture_names() -> dict[int, str]:
+    """Get the fixture name for each node ID."""
+    return {
+        load_and_parse_node_fixture(fixture_name)["node_id"]: fixture_name
+        for fixture_name in FIXTURES
+    }
 
 
 def snapshot_matter_entities(
@@ -281,10 +298,74 @@ def snapshot_matter_entities(
     for entity_state in entities:
         entity_entry = entity_registry.async_get(entity_state.entity_id)
         node_id = int(entity_entry.unique_id.split("-")[1], 16)
-        fixture_name = _get_fixture_name(node_id)
+        fixture_name = _get_fixture_names()[node_id]
         assert entity_entry == snapshot(
             name=f"{fixture_name}][{entity_entry.entity_id}-entry"
         )
         assert entity_state == snapshot(
             name=f"{fixture_name}][{entity_entry.entity_id}-state"
         )
+
+
+def _matter_device_id(device: dr.AnyDeviceEntry) -> str:
+    """Return the stable Matter device-id portion of a device's identifiers."""
+    prefix = f"{ID_TYPE_DEVICE_ID}_"
+    return next(
+        identifier[1].removeprefix(prefix)
+        for identifier in device.identifiers
+        if identifier[0] == DOMAIN and identifier[1].startswith(prefix)
+    )
+
+
+def _device_entity_names(
+    entity_registry: er.EntityRegistry, device_id: str
+) -> dict[str, str | None]:
+    """Return a device's entities as a sorted entity_id -> name mapping."""
+    return {
+        entry.entity_id: entry.original_name
+        for entry in sorted(
+            er.async_entries_for_device(
+                entity_registry, device_id, include_disabled_entities=True
+            ),
+            key=lambda entry: entry.entity_id,
+        )
+    }
+
+
+def snapshot_matter_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot the Matter device topology and entity names.
+
+    Produces a stable tree keyed by the Matter device id, showing each node
+    device, its child devices, its bridge (``via_device``) link and the entity
+    names on each device, so the effect of multi-endpoint changes (child devices,
+    entity naming) are asserted.
+    """
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    devices = dr.async_entries_for_config_entry(device_registry, entry_id)
+    matter_id_by_device_id = {
+        device.id: _matter_device_id(device) for device in devices
+    }
+
+    tree = {
+        _matter_device_id(device): {
+            "name": device.name,
+            "via_device": matter_id_by_device_id.get(device.via_device_id),
+            "entities": _device_entity_names(entity_registry, device.id),
+            "children": {
+                _matter_device_id(child): {
+                    "name": child.name,
+                    "entities": _device_entity_names(entity_registry, child.id),
+                }
+                for child in dr.async_entries_for_parent_device(
+                    device_registry, device.id
+                )
+            },
+        }
+        for device in devices
+    }
+    assert tree == snapshot

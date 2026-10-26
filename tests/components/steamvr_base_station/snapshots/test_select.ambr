@@ -1,0 +1,149 @@
+# serializer version: 1
+# name: test_select_entities[select.lhb_747a9bc5_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+        '7',
+        '8',
+        '9',
+        '10',
+        '11',
+        '12',
+        '13',
+        '14',
+        '15',
+        '16',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('bluetooth', 'AA:BB:CC:DD:EE:01')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.lhb_747a9bc5_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Channel',
+    'platform': 'steamvr_base_station',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'channel',
+    'unique_id': 'AA:BB:CC:DD:EE:01_channel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.lhb_747a9bc5_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LHB-747A9BC5 Channel',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+        '7',
+        '8',
+        '9',
+        '10',
+        '11',
+        '12',
+        '13',
+        '14',
+        '15',
+        '16',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.lhb_747a9bc5_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_select_entities[select.lhb_747a9bc5_power_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        <PowerState.ON: 'on'>,
+        <PowerState.STANDBY: 'standby'>,
+        <PowerState.SLEEP: 'sleep'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('bluetooth', 'AA:BB:CC:DD:EE:01')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.lhb_747a9bc5_power_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power mode',
+    'platform': 'steamvr_base_station',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_mode',
+    'unique_id': 'AA:BB:CC:DD:EE:01_power_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.lhb_747a9bc5_power_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LHB-747A9BC5 Power mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        <PowerState.ON: 'on'>,
+        <PowerState.STANDBY: 'standby'>,
+        <PowerState.SLEEP: 'sleep'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.lhb_747a9bc5_power_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

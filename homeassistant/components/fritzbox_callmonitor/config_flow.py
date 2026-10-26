@@ -37,7 +37,7 @@ DATA_SCHEMA_USER = probatio.Schema(
         probatio.Required(CONF_HOST, default=DEFAULT_HOST): str,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Coerce(int),
         probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -226,7 +226,7 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME, default=default_username): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders={"host": self._host},

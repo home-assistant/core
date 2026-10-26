@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 from boschshcpy import (
     SHCLightSwitchBSM,
     SHCMicromoduleShutterControl,
+    SHCSession,
     SHCSmartPlug,
     SHCSmartPlugCompact,
     SHCThermostat,
@@ -22,16 +23,19 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import BoschConfigEntry
+from .const import DOMAIN
 from .entity import SHCEntity
 
 PARALLEL_UPDATES = 0
@@ -53,6 +57,7 @@ _PowerMeterDevice = SHCSmartPlug | SHCLightSwitchBSM | SHCMicromoduleShutterCont
 TEMPERATURE_SENSOR = "temperature"
 HUMIDITY_SENSOR = "humidity"
 VALVE_TAPPET_SENSOR = "valvetappet"
+VALVE_TAPPET_STATE_SENSOR = "valve_tappet_state"
 PURITY_SENSOR = "purity"
 AIR_QUALITY_SENSOR = "airquality"
 TEMPERATURE_RATING_SENSOR = "temperature_rating"
@@ -61,6 +66,15 @@ PURITY_RATING_SENSOR = "purity_rating"
 POWER_SENSOR = "power"
 ENERGY_SENSOR = "energy"
 COMMUNICATION_QUALITY_SENSOR = "communication_quality"
+
+
+def _valve_tappet_state_value(device: SHCThermostat) -> str | None:
+    """Return the valve motor status enum string, or None on unknown value."""
+    try:
+        return str(device.valvestate.name.lower())
+    except ValueError, AttributeError:
+        return None
+
 
 _THERMOSTAT_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCThermostat] = (
     SHCSensorEntityDescription(
@@ -77,10 +91,44 @@ _VALVE_TAPPET_DESCRIPTION: SHCSensorEntityDescription[SHCThermostat] = (
         translation_key=VALVE_TAPPET_SENSOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        # Superseded by the "valve" platform's position entity; kept
+        # available (opt-in) for anyone already relying on the raw percentage.
+        entity_registry_enabled_default=False,
+        suggested_display_precision=0,
         value_fn=lambda device: device.position,
-        attributes_fn=lambda device: {
-            "valve_tappet_state": device.valvestate.name,
-        },
+        # Kept for anyone already reading this attribute in a template or
+        # automation, even though the same value is now also a first-class
+        # sensor below (_VALVE_TAPPET_STATE_DESCRIPTION).
+        attributes_fn=lambda device: {"valve_tappet_state": device.valvestate.name},
+    )
+)
+_VALVE_TAPPET_STATE_DESCRIPTION: SHCSensorEntityDescription[SHCThermostat] = (
+    SHCSensorEntityDescription(
+        key=VALVE_TAPPET_STATE_SENSOR,
+        translation_key=VALVE_TAPPET_STATE_SENSOR,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=[
+            "valve_adaption_successful",
+            "valve_adaption_in_progress",
+            "valve_adaption_requested",
+            "range_too_big",
+            "range_too_small",
+            "run_to_start_position",
+            "start_position_requested",
+            "in_start_position",
+            "not_available",
+            "no_valve_body_error",
+            "no_motor_error",
+            "valve_too_tight",
+            "fix_motor_logic_requested",
+            "fix_motor_logic_in_progress",
+            "fix_motor_logic_successful",
+            "error",
+            "unknown",
+        ],
+        value_fn=_valve_tappet_state_value,
     )
 )
 _WALLTHERMOSTAT_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[
@@ -223,6 +271,7 @@ async def async_setup_entry(
         for description in (
             _THERMOSTAT_TEMPERATURE_DESCRIPTION,
             _VALVE_TAPPET_DESCRIPTION,
+            _VALVE_TAPPET_STATE_DESCRIPTION,
         )
     ]
 
@@ -296,6 +345,57 @@ async def async_setup_entry(
     )
 
     async_add_entities(entities)
+
+    async_add_entities(
+        [SHCOpenWindowsSensor(session=session, parent_id=shc_info.unique_id)],
+        update_before_add=True,
+    )
+
+
+class SHCOpenWindowsSensor(SensorEntity):
+    """Whole-home summary of open doors/windows (official OpenAPI spec).
+
+    Not tied to one SHC device, so this does not inherit SHCEntity — it's
+    scoped to the config entry and linked to the hub device directly. The
+    underlying doors-windows/openwindows endpoint is a plain GET, not
+    delivered by the long-poll stream, so this needs should_poll=True.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "open_windows_doors"
+    _attr_should_poll = True
+
+    def __init__(self, session: SHCSession, parent_id: str) -> None:
+        """Initialize the open-windows/doors summary sensor."""
+        self._session = session
+        self._attr_unique_id = f"{parent_id}_open_windows_doors"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, parent_id)})
+        self._open_doors: list[dict[str, Any]] = []
+        self._open_windows: list[dict[str, Any]] = []
+        self._open_others: list[dict[str, Any]] = []
+
+    @property
+    @override
+    def native_value(self) -> int:
+        """Return the total count of open doors, windows, and other openings."""
+        return len(self._open_doors) + len(self._open_windows) + len(self._open_others)
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, list[str]]:
+        """Return the names of each currently-open door/window/other opening."""
+        return {
+            "open_doors": [d.get("name", "") for d in self._open_doors],
+            "open_windows": [w.get("name", "") for w in self._open_windows],
+            "open_others": [o.get("name", "") for o in self._open_others],
+        }
+
+    def update(self) -> None:
+        """Poll the whole-home open-doors/open-windows summary."""
+        data = self._session.api.get_open_windows()
+        self._open_doors = data.get("openDoors", [])
+        self._open_windows = data.get("openWindows", [])
+        self._open_others = data.get("openOthers", [])
 
 
 class SHCSensor[_DeviceT: SHCDevice](SHCEntity, SensorEntity):

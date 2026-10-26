@@ -162,7 +162,7 @@ _BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
         probatio.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TOPIC): valid_publish_topic,
         probatio.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE): cv.template,
         probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
         probatio.Optional(
@@ -182,7 +182,7 @@ _BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
         probatio.Optional(CONF_STATE_TOPIC): valid_publish_topic,
         probatio.Optional(
             CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS
-        ): probatio.All(cv.ensure_list, [probatio.In(STRING_TO_SERVICE.keys())]),
+        ): probatio.All(probatio.EnsureList(), [probatio.In(STRING_TO_SERVICE.keys())]),
         probatio.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     }

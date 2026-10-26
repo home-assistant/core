@@ -17,6 +17,7 @@ from .const import DOMAIN
 def deprecate_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    config_entry_id: str,
     platform_domain: str,
     entity_unique_id: str,
     issue_id: str,
@@ -60,6 +61,7 @@ def deprecate_entity(
             DOMAIN,
             issue_id,
             breaks_in_ha_version=version,
+            config_entry_id=config_entry_id,
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key=translation_key,

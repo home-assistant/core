@@ -93,6 +93,7 @@ async def warn_on_inconsistent_network_settings(
         hass,
         domain=DOMAIN,
         issue_id=ISSUE_INCONSISTENT_NETWORK_SETTINGS,
+        config_entry_id=config_entry.entry_id,
         is_fixable=True,
         severity=ir.IssueSeverity.ERROR,
         translation_key=ISSUE_INCONSISTENT_NETWORK_SETTINGS,
