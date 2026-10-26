@@ -67,6 +67,7 @@ RECEIVER_OPTION_KEYS: Final = (
 SENSOR_TYPE_COMBINATIONS: Final = {
     "temperature": LaCrosseSensorType.TEMPERATURE,
     "humidity": LaCrosseSensorType.HUMIDITY,
+    "battery": LaCrosseSensorType.BATTERY,
     "temperature_humidity": LaCrosseSensorType.TEMPERATURE
     | LaCrosseSensorType.HUMIDITY,
     "temperature_battery": LaCrosseSensorType.TEMPERATURE | LaCrosseSensorType.BATTERY,

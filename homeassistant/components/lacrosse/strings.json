@@ -106,6 +106,7 @@
   "selector": {
     "sensor_type": {
       "options": {
+        "battery": "Battery",
         "humidity": "Humidity",
         "humidity_battery": "Humidity and battery",
         "temperature": "Temperature",
