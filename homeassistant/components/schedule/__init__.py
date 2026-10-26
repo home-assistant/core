@@ -5,15 +5,7 @@ from typing import override
 
 import probatio
 
-from homeassistant.const import (
-    ATTR_EDITABLE,
-    CONF_ICON,
-    CONF_ID,
-    CONF_NAME,
-    SERVICE_RELOAD,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.collection import (
@@ -28,19 +20,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ATTR_NEXT_EVENT,
-    CONF_ALL_DAYS,
-    CONF_DATA,
-    CONF_FROM,
-    CONF_TO,
-    DATA_SCHEDULE,
-    DOMAIN,
-    LOGGER,
-    WEEKDAY_TO_CONF,
-    ScheduleEntityCapabilityAttribute,
-    ScheduleEntityStateAttribute,
-)
+from .const import ATTR_NEXT_EVENT, DATA_SCHEDULE, DOMAIN, LOGGER, WEEKDAY_TO_CONF
 from .entity import Schedule
 from .schema import (
     BASE_SCHEMA,
@@ -61,27 +41,12 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 __all__ = [
-    "ATTR_EDITABLE",
     "ATTR_NEXT_EVENT",
     "BASE_SCHEMA",
-    "CONF_ALL_DAYS",
-    "CONF_DATA",
-    "CONF_FROM",
-    "CONF_ICON",
-    "CONF_ID",
-    "CONF_NAME",
-    "CONF_TO",
-    "DATA_SCHEDULE",
     "DOMAIN",
-    "LOGGER",
-    "SERVICE_RELOAD",
-    "STATE_OFF",
-    "STATE_ON",
     "STORAGE_SCHEDULE_SCHEMA",
     "WEEKDAY_TO_CONF",
     "Schedule",
-    "ScheduleEntityCapabilityAttribute",
-    "ScheduleEntityStateAttribute",
 ]
 
 
