@@ -1357,11 +1357,11 @@ def _has_own_area_without_own_name(hass: HomeAssistant, entry: RegistryEntry) ->
 def _async_get_child_device_accepting_area(
     hass: HomeAssistant, entry: RegistryEntry
 ) -> dr.ChildDeviceEntry | None:
-    """Return the child device which takes over the area of its new main entity.
+    """Return the child device which accepts the area of its new main entity.
 
     An entity without a name of its own is the main entity of its device, so its
     own area describes where the device is. A child device without an area, or
-    with the same area, takes it over.
+    with the same area, accepts it.
     """
     if entry.device_id is None:
         return None
