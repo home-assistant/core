@@ -155,6 +155,7 @@ async def test_expose_entity(
 
     response = await ws_client.receive_json()
     assert response["success"]
+    assert response["result"] == {"changed_entity_ids": [entry1.entity_id]}
 
     entry1 = entity_registry.async_get(entry1.entity_id)
     assert entry1.options == {"cloud.alexa": {"should_expose": True}}
@@ -174,6 +175,9 @@ async def test_expose_entity(
 
     response = await ws_client.receive_json()
     assert response["success"]
+    assert response["result"] == {
+        "changed_entity_ids": [entry1.entity_id, entry2.entity_id]
+    }
 
     entry1 = entity_registry.async_get(entry1.entity_id)
     assert entry1.options == {
@@ -186,6 +190,20 @@ async def test_expose_entity(
         "cloud.google_assistant": {"should_expose": False},
     }
     assert len(exposed_entities.entities) == 0
+
+    # Setting the same options again changes nothing
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa", "cloud.google_assistant"],
+            "entity_ids": [entry1.entity_id, entry2.entity_id],
+            "should_expose": False,
+        }
+    )
+
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"changed_entity_ids": []}
 
 
 async def test_expose_entity_unknown(
@@ -212,6 +230,7 @@ async def test_expose_entity_unknown(
 
     response = await ws_client.receive_json()
     assert response["success"]
+    assert response["result"] == {"changed_entity_ids": ["test.test"]}
 
     assert len(exposed_entities.entities) == 1
     assert exposed_entities.entities == {
@@ -230,6 +249,7 @@ async def test_expose_entity_unknown(
 
     response = await ws_client.receive_json()
     assert response["success"]
+    assert response["result"] == {"changed_entity_ids": ["test.test", "test.test2"]}
 
     assert len(exposed_entities.entities) == 2
     assert exposed_entities.entities == {
@@ -246,6 +266,20 @@ async def test_expose_entity_unknown(
             }
         ),
     }
+
+    # Only entities with changed settings are returned
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa"],
+            "entity_ids": ["test.test", "test.test3"],
+            "should_expose": False,
+        }
+    )
+
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"changed_entity_ids": ["test.test3"]}
 
 
 @pytest.mark.parametrize("expose_new", [True, False])

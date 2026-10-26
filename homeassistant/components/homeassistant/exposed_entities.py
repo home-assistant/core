@@ -143,21 +143,23 @@ class ExposedEntities:
     @callback
     def async_set_assistant_option(
         self, assistant: str, entity_id: str, key: str, value: Any
-    ) -> None:
+    ) -> bool:
         """Set an option for an assistant.
 
         Notify listeners if expose flag was changed.
+        Return True if the option was changed.
         """
         entity_registry = er.async_get(self._hass)
         if not (registry_entry := entity_registry.async_get(entity_id)):
-            self._async_set_legacy_assistant_option(assistant, entity_id, key, value)
-            return
+            return self._async_set_legacy_assistant_option(
+                assistant, entity_id, key, value
+            )
 
         assistant_options: ReadOnlyDict[str, Any] | dict[str, Any]
         if (
             assistant_options := registry_entry.options.get(assistant, {})
         ) and assistant_options.get(key) == value:
-            return
+            return False
 
         assistant_options = assistant_options | {key: value}
         entity_registry.async_update_entity_options(
@@ -165,20 +167,22 @@ class ExposedEntities:
         )
         for listener in self._listeners.get(assistant, []):
             listener()
+        return True
 
     def _async_set_legacy_assistant_option(
         self, assistant: str, entity_id: str, key: str, value: Any
-    ) -> None:
+    ) -> bool:
         """Set an option for an assistant.
 
         Notify listeners if expose flag was changed.
+        Return True if the option was changed.
         """
         if (
             (exposed_entity := self.entities.get(entity_id))
             and (assistant_options := exposed_entity.assistants.get(assistant, {}))
             and assistant_options.get(key) == value
         ):
-            return
+            return False
 
         if exposed_entity:
             new_exposed_entity = self._update_exposed_entity(
@@ -190,6 +194,7 @@ class ExposedEntities:
         self._async_schedule_save()
         for listener in self._listeners.get(assistant, []):
             listener()
+        return True
 
     @callback
     def async_get_expose_new_entities(self, assistant: str) -> bool:
@@ -406,12 +411,17 @@ def ws_expose_entity(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Expose an entity to an assistant."""
-    entity_ids: list[str] = msg["entity_ids"]
+    changed_entity_ids: list[str] = []
 
-    for entity_id in entity_ids:
+    for entity_id in msg["entity_ids"]:
+        changed = False
         for assistant in msg["assistants"]:
-            async_expose_entity(hass, assistant, entity_id, msg["should_expose"])
-    connection.send_result(msg["id"])
+            changed |= async_expose_entity(
+                hass, assistant, entity_id, msg["should_expose"]
+            )
+        if changed:
+            changed_entity_ids.append(entity_id)
+    connection.send_result(msg["id"], {"changed_entity_ids": changed_entity_ids})
 
 
 @callback
@@ -510,9 +520,12 @@ def async_expose_entity(
     assistant: str,
     entity_id: str,
     should_expose: bool,
-) -> None:
-    """Get assistant expose settings for an entity."""
-    async_set_assistant_option(
+) -> bool:
+    """Expose an entity to an assistant.
+
+    Return True if the setting was changed.
+    """
+    return async_set_assistant_option(
         hass, assistant, entity_id, "should_expose", should_expose
     )
 
@@ -527,10 +540,13 @@ def async_should_expose(hass: HomeAssistant, assistant: str, entity_id: str) -> 
 @callback
 def async_set_assistant_option(
     hass: HomeAssistant, assistant: str, entity_id: str, option: str, value: Any
-) -> None:
+) -> bool:
     """Set an option for an assistant.
 
     Notify listeners if expose flag was changed.
+    Return True if the option was changed.
     """
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_set_assistant_option(assistant, entity_id, option, value)
+    return exposed_entities.async_set_assistant_option(
+        assistant, entity_id, option, value
+    )
