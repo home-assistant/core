@@ -355,6 +355,34 @@ async def test_choice_not_asked_when_unavailable(
     )
 
 
+async def test_choice_follows_channel(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    supervisor_info: AsyncMock,
+) -> None:
+    """Test the question follows the feature as the Supervisor channel changes."""
+    await _setup_hassio(hass)
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE)
+
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, channel=UpdateChannel.BETA
+    )
+    await _refresh_main_coordinator(hass, freezer)
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE)
+        is None
+    )
+
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, channel=UpdateChannel.STABLE
+    )
+    await _refresh_main_coordinator(hass, freezer)
+
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE)
+
+
 async def test_choice_made_in_settings(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:

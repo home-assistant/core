@@ -257,6 +257,9 @@ class AutoUpdateManager:
         )
         self._async_update_choice_issue()
         self._entry.async_on_unload(
+            self._coordinator.async_add_listener(self._async_update_choice_issue)
+        )
+        self._entry.async_on_unload(
             self._entry.add_update_listener(self._async_entry_updated)
         )
         self._entry.async_on_unload(
