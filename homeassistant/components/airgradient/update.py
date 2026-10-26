@@ -11,7 +11,7 @@ from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirGradientConfigEntry, AirGradientCoordinator
+from .coordinator import AirGradientConfigEntry, AirGradientCoordinator
 from .entity import AirGradientEntity
 
 PARALLEL_UPDATES = 1
@@ -40,6 +40,7 @@ class AirGradientUpdate(AirGradientEntity, UpdateEntity):
     def __init__(self, coordinator: AirGradientCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{coordinator.serial_number}-update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @cached_property
@@ -66,7 +67,6 @@ class AirGradientUpdate(AirGradientEntity, UpdateEntity):
         try:
             self._attr_latest_version = (
                 await self.coordinator.client.get_latest_firmware_version(
-                    self.coordinator.serial_number,
                     model=self.coordinator.data.measures.model,
                 )
             )

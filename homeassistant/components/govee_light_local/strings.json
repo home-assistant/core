@@ -19,6 +19,7 @@
               "energetic": "Energetic",
               "movie": "Movie",
               "none": "None",
+              "rainbow": "Rainbow",
               "romantic": "Romantic",
               "snowflake": "Snowflake",
               "sunrise": "Sunrise",
@@ -31,8 +32,14 @@
     }
   },
   "exceptions": {
+    "bind_failed": {
+      "message": "Could not listen for Govee devices: {error}"
+    },
     "no_devices_found": {
       "message": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "no_listening_addresses": {
+      "message": "No enabled network adapter has an IPv4 address to listen on"
     },
     "port_in_use": {
       "message": "Port {port} is already in use"

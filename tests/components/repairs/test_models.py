@@ -6,6 +6,16 @@ from types import FrameType
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    Mock,
+    MockConfigEntry,
+    MockModule,
+    async_setup_component,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components.repairs import (
     DOMAIN,
@@ -24,17 +34,6 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.frame import IntegrationFrame
 import homeassistant.helpers.issue_registry as ir
-
-from tests.common import (
-    AsyncMock,
-    Mock,
-    MockConfigEntry,
-    MockModule,
-    async_setup_component,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 
 @pytest.fixture(autouse=True)

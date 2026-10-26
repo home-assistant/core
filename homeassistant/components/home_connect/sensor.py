@@ -627,6 +627,15 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
     entity_description: HomeConnectSensorEntityDescription
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the sensor has its required unit."""
+        return super().available and (
+            not self.entity_description.fetch_unit
+            or self.native_unit_of_measurement is not None
+        )
+
     @override
     def update_native_value(self) -> None:
         """Set the value of the sensor."""
@@ -720,8 +729,7 @@ class HomeConnectProgramSensor(HomeConnectSensor):
     def update_native_value(self) -> None:
         """Update the program sensor's status."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
-        if event:
-            self._update_native_value(event.value)
+        self._update_native_value(event.value if event else None)
 
 
 class HomeConnectEventSensor(HomeConnectSensor):

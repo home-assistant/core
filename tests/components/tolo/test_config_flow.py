@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tololib import ToloCommunicationError
 
 from homeassistant.components.tolo.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 MOCK_DHCP_DATA = DhcpServiceInfo(
     ip="127.0.0.2", macaddress="001122334455", hostname="mock_hostname"
@@ -55,6 +54,7 @@ async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return config_entry
 
 
+@pytest.mark.usefixtures("coordinator_toloclient")
 async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock) -> None:
     """Test a user initiated config flow with provided host which times out."""
     toloclient().get_status.side_effect = ToloCommunicationError
@@ -73,6 +73,12 @@ async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock) -
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    toloclient().get_status.side_effect = lambda *args, **kwargs: object()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_walkthrough(

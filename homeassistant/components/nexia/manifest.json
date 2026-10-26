@@ -1,6 +1,7 @@
 {
   "domain": "nexia",
   "name": "Nexia/American Standard/Trane",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dhcp": [

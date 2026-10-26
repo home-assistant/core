@@ -5,6 +5,7 @@ from homeassistant.components.nightscout.const import (
     ATTR_DEVICE,
     ATTR_DIRECTION,
 )
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import ATTR_DATE, ATTR_ICON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
@@ -56,3 +57,4 @@ async def test_sensor_attributes(hass: HomeAssistant) -> None:
     assert attr[ATTR_DEVICE] == reading.device  # pylint: disable=maybe-no-member
     assert attr[ATTR_DIRECTION] == reading.direction  # pylint: disable=maybe-no-member
     assert attr[ATTR_ICON] == "mdi:arrow-bottom-right"
+    assert attr[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT

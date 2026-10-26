@@ -1,6 +1,7 @@
 {
   "domain": "laundrify",
   "name": "laundrify",
+  "categories": ["appliances_cleaning.laundry"],
   "codeowners": ["@xLarry"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/laundrify",

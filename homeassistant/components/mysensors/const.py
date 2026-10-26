@@ -5,6 +5,9 @@ from typing import Final, Literal, TypedDict
 
 from homeassistant.const import Platform
 
+# MQTT is only imported once it is set up, as it is heavy to load
+MQTT_DOMAIN: Final = "mqtt"
+
 ATTR_DEVICES: Final = "devices"
 ATTR_GATEWAY_ID: Final = "gateway_id"
 ATTR_NODE_ID: Final = "node_id"

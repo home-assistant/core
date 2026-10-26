@@ -1,6 +1,6 @@
 """Enforce that the integration uses ConfigEntry.runtime_data to store runtime data.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/runtime-data
+https://contributors.home-assistant.io/core/quality-scale/runtime-data/
 """
 
 import ast

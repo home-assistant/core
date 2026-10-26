@@ -7,6 +7,7 @@
       "service_uuid": "00467768-6228-2272-4663-277478268000"
     }
   ],
+  "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@emontnemery"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

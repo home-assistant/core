@@ -2,6 +2,8 @@
 
 from typing import override
 
+from lifx import HevLightState
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -14,7 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import HEV_CYCLE_STATE
 from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
-from .util import lifx_features
+
+PARALLEL_UPDATES = 0
 
 HEV_CYCLE_STATE_SENSOR = BinarySensorEntityDescription(
     key=HEV_CYCLE_STATE,
@@ -32,7 +35,7 @@ async def async_setup_entry(
     """Set up LIFX from a config entry."""
     coordinator = entry.runtime_data
 
-    if lifx_features(coordinator.device)["hev"]:
+    if coordinator.data.capabilities.has_hev:
         async_add_entities(
             [LIFXHevCycleBinarySensorEntity(coordinator, HEV_CYCLE_STATE_SENSOR)]
         )
@@ -47,19 +50,16 @@ class LIFXHevCycleBinarySensorEntity(LIFXEntity, BinarySensorEntity):
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialise the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
+        super().__init__(coordinator, description)
         self._async_update_attrs()
 
     @callback
     @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
-
-    @callback
     def _async_update_attrs(self) -> None:
         """Handle coordinator updates."""
-        self._attr_is_on = self.coordinator.async_get_hev_cycle_state()
+        state = self.coordinator.data
+        self._attr_is_on = (
+            state.hev_cycle.remaining_s > 0
+            if isinstance(state, HevLightState)
+            else None
+        )
