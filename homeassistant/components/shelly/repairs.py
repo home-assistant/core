@@ -616,7 +616,4 @@ async def async_create_fix_flow(
     if "ir_raw_receive_disabled" in issue_id:
         return EnableIrRawReceiveFlow(device)
 
-    if "ir_raw_receive_disabled" in issue_id:
-        return EnableIrRawReceiveFlow(device)
-
     return ConfirmRepairFlow()
