@@ -20,7 +20,13 @@ DEFAULT_INCLUDE_COMPLETED = False
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 2
 
-PLATFORMS = [Platform.CALENDAR, Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.TODO]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.CALENDAR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.TODO,
+]
 
 # pyicloud.AppleDevice status
 DEVICE_FEATURES = "features"

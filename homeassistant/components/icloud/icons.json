@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "play_sound": {
+        "default": "mdi:speaker-wireless"
+      }
+    },
     "sensor": {
       "altitude": {
         "default": "mdi:altimeter"
