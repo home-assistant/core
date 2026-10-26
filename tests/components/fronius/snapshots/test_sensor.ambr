@@ -5047,7 +5047,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_gen24_storage[sensor.ohmpilot_state_message-entry]
