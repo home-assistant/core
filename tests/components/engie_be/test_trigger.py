@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import probatio
@@ -18,10 +18,13 @@ from homeassistant.components.engie_be.trigger import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    BAN,
     BRUSSELS_TIME_ZONE,
     automation_calls,
+    build_contracts,
     build_epex_payload,
     build_epex_payload_rising_per_day,
     build_epex_payload_with_gap,
@@ -257,6 +260,99 @@ async def test_tomorrow_prices_published_trigger(
     await hass.async_block_till_done()
 
     assert len(automation_calls(service_calls)) == 1
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_trigger_before_entry_loaded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test a trigger attached before the entry loads compares from the load on."""
+    await _async_move_to(hass, freezer, _brussels(3, 14, 30))
+    mock_engie_client.return_value.async_get_energy_contracts.return_value = (
+        build_contracts(dynamic=True)
+    )
+    mock_config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, BAN)}
+    )
+    await _async_setup_trigger_automation(
+        hass,
+        "epex_current_quarter_hour_crossed_threshold",
+        {"device_id": device.id, "above": 0.156},
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await _async_count_calls_along(
+        hass, freezer, service_calls, [_brussels(3, 14, 45)]
+    ) == [1]
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_trigger_without_entities(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test the trigger keeps the EPEX prices polling when no entity listens."""
+    client = mock_engie_client.return_value
+    client.async_get_epex_prices.side_effect = build_epex_payload_without_tomorrow
+    with patch("homeassistant.components.engie_be._PLATFORMS", []):
+        await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+        device_id = household_device_id(device_registry, mock_config_entry)
+        await _async_setup_trigger_automation(
+            hass, "epex_tomorrow_prices_published", {"device_id": device_id}
+        )
+
+        client.async_get_epex_prices.side_effect = build_epex_payload
+        await _async_move_to(hass, freezer, dt_util.utcnow() + EPEX_SCAN_INTERVAL)
+
+        assert len(automation_calls(service_calls)) == 1
+
+        await hass.services.async_call(
+            automation.DOMAIN, "turn_off", {"entity_id": "all"}, blocking=True
+        )
+        client.async_get_epex_prices.side_effect = build_epex_payload_without_tomorrow
+        polls = client.async_get_epex_prices.call_count
+        await _async_move_to(hass, freezer, dt_util.utcnow() + 2 * EPEX_SCAN_INTERVAL)
+
+        assert client.async_get_epex_prices.call_count == polls
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_trigger_detached(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test the trigger stops listening when the automation is turned off."""
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    device_id = household_device_id(device_registry, mock_config_entry)
+    await _async_setup_trigger_automation(
+        hass,
+        "epex_current_quarter_hour_crossed_threshold",
+        {"device_id": device_id, "above": 0.156},
+    )
+
+    await hass.services.async_call(
+        automation.DOMAIN, "turn_off", {"entity_id": "all"}, blocking=True
+    )
+
+    assert await _async_count_calls_along(
+        hass, freezer, service_calls, _THRESHOLD_MOMENTS
+    ) == [0] * len(_THRESHOLD_MOMENTS)
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
