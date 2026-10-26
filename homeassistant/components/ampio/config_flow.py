@@ -9,7 +9,7 @@ import probatio
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from .const import ADMIN_USERNAME, DEFAULT_HOST, DOMAIN
+from .const import DEFAULT_HOST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,11 +46,9 @@ class AmpioConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Setup picks the client class by username, so the name must match the tier.
-                if (info.access_tier is AccessTier.ADMIN) != (
-                    user_input[CONF_USERNAME] == ADMIN_USERNAME
-                ):
-                    errors[CONF_USERNAME] = "admin_login_name"
+                # The admin account bypasses the object grants of the Ampio app.
+                if info.access_tier is AccessTier.ADMIN:
+                    errors[CONF_USERNAME] = "admin_account"
                 else:
                     await self.async_set_unique_id(info.server_key)
                     self._abort_if_unique_id_configured()

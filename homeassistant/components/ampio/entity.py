@@ -29,31 +29,19 @@ def _async_module_device_id(
 ) -> str:
     """Register the device of the module that owns ``obj`` and return its id.
 
-    Keyed on the module mac in the object's address, which both account
-    tiers receive. The admin-only module catalogue adds the name and the
-    metadata, and each metadata field is always passed, so a tier downgrade
-    clears all of it.
+    Keyed on the module mac in the object's address.
     """
-    data = entry.runtime_data
     mac = obj.address.mac
-    module = data.admin.module_for(obj) if data.admin else None
-    device_info = dr.DeviceInfo(
-        identifiers={_module_identifier(mac)},
-        manufacturer="Ampio",
-        via_device_id=data.hub_device_id,
-        model=module.model if module else None,
-        sw_version=str(module.wersja_softu) if module else None,
-        hw_version=str(module.wersja_pcb) if module else None,
-        serial_number=str(module.mac_global) if module else None,
-    )
-    if module is not None and module.nazwa_urzadzenia:
-        device_info["name"] = module.nazwa_urzadzenia
-    else:
-        device_info["translation_key"] = "module"
-        device_info["translation_placeholders"] = {"mac": format_mac(mac)}
     return (
         dr.async_get(hass)
-        .async_get_or_create(config_entry_id=entry.entry_id, **device_info)
+        .async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={_module_identifier(mac)},
+            manufacturer="Ampio",
+            via_device_id=entry.runtime_data.hub_device_id,
+            translation_key="module",
+            translation_placeholders={"mac": format_mac(mac)},
+        )
         .id
     )
 

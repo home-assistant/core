@@ -4,7 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "admin_login_name": "The administrator account signs in as admin, in lowercase. Every other account uses its own name.",
+      "admin_account": "Home Assistant needs a standard Ampio user account. Create a user in the Ampio app and give it access to the objects you want in Home Assistant.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -19,9 +19,9 @@
         "data_description": {
           "host": "Hostname or IP address of the Ampio server (M-SERV).",
           "password": "Your Ampio account password.",
-          "username": "Your Ampio account username. The administrator account signs in as admin."
+          "username": "The name of a standard Ampio user account from the Ampio app."
         },
-        "description": "Enter the address and credentials of your Ampio server. A standard user account is recommended. An administrator account additionally provides per-module device information and faster state updates.",
+        "description": "Enter the address of your Ampio server and the credentials of a standard Ampio user account. Home Assistant sees only the objects that this account can access.",
         "title": "Connect to Ampio"
       }
     }

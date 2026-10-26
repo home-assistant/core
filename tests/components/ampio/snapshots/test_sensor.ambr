@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.m_sens_salon_object_43_carbon_dioxide-entry]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_object_43_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_object_43_carbon_dioxide',
+    'entity_id': 'sensor.ampio_module_0xcb8f_object_43_carbon_dioxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_object_43_carbon_dioxide-state]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_object_43_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
@@ -50,14 +50,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_object_43_carbon_dioxide',
+    'entity_id': 'sensor.ampio_module_0xcb8f_object_43_carbon_dioxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '900.5',
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_object_44_absolute_pressure-entry]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_object_44_absolute_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -73,7 +73,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_object_44_absolute_pressure',
+    'entity_id': 'sensor.ampio_module_0xcb8f_object_44_absolute_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,7 +99,7 @@
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_object_44_absolute_pressure-state]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_object_44_absolute_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'atmospheric_pressure',
@@ -108,14 +108,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_object_44_absolute_pressure',
+    'entity_id': 'sensor.ampio_module_0xcb8f_object_44_absolute_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1013.2',
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_object_45_relative_pressure-entry]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_object_45_relative_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -131,7 +131,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_object_45_relative_pressure',
+    'entity_id': 'sensor.ampio_module_0xcb8f_object_45_relative_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -157,7 +157,7 @@
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_object_45_relative_pressure-state]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_object_45_relative_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
@@ -166,14 +166,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_object_45_relative_pressure',
+    'entity_id': 'sensor.ampio_module_0xcb8f_object_45_relative_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1019.7',
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_object_46_sound_pressure-entry]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_object_46_sound_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -189,7 +189,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_object_46_sound_pressure',
+    'entity_id': 'sensor.ampio_module_0xcb8f_object_46_sound_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -215,7 +215,7 @@
     'unit_of_measurement': <UnitOfSoundPressure.DECIBEL: 'dB'>,
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_object_46_sound_pressure-state]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_object_46_sound_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound_pressure',
@@ -224,14 +224,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSoundPressure.DECIBEL: 'dB'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_object_46_sound_pressure',
+    'entity_id': 'sensor.ampio_module_0xcb8f_object_46_sound_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '38.5',
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_object_47_illuminance-entry]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_object_47_illuminance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -247,7 +247,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_object_47_illuminance',
+    'entity_id': 'sensor.ampio_module_0xcb8f_object_47_illuminance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -273,7 +273,7 @@
     'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_object_47_illuminance-state]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_object_47_illuminance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'illuminance',
@@ -282,14 +282,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'lx',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_object_47_illuminance',
+    'entity_id': 'sensor.ampio_module_0xcb8f_object_47_illuminance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '742.0',
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_object_48_air_quality_index-entry]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_object_48_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -305,7 +305,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_object_48_air_quality_index',
+    'entity_id': 'sensor.ampio_module_0xcb8f_object_48_air_quality_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -331,7 +331,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_object_48_air_quality_index-state]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_object_48_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
@@ -339,14 +339,14 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_object_48_air_quality_index',
+    'entity_id': 'sensor.ampio_module_0xcb8f_object_48_air_quality_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '23.0',
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_temperatura-entry]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_temperatura-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -362,7 +362,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_temperatura',
+    'entity_id': 'sensor.ampio_module_0xcb8f_temperatura',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -388,7 +388,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_temperatura-state]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_temperatura-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -397,14 +397,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_temperatura',
+    'entity_id': 'sensor.ampio_module_0xcb8f_temperatura',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24.4',
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_wilgotnosc-entry]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_wilgotnosc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -420,7 +420,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_wilgotnosc',
+    'entity_id': 'sensor.ampio_module_0xcb8f_wilgotnosc',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -446,7 +446,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_wilgotnosc-state]
+# name: test_all_entities[sensor.ampio_module_0xcb8f_wilgotnosc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
@@ -455,7 +455,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_wilgotnosc',
+    'entity_id': 'sensor.ampio_module_0xcb8f_wilgotnosc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -622,6 +622,36 @@
     'parent_device_id': <ANY>,
   })
 # ---
+# name: test_devices[device-Ampio module 0xCB8F]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ampio',
+        'module:0xCB8F',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Ampio',
+    'model': None,
+    'model_id': None,
+    'name': 'Ampio module 0xCB8F',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
 # name: test_devices[device-M-SERV]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -643,42 +673,12 @@
     'labels': set({
     }),
     'manufacturer': 'Ampio',
-    'model': 'M-SERV-s',
+    'model': 'M-SERV',
     'model_id': None,
     'name': 'M-SERV',
     'name_by_user': None,
     'serial_number': '0011223344556677',
     'sw_version': '1865',
     'via_device_id': None,
-  })
-# ---
-# name: test_devices[device-m-sens salon]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': '7',
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'ampio',
-        'module:0xCB8F',
-      ),
-    }),
-    'labels': set({
-    }),
-    'manufacturer': 'Ampio',
-    'model': 'M-SENS',
-    'model_id': None,
-    'name': 'm-sens salon',
-    'name_by_user': None,
-    'serial_number': '152111',
-    'sw_version': '63',
-    'via_device_id': <ANY>,
   })
 # ---

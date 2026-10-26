@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import logging
 
 from ampio_mqtt import (
-    AmpioAdminClient,
     AmpioAuthError,
     AmpioClient,
     AmpioConnectionError,
@@ -12,7 +11,6 @@ from ampio_mqtt import (
     AuthFailed,
     AvailabilityChanged,
     ConnectionDied,
-    format_mac,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +24,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import ADMIN_USERNAME, DOMAIN, HUB_IDENTIFIER, PLATFORMS
+from .const import DOMAIN, HUB_IDENTIFIER, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,26 +36,14 @@ class AmpioData:
     """Runtime data for one Ampio server."""
 
     client: AmpioClient
-    # The same client when the entry signs in as the administrator, the only
-    # account served the module catalogue. None on a standard account.
-    admin: AmpioAdminClient | None
     hub_device_id: str
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> bool:
     """Set up Ampio from a config entry."""
-    admin: AmpioAdminClient | None = None
-    client: AmpioClient
-    if entry.data[CONF_USERNAME] == ADMIN_USERNAME:
-        client = admin = AmpioAdminClient(
-            entry.data[CONF_HOST], entry.data[CONF_PASSWORD]
-        )
-    else:
-        client = AmpioClient(
-            entry.data[CONF_HOST],
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-        )
+    client = AmpioClient(
+        entry.data[CONF_HOST], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+    )
     entry.async_on_unload(client.disconnect)
 
     # Home Assistant does not unload entries when it stops, so without this the
@@ -77,20 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> boo
         ) from err
     except AmpioNotConfigured as err:
         # The library still serves every other row. Its message embeds
-        # Designer names, so only ids and macs reach the log.
+        # Designer names, so only ids reach the log.
         if err.objects:
             _LOGGER.warning(
                 "Ampio Designer leaves objects %s without a bus address; fix "
                 "them in Ampio Designer",
                 ", ".join(str(oid) for oid in sorted(oid for oid, _ in err.objects)),
-            )
-        if err.collisions:
-            _LOGGER.warning(
-                "Ampio Designer leaves module addresses %s without exactly one "
-                "module row; fix them in Ampio Designer",
-                ", ".join(
-                    format_mac(mac) for mac in sorted(mac for mac, _ in err.collisions)
-                ),
             )
         discovered = True
     except AmpioConnectionError as err:
@@ -103,18 +81,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> boo
             translation_domain=DOMAIN, translation_key="discovery_timeout"
         )
 
-    mserv = admin.mserv if admin else None
     hub = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={HUB_IDENTIFIER},
         manufacturer="Ampio",
         name="M-SERV",
-        model=mserv.model if mserv and mserv.model else "M-SERV",
+        model="M-SERV",
         sw_version=info.server_version,
         serial_number=info.device_id,
         configuration_url=f"http://{info.local_ip}" if info.local_ip else None,
     )
-    entry.runtime_data = AmpioData(client, admin, hub.id)
+    entry.runtime_data = AmpioData(client, hub.id)
 
     was_unavailable = False
 

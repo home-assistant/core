@@ -24,7 +24,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import setup_integration
 from .conftest import (
     MREL_MAC,
-    MSENS_FALLBACK_NAME,
     MSENS_IDENTIFIER,
     emit,
     make_object,
@@ -35,10 +34,10 @@ from .conftest import (
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-TEMPERATURE_ENTITY_ID = "sensor.m_sens_salon_temperatura"
-HUMIDITY_ENTITY_ID = "sensor.m_sens_salon_wilgotnosc"
+TEMPERATURE_ENTITY_ID = "sensor.ampio_module_0xcb8f_temperatura"
+HUMIDITY_ENTITY_ID = "sensor.ampio_module_0xcb8f_wilgotnosc"
 # An unnamed object's device reads "Object <id>", after its module's name.
-CO2_ENTITY_ID = "sensor.m_sens_salon_object_43_carbon_dioxide"
+CO2_ENTITY_ID = "sensor.ampio_module_0xcb8f_object_43_carbon_dioxide"
 
 
 async def _push_value(
@@ -275,51 +274,6 @@ async def test_server_owned_object_anchors_to_hub(
     )
     assert entity_id is not None
     assert entity_registry.async_get(entity_id).device_id == child.id
-
-
-async def test_module_without_catalogue_row_gets_bare_device(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """A module mac with no catalogue row still keys its own device."""
-    mock_client.objects[500] = make_object(
-        500, "temp", 1, leaf_id="0_dead_76_0_1", name="Dangling"
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    device = device_registry.async_get_device_by_identifier(
-        module_identifier(0xDEAD), mock_config_entry.entry_id
-    )
-    assert device is not None
-    assert device.name == "Ampio module 0xDEAD"
-    assert device.model is None
-    child = device_registry.async_get_child_device_by_identifier(
-        object_identifier(500), mock_config_entry.entry_id
-    )
-    assert child is not None
-    assert child.parent_device_id == device.id
-
-
-async def test_nameless_module_row_keeps_fallback_name(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """A catalogue row without a name leaves the mac-derived device name."""
-    mock_client.modules[17] = replace(mock_client.modules[17], nazwa_urzadzenia=None)
-
-    await setup_integration(hass, mock_config_entry)
-
-    device = device_registry.async_get_device_by_identifier(
-        MSENS_IDENTIFIER, mock_config_entry.entry_id
-    )
-    assert device is not None
-    assert device.name == MSENS_FALLBACK_NAME
-    assert device.model == "M-SENS"
 
 
 @pytest.mark.parametrize(

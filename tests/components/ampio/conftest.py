@@ -11,7 +11,7 @@ from dataclasses import replace
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from ampio_mqtt import AmpioModule, AmpioObject, AmpioServerInfo, parse_module_address
+from ampio_mqtt import AmpioObject, AmpioServerInfo, parse_module_address
 import pytest
 
 from homeassistant.components.ampio.const import DOMAIN
@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry
 
 MSERV_MAC = "47846"
 MSENS_MAC = 0xCB8F
-MSENS_FALLBACK_NAME = "Ampio module 0xCB8F"
+MSENS_DEVICE_NAME = "Ampio module 0xCB8F"
 
 
 def module_identifier(mac: int) -> tuple[str, str]:
@@ -44,23 +44,23 @@ MREL_MAC = 0xBE82
 
 USER_INPUT = {
     CONF_HOST: "ampio.test",
-    CONF_USERNAME: "admin",
+    CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",
 }
-STANDARD_USER_INPUT = {**USER_INPUT, CONF_USERNAME: "user"}
 
-# The identity reply of the default test server to the administrator login.
+# The identity reply of the default test server. An account created in the
+# Ampio app carries a positive user id.
 SERVER_INFO = AmpioServerInfo(
     mac=47846,
-    user_id=-1,
+    user_id=2,
     server_version="1865",
     server_revision="409",
     mqtt_version="5.133.11",
     local_ip="10.0.0.1",
     device_id="0011223344556677",
 )
-# An account created in the Ampio app carries a positive user id.
-STANDARD_SERVER_INFO = replace(SERVER_INFO, user_id=2)
+# The reserved admin login carries user id -1.
+ADMIN_SERVER_INFO = replace(SERVER_INFO, user_id=-1)
 
 
 def make_object(
@@ -115,37 +115,6 @@ DEFAULT_OBJECTS = (
     make_object(48, "lin_wej", 5, leaf_id="0_cb8f_74_0_8", funkcja=9, state="23"),
 )
 
-# The module catalogue the administrator login receives.
-DEFAULT_MODULES = (
-    AmpioModule(
-        id=17,
-        mac=52111,
-        mac_global=152111,
-        nazwa_urzadzenia="m-sens salon",
-        typ_urzadzenia=44,
-        wersja_softu=63,
-        wersja_pcb=7,
-    ),
-    AmpioModule(
-        id=3,
-        mac=48770,
-        mac_global=148770,
-        nazwa_urzadzenia="MREL 3",
-        typ_urzadzenia=4,
-        wersja_softu=11000,
-        wersja_pcb=2,
-    ),
-    AmpioModule(
-        id=1,
-        mac=1,
-        mac_global=47846,
-        nazwa_urzadzenia="MSERV",
-        typ_urzadzenia=10,
-        wersja_softu=11639,
-        wersja_pcb=7,
-    ),
-)
-
 
 def emit(client: MagicMock, event: Any) -> None:
     """Dispatch ``event`` to the live listeners subscribed on the mocked client.
@@ -164,7 +133,7 @@ def emit(client: MagicMock, event: Any) -> None:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a mock config entry for the administrator login."""
+    """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title=USER_INPUT[CONF_HOST],
@@ -174,32 +143,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def standard_config_entry() -> MockConfigEntry:
-    """Return a mock config entry for a standard account."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title=STANDARD_USER_INPUT[CONF_HOST],
-        data=STANDARD_USER_INPUT,
-        unique_id=MSERV_MAC,
-    )
-
-
-@pytest.fixture
-def mock_admin_client_class() -> Generator[MagicMock]:
-    """Patch AmpioAdminClient, the client of the administrator login."""
-    with patch(
-        "homeassistant.components.ampio.AmpioAdminClient", autospec=True
-    ) as admin_class:
-        yield admin_class
-
-
-@pytest.fixture
-def mock_client_class(mock_admin_client_class: MagicMock) -> Generator[MagicMock]:
-    """Patch AmpioClient so that both client classes build one connected mock.
-
-    The mock carries the administrator surface. A standard-account entry
-    reaches it through AmpioClient and reads none of those members.
-    """
+def mock_client_class() -> Generator[MagicMock]:
+    """Patch AmpioClient in setup and in the config flow with one connected mock."""
     with (
         patch(
             "homeassistant.components.ampio.AmpioClient", autospec=True
@@ -209,28 +154,11 @@ def mock_client_class(mock_admin_client_class: MagicMock) -> Generator[MagicMock
         ),
     ):
         client_class.check_connection.return_value = SERVER_INFO
-        client = mock_admin_client_class.return_value
-        client_class.return_value = client
+        client = client_class.return_value
         client.connect.return_value = True
         client.available = True
         client.objects = {obj.id: obj for obj in DEFAULT_OBJECTS}
-        client.modules = {module.id: module for module in DEFAULT_MODULES}
         client.server_info = SERVER_INFO
-        client.mserv = client.modules[1]
-
-        # Mirrors the library's join of an object to its module row by the
-        # address mac, over the seeded catalogue.
-        def module_for(obj: AmpioObject) -> AmpioModule | None:
-            return next(
-                (
-                    module
-                    for module in client.modules.values()
-                    if module.mac == obj.address.mac
-                ),
-                None,
-            )
-
-        client.module_for.side_effect = module_for
 
         # Track live registrations so unsubscribing works: emit() must not
         # reach listeners from a torn-down setup. Unsubscribing is idempotent,

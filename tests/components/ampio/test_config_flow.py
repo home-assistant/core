@@ -2,12 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from ampio_mqtt import (
-    AmpioAuthError,
-    AmpioConnectionError,
-    AmpioServerInfo,
-    AmpioTimeoutError,
-)
+from ampio_mqtt import AmpioAuthError, AmpioConnectionError, AmpioTimeoutError
 import pytest
 
 from homeassistant.components.ampio.const import DOMAIN
@@ -16,13 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import (
-    MSERV_MAC,
-    SERVER_INFO,
-    STANDARD_SERVER_INFO,
-    STANDARD_USER_INPUT,
-    USER_INPUT,
-)
+from .conftest import ADMIN_SERVER_INFO, MSERV_MAC, SERVER_INFO, USER_INPUT
 
 from tests.common import MockConfigEntry, get_schema_suggested_value
 
@@ -104,32 +93,30 @@ async def test_user_flow_errors_and_recovers(
 
 
 @pytest.mark.parametrize(
-    ("user_input", "server_info"),
+    "username",
     [
-        pytest.param(
-            STANDARD_USER_INPUT, SERVER_INFO, id="admin-tier-under-another-name"
-        ),
-        pytest.param(USER_INPUT, STANDARD_SERVER_INFO, id="standard-tier-as-admin"),
+        pytest.param("admin", id="admin-login"),
+        pytest.param("user", id="admin-tier-under-another-name"),
     ],
 )
-async def test_user_flow_rejects_tier_mismatch(
-    hass: HomeAssistant,
-    mock_client_class: MagicMock,
-    user_input: dict[str, str],
-    server_info: AmpioServerInfo,
+async def test_user_flow_refuses_admin_account(
+    hass: HomeAssistant, mock_client_class: MagicMock, username: str
 ) -> None:
-    """The username must agree with the tier that the server reports for it."""
-    mock_client_class.check_connection.return_value = server_info
+    """The account the server reports as admin is refused, whatever its name.
+
+    A standard account then creates the entry.
+    """
+    mock_client_class.check_connection.return_value = ADMIN_SERVER_INFO
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input
+        result["flow_id"], {**USER_INPUT, CONF_USERNAME: username}
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_USERNAME: "admin_login_name"}
+    assert result["errors"] == {CONF_USERNAME: "admin_account"}
 
     mock_client_class.check_connection.return_value = SERVER_INFO
     result = await hass.config_entries.flow.async_configure(
