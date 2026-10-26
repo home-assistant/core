@@ -19,6 +19,7 @@ import pydantic
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, setup_test_component_platform
 from pytest_homeassistant.typing import ClientSessionGenerator
+from yarl import URL
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -430,6 +431,31 @@ def mcp_client_fixture(mcp_protocol: str) -> Any:
     if mcp_protocol == "streamable":
         return mcp_streamable_session
     raise ValueError(f"Unknown MCP protocol: {mcp_protocol}")
+
+
+@pytest.mark.parametrize("url_type", ["internal", "external"])
+async def test_server_icons(
+    hass: HomeAssistant,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+    url_type: str,
+) -> None:
+    """Advertise the frontend icon using the URL of the current request."""
+    base_url = str(URL(mcp_url).origin())
+    hass.config.internal_url = "http://internal.example:8123"
+    hass.config.external_url = "https://external.example"
+    setattr(hass.config, f"{url_type}_url", base_url)
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        assert session.server_info is not None
+        assert session.server_info.icons == [
+            mcp.types.Icon(
+                src=f"{base_url}/static/icons/favicon-192x192.png",
+                mime_type="image/png",
+                sizes=["192x192"],
+            )
+        ]
 
 
 @pytest.mark.parametrize(
