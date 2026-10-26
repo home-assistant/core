@@ -15,7 +15,7 @@ from homeassistant.components.mqtt.schemas import (
     MQTT_DEVICE_INFO_SCHEMA,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 )
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import DATA_INSTANCES
@@ -438,6 +438,24 @@ async def test_device_discovery_with_child_devices_only(
             },
             "value must be one of",
             id="child_tag",
+        ),
+        pytest.param(
+            {
+                "dev": {"ids": ["parent"]},
+                "o": {"name": "Foo2Mqtt"},
+                "cmps": {"sw": None},
+            },
+            "expected a mapping",
+            id="component_not_a_mapping",
+        ),
+        pytest.param(
+            {
+                "dev": {"ids": ["parent"]},
+                "o": {"name": "Foo2Mqtt"},
+                "cdevs": [{"ids": ["sub"], "cmps": {"sw": 1}}],
+            },
+            "expected a mapping",
+            id="child_component_not_a_mapping",
         ),
     ],
 )
@@ -1078,7 +1096,8 @@ async def test_reload_after_failed_parent_update_keeps_devices(
 ) -> None:
     """Test a reload after the parent device of a child device could not change.
 
-    The entity is not added, and keeps its child device and parent device.
+    The entity is not added, and keeps its child device and parent device. After
+    removing the child device, it is registered again with its new parent device.
     """
     await mqtt_mock_entry()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -1122,6 +1141,26 @@ async def test_reload_after_failed_parent_update_keeps_devices(
     assert _get_child_device(hass, device_registry, "sub") is not None
     assert _get_device(hass, device_registry, "parent") is not None
     assert _get_device(hass, device_registry, "new_parent") is None
+
+    device_registry.async_remove_device(child_device.id)
+    await hass.async_block_till_done()
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient"):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, SWITCH_TOPIC, update, retain=True)
+    await hass.async_block_till_done()
+    new_parent = _get_device(hass, device_registry, "new_parent")
+    moved_child_device = _get_child_device(hass, device_registry, "sub")
+    assert new_parent is not None
+    assert moved_child_device is not None
+    # The child device keeps its device ID
+    assert moved_child_device.id == child_device.id
+    assert moved_child_device.parent_device_id == new_parent.id
+    entity_id = entity_registry.async_get_entity_id("switch", DOMAIN, "sw1")
+    assert entity_id is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_device.id
 
 
 async def test_remove_child_device_after_failed_parent_update(
@@ -1442,6 +1481,149 @@ async def test_discovery_update_registration_error_keeps_config(
     mqtt_mock.async_publish.assert_called_once_with(
         "sw1/set", "ON", 0, False, message_expiry_interval=None
     )
+
+
+@pytest.mark.parametrize(
+    ("device", "identifier"),
+    [
+        pytest.param({"identifiers": ["plain"]}, "plain", id="device"),
+        pytest.param(
+            {**PARENT_DEVICE, "child_device": CHILD_DEVICE}, "sub", id="child_device"
+        ),
+    ],
+)
+async def test_discovery_update_drops_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device: dict[str, Any],
+    identifier: str,
+) -> None:
+    """Test a discovery update without device unlinks the entity right away."""
+    await mqtt_mock_entry()
+    await _discover_switch(hass, "sw1", device)
+    entity_id = entity_registry.async_get_entity_id("switch", DOMAIN, "sw1")
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).device_id is not None
+
+    update = json.loads(_switch_config("sw1", device))
+    del update["device"]
+    async_fire_mqtt_message(hass, SWITCH_TOPIC, json.dumps(update))
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entity_id).device_id is None
+    entry_id = _entry_id(hass)
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, identifier), entry_id)
+        is None
+    )
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, identifier), entry_id
+        )
+        is None
+    )
+    assert _get_device(hass, device_registry, "parent") is None
+
+
+async def test_device_discovery_parent_change_with_child_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a device discovery update that changes the parent device.
+
+    The components of the device move to the new device. The components of the
+    child device keep their current device, as a child device can not be moved to
+    another parent device.
+    """
+    await mqtt_mock_entry()
+    payload: dict[str, Any] = {
+        "dev": {"ids": ["parent"], "name": "Parent"},
+        "o": {"name": "Foo2Mqtt"},
+        "cdevs": [
+            {
+                "ids": ["sub"],
+                "name": "Sub",
+                "cmps": {"sw1": {**DISCOVERY_SWITCH, "uniq_id": "sw1"}},
+            }
+        ],
+        "cmps": {"sw": {**DISCOVERY_SWITCH, "uniq_id": "sw"}},
+    }
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    parent = _get_device(hass, device_registry, "parent")
+    child_device = _get_child_device(hass, device_registry, "sub")
+    assert parent is not None
+    assert child_device is not None
+
+    payload["dev"] = {"ids": ["new_parent"], "name": "New parent"}
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    assert REGISTRATION_WARNING in caplog.text
+    new_parent = _get_device(hass, device_registry, "new_parent")
+    assert new_parent is not None
+    device_entity_id = entity_registry.async_get_entity_id("switch", DOMAIN, "sw")
+    child_entity_id = entity_registry.async_get_entity_id("switch", DOMAIN, "sw1")
+    assert device_entity_id is not None
+    assert child_entity_id is not None
+    assert entity_registry.async_get(device_entity_id).device_id == new_parent.id
+    assert entity_registry.async_get(child_entity_id).device_id == child_device.id
+    # The previous parent device is kept for its child device
+    assert device_registry.async_get(parent.id) is not None
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
+                "switch": {
+                    "name": "Switch",
+                    "command_topic": "sw1/set",
+                    "unique_id": "sw1",
+                    "device": {**PARENT_DEVICE, "child_device": CHILD_DEVICE},
+                }
+            }
+        }
+    ],
+)
+async def test_yaml_reload_moves_entity_to_other_child_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a YAML reload moves an entity to another child device."""
+    await mqtt_mock_entry()
+    child_device = _get_child_device(hass, device_registry, "sub")
+    assert child_device is not None
+    assert entity_registry.async_get(SWITCH_ENTITY_ID).device_id == child_device.id
+
+    new_config = {
+        DOMAIN: {
+            "switch": {
+                "name": "Switch",
+                "command_topic": "sw1/set",
+                "unique_id": "sw1",
+                "device": {
+                    **PARENT_DEVICE,
+                    "child_device": {"identifiers": ["sub2"], "name": "Sub 2"},
+                },
+            }
+        }
+    }
+    with patch("homeassistant.config.load_yaml_config_file", return_value=new_config):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.async_block_till_done()
+
+    new_child_device = _get_child_device(hass, device_registry, "sub2")
+    assert new_child_device is not None
+    assert entity_registry.async_get(SWITCH_ENTITY_ID).device_id == new_child_device.id
+    assert _get_child_device(hass, device_registry, "sub") is None
+    assert _get_device(hass, device_registry, "parent") is not None
 
 
 async def test_device_registration_error(
