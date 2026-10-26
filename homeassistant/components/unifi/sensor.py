@@ -232,8 +232,7 @@ def async_device_outlet_power_value_fn(
     hub: UnifiHub, outlet: Outlet
 ) -> float | str | None:
     """Return outlet power only when the relay state is known."""
-    relay_state = cast(bool | None, outlet.raw.get("relay_state"))
-    if relay_state is None:
+    if (relay_state := cast(bool | None, outlet.raw.get("relay_state"))) is None:
         return None
     return outlet.power if relay_state else "0"
 
