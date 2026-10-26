@@ -790,3 +790,57 @@ async def test_relay_actuator_type_unsupported(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(ACTUATOR_TYPE_ENTITY_ID) is None
+
+
+OUTPUT_MODE_ENTITY_ID = "select.relay_output_mode"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_relays": [
+                micromodule_relay_device(
+                    supports_switch_configuration=True,
+                    output_mode=SwitchConfiguration.OutputMode.ATTACHED,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_relay_output_mode(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The relay output mode is reported and written to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.micromodule_relays[0]
+
+    assert hass.states.get(OUTPUT_MODE_ENTITY_ID).state == "attached"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: OUTPUT_MODE_ENTITY_ID, "option": "detached"},
+        blocking=True,
+    )
+    assert device.output_mode == SwitchConfiguration.OutputMode.DETACHED
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"micromodule_relays": [micromodule_relay_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_relay_output_mode_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No output mode select is created without switch configuration support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(OUTPUT_MODE_ENTITY_ID) is None

@@ -1,5 +1,6 @@
 """LLM tools for the homeassistant integration."""
 
+from collections.abc import Iterator
 from decimal import Decimal
 from enum import Enum
 from operator import attrgetter
@@ -23,7 +24,9 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     intent,
+    translation,
 )
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.llm import (
     LLM_API_ASSIST,
     LLM_API_HOME_ASSISTANT,
@@ -33,6 +36,7 @@ from homeassistant.helpers.llm import (
     ToolInput,
     ToolResult,
 )
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
@@ -45,6 +49,9 @@ SCRIPT_DOMAIN = "script"
 
 TEMPLATE_RENDER_TIMEOUT = 3
 TEMPLATE_MAX_OUTPUT = 16 * 1024
+
+ACTION_SEARCH_LIMIT = 3
+ACTION_DESCRIPTION_MAX_SIZE = 16 * 1024
 
 NO_ENTITIES_PROMPT = (
     "Only if the user wants to control a device, tell them to expose entities "
@@ -404,13 +411,137 @@ class RenderTemplateTool(Tool):
         return ToolResult(data={"result": result})
 
 
+def _action_fields(fields: dict[str, Any]) -> Iterator[tuple[str, dict[str, Any]]]:
+    """Yield the fields of an action, including the fields inside sections."""
+    for field, config in fields.items():
+        if "fields" in config:
+            yield from config["fields"].items()
+        else:
+            yield field, config
+
+
+def _describe_action(
+    action_id: str, action_description: dict[str, Any], translations: dict[str, str]
+) -> dict[str, Any]:
+    """Return the name, description, target and fields of an action."""
+    domain, action = action_id.split(".", 1)
+    key = f"component.{domain}.services.{action}"
+    placeholders = action_description.get("description_placeholders", {})
+
+    def text(config: dict[str, Any], item: str, translation_key: str) -> str:
+        """Return a text of the description, else its translation."""
+        value = config.get(item) or translations.get(translation_key, "")
+        for placeholder, replacement in placeholders.items():
+            value = value.replace(f"{{{placeholder}}}", replacement)
+        return value
+
+    fields: dict[str, dict[str, Any]] = {}
+    for field, config in _action_fields(action_description["fields"]):
+        field_info: dict[str, Any] = {}
+        if description := text(
+            config, "description", f"{key}.fields.{field}.description"
+        ):
+            field_info["description"] = description
+        if config.get("required"):
+            field_info["required"] = True
+        if "selector" in config:
+            field_info["selector"] = config["selector"]
+        fields[field] = field_info
+
+    result: dict[str, Any] = {
+        "action": action_id,
+        "name": text(action_description, "name", f"{key}.name"),
+        "description": text(action_description, "description", f"{key}.description"),
+        "fields": fields,
+    }
+    if "target" in action_description:
+        # An empty target accepts any entity, device, area, floor or label
+        result["target"] = action_description["target"] or {}
+    return result
+
+
+class SearchActionsTool(Tool):
+    """Tool for searching the actions that Home Assistant can perform."""
+
+    name = "homeassistant__search_actions"
+    title = "Search actions"
+    description = (
+        "Search the actions that Home Assistant can perform. Each word of the query "
+        "must appear in the action ID, name or description. An exact action ID or "
+        "name ranks first. Returns the "
+        f"{ACTION_SEARCH_LIMIT} best matches with their target and fields."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required(
+                "query",
+                description="Words to find, case-insensitive, e.g. 'light turn on'.",
+            ): probatio.All(str, probatio.NonEmpty()),
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Search the actions."""
+        args = self.parameters(tool_input.tool_args)
+        query = args["query"].strip().casefold()
+        words = query.replace("_", " ").split()
+        descriptions = await async_get_all_descriptions(hass)
+        translations = await translation.async_get_translations(
+            hass, "en", "services", descriptions
+        )
+
+        matches: list[tuple[int, str, dict[str, Any]]] = []
+        for domain, domain_actions in descriptions.items():
+            for action, action_description in domain_actions.items():
+                found = _describe_action(
+                    f"{domain}.{action}", action_description, translations
+                )
+                head = f"{found['action']} {found['name']}".replace("_", " ").casefold()
+                text = f"{head} {found['description'].casefold()}"
+                if not all(word in text for word in words):
+                    continue
+                # Exact matches first, then matches on ID and name, then description
+                if query in (found["action"], found["name"].casefold()):
+                    rank = 0
+                elif all(word in head for word in words):
+                    rank = 1
+                else:
+                    rank = 2
+                matches.append((rank, found["action"], found))
+        matches.sort(key=lambda match: match[:2])
+
+        actions = [found for _, _, found in matches[:ACTION_SEARCH_LIMIT]]
+        for found in actions:
+            # Some actions list so many select options that they would fill the context
+            if len(json_dumps(found)) > ACTION_DESCRIPTION_MAX_SIZE:
+                for field_info in found["fields"].values():
+                    field_info.pop("selector", None)
+                found["note"] = (
+                    "The selectors of the fields are left out to save space."
+                )
+        result: dict[str, Any] = {"actions": actions}
+        if len(matches) > ACTION_SEARCH_LIMIT:
+            result["more"] = (
+                f"{len(matches)} actions match. Use a more specific query to "
+                "find the others."
+            )
+        return ToolResult(data=result)
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
 ) -> LLMTools | None:
     """Return the homeassistant LLM tools for the given API."""
     if api_id == LLM_API_HOME_ASSISTANT:
-        return LLMTools(tools=[RenderTemplateTool()])
+        return LLMTools(tools=[RenderTemplateTool(), SearchActionsTool()])
 
     if api_id != LLM_API_ASSIST:
         return None
