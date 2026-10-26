@@ -86,7 +86,7 @@ async def async_setup_entry(
     for subentry in entry.subentries.values():
         sensors = {
             sensor_entity_key(subentry.subentry_id, sensor[CONF_TYPE])
-            if key == sensor[CONF_TYPE]
+            if entry.source != SOURCE_IMPORT and key == sensor[CONF_TYPE]
             else key: sensor
             for key, sensor in subentry.data[CONF_SENSORS].items()
         }
