@@ -500,6 +500,52 @@ class TestOnectaDataUpdateCoordinator:
         assert exc_info.value.translation_key == "rate_limit_exceeded"
         assert coordinator.update_interval == initial_interval
 
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
+    async def test_rate_limited_write_defers_polling(
+        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
+        """Defer cloud polling after a rate-limited write without retrying it."""
+        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
+        mock_utcnow.return_value = now
+        command = AsyncMock(
+            side_effect=OnectaRateLimitError(
+                RateLimit(retry_after=60),
+                method="PATCH",
+                path="/v1/gateway-devices/gateway/management-points/point/characteristics/power",
+            )
+        )
+
+        assert not await coordinator.async_execute_command(lambda _client: command())
+        assert coordinator._polling_backoff_until == now + timedelta(seconds=60)
+
+        coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
+        assert await coordinator._async_update_data_from_cloud() == {}
+        assert coordinator.update_interval == timedelta(seconds=60)
+        coordinator._async_get_cloud_devices.assert_not_awaited()
+        command.assert_awaited_once()
+
+        mock_utcnow.return_value += timedelta(seconds=60)
+        assert await coordinator._async_update_data_from_cloud() == {}
+        coordinator._async_get_cloud_devices.assert_awaited_once_with(
+            cooldown=timedelta(seconds=30)
+        )
+        assert coordinator._polling_backoff_until is None
+
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
+    async def test_successful_write_clears_polling_backoff(
+        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
+        """Allow commands through during polling backoff and clear it on success."""
+        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
+        mock_utcnow.return_value = now
+        coordinator._polling_backoff_until = now + timedelta(minutes=1)
+        command = AsyncMock()
+
+        assert await coordinator.async_execute_command(lambda _client: command())
+
+        command.assert_awaited_once()
+        assert coordinator._polling_backoff_until is None
+
     async def test_api_error_uses_update_failed_with_http_status(self, coordinator):
         """Turn a Daikin HTTP error into a translatable polling failure."""
         coordinator._last_patch_call = None

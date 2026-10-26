@@ -62,6 +62,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             async_get_clientsession(hass), self.async_get_access_token
         )
         self._last_patch_call: datetime | None = None
+        self._polling_backoff_until: datetime | None = None
         self._cloud_lock = asyncio.Lock()
 
         super().__init__(
@@ -110,6 +111,13 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             except OnectaAuthenticationError:
                 return False
             except OnectaRateLimitError as err:
+                if err.retry_after is not None and err.retry_after > 0:
+                    retry_at = dt_util.utcnow() + timedelta(seconds=err.retry_after)
+                    if (
+                        self._polling_backoff_until is None
+                        or retry_at > self._polling_backoff_until
+                    ):
+                        self._polling_backoff_until = retry_at
                 _LOGGER.debug(
                     "Daikin request %s %s was rate limited; retry after %s seconds",
                     err.method,
@@ -136,6 +144,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             except TimeoutError:
                 _LOGGER.debug("Daikin request timed out")
                 return False
+            self._polling_backoff_until = None
             self._last_patch_call = dt_util.utcnow()
             return True
 
@@ -180,6 +189,13 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         """Fetch the latest device state from Daikin."""
 
         devices = self.data or {}
+        if self._polling_backoff_until is not None:
+            remaining = self._polling_backoff_until - dt_util.utcnow()
+            if remaining > timedelta(0):
+                self.update_interval = remaining
+                return devices
+            self._polling_backoff_until = None
+
         if (
             self.last_patch_call is not None
             and (dt_util.utcnow() - self.last_patch_call).total_seconds()
