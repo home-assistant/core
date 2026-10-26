@@ -1167,9 +1167,10 @@ class MqttDiscoveryUpdateMixin(Entity):
     async def async_prepare_to_add_to_hass(self) -> None:
         """Register discovery cleanup that must also run if the add is aborted."""
         self._added_to_hass = False
-        await super().async_prepare_to_add_to_hass()
+        # Before the device registration below, which aborts the add when it fails
         if self._discovery_data is not None:
             self.async_on_remove(self._async_teardown_discovery_on_remove)
+        await super().async_prepare_to_add_to_hass()
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -1696,6 +1697,7 @@ class MqttEntityDeviceInfo(Entity):
 
     async def device_info_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
+        previous_device_specifications = self._device_specifications
         self._set_device_specifications(config)
         ensure_via_device_exists(
             self.hass, self._device_specifications, self._config_entry
@@ -1705,6 +1707,7 @@ class MqttEntityDeviceInfo(Entity):
             device = self.async_register_device()
         except dr.DeviceInfoError as err:
             # Cancel the device update, the entity keeps its current device
+            self._device_specifications = previous_device_specifications
             _log_device_info_error(err)
             return
         # The entity platform only links the device when the entity is added

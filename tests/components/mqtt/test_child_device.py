@@ -18,6 +18,7 @@ from homeassistant.components.mqtt.schemas import (
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 PARENT_DEVICE = {"identifiers": ["parent"], "name": "Parent", "manufacturer": "Acme"}
 CHILD_DEVICE = {"identifiers": ["sub"], "name": "Sub"}
@@ -1355,6 +1356,63 @@ async def test_child_device_registration_error(
     assert old_entry is not None
     assert old_entry.device_id == old_device.id
     assert _get_device(hass, device_registry, "parent") is None
+
+
+async def test_rediscovery_after_child_device_registration_error(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a corrected config is discovered after the child device failed."""
+    await mqtt_mock_entry()
+    # A device registered in this session can not be used as a child device
+    await _discover_switch(hass, "old", {"identifiers": ["sub"], "name": "Old"})
+    await _discover_switch(
+        hass, "new", {**PARENT_DEVICE, "child_device": CHILD_DEVICE}, name="New"
+    )
+    assert ADD_ERROR in caplog.text
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "new") is None
+
+    await _discover_switch(
+        hass,
+        "new",
+        {**PARENT_DEVICE, "child_device": {"identifiers": ["sub2"]}},
+        name="New",
+    )
+    child_device = _get_child_device(hass, device_registry, "sub2")
+    assert child_device is not None
+    entity_id = entity_registry.async_get_entity_id("switch", DOMAIN, "new")
+    assert entity_id is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_device.id
+
+
+async def test_discovery_update_registration_error_keeps_device_info(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed discovery update keeps the device info of the entity."""
+    await mqtt_mock_entry()
+    await _discover_switch(hass, "sw1", {**PARENT_DEVICE, "child_device": CHILD_DEVICE})
+    await _discover_switch(
+        hass,
+        "sw2",
+        {**PARENT_DEVICE, "child_device": {"identifiers": ["sub2"]}},
+        name="Other",
+    )
+
+    # A device can not use the identifiers of a child device
+    await _discover_switch(hass, "sw1", {"identifiers": ["sub2"]})
+    assert REGISTRATION_WARNING in caplog.text
+    entity = hass.data[DATA_INSTANCES]["switch"].get_entity(SWITCH_ENTITY_ID)
+    assert entity is not None
+    device_info = entity.device_info
+    assert isinstance(device_info, dr.ChildDeviceInfo)
+    assert device_info.identifiers == {(DOMAIN, "sub")}
 
 
 async def test_device_registration_error(
