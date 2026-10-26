@@ -15,10 +15,6 @@ from .critical import CRITICAL_ISSUE_PREFIX, async_acknowledge_critical_reposito
 class RestartRequiredFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
-    def __init__(self, issue_id: str) -> None:
-        """Initialize the fix flow."""
-        self.issue_id = issue_id
-
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
@@ -88,7 +84,7 @@ async def async_create_fix_flow(
 ) -> RepairsFlow | None:
     """Create flow."""
     if issue_id.startswith("restart_required"):
-        return RestartRequiredFixFlow(issue_id)
+        return RestartRequiredFixFlow()
     if issue_id.startswith(CRITICAL_ISSUE_PREFIX) and data:
         return CriticalRepositoryFixFlow(str(data["repository"]), str(data["reason"]))
     return None
