@@ -30,7 +30,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.flo.async_setup_entry", return_value=True
+        "homeassistant.components.flo.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": TEST_USER_ID, "password": TEST_PASSWORD}
@@ -76,7 +76,7 @@ async def test_form_cannot_connect(
             "tokenExpiration": 86400,
         },
     )
-    with patch("homeassistant.components.flo.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.flo.async_setup_entry", return_value=None):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": "test-username", "password": "test-password"},
@@ -121,7 +121,7 @@ async def test_form_sso_after_legacy_failure(
     )
 
     with patch(
-        "homeassistant.components.flo.async_setup_entry", return_value=True
+        "homeassistant.components.flo.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": TEST_USER_ID, "password": TEST_PASSWORD}

@@ -69,7 +69,7 @@ def _patch_fritz_connection(fc_class_mock: MagicMock) -> Generator[None]:
             "homeassistant.components.fritz.config_flow.socket.gethostbyname",
             return_value=MOCK_IPS["fritz.box"],
         ),
-        patch("homeassistant.components.fritz.async_setup_entry", return_value=True),
+        patch("homeassistant.components.fritz.async_setup_entry", return_value=None),
     ):
         yield
 
@@ -213,7 +213,7 @@ async def test_user_already_configured(
             "homeassistant.components.fritz.config_flow.socket.gethostbyname",
             return_value=MOCK_IPS["fritz.box"],
         ) as mock_gethostbyname,
-        patch("homeassistant.components.fritz.async_setup_entry", return_value=True),
+        patch("homeassistant.components.fritz.async_setup_entry", return_value=None),
     ):
         mock_request_get.return_value.status_code = 200
         mock_request_get.return_value.content = MOCK_REQUEST
@@ -280,6 +280,47 @@ async def test_exception_security(
     with _patch_fritz_connection(fc_class_mock):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+CALL_ACTION_ERRORS = [
+    pytest.param(FritzAuthorizationError, ERROR_AUTH_INVALID, id="authorization"),
+    pytest.param(FritzSecurityError, ERROR_AUTH_INVALID, id="security"),
+    pytest.param(FritzConnectionException, ERROR_CANNOT_CONNECT, id="connection"),
+]
+
+
+@pytest.mark.parametrize(("error", "expected_error"), CALL_ACTION_ERRORS)
+async def test_user_call_action_exception(
+    hass: HomeAssistant,
+    fc_class_mock: MagicMock,
+    error: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test the user flow when the first TR-064 call fails.
+
+    FritzConnection does not authenticate on init; invalid credentials are
+    only reported by the first call_action.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    with _patch_fritz_connection(fc_class_mock):
+        fc_class_mock.return_value.call_action_side_effect(error())
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_INPUT_SIMPLE
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"]["base"] == expected_error
+
+        fc_class_mock.return_value.call_action_side_effect(None)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_INPUT_SIMPLE
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -821,6 +862,39 @@ async def test_ssdp_exception(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm"
+
+
+@pytest.mark.parametrize(("error", "expected_error"), CALL_ACTION_ERRORS)
+async def test_ssdp_call_action_exception(
+    hass: HomeAssistant,
+    fc_class_mock: MagicMock,
+    error: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test confirming a discovered device when the first TR-064 call fails."""
+    with _patch_fritz_connection(fc_class_mock):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+
+        fc_class_mock.return_value.call_action_side_effect(error())
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: "fake_user", CONF_PASSWORD: "fake_pass"},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+        assert result["errors"]["base"] == expected_error
+
+        fc_class_mock.return_value.call_action_side_effect(None)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: "fake_user", CONF_PASSWORD: "fake_pass"},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_ssdp_not_supported(hass: HomeAssistant) -> None:

@@ -1,4 +1,4 @@
-"""Utility functions for the Open Thread Border Router integration."""
+"""Utility functions for the OpenThread Border Router integration."""
 
 from collections.abc import Callable, Coroutine
 import dataclasses
@@ -26,7 +26,7 @@ from homeassistant.helpers import issue_registry as ir
 from .const import DOMAIN
 
 if TYPE_CHECKING:
-    from . import OTBRConfigEntry
+    from .types import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

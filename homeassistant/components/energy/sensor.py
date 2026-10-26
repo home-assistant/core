@@ -355,6 +355,13 @@ class SensorManager:
         to_add.append(sensor)
 
 
+def _unit_converter(unit: str) -> type[unit_conversion.BaseUnitConverter]:
+    """Return the converter for an energy or volume unit."""
+    if unit in VALID_ENERGY_UNITS:
+        return unit_conversion.EnergyConverter
+    return unit_conversion.VolumeConverter
+
+
 def _set_result_unless_done(future: asyncio.Future[None]) -> None:
     """Set the result of a future unless it is done."""
     if not future.done():
@@ -551,13 +558,27 @@ class EnergyCostSensor(RestoreSensor):
                 )
             return
 
+        last_energy = float(self._last_energy_sensor_state.state)
+        last_energy_unit = self._last_energy_sensor_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
+        if last_energy_unit != energy_unit:
+            try:
+                last_energy = _unit_converter(energy_unit).convert(
+                    last_energy, last_energy_unit, energy_unit
+                )
+            except HomeAssistantError:
+                # Readings in these units can't be compared, start from this one
+                self._last_energy_sensor_state = energy_state
+                return
+
         if state_class == SensorStateClass.TOTAL_INCREASING:
             try:
                 meter_reset = reset_detected(
                     self.hass,
                     cast(str, self._config[self._adapter.stat_energy_key]),
                     energy,
-                    float(self._last_energy_sensor_state.state),
+                    last_energy,
                     self._last_energy_sensor_state,
                 )
             except HomeAssistantError:
@@ -575,13 +596,13 @@ class EnergyCostSensor(RestoreSensor):
             energy_state_copy = copy.copy(energy_state)
             energy_state_copy.state = "0.0"
             self._reset(energy_state_copy)
+            last_energy = 0.0
 
         # Update with newly incurred cost
-        old_energy_value = float(self._last_energy_sensor_state.state)
         cur_value = cast(float, self._attr_native_value)
 
         self._attr_native_value = (
-            cur_value + (energy - old_energy_value) * converted_energy_price
+            cur_value + (energy - last_energy) * converted_energy_price
         )
 
         self._last_energy_sensor_state = energy_state
@@ -630,12 +651,7 @@ class EnergyCostSensor(RestoreSensor):
         if energy_price_unit is None:
             return energy_price
 
-        converter: type[unit_conversion.BaseUnitConverter]
-        if energy_unit in VALID_ENERGY_UNITS:
-            converter = unit_conversion.EnergyConverter
-        else:
-            converter = unit_conversion.VolumeConverter
-
+        converter = _unit_converter(energy_unit)
         if energy_price_unit not in converter.VALID_UNITS:
             raise PriceUnitMismatchError
 

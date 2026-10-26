@@ -35,6 +35,35 @@ class ViCareEntity(Entity):
     _attr_has_entity_name = True
     _logged_api_error: tuple[str, tuple[str, ...]] | None = None
 
+    def __init__(
+        self,
+        unique_id_suffix: str,
+        device_serial: str | None,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        component: PyViCareHeatingDeviceComponent | None = None,
+    ) -> None:
+        """Initialize the entity."""
+        gateway_serial = device_config.getConfig().serial
+        device_id = device_config.getId()
+        model = device_config.getModel().replace("_", " ")
+
+        identifier = (
+            f"{gateway_serial}_{device_serial.replace('-', '_')}"
+            if device_serial is not None
+            else f"{gateway_serial}_{device_id}"
+        )
+
+        self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = component or device
+        self._attr_unique_id = f"{identifier}-{unique_id_suffix}"
+        if component:
+            self._attr_unique_id += f"-{component.id}"
+
+        self._gateway_serial = gateway_serial
+        self._device_serial = device_serial
+        self._device_identifier = identifier
+        self._model = model
+
     @contextmanager
     def vicare_api_handler(self) -> Generator[None]:
         """Handle common ViCare API errors."""
@@ -67,35 +96,6 @@ class ViCareEntity(Entity):
             return
         self._logged_api_error = error
         _LOGGER.log(level, message, *args)
-
-    def __init__(
-        self,
-        unique_id_suffix: str,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
-        component: PyViCareHeatingDeviceComponent | None = None,
-    ) -> None:
-        """Initialize the entity."""
-        gateway_serial = device_config.getConfig().serial
-        device_id = device_config.getId()
-        model = device_config.getModel().replace("_", " ")
-
-        identifier = (
-            f"{gateway_serial}_{device_serial.replace('-', '_')}"
-            if device_serial is not None
-            else f"{gateway_serial}_{device_id}"
-        )
-
-        self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = component or device
-        self._attr_unique_id = f"{identifier}-{unique_id_suffix}"
-        if component:
-            self._attr_unique_id += f"-{component.id}"
-
-        self._gateway_serial = gateway_serial
-        self._device_serial = device_serial
-        self._device_identifier = identifier
-        self._model = model
 
     @property
     @override

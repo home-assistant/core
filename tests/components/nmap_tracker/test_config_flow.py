@@ -38,7 +38,7 @@ def _patch_setup_entry() -> Generator[None]:
     """Patch the Nmap Tracker entry setup."""
     with patch(
         "homeassistant.components.nmap_tracker.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 
@@ -60,7 +60,7 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
 
     with patch(
         "homeassistant.components.nmap_tracker.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -98,7 +98,7 @@ async def test_form_range(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nmap_tracker.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -306,7 +306,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nmap_tracker.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

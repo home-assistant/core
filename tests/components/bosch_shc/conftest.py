@@ -54,10 +54,14 @@ from boschshcpy.services_impl import (
     DisplayedTemperatureConfiguration,
     OutdoorSirenService,
     PirSensorConfigurationService,
+    PowerSwitchConfigurationService,
     PresenceSimulationConfigurationService,
     SmokeSensitivityService,
+    SwitchConfiguration,
+    TerminalConfiguration,
     ValveTappetService,
     VibrationSensorService,
+    WallThermostatConfiguration,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -334,6 +338,8 @@ def smart_plug_device(
     energy_saving_mode_enabled: bool = False,
     power_threshold: float | None = None,
     enter_duration_seconds: int | None = None,
+    state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
+    | None = None,
 ) -> SHCSmartPlug:
     """Build a minimal device double for the smart_plugs bucket."""
     device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
@@ -352,6 +358,7 @@ def smart_plug_device(
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
     device.power_threshold = power_threshold
     device.enter_duration_seconds = enter_duration_seconds
+    device.state_after_power_outage = state_after_power_outage
     return device
 
 
@@ -362,6 +369,8 @@ def smart_plug_compact_device(
     energy_saving_mode_enabled: bool = False,
     power_threshold: float | None = None,
     enter_duration_seconds: int | None = None,
+    state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
+    | None = None,
 ) -> SHCSmartPlugCompact:
     """Build a minimal device double for the smart_plugs_compact bucket."""
     device = create_autospec(SHCSmartPlugCompact, instance=True, spec_set=True)
@@ -379,6 +388,7 @@ def smart_plug_compact_device(
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
     device.power_threshold = power_threshold
     device.enter_duration_seconds = enter_duration_seconds
+    device.state_after_power_outage = state_after_power_outage
     return device
 
 
@@ -452,9 +462,12 @@ def thermostat_device(
     valvestate: ValveTappetService.State = ValveTappetService.State.VALVE_ADAPTION_SUCCESSFUL,
     supports_silentmode: bool = False,
     silentmode: SilentModeService.State = SilentModeService.State.MODE_NORMAL,
+    offset: float | None = None,
+    step_size: float = 0.5,
+    spec: type[SHCThermostat] = SHCThermostat,
 ) -> SHCThermostat:
     """Build a minimal device double for the thermostats/roomthermostats/wallthermostats buckets."""
-    device = create_autospec(SHCThermostat, instance=True, spec_set=True)
+    device = create_autospec(spec, instance=True, spec_set=True)
     device.name = name
     device.id = device_id
     device.root_device_id = "test-mac"
@@ -464,11 +477,17 @@ def thermostat_device(
     device.device_services = []
     device.deleted = False
     device.status = "AVAILABLE"
-    device.child_lock = child_lock
-    device.position = position
-    device.valvestate = valvestate
-    device.supports_silentmode = supports_silentmode
-    device.silentmode = silentmode
+    if spec is SHCThermostat:
+        device.child_lock = child_lock
+        device.position = position
+        device.valvestate = valvestate
+        device.supports_silentmode = supports_silentmode
+        device.silentmode = silentmode
+    device.supports_temperature_offset = offset is not None
+    device.offset = offset
+    device.min_offset = -5.0
+    device.max_offset = 5.0
+    device.step_size = step_size
     return device
 
 
@@ -482,6 +501,9 @@ def thermostat_gen2_device(
     | None = None,
     supports_display_direction: bool | None = None,
     supports_displayed_temperature: bool | None = None,
+    valve_type: WallThermostatConfiguration.ValveType | None = None,
+    heater_type: WallThermostatConfiguration.HeaterType | None = None,
+    terminal_type: TerminalConfiguration.Type | None = None,
     spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
 ) -> SHCThermostatGen2 | SHCRoomThermostat2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
@@ -495,6 +517,7 @@ def thermostat_gen2_device(
     device.device_services = []
     device.deleted = False
     device.status = "AVAILABLE"
+    device.supports_temperature_offset = False
     device.supports_display_configuration = supports_display_configuration
     device.humidity_warning_enabled = humidity_warning_enabled
     device.supports_display_direction = (
@@ -509,6 +532,15 @@ def thermostat_gen2_device(
         else supports_displayed_temperature
     )
     device.displayed_temperature = displayed_temperature
+    if spec is SHCThermostatGen2:
+        device.supports_wall_thermostat_configuration = (
+            valve_type is not None or heater_type is not None
+        )
+        device.valve_type = valve_type
+        device.heater_type = heater_type
+    if spec is SHCRoomThermostat2:
+        device.supports_terminal_configuration = terminal_type is not None
+        device.terminal_type = terminal_type
     return device
 
 
@@ -564,6 +596,9 @@ def micromodule_relay_device(
     swap_outputs: bool = False,
     impulse_length: float | None = None,
     impulse_length_raises_key_error: bool = False,
+    switch_type: SwitchConfiguration.SwitchType | None = None,
+    actuator_type: SwitchConfiguration.ActuatorType | None = None,
+    output_mode: SwitchConfiguration.OutputMode | None = None,
 ) -> SHCMicromoduleRelay:
     """Build a minimal device double for the micromodule_relays bucket."""
     device = create_autospec(SHCMicromoduleRelay, instance=True, spec_set=True)
@@ -581,6 +616,9 @@ def micromodule_relay_device(
     device.supports_switch_configuration = supports_switch_configuration
     device.swap_inputs = swap_inputs
     device.swap_outputs = swap_outputs
+    device.switch_type = switch_type
+    device.actuator_type = actuator_type
+    device.output_mode = output_mode
     if impulse_length_raises_key_error:
         type(device).impulse_length = PropertyMock(
             side_effect=KeyError("impulseLength")
