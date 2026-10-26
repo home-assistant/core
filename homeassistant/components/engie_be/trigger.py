@@ -19,7 +19,7 @@ from homeassistant.helpers.trigger import (
     TriggerConfig,
     TriggerNotTriggeredReporter,
 )
-from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -72,8 +72,8 @@ class _EpexTrigger(Trigger):
     def _value(self, data: EngieBeEpexData, now: datetime) -> bool | None:
         """Return the check to compare between two updates."""
 
-    def _device_value(self, device_id: str) -> Any:
-        """Return the value for one device, or UNDEFINED when it is not known."""
+    def _device_value(self, device_id: str) -> bool | UndefinedType | None:
+        """Return the check for one device, or UNDEFINED when it is not known."""
         data = async_get_device_epex_data(self._hass, device_id)
         if data is None:
             return UNDEFINED
@@ -116,7 +116,7 @@ class _EpexTrigger(Trigger):
         """Track the EPEX prices for a single device."""
         description = f"EPEX prices changed for {device.name_by_user or device.name}"
         tracked_coordinator = async_get_device_epex(self._hass, device_id)
-        previous: Any = self._device_value(device_id)
+        previous: bool | UndefinedType | None = self._device_value(device_id)
 
         @callback
         def async_epex_updated(coordinator: EngieBeEpexCoordinator) -> None:
