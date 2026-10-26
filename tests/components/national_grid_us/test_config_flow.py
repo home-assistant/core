@@ -49,6 +49,7 @@ async def test_user_step_shows_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
+@pytest.mark.usefixtures("mock_national_grid_api")
 async def test_user_step_single_account(hass: HomeAssistant) -> None:
     """Test user step with a single account creates the entry directly."""
     client = _mock_client([{"billingAccountId": MOCK_ACCOUNT_ID}])
@@ -71,6 +72,7 @@ async def test_user_step_single_account(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == MOCK_ACCOUNT_ID
 
 
+@pytest.mark.usefixtures("mock_national_grid_api")
 async def test_user_step_single_account_without_service_address(
     hass: HomeAssistant,
 ) -> None:
@@ -114,6 +116,7 @@ async def test_user_step_multiple_accounts(hass: HomeAssistant) -> None:
     assert result["step_id"] == "select_account"
 
 
+@pytest.mark.usefixtures("mock_national_grid_api")
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
@@ -229,6 +232,7 @@ async def test_select_account_labels_fallback_when_address_unavailable(
     ]
 
 
+@pytest.mark.usefixtures("mock_national_grid_api")
 async def test_select_account_step(hass: HomeAssistant) -> None:
     """Test selecting an account creates a single entry for that account."""
     client = _mock_client(
@@ -255,6 +259,7 @@ async def test_select_account_step(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == MOCK_ACCOUNT_ID_2
 
 
+@pytest.mark.usefixtures("mock_national_grid_api")
 async def test_user_step_skips_already_configured_account(
     hass: HomeAssistant,
 ) -> None:
