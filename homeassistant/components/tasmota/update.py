@@ -36,8 +36,8 @@ async def async_setup_entry(
     def async_device_discovered(mac: str) -> None:
         """Create update entity for a newly discovered Tasmota device."""
         if mac not in added_macs and (
-            device := device_registry.async_get_device(
-                connections={(CONNECTION_NETWORK_MAC, mac)}
+            device := device_registry.async_get_device_by_connection(
+                (CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
             )
         ):
             added_macs.add(mac)
@@ -72,10 +72,11 @@ class TasmotaUpdateEntity(
     ) -> None:
         """Initialize the Tasmota update entity."""
         super().__init__(coordinator=coordinator)
-        self._connections = device_entry.connections
-        self._attr_device_info = dr.DeviceInfo(connections=self._connections)
-        for connection_type, connection_value in self._connections:
+        self._config_entry_id = device_entry.config_entry_id
+        self._attr_device_info = dr.DeviceInfo(connections=device_entry.connections)
+        for connection_type, connection_value in device_entry.connections:
             if connection_type == dr.CONNECTION_NETWORK_MAC:
+                self._connection = (connection_type, connection_value)
                 self._attr_unique_id = connection_value
                 break
 
@@ -84,8 +85,8 @@ class TasmotaUpdateEntity(
     def installed_version(self) -> str | None:
         """Return the installed version."""
         if self.hass and (
-            device := dr.async_get(self.hass).async_get_device(
-                connections=self._connections
+            device := dr.async_get(self.hass).async_get_device_by_connection(
+                self._connection, self._config_entry_id
             )
         ):
             return device.sw_version

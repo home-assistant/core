@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, patch
 
 from aiogithubapi import GitHubReleaseModel
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
 from homeassistant.components.update import (
@@ -20,9 +22,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import setup_tasmota_helper
 from .test_common import DEFAULT_CONFIG
-
-from pytest_homeassistant.common import async_fire_mqtt_message
-from pytest_homeassistant.typing import MqttMockHAClient
 
 
 @pytest.fixture
@@ -72,6 +71,7 @@ async def test_device_update_entity(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_github_latest_release: str,
     expected_update_state: str,
 ) -> None:
@@ -88,13 +88,14 @@ async def test_device_update_entity(
     )
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device_entry is not None
     assert device_entry.sw_version == DEFAULT_CONFIG["sw"]
 
-    entity_id = er.async_get(hass).async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         Platform.UPDATE, DOMAIN, dr.format_mac(mac)
     )
     assert entity_id is not None, "Update entity should exist for each Tasmota device"
