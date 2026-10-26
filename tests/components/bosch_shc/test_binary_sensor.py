@@ -244,6 +244,11 @@ async def test_twinguard_smoke_looks_up_once(
         ({"has_demand": True}, "binary_sensor.room_climate_call_for_heat", STATE_ON),
         ({}, "binary_sensor.room_climate_call_for_heat", STATE_OFF),
         (
+            {"has_demand": True, "supports_cooling": True, "cooling_mode": True},
+            "binary_sensor.room_climate_call_for_heat",
+            STATE_OFF,
+        ),
+        (
             {"setpoint_temperature_offset_active": True},
             "binary_sensor.room_climate_schedule_override_active",
             STATE_ON,
