@@ -4,7 +4,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from contextlib import suppress
 import re
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 import probatio
 
@@ -597,7 +597,8 @@ class ConfigureFlowTool(Tool):
         flow_mgr = hass.config_entries.flow
         flow_id = flow_handler.flow_id
         cur_step = flow_handler.cur_step
-        assert cur_step is not None
+        if TYPE_CHECKING:
+            assert cur_step is not None
         domain = str(flow_handler.handler)
 
         if abort:
@@ -646,17 +647,7 @@ class ConfigureFlowTool(Tool):
             try:
                 result = await flow_mgr.async_configure(flow_id, flow_input)
             except data_entry_flow.InvalidData as err:
-                return ToolResult(
-                    data={
-                        "result": {
-                            "flow_id": short_flow_id,
-                            "type": str(cur_type),
-                            "step_id": str(cur_step.get("step_id", "user")),
-                            "errors": err.schema_errors,
-                        }
-                    },
-                    error=True,
-                )
+                return _error_result(f"Invalid input: {err.schema_errors}")
             except data_entry_flow.UnknownFlow:
                 return _error_result(f"Flow '{short_flow_id}' not found.")
             except HomeAssistantError as err:

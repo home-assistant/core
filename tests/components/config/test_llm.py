@@ -737,12 +737,7 @@ async def test_start_and_configure_multi_step_config_flow(
         llm_context,
     )
     assert invalid_menu_opt.error is True
-    assert isinstance(invalid_menu_res := invalid_menu_opt.data["result"], dict)
-    assert invalid_menu_res["type"] == "menu"
-    assert invalid_menu_res["step_id"] == "user"
-    assert "fields" not in invalid_menu_res
-    assert isinstance(menu_errors := invalid_menu_res["errors"], dict)
-    assert "next_step_id" in menu_errors
+    assert "next_step_id" in str(invalid_menu_opt.data["error"])
 
     step2 = await configure_tool.async_call(
         hass,
@@ -789,11 +784,7 @@ async def test_start_and_configure_multi_step_config_flow(
         llm_context,
     )
     assert invalid_step.error is True
-    assert isinstance(invalid_res := invalid_step.data["result"], dict)
-    assert invalid_res["type"] == "form"
-    assert invalid_res["step_id"] == "sensor"
-    assert "fields" not in invalid_res
-    assert "errors" in invalid_res
+    assert "minimum" in str(invalid_step.data["error"])
 
     step3 = await configure_tool.async_call(
         hass,
