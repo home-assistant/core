@@ -569,6 +569,8 @@ def micromodule_dimmer_device(
     name: str = "Dimmer",
     binarystate: bool = False,
     brightness: int = 50,
+    supports_dimmer_configuration: bool = False,
+    dimming_speed: int | None = 5,
 ) -> SHCMicromoduleDimmer:
     """Build a minimal device double for the micromodule_dimmers bucket."""
     device = create_autospec(SHCMicromoduleDimmer, instance=True, spec_set=True)
@@ -583,6 +585,8 @@ def micromodule_dimmer_device(
     device.status = "AVAILABLE"
     device.binarystate = binarystate
     device.brightness = brightness
+    device.supports_dimmer_configuration = supports_dimmer_configuration
+    device.dimming_speed = dimming_speed
     return device
 
 
