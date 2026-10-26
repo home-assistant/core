@@ -11,7 +11,8 @@ from homeassistant import setup
 from homeassistant.components import device_tracker, zone
 from homeassistant.components.zone import DOMAIN
 from homeassistant.components.zone.const import ZoneEntityStateAttribute
-from homeassistant.const import CONF_NAME, SERVICE_RELOAD, EntityStateAttribute
+from homeassistant.components.zone.services import ZoneService
+from homeassistant.const import CONF_NAME, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
@@ -389,13 +390,13 @@ async def test_reload(
         with pytest.raises(Unauthorized):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_RELOAD,
+                ZoneService.RELOAD,
                 blocking=True,
                 context=Context(user_id=hass_read_only_user.id),
             )
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            ZoneService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
