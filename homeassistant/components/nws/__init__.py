@@ -299,3 +299,15 @@ def device_info(entry: ConfigEntry, nws_data: NWSData) -> DeviceInfo:
         manufacturer="National Weather Service",
         name=name,
     )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
+    """Migrate config entry."""
+
+    if entry.version < 2:
+        data = dict(entry.data)
+        long = data.pop(CONF_LONGITUDE)
+        lat = data.pop(CONF_LATITUDE)
+        if lat is not None and long is not None:
+            data[CONF_LOCATION] = {CONF_LATITUDE: lat, CONF_LONGITUDE: long}
+        hass.config_entries.async_update_entry(entry, data=data, version=2)

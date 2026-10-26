@@ -9,11 +9,18 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.nws.const import (
     CONF_LOCATION_ENTITY,
+    CONF_STATION,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -472,3 +479,26 @@ async def test_unload_with_location_entity(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_migrate_entry(hass: HomeAssistant, mock_simple_nws) -> None:
+    """Test entry migration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "test",
+            CONF_LATITUDE: 35,
+            CONF_LONGITUDE: -75,
+            CONF_STATION: "ABC",
+        },
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert entry.version == 2
+    assert entry.data == NWS_CONFIG
