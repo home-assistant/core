@@ -745,6 +745,10 @@ async def test_issue_for_mariadb_with_MDEV_25020(
         "10.7.5-MariaDB",
         "10.8.4-MariaDB",
         "10.9.1-MariaDB",
+        "10.11.7-MariaDB",
+        "11.4.9-MariaDB",
+        "11.8.8-MariaDB",
+        "12.3.3-MariaDB",
     ],
 )
 async def test_no_issue_for_mariadb_with_MDEV_25020(
@@ -790,7 +794,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     assert issue is None
 
     assert database_engine is not None
-    assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_range_in_select is True
     assert database_engine.optimizer.slow_dependent_subquery is False
 
 

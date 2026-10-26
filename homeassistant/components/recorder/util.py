@@ -79,16 +79,12 @@ def _simple_version(version: str) -> AwesomeVersion:
 
 MIN_VERSION_MARIA_DB = _simple_version("10.3.0")
 RECOMMENDED_MIN_VERSION_MARIA_DB = _simple_version("10.5.17")
-MARIADB_WITH_FIXED_IN_QUERIES_105 = _simple_version("10.5.17")
 MARIA_DB_106 = _simple_version("10.6.0")
-MARIADB_WITH_FIXED_IN_QUERIES_106 = _simple_version("10.6.9")
 RECOMMENDED_MIN_VERSION_MARIA_DB_106 = _simple_version("10.6.9")
 MARIA_DB_107 = _simple_version("10.7.0")
 RECOMMENDED_MIN_VERSION_MARIA_DB_107 = _simple_version("10.7.5")
-MARIADB_WITH_FIXED_IN_QUERIES_107 = _simple_version("10.7.5")
 MARIA_DB_108 = _simple_version("10.8.0")
 RECOMMENDED_MIN_VERSION_MARIA_DB_108 = _simple_version("10.8.4")
-MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.40.1")
@@ -691,13 +687,9 @@ def setup_connection_for_dialect(
                         instance.hass,
                         version,
                     )
-                slow_range_in_select = bool(
-                    not version
-                    or version < MARIADB_WITH_FIXED_IN_QUERIES_105
-                    or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
-                    or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
-                    or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
-                )
+                # Large IN lists become semijoins which scan every matching row
+                # instead of stopping after the first match for each shared ID.
+                slow_range_in_select = True
             elif not version or version < MIN_VERSION_MYSQL:
                 _raise_if_version_unsupported(
                     version or version_string, "MySQL", MIN_VERSION_MYSQL

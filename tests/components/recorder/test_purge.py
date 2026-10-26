@@ -114,8 +114,16 @@ async def test_purge_big_database(hass: HomeAssistant, recorder_mock: Recorder) 
             assert state_attributes.count() == 1
 
 
-async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) -> None:
+@pytest.mark.parametrize(
+    "slow_range_in_select",
+    [pytest.param(False, id="distinct"), pytest.param(True, id="limit_one")],
+)
+async def test_purge_old_states(
+    hass: HomeAssistant, recorder_mock: Recorder, slow_range_in_select: bool
+) -> None:
     """Test deleting old states."""
+    assert recorder_mock.database_engine is not None
+    recorder_mock.database_engine.optimizer.slow_range_in_select = slow_range_in_select
     assert recorder_mock.states_manager.oldest_ts is None
     oldest_ts = recorder_mock.states_manager.oldest_ts
 
@@ -317,8 +325,16 @@ async def test_purge_old_states_encounters_operational_error(
     assert "Error executing purge" in caplog.text
 
 
-async def test_purge_old_events(hass: HomeAssistant, recorder_mock: Recorder) -> None:
+@pytest.mark.parametrize(
+    "slow_range_in_select",
+    [pytest.param(False, id="distinct"), pytest.param(True, id="limit_one")],
+)
+async def test_purge_old_events(
+    hass: HomeAssistant, recorder_mock: Recorder, slow_range_in_select: bool
+) -> None:
     """Test deleting old events."""
+    assert recorder_mock.database_engine is not None
+    recorder_mock.database_engine.optimizer.slow_range_in_select = slow_range_in_select
     await _add_test_events(hass)
 
     with session_scope(hass=hass) as session:

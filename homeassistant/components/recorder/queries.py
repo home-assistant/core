@@ -99,7 +99,7 @@ def attributes_ids_exist_in_states(
     for each attributes_id. This is then used to filter out the attributes_id
     that no longer exist in the States table.
 
-    This query is fast for older MariaDB, older MySQL, and PostgreSQL.
+    This query is fast for MariaDB, older MySQL, and PostgreSQL.
     """
     return lambda_stmt(
         lambda: (
@@ -143,7 +143,7 @@ def data_ids_exist_in_events(
     for each data_id. This is then used to filter out the data_id
     that no longer exist in the Events table.
 
-    This query is fast for older MariaDB, older MySQL, and PostgreSQL.
+    This query is fast for MariaDB, older MySQL, and PostgreSQL.
     """
     return lambda_stmt(
         lambda: (
