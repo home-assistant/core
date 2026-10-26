@@ -54,6 +54,7 @@ from boschshcpy.services_impl import (
     DisplayedTemperatureConfiguration,
     OutdoorSirenService,
     PirSensorConfigurationService,
+    PollControlService,
     PowerSwitchConfigurationService,
     PresenceSimulationConfigurationService,
     SmokeSensitivityService,
@@ -878,6 +879,7 @@ def motion_detector2_device(
     motion_sensitivity: PirSensorConfigurationService.MotionSensitivity
     | None = PirSensorConfigurationService.MotionSensitivity.MIDDLE,
     smart_sensitivity: dict[str, str] | None = None,
+    long_poll_interval: PollControlService.PollControlState = PollControlService.PollControlState.LONG,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -901,6 +903,7 @@ def motion_detector2_device(
         if smart_sensitivity
         else None
     )
+    device.long_poll_interval = long_poll_interval
     if motion_sensitivity is None:
         del device.motion_sensitivity
     else:

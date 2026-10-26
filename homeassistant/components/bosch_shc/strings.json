@@ -134,6 +134,13 @@
           "middle": "[%key:common::state::medium%]"
         }
       },
+      "orientation_light_response_time": {
+        "name": "Orientation light response time",
+        "state": {
+          "long": "Long",
+          "short": "Short"
+        }
+      },
       "output_mode": {
         "name": "Output mode",
         "state": {

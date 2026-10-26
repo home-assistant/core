@@ -21,6 +21,7 @@ from boschshcpy.services_impl import (
     DisplayDirection,
     DisplayedTemperatureConfiguration,
     PirSensorConfigurationService,
+    PollControlService,
     PowerSwitchConfigurationService,
     SmartSensitivityControlService,
     SmokeSensitivityService,
@@ -90,6 +91,31 @@ MOTION_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCMotionDetector2](
     options=["high", "middle", "low"],
     current_option_fn=lambda device, options: device.motion_sensitivity.name.lower(),
     select_option_fn=_motion_select_option,
+)
+
+
+def _orientation_light_current_option(
+    device: SHCMotionDetector2, options: Sequence[str] | None
+) -> str | None:
+    """Read the Motion Detector II's orientation-light response time."""
+    interval = device.long_poll_interval
+    if interval is PollControlService.PollControlState.UNKNOWN:
+        return None
+    return str(interval.name.lower())
+
+
+def _orientation_light_select_option(device: SHCMotionDetector2, option: str) -> None:
+    """Write the Motion Detector II's orientation-light response time."""
+    device.long_poll_interval = PollControlService.PollControlState[option.upper()]
+
+
+ORIENTATION_LIGHT_RESPONSE_DESCRIPTION = SHCSelectEntityDescription[SHCMotionDetector2](
+    key="orientation_light_response_time",
+    translation_key="orientation_light_response_time",
+    entity_category=EntityCategory.CONFIG,
+    options=["long", "short"],
+    current_option_fn=_orientation_light_current_option,
+    select_option_fn=_orientation_light_select_option,
 )
 
 
@@ -413,6 +439,17 @@ async def async_setup_entry(
             description=MOTION_SENSITIVITY_DESCRIPTION,
         )
         for detector in motion_detectors
+    )
+
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=detector,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=ORIENTATION_LIGHT_RESPONSE_DESCRIPTION,
+        )
+        for detector in session.device_helper.motion_detectors2
     )
 
     entities.extend(
