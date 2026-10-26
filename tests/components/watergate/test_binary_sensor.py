@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import timedelta
+import copy
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -16,11 +17,18 @@ from syrupy.assertion import SnapshotAssertion
 from watergate_local_api import WatergateApiException
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, EntityCategory, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
+from .const import DEFAULT_DEVICE_STATE_V2, DEFAULT_NETWORKING_STATE
 
 WATER_FLOWING = "binary_sensor.sonic_water_flowing"
 MQTT_CONNECTED = "binary_sensor.sonic_mqtt_connected"
@@ -63,6 +71,31 @@ async def test_enabled_by_default(
         assert entry.disabled
         assert entry.entity_category is EntityCategory.DIAGNOSTIC
         assert entry.original_device_class is BinarySensorDeviceClass.CONNECTIVITY
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_states_are_off_when_the_device_reports_false(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """Test the binary sensors are off when the device reports boolean false."""
+    state = copy.copy(DEFAULT_DEVICE_STATE_V2)
+    state.water_flow_indicator = False
+    networking = copy.copy(DEFAULT_NETWORKING_STATE)
+    networking.mqtt_connected = False
+    networking.wifi_connected = False
+    mock_watergate_client.async_get_device_state_v2.return_value = state
+    mock_watergate_client.async_get_networking.return_value = networking
+
+    with patch(
+        "homeassistant.components.watergate.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await init_integration(hass, mock_entry)
+
+    assert hass.states.get(WATER_FLOWING).state == STATE_OFF
+    assert hass.states.get(MQTT_CONNECTED).state == STATE_OFF
+    assert hass.states.get(WIFI_CONNECTED).state == STATE_OFF
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
