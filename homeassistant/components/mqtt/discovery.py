@@ -668,7 +668,8 @@ async def async_start(  # noqa: C901
                     discovery_payload[CONF_DEVICE] = (
                         device_config
                         if device_component.child_device is None
-                        # Copy, as the device config is shared by all components
+                        # All components share the device config, so a component of
+                        # a child device gets a new dict with its child device
                         else {
                             **device_config,
                             CONF_CHILD_DEVICE: device_component.child_device,

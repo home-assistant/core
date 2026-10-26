@@ -121,7 +121,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA, validate_child_device_has_unique_id
+from .schemas import validate_child_device_has_unique_id
 from .subscription import (
     EntitySubscription,
     async_prepare_subscribe_topics,
@@ -268,8 +268,8 @@ def async_setup_entity_entry_helper(  # noqa: C901
     """Set up entity creation dynamically through MQTT discovery."""
     mqtt_data = hass.data[DATA_MQTT]
     platform = async_get_current_platform()
-    # Validators on the whole config are lost when platforms extend
-    # MQTT_ENTITY_COMMON_SCHEMA.schema
+    # The child device check needs the whole config, a validator wrapped around
+    # MQTT_ENTITY_COMMON_SCHEMA is not kept by the platform schemas that extend it
     discovery_schema = probatio.All(
         discovery_schema, validate_child_device_has_unique_id
     )
@@ -813,31 +813,6 @@ async def async_remove_discovery_payload(
     await async_publish(hass, discovery_topic, None, retain=True)
 
 
-@callback
-def _async_get_discovered_device_id(
-    hass: HomeAssistant,
-    discovery_payload: MQTTDiscoveryPayload,
-    config_entry_id: str,
-    main_device_id: str | None,
-) -> str | None:
-    """Return the ID of the device of a device discovery payload, if it exists.
-
-    This is the parent device of the child devices in the payload. The device the
-    entity was last registered with is used when known, as a failed update leaves
-    the device in the payload unregistered, or refers to another device.
-    """
-    device_registry = dr.async_get(hass)
-    if main_device_id is not None:
-        return main_device_id if device_registry.async_get(main_device_id) else None
-    device_config = MQTT_ENTITY_DEVICE_INFO_SCHEMA(discovery_payload[CONF_DEVICE])
-    devices = device_registry.async_get_devices(
-        identifiers={(DOMAIN, id_) for id_ in device_config[CONF_IDENTIFIERS]},
-        connections={(conn_[0], conn_[1]) for conn_ in device_config[CONF_CONNECTIONS]},
-        config_entry_id=config_entry_id,
-    )
-    return devices[0].id if devices else None
-
-
 async def async_remove_entity_discovery_payload(
     hass: HomeAssistant,
     entity_id: str,
@@ -851,23 +826,21 @@ async def async_remove_entity_discovery_payload(
     as clearing it removes all components of the device, including the components
     of its child devices. Removing a child device keeps the topic, and removes the
     parent device when it has no components left, like a device that has no
-    entities left.
+    entities left. The device of the payload is the device the entity was last
+    registered with, the main device, which is the parent of a child device.
     """
     discovery_payload: MQTTDiscoveryPayload = discovery_data[ATTR_DISCOVERY_PAYLOAD]
     if discovery_payload.device_discovery:
-        # The device registry removes child devices before their parent device,
-        # let a removal of the parent device finish before checking it
+        # Removing a parent device first removes its child devices and their
+        # entities, which starts this check while the parent device still exists.
+        # Yield, so the removal of the parent device is done before it is checked.
         await asyncio.sleep(0)
     if (
         discovery_payload.device_discovery
         and registry_entry is not None
         and registry_entry.config_entry_id is not None
-        and (
-            discovered_device_id := _async_get_discovered_device_id(
-                hass, discovery_payload, registry_entry.config_entry_id, main_device_id
-            )
-        )
-        is not None
+        and main_device_id is not None
+        and dr.async_get(hass).async_get(main_device_id) is not None
     ):
         application: str = discovery_payload[CONF_ORIGIN][CONF_NAME]
         _LOGGER.warning(
@@ -880,8 +853,9 @@ async def async_remove_entity_discovery_payload(
             discovery_data[ATTR_DISCOVERY_TOPIC],
             application,
         )
-        # Other entities removed together check the parent device first, removing
-        # it or its last child device earlier would let them clear the topic
+        # Entities removed together, like those of a removed child device, all check
+        # the parent device above before any of them cleans up devices below.
+        # Removing the parent device earlier would let the others clear the topic.
         await asyncio.sleep(0)
         # Remove the device if no components are left, as an empty device
         # discovery payload can no longer clean it up
@@ -889,7 +863,7 @@ async def async_remove_entity_discovery_payload(
             hass, registry_entry.device_id, registry_entry.config_entry_id
         )
         await async_cleanup_device_registry(
-            hass, discovered_device_id, registry_entry.config_entry_id
+            hass, main_device_id, registry_entry.config_entry_id
         )
         return
     await async_remove_discovery_payload(hass, discovery_data)
@@ -1582,7 +1556,6 @@ class MqttEntityDeviceInfo(Entity):
     _main_device_id: str | None = None
     # The device of the registry entry before the entity is added, set by MqttEntity
     _previous_device_id: str | None = None
-    _device_registration_failed = False
     _register_device_on_add = False
 
     def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
@@ -1594,7 +1567,9 @@ class MqttEntityDeviceInfo(Entity):
     def async_register_device_on_add(self) -> None:
         """Register the device when the entity is added.
 
-        The entity platform registers the device of a subentry entity instead.
+        Used for discovered and YAML entities, which can have a child device. The
+        entity platform registers the device of a subentry entity, with its
+        subentry ID.
         """
         self._register_device_on_add = True
 
@@ -1602,8 +1577,9 @@ class MqttEntityDeviceInfo(Entity):
     async def async_prepare_to_add_to_hass(self) -> None:
         """Register the device, right before the entity platform links it.
 
-        Registering it earlier lets the cleanup of another entity in the same
-        batch, that is not added, remove the device before this entity uses it.
+        The YAML entities are added one by one. When a rejected entity, like one
+        with a duplicate unique ID, cleans up its devices, a device shared with a
+        later entity must not have been registered for that later entity yet.
         """
         await super().async_prepare_to_add_to_hass()
         if self._register_device_on_add:
@@ -1627,25 +1603,19 @@ class MqttEntityDeviceInfo(Entity):
     def async_register_device(self) -> dr.AnyDeviceEntry | None:
         """Register the device, a parent device is registered before its child device.
 
-        Registration errors are logged and leave the entity without a device,
-        instead of the entity platform not adding the entity.
+        Raises DeviceInfoError when the device can not be registered, which leaves
+        the registered devices of the entity unchanged.
         """
-        self._parent_device_id = None
-        self._registered_device_id = None
-        self._device_registration_failed = False
         if (device_info := self._main_device_info()) is None:
+            self._parent_device_id = self._registered_device_id = None
             return None
         device_registry = dr.async_get(self.hass)
         config_entry_id = self._config_entry.entry_id
-        try:
-            device = device_registry.async_get_or_create_from_info(
-                config_entry_id=config_entry_id, device_info=device_info
-            )
-        except dr.DeviceInfoError as err:
-            self._device_registration_failed = True
-            _log_device_info_error(err)
-            return None
+        device = device_registry.async_get_or_create_from_info(
+            config_entry_id=config_entry_id, device_info=device_info
+        )
         if not self._has_child_device:
+            self._parent_device_id = None
             self._registered_device_id = self._main_device_id = device.id
             return device
         try:
@@ -1653,9 +1623,7 @@ class MqttEntityDeviceInfo(Entity):
                 config_entry_id=config_entry_id,
                 device_info=self._child_device_info(device.id),
             )
-        except dr.DeviceInfoError as err:
-            self._device_registration_failed = True
-            _log_device_info_error(err)
+        except dr.DeviceInfoError:
             # The parent device may have been registered for this child device only
             self._config_entry.async_create_task(
                 self.hass,
@@ -1667,7 +1635,7 @@ class MqttEntityDeviceInfo(Entity):
                 ),
                 "mqtt cleanup parent device",
             )
-            return None
+            raise
         self._parent_device_id = self._main_device_id = device.id
         self._registered_device_id = child_device.id
         return child_device
@@ -1733,9 +1701,15 @@ class MqttEntityDeviceInfo(Entity):
             self.hass, self._device_specifications, self._config_entry
         )
 
+        try:
+            device = self.async_register_device()
+        except dr.DeviceInfoError as err:
+            # Cancel the device update, the entity keeps its current device
+            _log_device_info_error(err)
+            return
         # The entity platform only links the device when the entity is added
         if (
-            (device := self.async_register_device()) is None
+            device is None
             or self.registry_entry is None
             or (old_device_id := self.registry_entry.device_id) == device.id
         ):
@@ -1752,8 +1726,6 @@ class MqttEntityDeviceInfo(Entity):
     @override
     def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:
         """Return a device description for device registry."""
-        if self._device_registration_failed:
-            return None
         if self._parent_device_id is not None:
             return self._child_device_info(self._parent_device_id)
         return self._main_device_info()

@@ -2,7 +2,7 @@
 
 import json
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import probatio
 import pytest
@@ -15,6 +15,7 @@ from homeassistant.components.mqtt.schemas import (
     MQTT_DEVICE_INFO_SCHEMA,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 )
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -24,6 +25,7 @@ SWITCH_ENTITY_ID = "switch.parent_sub_switch"
 SWITCH_TOPIC = "homeassistant/switch/sw1/config"
 DEVICE_TOPIC = "homeassistant/device/parent/config"
 REGISTRATION_WARNING = "Unable to register MQTT device"
+ADD_ERROR = "Error adding entity"
 UNIQUE_ID_REQUIRED = "'unique_id' is required when a 'child_device' is configured"
 TRIGGER_TOPIC = "homeassistant/device_automation/trigger1/config"
 TRIGGER_CONFIG = {
@@ -1038,17 +1040,20 @@ async def test_remove_parent_device_with_child_device_components_clears_topic(
     )
 
 
-async def test_remove_entity_without_child_device_keeps_device_discovery_topic(
+async def test_device_discovery_child_device_registration_error(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test removing an entity of a child device that could not be registered."""
+    """Test a component of a child device that can not be registered.
+
+    The component is not added, while the other components of the device are.
+    """
     mqtt_mock = await mqtt_mock_entry()
     # A device registered in this session can not be used as a child device
     await _discover_switch(hass, "old", {"identifiers": ["sub"], "name": "Old"})
+    mqtt_mock.async_publish.reset_mock()
     payload = {
         "dev": {"ids": ["parent"], "name": "Parent"},
         "o": {"name": "Foo2Mqtt"},
@@ -1057,19 +1062,65 @@ async def test_remove_entity_without_child_device_keeps_device_discovery_topic(
     }
     async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
     await hass.async_block_till_done()
-    assert REGISTRATION_WARNING in caplog.text
-    entity_id = entity_registry.async_get_entity_id("switch", DOMAIN, "sw1")
-    assert entity_id is not None
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry is not None
-    assert entity_entry.device_id is None
-    mqtt_mock.async_publish.reset_mock()
-
-    entity_registry.async_remove(entity_id)
-    await hass.async_block_till_done()
+    assert ADD_ERROR in caplog.text
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "sw1") is None
     assert entity_registry.async_is_registered("switch.parent_switch")
-    # Clearing the device discovery topic would remove all device components
     mqtt_mock.async_publish.assert_not_called()
+
+
+async def test_reload_after_failed_parent_update_keeps_devices(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a reload after the parent device of a child device could not change.
+
+    The entity is not added, and keeps its child device and parent device.
+    """
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    async_fire_mqtt_message(
+        hass,
+        SWITCH_TOPIC,
+        _switch_config("sw1", {**PARENT_DEVICE, "child_device": CHILD_DEVICE}),
+        retain=True,
+    )
+    await hass.async_block_till_done()
+    parent = _get_device(hass, device_registry, "parent")
+    child_device = _get_child_device(hass, device_registry, "sub")
+    assert parent is not None
+    assert child_device is not None
+
+    # Reparenting is not supported, so the update keeps the current device
+    update = _switch_config(
+        "sw1",
+        {"identifiers": ["new_parent"], "child_device": CHILD_DEVICE},
+    )
+    async_fire_mqtt_message(hass, SWITCH_TOPIC, update)
+    await hass.async_block_till_done()
+    assert REGISTRATION_WARNING in caplog.text
+    entity_entry = entity_registry.async_get(SWITCH_ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_device.id
+
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient"):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+    # The broker replays the retained discovery payload
+    async_fire_mqtt_message(hass, SWITCH_TOPIC, update, retain=True)
+    await hass.async_block_till_done()
+    assert ADD_ERROR in caplog.text
+    state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    entity_entry = entity_registry.async_get(SWITCH_ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_device.id
+    assert _get_child_device(hass, device_registry, "sub") is not None
+    assert _get_device(hass, device_registry, "parent") is not None
+    assert _get_device(hass, device_registry, "new_parent") is None
 
 
 async def test_remove_child_device_after_failed_parent_update(
@@ -1291,12 +1342,9 @@ async def test_child_device_registration_error(
     await _discover_switch(
         hass, "new", {**PARENT_DEVICE, "child_device": CHILD_DEVICE}, name="New"
     )
-    assert REGISTRATION_WARNING in caplog.text
-    assert not [record for record in caplog.records if record.exc_info]
-    # The entity is added without a device and the parent device is cleaned up
-    new_entry = entity_registry.async_get("switch.new")
-    assert new_entry is not None
-    assert new_entry.device_id is None
+    # The entity is not added and the parent device is cleaned up
+    assert ADD_ERROR in caplog.text
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "new") is None
     assert _get_device(hass, device_registry, "parent") is None
 
     # A discovery update with the same error keeps the current device
@@ -1321,11 +1369,8 @@ async def test_device_registration_error(
     await _discover_switch(hass, "sw1", {**PARENT_DEVICE, "child_device": CHILD_DEVICE})
 
     await _discover_switch(hass, "clash", CHILD_DEVICE, name="Clash")
-    assert REGISTRATION_WARNING in caplog.text
-    assert not [record for record in caplog.records if record.exc_info]
-    entity_entry = entity_registry.async_get("switch.clash")
-    assert entity_entry is not None
-    assert entity_entry.device_id is None
+    assert ADD_ERROR in caplog.text
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "clash") is None
     assert isinstance(
         _get_child_device(hass, device_registry, "sub"), dr.ChildDeviceEntry
     )
@@ -1370,11 +1415,8 @@ async def test_yaml_device_registration_error(
     """Test a device registration error does not block other YAML entities."""
     await mqtt_mock_entry()
 
-    assert REGISTRATION_WARNING in caplog.text
-    assert not [record for record in caplog.records if record.exc_info]
-    clash_entry = entity_registry.async_get("switch.clash")
-    assert clash_entry is not None
-    assert clash_entry.device_id is None
+    assert ADD_ERROR in caplog.text
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "clash") is None
     other = _get_device(hass, device_registry, "other")
     assert other is not None
     after_entry = entity_registry.async_get("switch.other_after")
