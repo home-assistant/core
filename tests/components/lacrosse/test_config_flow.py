@@ -668,6 +668,7 @@ async def test_update_sensor_new_type_unique_key(
     [
         pytest.param("temperature", {"temperature"}, id="temperature"),
         pytest.param("humidity", {"humidity"}, id="humidity"),
+        pytest.param("battery", {"battery"}, id="battery"),
         pytest.param(
             "temperature_humidity",
             {"temperature", "humidity"},
@@ -710,6 +711,7 @@ async def test_add_sensor(
     assert set(type_field["selector"]["select"]["options"]) == {
         "temperature",
         "humidity",
+        "battery",
         "temperature_humidity",
         "temperature_battery",
         "humidity_battery",
