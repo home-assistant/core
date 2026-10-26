@@ -23,6 +23,27 @@
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'features': dict({
+          'motionSensor': dict({
+            '2': dict({
+              'friendly_name': None,
+              'maximum_value': None,
+              'minimum_value': None,
+              'precision': None,
+              'properties': list([
+                'detectionState',
+              ]),
+              'raw_configuration': dict({
+              }),
+              'sensor_keys': dict({
+                'detectionState': 'detectionState',
+              }),
+              'supported_modes': list([
+              ]),
+              'supported_operations': list([
+              ]),
+              'unit_of_measure': None,
+            }),
+          }),
           'temperatureSensor': dict({
             '1': dict({
               'friendly_name': None,
@@ -139,6 +160,27 @@
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'features': dict({
+          'motionSensor': dict({
+            '2': dict({
+              'friendly_name': None,
+              'maximum_value': None,
+              'minimum_value': None,
+              'precision': None,
+              'properties': list([
+                'detectionState',
+              ]),
+              'raw_configuration': dict({
+              }),
+              'sensor_keys': dict({
+                'detectionState': 'detectionState',
+              }),
+              'supported_modes': list([
+              ]),
+              'supported_operations': list([
+              ]),
+              'unit_of_measure': None,
+            }),
+          }),
           'temperatureSensor': dict({
             '1': dict({
               'friendly_name': None,
@@ -255,6 +297,27 @@
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'features': dict({
+          'motionSensor': dict({
+            '2': dict({
+              'friendly_name': None,
+              'maximum_value': None,
+              'minimum_value': None,
+              'precision': None,
+              'properties': list([
+                'detectionState',
+              ]),
+              'raw_configuration': dict({
+              }),
+              'sensor_keys': dict({
+                'detectionState': 'detectionState',
+              }),
+              'supported_modes': list([
+              ]),
+              'supported_operations': list([
+              ]),
+              'unit_of_measure': None,
+            }),
+          }),
           'temperatureSensor': dict({
             '1': dict({
               'friendly_name': None,

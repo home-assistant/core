@@ -83,7 +83,21 @@ TEST_DEVICE_1 = AmazonDevice(
                 raw_configuration={},
                 sensor_keys={"temperature": "temperature"},
             )
-        }
+        },
+        "motionSensor": {
+            "2": AmazonDeviceFeature(
+                properties=["detectionState"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"detectionState": "detectionState"},
+            )
+        },
     },
     unsupported_features={
         "toggle": {
@@ -130,7 +144,22 @@ TEST_DEVICE_2 = AmazonDevice(
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=True,
-    features={},
+    features={
+        "temperatureSensor": {
+            "1": AmazonDeviceFeature(
+                properties=["temperature"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"temperature": "temperature"},
+            )
+        }
+    },
     unsupported_features={},
 )
 
@@ -160,7 +189,82 @@ TEST_DEVICE_AQM = AmazonDevice(
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=False,
-    features={},
+    features={
+        "range": {
+            "4": AmazonDeviceFeature(
+                properties=["rangeValue"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"rangeValue": "Humidity"},
+            ),
+            "5": AmazonDeviceFeature(
+                properties=["rangeValue"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"rangeValue": "VOC"},
+            ),
+            "6": AmazonDeviceFeature(
+                properties=["rangeValue"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"rangeValue": "PM25"},
+            ),
+            "7": AmazonDeviceFeature(
+                properties=["rangeValue"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"rangeValue": "PM10"},
+            ),
+            "8": AmazonDeviceFeature(
+                properties=["rangeValue"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"rangeValue": "CO"},
+            ),
+            "9": AmazonDeviceFeature(
+                properties=["rangeValue"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"rangeValue": "Air Quality"},
+            ),
+        }
+    },
     unsupported_features={},
 )
 
@@ -186,6 +290,17 @@ TEST_DEVICE_1_SENSORS: dict[str, AmazonDeviceSensor] = {
         feature_name="temperatureSensor",
         property_name="temperature",
         instance="1",
+    ),
+    "detectionState": AmazonDeviceSensor(
+        name="detectionState",
+        value="DETECTED",
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="motionSensor",
+        property_name="detectionState",
+        instance="2",
     ),
 }
 
