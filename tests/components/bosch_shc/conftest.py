@@ -836,6 +836,8 @@ def motion_detector2_device(
     latestmotion: str = "",
     motion_sensitivity: PirSensorConfigurationService.MotionSensitivity
     | None = PirSensorConfigurationService.MotionSensitivity.MIDDLE,
+    binaryswitch: bool = False,
+    multi_level_switch: int = 0,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -854,6 +856,8 @@ def motion_detector2_device(
     device.smart_sensitivity_enabled = smart_sensitivity_enabled
     device.supports_tamper_reset = supports_tamper_reset
     device.latestmotion = latestmotion
+    device.binaryswitch = binaryswitch
+    device.multi_level_switch = multi_level_switch
     if motion_sensitivity is None:
         del device.motion_sensitivity
     else:
