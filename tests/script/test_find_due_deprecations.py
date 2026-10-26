@@ -113,6 +113,25 @@ SAME_NAME_FILES = {
     """,
 }
 
+# Two classes with a create_issue() method of the same name but other defaults.
+SAME_FUNCTION_NAME_FILES = {
+    "homeassistant/components/zeta/entity.py": """
+        class Old:
+            def create_issue(self, version="2026.9.0"):
+                async_create_issue(breaks_in_ha_version=version)
+
+            def setup(self):
+                self.create_issue()
+
+        class New:
+            def create_issue(self, version="2099.1.0"):
+                async_create_issue(breaks_in_ha_version=version)
+
+            def setup(self):
+                self.create_issue()
+    """,
+}
+
 
 def write_repo(root: Path, files: dict[str, str]) -> Path:
     """Write a fake core checkout."""
@@ -195,6 +214,16 @@ def test_scan_same_constant_name(tmp_path: Path) -> None:
     # c.py doesn't define VERSION and the group has two values for it.
     assert [(item["file"], item["source"]) for item in result["unresolved"]] == [
         ("homeassistant/components/epsilon/c.py", "VERSION")
+    ]
+
+
+def test_scan_same_function_name(tmp_path: Path) -> None:
+    """Test calls are not resolved when the group defines the name twice."""
+    result = find.scan(write_repo(tmp_path, SAME_FUNCTION_NAME_FILES), (2099, 1))
+    assert result["groups"] == []
+    assert [(item["line"], item["source"]) for item in result["passthrough"]] == [
+        (3, "version"),
+        (10, "version"),
     ]
 
 

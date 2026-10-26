@@ -40,10 +40,13 @@ passes none. Those items point at the call site. It prints JSON with:
   different values in different files of the group. Read them by hand and add any that
   are due to the matching group.
 - `passthrough`: values the script could not follow, such as an attribute, a variable
-  unpacked from a tuple, or a helper with no callers in the same group. Helpers in
-  `homeassistant/helpers/` just forward the value and can be ignored. For one inside an
-  integration, find where the value comes from and check it by hand (for example
-  `smartthings` keeps its versions in tuples in its entity descriptions).
+  unpacked from a tuple, a helper with no callers in the same group, or a function name
+  defined more than once in the group. Find where each value comes from and check it by
+  hand. Most of them just forward a caller's argument, like
+  `helpers/issue_registry.py` and `helpers/frame.py`, and need nothing. Others hold
+  fixed versions the script can't read, like the tuples in `smartthings` entity
+  descriptions or `_DEPRECATED_DEVICE_INFO_PARAMETERS` in `helpers/device_registry.py`.
+  Add those that are due to the matching group.
 
 Branch names are `deprecation-cleanup/<group-slug>-<X.Y>`. The script derives them, so the
 same group gets the same name on every run.

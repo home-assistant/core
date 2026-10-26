@@ -199,9 +199,19 @@ def caller_items(
     """Resolve a forwarded parameter to the versions its callers end up using.
 
     Only callers in the same integration or core module are searched. Returns
-    None when there are none, or when one of them can't be resolved.
+    None when there are none, when one of them can't be resolved, or when the
+    group defines more than one function with this name, since calls are
+    matched by name.
     """
     if (found := find_parameter(func, parameter)) is None:
+        return None
+    definitions = sum(
+        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and node.name == func.name
+        for _, _, tree in files
+        for node in ast.walk(tree)
+    )
+    if definitions > 1:
         return None
     index, default = found
     is_method = bool(func.args.args) and func.args.args[0].arg in ("self", "cls")
