@@ -6,6 +6,7 @@ import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import conversation
 from homeassistant.components.intent import DOMAIN
@@ -31,8 +32,6 @@ from homeassistant.helpers import (
     intent,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 DELAYED_COMMAND = "turn on the lights"
 DELAYED_COMMAND_ERROR = "Sorry, I am not aware of any device called lights"

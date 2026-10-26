@@ -31,7 +31,7 @@ from .const import (
 )
 from .coordinator import RestConfigEntry, RestCoordinator
 from .data import RestData
-from .schema import CONFIG_SCHEMA, RESOURCE_SCHEMA  # noqa: F401
+from .schema import CONFIG_SCHEMA, RESOURCE_SCHEMA
 from .services import async_setup_services
 from .util import (
     async_process_config,
@@ -40,6 +40,15 @@ from .util import (
 )
 
 ENTRY_PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+
+__all__ = [
+    "CONFIG_SCHEMA",
+    "CONF_PAYLOAD_TEMPLATE",
+    "DOMAIN",
+    "RESOURCE_SCHEMA",
+    "RestData",
+    "create_rest_data_from_config",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -50,7 +59,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return await async_process_config(hass, config)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: RestConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: RestConfigEntry) -> None:
     """Setup config entry."""
 
     try:
@@ -87,8 +96,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: RestConfigEntry) 
 
     config_entry.async_on_unload(config_entry.add_update_listener(_async_entry_updated))
 
-    return True
-
 
 async def _async_entry_updated(
     hass: HomeAssistant, config_entry: ConfigEntry[Any]
@@ -96,9 +103,9 @@ async def _async_entry_updated(
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RestConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RestConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, ENTRY_PLATFORMS)
+    await hass.config_entries.async_unload_platforms(entry, ENTRY_PLATFORMS)
 
 
 def convert_config_to_legacy_format(

@@ -42,7 +42,14 @@ import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 from mcp import JSONRPCRequest, types
 from mcp.server import InitializationOptions, Server
+from mcp.server.runner import Connection, TransportContext, serve_connection
+from mcp.server.streamable_http import (
+    DEFAULT_NEGOTIATED_VERSION,
+    MCP_PROTOCOL_VERSION_HEADER,
+)
+from mcp.shared.jsonrpc_dispatcher import JSONRPCDispatcher
 from mcp.shared.message import SessionMessage
+import pydantic
 
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -63,8 +70,11 @@ TIMEOUT = 60  # Seconds
 
 KNOWN_MCP_METHODS: frozenset[str] = frozenset(
     req_cls.model_fields["method"].default
-    for req_cls in get_args(types.ClientRequestType)
+    for req_cls in get_args(types.ClientRequest)
     if "method" in req_cls.model_fields
+)
+JSONRPC_MESSAGE_ADAPTER: pydantic.TypeAdapter[types.JSONRPCMessage] = (
+    pydantic.TypeAdapter(types.JSONRPCMessage)
 )
 
 # Legacy SSE endpoint
@@ -263,7 +273,7 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
 
         json_data = await request.json()
         try:
-            message = types.JSONRPCMessage.model_validate(json_data)
+            message = JSONRPC_MESSAGE_ADAPTER.validate_python(json_data)
         except ValueError as err:
             _LOGGER.info("Failed to parse message: %s", err)
             raise HTTPBadRequest(text="Could not parse message") from err
@@ -289,7 +299,7 @@ async def _async_handle_streamable_message(
         raise HTTPBadRequest(text=f"Content-Type must be {CONTENT_TYPE_JSON}")
     try:
         json_data = await request.json()
-        message = types.JSONRPCMessage.model_validate(json_data)
+        message = JSONRPC_MESSAGE_ADAPTER.validate_python(json_data)
     except ValueError as err:
         _LOGGER.debug("Failed to parse message as JSON-RPC message: %s", err)
         raise HTTPBadRequest(text="Request must be a JSON-RPC message") from err
@@ -297,18 +307,18 @@ async def _async_handle_streamable_message(
     _LOGGER.debug("Received client message: %s", message)
 
     # For notifications and responses only, return 202 Accepted
-    if not isinstance(message.root, JSONRPCRequest):
+    if not isinstance(message, JSONRPCRequest):
         _LOGGER.debug("Notification or response received, returning 202")
         return web.Response(status=HTTPStatus.ACCEPTED)
 
-    if message.root.method not in KNOWN_MCP_METHODS:
+    if message.method not in KNOWN_MCP_METHODS:
         error_response = types.JSONRPCError(
             jsonrpc="2.0",
-            id=message.root.id,
+            id=message.id,
             error=types.ErrorData(
                 code=types.METHOD_NOT_FOUND,
                 message="Method not found",
-                data=message.root.method,
+                data=message.method,
             ),
         )
         return web.json_response(
@@ -321,12 +331,30 @@ async def _async_handle_streamable_message(
     # then shut down the server.
     server, options = await create_mcp_server(hass, context, llm_api_id, read_only)
 
+    protocol_version = (
+        request.headers.get(MCP_PROTOCOL_VERSION_HEADER) or DEFAULT_NEGOTIATED_VERSION
+    )
+
     async with create_streams() as streams:
+        dispatcher: JSONRPCDispatcher[TransportContext] = JSONRPCDispatcher(
+            streams.read_stream,
+            streams.write_stream,
+            inline_methods=frozenset({"initialize"}),
+            transport_builder=lambda _md: TransportContext(
+                kind="streamable-http", can_send_request=False
+            ),
+        )
+        connection = Connection.from_envelope(protocol_version, None, None)
 
         async def run_server() -> None:
-            await server.run(
-                streams.read_stream, streams.write_stream, options, stateless=True
-            )
+            async with server.lifespan(server) as lifespan_state:
+                await serve_connection(
+                    server,
+                    dispatcher,
+                    connection=connection,
+                    lifespan_state=lifespan_state,
+                    init_options=options,
+                )
 
         async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
             tg.start_soon(run_server)

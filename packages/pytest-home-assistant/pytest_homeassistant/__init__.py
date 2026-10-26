@@ -2,6 +2,9 @@
 
 import pytest
 
+# Install Home Assistant's httpx and voluptuous aliases before test dependencies.
+import homeassistant  # noqa: F401
+
 # Preserve assertion introspection when helpers are imported through compatibility modules.
 pytest.register_assert_rewrite(
     "pytest_homeassistant.common",

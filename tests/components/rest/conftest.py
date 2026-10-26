@@ -4,13 +4,14 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.rest import DOMAIN
 from homeassistant.components.rest.const import (
     CONF_ENCODING,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
-    CONF_REST_DATA,
     CONF_SSL_CIPHER_LIST,
     CONF_SSL_SECTION,
     DEFAULT_ENCODING,
@@ -39,9 +40,6 @@ from homeassistant.const import (
     UnitOfArea,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture
@@ -73,7 +71,6 @@ def get_subentry_data() -> list[ConfigSubentryData]:
         ConfigSubentryData(
             data={
                 CONF_VALUE_TEMPLATE: '{{ value_json["key"] == "on"}}',
-                CONF_REST_DATA: {CONF_REST_DATA: ""},
             },
             subentry_type=Platform.BINARY_SENSOR,
             title="binary sensor",
@@ -88,7 +85,6 @@ def get_subentry_data() -> list[ConfigSubentryData]:
                 CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 CONF_UNIT_OF_MEASUREMENT: UnitOfArea.SQUARE_METERS,
                 CONF_VALUE_TEMPLATE: '{{ value_json["items"][0]["area"] }}',
-                CONF_REST_DATA: {CONF_REST_DATA: ""},
             },
             subentry_type=Platform.SENSOR,
             title="sensor",

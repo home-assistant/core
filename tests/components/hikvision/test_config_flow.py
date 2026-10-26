@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.hikvision.const import DOMAIN
@@ -25,8 +26,6 @@ from .conftest import (
     TEST_PORT,
     TEST_USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

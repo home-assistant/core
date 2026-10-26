@@ -10,6 +10,15 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    get_test_config_dir,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import bootstrap, config as config_util, core, loader, runner
@@ -25,16 +34,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.translation import async_translations_loaded
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration
-
-from .common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    get_test_config_dir,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
@@ -1453,7 +1452,7 @@ async def test_bootstrap_dependencies(
     calls: list[str] = []
     assertions: list[bool] = []
 
-    async def async_mqtt_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_mqtt_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Assert the mqtt config entry was set up."""
         calls.append("mqtt")
         # assert the integration is not yet set up
@@ -1465,7 +1464,6 @@ async def test_bootstrap_dependencies(
             )
         )
         assertions.append(integration not in hass.config.components)
-        return True
 
     async def async_integration_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Assert the mqtt config entry was set up."""

@@ -2,6 +2,9 @@
 # name: test_generate_structured_data
   dict({
     'container': None,
+    'diagnostics': dict({
+      'previous_message_id': None,
+    }),
     'max_tokens': 3000,
     'messages': list([
       dict({

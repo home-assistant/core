@@ -38,7 +38,6 @@ CONF_JSON_ATTRS_PATH = "json_attributes_path"
 CONF_PAYLOAD_TEMPLATE = "payload_template"
 CONF_SSL_CIPHER_LIST = "ssl_cipher_list"
 CONF_SSL_SECTION = "ssl_section"
-CONF_REST_DATA = "rest_data"
 
 REST_IDX = "rest_idx"
 PLATFORM_IDX = "platform_idx"
@@ -56,6 +55,3 @@ XML_MIME_TYPES = (
     "application/xml",
     "text/xml",
 )
-
-# Config entry platforms
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]

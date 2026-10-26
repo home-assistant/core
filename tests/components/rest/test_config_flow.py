@@ -4,7 +4,9 @@ from http import HTTPStatus
 from typing import Any
 
 from aiohttp import ClientError
-import pytest
+from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.rest.const import (
@@ -14,22 +16,18 @@ from homeassistant.components.rest.const import (
 )
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorDeviceClass
 from homeassistant.const import (
-    CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
-    CONF_HEADERS,
     CONF_PARAMS,
     CONF_PAYLOAD,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_USERNAME,
     Platform,
+    UnitOfArea,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import CONF_RESOURCE, async_setup_entry
-
-from tests.test_util.aiohttp import AiohttpClientMocker
+from .conftest import async_setup_entry
 
 BINARY_SENSOR_DATA = 0
 SENSOR_DATA = 1
@@ -42,19 +40,34 @@ async def test_entry_and_binary_sensor_subentry(
     get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
     """Test the basic config flow and subentry flow."""
+
+    aioclient_mock.get("http://localhost", exc=ClientError("client error"))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        get_config_entry_data,
+    )
+
+    assert result["step_id"] == "user"
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "endpoint_error"}
+    assert result["description_placeholders"] == {
+        "endpoint_error_message": "client error"
+    }
+
+    aioclient_mock.clear_requests()
+
     aioclient_mock.get(
         "http://localhost",
         status=HTTPStatus.OK,
         json={"key": "on"},
         params={"fake_param": "fake_value"},
     )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["step_id"] == "user"
-    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -111,6 +124,7 @@ async def test_entry_and_binary_sensor_subentry(
 async def test_sensor_subentry_flow(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
     get_config_entry_data: dict[str, Any],
     get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
@@ -153,7 +167,8 @@ async def test_sensor_subentry_flow(
     aioclient_mock.clear_requests()
     aioclient_mock.get("http://localhost", exc=TimeoutError)
 
-    await entry.runtime_data.async_refresh()
+    freezer.tick(30)
+    async_fire_time_changed(hass)
 
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, Platform.SENSOR),
@@ -213,25 +228,6 @@ async def test_config_flow_subentry_flow_no_data(
         context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] == FlowResultType.FORM
-
-
-async def test_config_entry_flow_payload_template_error(
-    hass: HomeAssistant,
-    get_config_entry_data: dict[str, Any],
-) -> None:
-    """Test a template render error."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with pytest.raises(InvalidData) as ex:
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"], get_config_entry_data | {CONF_PAYLOAD: "{{ 1 / 0}}"}
-        )
-
-    assert "ZeroDivisionError" in ex.value.error_message
-    assert ex.value.path == [CONF_PAYLOAD]
 
 
 async def test_sensor_subentry_flow_endpoint_failure(
@@ -324,6 +320,10 @@ async def test_sensor_subentry_flow_invalid_json_attrs_path(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_result"}
     assert "json_path" in result["description_placeholders"]
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], get_subentry_data[SENSOR_DATA]["data"]
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_sensor_subentry_flow_invalid_unit_state_class(
@@ -391,6 +391,17 @@ async def test_sensor_subentry_flow_invalid_unit_state_class(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"][CONF_STATE_CLASS] == "state_class_validation_error"
 
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        get_subentry_data[SENSOR_DATA]["data"]
+        | {
+            CONF_DEVICE_CLASS: SensorDeviceClass.AREA,
+            CONF_UNIT_OF_MEASUREMENT: UnitOfArea.SQUARE_METERS,
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+
 
 async def test_subentry_flow_entry_not_loaded(
     hass: HomeAssistant,
@@ -424,112 +435,10 @@ async def test_subentry_flow_entry_not_loaded(
     assert result["reason"] == "config_entry_not_loaded"
 
 
-async def test_invalid_rest_resource(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    get_config_entry_data: dict[str, Any],
-) -> None:
-    """Test config flow handling of resource (ClientError) handling."""
-    aioclient_mock.get("http://localhost", exc=ClientError("client error"))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        get_config_entry_data,
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "endpoint_error"}
-    assert result["description_placeholders"] == {
-        "endpoint_error_message": "client error"
-    }
-
-
-async def test_config_invalid_input(
-    hass: HomeAssistant,
-    get_config_entry_data: dict[str, Any],
-) -> None:
-    """Test config entry flow schema validation."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    user_input = get_config_entry_data | {CONF_ENCODING: "fake_encoding"}
-    user_input[CONF_AUTHENTICATION][CONF_USERNAME] = "test_user"
-    with pytest.raises(InvalidData) as ex:
-        await hass.config_entries.flow.async_configure(result["flow_id"], user_input)
-
-    assert ex.value.schema_errors[CONF_ENCODING] == "codec not found"
-    assert ex.value.schema_errors[CONF_AUTHENTICATION] == "credentials_missing"
-
-
-async def test_config_invalid_authentication_input(
-    hass: HomeAssistant,
-    get_config_entry_data: dict[str, Any],
-) -> None:
-    """Test custom auth section schema handling."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    user_input = get_config_entry_data | {  # missing auth method
-        CONF_AUTHENTICATION: {"extra_key": "fake_data"}
-    }
-    with pytest.raises(InvalidData) as ex:
-        await hass.config_entries.flow.async_configure(result["flow_id"], user_input)
-
-    assert ex.value.error_message == "not a valid option"
-
-
-async def test_config_template_error(
-    hass: HomeAssistant,
-    get_config_entry_data: dict[str, Any],
-) -> None:
-    """Test template validation error handling."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with pytest.raises(InvalidData) as ex:
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            get_config_entry_data
-            | {CONF_RESOURCE: "http://fakeurl.com/{{ param[5] }}"},
-        )
-
-    assert "UndefinedError" in ex.value.schema_errors[CONF_RESOURCE]
-
-
-async def test_config_flow_template_error(
-    hass: HomeAssistant,
-    get_config_entry_data: dict[str, Any],
-) -> None:
-    """Test template render error handling."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with pytest.raises(InvalidData) as ex:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            get_config_entry_data
-            | {CONF_HEADERS: [{"key": "Fake-Header", "value": "{{ 1/0 }}"}]},
-        )
-
-    assert (ex.value.path) == [CONF_HEADERS]
-    assert "ZeroDivisionError" in str(ex.value.error_message)
-
-
 async def test_xml_parse_error(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
-    get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
     """Test if the subentry user flow handles ExpatErrors correctly."""
 
@@ -539,6 +448,18 @@ async def test_xml_parse_error(
         text='<?xml version="1.0" encoding="UTF-8"?><root><item>this was not closed</root>',
         headers={"Content-Type": "application/xml"},
     )
+
+    entry = await async_setup_entry(hass, get_config_entry_data)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, Platform.SENSOR),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "xml_parse_error"
+
+    await hass.config_entries.async_remove(entry.entry_id)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -557,15 +478,23 @@ async def test_xml_parse_error(
         and "xml_parse_error_message" in result["description_placeholders"]
     )
 
-    entry = await async_setup_entry(hass, get_config_entry_data)
-
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, Platform.SENSOR),
-        context={"source": config_entries.SOURCE_USER},
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        text='<?xml version="1.0" encoding="UTF-8"?><root><item>this was closed</item></root>',
+        headers={"Content-Type": "application/xml"},
     )
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "xml_parse_error"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], get_config_entry_data
+    )
+    assert result["type"] == FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": Platform.BINARY_SENSOR},
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_decode_error(
@@ -593,3 +522,19 @@ async def test_config_flow_decode_error(
         "codec can't decode byte 0x80"
         in result["description_placeholders"]["decoding_error_message"]
     )
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        json={"key": "on"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], get_config_entry_data
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": Platform.BINARY_SENSOR},
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY

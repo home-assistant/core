@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from librehardwaremonitor_api.model import LibreHardwareMonitorSensorData
 from librehardwaremonitor_api.sensor_type import SensorType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.libre_hardware_monitor.const import (
     DEFAULT_SCAN_INTERVAL,
@@ -29,8 +30,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
 from .conftest import VALID_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_lhm_client")

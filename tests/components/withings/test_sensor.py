@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, patch
 from aiowithings import Goals
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.withings import DOMAIN
@@ -22,8 +27,6 @@ from . import (
     load_workout_fixture,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time("2023-10-21 12:00:00")

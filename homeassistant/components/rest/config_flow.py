@@ -41,6 +41,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.template import Template
 
@@ -49,7 +50,6 @@ from .const import (
     CONF_ENCODING,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
-    CONF_REST_DATA,
     DEFAULT_BINARY_SENSOR_NAME,
     DEFAULT_SENSOR_NAME,
     DOCS_URL_AVAILABILITY,
@@ -199,10 +199,11 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
                 (result["result"].entry_id, self._next_flow_platform),
                 context=SubentryFlowContext(source=SOURCE_USER),
             )
-            result["next_flow"] = (
-                FlowType.CONFIG_SUBENTRIES_FLOW,
-                subentry_result["flow_id"],
-            )
+            if subentry_result["type"] is FlowResultType.FORM:
+                result["next_flow"] = (
+                    FlowType.CONFIG_SUBENTRIES_FLOW,
+                    subentry_result["flow_id"],
+                )
         return result
 
 
@@ -298,7 +299,7 @@ class SubentryConfig:
     """Class to hold subentry config helpers/validators."""
 
     default_name: str
-    flow_schema: Callable[[str | None], probatio.Schema]
+    flow_schema: probatio.Schema
     post_schema_validation: (
         Callable[[str | None], probatio.Schema] | probatio.Schema | None
     ) = None
@@ -379,7 +380,6 @@ class RestSubentryFlow(ConfigSubentryFlow):
                     CONF_NAME,
                     SUBENTRY_CONFIG[Platform(self._subentry_type)].default_name,
                 )
-                del user_input[CONF_REST_DATA]
                 return self.async_create_entry(
                     title=title,
                     data=user_input,
@@ -399,9 +399,7 @@ class RestSubentryFlow(ConfigSubentryFlow):
             errors=errors,
             data_schema=(
                 self.add_suggested_values_to_schema(
-                    SUBENTRY_CONFIG[Platform(self._subentry_type)].flow_schema(
-                        rest_data
-                    ),
+                    SUBENTRY_CONFIG[Platform(self._subentry_type)].flow_schema,
                     user_input or {},
                 )
             ),

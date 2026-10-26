@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
 from yarl import URL
 
 from homeassistant.components.marketplace.base import (
@@ -33,9 +35,6 @@ from homeassistant.core import HomeAssistant
 from . import mocked_response
 from .conftest import MarketplaceResponses
 from .const import DEFAULT_CATEGORIES, REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
-
-from tests.common import MockConfigEntry, MockUser
-from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 DOWNLOAD_URL = "https://raw.githubusercontent.com/owner/repository/main/file.txt"
 SLEEP = "homeassistant.components.marketplace.base.asyncio.sleep"

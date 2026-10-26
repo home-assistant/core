@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from starlink_grpc import GrpcError
 
 from homeassistant.components.starlink.const import DOMAIN
@@ -16,8 +17,6 @@ from .patchers import (
     LOCATION_DATA_SUCCESS_PATCHER,
     STATUS_DATA_SUCCESS_PATCHER,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "time.starlink_sleep_start"
 SLEEP_DATA_TARGET = "homeassistant.components.starlink.coordinator.get_sleep_config"

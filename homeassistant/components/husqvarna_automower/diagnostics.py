@@ -8,8 +8,8 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
-from . import AutomowerConfigEntry
 from .const import DOMAIN
+from .coordinator import AutomowerConfigEntry
 
 CONF_REFRESH_TOKEN = "refresh_token"
 POSITIONS = "positions"

@@ -25,6 +25,8 @@ from aiohasupervisor.models import (
 )
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import get_system_health_info
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.hassio.const import (
     DATA_ADDONS_LIST,
@@ -38,9 +40,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
-
-from tests.common import get_system_health_info
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures(

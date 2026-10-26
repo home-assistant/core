@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any
 from unittest.mock import AsyncMock, create_autospec, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from ritualsgenie import (
     RitualsGenie,
     RitualsGenieHub,
@@ -18,8 +19,6 @@ from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 ROOM_SIZES = {15: "1", 30: "2", 60: "3", 100: "4"}
 SENSOR_FIELDS = {
@@ -68,6 +67,7 @@ class MockDiffuser:
     perfume: str = "Ritual of Sakura"
     perfume_amount: int = 2
     room_size_square_meter: int = 60
+    has_square_meters: bool = True
     standby_led: bool | None = True
     version: str | None = "4.0"
     firmware_id: int | None = 127
@@ -89,11 +89,15 @@ class MockDiffuser:
                 "hash": self.hub_hash,
                 "hublot": self.hublot,
                 "status": 1 if self.available else 0,
-                "attributes": {"ledc": self.standby_led is not None},
+                "attributes": {
+                    "ledc": self.standby_led is not None,
+                    "squaremeterc": self.has_square_meters,
+                },
                 "attributeValues": {
                     "fanc": "1" if self.is_on else "0",
                     "speedc": str(self.perfume_amount),
                     "roomc": ROOM_SIZES[self.room_size_square_meter],
+                    "squaremeterc": str(self.room_size_square_meter),
                     "roomnamec": self.name,
                     # Inverted: the attribute means "LED disabled".
                     "ledc": "1" if self.standby_led is False else "0",
@@ -193,19 +197,25 @@ def mock_diffuser_v2_no_battery_no_cartridge() -> MockDiffuser:
 
 
 def mock_client(diffusers: list[MockDiffuser]) -> AsyncMock:
-    """Return a mock client that answers with the given diffusers."""
-    by_hash = {diffuser.hub_hash: diffuser for diffuser in diffusers}
+    """Return a mock client that answers with the given diffusers.
+
+    Diffusers are looked up on every call, as a test may add one to the
+    account later on.
+    """
+
+    def by_hash(hub_hash: str) -> MockDiffuser:
+        return next(diffuser for diffuser in diffusers if diffuser.hub_hash == hub_hash)
+
+    def by_hublot(hublot: str) -> MockDiffuser:
+        return next(diffuser for diffuser in diffusers if diffuser.hublot == hublot)
 
     client = create_autospec(RitualsGenie, instance=True)
     client.token = "mock-token"
     client.hubs.side_effect = lambda: [diffuser.hub() for diffuser in diffusers]
-    client.hub.side_effect = lambda hub_hash: by_hash[hub_hash].hub()
-    # Looked up on every call, as a test may add a diffuser to the account.
-    client.hublot.side_effect = lambda hublot: next(
-        diffuser for diffuser in diffusers if diffuser.hublot == hublot
-    ).hardware()
-    client.sensors.side_effect = lambda hub, only=None: by_hash[hub.hash].sensors(only)
-    client.sensor.side_effect = lambda hub_hash, sensor: by_hash[hub_hash].sensor(
+    client.hub.side_effect = lambda hub_hash: by_hash(hub_hash).hub()
+    client.hublot.side_effect = lambda hublot: by_hublot(hublot).hardware()
+    client.sensors.side_effect = lambda hub, only=None: by_hash(hub.hash).sensors(only)
+    client.sensor.side_effect = lambda hub_hash, sensor: by_hash(hub_hash).sensor(
         sensor
     )
 

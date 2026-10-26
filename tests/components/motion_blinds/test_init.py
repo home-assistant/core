@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, BlindType
 from motionblinds.motion_blinds import DEVICE_TYPE_BLIND
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.motion_blinds.const import (
     DEFAULT_INTERFACE,
@@ -17,8 +18,6 @@ from homeassistant.components.motion_blinds.const import (
 from homeassistant.const import CONF_API_KEY, CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_HOST = "1.2.3.4"
 TEST_API_KEY = "12ab345c-d67e-8f"

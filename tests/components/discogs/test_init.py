@@ -3,11 +3,10 @@
 from unittest.mock import MagicMock
 
 import discogs_client
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload_entry(

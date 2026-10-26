@@ -137,8 +137,6 @@ def test_core_integrations_in_sync_with_bootstrap() -> None:
     """Test the duplicated CORE_INTEGRATIONS stays aligned with bootstrap."""
     # Imported here so the rest of the hassfest tests are not slowed down
     # by bootstrap's eager component pre-imports.
-    from homeassistant.bootstrap import (  # noqa: PLC0415
-        CORE_INTEGRATIONS as bootstrap_core_integrations,
-    )
+    from homeassistant.bootstrap import CORE_INTEGRATIONS as bootstrap_core_integrations  # noqa: PLC0415
 
     assert bootstrap_core_integrations == CORE_INTEGRATIONS

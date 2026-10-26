@@ -5,6 +5,8 @@ from http import HTTPStatus
 from typing import Any
 
 from aiohttp import ClientError
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.rest import RestConfigEntry, RestData
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
@@ -12,9 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from .conftest import async_setup_entry
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_coordinator_update_failed(

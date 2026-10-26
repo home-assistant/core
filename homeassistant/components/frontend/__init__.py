@@ -37,7 +37,7 @@ from .helpers import (
     DATA_THEMES_STORE,
     DEFAULT_THEME,
     MANIFEST_JSON,
-    VALUE_NO_THEME,  # noqa: F401
+    VALUE_NO_THEME,
     validate_themes,
 )
 from .pr_download import download_pr_artifact
@@ -110,6 +110,24 @@ CONFIG_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "CONF_THEMES",
+    "DEFAULT_THEME",
+    "DOMAIN",
+    "MANIFEST_JSON",
+    "VALUE_NO_THEME",
+    "IndexView",
+    "UrlManager",
+    "add_extra_js_url",
+    "add_manifest_json_key",
+    "async_get_theme_names",
+    "async_panel_exists",
+    "async_register_built_in_panel",
+    "async_remove_panel",
+    "async_system_store",
+    "remove_extra_js_url",
+]
 
 
 class UrlManager:
@@ -281,6 +299,12 @@ def async_remove_panel(
 def async_panel_exists(hass: HomeAssistant, frontend_url_path: str) -> bool:
     """Return if a panel is registered for the given frontend URL path."""
     return frontend_url_path in hass.data.get(DATA_PANELS, {})
+
+
+@callback
+def async_get_theme_names(hass: HomeAssistant) -> list[str]:
+    """Return the sorted names of the user-defined themes."""
+    return sorted(hass.data.get(DATA_THEMES, {}).keys())
 
 
 def add_extra_js_url(hass: HomeAssistant, url: str, es5: bool = False) -> None:

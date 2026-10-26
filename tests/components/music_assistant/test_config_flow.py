@@ -19,6 +19,7 @@ from music_assistant_client.exceptions import (
 from music_assistant_models.api import ServerInfoMessage
 from music_assistant_models.errors import AuthenticationFailed, InvalidToken
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 
 from homeassistant.components.music_assistant.config_flow import (
     CONF_URL,
@@ -48,8 +49,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 SERVER_INFO = {
     "server_id": "1234",
@@ -935,7 +934,7 @@ async def test_auth_manual_invalid_token(
         patch("homeassistant.components.music_assistant.config_flow._test_connection"),
         patch(
             "homeassistant.components.music_assistant.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

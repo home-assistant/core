@@ -2,9 +2,9 @@
 
 import json
 
-from homeassistant.core import HomeAssistant
+from pytest_homeassistant.common import async_fire_mqtt_message
 
-from tests.common import async_fire_mqtt_message
+from homeassistant.core import HomeAssistant
 
 
 def get_device_discovery_payload(
