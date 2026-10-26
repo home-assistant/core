@@ -14,6 +14,7 @@ from boschshcpy import (
     SHCThermostat,
     SHCTwinguard,
     SHCWallThermostat,
+    TerminalConfiguration,
 )
 from boschshcpy.device import SHCDevice
 
@@ -68,6 +69,13 @@ POWER_SENSOR = "power"
 ENERGY_SENSOR = "energy"
 COMMUNICATION_QUALITY_SENSOR = "communication_quality"
 FLOOR_TEMPERATURE_SENSOR = "floor_temperature"
+
+_FLOOR_SENSOR_TERMINAL_TYPES = {
+    TerminalConfiguration.Type.FLOOR_SENSOR_CONNECTED,
+    TerminalConfiguration.Type.FLOOR_SENSOR_USED_FOR_REGULATION,
+    TerminalConfiguration.Type.FLOOR_SENSOR_DISPLAYED,
+    TerminalConfiguration.Type.FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION,
+}
 
 
 def _valve_tappet_state_value(device: SHCThermostat) -> str | None:
@@ -308,7 +316,10 @@ async def async_setup_entry(
         ]
         if room_thermostat.supports_humidity:
             room_thermostat_descriptions.append(_WALLTHERMOSTAT_HUMIDITY_DESCRIPTION)
-        if room_thermostat.terminal_temperature is not None:
+        if (
+            room_thermostat.terminal_type in _FLOOR_SENSOR_TERMINAL_TYPES
+            and room_thermostat.terminal_temperature is not None
+        ):
             room_thermostat_descriptions.append(_FLOOR_TEMPERATURE_DESCRIPTION)
         entities.extend(
             SHCSensor(

@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import SHCRoomThermostat2
+from boschshcpy import SHCRoomThermostat2, TerminalConfiguration
 from boschshcpy.services_impl import ValveTappetService
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -157,6 +157,7 @@ async def test_thermostat_valvetappet_state_attribute_preserved(
                     name="Room Thermostat 2",
                     temperature=22.5,
                     humidity=45.0,
+                    terminal_type=TerminalConfiguration.Type.FLOOR_SENSOR_CONNECTED,
                     terminal_temperature=28.5,
                     spec=SHCRoomThermostat2,
                 )
@@ -203,4 +204,32 @@ async def test_room_thermostat_optional_sensors_absent(
 
     assert hass.states.get("sensor.room_thermostat_2_temperature") is not None
     assert hass.states.get("sensor.room_thermostat_2_humidity") is None
+    assert hass.states.get("sensor.room_thermostat_2_floor_temperature") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "roomthermostats": [
+                thermostat_gen2_device(
+                    device_id="hdm:ZigBee:roomthermostat2_1",
+                    name="Room Thermostat 2",
+                    terminal_type=TerminalConfiguration.Type.OUTDOOR_SENSOR_CONNECTED,
+                    terminal_temperature=5.0,
+                    spec=SHCRoomThermostat2,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_room_thermostat_no_floor_temperature_for_other_probe(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A terminal reading from a non-floor probe is not labeled as floor temperature."""
+    await setup_integration(hass, mock_config_entry)
+
     assert hass.states.get("sensor.room_thermostat_2_floor_temperature") is None
