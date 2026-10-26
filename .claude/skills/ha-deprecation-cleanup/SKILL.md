@@ -24,7 +24,10 @@ uv run --no-sync python3 ./.claude/skills/ha-deprecation-cleanup/scripts/find_du
 It finds `breaks_in_ha_version` keyword arguments and dict keys, plus the positional
 version of `DeprecatedConstant`, `DeprecatedConstantEnum`, `DeprecatedAlias` and
 `DeferredDeprecatedAlias`. Values held in an upper-case constant are resolved within the
-same integration or core module. It prints JSON with:
+same integration or core module. When the value is a parameter of the enclosing function,
+such as a `deprecate_entity(..., version="2026.9.0")` helper, it resolves each caller in
+the same integration or module: the version the caller passes, or the parameter's default
+when it passes none. Those items point at the call site. It prints JSON with:
 
 - `current_version`: the X.Y compared against.
 - `groups`: the due groups. Each has a `name` (integration domain, or module path such as
@@ -32,10 +35,11 @@ same integration or core module. It prints JSON with:
   `branch` name to use, and its `items` (file, line, version, source).
 - `unresolved`: constants the script could not resolve. Read them by hand and add any
   that are due to the matching group.
-- `passthrough`: values forwarded from a variable or attribute, such as a helper's
-  parameter. Helpers in `homeassistant/helpers/` just forward the value and can be
-  ignored. For one inside an integration, check its callers for due versions the script
-  missed (for example a version passed positionally).
+- `passthrough`: values the script could not follow, such as an attribute, a variable
+  unpacked from a tuple, or a helper with no callers in the same group. Helpers in
+  `homeassistant/helpers/` just forward the value and can be ignored. For one inside an
+  integration, find where the value comes from and check it by hand (for example
+  `smartthings` keeps its versions in tuples in its entity descriptions).
 
 Branch names are `deprecation-cleanup/<group-slug>-<X.Y>`. The script derives them, using the
 group's oldest due X.Y, so that the same group gets the same name on every run.
