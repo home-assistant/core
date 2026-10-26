@@ -6,7 +6,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.national_grid_us.const import CONF_ACCOUNT_ID, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    UnitOfEnergy,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -38,20 +43,22 @@ async def test_sensor_entities_created(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Electric meter - usage (kWh, no conversion)
+    # Electric meter - usage reported in kWh
     state = hass.states.get(ENTITY_ELECTRIC_USAGE)
     assert state is not None
     assert float(state.state) == 500.0
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
 
     # Electric meter - cost
     state = hass.states.get(ENTITY_ELECTRIC_COST)
     assert state is not None
     assert float(state.state) == 120.5
 
-    # Gas meter - usage (filtered by usageType THERMS)
+    # Gas meter - usage reported in therms (energy unit)
     state = hass.states.get(ENTITY_GAS_USAGE)
     assert state is not None
-    assert float(state.state) > 0
+    assert float(state.state) == 30.0
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.THERM
 
     # Gas meter - cost
     state = hass.states.get(ENTITY_GAS_COST)

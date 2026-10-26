@@ -9,7 +9,12 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import ENTITY_ELECTRIC_COST, ENTITY_ELECTRIC_USAGE, make_api_mock
+from .conftest import (
+    ENTITY_ELECTRIC_COST,
+    ENTITY_ELECTRIC_USAGE,
+    make_api_mock,
+    mock_billing_account,
+)
 
 PATCH_CLIENT = (
     "homeassistant.components.national_grid_us.coordinator.NationalGridClient"
@@ -84,7 +89,7 @@ async def test_sensor_missing_usage_data(
 ) -> None:
     """Test sensors handle missing usage and cost data gracefully."""
     api = make_api_mock()
-    api.get_energy_usages = AsyncMock(return_value=[])
+    api.get_ami_energy_usages = AsyncMock(return_value=[])
     api.get_energy_usage_costs = AsyncMock(return_value=[])
 
     with patch(PATCH_CLIENT, return_value=api):
@@ -102,6 +107,30 @@ async def test_sensor_missing_usage_data(
     assert state.state == "unknown"
 
 
+async def test_non_ami_meter_skips_usage_fetch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a non-AMI meter reports no usage without calling the usage API."""
+    billing_account = mock_billing_account()
+    for meter in billing_account["meter"]["nodes"]:
+        meter["hasAmiSmartMeter"] = False
+
+    api = make_api_mock()
+    api.get_billing_account = AsyncMock(return_value=billing_account)
+
+    with patch(PATCH_CLIENT, return_value=api):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(ENTITY_ELECTRIC_USAGE)
+    assert state is not None
+    assert state.state == "unknown"
+    api.get_ami_energy_usages.assert_not_called()
+
+
 @pytest.mark.parametrize(
     "error",
     [
@@ -114,7 +143,7 @@ async def test_sensor_missing_usage_data(
 @pytest.mark.parametrize(
     ("method", "entity_id"),
     [
-        ("get_energy_usages", ENTITY_ELECTRIC_USAGE),
+        ("get_ami_energy_usages", ENTITY_ELECTRIC_USAGE),
         ("get_energy_usage_costs", ENTITY_ELECTRIC_COST),
     ],
 )

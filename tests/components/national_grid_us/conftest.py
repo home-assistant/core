@@ -63,19 +63,24 @@ def mock_billing_account(account_id: str = MOCK_ACCOUNT_ID) -> dict:
                     "meterNumber": "MTR002",
                     "meterPointNumber": "MPT002",
                     "fuelType": "Gas",
-                    "hasAmiSmartMeter": False,
-                    "isSmartMeter": False,
+                    "hasAmiSmartMeter": True,
+                    "isSmartMeter": True,
                 },
             ],
         },
     }
 
 
-def mock_usages() -> list[dict]:
-    """Return mock energy usages."""
+def mock_ami_usages(fuel_type: str) -> list[dict]:
+    """Return mock per-meter AMI daily usages for a fuel type.
+
+    The coordinator uses the latest day's quantity, so two days are returned
+    to exercise the max-by-date selection.
+    """
+    quantity = 500.0 if fuel_type == "ELECTRIC" else 30.0
     return [
-        {"usageType": "TOTAL_KWH", "usageYearMonth": 202501, "usage": 500.0},
-        {"usageType": "THERMS", "usageYearMonth": 202501, "usage": 30.0},
+        {"date": "2025-01-14", "fuelType": fuel_type, "quantity": quantity - 10},
+        {"date": "2025-01-15", "fuelType": fuel_type, "quantity": quantity},
     ]
 
 
@@ -95,7 +100,9 @@ def make_api_mock() -> AsyncMock:
     """Create a mock NationalGridClient."""
     api = AsyncMock()
     api.get_billing_account = AsyncMock(return_value=mock_billing_account())
-    api.get_energy_usages = AsyncMock(return_value=mock_usages())
+    api.get_ami_energy_usages = AsyncMock(
+        side_effect=lambda **kwargs: mock_ami_usages(kwargs["fuel_type"])
+    )
     api.get_energy_usage_costs = AsyncMock(return_value=mock_costs())
     return api
 

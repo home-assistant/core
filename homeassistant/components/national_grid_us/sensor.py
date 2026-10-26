@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfVolume
+from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -30,30 +30,22 @@ class NationalGridSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[MeterData], float | None]
     unit_fn: Callable[[MeterData], str] | None = None
-    device_class_fn: Callable[[MeterData], SensorDeviceClass] | None = None
 
 
 def _get_energy_unit(meter_data: MeterData) -> str:
     """Get the appropriate energy unit based on fuel type."""
     if meter_data.meter["fuelType"].upper() == "GAS":
-        return UnitOfVolume.CENTUM_CUBIC_FEET
+        return UnitOfEnergy.THERM
     return UnitOfEnergy.KILO_WATT_HOUR
-
-
-def _get_energy_device_class(meter_data: MeterData) -> SensorDeviceClass:
-    """Get the device class based on fuel type."""
-    if meter_data.meter["fuelType"].upper() == "GAS":
-        return SensorDeviceClass.GAS
-    return SensorDeviceClass.ENERGY
 
 
 SENSOR_DESCRIPTIONS: tuple[NationalGridSensorEntityDescription, ...] = (
     NationalGridSensorEntityDescription(
         key="energy_usage",
         translation_key="energy_usage",
+        device_class=SensorDeviceClass.ENERGY,
         value_fn=lambda m: m.latest_usage,
         unit_fn=_get_energy_unit,
-        device_class_fn=_get_energy_device_class,
     ),
     NationalGridSensorEntityDescription(
         key="energy_cost",
@@ -109,8 +101,6 @@ class NationalGridSensor(NationalGridEntity, SensorEntity):
             self._attr_native_unit_of_measurement = entity_description.unit_fn(
                 meter_data
             )
-        if entity_description.device_class_fn:
-            self._attr_device_class = entity_description.device_class_fn(meter_data)
 
     @property
     @override

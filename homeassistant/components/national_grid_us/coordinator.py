@@ -12,7 +12,7 @@ from py_nationalgrid.exceptions import (
     NationalGridError,
     RetryExhaustedError,
 )
-from py_nationalgrid.models import BillingAccount, EnergyUsage, EnergyUsageCost, Meter
+from py_nationalgrid.models import BillingAccount, EnergyUsageCost, Meter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -28,11 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 
 type NationalGridConfigEntry = ConfigEntry[NationalGridDataUpdateCoordinator]
 
-# Maps normalized (uppercase) fuel type to the API's usageType field value
-_FUEL_TYPE_TO_USAGE_TYPE: dict[str, str] = {
-    "ELECTRIC": "TOTAL_KWH",
-    "GAS": "THERMS",
-}
+# How far back to request AMI usage; the latest daily reading is the one used.
+_USAGE_LOOKBACK = timedelta(days=30)
 
 
 @dataclass
@@ -52,7 +49,6 @@ class NationalGridCoordinatorData:
 
     accounts: dict[str, BillingAccount]
     meters: dict[str, MeterData]
-    usages: dict[str, list[EnergyUsage]]
     costs: dict[str, list[EnergyUsageCost]]
 
 
@@ -91,10 +87,9 @@ class NationalGridDataUpdateCoordinator(
         account_id: str = self.config_entry.data[CONF_ACCOUNT_ID]
 
         today = dt_util.utcnow().date()
-        from_month = (today.year - 1) * 100 + today.month
 
         try:
-            data = await self._fetch_account_data(account_id, today, from_month)
+            data = await self._fetch_account_data(account_id, today)
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(err) from err
         except (
@@ -114,10 +109,10 @@ class NationalGridDataUpdateCoordinator(
         self,
         account_id: str,
         today: date,
-        from_month: int,
     ) -> NationalGridCoordinatorData:
         """Fetch data for a single account."""
         billing_account = await self.api.get_billing_account(account_id)
+        premise_number = billing_account["premiseNumber"]
 
         meters: dict[str, MeterData] = {}
         for meter in billing_account["meter"]["nodes"]:
@@ -129,20 +124,10 @@ class NationalGridDataUpdateCoordinator(
                 meter=meter,
                 account_id=account_id,
                 billing_account=billing_account,
+                latest_usage=await self._fetch_meter_usage(
+                    meter, premise_number, today
+                ),
             )
-
-        try:
-            usages = await self.api.get_energy_usages(
-                account_number=account_id, from_month=from_month
-            )
-        except (
-            CannotConnectError,
-            RetryExhaustedError,
-            NationalGridError,
-            ValueError,
-        ) as err:
-            _LOGGER.debug("Could not fetch usages for account %s: %s", account_id, err)
-            usages = []
 
         region = billing_account["region"]
         if region:
@@ -168,35 +153,56 @@ class NationalGridDataUpdateCoordinator(
         return NationalGridCoordinatorData(
             accounts={account_id: billing_account},
             meters=meters,
-            usages={account_id: usages},
             costs={account_id: costs},
         )
 
+    async def _fetch_meter_usage(
+        self,
+        meter: Meter,
+        premise_number: int | str,
+        today: date,
+    ) -> float | None:
+        """Fetch the latest daily AMI usage for a single meter.
+
+        Non-AMI meters have no usage to report. Per-meter failures degrade to
+        no reading rather than failing the whole account refresh.
+        """
+        if not meter["hasAmiSmartMeter"]:
+            return None
+
+        try:
+            usages = await self.api.get_ami_energy_usages(
+                meter_number=meter["meterNumber"],
+                premise_number=premise_number,
+                service_point_number=meter["servicePointNumber"],
+                meter_point_number=meter["meterPointNumber"],
+                date_from=today - _USAGE_LOOKBACK,
+                date_to=today,
+                fuel_type=meter["fuelType"].upper(),
+            )
+        except (
+            CannotConnectError,
+            RetryExhaustedError,
+            NationalGridError,
+            ValueError,
+        ) as err:
+            _LOGGER.debug(
+                "Could not fetch usage for meter %s: %s", meter["meterNumber"], err
+            )
+            return None
+
+        if not usages:
+            return None
+        return max(usages, key=lambda u: u["date"])["quantity"]
+
     def _cache_computed_values(self, data: NationalGridCoordinatorData) -> None:
-        """Pre-compute latest usage and cost for each meter."""
+        """Pre-compute the latest cost for each meter."""
         for meter_data in data.meters.values():
             fuel_type = meter_data.meter["fuelType"].upper()
-
-            usage = self._find_latest_usage(
-                data.usages.get(meter_data.account_id, []), fuel_type
-            )
-            meter_data.latest_usage = usage["usage"] if usage else None
-
             cost = self._find_latest_cost(
                 data.costs.get(meter_data.account_id, []), fuel_type
             )
             meter_data.latest_cost = cost["amount"] if cost else None
-
-    @staticmethod
-    def _find_latest_usage(
-        usages: list[EnergyUsage], fuel_type: str
-    ) -> EnergyUsage | None:
-        """Find the most recent usage entry for a fuel type."""
-        usage_type = _FUEL_TYPE_TO_USAGE_TYPE.get(fuel_type, fuel_type)
-        filtered = [u for u in usages if u["usageType"] == usage_type]
-        if not filtered:
-            return None
-        return max(filtered, key=lambda u: u["usageYearMonth"])
 
     @staticmethod
     def _find_latest_cost(
