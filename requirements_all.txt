@@ -1115,7 +1115,7 @@ fritzconnection[qr]==1.15.1
 fronius-modbus==0.2.0
 
 # homeassistant.components.fronius
-fronius-solarapi==0.1.0
+fronius-solarapi==0.1.1
 
 # homeassistant.components.fumis
 fumis==0.4.2
