@@ -4,8 +4,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiosmtplib import SMTPAuthenticationError, SMTPException, SMTPTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smtp.const import (
+    CONF_REPLY_TO,
+    CONF_REPLY_TO_NAME,
     CONF_SENDER_NAME,
     DOMAIN,
     SECTION_OPTIONS,
@@ -32,8 +35,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import USER_INPUT
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.usefixtures("smtp")
 async def test_form(
@@ -53,7 +54,10 @@ async def test_form(
         result["flow_id"],
         {
             **USER_INPUT,
-            SECTION_OPTIONS: {CONF_TIMEOUT: 60},
+            SECTION_OPTIONS: {
+                CONF_REPLY_TO: "replyto@example.com",
+                CONF_REPLY_TO_NAME: "Reply To Name",
+            },
         },
     )
     await hass.async_block_till_done()
@@ -61,7 +65,10 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home Assistant"
     assert result["data"] == USER_INPUT
-    assert result["options"] == {CONF_TIMEOUT: 60}
+    assert result["options"] == {
+        CONF_REPLY_TO: "replyto@example.com",
+        CONF_REPLY_TO_NAME: "Reply To Name",
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
     await hass.async_block_till_done(wait_background_tasks=True)

@@ -1,6 +1,7 @@
 {
   "domain": "airnow",
   "name": "AirNow",
+  "categories": ["weather_alerts.air_quality_pollen"],
   "codeowners": ["@asymworks"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airnow",

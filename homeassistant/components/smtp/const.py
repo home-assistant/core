@@ -20,7 +20,7 @@ SECTION_OPTIONS: Final = "options"
 
 DEFAULT_HOST: Final = "localhost"
 DEFAULT_PORT: Final = 587
-DEFAULT_TIMEOUT: Final = 5
+DEFAULT_TIMEOUT: Final = 60
 DEFAULT_DEBUG: Final = False
 DEFAULT_ENCRYPTION: Final = "starttls"
 
@@ -29,3 +29,6 @@ ENCRYPTION_OPTIONS: Final = ["tls", "starttls", "none"]
 SUBENTRY_TYPE_RECIPIENT: Final = "recipient"
 CONF_ENTRY = "entry"
 CONF_OLD_RECIPIENT: Final = "old_recipient"
+
+CONF_REPLY_TO: Final = "reply_to"
+CONF_REPLY_TO_NAME: Final = "reply_to_name"

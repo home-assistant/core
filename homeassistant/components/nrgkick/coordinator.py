@@ -5,13 +5,15 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
-import aiohttp
 from nrgkick_api import (
     NRGkickAPI,
     NRGkickAPIDisabledError,
     NRGkickAuthenticationError,
     NRGkickConnectionError,
+    NRGkickHTTPError,
     NRGkickInvalidResponseError,
+    NRGkickTimeoutError,
+    NRGkickUnreachableError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -73,22 +75,31 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
                 translation_domain=DOMAIN,
                 translation_key="json_api_disabled",
             ) from error
+        except NRGkickTimeoutError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="timeout",
+            ) from error
+        except NRGkickUnreachableError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unreachable",
+            ) from error
+        except NRGkickHTTPError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="http_error",
+                translation_placeholders={"status": str(error.status)},
+            ) from error
         except NRGkickConnectionError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
-                translation_placeholders={"error": str(error)},
             ) from error
         except NRGkickInvalidResponseError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_response",
-            ) from error
-        except (TimeoutError, aiohttp.ClientError, OSError) as error:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(error)},
             ) from error
 
         return NRGkickData(info=info, control=control, values=values)

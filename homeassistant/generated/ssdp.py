@@ -134,6 +134,9 @@ SSDP = {
         {
             "st": "urn:schemas-frontier-silicon-com:undok:fsapi:1",
         },
+        {
+            "st": "urn:schemas-frontier-silicon-com:invalid:fsapi:1",
+        },
     ],
     "harman_luxury": [
         {
@@ -220,6 +223,10 @@ SSDP = {
         {
             "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
             "manufacturer": "Lyngdorf",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Steinway Lyngdorf",
         },
     ],
     "nanoleaf": [

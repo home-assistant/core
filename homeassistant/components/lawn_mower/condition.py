@@ -10,6 +10,7 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_encountering_an_error": make_entity_state_condition(
         DOMAIN, LawnMowerActivity.ERROR
     ),
+    "is_idle": make_entity_state_condition(DOMAIN, LawnMowerActivity.IDLE),
     "is_mowing": make_entity_state_condition(DOMAIN, LawnMowerActivity.MOWING),
     "is_paused": make_entity_state_condition(DOMAIN, LawnMowerActivity.PAUSED),
     "is_returning": make_entity_state_condition(DOMAIN, LawnMowerActivity.RETURNING),

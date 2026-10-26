@@ -106,11 +106,8 @@ async def async_get_config_entry_diagnostics(
         for name, control in trims.items()
     }
 
-    # Not lipsync.range: the control reads None until the device reports a
-    # value, while the range is known from the model as soon as it connects.
-    lipsync_range = receiver.lipsync_range
     ranges: dict[str, Any] = {
-        "lipsync_range": asdict(lipsync_range) if lipsync_range is not None else None
+        "lipsync_range": asdict(lipsync.range) if lipsync is not None else None
     }
     ranges |= {
         f"{name}_range": asdict(control.range) if control is not None else None

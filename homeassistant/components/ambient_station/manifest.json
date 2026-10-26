@@ -1,6 +1,7 @@
 {
   "domain": "ambient_station",
   "name": "Ambient Weather Station",
+  "categories": ["weather_alerts", "sensors.temperature_humidity"],
   "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ambient_station",

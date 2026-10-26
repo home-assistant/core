@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unique_id_mismatch": "The identifier does not match the previous identifier",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unsupported_version": "Your version of System Bridge is not supported. Please upgrade to the latest version."
@@ -113,6 +112,15 @@
       },
       "load": {
         "name": "Load"
+      },
+      "load_average": {
+        "name": "Load average (1 min)"
+      },
+      "load_average_15": {
+        "name": "Load average (15 min)"
+      },
+      "load_average_5": {
+        "name": "Load average (5 min)"
       },
       "memory_free": {
         "name": "Memory free"

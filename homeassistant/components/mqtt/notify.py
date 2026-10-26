@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import notify
 from homeassistant.components.notify import NotifyEntity
@@ -13,8 +13,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
-from .const import CONF_COMMAND_TEMPLATE, CONF_COMMAND_TOPIC, CONF_RETAIN
+from .config import MQTT_BASE_SCHEMA
+from .const import (
+    CONF_COMMAND_TEMPLATE,
+    CONF_COMMAND_TOPIC,
+    CONF_RETAIN,
+    DEFAULT_RETAIN,
+)
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -26,14 +31,14 @@ DEFAULT_NAME = "MQTT notify"
 
 PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
 
 
 async def async_setup_entry(
@@ -61,7 +66,7 @@ class MqttNotify(MqttEntity, NotifyEntity):
 
     @staticmethod
     @override
-    def config_schema() -> vol.Schema:
+    def config_schema() -> probatio.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 

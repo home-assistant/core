@@ -20,7 +20,7 @@ from .coordinator import CyncConfigEntry, CyncCoordinator
 _PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> None:
     """Set up Cync from a config entry."""
     user_info = User(
         entry.data[CONF_ACCESS_TOKEN],
@@ -45,16 +45,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
     devices_coordinator = CyncCoordinator(hass, entry, cync)
 
     cync.set_update_callback(devices_coordinator.on_data_update)
-    entry.async_on_unload(cync.shut_down)
 
     await devices_coordinator.async_config_entry_first_refresh()
     entry.runtime_data = devices_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    cync = entry.runtime_data.cync
+    await cync.shut_down()
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

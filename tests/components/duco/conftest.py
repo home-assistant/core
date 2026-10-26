@@ -16,6 +16,8 @@ from duco_connectivity import (
     ConfigNodeOverview,
     ConfigValueString,
     DiagComponent,
+    DiagInfo,
+    InfoOverview,
     KnownActionName,
     LanInfo,
     Node,
@@ -28,14 +30,13 @@ from duco_connectivity import (
     VentilationTemperatureInfo,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.duco.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, load_json_array_fixture
 
 TEST_HOST = "192.168.1.100"
 TEST_MAC = "aa:bb:cc:dd:ee:ff"
@@ -276,6 +277,18 @@ def mock_duco_client(
     mock_ventilation_temperature_info: VentilationTemperatureInfo,
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
+
+    def set_bypass_supply_temperature_target(
+        zone_id: int,
+        temperature: float,
+        *,
+        target: BypassSupplyTemperatureTarget,
+    ) -> BypassSupplyTemperatureTarget:
+        target.validate_value(temperature)
+        updated_target = replace(target, zone_id=zone_id, value=temperature)
+        mock_bypass_supply_temperature_targets[zone_id] = updated_target
+        return updated_target
+
     with (
         patch(
             "homeassistant.components.duco.DucoClient",
@@ -287,12 +300,29 @@ def mock_duco_client(
         ),
     ):
         client = mock_class.return_value
+
+        def get_node_info(node_id: int) -> Node:
+            return next(
+                node
+                for node in client.async_get_nodes.return_value
+                if node.node_id == node_id
+            )
+
         client.async_get_api_info.return_value = mock_api_info
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
+        client.async_get_node_info.side_effect = get_node_info
         client.async_get_node_configs.return_value = node_configs_from_nodes(mock_nodes)
         client.async_get_node_actions.return_value = mock_node_actions
+        client.async_get_info_overview.return_value = InfoOverview(
+            rssi_wifi=mock_lan_info.rssi_wifi,
+            diagnostic_subsystems=(
+                DiagComponent(component="Ventilation", status="Ok"),
+            ),
+            time_filter_remain=180,
+            ventilation_temperatures=mock_ventilation_temperature_info,
+        )
         client.async_get_time_filter_remaining.return_value = 180
         client.async_get_ventilation_temperature_info.return_value = (
             mock_ventilation_temperature_info
@@ -301,19 +331,14 @@ def mock_duco_client(
             mock_bypass_supply_temperature_targets.copy
         )
         client.async_set_bypass_supply_temperature_target.side_effect = (
-            lambda zone_id, temperature: (
-                mock_bypass_supply_temperature_targets.__setitem__(
-                    zone_id,
-                    replace(
-                        mock_bypass_supply_temperature_targets[zone_id],
-                        value=temperature,
-                    ),
-                )
-            )
+            set_bypass_supply_temperature_target
         )
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
         ]
+        client.async_get_diagnostics_info.return_value = DiagInfo(
+            diagnostic_subsystems=(DiagComponent(component="Ventilation", status="Ok"),)
+        )
         client.async_get_write_requests_remaining.return_value = 100
         yield client
 
@@ -322,7 +347,7 @@ def mock_duco_client(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.duco.async_setup_entry", return_value=True
+        "homeassistant.components.duco.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

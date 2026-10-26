@@ -20,7 +20,7 @@ from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import NoURLAvailableError
@@ -28,7 +28,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_CLOUDHOOK_URL, DEVICE_SUPPORT_MAP, DOMAIN, ENTRY_TITLE
 from .coordinator import SwitchBotCoordinator
-from .service import async_register_services
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema("switchbot_cloud")
 
@@ -280,13 +280,13 @@ async def make_new_device_data(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Switchbot Cloud."""
-    async_register_services(hass)
+    async_setup_services(hass)
     return True
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
-) -> bool:
+) -> None:
     """Set up SwitchBot via API from a config entry."""
     token = entry.data[CONF_API_TOKEN]
     secret = entry.data[CONF_API_KEY]
@@ -296,10 +296,10 @@ async def async_setup_entry(
     try:
         devices = await api.list_devices()
     except SwitchBotAuthenticationError as ex:
-        _LOGGER.error(
-            "Invalid authentication while connecting to SwitchBot API: %s", ex
-        )
-        return False
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from ex
     except SwitchBotConnectionError as ex:
         raise ConfigEntryNotReady from ex
     _LOGGER.debug("Devices: %s", devices)
@@ -342,19 +342,15 @@ async def async_setup_entry(
     # retry to set up a second time
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok and CONF_WEBHOOK_ID in entry.data:
+    if CONF_WEBHOOK_ID in entry.data:
         webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-
-    return unload_ok
 
 
 async def _initialize_webhook(

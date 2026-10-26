@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, create_autospec
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 from zwave_js_server.const.command_class.access_control import (
     SetCredentialResult,
     SetUserResult,
@@ -27,8 +28,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, MockUser
 
 
 def _mock_access_control(
@@ -1124,7 +1123,7 @@ async def test_set_credential_requires_user_id(
     """Test set_credential rejects calls without user_id."""
     api = _mock_access_control(lock_schlage_be469)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "set_credential",
@@ -1473,7 +1472,7 @@ async def test_set_credential_id_range_validation(
     }
     payload[field] = value
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "set_credential",
@@ -1498,7 +1497,7 @@ async def test_delete_user_rejects_oversize_user_id(
     """Reject user_id above uint16 max on delete_user."""
     api = _mock_access_control(lock_schlage_be469)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "delete_user",

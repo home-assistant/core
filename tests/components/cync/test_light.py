@@ -1,17 +1,20 @@
 """Tests for the Cync integration light platform."""
 
-from unittest.mock import AsyncMock, patch
+from copy import deepcopy
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+from pycync import CyncLight
+from pycync.devices.capabilities import CyncCapability
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.light import ColorMode
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -46,6 +49,7 @@ async def test_entities(
         ),
         ({"color_temp_kelvin": 2500}, 90, 10, None),
         ({"rgb_color": (50, 100, 150)}, 90, None, (50, 100, 150)),
+        ({"brightness_pct": 50}, 50, None, [120, 145, 180]),
     ],
 )
 async def test_turn_on(
@@ -54,21 +58,20 @@ async def test_turn_on(
     input_parameters: dict,
     expected_brightness: int | None,
     expected_color_temp: int | None,
-    expected_rgb: tuple[int, int, int] | None,
+    expected_rgb: tuple[int, int, int] | list[int] | None,
 ) -> None:
     """Test that turning on the light changes all necessary attributes."""
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("light.office_lamp_bulb_1")
-    assert state is not None
-    assert state.state == "off"
+    assert hass.states.get("light.office_lamp_bulb_1").state == "off"
 
     entity_id_parameter = {"entity_id": "light.office_lamp_bulb_1"}
     action_parameters = entity_id_parameter | input_parameters
 
-    test_device = mock_config_entry.runtime_data.data.get("10000-2")
+    test_device = mock_config_entry.runtime_data.data["10000-2"]
     test_device.set_combo = AsyncMock(name="set_combo")
+    test_device.turn_on = AsyncMock(name="turn_on")
 
     # now call the HA turn_on service
     await hass.services.async_call(
@@ -78,6 +81,173 @@ async def test_turn_on(
         blocking=True,
     )
 
-    test_device.set_combo.assert_called_once_with(
+    test_device.set_combo.assert_awaited_once_with(
         True, expected_brightness, expected_color_temp, expected_rgb
     )
+
+    test_device.turn_on.assert_not_called()
+
+
+@pytest.mark.parametrize("device_mode", [0, 20, 254, 255])
+@pytest.mark.parametrize("brightness", [0, 90])
+async def test_turn_on_without_parameters(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_mode: int,
+    brightness: int,
+) -> None:
+    """A bare turn-on must not overwrite retained settings with cached values."""
+    await setup_integration(hass, mock_config_entry)
+
+    device = mock_config_entry.runtime_data.data["10000-2"]
+    device.update_state(False, brightness=brightness, color_temp=device_mode)
+    with (
+        patch.object(device, "turn_on") as turn_on,
+        patch.object(device, "set_combo") as set_combo,
+    ):
+        await hass.services.async_call(
+            "light",
+            "turn_on",
+            {"entity_id": "light.office_lamp_bulb_1"},
+            blocking=True,
+        )
+
+    turn_on.assert_awaited_once_with()
+    set_combo.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("capabilities", "expected_fallback"),
+    [
+        pytest.param(
+            {
+                CyncCapability.ON_OFF,
+                CyncCapability.DIMMING,
+                CyncCapability.CCT_COLOR,
+                CyncCapability.RGB_COLOR,
+            },
+            ColorMode.UNKNOWN,
+            id="full-color",
+        ),
+        pytest.param(
+            {CyncCapability.ON_OFF, CyncCapability.DIMMING, CyncCapability.CCT_COLOR},
+            ColorMode.UNKNOWN,
+            id="color-temperature",
+        ),
+        pytest.param(
+            {CyncCapability.ON_OFF, CyncCapability.DIMMING, CyncCapability.RGB_COLOR},
+            ColorMode.UNKNOWN,
+            id="rgb",
+        ),
+        pytest.param(
+            {CyncCapability.ON_OFF, CyncCapability.DIMMING},
+            ColorMode.BRIGHTNESS,
+            id="dimmer",
+        ),
+        pytest.param({CyncCapability.ON_OFF}, ColorMode.ONOFF, id="on-off"),
+    ],
+)
+@pytest.mark.parametrize("device_mode", [0, 101, 253, 255])
+async def test_unrecognized_color_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    capabilities: set[CyncCapability],
+    expected_fallback: ColorMode,
+    device_mode: int,
+) -> None:
+    """Unrecognized device modes must not produce an invalid light state."""
+    with (
+        patch.object(
+            CyncLight, "supports_capability", side_effect=capabilities.__contains__
+        ),
+        patch.object(
+            CyncLight, "color_mode", new_callable=PropertyMock, return_value=device_mode
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+        state = hass.states.get("light.bedroom_bedroom_lamp")
+        assert state.state == "on"
+        assert state.attributes["color_mode"] == expected_fallback
+        assert "white" not in state.attributes["supported_color_modes"]
+
+
+@pytest.mark.parametrize(
+    ("device_mode", "expected_mode"),
+    [(1, ColorMode.COLOR_TEMP), (100, ColorMode.COLOR_TEMP), (254, ColorMode.RGB)],
+)
+async def test_recognized_color_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_mode: int,
+    expected_mode: ColorMode,
+) -> None:
+    """Recognized temperature and RGB modes retain their existing mapping."""
+    with patch.object(
+        CyncLight, "color_mode", new_callable=PropertyMock, return_value=device_mode
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+        state = hass.states.get("light.bedroom_bedroom_lamp")
+        assert state.state == "on"
+        assert state.attributes["color_mode"] == expected_mode
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "mesh_unique_id", "is_online", "expected_state"),
+    [
+        pytest.param("10000-1101", "10000-1", True, STATE_ON, id="online-room-light"),
+        pytest.param("10000-1111", "10000-2", True, STATE_ON, id="online-group-light"),
+        pytest.param(
+            "10000-1112", "10000-3", True, STATE_ON, id="online-initially-offline-light"
+        ),
+        pytest.param(
+            "10000-1101", "10000-1", False, STATE_ON, id="offline-room-light-in-grace"
+        ),
+        pytest.param(
+            "10000-1111", "10000-2", False, STATE_ON, id="offline-group-light-in-grace"
+        ),
+        pytest.param(
+            "10000-1112",
+            "10000-3",
+            False,
+            STATE_UNAVAILABLE,
+            id="offline-initially-offline-light",
+        ),
+    ],
+)
+async def test_mesh_state_callback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    cync_client: MagicMock,
+    unique_id: str,
+    mesh_unique_id: str,
+    is_online: bool,
+    expected_state: str,
+) -> None:
+    """Test mesh callbacks update lights with legacy registry identifiers."""
+    await setup_integration(hass, mock_config_entry)
+    home = cync_client.get_homes.return_value[0]
+    updated_light = deepcopy(
+        next(
+            device
+            for device in home.get_flattened_device_list()
+            if device.unique_id == mesh_unique_id
+        )
+    )
+    updated_light.update_state(True, 50, 254, (100, 150, 200), is_online)
+    callback = cync_client.set_update_callback.call_args.args[0]
+
+    await callback({mesh_unique_id: updated_light})
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(Platform.LIGHT, "cync", unique_id)
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
+    assert mock_config_entry.runtime_data.data[mesh_unique_id] is updated_light
+    assert set(mock_config_entry.runtime_data.data) == {
+        device.unique_id for device in cync_client.get_devices.return_value
+    } | {mesh_unique_id}

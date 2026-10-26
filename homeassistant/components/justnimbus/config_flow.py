@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 import justnimbus
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID
@@ -15,10 +15,10 @@ from .const import CONF_ZIP_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_ZIP_CODE): cv.string,
+        probatio.Required(CONF_CLIENT_ID): cv.string,
+        probatio.Required(CONF_ZIP_CODE): cv.string,
     },
 )
 

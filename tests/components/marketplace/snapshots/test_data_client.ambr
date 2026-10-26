@@ -1,0 +1,59 @@
+# serializer version: 1
+# name: test_get_data[hacs-test-org/integration-basic]
+  dict({
+    '1296269': dict({
+      'description': 'This your first repo!',
+      'domain': 'example',
+      'etag_repository': '321',
+      'full_name': 'hacs-test-org/integration-basic',
+      'last_fetched': 0.0,
+      'last_updated': '2020-01-20T09:34:52Z',
+      'last_version': '1.0.0',
+      'manifest': dict({
+      }),
+      'manifest_name': 'Basic integration',
+    }),
+  })
+# ---
+# name: test_get_data[hacs-test-org/plugin-basic]
+  dict({
+    '1296267': dict({
+      'description': 'This your first repo!',
+      'etag_repository': '321',
+      'full_name': 'hacs-test-org/plugin-basic',
+      'last_fetched': 0.0,
+      'last_updated': '2020-01-20T09:34:52Z',
+      'last_version': '1.0.0',
+      'manifest': dict({
+      }),
+    }),
+  })
+# ---
+# name: test_get_data[hacs-test-org/template-basic]
+  dict({
+    '1296268': dict({
+      'description': 'This your first repo!',
+      'etag_repository': '321',
+      'full_name': 'hacs-test-org/template-basic',
+      'last_fetched': 0.0,
+      'last_updated': '2020-01-20T09:34:52Z',
+      'last_version': '1.0.0',
+      'manifest': dict({
+      }),
+    }),
+  })
+# ---
+# name: test_get_data[hacs-test-org/theme-basic]
+  dict({
+    '1296266': dict({
+      'description': 'This your first repo!',
+      'etag_repository': '321',
+      'full_name': 'hacs-test-org/theme-basic',
+      'last_fetched': 0.0,
+      'last_updated': '2020-01-20T09:34:52Z',
+      'last_version': '1.0.0',
+      'manifest': dict({
+      }),
+    }),
+  })
+# ---

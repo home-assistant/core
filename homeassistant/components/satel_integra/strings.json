@@ -1,14 +1,11 @@
 {
   "common": {
-    "code": "Access code",
-    "code_input_description": "Code to toggle switchable outputs",
     "encryption_key": "Integration encryption key",
     "encryption_key_description": "If the alarm panel requires encryption, enter the integration encryption key here."
   },
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -17,14 +14,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "code": {
-        "data": {
-          "code": "[%key:component::satel_integra::common::code%]"
-        },
-        "data_description": {
-          "code": "[%key:component::satel_integra::common::code_input_description%]"
-        }
-      },
       "reconfigure": {
         "data": {
           "encryption_key": "[%key:component::satel_integra::common::encryption_key%]",
@@ -203,21 +192,31 @@
     "connection_initialization_failed": {
       "message": "[%key:component::satel_integra::config::error::connection_initialization_failed%]"
     },
+    "missing_alarm_access_code": {
+      "message": "Cannot disarm the alarm panel because no user code was provided."
+    },
     "missing_output_access_code": {
       "message": "Cannot control switchable outputs because no user code is configured for this Satel Integra entry. Configure a code in the integration options to enable output control."
+    },
+    "monitoring_start_failed": {
+      "message": "Connected to the alarm panel, but the panel did not confirm the request to start sending status updates."
     },
     "panel_busy": {
       "message": "[%key:component::satel_integra::config::error::panel_busy%]"
     }
   },
   "options": {
+    "error": {
+      "invalid_code_format": "User code must contain numbers only.",
+      "invalid_code_length": "User code must be between 4 and 16 characters long."
+    },
     "step": {
       "init": {
         "data": {
-          "code": "[%key:component::satel_integra::common::code%]"
+          "code": "Access code"
         },
         "data_description": {
-          "code": "[%key:component::satel_integra::common::code_input_description%]"
+          "code": "Code to toggle switchable outputs"
         }
       }
     }

@@ -5,17 +5,33 @@ import logging
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.common import (
+    TargetSupport,
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 from homeassistant.components.timer import (
     ATTR_FINISHES_AT,
     ATTR_LAST_TRANSITION,
     DOMAIN,
+)
+from homeassistant.components.timer.const import (
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
 )
+from homeassistant.components.timer.trigger import TRIGGERS
 from homeassistant.const import (
     ATTR_LABEL_ID,
     CONF_ENTITY_ID,
@@ -32,23 +48,21 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
-from tests.components.common import (
-    TriggerStateDescription,
-    assert_trigger_behavior_all,
-    assert_trigger_behavior_each,
-    assert_trigger_behavior_first,
-    assert_trigger_options_supported,
-    parametrize_target_entities,
-    parametrize_trigger_states,
-    target_entities,
-)
-
 
 @pytest.fixture
 async def target_timers(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple timer entities associated with different targets."""
     return await target_entities(hass, DOMAIN)
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "cancelled": TargetSupport.STANDARD,
+    "finished": TargetSupport.STANDARD,
+    "paused": TargetSupport.STANDARD,
+    "restarted": TargetSupport.STANDARD,
+    "started": TargetSupport.STANDARD,
+    "remaining_time_reached": TargetSupport.CUSTOM,
+}
 
 
 @pytest.mark.parametrize(
@@ -77,6 +91,11 @@ async def test_timer_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(
@@ -307,7 +326,7 @@ async def test_time_remaining_trigger_validation(hass: HomeAssistant) -> None:
     )
 
     # Missing remaining option
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_trigger_config(
             hass,
             [

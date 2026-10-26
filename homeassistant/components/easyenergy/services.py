@@ -6,6 +6,7 @@ from functools import partial
 from typing import Final
 
 from easyenergy import (
+    EasyEnergyError,
     Electricity,
     ElectricityGranularity,
     ElectricityPriceType,
@@ -14,7 +15,7 @@ from easyenergy import (
     VatOption,
 )
 from easyenergy.const import MARKET_TIMEZONE
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     HomeAssistant,
@@ -23,7 +24,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import selector, service
 from homeassistant.util import dt as dt_util
 
@@ -57,41 +58,41 @@ PRICE_TYPE_OPTIONS: Final = tuple(
     electricity_price_type.value for electricity_price_type in ElectricityPriceType
 )
 
-BASE_SERVICE_SCHEMA: Final = vol.Schema(
+BASE_SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
-        vol.Optional(ATTR_START): str,
-        vol.Optional(ATTR_END): str,
+        probatio.Optional(ATTR_START): str,
+        probatio.Optional(ATTR_END): str,
     }
 )
 GAS_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
     {
-        vol.Required(ATTR_INCL_VAT): bool,
-        vol.Optional(
+        probatio.Required(ATTR_INCL_VAT): bool,
+        probatio.Optional(
             ATTR_PRICE_TYPE, default=ElectricityPriceType.MARKET.value
-        ): vol.In(PRICE_TYPE_OPTIONS),
+        ): probatio.In(PRICE_TYPE_OPTIONS),
     }
 )
 ENERGY_USAGE_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
     {
-        vol.Required(ATTR_INCL_VAT): bool,
-        vol.Optional(
+        probatio.Required(ATTR_INCL_VAT): bool,
+        probatio.Optional(
             ATTR_GRANULARITY, default=ElectricityGranularity.HOUR.value
-        ): vol.In(GRANULARITY_OPTIONS),
-        vol.Optional(
+        ): probatio.In(GRANULARITY_OPTIONS),
+        probatio.Optional(
             ATTR_PRICE_TYPE, default=ElectricityPriceType.MARKET.value
-        ): vol.In(PRICE_TYPE_OPTIONS),
+        ): probatio.In(PRICE_TYPE_OPTIONS),
     }
 )
 ENERGY_RETURN_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
     {
-        vol.Optional(
+        probatio.Optional(
             ATTR_GRANULARITY, default=ElectricityGranularity.HOUR.value
-        ): vol.In(GRANULARITY_OPTIONS),
+        ): probatio.In(GRANULARITY_OPTIONS),
     }
 )
 
@@ -192,21 +193,33 @@ async def __get_prices(
     prices: list[dict[str, float | datetime]]
 
     if service_price_type == ServicePriceType.GAS:
-        data = await coordinator.easyenergy.gas_prices(
-            start_date=start_date,
-            end_date=end_date,
-            vat=vat,
-        )
+        try:
+            data = await coordinator.easyenergy.gas_prices(
+                start_date=start_date,
+                end_date=end_date,
+                vat=vat,
+            )
+        except EasyEnergyError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="fetch_prices_error",
+            ) from err
         prices = __select_prices(
             data, call.data[ATTR_PRICE_TYPE] == ElectricityPriceType.INVOICE.value
         )
     else:
-        data = await coordinator.easyenergy.energy_prices(
-            start_date=start_date,
-            end_date=end_date,
-            granularity=ElectricityGranularity(call.data[ATTR_GRANULARITY]),
-            vat=vat,
-        )
+        try:
+            data = await coordinator.easyenergy.energy_prices(
+                start_date=start_date,
+                end_date=end_date,
+                granularity=ElectricityGranularity(call.data[ATTR_GRANULARITY]),
+                vat=vat,
+            )
+        except EasyEnergyError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="fetch_prices_error",
+            ) from err
 
         if service_price_type == ServicePriceType.ENERGY_USAGE:
             prices = __select_prices(

@@ -3,6 +3,8 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from script.hassfest.core_files import EXTRA_BASE_PLATFORMS, validate
 from script.hassfest.model import Config, Integration
 
@@ -97,3 +99,141 @@ def test_unexpected_entry(config: Config) -> None:
         == "'unknown_thing' in base_platforms in .core_files.yaml"
         " is not an entity platform or in EXTRA_BASE_PLATFORMS"
     )
+
+
+def _create_core_integration(
+    config: Config, tmp_path: Path, domain: str, code: str
+) -> Integration:
+    """Create a core integration with the given __init__.py content."""
+    integration = _create_integration(config, domain)
+    integration.path = tmp_path / domain
+    integration.path.mkdir()
+    (integration.path / "__init__.py").write_text(code)
+    return integration
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param('__all__ = ["DOMAIN"]\n', id="assign"),
+        pytest.param('__all__: list[str] = ["DOMAIN"]\n', id="annotated_assign"),
+    ],
+)
+def test_core_integration_with_all(config: Config, tmp_path: Path, code: str) -> None:
+    """Test no errors when a core integration defines __all__."""
+    integrations = {"http": _create_core_integration(config, tmp_path, "http", code)}
+    core_files = {
+        "base_platforms": [],
+        "components": ["homeassistant/components/http/**"],
+    }
+
+    with (
+        patch("script.hassfest.core_files.load_yaml_dict", return_value=core_files),
+        patch("script.hassfest.core_files.EXTRA_BASE_PLATFORMS", set()),
+        patch("script.hassfest.core_files.MISSING_ALL", set()),
+    ):
+        validate(integrations, config)
+
+    assert not config.errors
+
+
+@pytest.mark.parametrize(
+    ("core_files", "extra_base_platforms"),
+    [
+        pytest.param(
+            {"base_platforms": [], "components": ["homeassistant/components/http/**"]},
+            set(),
+            id="component",
+        ),
+        pytest.param(
+            {"base_platforms": ["homeassistant/components/http/**"]},
+            {"http"},
+            id="base_platform",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param('DOMAIN = "http"\n', id="no_all"),
+        pytest.param(
+            'DOMAIN = "http"\n\ndef func() -> None:\n    __all__ = ["DOMAIN"]\n',
+            id="local_all",
+        ),
+        pytest.param("__all__: list[str]\n", id="annotation_only"),
+    ],
+)
+def test_core_integration_missing_all(
+    config: Config,
+    tmp_path: Path,
+    core_files: dict,
+    extra_base_platforms: set[str],
+    code: str,
+) -> None:
+    """Test error when a core integration does not define __all__."""
+    domain = "http"
+    integrations = {
+        domain: _create_core_integration(
+            config,
+            tmp_path,
+            domain,
+            code,
+        )
+    }
+
+    with (
+        patch("script.hassfest.core_files.load_yaml_dict", return_value=core_files),
+        patch("script.hassfest.core_files.EXTRA_BASE_PLATFORMS", extra_base_platforms),
+        patch("script.hassfest.core_files.MISSING_ALL", set()),
+    ):
+        validate(integrations, config)
+
+    assert [error.error for error in config.errors] == [
+        f"Core integration '{domain}' must define `__all__` in its `__init__.py`"
+    ]
+
+
+def test_core_integration_in_missing_all(config: Config, tmp_path: Path) -> None:
+    """Test no error when a core integration without __all__ is in MISSING_ALL."""
+    integrations = {
+        "http": _create_core_integration(config, tmp_path, "http", 'DOMAIN = "http"\n')
+    }
+    core_files = {
+        "base_platforms": [],
+        "components": ["homeassistant/components/http/**"],
+    }
+
+    with (
+        patch("script.hassfest.core_files.load_yaml_dict", return_value=core_files),
+        patch("script.hassfest.core_files.EXTRA_BASE_PLATFORMS", set()),
+        patch("script.hassfest.core_files.MISSING_ALL", {"http"}),
+    ):
+        validate(integrations, config)
+
+    assert not config.errors
+
+
+def test_core_integration_with_all_still_in_missing_all(
+    config: Config, tmp_path: Path
+) -> None:
+    """Test error when a core integration defines __all__ but is in MISSING_ALL."""
+    integrations = {
+        "http": _create_core_integration(
+            config, tmp_path, "http", '__all__ = ["DOMAIN"]\n'
+        )
+    }
+    core_files = {
+        "base_platforms": [],
+        "components": ["homeassistant/components/http/**"],
+    }
+
+    with (
+        patch("script.hassfest.core_files.load_yaml_dict", return_value=core_files),
+        patch("script.hassfest.core_files.EXTRA_BASE_PLATFORMS", set()),
+        patch("script.hassfest.core_files.MISSING_ALL", {"http"}),
+    ):
+        validate(integrations, config)
+
+    assert [error.error for error in config.errors] == [
+        "Core integration 'http' defines `__all__` but is still listed in MISSING_ALL"
+    ]

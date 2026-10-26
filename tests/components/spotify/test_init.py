@@ -4,6 +4,8 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from spotifyaio import SpotifyConnectionError, SpotifyForbiddenError
 
 from homeassistant.components.spotify.const import DOMAIN
@@ -15,9 +17,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 TOKEN_URL = "https://accounts.spotify.com/api/token"
 
@@ -57,6 +56,8 @@ async def test_setup_with_required_calls_failing(
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "update_failed"
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -74,10 +75,19 @@ async def test_setup_free_account_is_failing(
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "user_not_premium"
     issue = issue_registry.issues.get(
         (DOMAIN, f"user_not_premium_{mock_config_entry.unique_id}")
     )
     assert issue, "Repair issue not created"
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.issues.get(
+        (DOMAIN, f"user_not_premium_{mock_config_entry.unique_id}")
+    )
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -117,6 +127,33 @@ async def test_revoked_refresh_token_starts_reauth(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "token_refresh_failed"
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["handler"] == DOMAIN
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+@pytest.mark.usefixtures("setup_credentials", "mock_spotify")
+async def test_missing_scopes_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a token without all required scopes asks the user to reauthenticate."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            "token": {**mock_config_entry.data["token"], "scope": "user-read-private"},
+        },
+    )
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "missing_scopes"
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["handler"] == DOMAIN

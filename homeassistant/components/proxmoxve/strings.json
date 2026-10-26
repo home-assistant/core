@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "api_error_no_details": "An error occurred while communicating with the Proxmox VE instance.",
@@ -206,9 +204,6 @@
           "suspended": "Suspended"
         }
       },
-      "container_uptime": {
-        "name": "Uptime"
-      },
       "node_backup_duration": {
         "name": "Backup duration"
       },
@@ -242,9 +237,6 @@
           "offline": "Offline",
           "online": "Online"
         }
-      },
-      "node_uptime": {
-        "name": "Uptime"
       },
       "storage_available": {
         "name": "Available storage"
@@ -292,9 +284,6 @@
           "stopped": "Stopped",
           "suspended": "Suspended"
         }
-      },
-      "vm_uptime": {
-        "name": "Uptime"
       }
     },
     "update": {
