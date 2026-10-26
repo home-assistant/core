@@ -16,6 +16,8 @@ from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
 from .helpers import (
     MatterConfigEntry,
+    endpoint_requires_child_device,
+    get_child_device_id,
     get_device_endpoint,
     get_device_id,
     get_discovery_key,
@@ -38,6 +40,17 @@ def get_clean_name(name: str | None) -> str | None:
     return name.strip() or None
 
 
+def _child_device_endpoint_id(child_device: dr.ChildDeviceEntry) -> int | None:
+    """Return the endpoint id encoded in a child device's Matter identifier."""
+    prefix = f"{ID_TYPE_DEVICE_ID}_"
+    for domain, value in child_device.identifiers:
+        if domain == DOMAIN and value.startswith(prefix):
+            endpoint_part = value.rsplit("-", 1)[-1]
+            if endpoint_part.isdigit():
+                return int(endpoint_part)
+    return None
+
+
 class MatterAdapter:
     """Connect Matter into Home Assistant."""
 
@@ -52,7 +65,10 @@ class MatterAdapter:
         self.hass = hass
         self.config_entry = config_entry
         self.platform_handlers: dict[Platform, AddEntitiesCallback] = {}
-        self.discovered_entities: set[str] = set()
+        # Discovery keys already turned into entities, grouped by their
+        # (node_id, endpoint_id) so they can be dropped when an endpoint is
+        # removed, letting its entities be rediscovered if it reappears.
+        self.discovered_entities: dict[tuple[int, int], set[str]] = {}
 
     def register_platform_handler(
         self, platform: Platform, add_entities: AddEntitiesCallback
@@ -105,6 +121,18 @@ class MatterAdapter:
             if get_device_endpoint(endpoint) != endpoint:
                 # A composed device is represented by a single HA device, which is
                 # only removed once its compose parent endpoint is removed.
+                return
+            # An endpoint split into its own child device is removed on its own,
+            # without touching the node (parent) device.
+            child_identifier = (
+                DOMAIN,
+                f"{ID_TYPE_DEVICE_ID}_{get_child_device_id(server_info, endpoint)}",
+            )
+            if child_device := device_registry.async_get_child_device_by_identifier(
+                child_identifier, self.config_entry.entry_id
+            ):
+                device_registry.async_remove_device(child_device.id)
+                self._forget_endpoint_entities(node.node_id, endpoint.endpoint_id)
                 return
             node_device_id = get_device_id(server_info, endpoint)
             identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
@@ -162,6 +190,7 @@ class MatterAdapter:
             for endpoint_id in sorted(node.endpoints):
                 # Node endpoints are translated into HA devices
                 self._setup_endpoint(node.endpoints[endpoint_id])
+            self._prune_node_child_devices(node)
         except Exception as err:  # noqa: BLE001
             # We don't want to crash the whole setup when a single node fails to setup
             # for whatever reason, so we catch all exceptions here.
@@ -170,6 +199,65 @@ class MatterAdapter:
                 node.node_id,
                 err,
             )
+
+    def _prune_node_child_devices(self, node: MatterNode) -> None:
+        """Remove child devices of a node that no longer map to a split endpoint.
+
+        When the set of endpoints changes, a child device can become stale in two
+        ways. If its endpoint still exists but no longer needs its own device (e.g.
+        a sibling output was removed so it no longer collides), its entities are
+        moved back to the node device to preserve user customizations. If its
+        endpoint is gone entirely, the child device is removed together with its
+        now-orphaned entities.
+        """
+        server_info = cast(ServerInfoMessage, self.matter_client.server_info)
+        device_registry = dr.async_get(self.hass)
+        node_device = device_registry.async_get_device_by_identifier(
+            (
+                DOMAIN,
+                f"{ID_TYPE_DEVICE_ID}_{get_device_id(server_info, node.endpoints[0])}",
+            ),
+            self.config_entry.entry_id,
+        )
+        if node_device is None:
+            return
+        expected_child_identifiers: set[tuple[str, str]] = set()
+        current_child_identifiers: set[tuple[str, str]] = set()
+        for endpoint in node.endpoints.values():
+            child_identifier = (
+                DOMAIN,
+                f"{ID_TYPE_DEVICE_ID}_{get_child_device_id(server_info, endpoint)}",
+            )
+            current_child_identifiers.add(child_identifier)
+            if endpoint_requires_child_device(endpoint):
+                expected_child_identifiers.add(child_identifier)
+        entity_registry = er.async_get(self.hass)
+        for child_device in dr.async_entries_for_parent_device(
+            device_registry, node_device.id
+        ):
+            if child_device.identifiers & expected_child_identifiers:
+                continue
+            if child_device.identifiers & current_child_identifiers:
+                # Endpoint still present but no longer split: keep its entities by
+                # moving them back to the node device before removing the child.
+                # Include disabled entities so their customizations are not lost
+                # when the child device is removed below.
+                for entity_entry in er.async_entries_for_device(
+                    entity_registry, child_device.id, include_disabled_entities=True
+                ):
+                    entity_registry.async_update_entity(
+                        entity_entry.entity_id, device_id=node_device.id
+                    )
+            elif (endpoint_id := _child_device_endpoint_id(child_device)) is not None:
+                # Endpoint is gone: its entities are removed with the child device,
+                # so drop their discovery keys to allow rediscovery if it returns.
+                self._forget_endpoint_entities(node.node_id, endpoint_id)
+            # A child whose endpoint is gone is removed with its orphaned entities.
+            device_registry.async_remove_device(child_device.id)
+
+    def _forget_endpoint_entities(self, node_id: int, endpoint_id: int) -> None:
+        """Drop an endpoint's discovery keys so its entities can be rediscovered."""
+        self.discovered_entities.pop((node_id, endpoint_id), None)
 
     def _create_device_registry(
         self,
@@ -289,12 +377,15 @@ class MatterAdapter:
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
         device_id = get_device_id(server_info, endpoint)
         legacy_device_id = get_legacy_device_id(server_info, endpoint)
+        discovered = self.discovered_entities.setdefault(
+            (endpoint.node.node_id, endpoint.endpoint_id), set()
+        )
         # run platform discovery from device type instances
         for entity_info in async_discover_entities(
             endpoint, server_info.schema_version
         ):
             discovery_key = get_discovery_key(endpoint, entity_info)
-            if discovery_key in self.discovered_entities:
+            if discovery_key in discovered:
                 continue
             if legacy_device_id != device_id:
                 self._migrate_legacy_unique_id(
@@ -305,7 +396,7 @@ class MatterAdapter:
                 entity_info.platform,
                 entity_info.primary_attribute,
             )
-            self.discovered_entities.add(discovery_key)
+            discovered.add(discovery_key)
             new_entity = entity_info.entity_class(
                 self.matter_client, endpoint, entity_info
             )
