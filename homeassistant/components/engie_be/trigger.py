@@ -126,12 +126,7 @@ class _EpexTrigger(Trigger):
                 previous = UNDEFINED
 
             current = self._device_value(device_id)
-            if (
-                previous is not UNDEFINED
-                and current is not UNDEFINED
-                and previous is False
-                and current is True
-            ):
+            if previous is False and current is True:
                 run_action({ATTR_DEVICE_ID: device_id}, description)
             previous = current
 
