@@ -104,7 +104,7 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             rest = create_rest_data_from_config_entry(self.hass, user_input)
             try:
-                await rest.async_update()
+                await rest.async_update(log_errors=False)
                 if rest.last_exception or rest.data is None:
                     errors["base"] = (
                         "endpoint_error"
