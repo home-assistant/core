@@ -32,6 +32,7 @@ from freezegun.api import FrozenDateTimeFactory
 from probatio import Invalid
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
@@ -2117,3 +2118,58 @@ async def test_supervisor_issues_not_set_on_coordinator_failure(
     assert DATA_KEY_SUPERVISOR_ISSUES not in hass.data
     assert not user.refresh_tokens
     assert hass.auth.async_validate_access_token(access_token) is None
+
+
+@pytest.mark.parametrize(
+    ("event_data", "expected_reload_count"),
+    [
+        pytest.param(
+            {
+                "event": "supervisor_update",
+                "update_key": "network",
+                "data": {"host_internet": True},
+            },
+            1,
+            id="network-update",
+        ),
+        pytest.param(
+            {
+                "event": "supervisor_update",
+                "update_key": "supervisor",
+                "data": {"startup": "complete"},
+            },
+            0,
+            id="other-update-key",
+        ),
+        pytest.param(
+            {"event": "health_changed", "data": {"healthy": True}},
+            0,
+            id="other-event-type",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("supervisor_client")
+async def test_supervisor_network_update_event(
+    hass: HomeAssistant,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    event_data: dict[str, Any],
+    expected_reload_count: int,
+) -> None:
+    """Test supervisor network update events reload adapters."""
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.network.async_reload_adapters"
+        ) as mock_reload_adapters,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json_auto_id({"type": "supervisor/event", "data": event_data})
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    assert mock_reload_adapters.call_count == expected_reload_count

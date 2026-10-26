@@ -42,6 +42,9 @@ from .const import (
     ATTR_DEVICE_STATUS,
     ATTR_LOW_POWER_MODE,
     ATTR_OWNER_NAME,
+    DEVICE_ACTION_STATUS_CODE,
+    DEVICE_ACTION_STATUS_PENDING,
+    DEVICE_ACTIVATION_LOCKED,
     DEVICE_BATTERY_LEVEL,
     DEVICE_BATTERY_STATUS,
     DEVICE_CLASS,
@@ -49,24 +52,31 @@ from .const import (
     DEVICE_FEATURE_LOCK,
     DEVICE_FEATURES,
     DEVICE_ID,
+    DEVICE_IS_LOCATING,
     DEVICE_LOCATION,
     DEVICE_LOCATION_ALTITUDE,
+    DEVICE_LOCATION_ENABLED,
     DEVICE_LOCATION_FLOOR_LEVEL,
     DEVICE_LOCATION_HORIZONTAL_ACCURACY,
+    DEVICE_LOCATION_IS_INACCURATE,
+    DEVICE_LOCATION_IS_OLD,
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
     DEVICE_LOCATION_POSITION_TYPE,
     DEVICE_LOCATION_TIMESTAMP,
     DEVICE_LOCKED_TIMESTAMP,
     DEVICE_LOST_MODE_CAPABLE,
+    DEVICE_LOST_MODE_ENABLED,
     DEVICE_LOST_TIMESTAMP,
     DEVICE_LOW_POWER_MODE,
     DEVICE_NAME,
     DEVICE_PERSON_ID,
     DEVICE_RAW_DEVICE_MODEL,
+    DEVICE_REMOTE_LOCK,
     DEVICE_STATUS,
     DEVICE_STATUS_CODES,
     DEVICE_STATUS_SET,
+    DEVICE_WIPE_IN_PROGRESS,
     DEVICE_WIPED_TIMESTAMP,
     DOMAIN,
 )
@@ -1069,6 +1079,74 @@ class IcloudDevice:
     def lost_mode_available(self) -> bool:
         """Return whether the device supports lost mode."""
         return self._device.lost_mode_available
+
+    @property
+    def sound_available(self) -> bool:
+        """Return whether the device can play a sound."""
+        return self._device.sound_available
+
+    @property
+    def location_is_old(self) -> bool:
+        """Return whether Apple flagged the reported location fix as old."""
+        # The flag describes the payload Apple just sent, which can differ from
+        # the fix this integration stores.
+        location = self._status[DEVICE_LOCATION]
+        if location is None:
+            return False
+        return bool(location.get(DEVICE_LOCATION_IS_OLD, False))
+
+    @property
+    def location_is_inaccurate(self) -> bool:
+        """Return whether Apple flagged the reported location fix as inaccurate."""
+        location = self._status[DEVICE_LOCATION]
+        if location is None:
+            return False
+        return bool(location.get(DEVICE_LOCATION_IS_INACCURATE, False))
+
+    @property
+    def is_online(self) -> bool:
+        """Return whether the device is online."""
+        return self.device_status == "online"
+
+    @property
+    def low_power_mode(self) -> bool:
+        """Return whether low power mode is enabled on the device."""
+        return bool(self._status.get(DEVICE_LOW_POWER_MODE, False))
+
+    @property
+    def activation_locked(self) -> bool:
+        """Return whether activation lock is enabled on the device."""
+        return bool(self._status.get(DEVICE_ACTIVATION_LOCKED, False))
+
+    @property
+    def is_locating(self) -> bool:
+        """Return whether the device is being located right now."""
+        return bool(self._status.get(DEVICE_IS_LOCATING, False))
+
+    @property
+    def location_services_enabled(self) -> bool:
+        """Return whether location services are enabled on the device."""
+        return bool(self._status.get(DEVICE_LOCATION_ENABLED, False))
+
+    @property
+    def wipe_in_progress(self) -> bool:
+        """Return whether a wipe is in progress on the device."""
+        return bool(self._status.get(DEVICE_WIPE_IN_PROGRESS, False))
+
+    @property
+    def remote_lock_pending(self) -> bool:
+        """Return whether a remote lock is pending on the device."""
+        remote_lock = self._status.get(DEVICE_REMOTE_LOCK)
+        if not isinstance(remote_lock, dict):
+            return False
+        return (
+            remote_lock.get(DEVICE_ACTION_STATUS_CODE) == DEVICE_ACTION_STATUS_PENDING
+        )
+
+    @property
+    def lost_mode_enabled(self) -> bool:
+        """Return whether lost mode is currently enabled on the device."""
+        return bool(self._status.get(DEVICE_LOST_MODE_ENABLED, False))
 
     @property
     def raw_status(self) -> dict[str, Any]:

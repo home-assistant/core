@@ -156,8 +156,6 @@ class TibberRuntimeData:
                 ssl=ssl_util.get_default_context(),
                 refresh_access_token=self._async_get_access_token,
             )
-        else:
-            await self._client.set_access_token(access_token)
         return self._client
 
     async def async_disconnect(self) -> None:

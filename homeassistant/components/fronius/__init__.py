@@ -3,7 +3,7 @@
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Final
+from typing import Any, Final
 
 from fronius_modbus import (
     GEN24_UNIT_ID,
@@ -11,15 +11,15 @@ from fronius_modbus import (
     SunSpecError,
     datamanager_unit_id,
 )
+from fronius_solarapi import FroniusError, FroniusSolarApi
 from modbus_connection import ModbusError, ModbusTcpParams
-from pyfronius import Fronius, FroniusError
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -49,7 +49,6 @@ from .coordinator import (
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
 )
-from .sensor import MODBUS_INVERTER_ENTITY_DESCRIPTIONS
 
 _LOGGER: Final = logging.getLogger(__name__)
 PLATFORMS: Final = [
@@ -61,40 +60,11 @@ PLATFORMS: Final = [
 
 type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
 
-MODBUS_SENSOR_KEYS: Final = {
-    description.key for description in MODBUS_INVERTER_ENTITY_DESCRIPTIONS
-}
-
-
-@callback
-def _async_fix_modbus_sensor_unique_ids(
-    hass: HomeAssistant, entry: FroniusConfigEntry
-) -> None:
-    """Move sensors that were registered with the SolarAPI unique ID format.
-
-    A Modbus coordinator found by a re-scan reached the sensor platform
-    before it could be told from a SolarAPI one, so 2026.9 built its entities
-    as SolarAPI ones: `<inverter>-<key>` instead of `<inverter>-modbus-<key>`.
-    The keys of the two are distinct, so a Modbus key without the marker can
-    only come from that.
-    """
-    registry = er.async_get(hass)
-    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        inverter_id, _, key = entity.unique_id.rpartition("-")
-        if key not in MODBUS_SENSOR_KEYS or inverter_id.endswith("-modbus"):
-            continue
-        unique_id = f"{inverter_id}-modbus-{key}"
-        if registry.async_get_entity_id(entity.domain, DOMAIN, unique_id):
-            continue
-        _LOGGER.debug("Migrating unique ID of %s to %s", entity.entity_id, unique_id)
-        registry.async_update_entity(entity.entity_id, new_unique_id=unique_id)
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> None:
     """Set up fronius from a config entry."""
-    _async_fix_modbus_sensor_unique_ids(hass, entry)
     host = entry.data[CONF_HOST]
-    fronius = Fronius(
+    fronius = FroniusSolarApi(
         async_get_clientsession(
             hass,
             # Fronius Gen24 firmware 1.35.4-1 redirects to HTTPS with self-signed
@@ -140,7 +110,7 @@ class FroniusSolarNet:
     """The FroniusSolarNet class routes received values to sensor entities."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, fronius: Fronius
+        self, hass: HomeAssistant, entry: ConfigEntry, fronius: FroniusSolarApi
     ) -> None:
         """Initialize FroniusSolarNet class."""
         self.hass = hass
@@ -169,6 +139,23 @@ class FroniusSolarNet:
         ] = []
         # one hold on the shared connection per inverter, kept across re-scans
         self.modbus_inverters: dict[SolarNetId, FroniusModbusInverter] = {}
+
+    @property
+    def coordinators(self) -> list[FroniusCoordinatorBase[Any]]:
+        """Return the coordinators set up so far."""
+        optional = (
+            self.logger_coordinator,
+            self.meter_coordinator,
+            self.ohmpilot_coordinator,
+            self.power_flow_coordinator,
+            self.storage_coordinator,
+        )
+        return [
+            *self.inverter_coordinators,
+            *self.modbus_inverter_coordinators,
+            *(coordinator for coordinator in optional if coordinator is not None),
+            *self.modbus_settings_coordinators,
+        ]
 
     async def init_devices(self) -> None:
         """Initialize DataUpdateCoordinators for SolarNet devices."""
@@ -246,11 +233,9 @@ class FroniusSolarNet:
         )
         if self.logger_coordinator:
             _logger_info = self.logger_coordinator.data[SOLAR_NET_ID_SYSTEM]
-            # API v0 doesn't provide product_type
-            solar_net_device.model = _logger_info.get("product_type", {}).get(
-                "value", "Datalogger Web"
-            )
-            solar_net_device.sw_version = _logger_info["software_version"]["value"]
+            # API v0 doesn't provide a product id
+            solar_net_device.model = _logger_info.product_id or "Datalogger Web"
+            solar_net_device.sw_version = _logger_info.software_version
 
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create_from_info(
@@ -313,7 +298,7 @@ class FroniusSolarNet:
         inverter_infos: list[FroniusDeviceInfo] = []
 
         try:
-            _inverter_info = await self.fronius.inverter_info()
+            response = await self.fronius.inverter_info()
         except FroniusError as err:
             if self.config_entry.state is ConfigEntryState.LOADED:
                 # During a re-scan we will attempt again as per schedule.
@@ -329,16 +314,14 @@ class FroniusSolarNet:
                 },
             ) from err
 
-        for inverter in _inverter_info["inverters"]:
-            solar_net_id = inverter["device_id"]["value"]
-            unique_id = inverter["unique_id"]["value"]
+        for solar_net_id, inverter in response.data.items():
+            unique_id = inverter.unique_id
+            model = inverter.model
             device_info = DeviceInfo(
                 identifiers={(DOMAIN, unique_id)},
-                manufacturer=inverter["device_type"].get("manufacturer", "Fronius"),
-                model=inverter["device_type"].get(
-                    "model", inverter["device_type"]["value"]
-                ),
-                name=inverter.get("custom_name", {}).get("value"),
+                manufacturer=model.manufacturer if model else "Fronius",
+                model=model.model if model else str(inverter.device_type),
+                name=inverter.custom_name,
                 via_device_id=dr.async_get_device_id_by_identifier(
                     self.hass,
                     (DOMAIN, self.solar_net_device_id),

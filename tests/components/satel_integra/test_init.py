@@ -252,8 +252,8 @@ async def test_unload_unsubscribes_connection_status_callbacks(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test connection status callbacks are unsubscribed on unload."""
-    # 4 coordinators + 1 client = 5 callbacks to unsubscribe
-    unsubscribe_callbacks = [MagicMock(return_value=None) for _ in range(5)]
+    # 5 coordinators + 1 client = 6 callbacks to unsubscribe
+    unsubscribe_callbacks = [MagicMock(return_value=None) for _ in range(6)]
     mock_satel.add_connection_status_callback.side_effect = unsubscribe_callbacks
 
     await setup_integration(hass, mock_config_entry)
@@ -274,7 +274,7 @@ async def test_setup_failure_unsubscribes_connection_status_callbacks(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a setup failure unsubscribes connection status callbacks."""
-    unsubscribe_callbacks = [MagicMock(return_value=None) for _ in range(5)]
+    unsubscribe_callbacks = [MagicMock(return_value=None) for _ in range(6)]
     mock_satel.add_connection_status_callback.side_effect = unsubscribe_callbacks
     mock_satel.read_panel_info.side_effect = RuntimeError
 
