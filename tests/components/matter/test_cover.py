@@ -858,6 +858,10 @@ async def test_cover_position_aware_tilt(
         | CoverEntityFeature.SET_TILT_POSITION
     )
     assert state.attributes["supported_features"] & mask == mask
+    # tilt-only covers must not expose the lift button features
+    assert not state.attributes["supported_features"] & (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
 
     for tilt_position, expected_state in (
         (0, CoverState.OPEN),
@@ -883,6 +887,46 @@ async def test_cover_position_aware_tilt(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_pa_tilt", "cover.mock_pa_tilt_window_covering"),
+    ],
+)
+async def test_cover_feature_map(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the button features following WindowCovering FeatureMap updates."""
+    lift_buttons = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
+    tilt_buttons = (
+        CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.STOP_TILT
+    )
+
+    for feature_map, expected, unexpected in (
+        # tilt without lift exposes the tilt buttons
+        (0b10010, tilt_buttons, lift_buttons),
+        # lift and tilt expose the lift buttons
+        (0b10011, lift_buttons, tilt_buttons),
+        # non-conformant feature map falls back to the mandatory lift commands
+        (0, lift_buttons, tilt_buttons),
+    ):
+        set_node_attribute(matter_node, 1, 258, 65532, feature_map)
+        await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.attributes["supported_features"] & expected == expected
+        assert not state.attributes["supported_features"] & unexpected
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
