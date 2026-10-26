@@ -7,9 +7,9 @@ from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components.input_text import DOMAIN, MODE_TEXT
+from homeassistant.components.input_text.const import InputTextEntityStateAttribute
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.text import TextEntityCapabilityAttribute
-from homeassistant.const import ATTR_EDITABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -23,7 +23,7 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("input_text.test")
     assert state
-    assert state.attributes[ATTR_EDITABLE] is False
+    assert state.attributes[InputTextEntityStateAttribute.EDITABLE] is False
     assert state.attributes[TextEntityCapabilityAttribute.MAX] == 100
     assert state.attributes[TextEntityCapabilityAttribute.MIN] == 0
     assert state.attributes[TextEntityCapabilityAttribute.MODE] == MODE_TEXT
@@ -40,7 +40,7 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     assert len(states) >= 1
     for entity_states in states.values():
         for state in entity_states:
-            assert ATTR_EDITABLE not in state.attributes
+            assert InputTextEntityStateAttribute.EDITABLE not in state.attributes
             assert TextEntityCapabilityAttribute.MAX not in state.attributes
             assert TextEntityCapabilityAttribute.MIN not in state.attributes
             assert TextEntityCapabilityAttribute.MODE not in state.attributes
