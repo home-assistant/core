@@ -67,6 +67,31 @@ def test_sensor_uses_default_expiration(hass: HomeAssistant) -> None:
     )
 
 
+def test_sensor_name_includes_sensor_type(hass: HomeAssistant) -> None:
+    """Test a friendly name is combined with the sensor type."""
+    added_sensors: list[LaCrosseSensor] = []
+    _add_sensors(
+        hass,
+        MagicMock(),
+        "receiver_entry_id",
+        {
+            "device": "/dev/ttyUSB0",
+            "sensors": {
+                "subentry_id_humidity": {
+                    "id": 1,
+                    "type": "humidity",
+                    "friendly_name": "Test",
+                }
+            },
+        },
+        added_sensors.extend,
+    )
+
+    assert added_sensors[0].name == "Humidity"
+    assert added_sensors[0].has_entity_name
+    assert added_sensors[0].device_info["name"] == "Test"
+
+
 @pytest.mark.parametrize(
     ("config", "device_name", "object_id"),
     [

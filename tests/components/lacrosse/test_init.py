@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from serial import SerialException
 
 from homeassistant.components.lacrosse import async_remove_config_entry_device
-from homeassistant.components.lacrosse.const import DOMAIN
+from homeassistant.components.lacrosse.const import DOMAIN, sensor_entity_key
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_USER,
@@ -143,6 +143,58 @@ async def test_setup_and_unload(
         await hass.async_block_till_done()
 
     assert receiver.close.call_count == 1
+
+
+async def test_sensor_entity_id_survives_sensor_id_change_and_reload(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test subentry-based entity IDs survive a sensor ID change and reload."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA)
+    entry.add_to_hass(hass)
+    subentry = ConfigSubentry(
+        data=MappingProxyType(
+            {
+                "sensors": {
+                    "temperature": {
+                        "id": 1,
+                        "type": "temperature",
+                        "friendly_name": "Outdoor",
+                    }
+                }
+            }
+        ),
+        subentry_type="sensor",
+        title="Outdoor",
+        unique_id="1",
+    )
+    hass.config_entries.async_add_subentry(entry, subentry)
+    unique_id = (
+        f"{entry.entry_id}_{sensor_entity_key(subentry.subentry_id, 'temperature')}"
+    )
+
+    with patch("homeassistant.components.lacrosse.pylacrosse.LaCrosse"):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entity_id is not None
+        assert (
+            er.async_get_full_entity_name(hass, entity_registry.async_get(entity_id))
+            == "Outdoor Temperature"
+        )
+
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {"id": 7, "temperature": True, "humidity": False, "battery": False},
+        )
+        assert result["reason"] == "reconfigure_successful"
+        assert subentry.unique_id == "7"
+
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id).unique_id == unique_id
 
 
 async def test_yaml_import_keeps_legacy_entity_id(

@@ -2,8 +2,6 @@
 
 from enum import IntFlag
 
-from homeassistant.util import slugify
-
 DOMAIN = "lacrosse"
 
 CONF_BATTERY = "battery"
@@ -36,13 +34,11 @@ class LaCrosseSensorType(IntFlag):
 
 
 def sensor_entity_key(
-    sensor_id: int,
-    sensor_type: LaCrosseSensorType,
-    friendly_name: str | None = None,
+    subentry_id: str,
+    sensor_type: str,
 ) -> str:
     """Return the entity key for a sensor type."""
-    name = slugify(friendly_name.strip()) if friendly_name else ""
-    return f"{name or sensor_id}_{sensor_type.key}"
+    return f"{subentry_id}_{sensor_type}"
 
 
 TYPES = [sensor_type.key for sensor_type in LaCrosseSensorType]
