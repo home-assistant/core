@@ -37,7 +37,7 @@ from homeassistant.components.engie_be.const import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
@@ -273,6 +273,28 @@ def build_epex_payload_with_negative_current(
     )
 
 
+def build_epex_payload_rising_per_day(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Build a payload whose prices are one tenth of a cent higher every day."""
+    payload = build_epex_payload(start, end, granularity)
+    return EpexPayload(
+        slots=tuple(
+            EpexSlot(
+                start=slot.start,
+                end=slot.end,
+                value_eur_per_kwh=round(
+                    slot.value_eur_per_kwh + slot.start.day / 1000, 6
+                ),
+            )
+            for slot in payload.slots
+        ),
+        slot_duration=payload.slot_duration,
+    )
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
@@ -360,10 +382,12 @@ def automation_calls(service_calls: list[ServiceCall]) -> list[ServiceCall]:
     return [call for call in service_calls if call.domain == "test"]
 
 
-def engie_entity_id(
-    entity_registry: er.EntityRegistry, domain: str, unique_id: str
+def household_device_id(
+    device_registry: dr.DeviceRegistry, mock_config_entry: MockConfigEntry
 ) -> str:
-    """Return the entity id of an ENGIE entity."""
-    entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
-    assert entity_id is not None
-    return entity_id
+    """Return the device id of the household of BAN."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN), mock_config_entry.entry_id
+    )
+    assert device is not None
+    return device.id

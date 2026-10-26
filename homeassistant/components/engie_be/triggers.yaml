@@ -1,133 +1,77 @@
-.trigger_behavior: &trigger_behavior
+.device: &device
   required: true
-  default: each
   selector:
-    automation_behavior:
-      mode: trigger
+    device:
+      filter:
+        - integration: engie_be
+      multiple: true
 
-.trigger_for: &trigger_for
-  required: true
-  default: 00:00:00
+.price: &price
+  required: false
   selector:
-    duration:
-
-.target_engie_binary_sensor: &target_engie_binary_sensor
-  entity:
-    - integration: engie_be
-      domain: binary_sensor
-
-.target_engie_binary_sensor_with_diagnostics:
-  &target_engie_binary_sensor_with_diagnostics
-  entity:
-    - integration: engie_be
-      domain: binary_sensor
-  primary_entities_only: false
-
-.target_engie_sensor: &target_engie_sensor
-  entity:
-    - integration: engie_be
-      domain: sensor
-
-.epex_threshold_entity: &epex_threshold_entity
-  - integration: engie_be
-    domain: sensor
-
-.epex_threshold_number: &epex_threshold_number
-  min: -1
-  max: 5
-  mode: box
-  unit_of_measurement: EUR/kWh
+    number:
+      min: -1
+      max: 5
+      step: 0.001
+      mode: box
+      unit_of_measurement: EUR/kWh
 
 epex_hour_became_negative:
-  target: *target_engie_binary_sensor
   fields:
-    behavior: *trigger_behavior
-    for: *trigger_for
+    device_id: *device
 
 epex_hour_no_longer_negative:
-  target: *target_engie_binary_sensor
   fields:
-    behavior: *trigger_behavior
-    for: *trigger_for
+    device_id: *device
 
 epex_quarter_hour_became_negative:
-  target: *target_engie_binary_sensor
   fields:
-    behavior: *trigger_behavior
-    for: *trigger_for
+    device_id: *device
 
 epex_quarter_hour_no_longer_negative:
-  target: *target_engie_binary_sensor
   fields:
-    behavior: *trigger_behavior
-    for: *trigger_for
+    device_id: *device
 
 epex_tomorrow_prices_published:
-  target: *target_engie_binary_sensor_with_diagnostics
   fields:
-    behavior: *trigger_behavior
-    for: *trigger_for
+    device_id: *device
 
 epex_current_hour_crossed_threshold:
-  target: *target_engie_sensor
   fields:
-    behavior: *trigger_behavior
-    for: *trigger_for
-    threshold:
-      required: true
-      selector:
-        numeric_threshold:
-          entity: *epex_threshold_entity
-          mode: crossed
-          number: *epex_threshold_number
+    device_id: *device
+    above: *price
+    below: *price
 
 epex_next_hour_crossed_threshold:
-  target: *target_engie_sensor
   fields:
-    behavior: *trigger_behavior
-    for: *trigger_for
-    threshold:
-      required: true
-      selector:
-        numeric_threshold:
-          entity: *epex_threshold_entity
-          mode: crossed
-          number: *epex_threshold_number
+    device_id: *device
+    above: *price
+    below: *price
 
 epex_current_quarter_hour_crossed_threshold:
-  target: *target_engie_sensor
   fields:
-    behavior: *trigger_behavior
-    for: *trigger_for
-    threshold:
-      required: true
-      selector:
-        numeric_threshold:
-          entity: *epex_threshold_entity
-          mode: crossed
-          number: *epex_threshold_number
+    device_id: *device
+    above: *price
+    below: *price
 
 epex_next_quarter_hour_crossed_threshold:
-  target: *target_engie_sensor
   fields:
-    behavior: *trigger_behavior
-    for: *trigger_for
-    threshold:
-      required: true
-      selector:
-        numeric_threshold:
-          entity: *epex_threshold_entity
-          mode: crossed
-          number: *epex_threshold_number
+    device_id: *device
+    above: *price
+    below: *price
 
 epex_high_today_hour_updated:
-  target: *target_engie_sensor
+  fields:
+    device_id: *device
 
 epex_low_today_hour_updated:
-  target: *target_engie_sensor
+  fields:
+    device_id: *device
 
 epex_high_today_quarter_hour_updated:
-  target: *target_engie_sensor
+  fields:
+    device_id: *device
 
 epex_low_today_quarter_hour_updated:
-  target: *target_engie_sensor
+  fields:
+    device_id: *device

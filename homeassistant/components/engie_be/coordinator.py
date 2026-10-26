@@ -23,9 +23,11 @@ from aioengiebelgium import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.signal_type import SignalTypeFormat
 
 from .const import DOMAIN, EPEX_SCAN_INTERVAL, LOGGER, PRICES_SCAN_INTERVAL
 
@@ -37,6 +39,10 @@ _DIRECTION_PREFIXES = ("OFFTAKE_", "INJECTION_")
 _BLENDED_SLOT_CODE = "EN"
 
 BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
+
+SIGNAL_EPEX_UPDATED: SignalTypeFormat[EngieBeEpexCoordinator] = SignalTypeFormat(
+    f"{DOMAIN}_{{}}_epex_updated"
+)
 
 
 def mask_identifier(identifier: str) -> str:
@@ -308,6 +314,17 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
             self._listener_unsub()
             self._listener_unsub = None
         await super().async_shutdown()
+
+    @override
+    @callback
+    def async_update_listeners(self) -> None:
+        """Update all registered listeners and notify the automation triggers."""
+        super().async_update_listeners()
+        async_dispatcher_send(
+            self.hass,
+            SIGNAL_EPEX_UPDATED.format(self.config_entry.entry_id),
+            self,
+        )
 
     @override
     async def _async_setup(self) -> None:

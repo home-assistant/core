@@ -1,161 +1,330 @@
-"""Purpose-specific automation triggers for the ENGIE Belgium integration."""
+"""Automation triggers for the ENGIE Belgium integration."""
 
-from collections.abc import Mapping
-from typing import ClassVar, override
+from abc import abstractmethod
+from datetime import datetime, timedelta
+from typing import Any, override
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.automation import DomainSpec
+from aioengiebelgium import EpexGranularity
+import probatio
+
+from homeassistant.const import ATTR_DEVICE_ID, CONF_ABOVE, CONF_BELOW, CONF_OPTIONS
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, async_noop, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import (
-    ENTITY_STATE_TRIGGER_SCHEMA,
-    EntityNumericalStateCrossedThresholdTriggerBase,
-    EntityTargetStateTriggerBase,
-    EntityTriggerBase,
     Trigger,
+    TriggerActionRunner,
+    TriggerConfig,
+    TriggerNotTriggeredReporter,
 )
+from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .coordinator import (
+    BRUSSELS_TIME_ZONE,
+    SIGNAL_EPEX_UPDATED,
+    EngieBeEpexCoordinator,
+    EngieBeEpexData,
+    epex_day_available,
+)
+from .helpers import (
+    DEVICE_IDS_SCHEMA,
+    THRESHOLD_SCHEMA,
+    async_get_device_epex,
+    async_validate_device_ids,
+    epex_current_price,
+    epex_extreme_price_today,
+    epex_next_price,
+    price_in_range,
+    validate_threshold,
+)
 
 
-def _filter_by_translation_key(
-    hass: HomeAssistant, entities: set[str], translation_key: str
-) -> set[str]:
-    """Return the ENGIE entities among entities that carry the translation key."""
-    registry = er.async_get(hass)
-    return {
-        entity_id
-        for entity_id in entities
-        if (entry := registry.async_get(entity_id)) is not None
-        and entry.platform == DOMAIN
-        and entry.translation_key == translation_key
-    }
+class _EpexTrigger(Trigger):
+    """Base for triggers that watch the EPEX prices of ENGIE Belgium devices.
 
+    Each update of the EPEX coordinator, including the quarter-hour tick,
+    computes a value per device and compares it against the previous one.
+    """
 
-class _EngieBinaryTrigger(EntityTargetStateTriggerBase):
-    """Base for binary sensor edge triggers tied to one ENGIE entity."""
+    _options_schema: probatio.Schema = probatio.Schema(DEVICE_IDS_SCHEMA)
 
-    _domain_specs: Mapping[str, DomainSpec] = {BINARY_SENSOR_DOMAIN: DomainSpec()}
-    _translation_key: ClassVar[str]
+    @classmethod
+    @override
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        config = probatio.Schema(
+            {probatio.Required(CONF_OPTIONS): cls._options_schema}
+        )(config)
+        async_validate_device_ids(hass, config[CONF_OPTIONS][ATTR_DEVICE_ID])
+        return config
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the trigger."""
+        super().__init__(hass, config)
+        assert config.options is not None
+        self._options: dict[str, Any] = config.options
+        self._device_ids: list[str] = config.options[ATTR_DEVICE_ID]
+
+    @abstractmethod
+    def _value(self, data: EngieBeEpexData, now: datetime) -> Any:
+        """Return the value to compare between two updates."""
+
+    @abstractmethod
+    def _fires(self, previous: Any, current: Any) -> bool:
+        """Return True when the change from previous to current fires."""
+
+    def _device_value(self, device_id: str) -> Any:
+        """Return the value for one device, or UNDEFINED when it is not known."""
+        epex = async_get_device_epex(self._hass, device_id)
+        if epex is None or not epex.last_update_success:
+            return UNDEFINED
+        return self._value(epex.data, dt_util.utcnow())
 
     @override
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Restrict the targets to the ENGIE entity of this trigger."""
-        candidates = super().entity_filter(entities)
-        return _filter_by_translation_key(self._hass, candidates, self._translation_key)
+    async def async_attach_runner(
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to an action runner."""
+        unsubscribes: list[CALLBACK_TYPE] = []
+        for device_id in self._device_ids:
+            device, entry = dr.async_get_device_and_config_entry_for_domain(
+                self._hass, device_id, domain=DOMAIN
+            )
+            if device is None or entry is None:
+                continue
+            unsubscribes.append(
+                self._async_track_device(device_id, device, entry.entry_id, run_action)
+            )
+
+        @callback
+        def async_remove() -> None:
+            """Stop tracking the devices."""
+            for unsubscribe in unsubscribes:
+                unsubscribe()
+
+        return async_remove
+
+    @callback
+    def _async_track_device(
+        self,
+        device_id: str,
+        device: dr.AnyDeviceEntry,
+        entry_id: str,
+        run_action: TriggerActionRunner,
+    ) -> CALLBACK_TYPE:
+        """Track the EPEX prices for a single device."""
+        description = f"EPEX prices changed for {device.name_by_user or device.name}"
+        tracked_coordinator: EngieBeEpexCoordinator | None = None
+        remove_coordinator_listener: CALLBACK_TYPE | None = None
+        previous: Any = UNDEFINED
+
+        @callback
+        def async_track_coordinator(coordinator: EngieBeEpexCoordinator) -> None:
+            """Keep the EPEX coordinator polling while the trigger is attached."""
+            nonlocal tracked_coordinator, remove_coordinator_listener
+            if remove_coordinator_listener is not None:
+                remove_coordinator_listener()
+            tracked_coordinator = coordinator
+            remove_coordinator_listener = coordinator.async_add_listener(async_noop)
+
+        if (epex := async_get_device_epex(self._hass, device_id)) is not None:
+            async_track_coordinator(epex)
+            previous = self._device_value(device_id)
+
+        @callback
+        def async_epex_updated(coordinator: EngieBeEpexCoordinator) -> None:
+            """Compare the device value against the previous update."""
+            nonlocal previous
+            if coordinator is not tracked_coordinator:
+                async_track_coordinator(coordinator)
+                previous = UNDEFINED
+
+            current = self._device_value(device_id)
+            if (
+                previous is not UNDEFINED
+                and current is not UNDEFINED
+                and self._fires(previous, current)
+            ):
+                run_action({ATTR_DEVICE_ID: device_id}, description)
+            previous = current
+
+        remove_dispatcher = async_dispatcher_connect(
+            self._hass, SIGNAL_EPEX_UPDATED.format(entry_id), async_epex_updated
+        )
+
+        @callback
+        def async_remove() -> None:
+            """Stop tracking the device."""
+            remove_dispatcher()
+            if remove_coordinator_listener is not None:
+                remove_coordinator_listener()
+
+        return async_remove
 
 
-class _EngieSensorTrigger(EntityTriggerBase):
-    """Base for sensor value triggers tied to one ENGIE entity."""
-
-    _domain_specs: Mapping[str, DomainSpec] = {SENSOR_DOMAIN: DomainSpec()}
-    _schema = ENTITY_STATE_TRIGGER_SCHEMA
-    _translation_key: ClassVar[str]
+class _EpexBecameTrueTrigger(_EpexTrigger):
+    """Base for triggers that fire when a check goes from false to true."""
 
     @override
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Restrict the targets to the ENGIE entity of this trigger."""
-        candidates = super().entity_filter(entities)
-        return _filter_by_translation_key(self._hass, candidates, self._translation_key)
+    def _fires(self, previous: bool | None, current: bool | None) -> bool:
+        """Return True on the change from false to true."""
+        return previous is False and current is True
 
 
-class _EngieThresholdTrigger(EntityNumericalStateCrossedThresholdTriggerBase):
-    """Base for threshold triggers tied to one ENGIE sensor."""
+class _EpexNegativeTrigger(_EpexBecameTrueTrigger):
+    """Base for triggers on the sign of the current EPEX price."""
 
-    _domain_specs: Mapping[str, DomainSpec] = {SENSOR_DOMAIN: DomainSpec()}
-    _translation_key: ClassVar[str]
+    _granularity: EpexGranularity
+    _negative: bool
 
     @override
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Restrict the targets to the ENGIE entity of this trigger."""
-        candidates = super().entity_filter(entities)
-        return _filter_by_translation_key(self._hass, candidates, self._translation_key)
+    def _value(self, data: EngieBeEpexData, now: datetime) -> bool | None:
+        """Return whether the current price has the watched sign."""
+        price = epex_current_price(data, self._granularity, now)
+        if price is None:
+            return None
+        return (price < 0) is self._negative
 
 
-class EpexHourBecameNegativeTrigger(_EngieBinaryTrigger):
+class EpexHourBecameNegativeTrigger(_EpexNegativeTrigger):
     """Trigger that fires when the hourly EPEX price becomes negative."""
 
-    _translation_key = "epex_negative"
-    _to_states = {STATE_ON}
+    _granularity = EpexGranularity.HOURLY
+    _negative = True
 
 
-class EpexHourNoLongerNegativeTrigger(_EngieBinaryTrigger):
+class EpexHourNoLongerNegativeTrigger(_EpexNegativeTrigger):
     """Trigger that fires when the hourly EPEX price is no longer negative."""
 
-    _translation_key = "epex_negative"
-    _to_states = {STATE_OFF}
+    _granularity = EpexGranularity.HOURLY
+    _negative = False
 
 
-class EpexQuarterHourBecameNegativeTrigger(_EngieBinaryTrigger):
+class EpexQuarterHourBecameNegativeTrigger(_EpexNegativeTrigger):
     """Trigger that fires when the quarter-hourly EPEX price becomes negative."""
 
-    _translation_key = "epex_negative_quarter_hour"
-    _to_states = {STATE_ON}
+    _granularity = EpexGranularity.QUARTER_HOURLY
+    _negative = True
 
 
-class EpexQuarterHourNoLongerNegativeTrigger(_EngieBinaryTrigger):
+class EpexQuarterHourNoLongerNegativeTrigger(_EpexNegativeTrigger):
     """Trigger that fires when the quarter-hourly EPEX price is no longer negative."""
 
-    _translation_key = "epex_negative_quarter_hour"
-    _to_states = {STATE_OFF}
+    _granularity = EpexGranularity.QUARTER_HOURLY
+    _negative = False
 
 
-class EpexTomorrowPricesPublishedTrigger(_EngieBinaryTrigger):
-    """Trigger that fires when tomorrow's EPEX prices become available."""
+class EpexTomorrowPricesPublishedTrigger(_EpexBecameTrueTrigger):
+    """Trigger that fires when the EPEX prices of tomorrow become available."""
 
-    _translation_key = "epex_tomorrow_available"
-    _to_states = {STATE_ON}
-    _primary_entities_only = False
-
-
-class EpexHighTodayHourUpdatedTrigger(_EngieSensorTrigger):
-    """Trigger that fires when the highest hourly EPEX price of today changes."""
-
-    _translation_key = "epex_high_today_hour"
+    @override
+    def _value(self, data: EngieBeEpexData, now: datetime) -> bool:
+        """Return whether both granularities cover tomorrow."""
+        tomorrow = now.astimezone(BRUSSELS_TIME_ZONE).date() + timedelta(days=1)
+        return epex_day_available(data, tomorrow)
 
 
-class EpexLowTodayHourUpdatedTrigger(_EngieSensorTrigger):
-    """Trigger that fires when the lowest hourly EPEX price of today changes."""
+class _EpexCrossedThresholdTrigger(_EpexBecameTrueTrigger):
+    """Base for triggers that fire when an EPEX price enters a range."""
 
-    _translation_key = "epex_low_today_hour"
+    _options_schema = probatio.Schema(
+        probatio.All({**DEVICE_IDS_SCHEMA, **THRESHOLD_SCHEMA}, validate_threshold)
+    )
+    _granularity: EpexGranularity
+    _next: bool
+
+    @override
+    def _value(self, data: EngieBeEpexData, now: datetime) -> bool | None:
+        """Return whether the watched price is inside the range."""
+        price = (epex_next_price if self._next else epex_current_price)(
+            data, self._granularity, now
+        )
+        if price is None:
+            return None
+        return price_in_range(
+            price, self._options.get(CONF_ABOVE), self._options.get(CONF_BELOW)
+        )
 
 
-class EpexHighTodayQuarterHourUpdatedTrigger(_EngieSensorTrigger):
-    """Trigger that fires when the highest quarter-hourly EPEX price of today changes."""
-
-    _translation_key = "epex_high_today_quarter_hour"
-
-
-class EpexLowTodayQuarterHourUpdatedTrigger(_EngieSensorTrigger):
-    """Trigger that fires when the lowest quarter-hourly EPEX price of today changes."""
-
-    _translation_key = "epex_low_today_quarter_hour"
-
-
-class EpexCurrentHourCrossedThresholdTrigger(_EngieThresholdTrigger):
+class EpexCurrentHourCrossedThresholdTrigger(_EpexCrossedThresholdTrigger):
     """Trigger that fires when the current hourly EPEX price crosses a threshold."""
 
-    _translation_key = "epex_current_hour"
+    _granularity = EpexGranularity.HOURLY
+    _next = False
 
 
-class EpexNextHourCrossedThresholdTrigger(_EngieThresholdTrigger):
+class EpexNextHourCrossedThresholdTrigger(_EpexCrossedThresholdTrigger):
     """Trigger that fires when the next hourly EPEX price crosses a threshold."""
 
-    _translation_key = "epex_next_hour"
+    _granularity = EpexGranularity.HOURLY
+    _next = True
 
 
-class EpexCurrentQuarterHourCrossedThresholdTrigger(_EngieThresholdTrigger):
+class EpexCurrentQuarterHourCrossedThresholdTrigger(_EpexCrossedThresholdTrigger):
     """Trigger that fires when the current quarter-hourly EPEX price crosses a threshold."""
 
-    _translation_key = "epex_current_quarter_hour"
+    _granularity = EpexGranularity.QUARTER_HOURLY
+    _next = False
 
 
-class EpexNextQuarterHourCrossedThresholdTrigger(_EngieThresholdTrigger):
+class EpexNextQuarterHourCrossedThresholdTrigger(_EpexCrossedThresholdTrigger):
     """Trigger that fires when the next quarter-hourly EPEX price crosses a threshold."""
 
-    _translation_key = "epex_next_quarter_hour"
+    _granularity = EpexGranularity.QUARTER_HOURLY
+    _next = True
+
+
+class _EpexExtremeUpdatedTrigger(_EpexTrigger):
+    """Base for triggers that fire when the lowest or highest price of today changes."""
+
+    _granularity: EpexGranularity
+    _highest: bool
+
+    @override
+    def _value(self, data: EngieBeEpexData, now: datetime) -> float | None:
+        """Return the lowest or highest price of today."""
+        return epex_extreme_price_today(
+            data, self._granularity, now, max if self._highest else min
+        )
+
+    @override
+    def _fires(self, previous: float | None, current: float | None) -> bool:
+        """Return True when a known price changes to another known price."""
+        return previous is not None and current is not None and previous != current
+
+
+class EpexHighTodayHourUpdatedTrigger(_EpexExtremeUpdatedTrigger):
+    """Trigger that fires when the highest hourly EPEX price of today changes."""
+
+    _granularity = EpexGranularity.HOURLY
+    _highest = True
+
+
+class EpexLowTodayHourUpdatedTrigger(_EpexExtremeUpdatedTrigger):
+    """Trigger that fires when the lowest hourly EPEX price of today changes."""
+
+    _granularity = EpexGranularity.HOURLY
+    _highest = False
+
+
+class EpexHighTodayQuarterHourUpdatedTrigger(_EpexExtremeUpdatedTrigger):
+    """Trigger that fires when the highest quarter-hourly EPEX price of today changes."""
+
+    _granularity = EpexGranularity.QUARTER_HOURLY
+    _highest = True
+
+
+class EpexLowTodayQuarterHourUpdatedTrigger(_EpexExtremeUpdatedTrigger):
+    """Trigger that fires when the lowest quarter-hourly EPEX price of today changes."""
+
+    _granularity = EpexGranularity.QUARTER_HOURLY
+    _highest = False
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
@@ -180,5 +349,5 @@ TRIGGERS: dict[str, type[Trigger]] = {
 
 
 async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
-    """Return the purpose-specific triggers for the ENGIE Belgium integration."""
+    """Return the triggers for the ENGIE Belgium integration."""
     return TRIGGERS

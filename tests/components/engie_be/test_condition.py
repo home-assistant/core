@@ -1,42 +1,53 @@
 """Test the ENGIE Belgium conditions."""
 
+from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock
 
+from aioengiebelgium import EnergyContractsResponse
+from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.components.common import (
-    TargetSupport,
-    assert_condition_options_supported,
-    assert_conditions_target_support,
-)
 
 from homeassistant.components import automation
-from homeassistant.components.engie_be.condition import CONDITIONS
+from homeassistant.components.engie_be.condition import (
+    EpexHourPriceIsNegativeCondition,
+    EpexHourPriceMeetsThresholdCondition,
+)
 from homeassistant.components.engie_be.const import DOMAIN
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import BAN, automation_calls, engie_entity_id, setup_dynamic_entry
-
-_BELOW_THRESHOLD_OPTIONS = {"threshold": {"type": "below", "value": {"number": 0.1}}}
-
-_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = dict.fromkeys(
-    CONDITIONS, TargetSupport.STANDARD
+from .conftest import (
+    BAN,
+    BAN_2,
+    BRUSSELS_TIME_ZONE,
+    automation_calls,
+    build_contracts,
+    build_epex_payload_with_negative_current,
+    build_relations,
+    household_device_id,
+    setup_dynamic_entry,
+    setup_entry,
 )
 
 
-def test_condition_target_support() -> None:
-    """Certify the condition registry matches its declared target support."""
-    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
+def _brussels(hour: int, minute: int) -> datetime:
+    """Return a Brussels moment on the frozen Saturday."""
+    return datetime(2026, 10, 3, hour, minute, tzinfo=BRUSSELS_TIME_ZONE)
 
 
-async def _async_setup_condition_automation(
-    hass: HomeAssistant, condition_config: dict[str, Any]
-) -> None:
-    """Set up an automation gated by one ENGIE Belgium condition."""
+async def _async_condition_passes(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    condition_key: str,
+    options: dict[str, Any],
+) -> bool:
+    """Run an automation gated by one ENGIE Belgium condition."""
+    hass.states.async_set("input_boolean.test", STATE_OFF)
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -45,251 +56,200 @@ async def _async_setup_condition_automation(
                 "trigger": {
                     "trigger": "state",
                     "entity_id": "input_boolean.test",
-                    "to": "on",
+                    "to": STATE_ON,
                 },
-                "condition": condition_config,
+                "condition": {
+                    "condition": f"{DOMAIN}.{condition_key}",
+                    "options": options,
+                },
                 "action": {"action": "test.automation"},
             }
         },
     )
     await hass.async_block_till_done()
+    hass.states.async_set("input_boolean.test", STATE_ON)
+    await hass.async_block_till_done()
+    return len(automation_calls(service_calls)) == 1
 
 
 @pytest.mark.parametrize(
-    ("condition", "base_options"),
+    ("condition_key", "minute", "expected"),
     [
-        pytest.param(f"{DOMAIN}.epex_hour_price_is_negative", {}, id="hour_negative"),
+        pytest.param("epex_hour_price_is_negative", 0, True, id="hour_negative"),
+        pytest.param("epex_hour_price_is_negative", 30, True, id="hour_still"),
         pytest.param(
-            f"{DOMAIN}.epex_quarter_hour_price_is_negative",
-            {},
-            id="quarter_hour_negative",
+            "epex_quarter_hour_price_is_negative", 0, True, id="quarter_negative"
         ),
         pytest.param(
-            f"{DOMAIN}.epex_hour_price_meets_threshold",
-            _BELOW_THRESHOLD_OPTIONS,
-            id="hour_meets_threshold",
-        ),
-        pytest.param(
-            f"{DOMAIN}.epex_quarter_hour_price_meets_threshold",
-            _BELOW_THRESHOLD_OPTIONS,
-            id="quarter_hour_meets_threshold",
-        ),
-    ],
-)
-async def test_condition_options_validation(
-    hass: HomeAssistant, condition: str, base_options: dict[str, Any] | None
-) -> None:
-    """Test that each condition accepts the options its schema supports."""
-    await assert_condition_options_supported(
-        hass, condition, base_options, supports_behavior=True, supports_duration=True
-    )
-
-
-@pytest.mark.parametrize(
-    ("condition_key", "unique_id", "other_unique_id"),
-    [
-        pytest.param(
-            "epex_hour_price_is_negative",
-            f"{BAN}_epex_negative",
-            f"{BAN}_epex_negative_quarter_hour",
-            id="hour",
-        ),
-        pytest.param(
-            "epex_quarter_hour_price_is_negative",
-            f"{BAN}_epex_negative_quarter_hour",
-            f"{BAN}_epex_negative",
-            id="quarter_hour",
+            "epex_quarter_hour_price_is_negative", 30, False, id="quarter_positive"
         ),
     ],
 )
 async def test_negative_condition(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
-    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
     condition_key: str,
-    unique_id: str,
-    other_unique_id: str,
+    minute: int,
+    expected: bool,
 ) -> None:
-    """Test the negative conditions pass only for their own entity."""
-    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = engie_entity_id(entity_registry, "binary_sensor", unique_id)
-    other_entity_id = engie_entity_id(entity_registry, "binary_sensor", other_unique_id)
-    hass.states.async_set("input_boolean.test", "off")
-    await _async_setup_condition_automation(
-        hass,
-        {
-            "condition": f"{DOMAIN}.{condition_key}",
-            "target": {"entity_id": entity_id},
-        },
+    """Test the negative conditions follow the price of their granularity."""
+    freezer.move_to(_brussels(14, minute))
+    mock_engie_client.return_value.async_get_epex_prices.side_effect = (
+        build_epex_payload_with_negative_current
     )
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    device_id = household_device_id(device_registry, mock_config_entry)
 
-    hass.states.async_set(entity_id, "off")
-    hass.states.async_set(other_entity_id, "on")
-    await hass.async_block_till_done()
-    hass.states.async_set("input_boolean.test", "on")
-    await hass.async_block_till_done()
-    assert len(automation_calls(service_calls)) == 0
-
-    hass.states.async_set("input_boolean.test", "off")
-    hass.states.async_set(entity_id, "on")
-    await hass.async_block_till_done()
-    hass.states.async_set("input_boolean.test", "on")
-    await hass.async_block_till_done()
-    assert len(automation_calls(service_calls)) == 1
+    assert (
+        await _async_condition_passes(
+            hass, service_calls, condition_key, {"device_id": device_id}
+        )
+        is expected
+    )
 
 
 @pytest.mark.parametrize(
-    (
-        "condition_key",
-        "unique_id",
-        "other_unique_id",
-        "threshold",
-        "passing_value",
-        "failing_value",
-    ),
+    ("condition_key", "options", "expected"),
     [
         pytest.param(
-            "epex_hour_price_meets_threshold",
-            f"{BAN}_epex_current_hour",
-            f"{BAN}_epex_next_hour",
-            {"type": "below", "value": {"number": 0.1}},
-            "0.05",
-            "0.15",
-            id="hour_below",
+            "epex_hour_price_meets_threshold", {"above": 0.14}, True, id="above"
         ),
         pytest.param(
-            "epex_hour_price_meets_threshold",
-            f"{BAN}_epex_current_hour",
-            f"{BAN}_epex_next_hour",
-            {"type": "above", "value": {"number": 0.1}},
-            "0.15",
-            "0.05",
-            id="hour_above",
+            "epex_hour_price_meets_threshold", {"below": 0.14}, False, id="not_below"
         ),
         pytest.param(
             "epex_quarter_hour_price_meets_threshold",
-            f"{BAN}_epex_current_quarter_hour",
-            f"{BAN}_epex_next_quarter_hour",
-            {"type": "below", "value": {"number": 0.1}},
-            "0.05",
-            "0.15",
-            id="quarter_hour_below",
+            {"above": 0.155, "below": 0.16},
+            True,
+            id="range",
         ),
         pytest.param(
             "epex_quarter_hour_price_meets_threshold",
-            f"{BAN}_epex_current_quarter_hour",
-            f"{BAN}_epex_next_quarter_hour",
-            {"type": "above", "value": {"number": 0.1}},
-            "0.15",
-            "0.05",
-            id="quarter_hour_above",
+            {"above": 0.16},
+            False,
+            id="not_above",
         ),
     ],
 )
 async def test_threshold_condition(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
-    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
     condition_key: str,
-    unique_id: str,
-    other_unique_id: str,
-    threshold: dict[str, Any],
-    passing_value: str,
-    failing_value: str,
+    options: dict[str, float],
+    expected: bool,
 ) -> None:
-    """Test the threshold conditions pass only for their own entity."""
+    """Test the threshold conditions compare the current price with the range."""
+    freezer.move_to(_brussels(14, 45))
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = engie_entity_id(entity_registry, "sensor", unique_id)
-    other_entity_id = engie_entity_id(entity_registry, "sensor", other_unique_id)
-    hass.states.async_set("input_boolean.test", "off")
-    await _async_setup_condition_automation(
-        hass,
-        {
-            "condition": f"{DOMAIN}.{condition_key}",
-            "target": {"entity_id": entity_id},
-            "options": {"threshold": threshold},
-        },
+    device_id = household_device_id(device_registry, mock_config_entry)
+
+    assert (
+        await _async_condition_passes(
+            hass, service_calls, condition_key, {"device_id": device_id, **options}
+        )
+        is expected
     )
-
-    hass.states.async_set(entity_id, failing_value)
-    hass.states.async_set(other_entity_id, passing_value)
-    await hass.async_block_till_done()
-    hass.states.async_set("input_boolean.test", "on")
-    await hass.async_block_till_done()
-    assert len(automation_calls(service_calls)) == 0
-
-    hass.states.async_set("input_boolean.test", "off")
-    hass.states.async_set(entity_id, passing_value)
-    await hass.async_block_till_done()
-    hass.states.async_set("input_boolean.test", "on")
-    await hass.async_block_till_done()
-    assert len(automation_calls(service_calls)) == 1
 
 
 @pytest.mark.parametrize(
-    (
-        "condition_key",
-        "domain",
-        "unique_id",
-        "own_unique_id",
-        "options",
-        "passing_state",
-    ),
+    ("ban", "expected"),
     [
-        pytest.param(
-            "epex_hour_price_meets_threshold",
-            "sensor",
-            f"{BAN}_epex_next_hour",
-            f"{BAN}_epex_current_hour",
-            _BELOW_THRESHOLD_OPTIONS,
-            "0.05",
-            id="hour_threshold_targeting_next_hour",
-        ),
-        pytest.param(
-            "epex_hour_price_is_negative",
-            "binary_sensor",
-            f"{BAN}_epex_negative_quarter_hour",
-            f"{BAN}_epex_negative",
-            {},
-            STATE_ON,
-            id="hour_negative_targeting_quarter_hour",
-        ),
+        pytest.param(BAN, True, id="dynamic"),
+        pytest.param(BAN_2, False, id="fixed"),
     ],
 )
-async def test_condition_ignores_mismatched_target(
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_condition_per_household_tariff(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
-    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
-    condition_key: str,
-    domain: str,
-    unique_id: str,
-    own_unique_id: str,
-    options: dict[str, Any],
-    passing_state: str,
+    ban: str,
+    expected: bool,
 ) -> None:
-    """Test that a condition targeting an entity of another kind never passes."""
-    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = engie_entity_id(entity_registry, domain, unique_id)
-    own_entity_id = engie_entity_id(entity_registry, domain, own_unique_id)
-    hass.states.async_set("input_boolean.test", "off")
-    await _async_setup_condition_automation(
-        hass,
-        {
-            "condition": f"{DOMAIN}.{condition_key}",
-            "target": {"entity_id": entity_id},
-            "options": options,
-        },
+    """Test the conditions only pass for a household with a dynamic tariff."""
+    mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
+        build_relations(BAN, BAN_2)
     )
 
-    hass.states.async_set(entity_id, passing_state)
-    hass.states.async_set(own_entity_id, passing_state)
-    await hass.async_block_till_done()
-    hass.states.async_set("input_boolean.test", "on")
-    await hass.async_block_till_done()
-    assert len(automation_calls(service_calls)) == 0
+    def _contracts(queried_ban: str) -> EnergyContractsResponse:
+        return build_contracts(dynamic=queried_ban == BAN)
+
+    mock_engie_client.return_value.async_get_energy_contracts.side_effect = _contracts
+    await setup_entry(hass, mock_config_entry)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ban), mock_config_entry.entry_id
+    )
+    assert device is not None
+
+    assert (
+        await _async_condition_passes(
+            hass,
+            service_calls,
+            "epex_hour_price_meets_threshold",
+            {"device_id": device.id, "above": -1},
+        )
+        is expected
+    )
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_condition_without_dynamic_tariff(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test the conditions fail for a household with a fixed tariff."""
+    await setup_entry(hass, mock_config_entry)
+    device_id = household_device_id(device_registry, mock_config_entry)
+
+    assert not await _async_condition_passes(
+        hass,
+        service_calls,
+        "epex_hour_price_meets_threshold",
+        {"device_id": device_id, "above": -1},
+    )
+
+
+async def test_condition_invalid_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test the conditions only accept ENGIE Belgium devices."""
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, identifiers={("other", "device")}
+    )
+
+    for device_id in ("missing", other_device.id):
+        with pytest.raises(probatio.Invalid, match="is not an ENGIE Belgium device"):
+            await EpexHourPriceIsNegativeCondition.async_validate_complete_config(
+                hass,
+                {
+                    "condition": f"{DOMAIN}.epex_hour_price_is_negative",
+                    "options": {"device_id": device_id},
+                },
+            )
+
+
+async def test_condition_invalid_threshold(hass: HomeAssistant) -> None:
+    """Test the threshold conditions require at least one bound."""
+    with pytest.raises(probatio.Invalid, match="Set above, below or both"):
+        await EpexHourPriceMeetsThresholdCondition.async_validate_complete_config(
+            hass,
+            {
+                "condition": f"{DOMAIN}.epex_hour_price_meets_threshold",
+                "options": {"device_id": "device"},
+            },
+        )

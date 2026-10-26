@@ -1,86 +1,127 @@
-"""Purpose-specific automation conditions for the ENGIE Belgium integration."""
+"""Automation conditions for the ENGIE Belgium integration."""
 
-from collections.abc import Mapping
-from typing import ClassVar, override
+from abc import abstractmethod
+from datetime import datetime
+from typing import Any, Unpack, override
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_ON
+from aioengiebelgium import EpexGranularity
+import probatio
+
+from homeassistant.const import ATTR_DEVICE_ID, CONF_ABOVE, CONF_BELOW, CONF_OPTIONS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     Condition,
-    EntityNumericalConditionBase,
-    EntityStateConditionBase,
+    ConditionCheckParams,
+    ConditionConfig,
+)
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
+
+from .helpers import (
+    DEVICE_IDS_SCHEMA,
+    THRESHOLD_SCHEMA,
+    async_get_device_epex,
+    async_validate_device_ids,
+    epex_current_price,
+    price_in_range,
+    validate_threshold,
 )
 
-from .const import DOMAIN
 
+class _EpexCondition(Condition):
+    """Base for conditions on the current EPEX price of ENGIE Belgium devices.
 
-def _filter_by_translation_key(
-    hass: HomeAssistant, entities: set[str], translation_key: str
-) -> set[str]:
-    """Return the ENGIE entities among entities that carry the translation key."""
-    registry = er.async_get(hass)
-    return {
-        entity_id
-        for entity_id in entities
-        if (entry := registry.async_get(entity_id)) is not None
-        and entry.platform == DOMAIN
-        and entry.translation_key == translation_key
-    }
+    The condition passes when every selected device has a dynamic tariff,
+    known EPEX prices and a current price that passes the check.
+    """
 
+    _options_schema: probatio.Schema = probatio.Schema(DEVICE_IDS_SCHEMA)
+    _granularity: EpexGranularity
 
-class _EngieBinaryCondition(EntityStateConditionBase):
-    """Base for binary sensor conditions tied to one ENGIE entity."""
+    @classmethod
+    @override
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        config = probatio.Schema(
+            {probatio.Required(CONF_OPTIONS): cls._options_schema}
+        )(config)
+        async_validate_device_ids(hass, config[CONF_OPTIONS][ATTR_DEVICE_ID])
+        return config
 
-    _domain_specs: Mapping[str, DomainSpec] = {BINARY_SENSOR_DOMAIN: DomainSpec()}
-    _states = {STATE_ON}
-    _translation_key: ClassVar[str]
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the condition."""
+        super().__init__(hass, config)
+        assert config.options is not None
+        self._options: dict[str, Any] = config.options
+        self._device_ids: list[str] = config.options[ATTR_DEVICE_ID]
+
+    @abstractmethod
+    def _check_price(self, price: float) -> bool:
+        """Return True when the current price passes the check."""
+
+    def _check_device(self, device_id: str, now: datetime) -> bool:
+        """Return True when the current price of one device passes the check."""
+        epex = async_get_device_epex(self._hass, device_id)
+        if epex is None or not epex.last_update_success:
+            return False
+        price = epex_current_price(epex.data, self._granularity, now)
+        return price is not None and self._check_price(price)
 
     @override
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Restrict the targets to the ENGIE entity of this condition."""
-        candidates = super().entity_filter(entities)
-        return _filter_by_translation_key(self._hass, candidates, self._translation_key)
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        now = dt_util.utcnow()
+        return all(self._check_device(device_id, now) for device_id in self._device_ids)
 
 
-class _EngieSensorCondition(EntityNumericalConditionBase):
-    """Base for numerical threshold conditions tied to one ENGIE sensor."""
-
-    _domain_specs: Mapping[str, DomainSpec] = {SENSOR_DOMAIN: DomainSpec()}
-    _translation_key: ClassVar[str]
+class _EpexNegativeCondition(_EpexCondition):
+    """Base for conditions that pass while the current EPEX price is negative."""
 
     @override
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Restrict the targets to the ENGIE entity of this condition."""
-        candidates = super().entity_filter(entities)
-        return _filter_by_translation_key(self._hass, candidates, self._translation_key)
+    def _check_price(self, price: float) -> bool:
+        """Return True when the price is negative."""
+        return price < 0
 
 
-class EpexHourPriceIsNegativeCondition(_EngieBinaryCondition):
-    """Condition that is true while the hourly EPEX price is negative."""
+class _EpexThresholdCondition(_EpexCondition):
+    """Base for conditions that pass while the current EPEX price is in a range."""
 
-    _translation_key = "epex_negative"
+    _options_schema = probatio.Schema(
+        probatio.All({**DEVICE_IDS_SCHEMA, **THRESHOLD_SCHEMA}, validate_threshold)
+    )
 
-
-class EpexQuarterHourPriceIsNegativeCondition(_EngieBinaryCondition):
-    """Condition that is true while the quarter-hourly EPEX price is negative."""
-
-    _translation_key = "epex_negative_quarter_hour"
-
-
-class EpexHourPriceMeetsThresholdCondition(_EngieSensorCondition):
-    """Condition that compares the current hourly EPEX price against a threshold."""
-
-    _translation_key = "epex_current_hour"
+    @override
+    def _check_price(self, price: float) -> bool:
+        """Return True when the price is inside the range."""
+        return price_in_range(
+            price, self._options.get(CONF_ABOVE), self._options.get(CONF_BELOW)
+        )
 
 
-class EpexQuarterHourPriceMeetsThresholdCondition(_EngieSensorCondition):
-    """Condition that compares the current quarter-hourly EPEX price against a threshold."""
+class EpexHourPriceIsNegativeCondition(_EpexNegativeCondition):
+    """Condition that passes while the hourly EPEX price is negative."""
 
-    _translation_key = "epex_current_quarter_hour"
+    _granularity = EpexGranularity.HOURLY
+
+
+class EpexQuarterHourPriceIsNegativeCondition(_EpexNegativeCondition):
+    """Condition that passes while the quarter-hourly EPEX price is negative."""
+
+    _granularity = EpexGranularity.QUARTER_HOURLY
+
+
+class EpexHourPriceMeetsThresholdCondition(_EpexThresholdCondition):
+    """Condition that passes while the hourly EPEX price is in a range."""
+
+    _granularity = EpexGranularity.HOURLY
+
+
+class EpexQuarterHourPriceMeetsThresholdCondition(_EpexThresholdCondition):
+    """Condition that passes while the quarter-hourly EPEX price is in a range."""
+
+    _granularity = EpexGranularity.QUARTER_HOURLY
 
 
 CONDITIONS: dict[str, type[Condition]] = {
@@ -94,5 +135,5 @@ CONDITIONS: dict[str, type[Condition]] = {
 
 
 async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
-    """Return the purpose-specific conditions for the ENGIE Belgium integration."""
+    """Return the conditions for the ENGIE Belgium integration."""
     return CONDITIONS
