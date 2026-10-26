@@ -211,7 +211,7 @@ class VisonicCloudConnection(VisonicConnection):
         """Get code code."""
         if self.cloud_alarm is not None:
             if not code or (
-                PIN_REGEX.match(code) and code == self.cloud_alarm.get_user_code()
+                PIN_REGEX.fullmatch(code) and code == self.cloud_alarm.get_user_code()
             ):
                 return True, self.cloud_alarm.get_user_code()
         return False, None

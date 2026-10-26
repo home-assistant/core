@@ -242,12 +242,23 @@ async def test_async_panel_stop(
     coordinator._client.async_panel_stop.assert_awaited_once_with()
 
 
-async def test_send_command_invalid_pin(coordinator: VisonicDirectConnection) -> None:
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param("bad", id="not-digits"),
+        pytest.param("1234\n", id="trailing-newline"),
+        pytest.param("1234 ", id="trailing-space"),
+    ],
+)
+async def test_send_command_invalid_pin(
+    coordinator: VisonicDirectConnection, code: str
+) -> None:
     """Reject a malformed direct panel PIN."""
     coordinator._client = MagicMock()
     coordinator._client.is_panel_connected.return_value = False
-    result = await coordinator.send_command(AlarmPanelCommand.ARM_AWAY, "bad")
+    result = await coordinator.send_command(AlarmPanelCommand.ARM_AWAY, code)
     assert result.status is AlarmCommandStatus.FAIL_INVALID_CODE
+    coordinator._client.send_command.assert_not_called()
 
 
 @pytest.mark.parametrize(

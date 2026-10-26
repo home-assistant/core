@@ -161,7 +161,7 @@ class VisonicDirectConnection(VisonicConnection):
     def get_panel_pin_code(self, code: str | None) -> tuple[bool, str | None]:
         """Get code."""
         if code:
-            if isinstance(code, str) and PIN_REGEX.match(code):
+            if isinstance(code, str) and PIN_REGEX.fullmatch(code):
                 return True, code
             return False, None
         if self._client.achieved_powerlink():

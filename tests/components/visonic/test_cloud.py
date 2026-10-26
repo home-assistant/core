@@ -1255,23 +1255,23 @@ async def test_wait_for_process_status_unknown_result(
     assert result == AlarmCommandStatus.FAIL_INVALID_RETURN
 
 
-@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param("9999", id="wrong-code"),
+        pytest.param("bad", id="not-digits"),
+        pytest.param("1234\n", id="trailing-newline"),
+        pytest.param("1234 ", id="trailing-space"),
+    ],
+)
 async def test_send_command_invalid_code(
-    setup_cloud_integration: SetupIntegration,
+    cloud: VisonicCloudConnection, code: str
 ) -> None:
     """Invalid PIN prevents a command."""
-    ok, entry = await setup_cloud_integration()
-    assert ok
-    coordinator: VisonicCloudConnection = entry.runtime_data.coordinator.connection
+    result = await cloud.send_command(command=AlarmPanelCommand.ARM_AWAY, code=code)
 
-    coordinator.cloud_alarm = MagicMock()
-    coordinator.get_panel_pin_code = MagicMock(return_value=(False, None))
-
-    result = await coordinator.send_command(
-        command=AlarmPanelCommand.ARM_AWAY, code="9999"
-    )
-
-    assert result.status == AlarmCommandStatus.FAIL_INVALID_CODE
+    assert result.status is AlarmCommandStatus.FAIL_INVALID_CODE
+    cloud.cloud_alarm.arm_away.assert_not_awaited()
 
 
 @pytest.mark.asyncio

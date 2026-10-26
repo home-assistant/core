@@ -120,7 +120,7 @@ rules:
   test-coverage:
     status: done
     comment: >
-      All 542 tests pass with 98.19 percent combined statement and branch
+      All 547 tests pass with 98.19 percent combined statement and branch
       coverage. Config-flow statement coverage is 100 percent and branch
       coverage is 98.81 percent.
 
