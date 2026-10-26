@@ -1,4 +1,4 @@
-"""Config flow for the Open Thread Border Router integration."""
+"""Config flow for the OpenThread Border Router integration."""
 
 from contextlib import suppress
 import logging
@@ -35,7 +35,7 @@ from .util import (
 )
 
 if TYPE_CHECKING:
-    from . import OTBRConfigEntry
+    from .types import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
 
 
 class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Open Thread Border Router."""
+    """Handle a config flow for OpenThread Border Router."""
 
     VERSION = 1
 
@@ -178,7 +178,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(border_agent_id.hex())
                 return self.async_create_entry(
-                    title="Open Thread Border Router",
+                    title="OpenThread Border Router",
                     data={CONF_URL: url},
                 )
 

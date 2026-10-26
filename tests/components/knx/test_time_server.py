@@ -1,12 +1,11 @@
 """Test KNX time server."""
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
-
-from tests.typing import WebSocketGenerator
 
 # Freeze time: 2026-1-29 11:02:03 UTC -> Europe/Vienna (UTC+1) = 12:02:03 Thursday
 FREEZE_TIME = "2026-1-29 11:02:03"

@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.madvr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import MOCK_CONFIG, MOCK_MAC
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -18,7 +17,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.madvr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

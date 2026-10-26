@@ -194,6 +194,7 @@ class SynoApi:
                     self._hass,
                     DOMAIN,
                     f"{ISSUE_MISSING_BACKUP_SETUP}_{self._entry.unique_id}",
+                    config_entry_id=self._entry.entry_id,
                     data={"entry_id": self._entry.entry_id},
                     is_fixable=True,
                     is_persistent=False,

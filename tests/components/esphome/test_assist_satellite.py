@@ -22,6 +22,7 @@ from aioesphomeapi import (
     VoiceAssistantTimerEventType,
 )
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import (
     assist_pipeline,
@@ -55,7 +56,6 @@ from .common import get_satellite_entity
 from .conftest import MockESPHomeDeviceType
 
 from tests.components.tts.common import MockResultStream
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture

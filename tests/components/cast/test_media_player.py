@@ -12,6 +12,14 @@ import attr
 import pychromecast
 from pychromecast.const import CAST_TYPE_CHROMECAST, CAST_TYPE_GROUP
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_load_fixture,
+    mock_platform,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 import yarl
 
 from homeassistant.components import media_player, tts
@@ -50,15 +58,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_load_fixture,
-    mock_platform,
-)
 from tests.components.media_player import common
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 FakeUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e2")
 FakeUUID2 = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e4")

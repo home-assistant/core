@@ -8,6 +8,11 @@ from unittest.mock import MagicMock, _patch_dict, patch
 from aio_ownet.exceptions import OWServerReturnError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.onewire.onewirehub import _DEVICE_SCAN_INTERVAL
@@ -18,8 +23,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_owproxy_mock_devices
 from .const import ATTR_INJECT_READS, MOCK_OWPROXY_DEVICES
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

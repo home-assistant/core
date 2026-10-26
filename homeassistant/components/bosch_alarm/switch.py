@@ -12,9 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BoschAlarmConfigEntry
 from .const import DOMAIN
 from .entity import BoschAlarmDoorEntity, BoschAlarmOutputEntity
+from .types import BoschAlarmConfigEntry
 
 
 @dataclass(kw_only=True, frozen=True)

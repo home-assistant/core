@@ -24,6 +24,7 @@ from pytest_homeassistant.components.recorder.db_schema_32 import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 from sqlalchemy import text, update
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
@@ -41,8 +42,6 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture

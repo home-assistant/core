@@ -5,7 +5,6 @@ from typing import override
 from pynobo import PynoboError, nobo
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -92,7 +91,7 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, hub.hub_serial)},
             serial_number=hub.hub_serial,
-            name=hub.hub_info[ATTR_NAME],
+            name=hub.hub_info["name"],
             manufacturer=NOBO_MANUFACTURER,
             model="Nobø Ecohub",
             sw_version=hub.hub_info[ATTR_SOFTWARE_VERSION],
@@ -142,7 +141,7 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
         self._profiles: dict[str, str] = {}
         self._attr_options: list[str] = []
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}:profile"
-        zone_name = hub.zones[zone_id][ATTR_NAME]
+        zone_name = hub.zones[zone_id]["name"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
             name=zone_name,

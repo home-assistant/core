@@ -20,6 +20,7 @@ from openai.types.responses import (
 )
 from openai.types.responses.response import IncompleteDetails
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
@@ -39,8 +40,6 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -139,6 +138,9 @@ async def mock_init_component(
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield
+        # A subentry flow reloads the entry in the background; let the reload
+        # finish while the model list is still mocked.
+        await hass.async_block_till_done()
 
 
 @pytest.fixture(autouse=True)

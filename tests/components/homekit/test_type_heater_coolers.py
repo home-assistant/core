@@ -13,6 +13,7 @@ from pyhap.const import (
     HAP_REPR_VALUE,
 )
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -82,8 +83,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from tests.common import async_mock_service
 
 
 def _write_chars(

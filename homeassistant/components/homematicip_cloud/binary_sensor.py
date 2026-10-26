@@ -21,6 +21,7 @@ from homematicip.device import (
     MotionDetectorIndoor,
     MotionDetectorOutdoor,
     MotionDetectorPushButton,
+    MotionDetectorSwitchOutdoor,
     PluggableMainsFailureSurveillance,
     PresenceDetectorIndoor,
     RainSensor,
@@ -118,6 +119,19 @@ MOTION_SENSOR_DESCRIPTIONS: tuple[
         device_class=BinarySensorDeviceClass.MOTION,
         value_fn=lambda device: device.motionDetected,
         channel=1,
+    ),
+)
+
+MOTION_SWITCH_SENSOR_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[MotionDetectorSwitchOutdoor],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        channel_value_fn=lambda channel: channel.motionDetected,
+        channel=1,
+        channel_type=FunctionalChannelType.MOTION_DETECTION_CHANNEL,
     ),
 )
 
@@ -231,6 +245,7 @@ SIMPLE_BINARY_SENSOR_DESCRIPTIONS: dict[
         MotionDetectorOutdoor,
         MotionDetectorPushButton,
     ): MOTION_SENSOR_DESCRIPTIONS,
+    (MotionDetectorSwitchOutdoor,): MOTION_SWITCH_SENSOR_DESCRIPTIONS,
     (PresenceDetectorIndoor,): PRESENCE_SENSOR_DESCRIPTIONS,
     (SmokeDetector,): SMOKE_SENSOR_DESCRIPTIONS,
     (WaterSensor,): WATER_SENSOR_DESCRIPTIONS,

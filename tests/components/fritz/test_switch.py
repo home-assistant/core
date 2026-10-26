@@ -7,6 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzActionError
 from fritzconnection.lib.fritzstatus import DefaultConnectionService
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz import switch as fritz_switch
@@ -38,8 +43,6 @@ from .const import (
     MOCK_SERIAL_NUMBER,
     MOCK_USER_DATA,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 MOCK_WLANCONFIGS_24_5_GUEST_SAME_SSID: dict[str, dict] = {
     "WLANConfiguration1": {
@@ -755,11 +758,19 @@ async def test_switch_device_wan_access(
     assert state.state == expected_state
 
 
+@pytest.mark.parametrize(
+    "ip_address",
+    [
+        pytest.param("", id="empty"),
+        pytest.param(None, id="none"),
+    ],
+)
 async def test_switch_device_no_ip_address(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
+    ip_address: str | None,
 ) -> None:
     """Test Fritz!Tools switches when device has no IP address."""
 
@@ -769,7 +780,7 @@ async def test_switch_device_no_ip_address(
     entry.add_to_hass(hass)
 
     attributes = deepcopy(MOCK_HOST_ATTRIBUTES_DATA)
-    attributes[0]["IPAddress"] = ""
+    attributes[0]["IPAddress"] = ip_address
 
     fh_class_mock.get_hosts_attributes = MagicMock(return_value=attributes)
 
