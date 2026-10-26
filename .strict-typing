@@ -547,6 +547,7 @@ homeassistant.components.saunum.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
 homeassistant.components.schlage.*
+homeassistant.components.scorpiontrack.*
 homeassistant.components.scrape.*
 homeassistant.components.script.*
 homeassistant.components.search.*

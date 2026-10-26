@@ -49,7 +49,7 @@ rules:
   parallel-updates:
     status: exempt
     comment: The integration has no entity platforms.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   devices:

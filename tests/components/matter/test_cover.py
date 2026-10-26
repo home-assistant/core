@@ -36,6 +36,12 @@ async def trigger_subscription_callback_debounced(
     await hass.async_block_till_done()
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.COVER
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_covers(
     hass: HomeAssistant,
