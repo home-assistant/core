@@ -42,12 +42,12 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: The integration talks to a cloud service, not to a network device.
@@ -65,15 +65,9 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category:
-    status: exempt
-    comment: The fan is the primary entity of the device.
-  entity-device-class:
-    status: exempt
-    comment: The fan platform has no device classes.
-  entity-disabled-by-default:
-    status: exempt
-    comment: The only entity is the primary feature of the device.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations:

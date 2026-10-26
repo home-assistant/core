@@ -5,9 +5,10 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import probatio
+from pydantic import ValidationError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
-from uiprotect.data import Camera, Chime, Light, ModelType, PTZPreset
+from uiprotect.data import Camera, Chime, Light, PTZPreset
 from uiprotect.data.devices import CameraZone
 from uiprotect.exceptions import BadRequest, ClientError
 
@@ -49,7 +50,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import patch_ufp_method
 from .conftest import UNIFI_MAC
-from .utils import MockUFPFixture, init_entry
+from .utils import MockUFPFixture, init_entry, setup_public_chime
 
 
 @pytest.fixture(name="device")
@@ -217,17 +218,14 @@ async def test_add_doorbell_text_disabled_config_entry(
     assert error.value.translation_key == "service_config_entry_not_loaded"
 
 
-async def test_set_chime_paired_doorbells(
+async def _setup_chime_pairing(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     chime: Chime,
     doorbell: Camera,
-) -> None:
-    """Test set_chime_paired_doorbells."""
-
-    ufp.api.update_device = AsyncMock()
-
+) -> tuple[dict[str, Any], Camera, Camera]:
+    """Set up a chime and two doorbells, returning the action data and doorbells."""
     camera1 = doorbell.model_copy()
     camera1.name = "Test Camera 1"
 
@@ -237,26 +235,347 @@ async def test_set_chime_paired_doorbells(
     await init_entry(hass, ufp, [camera1, camera2, chime])
 
     chime_entry = entity_registry.async_get("button.test_chime_play_chime")
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_2_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_2_doorbell")
     assert chime_entry is not None
     assert camera_entry is not None
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_CHIME_PAIRED,
-        {
-            ATTR_DEVICE_ID: chime_entry.device_id,
-            "doorbells": {
-                ATTR_ENTITY_ID: ["binary_sensor.test_camera_1_doorbell"],
-                ATTR_DEVICE_ID: [camera_entry.device_id],
-            },
+    data = {
+        ATTR_DEVICE_ID: chime_entry.device_id,
+        "doorbells": {
+            ATTR_ENTITY_ID: ["event.test_camera_1_doorbell"],
+            ATTR_DEVICE_ID: [camera_entry.device_id],
         },
-        blocking=True,
+    }
+    return data, camera1, camera2
+
+
+async def test_set_chime_paired_doorbells(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """The paired doorbells are written through the public chime."""
+    ufp.api.update_device = AsyncMock()
+    setup_public_chime(ufp)
+    data, camera1, camera2 = await _setup_chime_pairing(
+        hass, entity_registry, ufp, chime, doorbell
     )
 
-    ufp.api.update_device.assert_called_once_with(
-        ModelType.CHIME, chime.id, {"cameraIds": sorted([camera1.id, camera2.id])}
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
     )
+
+    public = ufp.api.public_bootstrap.chimes[chime.id]
+    public.set_camera_ids.assert_awaited_once_with(sorted([camera1.id, camera2.id]))
+    ufp.api.update_device.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_private_only_entities_registered")
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("event.test_camera_1_doorbell", id="event"),
+        pytest.param("binary_sensor.test_camera_1_doorbell", id="binary_sensor"),
+    ],
+)
+async def test_set_chime_paired_doorbells_entity_target(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+    entity_id: str,
+) -> None:
+    """The doorbell event entity and the deprecated binary sensor both pick a doorbell."""
+    setup_public_chime(ufp)
+    data, camera1, _ = await _setup_chime_pairing(
+        hass, entity_registry, ufp, chime, doorbell
+    )
+    data["doorbells"] = {ATTR_ENTITY_ID: [entity_id]}
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+    )
+
+    public = ufp.api.public_bootstrap.chimes[chime.id]
+    public.set_camera_ids.assert_awaited_once_with([camera1.id])
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("event.test_camera_1_motion_detection", id="other_event"),
+        pytest.param("binary_sensor.test_camera_1_motion", id="other_binary_sensor"),
+    ],
+)
+async def test_set_chime_paired_doorbells_ignores_other_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+    entity_id: str,
+) -> None:
+    """Other entities of a doorbell do not pick it."""
+    setup_public_chime(ufp)
+    data, _, _ = await _setup_chime_pairing(hass, entity_registry, ufp, chime, doorbell)
+    assert entity_registry.async_get(entity_id) is not None
+    data["doorbells"] = {ATTR_ENTITY_ID: [entity_id]}
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+    )
+
+    public = ufp.api.public_bootstrap.chimes[chime.id]
+    public.set_camera_ids.assert_awaited_once_with([])
+
+
+async def test_set_chime_paired_doorbells_with_foreign_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """An entity of another integration on the chime device does not matter."""
+    setup_public_chime(ufp)
+    data, camera1, camera2 = await _setup_chime_pairing(
+        hass, entity_registry, ufp, chime, doorbell
+    )
+    # Leave only an entity of another integration on the chime device, as a
+    # helper linked to it would add.
+    for entry in er.async_entries_for_device(entity_registry, data[ATTR_DEVICE_ID]):
+        entity_registry.async_remove(entry.entity_id)
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "sensor",
+        "other",
+        "not-a-mac",
+        config_entry=other_entry,
+        device_id=data[ATTR_DEVICE_ID],
+    )
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+    )
+
+    public = ufp.api.public_bootstrap.chimes[chime.id]
+    public.set_camera_ids.assert_awaited_once_with(sorted([camera1.id, camera2.id]))
+
+
+async def test_set_chime_paired_doorbells_readopted_chime(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """The public chime is matched by mac, so a new id after a re-adopt works."""
+    setup_public_chime(ufp)
+    data, camera1, camera2 = await _setup_chime_pairing(
+        hass, entity_registry, ufp, chime, doorbell
+    )
+    chimes = ufp.api.public_bootstrap.chimes
+    public = chimes.pop(chime.id)
+    public.id = "new-chime-id"
+    chimes[public.id] = public
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+    )
+
+    public.set_camera_ids.assert_awaited_once_with(sorted([camera1.id, camera2.id]))
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ClientError("boom"), id="client_error"),
+        pytest.param(
+            ValidationError.from_exception_data("PublicChime", []),
+            id="validation_error",
+        ),
+    ],
+)
+async def test_set_chime_paired_doorbells_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+    error: Exception,
+) -> None:
+    """A failed pairing request raises a service error."""
+    setup_public_chime(ufp)
+    data, _, _ = await _setup_chime_pairing(hass, entity_registry, ufp, chime, doorbell)
+    public = ufp.api.public_bootstrap.chimes[chime.id]
+    public.set_camera_ids.side_effect = error
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+        )
+
+    assert exc_info.value.translation_key == "service_error"
+
+
+async def test_set_chime_paired_doorbells_without_public_chime(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """Pairing a chime without its public mirror names the chime."""
+    data, _, _ = await _setup_chime_pairing(hass, entity_registry, ufp, chime, doorbell)
+    assert not ufp.api.public_bootstrap.chimes
+    device_registry.async_update_device(data[ATTR_DEVICE_ID], name_by_user="Hallway")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+        )
+
+    assert exc_info.value.translation_key == "device_not_available"
+    assert exc_info.value.translation_placeholders == {"device_name": "Hallway"}
+
+
+async def test_set_chime_paired_doorbells_without_public_camera(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """A doorbell without its public mirror is named instead of unpaired."""
+    setup_public_chime(ufp)
+    data, camera1, _ = await _setup_chime_pairing(
+        hass, entity_registry, ufp, chime, doorbell
+    )
+    del ufp.api.public_bootstrap.cameras[camera1.id]
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+        )
+
+    assert exc_info.value.translation_key == "device_not_available"
+    assert exc_info.value.translation_placeholders == {"device_name": "Test Camera 1"}
+    ufp.api.public_bootstrap.chimes[chime.id].set_camera_ids.assert_not_called()
+
+
+async def test_set_chime_paired_doorbells_public_nvr_without_mac(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """A public NVR without a mac does not break the not-a-chime check."""
+    setup_public_chime(ufp)
+    data, _, _ = await _setup_chime_pairing(hass, entity_registry, ufp, chime, doorbell)
+    camera_entry = entity_registry.async_get("event.test_camera_2_doorbell")
+    assert camera_entry is not None
+    data[ATTR_DEVICE_ID] = camera_entry.device_id
+    ufp.api.public_bootstrap.nvr.mac = None
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+        )
+
+    assert exc_info.value.translation_key == "not_a_chime"
+
+
+async def test_set_chime_paired_doorbells_device_without_mac(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """A device without a mac cannot be a chime and is named in the error."""
+    setup_public_chime(ufp)
+    data, _, _ = await _setup_chime_pairing(hass, entity_registry, ufp, chime, doorbell)
+    device = device_registry.async_get_or_create(
+        config_entry_id=ufp.entry.entry_id,
+        identifiers={(DOMAIN, "no-mac")},
+        name="No Mac",
+    )
+    data[ATTR_DEVICE_ID] = device.id
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+        )
+
+    assert exc_info.value.translation_key == "device_not_available"
+    assert exc_info.value.translation_placeholders == {"device_name": "No Mac"}
+    ufp.api.public_bootstrap.chimes[chime.id].set_camera_ids.assert_not_called()
+
+
+async def test_set_chime_paired_doorbells_unpair_all(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """Without doorbells the chime is unpaired from all of them."""
+    setup_public_chime(ufp)
+    data, _, _ = await _setup_chime_pairing(hass, entity_registry, ufp, chime, doorbell)
+    del data["doorbells"]
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+    )
+
+    public = ufp.api.public_bootstrap.chimes[chime.id]
+    public.set_camera_ids.assert_awaited_once_with([])
+
+
+@pytest.mark.parametrize(
+    ("picked", "device_name"),
+    [
+        pytest.param("camera", "Test Camera 2", id="camera"),
+        pytest.param("nvr", "UnifiProtect", id="nvr"),
+    ],
+)
+async def test_set_chime_paired_doorbells_not_a_chime(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+    picked: str,
+    device_name: str,
+) -> None:
+    """A device that is not a chime is rejected by name."""
+    setup_public_chime(ufp)
+    data, _, camera2 = await _setup_chime_pairing(
+        hass, entity_registry, ufp, chime, doorbell
+    )
+    mac = {"camera": camera2.mac, "nvr": ufp.api.bootstrap.nvr.mac}[picked]
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac)), ufp.entry.entry_id
+    )
+    assert device is not None
+    data[ATTR_DEVICE_ID] = device.id
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+        )
+
+    assert exc_info.value.translation_key == "not_a_chime"
+    assert exc_info.value.translation_placeholders == {"device_name": device_name}
+    ufp.api.public_bootstrap.chimes[chime.id].set_camera_ids.assert_not_called()
 
 
 async def test_remove_privacy_zone_no_zone(
@@ -272,7 +591,7 @@ async def test_remove_privacy_zone_no_zone(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -299,7 +618,7 @@ async def test_remove_privacy_zone(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     await hass.services.async_call(
         DOMAIN,
@@ -335,7 +654,7 @@ async def get_user_keyring_info(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -379,7 +698,7 @@ async def test_get_user_keyring_info_no_users(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     with pytest.raises(
         HomeAssistantError, match="No users found, please check Protect permissions"
@@ -499,7 +818,7 @@ async def test_ptz_goto_preset_not_ptz_camera(
     """Test ptz_goto_preset service on a non-PTZ camera."""
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     with pytest.raises(ServiceValidationError, match="does not support PTZ"):
         await hass.services.async_call(
@@ -622,7 +941,7 @@ async def test_public_only_action_rejected(
     )
     assert device is not None
 
-    with pytest.raises(HomeAssistantError, match="requires full access"):
+    with pytest.raises(HomeAssistantError, match="requires a local user"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_DOORBELL_TEXT,

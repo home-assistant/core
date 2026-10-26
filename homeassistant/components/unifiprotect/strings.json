@@ -26,7 +26,7 @@
           "port": "Port of your UniFi Protect device.",
           "verify_ssl": "Verify SSL certificate of the UniFi Protect device."
         },
-        "description": "Connect using only an API key, without a local user. The API-key-only mode currently provides a limited set of entities: the alarm manager, cameras (streams and snapshots) and lights. Everything else requires a local user. For more information: {api_key_documentation_url}",
+        "description": "Connect using only an API key, without a local user. Features the public Integration API does not offer yet are unavailable. For more information: {api_key_documentation_url}",
         "title": "UniFi Protect setup (API key)"
       },
       "discovery_api_key": {
@@ -38,14 +38,14 @@
           "api_key": "[%key:component::unifiprotect::config::step::api_key::data_description::api_key%]",
           "port": "[%key:component::unifiprotect::config::step::api_key::data_description::port%]"
         },
-        "description": "Connect to {name} ({ip_address}) using only an API key. The API-key-only mode currently provides a limited set of entities: the alarm manager, cameras (streams and snapshots) and lights. Everything else requires a local user. For more information: {api_key_documentation_url}",
+        "description": "Connect to {name} ({ip_address}) using only an API key. Features the public Integration API does not offer yet are unavailable. For more information: {api_key_documentation_url}",
         "title": "UniFi Protect discovered (API key)"
       },
       "discovery_confirm": {
-        "description": "How do you want to connect to {name} ({ip_address})? The API-key-only mode currently provides a limited set of entities: the alarm manager, cameras (streams and snapshots) and lights. Everything else requires a local user.",
+        "description": "How do you want to connect to {name} ({ip_address})? An API key uses the public Integration API. A local user adds the features the public API does not offer yet.",
         "menu_options": {
-          "discovery_api_key": "API key only (limited feature set)",
-          "discovery_full": "Local user and API key (full access)"
+          "discovery_api_key": "API key only",
+          "discovery_full": "API key and local user"
         },
         "title": "UniFi Protect discovered"
       },
@@ -114,8 +114,8 @@
       "reconfigure": {
         "description": "[%key:component::unifiprotect::config::step::user::description%]",
         "menu_options": {
-          "reconfigure_api_key": "API key only (limited feature set)",
-          "reconfigure_full": "Local user and API key (full access)"
+          "reconfigure_api_key": "API key only",
+          "reconfigure_full": "API key and local user"
         },
         "title": "Reconfigure UniFi Protect"
       },
@@ -132,7 +132,7 @@
           "port": "[%key:component::unifiprotect::config::step::api_key::data_description::port%]",
           "verify_ssl": "[%key:component::unifiprotect::config::step::api_key::data_description::verify_ssl%]"
         },
-        "description": "Switch to (or update) API-key-only mode. Stored local user credentials are kept, so you can switch back at any time. The API-key-only mode currently provides a limited set of entities: the alarm manager, cameras (streams and snapshots) and lights. Everything else requires a local user. For more information: {api_key_documentation_url}",
+        "description": "Switch to (or update) API-key-only mode. Stored local user credentials are kept, so you can switch back at any time. Features the public Integration API does not offer yet are unavailable. For more information: {api_key_documentation_url}",
         "title": "Reconfigure UniFi Protect (API key)"
       },
       "reconfigure_full": {
@@ -156,10 +156,10 @@
         "title": "Reconfigure UniFi Protect (local user)"
       },
       "user": {
-        "description": "Choose how to connect to your UniFi Protect console. The API-key-only mode currently provides a limited set of entities: the alarm manager, cameras (streams and snapshots) and lights. Everything else requires a local user.",
+        "description": "Choose how to connect to your UniFi Protect console. An API key uses the public Integration API. A local user adds the features the public API does not offer yet.",
         "menu_options": {
-          "api_key": "API key only (limited feature set)",
-          "full": "Local user and API key (full access)"
+          "api_key": "API key only",
+          "full": "API key and local user"
         },
         "title": "UniFi Protect setup"
       }
@@ -849,6 +849,9 @@
     "no_users_found": {
       "message": "No users found, please check Protect permissions"
     },
+    "not_a_chime": {
+      "message": "{device_name} is not a UniFi Protect chime"
+    },
     "not_authorized": {
       "message": "Not authorized to perform this action on the UniFi Protect controller"
     },
@@ -871,7 +874,7 @@
       "message": "Could not load the public API bootstrap for camera streams"
     },
     "public_only_no_actions": {
-      "message": "This action requires full access (local user); the entry is set up with an API key only."
+      "message": "This action requires a local user; the entry is set up with an API key only."
     },
     "relay_not_available": {
       "message": "Relay is no longer available"
@@ -907,6 +910,10 @@
       },
       "title": "Ubiquiti Cloud Users are not Supported"
     },
+    "doorbell_sensor_deprecated": {
+      "description": "The binary sensor `{entity_id}` is deprecated and will be removed in a future release. Use the event entity `{replacement}` with the **Event received** trigger instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::private_only_entity_deprecated::title%]"
+    },
     "hdr_switch_removed": {
       "description": "The HDR mode switch `{entity_id}` has been removed. It could not represent the auto HDR mode and was replaced by the HDR mode select.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "HDR mode switch removed"
@@ -915,9 +922,17 @@
       "description": "The camera entity `{entity_id}` used plain RTSP, which is no longer available now that streams come from the UniFi Protect public API (RTSPS only). It has been removed; use `{replacement}` instead.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Insecure camera entity removed"
     },
+    "last_event_sensor_deprecated": {
+      "description": "The entity `{entity_id}` is deprecated and will be removed in a future release. Use the event entity `{replacement}` with the **Event received** trigger instead. The event entity's state is the time of the last event Home Assistant received.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::private_only_entity_deprecated::title%]"
+    },
     "package_binary_sensor_removed": {
       "description": "The binary sensor `{entity_id}` for package detection has been removed. Package detection is a momentary smart-detect event, so it is now provided by the package event entity instead.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Package binary sensor removed"
+    },
+    "private_only_entity_deprecated": {
+      "description": "The entity `{entity_id}` is deprecated and will be removed in a future release. It depends on a private API that the integration is phasing out.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Entity deprecated"
     },
     "rtsp_disabled": {
       "fix_flow": {
@@ -946,8 +961,20 @@
       "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same state and can also change it.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Read-only setting entity deprecated"
     },
+    "setting_mirror_deprecated_doorbell_text": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same message and can also change it. Where this entity is unknown because no message is set, it shows the default message instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    },
+    "setting_mirror_deprecated_hdr_mode": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same setting and can also change it. Its states differ: `on` is `auto` or `always`, and `off` is `off`, so update any conditions that compare them.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    },
     "setting_mirror_deprecated_light_mode": {
       "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same setting and can also change it. Its states are named differently: `always` is `when_dark` and `off` is `manual`, so update any conditions that compare them.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    },
+    "setting_mirror_deprecated_mic_level": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same level and can also change it. While the microphone is disabled, `{replacement}` is unavailable, so update any automations and scripts that read the level then.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
     }
   },

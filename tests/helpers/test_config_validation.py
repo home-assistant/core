@@ -6,6 +6,7 @@ from datetime import date, timedelta
 import enum
 from functools import partial
 import logging
+import math
 import os
 from pathlib import Path
 import re
@@ -140,6 +141,65 @@ def test_url() -> None:
         assert schema(value)
 
 
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.url, id="url"),
+        pytest.param(cv.url_no_path, id="url_no_path"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("http://exa mple.com", id="space_in_host"),
+        pytest.param("http://user:pass@exa mple.com", id="space_in_host_with_userinfo"),
+        pytest.param("http://example.com\x00", id="nul"),
+        pytest.param("http://exam\tple.com", id="tab_in_host"),
+        pytest.param("http://exam\nple.com", id="newline_in_host"),
+        pytest.param("http://exam\u00a0ple.com", id="no_break_space_in_host"),
+        pytest.param("http://example.com/pa\tth", id="tab_in_path"),
+        pytest.param("http://example.com/?q=a\nb", id="newline_in_query"),
+        pytest.param("http://example.com/\x7f", id="delete_in_path"),
+    ],
+)
+def test_url_rejects_whitespace_and_control_chars(
+    validator: Callable[[Any], Any], value: str
+) -> None:
+    """Test URLs containing whitespace or control characters are rejected."""
+    with pytest.raises(probatio.Invalid):
+        probatio.Schema(validator)(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("\nhttp://example.com", id="leading_newline"),
+        pytest.param("http://example.com\n", id="trailing_newline"),
+        pytest.param("  http://example.com  ", id="surrounding_spaces"),
+    ],
+)
+def test_url_strips_surrounding_whitespace(value: str) -> None:
+    """Test surrounding whitespace is stripped from URLs."""
+    assert probatio.Schema(cv.url)(value) == "http://example.com"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("http://example.com/snapshot image.jpg", id="space_in_path"),
+        pytest.param(
+            "http://example.com/?file=snapshot image.jpg", id="space_in_query"
+        ),
+        pytest.param("http://example.com/#snapshot image", id="space_in_fragment"),
+        pytest.param("http://user:pa ss@example.com/", id="space_in_password"),
+        pytest.param("http://us er@example.com/", id="space_in_username"),
+    ],
+)
+def test_url_allows_spaces_outside_host(value: str) -> None:
+    """Test spaces outside the host are kept, since HTTP clients encode them."""
+    assert probatio.Schema(cv.url)(value) == value
+
+
 def test_configuration_url() -> None:
     """Test URL."""
     schema = probatio.Schema(cv.configuration_url)
@@ -219,6 +279,9 @@ def test_entity_id() -> None:
     with pytest.raises(probatio.MultipleInvalid):
         schema("invalid_entity")
 
+    with pytest.raises(probatio.MultipleInvalid):
+        schema("sensor.light\n")
+
     assert schema("sensor.LIGHT") == "sensor.light"
 
 
@@ -294,6 +357,31 @@ def test_entity_domain() -> None:
 
     assert schema("sensor.LIGHT") == "sensor.light"
     assert schema("binary_sensor.LIGHT") == "binary_sensor.light"
+
+
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.entity_ids, id="entity_ids"),
+        pytest.param(cv.entity_ids_or_uuids, id="entity_ids_or_uuids"),
+        pytest.param(cv.comp_entity_ids, id="comp_entity_ids"),
+        pytest.param(cv.comp_entity_ids_or_uuids, id="comp_entity_ids_or_uuids"),
+        pytest.param(cv.entity_domain("sensor"), id="entity_domain"),
+        pytest.param(cv.entities_domain("sensor"), id="entities_domain"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(True, id="bool"),
+        pytest.param(4, id="int"),
+        pytest.param(1.5, id="float"),
+    ],
+)
+def test_entity_ids_non_iterable(validator: Callable[[Any], Any], value: Any) -> None:
+    """Test entity ID validators reject non-string scalars with Invalid."""
+    with pytest.raises(probatio.Invalid):
+        validator(value)
 
 
 def test_entities_domain() -> None:
@@ -412,6 +500,32 @@ def test_time_period() -> None:
         assert schema(value) == result
 
 
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.time_period, id="time_period"),
+        pytest.param(cv.positive_time_period, id="positive_time_period"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(math.inf, id="float_inf"),
+        pytest.param("inf", id="str_inf"),
+        pytest.param("-inf", id="str_neg_inf"),
+        pytest.param(10**20, id="huge_seconds"),
+        pytest.param("99999999999:00", id="huge_hours"),
+        pytest.param("0:0:inf", id="inf_seconds_field"),
+        pytest.param({"days": math.inf}, id="dict_inf_days"),
+        pytest.param({"days": 1e10}, id="dict_huge_days"),
+    ],
+)
+def test_time_period_overflow(validator: Callable[[Any], Any], value: Any) -> None:
+    """Test time_period rejects periods that overflow timedelta."""
+    with pytest.raises(probatio.Invalid):
+        probatio.Schema(validator)(value)
+
+
 def test_remove_falsy() -> None:
     """Test remove falsy."""
     assert cv.remove_falsy([0, None, 1, "1", {}, [], ""]) == [1, "1"]
@@ -456,6 +570,21 @@ def test_service() -> None:
             "alias": "turn on kitchen lights",
         },
         {"action": "scene.turn_on", "metadata": {}},
+        {
+            "action": "light.turn_on",
+            "target": {
+                "area_id": "kitchen",
+                "exclude": {"entity_id": "light.pantry"},
+            },
+        },
+        {
+            "action": "light.turn_on",
+            "target": {
+                "area_id": "{{ 'kitchen' }}",
+                "exclude": {"entity_id": "light.pantry"},
+            },
+        },
+        {"action": "light.turn_on", "target": "{{ {'area_id': 'kitchen'} }}"},
     ],
 )
 def test_service_schema(hass: HomeAssistant, config: dict[str, Any]) -> None:
@@ -498,6 +627,10 @@ def test_service_schema(hass: HomeAssistant, config: dict[str, Any]) -> None:
         {
             "action": "homeassistant.turn_on",
             "data_template": {"brightness": "{{ no_end"},
+        },
+        {
+            "action": "light.turn_on",
+            "target": {"exclude": {"entity_id": "light.pantry"}},
         },
     ],
 )
@@ -549,6 +682,105 @@ def test_entity_service_schema() -> None:
     for value in options:
         validated = schema(value)
         assert "metadata" not in validated
+
+
+def test_entity_service_schema_exclude() -> None:
+    """Test make_entity_service_schema validates the exclude block."""
+    schema = cv.make_entity_service_schema({})
+
+    invalid = (
+        # An exclude block alone doesn't target anything
+        {"exclude": {"entity_id": "light.kitchen"}},
+        # Exclude blocks can't be nested
+        {"area_id": "kitchen", "exclude": {"exclude": {"area_id": "pantry"}}},
+        # all and none are not supported in the exclude block
+        {"area_id": "kitchen", "exclude": {"entity_id": "all"}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "none"}},
+        {"area_id": "kitchen", "exclude": {"unknown": "pantry"}},
+        {"area_id": "kitchen", "exclude": "light.kitchen"},
+    )
+    for value in invalid:
+        with pytest.raises(probatio.MultipleInvalid):
+            schema(value)
+
+    assert schema(
+        {
+            "entity_id": "all",
+            "exclude": {
+                "entity_id": "light.kitchen, light.pantry",
+                "device_id": "a_device",
+                "area_id": "kitchen",
+                "floor_id": "ground_floor",
+                "label_id": "christmas",
+            },
+        }
+    ) == {
+        "entity_id": "all",
+        "exclude": {
+            "entity_id": ["light.kitchen", "light.pantry"],
+            "device_id": ["a_device"],
+            "area_id": ["kitchen"],
+            "floor_id": ["ground_floor"],
+            "label_id": ["christmas"],
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        probatio.Schema(cv.TARGET_FIELDS),
+        probatio.Schema(cv.TARGET_SERVICE_FIELDS),
+        probatio.Schema(cv._TARGET_SERVICE_FIELDS_TEMPLATED),
+    ],
+)
+def test_target_fields_exclude(schema: probatio.Schema) -> None:
+    """Test the exclude block of the target field schemas."""
+    assert schema({"area_id": "kitchen", "exclude": {"label_id": "christmas"}}) == {
+        "area_id": ["kitchen"],
+        "exclude": {"label_id": ["christmas"]},
+    }
+
+    for value in (
+        {"area_id": "kitchen", "exclude": {"exclude": {"area_id": "pantry"}}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "all"}},
+    ):
+        with pytest.raises(probatio.MultipleInvalid):
+            schema(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param({}, id="empty"),
+        pytest.param({"area_id": ["kitchen"]}, id="no_exclude"),
+        pytest.param(
+            {"area_id": ["kitchen"], "exclude": {"label_id": ["christmas"]}},
+            id="target_and_exclude",
+        ),
+    ],
+)
+def test_exclude_requires_target_valid(value: dict[str, Any]) -> None:
+    """Test targets which are accepted by exclude_requires_target."""
+    assert cv.exclude_requires_target(value) == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param({"exclude": {"label_id": ["christmas"]}}, id="exclude_only"),
+        pytest.param(
+            {"entity_id": [], "exclude": {"label_id": ["christmas"]}},
+            id="empty_target_and_exclude",
+        ),
+    ],
+)
+def test_exclude_requires_target_invalid(value: dict[str, Any]) -> None:
+    """Test a target consisting of only an exclude block is rejected."""
+    with pytest.raises(
+        probatio.Invalid, match="an exclude block requires a target to exclude from"
+    ):
+        cv.exclude_requires_target(value)
 
 
 def test_entity_service_schema_with_metadata() -> None:
@@ -818,7 +1050,12 @@ def test_time() -> None:
     """Test date validation."""
     schema = probatio.Schema(cv.time)
 
-    for value in ("Not a time", "2016-11-23", "2016-11-23T18:59:08"):
+    for value in (
+        "Not a time",
+        "2016-11-23",
+        "2016-11-23T18:59:08",
+        "0:2147483648",
+    ):
         with pytest.raises(probatio.Invalid):
             schema(value)
 
@@ -1900,6 +2137,9 @@ def test_color_hex() -> None:
 
     with pytest.raises(probatio.Invalid, match=msg):
         cv.color_hex("#FFFFFFF")
+
+    with pytest.raises(probatio.Invalid, match=msg):
+        cv.color_hex("#FFFFFF\n")
 
     with pytest.raises(probatio.Invalid, match=msg):
         cv.color_hex(123456)

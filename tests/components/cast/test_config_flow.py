@@ -30,7 +30,7 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.cast.media_player.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup,
         patch("pychromecast.discovery.discover_chromecasts", return_value=(True, None)),
         patch(

@@ -32,7 +32,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.template import Template
 
@@ -164,6 +164,118 @@ async def test_setup_config_entry(
     state = hass.states.get(TEST_EVENT.entity_id)
     assert state is not None
     assert state == snapshot
+
+
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
+async def test_doorbell_with_ring_event_type_in_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a templated doorbell entity with 'ring' does not log a warning.
+
+    event_types is resolved asynchronously by the template after the entity
+    is added to hass, so the warning must not be based on its not-yet-rendered
+    initial value.
+    """
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": TEST_EVENT.object_id,
+            "device_class": "doorbell",
+            "event_type": "{{ 'ring' }}",
+            "event_types": "{{ ['ring', 'rung'] }}",
+            "template_type": event.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "does not support the 'ring' event type" not in caplog.text
+
+
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
+async def test_doorbell_with_resolved_empty_event_types_in_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a templated doorbell entity whose event_types resolves to [] warns.
+
+    An empty list is a legitimate, fully-rendered result (see
+    test_event_types_template), not a sign that the template hasn't rendered
+    yet, so it must still be checked for the 'ring' event type.
+    """
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": TEST_EVENT.object_id,
+            "device_class": "doorbell",
+            "event_type": "{{ 'ring' }}",
+            "event_types": "{{ [] }}",
+            "template_type": event.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "does not support the 'ring' event type" in caplog.text
+
+
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
+@pytest.mark.parametrize(
+    ("event_types_template", "expect_warning"),
+    [
+        ("{{ ['ring', 'rung'] }}", False),
+        ("{{ [] }}", True),
+    ],
+)
+async def test_doorbell_event_types_cold_start(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    event_types_template: str,
+    expect_warning: bool,
+) -> None:
+    """Test the doorbell check across a real cold start.
+
+    On a real Home Assistant startup, entities are added (and their initial
+    state is written) before EVENT_HOMEASSISTANT_START fires, so templates
+    like event_types are not rendered yet at that first write. That must not
+    be mistaken for event_types having resolved to [].
+    """
+    hass.set_state(CoreState.not_running)
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": TEST_EVENT.object_id,
+            "device_class": "doorbell",
+            "event_type": "{{ 'ring' }}",
+            "event_types": event_types_template,
+            "template_type": event.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "does not support the 'ring' event type" not in caplog.text
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert ("does not support the 'ring' event type" in caplog.text) == expect_warning
 
 
 @pytest.mark.freeze_time(TEST_FROZEN_INPUT)
