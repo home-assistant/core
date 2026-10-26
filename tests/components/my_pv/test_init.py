@@ -13,6 +13,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
+
 
 @pytest.mark.usefixtures("mock_my_pv_client")
 async def test_setup_entry_success(
@@ -20,10 +22,7 @@ async def test_setup_entry_success(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful setup of a config entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -34,10 +33,9 @@ async def test_setup_entry_cannot_connect(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setup of a config entry when unable to connect."""
-    mock_config_entry.add_to_hass(hass)
-
     mock_my_pv_client.connect.return_value = False
 
+    mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -50,10 +48,9 @@ async def test_setup_entry_unsupported_device(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setup of a config entry when device is not supported."""
-    mock_config_entry.add_to_hass(hass)
-
     mock_my_pv_client.connect.side_effect = MyPVDeviceNotSupportedError()
 
+    mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -67,10 +64,9 @@ async def test_setup_entry_auth_error(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setup of a config entry when authentication fails."""
-    mock_config_entry.add_to_hass(hass)
-
     mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
 
+    mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -83,9 +79,9 @@ async def test_setup_entry_failed_first_refresh(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setup of a config entry when first refresh fails."""
-    mock_config_entry.add_to_hass(hass)
-
     mock_my_pv_client.fetch_data.side_effect = MyPVConnectionError()
+
+    mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -98,10 +94,7 @@ async def test_unload_entry(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test unloading a config entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

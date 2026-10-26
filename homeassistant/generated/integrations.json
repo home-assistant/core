@@ -1294,6 +1294,15 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "bluetti_modbus": {
+      "name": "BLUETTI Modbus",
+      "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "bond": {
       "name": "Bond",
       "integration_type": "hub",
@@ -3420,7 +3429,7 @@
       "categories": [
         "water.pools_spas"
       ],
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_polling"
     },
     "flo": {
@@ -4918,7 +4927,9 @@
       "name": "Qube heat pump",
       "integration_type": "hub",
       "categories": [
-        "climate.heat_pumps_air_conditioning"
+        "climate.heat_pumps_air_conditioning",
+        "climate.thermostats_heating",
+        "climate.water_heaters"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -8270,7 +8281,7 @@
         },
         "ubus": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "categories": [
             "presence_location.network_presence",
@@ -8362,7 +8373,7 @@
       "iot_class": "local_polling"
     },
     "otbr": {
-      "name": "Open Thread Border Router",
+      "name": "OpenThread Border Router",
       "integration_type": "service",
       "categories": [
         "hubs_protocols.wireless_protocols"
@@ -10308,7 +10319,7 @@
       "integrations": {
         "sky_hub": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "categories": [
             "presence_location.network_presence",
@@ -11312,28 +11323,14 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "telegram": {
-      "name": "Telegram",
-      "integrations": {
-        "telegram": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_polling",
-          "categories": [
-            "messaging_notifications.chat_apps"
-          ],
-          "name": "Telegram"
-        },
-        "telegram_bot": {
-          "integration_type": "service",
-          "config_flow": true,
-          "iot_class": "cloud_push",
-          "categories": [
-            "messaging_notifications.chat_apps"
-          ],
-          "name": "Telegram bot"
-        }
-      }
+    "telegram_bot": {
+      "name": "Telegram bot",
+      "integration_type": "service",
+      "categories": [
+        "messaging_notifications.chat_apps"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "teleinfo": {
       "name": "Teleinfo",

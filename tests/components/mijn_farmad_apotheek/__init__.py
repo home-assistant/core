@@ -38,6 +38,8 @@ API_PRODUCT_DESCRIPTION_LATER = "Dafalgan 2g"
 API_DRAFT_ID = "mock-draft-id"
 API_BASKET_ID = "mock-basket-id"
 API_SEARCH_QUERY = "dafalgan"
+API_OTP = "123456"
+API_OTP_2 = "654321"
 
 ENTRY_DATA = {
     CONF_ACCESS_TOKEN: API_ACCESS_TOKEN,
@@ -152,12 +154,14 @@ async def init_integration(
     hass: HomeAssistant,
     *,
     data: dict[str, Any] | UndefinedType = UNDEFINED,
+    entry_id: str | None = None,
 ) -> MockConfigEntry:
     """Set up the Mijn Farmad Apotheek integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=ENTRY_DATA if data is UNDEFINED else data,
         unique_id=API_ACCOUNT_ID,
+        entry_id=entry_id,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

@@ -82,12 +82,18 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
     @override
     def installed_version(self) -> str | None:
         """Return the installed Venus OS version."""
-        return self._firmware_info.installed_version
+        return (
+            self._firmware_info.installed_version
+            if self._firmware_info is not None
+            else None
+        )
 
     @property
     @override
     def latest_version(self) -> str | None:
         """Return the latest available Venus OS version."""
+        if self._firmware_info is None:
+            return None
         return (
             self._firmware_info.available_version
             or self._firmware_info.installed_version
@@ -97,20 +103,20 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
     @override
     def available(self) -> bool:
         """Return whether the installed firmware version is available."""
-        return self.installed_version is not None
+        return super().available and self.installed_version is not None
 
     @property
     @override
     def has_update(self) -> bool:
         """Return whether Victron offers a Venus OS firmware build."""
-        return self._firmware_info.update_available
+        return self._firmware_info is not None and self._firmware_info.update_available
 
     @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the latest Venus OS firmware."""
-        if not self._firmware_info.update_available:
+        if not self.has_update:
             return
 
         self._installing = self._attr_in_progress = True

@@ -67,6 +67,7 @@ async def test_imperial_metric(
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -90,6 +91,7 @@ async def test_night_clear(hass: HomeAssistant, mock_simple_nws, no_sensor) -> N
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -108,6 +110,7 @@ async def test_none_values(hass: HomeAssistant, mock_simple_nws, no_sensor) -> N
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -133,6 +136,7 @@ async def test_data_caching_error_observation(
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -177,6 +181,7 @@ async def test_no_data_error_observation(
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -195,6 +200,7 @@ async def test_no_data_error_forecast(
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -215,6 +221,7 @@ async def test_no_data_error_forecast_hourly(
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -235,6 +242,7 @@ async def test_none(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -275,6 +283,7 @@ async def test_entity_refresh(hass: HomeAssistant, mock_simple_nws, no_sensor) -
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -306,6 +315,7 @@ async def test_error_observation(
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -325,6 +335,7 @@ async def test_new_config_entry(
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -356,6 +367,7 @@ async def test_forecast_service(
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -475,6 +487,7 @@ async def test_forecast_subscription(
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -579,6 +592,7 @@ async def test_detailed_forecast_service(
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -620,6 +634,7 @@ async def test_detailed_forecast_service_no_data(
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
 
