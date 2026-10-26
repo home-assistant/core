@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 from aiohue import LinkButtonNotPressed, create_app_key
@@ -43,6 +43,9 @@ HUE_MANUAL_BRIDGE_ID = "manual"
 BSB002_MODEL_ID = "BSB002"
 BSB003_MODEL_ID = "BSB003"
 
+LINK_TIMEOUT = 60
+LINK_POLL_INTERVAL = 1
+
 
 class HueFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Hue config flow."""
@@ -65,6 +68,9 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the Hue flow."""
         self.bridge: DiscoveredHueBridge | None = None
         self.discovered_bridges: dict[str, DiscoveredHueBridge] | None = None
+        self.link_task: asyncio.Task[str] | None = None
+        self.link_error: str | None = None
+        self.app_key: str | None = None
 
     @override
     async def async_step_user(
@@ -176,42 +182,85 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_link(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Attempt to link with the Hue bridge.
-
-        Given a configured host, will ask the user to press the link button
-        to connect to the bridge.
-        """
+        """Ask the user to start linking with the Hue bridge."""
         if user_input is None:
-            return self.async_show_form(step_id="link")
+            errors = {"base": self.link_error} if self.link_error else None
+            return self.async_show_form(step_id="link", errors=errors)
 
+        self.link_task = None
+        self.link_error = None
+        return await self.async_step_wait_for_button()
+
+    async def _async_wait_for_button(self) -> str:
+        """Poll the bridge until the link button is pressed and return the app key."""
         bridge = self.bridge
-        assert bridge is not None
-        errors = {}
+        if TYPE_CHECKING:
+            assert bridge is not None
         device_name = unicode_slug.slugify(
             self.hass.config.location_name, max_length=19
         )
+        websession = aiohttp_client.async_get_clientsession(self.hass, verify_ssl=False)
+        async with asyncio.timeout(LINK_TIMEOUT):
+            while True:
+                try:
+                    return await create_app_key(
+                        bridge.host,
+                        f"home-assistant#{device_name}",
+                        websession=websession,
+                    )
+                except LinkButtonNotPressed:
+                    await asyncio.sleep(LINK_POLL_INTERVAL)
 
-        try:
-            app_key = await create_app_key(
-                bridge.host,
-                f"home-assistant#{device_name}",
-                websession=aiohttp_client.async_get_clientsession(
-                    self.hass, verify_ssl=False
-                ),
+    async def async_step_wait_for_button(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Wait for the user to press the link button on the Hue bridge."""
+        if self.link_task is None:
+            # Not started eagerly, so the next step never receives the link form input
+            self.link_task = self.hass.async_create_task(
+                self._async_wait_for_button(), eager_start=False
             )
-        except LinkButtonNotPressed:
-            errors["base"] = "register_failed"
+
+        if not self.link_task.done():
+            return self.async_show_progress(
+                step_id="wait_for_button",
+                progress_action="wait_for_button",
+                progress_task=self.link_task,
+            )
+
+        bridge = self.bridge
+        if TYPE_CHECKING:
+            assert bridge is not None
+        try:
+            self.app_key = self.link_task.result()
+        except TimeoutError:
+            self.link_error = "register_failed"
+            return self.async_show_progress_done(next_step_id="link")
         except CannotConnect:
             LOGGER.error("Error connecting to the Hue bridge at %s", bridge.host)
-            return self.async_abort(reason="cannot_connect")
+            return self.async_show_progress_done(next_step_id="cannot_connect")
         except Exception:
             LOGGER.exception(
                 "Unknown error connecting with Hue bridge at %s", bridge.host
             )
-            errors["base"] = "linking"
+            self.link_error = "linking"
+            return self.async_show_progress_done(next_step_id="link")
+        return self.async_show_progress_done(next_step_id="finish_link")
 
-        if errors:
-            return self.async_show_form(step_id="link", errors=errors)
+    async def async_step_cannot_connect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort the flow when the bridge could not be reached while linking."""
+        return self.async_abort(reason="cannot_connect")
+
+    async def async_step_finish_link(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create the config entry after linking with the Hue bridge."""
+        bridge = self.bridge
+        if TYPE_CHECKING:
+            assert bridge is not None
+            assert self.app_key is not None
 
         # Can happen if we come from import or manual entry
         if self.unique_id is None:
@@ -223,7 +272,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             title=f"Hue Bridge {bridge.id}",
             data={
                 CONF_HOST: bridge.host,
-                CONF_API_KEY: app_key,
+                CONF_API_KEY: self.app_key,
                 CONF_API_VERSION: 2 if bridge.supports_v2 else 1,
             },
         )
