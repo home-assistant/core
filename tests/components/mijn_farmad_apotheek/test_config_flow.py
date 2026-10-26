@@ -26,7 +26,6 @@ from . import (
     API_ACCOUNT_ID,
     API_OTP,
     API_OTP_2,
-    API_REFRESH_TOKEN,
     ENTRY_DATA,
     USER_INPUT,
     get_mock_account,
@@ -244,37 +243,6 @@ async def test_reauth(hass: HomeAssistant, mock_farmad_client: MagicMock) -> Non
         CONF_ACCESS_TOKEN: "new-access-token",
         CONF_REFRESH_TOKEN: "new-refresh-token",
     }
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reauth_entry_without_email(
-    hass: HomeAssistant, mock_farmad_client: MagicMock
-) -> None:
-    """Test an entry without a stored email asks the email and then stores it."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=API_ACCOUNT_ID,
-        title=API_ACCOUNT_FULL_NAME,
-        data={
-            CONF_ACCESS_TOKEN: API_ACCESS_TOKEN,
-            CONF_REFRESH_TOKEN: API_REFRESH_TOKEN,
-        },
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["description_placeholders"]["account"] == API_ACCOUNT_FULL_NAME
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert entry.data == ENTRY_DATA
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

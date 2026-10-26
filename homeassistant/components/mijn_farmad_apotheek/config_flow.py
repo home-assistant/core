@@ -138,24 +138,20 @@ class FarmadConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Ask for the credentials to renew the Farmad session.
-
-        Entries created before the email was stored ask for the email too.
-        """
+        """Ask for the password to renew the Farmad session."""
         errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
-        email: str | None = reauth_entry.data.get(CONF_EMAIL)
+        email: str = self._get_reauth_entry().data[CONF_EMAIL]
         if user_input is not None:
             result, errors = await self._async_attempt_login(
-                {CONF_EMAIL: email, **user_input} if email else user_input
+                {CONF_EMAIL: email, **user_input}
             )
             if result is not None:
                 return result
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_REAUTH_DATA_SCHEMA if email else STEP_USER_DATA_SCHEMA,
-            description_placeholders={"account": email or reauth_entry.title},
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            description_placeholders={"account": email},
             errors=errors,
         )
 
