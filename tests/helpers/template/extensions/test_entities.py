@@ -59,6 +59,29 @@ def test_entity_name(
         "Temperature"
     )
 
+    # The frontend "use device name" toggle stores an empty name
+    entity_registry.async_update_entity(entry2.entity_id, name="")
+    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == "My Device"
+
+    device_registry.async_update_device(device_entry.id, name_by_user="User Device")
+    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
+        "User Device"
+    )
+
+    # Entities without an original name are named after their device
+    entry3 = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique_3",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name=None,
+    )
+    assert render(hass, f"{{{{ entity_name('{entry3.entity_id}') }}}}") == (
+        "User Device"
+    )
+
 
 def test_is_hidden_entity(
     hass: HomeAssistant,
