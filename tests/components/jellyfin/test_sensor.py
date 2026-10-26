@@ -65,10 +65,9 @@ async def test_server_offline(
     """Test the sensor becomes unavailable while the server is offline."""
     mock_api.sessions.side_effect = HTTPException("ServerUnreachable", "offline")
 
-    for _ in range(3):
-        freezer.tick(timedelta(seconds=10))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.jellyfin_server_active_clients")
     assert state
