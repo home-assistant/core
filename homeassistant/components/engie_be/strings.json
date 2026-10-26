@@ -9,17 +9,17 @@
   },
   "conditions": {
     "epex_hour_price_is_negative": {
-      "description": "True when the current hourly EPEX day-ahead price is negative.",
+      "description": "Tests if the current hourly EPEX price is negative.",
       "fields": {
         "device_id": {
           "description": "[%key:component::engie_be::common::device_description%]",
           "name": "[%key:component::engie_be::common::device_name%]"
         }
       },
-      "name": "EPEX hour price is negative"
+      "name": "EPEX hourly price is negative"
     },
     "epex_hour_price_meets_threshold": {
-      "description": "True when the current hourly EPEX day-ahead price is inside the configured range.",
+      "description": "Tests if the current hourly EPEX price is in a price range.",
       "fields": {
         "above": {
           "description": "[%key:component::engie_be::common::above_description%]",
@@ -34,10 +34,10 @@
           "name": "[%key:component::engie_be::common::device_name%]"
         }
       },
-      "name": "EPEX hour price is in range"
+      "name": "EPEX hourly price is in range"
     },
     "epex_quarter_hour_price_is_negative": {
-      "description": "True when the current quarter-hourly EPEX day-ahead price is negative.",
+      "description": "Tests if the current quarter-hourly EPEX price is negative.",
       "fields": {
         "device_id": {
           "description": "[%key:component::engie_be::common::device_description%]",
@@ -47,7 +47,7 @@
       "name": "EPEX quarter-hourly price is negative"
     },
     "epex_quarter_hour_price_meets_threshold": {
-      "description": "True when the current quarter-hourly EPEX day-ahead price is inside the configured range.",
+      "description": "Tests if the current quarter-hourly EPEX price is in a price range.",
       "fields": {
         "above": {
           "description": "[%key:component::engie_be::common::above_description%]",
@@ -483,7 +483,7 @@
           "name": "[%key:component::engie_be::common::device_name%]"
         }
       },
-      "name": "EPEX current hour price crossed threshold"
+      "name": "EPEX current hourly price crossed threshold"
     },
     "epex_current_quarter_hour_crossed_threshold": {
       "description": "Triggers when the current quarter-hourly EPEX price enters the configured range.",
@@ -511,7 +511,7 @@
           "name": "[%key:component::engie_be::common::device_name%]"
         }
       },
-      "name": "EPEX hour price became negative"
+      "name": "EPEX hourly price became negative"
     },
     "epex_hour_no_longer_negative": {
       "description": "Triggers when the hourly EPEX day-ahead price returns to zero or above.",
@@ -521,7 +521,7 @@
           "name": "[%key:component::engie_be::common::device_name%]"
         }
       },
-      "name": "EPEX hour price no longer negative"
+      "name": "EPEX hourly price no longer negative"
     },
     "epex_next_hour_crossed_threshold": {
       "description": "Triggers when the next hourly EPEX price enters the configured range.",
@@ -539,7 +539,7 @@
           "name": "[%key:component::engie_be::common::device_name%]"
         }
       },
-      "name": "EPEX next hour price crossed threshold"
+      "name": "EPEX next hourly price crossed threshold"
     },
     "epex_next_quarter_hour_crossed_threshold": {
       "description": "Triggers when the next quarter-hourly EPEX price enters the configured range.",
