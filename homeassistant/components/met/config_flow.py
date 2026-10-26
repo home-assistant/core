@@ -58,7 +58,7 @@ def configured_instances(hass: HomeAssistant) -> set[str]:
         if entry.data.get("track_home"):
             entries.append("home")
             continue
-        location = entry.data[CONF_LOCATION]
+        location = entry.data.get(CONF_LOCATION, entry.data)
         entries.append(f"{location[CONF_LATITUDE]}-{location[CONF_LONGITUDE]}")
     return set(entries)
 
@@ -164,6 +164,18 @@ class MetOptionsFlowHandler(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input or self.config_entry.data
+                STEP_USER_DATA_SCHEMA,
+                user_input
+                or (
+                    self.config_entry.data
+                    if not self.config_entry.data.get(CONF_TRACK_HOME, False)
+                    else {
+                        CONF_LOCATION: {
+                            CONF_LATITUDE: self.hass.config.latitude,
+                            CONF_LONGITUDE: self.hass.config.longitude,
+                        },
+                        CONF_ELEVATION: self.hass.config.elevation,
+                    }
+                ),
             ),
         )
