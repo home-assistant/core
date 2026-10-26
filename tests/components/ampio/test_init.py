@@ -240,6 +240,34 @@ async def test_connection_died_reloads_and_recovers(
     assert mock_client.connect.await_count == 2
 
 
+@pytest.mark.parametrize(
+    "discovered",
+    [
+        pytest.param(True, id="after-discovery"),
+        pytest.param(False, id="before-discovery"),
+    ],
+)
+async def test_connection_died_while_connecting_retries_setup(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    discovered: bool,
+) -> None:
+    """A connection-loop crash inside connect() fails setup into a retry."""
+
+    def die_while_connecting() -> bool:
+        emit(mock_client, ConnectionDied(reason="internal error"))
+        return discovered
+
+    mock_client.connect.side_effect = die_while_connecting
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+    assert mock_client.connect.await_count == 1
+
+
 async def test_availability_transitions_log_once_per_edge(
     hass: HomeAssistant,
     mock_client: MagicMock,

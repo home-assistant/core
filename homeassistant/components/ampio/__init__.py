@@ -55,6 +55,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> boo
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect)
     )
 
+    # The library dispatches terminal events from the first session on, inside
+    # connect(), and does not replay them.
+    ended_while_connecting: list[AuthFailed | ConnectionDied] = []
+    stop_collecting = client.subscribe(
+        ended_while_connecting.append, of=(AuthFailed, ConnectionDied)
+    )
+    entry.async_on_unload(stop_collecting)
+
     try:
         discovered = await client.connect()
     except AmpioAuthError as err:
@@ -75,6 +83,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> boo
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="cannot_connect"
         ) from err
+    stop_collecting()
+    if ended_while_connecting:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="cannot_connect"
+        )
     # A True connect() guarantees the server identity; the None check narrows the type.
     if not discovered or (info := client.server_info) is None:
         raise ConfigEntryNotReady(
