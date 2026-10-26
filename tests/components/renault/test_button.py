@@ -7,6 +7,7 @@ import pytest
 from pytest_homeassistant.common import async_load_fixture, snapshot_platform
 from renault_api.exceptions import NotAuthenticatedException
 from renault_api.kamereon import schemas
+from renault_api.kamereon.exceptions import InsufficientBatteryLevelException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -14,7 +15,7 @@ from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
@@ -214,6 +215,65 @@ async def test_button_start_air_conditioner(
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (21, None)
+
+
+@pytest.mark.usefixtures("fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_button_start_air_conditioner_insufficient_battery(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that a low battery is reported as a validation error."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.set_ac_start",
+            side_effect=InsufficientBatteryLevelException(
+                "err.func.wired.low.battery.level",
+                "Insufficient Battery Level, the minimum required is 30%",
+            ),
+        ),
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            service_data={ATTR_ENTITY_ID: "button.reg_zoe_40_start_air_conditioner"},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "insufficient_battery_level"
+
+
+@pytest.mark.usefixtures("fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_50"], indirect=True)
+async def test_button_start_air_conditioner_insufficient_battery_threshold(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that the minimum battery level is reported when it is known."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.set_ac_start",
+            side_effect=InsufficientBatteryLevelException(
+                "err.func.wired.low.battery.level",
+                "Insufficient Battery Level, the minimum required is 30%",
+            ),
+        ),
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            service_data={ATTR_ENTITY_ID: "button.reg_zoe_50_start_air_conditioner"},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "insufficient_battery_level_threshold"
+    assert err.value.translation_placeholders == {"soc_threshold": "30"}
 
 
 @pytest.mark.usefixtures("fixtures_with_data")
