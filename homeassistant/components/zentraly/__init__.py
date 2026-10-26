@@ -1,7 +1,6 @@
 """The Zentraly integration."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
 import logging
 
 from zentraly import (
@@ -27,7 +26,6 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
-    HomeAssistantError,
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -75,11 +73,15 @@ async def _async_refresh_device_info(
     """Refresh firmware and hardware information for a Zentraly device."""
 
     if not device.connected:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN, translation_key="cannot_connect"
-        )
+        return
 
-    info = await device.async_get_device_info()
+    try:
+        info = await device.async_get_device_info()
+    except ZentralyApiError:
+        _LOGGER.debug(
+            "Unable to refresh Zentraly device information for %s", device.device_id
+        )
+        return
     firmware_version = info.firmware_version
     hardware_version = info.hardware_version
 
@@ -107,19 +109,6 @@ async def _async_refresh_device_info(
             device.hardware_version,
         )
 
-    if firmware_version is None and hardware_version is None:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN, translation_key="versions_read_failed"
-        )
-    if firmware_version is None:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN, translation_key="firmware_read_failed"
-        )
-    if hardware_version is None:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN, translation_key="hardware_read_failed"
-        )
-
 
 def _register_device_info_refresh(
     hass: HomeAssistant,
@@ -127,53 +116,33 @@ def _register_device_info_refresh(
     device: ZentralyDevice,
     device_registry: dr.DeviceRegistry,
     registry_device_id: str,
-) -> Callable[[], Awaitable[None]]:
-    """Share initial, reconnect and manual metadata reads without periodic polling."""
+) -> None:
+    """Refresh metadata at setup and reconnect without periodic polling."""
+    if not device.supports_device_info:
+        return
 
     refresh_task: asyncio.Task[None] | None = None
 
-    async def async_refresh() -> None:
-        """Refresh metadata, sharing a read already in progress."""
-        nonlocal refresh_task
-        if not device.supports_device_info:
-            return
-        if not device.connected:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="cannot_connect"
-            )
-        if refresh_task is None or refresh_task.done():
-            refresh_task = entry.async_create_background_task(
-                hass,
-                _async_refresh_device_info(device, device_registry, registry_device_id),
-                f"Refresh Zentraly device information: {device.device_id}",
-            )
-        await asyncio.shield(refresh_task)
-
-    async def async_background_refresh() -> None:
-        """Preserve known metadata when an automatic read fails."""
-        try:
-            await async_refresh()
-        except ZentralyApiError, HomeAssistantError:
-            _LOGGER.debug(
-                "Unable to refresh Zentraly device information for %s", device.device_id
-            )
-
     @callback
     def _async_connection_changed(connected: bool) -> None:
-        """Refresh metadata after a connection is established."""
-        if connected:
-            entry.async_create_background_task(
-                hass,
-                async_background_refresh(),
-                f"Schedule Zentraly device information: {device.device_id}",
-            )
-
-    if device.supports_device_info:
-        entry.async_on_unload(
-            device.add_connection_state_listener(_async_connection_changed)
+        """Schedule one metadata read, owned by the config entry."""
+        nonlocal refresh_task
+        if (
+            not connected
+            or not device.connected
+            or (refresh_task is not None and not refresh_task.done())
+        ):
+            return
+        refresh_task = entry.async_create_background_task(
+            hass,
+            _async_refresh_device_info(device, device_registry, registry_device_id),
+            f"Refresh Zentraly device information: {device.device_id}",
         )
-        _async_connection_changed(True)
-    return async_refresh
+
+    entry.async_on_unload(
+        device.add_connection_state_listener(_async_connection_changed)
+    )
+    _async_connection_changed(True)
 
 
 async def async_setup_entry(
@@ -230,7 +199,7 @@ async def async_setup_entry(
         **device.device_info,
     )
 
-    platforms = [Platform.CLIMATE, Platform.BUTTON]
+    platforms = [Platform.CLIMATE]
 
     # Connection failures are retried inside the library's background task.
     await api.async_connect()
@@ -244,7 +213,7 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
     )
 
-    refresh_device_info = _register_device_info_refresh(
+    _register_device_info_refresh(
         hass,
         entry,
         device,
@@ -252,9 +221,7 @@ async def async_setup_entry(
         parent_device_entry.id,
     )
 
-    entry.runtime_data = ZentralyData(
-        api=api, device=device, async_refresh_device_info=refresh_device_info
-    )
+    entry.runtime_data = ZentralyData(api=api, device=device)
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
@@ -275,7 +242,7 @@ async def async_unload_entry(
 ) -> None:
     """Unload a Zentraly config entry."""
 
-    platforms = [Platform.CLIMATE, Platform.BUTTON]
+    platforms = [Platform.CLIMATE]
 
     await hass.config_entries.async_unload_platforms_or_raise(
         entry,

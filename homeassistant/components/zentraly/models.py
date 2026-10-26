@@ -1,6 +1,5 @@
 """Home Assistant runtime and registry information for Zentraly."""
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from zentraly import ZentralyApi, ZentralyDevice as LibraryDevice
@@ -56,7 +55,6 @@ class ZentralyData:
 
     api: ZentralyApi
     device: ZentralyDevice
-    async_refresh_device_info: Callable[[], Awaitable[None]]
 
 
 type ZentralyConfigEntry = ConfigEntry[ZentralyData]

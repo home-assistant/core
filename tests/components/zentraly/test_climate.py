@@ -335,7 +335,7 @@ async def test_unload(
     await hass.async_block_till_done()
     mock_api.async_disconnect.assert_awaited_once_with()
     mock_climate_api.add_state_listener.return_value.assert_called_once_with()
-    assert mock_api.add_connection_state_listener.return_value.call_count == 3
+    assert mock_api.add_connection_state_listener.return_value.call_count == 2
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
     assert mock_climate_api.async_get_current_temperature.await_count == reads

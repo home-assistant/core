@@ -23,13 +23,6 @@
       }
     }
   },
-  "entity": {
-    "button": {
-      "refresh_device_info": {
-        "name": "Update device information"
-      }
-    }
-  },
   "exceptions": {
     "action_failed": {
       "message": "The device could not complete the action."
@@ -46,12 +39,6 @@
     "connection_busy": {
       "message": "The Zentraly connection is busy. Please try again later."
     },
-    "firmware_read_failed": {
-      "message": "Unable to read the firmware version. Any available hardware version has been retained."
-    },
-    "hardware_read_failed": {
-      "message": "Unable to read the hardware version. Any available firmware version has been retained."
-    },
     "invalid_action": {
       "message": "The requested value or operation is not supported by this device."
     },
@@ -66,9 +53,6 @@
     },
     "unsupported_model": {
       "message": "The Zentraly device with ID {device_id} is not supported."
-    },
-    "versions_read_failed": {
-      "message": "Unable to read the hardware and firmware versions. Previously known versions have been retained."
     }
   }
 }

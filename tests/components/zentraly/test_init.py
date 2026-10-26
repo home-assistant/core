@@ -91,7 +91,7 @@ async def test_setup_device(
 ) -> None:
     """Load one climate entity and register the physical thermostat."""
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert len(hass.states.async_all("climate")) == 1
+    assert len(hass.states.async_all()) == 1
     assert hass.states.get(ENTITY_ID).state == "heat"
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
@@ -185,7 +185,7 @@ async def test_climate_periodic_refresh_lifecycle(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert len(hass.states.async_all("climate")) == 1
+    assert len(hass.states.async_all()) == 1
     mock_climate_api.async_get_current_temperature.reset_mock()
     now = dt_util.utcnow()
     async_fire_time_changed(hass, now + timedelta(minutes=4))
@@ -251,7 +251,7 @@ async def test_device_info_connection_and_unload(
     mock_device_info.assert_awaited_once_with()
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert cancelled.is_set()
-    assert mock_api.add_connection_state_listener.return_value.call_count == 3
+    assert mock_api.add_connection_state_listener.return_value.call_count == 2
 
 
 async def test_disabled_periodic_polling(
