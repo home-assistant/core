@@ -12,6 +12,7 @@ from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
+    CannotSetFeature,
     NoOnlineDevicesError,
 )
 from aioamazondevices.structures import (
@@ -74,6 +75,13 @@ async def alexa_api_call(
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="cannot_retrieve_data_with_error",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except CannotSetFeature as err:
+        # Rejected command, the connection itself is fine
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_set_feature",
             translation_placeholders={"error": repr(err)},
         ) from err
 

@@ -270,6 +270,17 @@ TEST_DEVICE_AQM_SENSORS: dict[str, AmazonDeviceSensor] = {
         property_name="rangeValue",
         instance="9",
     ),
+    "AQM-LED": AmazonDeviceSensor(
+        name="AQM-LED",
+        value="ON",
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="toggle",
+        property_name="toggleState",
+        instance="11",
+    ),
 }
 
 TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(
