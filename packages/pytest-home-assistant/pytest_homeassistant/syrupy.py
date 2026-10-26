@@ -193,8 +193,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             )
             | {"id": ANY}
         )
-        if serialized["via_device_id"] is not None:
-            serialized["via_device_id"] = ANY
+        serialized["via_device_id"] = cls._serializable_device_id(data.via_device_id)
 
         serialized["config_entry_id"] = ANY
         serialized["config_subentry_id"] = ANY
