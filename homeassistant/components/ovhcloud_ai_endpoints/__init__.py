@@ -52,7 +52,7 @@ async def _validate_api_key(client: AsyncOpenAI) -> None:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: OVHcloudAIEndpointsConfigEntry
-) -> bool:
+) -> None:
     """Set up OVHcloud AI Endpoints from a config entry."""
     client = _create_client(hass, entry.data[CONF_API_KEY])
 
@@ -69,8 +69,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_update_entry(
     hass: HomeAssistant, entry: OVHcloudAIEndpointsConfigEntry
@@ -81,6 +79,6 @@ async def async_update_entry(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: OVHcloudAIEndpointsConfigEntry
-) -> bool:
+) -> None:
     """Unload OVHcloud AI Endpoints."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

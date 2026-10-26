@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import json
 
-import voluptuous as vol
+import probatio
 import yaml
 
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
@@ -23,10 +23,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_READ_FILE,
         read_file,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_FILE_NAME): cv.string,
-                vol.Required(ATTR_FILE_ENCODING): cv.string,
+                probatio.Required(ATTR_FILE_NAME): cv.string,
+                probatio.Required(ATTR_FILE_ENCODING): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,

@@ -9,9 +9,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -37,8 +37,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'hostname_battery',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_battery',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_battery-state]
@@ -47,7 +47,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_battery',
@@ -65,9 +65,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -90,7 +90,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_time_remaining',
-    'unique_id': 'hostname_battery_time_remaining',
+    'unique_id': 'uuid_battery_time_remaining',
     'unit_of_measurement': None,
   })
 # ---
@@ -116,12 +116,12 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.hostname_boot_time',
     'has_entity_name': True,
     'hidden_by': None,
@@ -141,7 +141,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boot_time',
-    'unique_id': 'hostname_boot_time',
+    'unique_id': 'uuid_boot_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -169,9 +169,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -197,7 +197,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_power_core',
-    'unique_id': 'hostname_cpu_power_core_0',
+    'unique_id': 'uuid_cpu_power_core_0',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -226,9 +226,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -254,7 +254,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_power_package',
-    'unique_id': 'hostname_cpu_power_package',
+    'unique_id': 'uuid_cpu_power_package',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -283,9 +283,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -311,7 +311,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_speed',
-    'unique_id': 'hostname_cpu_speed',
+    'unique_id': 'uuid_cpu_speed',
     'unit_of_measurement': <UnitOfFrequency.GIGAHERTZ: 'GHz'>,
   })
 # ---
@@ -341,9 +341,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -369,7 +369,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_temperature',
-    'unique_id': 'hostname_cpu_temperature',
+    'unique_id': 'uuid_cpu_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -399,9 +399,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -427,7 +427,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_voltage',
-    'unique_id': 'hostname_cpu_voltage',
+    'unique_id': 'uuid_cpu_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -447,6 +447,128 @@
     'state': '1.2',
   })
 # ---
+# name: test_sensor_platform[sensor.hostname_disk_read_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_disk_read_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Disk read rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Disk read rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'disk_read_rate',
+    'unique_id': 'uuid_disk_read_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_disk_read_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Disk read rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_disk_read_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.5e-06',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_disk_write_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_disk_write_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Disk write rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Disk write rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'disk_write_rate',
+    'unique_id': 'uuid_disk_write_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_disk_write_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Disk write rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_disk_write_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.05e-05',
+  })
+# ---
 # name: test_sensor_platform[sensor.hostname_display_abc123_refresh_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -457,9 +579,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -485,7 +607,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_refresh_rate',
-    'unique_id': 'hostname_display_abc123_refresh_rate',
+    'unique_id': 'uuid_display_abc123_refresh_rate',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -515,9 +637,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -540,7 +662,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_resolution_x',
-    'unique_id': 'hostname_display_abc123_resolution_x',
+    'unique_id': 'uuid_display_abc123_resolution_x',
     'unit_of_measurement': 'px',
   })
 # ---
@@ -569,9 +691,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -594,7 +716,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_resolution_y',
-    'unique_id': 'hostname_display_abc123_resolution_y',
+    'unique_id': 'uuid_display_abc123_resolution_y',
     'unit_of_measurement': 'px',
   })
 # ---
@@ -623,9 +745,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -648,7 +770,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'displays_connected',
-    'unique_id': 'hostname_displays_connected',
+    'unique_id': 'uuid_displays_connected',
     'unit_of_measurement': None,
   })
 # ---
@@ -674,12 +796,12 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.hostname_kernel',
     'has_entity_name': True,
     'hidden_by': None,
@@ -699,7 +821,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kernel',
-    'unique_id': 'hostname_kernel',
+    'unique_id': 'uuid_kernel',
     'unit_of_measurement': None,
   })
 # ---
@@ -724,12 +846,12 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.hostname_latest_version',
     'has_entity_name': True,
     'hidden_by': None,
@@ -749,7 +871,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'version_latest',
-    'unique_id': 'hostname_version_latest',
+    'unique_id': 'uuid_version_latest',
     'unit_of_measurement': None,
   })
 # ---
@@ -776,9 +898,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -804,8 +926,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load',
-    'unique_id': 'hostname_processes_load',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_processes_load',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_load-state]
@@ -813,7 +935,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Load',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_load',
@@ -821,6 +943,174 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80.0',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_load_average_15_min-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_load_average_15_min',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Load average (15 min)',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Load average (15 min)',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'load_average_15',
+    'unique_id': 'uuid_load_average_15',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_load_average_15_min-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Load average (15 min)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_load_average_15_min',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_load_average_1_min-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_load_average_1_min',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Load average (1 min)',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Load average (1 min)',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'load_average',
+    'unique_id': 'uuid_load_average',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_load_average_1_min-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Load average (1 min)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_load_average_1_min',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.5',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_load_average_5_min-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_load_average_5_min',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Load average (5 min)',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Load average (5 min)',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'load_average_5',
+    'unique_id': 'uuid_load_average_5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_load_average_5_min-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Load average (5 min)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_load_average_5_min',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.25',
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_load_cpu_0-entry]
@@ -833,9 +1123,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -861,8 +1151,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'processes_load_cpu',
-    'unique_id': 'hostname_processes_load_cpu_0',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_processes_load_cpu_0',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_load_cpu_0-state]
@@ -870,7 +1160,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Load CPU 0',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_load_cpu_0',
@@ -890,9 +1180,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -918,7 +1208,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_free',
-    'unique_id': 'hostname_memory_free',
+    'unique_id': 'uuid_memory_free',
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
@@ -948,9 +1238,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -976,8 +1266,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_used_percentage',
-    'unique_id': 'hostname_memory_used_percentage',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_memory_used_percentage',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_memory_used-state]
@@ -985,7 +1275,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Memory used %',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_memory_used',
@@ -1005,9 +1295,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1033,7 +1323,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_used',
-    'unique_id': 'hostname_memory_used',
+    'unique_id': 'uuid_memory_used',
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
@@ -1063,9 +1353,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1091,8 +1381,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'space_used',
-    'unique_id': 'hostname_filesystem_mountpoint',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_filesystem_mountpoint',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_mountpoint_space_used-state]
@@ -1100,7 +1390,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname mountpoint space used',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_mountpoint_space_used',
@@ -1120,9 +1410,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1148,7 +1438,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_core_clock_speed',
-    'unique_id': 'hostname_gpu_abc123_core_clock_speed',
+    'unique_id': 'uuid_gpu_abc123_core_clock_speed',
     'unit_of_measurement': <UnitOfFrequency.MEGAHERTZ: 'MHz'>,
   })
 # ---
@@ -1168,6 +1458,67 @@
     'state': '1000.0',
   })
 # ---
+# name: test_sensor_platform[sensor.hostname_name_download_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_name_download_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'name download rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'name download rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_interface_download_rate',
+    'unique_id': 'uuid_network_name_download_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_download_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name download rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_name_download_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.000164',
+  })
+# ---
 # name: test_sensor_platform[sensor.hostname_name_fan_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1178,9 +1529,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1203,7 +1554,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_fan_speed',
-    'unique_id': 'hostname_gpu_abc123_fan_speed',
+    'unique_id': 'uuid_gpu_abc123_fan_speed',
     'unit_of_measurement': 'rpm',
   })
 # ---
@@ -1222,6 +1573,64 @@
     'state': '100.0',
   })
 # ---
+# name: test_sensor_platform[sensor.hostname_name_link_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hostname_name_link_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'name link rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'name link rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_interface_link_rate',
+    'unique_id': 'uuid_network_name_link_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_link_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name link rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_name_link_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '866.7',
+  })
+# ---
 # name: test_sensor_platform[sensor.hostname_name_memory_clock_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1232,9 +1641,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1260,7 +1669,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_clock_speed',
-    'unique_id': 'hostname_gpu_abc123_memory_clock_speed',
+    'unique_id': 'uuid_gpu_abc123_memory_clock_speed',
     'unit_of_measurement': <UnitOfFrequency.MEGAHERTZ: 'MHz'>,
   })
 # ---
@@ -1290,9 +1699,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1318,7 +1727,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_free',
-    'unique_id': 'hostname_gpu_abc123_memory_free',
+    'unique_id': 'uuid_gpu_abc123_memory_free',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1348,9 +1757,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1376,8 +1785,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_used_percentage',
-    'unique_id': 'hostname_gpu_abc123_memory_used_percentage',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_gpu_abc123_memory_used_percentage',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_name_memory_used-state]
@@ -1385,7 +1794,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name memory used %',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_name_memory_used',
@@ -1405,9 +1814,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1433,7 +1842,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_used',
-    'unique_id': 'hostname_gpu_abc123_memory_used',
+    'unique_id': 'uuid_gpu_abc123_memory_used',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1463,9 +1872,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1488,7 +1897,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_power_usage',
-    'unique_id': 'hostname_gpu_abc123_power_usage',
+    'unique_id': 'uuid_gpu_abc123_power_usage',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1507,6 +1916,172 @@
     'state': '100.0',
   })
 # ---
+# name: test_sensor_platform[sensor.hostname_name_read_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_name_read_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'name read rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'name read rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'disk_device_read_rate',
+    'unique_id': 'uuid_disk_name_read_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_read_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name read rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_name_read_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.5e-06',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_signal_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hostname_name_signal_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'name signal strength',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'name signal strength',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_interface_signal_strength',
+    'unique_id': 'uuid_network_name_signal_strength',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_signal_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name signal strength',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_name_signal_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-55',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_ssid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_name_ssid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'name SSID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'name SSID',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_interface_ssid',
+    'unique_id': 'uuid_network_name_ssid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_ssid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name SSID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_name_ssid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ssid',
+  })
+# ---
 # name: test_sensor_platform[sensor.hostname_name_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1517,9 +2092,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1545,7 +2120,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_temperature',
-    'unique_id': 'hostname_gpu_abc123_temperature',
+    'unique_id': 'uuid_gpu_abc123_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1565,6 +2140,67 @@
     'state': '100.0',
   })
 # ---
+# name: test_sensor_platform[sensor.hostname_name_upload_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_name_upload_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'name upload rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'name upload rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_interface_upload_rate',
+    'unique_id': 'uuid_network_name_upload_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_upload_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name upload rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_name_upload_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.000156',
+  })
+# ---
 # name: test_sensor_platform[sensor.hostname_name_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1575,9 +2211,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1603,8 +2239,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_usage_percentage',
-    'unique_id': 'hostname_gpu_abc123_usage_percentage',
-    'unit_of_measurement': '%',
+    'unique_id': 'uuid_gpu_abc123_usage_percentage',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_name_usage-state]
@@ -1612,7 +2248,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name usage %',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hostname_name_usage',
@@ -1620,6 +2256,189 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_write_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_name_write_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'name write rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'name write rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'disk_device_write_rate',
+    'unique_id': 'uuid_disk_name_write_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_write_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name write rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_name_write_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.5e-06',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_network_download_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_network_download_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network download rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Network download rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_download_rate',
+    'unique_id': 'uuid_network_download_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_network_download_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Network download rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_network_download_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.4e-05',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_network_upload_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_network_upload_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network upload rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Network upload rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_upload_rate',
+    'unique_id': 'uuid_network_upload_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_network_upload_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Network upload rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_network_upload_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.6e-05',
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_operating_system-entry]
@@ -1630,12 +2449,12 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.hostname_operating_system',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1655,7 +2474,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'os',
-    'unique_id': 'hostname_os',
+    'unique_id': 'uuid_os',
     'unit_of_measurement': None,
   })
 # ---
@@ -1682,9 +2501,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1710,7 +2529,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_usage',
-    'unique_id': 'hostname_power_usage',
+    'unique_id': 'uuid_power_usage',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1740,9 +2559,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1765,7 +2584,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'processes',
-    'unique_id': 'hostname_processes_count',
+    'unique_id': 'uuid_processes_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -1791,12 +2610,12 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.hostname_version',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1816,7 +2635,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'version',
-    'unique_id': 'hostname_version',
+    'unique_id': 'uuid_version',
     'unit_of_measurement': None,
   })
 # ---

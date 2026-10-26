@@ -1,6 +1,7 @@
 {
   "domain": "openuv",
   "name": "OpenUV",
+  "categories": ["weather_alerts"],
   "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openuv",

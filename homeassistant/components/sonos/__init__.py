@@ -2,7 +2,7 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
-import datetime
+import datetime as dt
 from functools import partial
 from http import HTTPStatus
 from ipaddress import AddressValueError, IPv4Address
@@ -13,13 +13,13 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
+import probatio
 from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
 from soco.core import SoCo, soco_reset
 from soco.events_base import Event as SonosEvent, SubscriptionBase
 from soco.exceptions import SoCoException
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
@@ -73,17 +73,23 @@ DISCOVERY_IGNORED_MODELS = ["Sonos Boost"]
 ZGS_SUBSCRIPTION_TIMEOUT = 2
 SHUTDOWN_TIMEOUT = 10
 
-CONFIG_SCHEMA = vol.Schema(
+
+def _get_soco_uid(soco: SoCo) -> str:
+    """Get SoCo uid as a typed helper for executor jobs."""
+    return soco.uid
+
+
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                MP_DOMAIN: vol.All(
+                MP_DOMAIN: probatio.All(
                     cv.deprecated(CONF_INTERFACE_ADDR),
-                    vol.Schema(
+                    probatio.Schema(
                         {
-                            vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
-                            vol.Optional(CONF_INTERFACE_ADDR): cv.string,
-                            vol.Optional(CONF_HOSTS): vol.All(
+                            probatio.Optional(CONF_ADVERTISE_ADDR): cv.string,
+                            probatio.Optional(CONF_INTERFACE_ADDR): cv.string,
+                            probatio.Optional(CONF_HOSTS): probatio.All(
                                 cv.ensure_list_csv, [cv.string]
                             ),
                         }
@@ -92,7 +98,7 @@ CONFIG_SCHEMA = vol.Schema(
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -114,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> None:
     """Set up Sonos from a config entry."""
     _LOGGER.debug("Setting up Sonos config entry: %s", entry.entry_id)
     soco_reset()
@@ -146,20 +152,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> boo
         hass, entry, data, hosts
     )
     await manager.setup_platforms_and_discovery()
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: SonosConfigEntry
-) -> bool:
+) -> None:
     """Unload a Sonos config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
-    soco_reset()
-    _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, PLATFORMS
+        )
+    finally:
+        await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
+        soco_reset()
+        _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
 
 
 class SonosDiscoveryManager:
@@ -222,6 +228,7 @@ class SonosDiscoveryManager:
                 self.hass,
                 DOMAIN,
                 f"{UPNP_ISSUE_ID}_{ip_address}",
+                config_entry_id=self.entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="upnp_disabled",
@@ -298,8 +305,11 @@ class SonosDiscoveryManager:
                 eager_start=True,
             )
 
-        async def async_subscription_failed(now: datetime.datetime) -> None:
+        async def async_subscription_failed(now: dt.datetime) -> None:
             """Fallback logic if the subscription callback never arrives."""
+            # The timer outlives an unload, and the issue can't link to a removed entry
+            if self._stop_event.is_set():
+                return
             addr, port = sub.event_listener.address
             listener_address = f"{addr}:{port}"
             if advertise_ip := soco_config.EVENT_ADVERTISE_IP:
@@ -308,6 +318,7 @@ class SonosDiscoveryManager:
                 self.hass,
                 DOMAIN,
                 SUB_FAIL_ISSUE_ID,
+                config_entry_id=self.entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="subscriptions_failed",
@@ -463,9 +474,7 @@ class SonosDiscoveryManager:
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
 
-    async def async_poll_manual_hosts(
-        self, now: datetime.datetime | None = None
-    ) -> None:
+    async def async_poll_manual_hosts(self, now: dt.datetime | None = None) -> None:
         """Add and maintain Sonos devices from a manual configuration."""
 
         # Loop through each configured host and verify that
@@ -531,9 +540,11 @@ class SonosDiscoveryManager:
                 ),
                 None,
             )
-            if not known_speaker:
+            if known_speaker:
+                uid = known_speaker.uid
+            else:
                 try:
-                    uid = await self.hass.async_add_executor_job(getattr, soco, "uid")
+                    uid = await self.hass.async_add_executor_job(_get_soco_uid, soco)
                 except HTTPError as err:
                     await self._process_http_connection_error(err, ip_addr)
                     continue
@@ -545,6 +556,14 @@ class SonosDiscoveryManager:
                 ) as ex:
                     _LOGGER.warning("Could not get Sonos uid from %s: %s", ip_addr, ex)
                     continue
+
+            if self.is_device_disabled(uid):
+                _LOGGER.debug(
+                    "Skipping manual poll for disabled Sonos device: %s",
+                    uid,
+                )
+                continue
+            if not known_speaker:
                 try:
                     await self._async_handle_discovery_message(
                         uid,
@@ -579,8 +598,8 @@ class SonosDiscoveryManager:
     def is_device_disabled(self, uid: str) -> bool:
         """Check if the Sonos device is disabled in the device registry."""
         if not (
-            device := dr.async_get(self.hass).async_get_device(
-                identifiers={(DOMAIN, uid)}
+            device := dr.async_get(self.hass).async_get_device_by_identifier(
+                (DOMAIN, uid), self.entry.entry_id
             )
         ):
             return False
@@ -724,7 +743,7 @@ class SonosDiscoveryManager:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove Sonos config entry from a device."""
     known_devices = config_entry.runtime_data.discovered.keys()

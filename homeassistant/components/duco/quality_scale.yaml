@@ -42,7 +42,7 @@ rules:
   integration-owner: done
   log-when-unavailable:
     status: done
-    comment: Handled by the DataUpdateCoordinator.
+    comment: Handled by the coordinator, including isolated supplemental endpoints.
   parallel-updates: done
   reauthentication-flow:
     status: exempt

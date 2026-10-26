@@ -9,6 +9,11 @@ from aiounifi.models.event import EventKey
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -34,8 +39,6 @@ from .conftest import (
     WebsocketMessageMock,
     WebsocketStateManager,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 WIRED_CLIENT_1 = {
     "hostname": "wd_client_1",
@@ -739,24 +742,24 @@ async def test_pruning_stale_restored_clients(
     # Recently seen client is restored with its tracker and device intact
     assert hass.states.get("device_tracker.recent")
     assert entity_registry.async_get(entries[recent["mac"]].entity_id)
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, recent["mac"])}
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, recent["mac"]), config_entry.entry_id
     )
 
     # Stale client is pruned together with its device
     assert not hass.states.get("device_tracker.stale")
     assert entity_registry.async_get(entries[stale["mac"]].entity_id) is None
     assert (
-        device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, stale["mac"])}
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, stale["mac"]), config_entry.entry_id
         )
         is None
     )
 
     # Client absent from clients_all is left untouched, never pruned on missing data
     assert entity_registry.async_get(entries[absent_mac].entity_id)
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, absent_mac)}
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, absent_mac), config_entry.entry_id
     )
 
 

@@ -7,6 +7,7 @@ import blebox_uniapi.error
 import blebox_uniapi.update
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
@@ -31,8 +32,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import async_setup_entity, mock_feature
 
-from tests.common import async_fire_time_changed
-
 
 @pytest.fixture(name="firmwareupdate")
 def firmwareupdate_fixture() -> tuple[blebox_uniapi.update.Update, str]:
@@ -48,6 +47,7 @@ def firmwareupdate_fixture() -> tuple[blebox_uniapi.update.Update, str]:
     product = feature.product
     type(product).name = PropertyMock(return_value="My airSensor")
     type(product).model = PropertyMock(return_value="airSensor")
+    type(product).product = PropertyMock(return_value="airSensor")
     return (feature, "update.my_airsensor_firmware")
 
 

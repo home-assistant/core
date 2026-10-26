@@ -118,7 +118,7 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
                     severity=ir.IssueSeverity.ERROR,
                     translation_key="topic_protected",
                     translation_placeholders={CONF_TOPIC: self.topic},
-                    data={"entity_id": self.entity_id, "topic": self.topic},
+                    data={"unique_id": self.unique_id, "topic": self.topic},
                 )
                 return
             except NtfyHTTPError as e:

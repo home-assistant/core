@@ -5,33 +5,32 @@ from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
-    SERVICE_SEND_MESSAGE,
     BaseNotificationService,
     NotifyEntity,
     NotifyEntityFeature,
+    NotifyService,
+    NotifyServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ACTION,
     CONF_ENTITIES,
     CONF_SERVICE,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 
 CONF_SERVICES = "services"
@@ -46,7 +45,7 @@ def _backward_compat_schema(value: Any | None) -> Any:
     # `service` has been renamed to `action`
     if CONF_SERVICE in value:
         if CONF_ACTION in value:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 "Cannot specify both 'service' and 'action'. Please use 'action' only."
             )
         value[CONF_ACTION] = value.pop(CONF_SERVICE)
@@ -56,14 +55,14 @@ def _backward_compat_schema(value: Any | None) -> Any:
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_SERVICES): vol.All(
-            cv.ensure_list,
+        probatio.Required(CONF_SERVICES): probatio.All(
+            probatio.EnsureList(),
             [
-                vol.All(
+                probatio.All(
                     _backward_compat_schema,
                     {
-                        vol.Required(CONF_ACTION): cv.slug,
-                        vol.Optional(ATTR_DATA): dict,
+                        probatio.Required(CONF_ACTION): cv.slug,
+                        probatio.Optional(NotifyServiceArgument.DATA): dict,
                     },
                 )
             ],
@@ -104,13 +103,13 @@ class GroupNotifyPlatform(BaseNotificationService):
     @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send message to all entities in the group."""
-        payload: dict[str, Any] = {ATTR_MESSAGE: message}
+        payload: dict[str, Any] = {NotifyServiceArgument.MESSAGE: message}
         payload.update({key: val for key, val in kwargs.items() if val})
 
         tasks: list[asyncio.Task[Any]] = []
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
-            if (default_data := entity.get(ATTR_DATA)) is not None:
+            if (default_data := entity.get(NotifyServiceArgument.DATA)) is not None:
                 add_defaults(sending_payload, default_data)
             tasks.append(
                 asyncio.create_task(
@@ -169,7 +168,9 @@ class NotifyGroup(GroupEntity, NotifyEntity):
         """Initialize a NotifyGroup."""
         self._entity_ids = entity_ids
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entity_ids
+        }
         self._attr_unique_id = unique_id
 
     @override
@@ -177,7 +178,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
         """Send a message to all members of the group."""
 
         data = {
-            ATTR_MESSAGE: message,
+            NotifyServiceArgument.MESSAGE: message,
             ATTR_ENTITY_ID: self._entity_ids,
         }
 
@@ -186,11 +187,11 @@ class NotifyGroup(GroupEntity, NotifyEntity):
             title is not None
             and self._attr_supported_features & NotifyEntityFeature.TITLE
         ):
-            data[ATTR_TITLE] = title
+            data[NotifyServiceArgument.TITLE] = title
 
         await self.hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             data,
             blocking=True,
             context=self._context,
@@ -213,7 +214,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
             state = self.hass.states.get(entity_id)
             if (
                 state is None
-                or not state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                or not state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
                 & NotifyEntityFeature.TITLE
             ):
                 self._attr_supported_features &= ~NotifyEntityFeature.TITLE

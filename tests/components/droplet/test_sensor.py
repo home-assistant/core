@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -9,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_sensors(
@@ -39,10 +38,10 @@ async def test_sensors_update_data(
     """Test Droplet async update data."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.mock_title_flow_rate").state == "0.0264172052358148"
+    assert hass.states.get("sensor.mock_title_flow_rate").state == "0.1"
 
     mock_droplet.get_flow_rate.return_value = 0.5
 
     mock_droplet.listen_forever.call_args_list[0][0][1]({})
 
-    assert hass.states.get("sensor.mock_title_flow_rate").state == "0.132086026179074"
+    assert hass.states.get("sensor.mock_title_flow_rate").state == "0.5"

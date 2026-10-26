@@ -88,8 +88,13 @@ class ShadeEntity(HDEntity):
             name=self._shade_name,
             suggested_area=self._room_name,
             manufacturer=MANUFACTURER,
-            model=self._shade.type_name,
+            # aiopvapi returns the integer type id for unknown shade types
+            model=str(self._shade.type_name),
             sw_version=self._shade.firmware,
-            via_device=(DOMAIN, self._device_info.serial_number),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, self._device_info.serial_number),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             configuration_url=self._configuration_url,
         )

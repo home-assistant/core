@@ -10,7 +10,7 @@ from numbers import Number
 import statistics
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
@@ -84,47 +84,49 @@ FILTERS: Registry[str, type[Filter]] = Registry()
 
 ICON = "mdi:chart-line-variant"
 
-FILTER_SCHEMA = vol.Schema({vol.Optional(CONF_FILTER_PRECISION): vol.Coerce(int)})
+FILTER_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_FILTER_PRECISION): probatio.Coerce(int)}
+)
 
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend(
     {
-        vol.Required(CONF_FILTER_NAME): FILTER_NAME_OUTLIER,
-        vol.Optional(CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE): vol.Coerce(
-            int
-        ),
-        vol.Optional(CONF_FILTER_RADIUS, default=DEFAULT_FILTER_RADIUS): vol.Coerce(
-            float
-        ),
+        probatio.Required(CONF_FILTER_NAME): FILTER_NAME_OUTLIER,
+        probatio.Optional(
+            CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
+        ): probatio.Coerce(int),
+        probatio.Optional(
+            CONF_FILTER_RADIUS, default=DEFAULT_FILTER_RADIUS
+        ): probatio.Coerce(float),
     }
 )
 
 FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend(
     {
-        vol.Required(CONF_FILTER_NAME): FILTER_NAME_LOWPASS,
-        vol.Optional(CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE): vol.Coerce(
-            int
-        ),
-        vol.Optional(
+        probatio.Required(CONF_FILTER_NAME): FILTER_NAME_LOWPASS,
+        probatio.Optional(
+            CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
+        ): probatio.Coerce(int),
+        probatio.Optional(
             CONF_FILTER_TIME_CONSTANT, default=DEFAULT_FILTER_TIME_CONSTANT
-        ): vol.Coerce(int),
+        ): probatio.Coerce(int),
     }
 )
 
 FILTER_RANGE_SCHEMA = FILTER_SCHEMA.extend(
     {
-        vol.Required(CONF_FILTER_NAME): FILTER_NAME_RANGE,
-        vol.Optional(CONF_FILTER_LOWER_BOUND): vol.Coerce(float),
-        vol.Optional(CONF_FILTER_UPPER_BOUND): vol.Coerce(float),
+        probatio.Required(CONF_FILTER_NAME): FILTER_NAME_RANGE,
+        probatio.Optional(CONF_FILTER_LOWER_BOUND): probatio.Coerce(float),
+        probatio.Optional(CONF_FILTER_UPPER_BOUND): probatio.Coerce(float),
     }
 )
 
 FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend(
     {
-        vol.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_SMA,
-        vol.Optional(CONF_TIME_SMA_TYPE, default=TIME_SMA_LAST): vol.In(
+        probatio.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_SMA,
+        probatio.Optional(CONF_TIME_SMA_TYPE, default=TIME_SMA_LAST): probatio.In(
             [TIME_SMA_LAST]
         ),
-        vol.Required(CONF_FILTER_WINDOW_SIZE): vol.All(
+        probatio.Required(CONF_FILTER_WINDOW_SIZE): probatio.All(
             cv.time_period, cv.positive_timedelta
         ),
     }
@@ -132,17 +134,17 @@ FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend(
 
 FILTER_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
     {
-        vol.Required(CONF_FILTER_NAME): FILTER_NAME_THROTTLE,
-        vol.Optional(CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE): vol.Coerce(
-            int
-        ),
+        probatio.Required(CONF_FILTER_NAME): FILTER_NAME_THROTTLE,
+        probatio.Optional(
+            CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
+        ): probatio.Coerce(int),
     }
 )
 
 FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
     {
-        vol.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_THROTTLE,
-        vol.Required(CONF_FILTER_WINDOW_SIZE): vol.All(
+        probatio.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_THROTTLE,
+        probatio.Required(CONF_FILTER_WINDOW_SIZE): probatio.All(
             cv.time_period, cv.positive_timedelta
         ),
     }
@@ -150,23 +152,26 @@ FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): vol.Any(
+        probatio.Required(CONF_ENTITY_ID): probatio.Any(
             cv.entity_domain(SENSOR_DOMAIN),
             cv.entity_domain(BINARY_SENSOR_DOMAIN),
             cv.entity_domain(INPUT_NUMBER_DOMAIN),
         ),
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Required(CONF_FILTERS): vol.All(
-            cv.ensure_list,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_FILTERS): probatio.All(
+            probatio.EnsureList(),
             [
-                vol.Any(
-                    FILTER_OUTLIER_SCHEMA,
-                    FILTER_LOWPASS_SCHEMA,
-                    FILTER_TIME_SMA_SCHEMA,
-                    FILTER_THROTTLE_SCHEMA,
-                    FILTER_TIME_THROTTLE_SCHEMA,
-                    FILTER_RANGE_SCHEMA,
+                probatio.TaggedUnion(
+                    CONF_FILTER_NAME,
+                    [
+                        FILTER_OUTLIER_SCHEMA,
+                        FILTER_LOWPASS_SCHEMA,
+                        FILTER_TIME_SMA_SCHEMA,
+                        FILTER_THROTTLE_SCHEMA,
+                        FILTER_TIME_THROTTLE_SCHEMA,
+                        FILTER_RANGE_SCHEMA,
+                    ],
                 )
             ],
         ),
@@ -282,6 +287,16 @@ class SensorFilter(SensorEntity):
 
         temp_state = _State(new_state.last_updated, new_state.state)
 
+        # Reset before filtering so the new unit's first reading is kept
+        if self._attr_native_unit_of_measurement != new_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        ):
+            for filt in self._filters:
+                filt.reset()
+            self._attr_native_unit_of_measurement = new_state.attributes.get(
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            )
+
         try:
             for filt in self._filters:
                 filtered_state = filt.filter_state(copy(temp_state))
@@ -313,21 +328,13 @@ class SensorFilter(SensorEntity):
             SensorEntityCapabilityAttribute.STATE_CLASS
         )
 
-        if self._attr_native_unit_of_measurement != new_state.attributes.get(
-            EntityStateAttribute.UNIT_OF_MEASUREMENT
-        ):
-            for filt in self._filters:
-                filt.reset()
-            self._attr_native_unit_of_measurement = new_state.attributes.get(
-                EntityStateAttribute.UNIT_OF_MEASUREMENT
-            )
-
         if update_ha:
             self.async_write_ha_state()
 
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        last_replayed: datetime | None = None
 
         if "recorder" in self.hass.config.components:
             history_list = []
@@ -389,6 +396,8 @@ class SensorFilter(SensorEntity):
             for state in history_list:
                 if state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE, None]:
                     self._update_filter_sensor_state(state, False)
+            if history_list:
+                last_replayed = history_list[-1].last_updated
 
         @callback
         def _async_hass_started(hass: HomeAssistant) -> None:
@@ -398,6 +407,13 @@ class SensorFilter(SensorEntity):
                     self.hass, [self._entity], self._update_filter_sensor_state_event
                 )
             )
+            # Changes made while starting were not tracked
+            if (
+                (state := hass.states.get(self._entity)) is not None
+                and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                and (last_replayed is None or state.last_updated > last_replayed)
+            ):
+                self._update_filter_sensor_state(state)
 
         self.async_on_remove(async_at_started(self.hass, _async_hass_started))
 
@@ -694,12 +710,19 @@ class TimeSMAFilter(Filter, SensorEntity):
         self._time_window = window_size
         self.last_leak: FilterState | None = None
         self.queue = deque[FilterState]()
+        # running time weighted sum of the queue, so a sample costs no pass over it
+        self._queue_sum: float = 0
 
     def _leak(self, left_boundary: datetime) -> None:
         """Remove timeouted elements."""
         while self.queue:
             if self.queue[0].timestamp + self._time_window <= left_boundary:
                 self.last_leak = self.queue.popleft()
+                if self.queue:
+                    self._queue_sum -= self._weighted(self.last_leak, self.queue[0])
+                else:
+                    # nothing left to weigh, so drop any rounding drift as well
+                    self._queue_sum = 0
             else:
                 return
 
@@ -708,21 +731,30 @@ class TimeSMAFilter(Filter, SensorEntity):
         """Implement the Simple Moving Average filter."""
 
         self._leak(new_state.timestamp)
+        if self.queue:
+            self._queue_sum += self._weighted(self.queue[-1], new_state)
         self.queue.append(copy(new_state))
 
-        moving_sum: float = 0
+        # the stretch before the oldest queued sample is covered by the value that
+        # left the window last, or by that oldest sample while nothing has left yet
         start = new_state.timestamp - self._time_window
-        prev_state = self.last_leak if self.last_leak is not None else self.queue[0]
-        for state in self.queue:
-            # We can cast safely here thanks to self._only_numbers = True
-            prev_state_value = cast(float, prev_state.state)
-            moving_sum += (state.timestamp - start).total_seconds() * prev_state_value
-            start = state.timestamp
-            prev_state = state
+        lead_state = self.last_leak if self.last_leak is not None else self.queue[0]
+        # We can cast safely here thanks to self._only_numbers = True
+        lead_value = cast(float, lead_state.state)
+        lead_seconds = (self.queue[0].timestamp - start).total_seconds()
+        moving_sum = lead_seconds * lead_value + self._queue_sum
 
         new_state.state = moving_sum / self._time_window.total_seconds()
 
         return new_state
+
+    @staticmethod
+    def _weighted(state: FilterState, until: FilterState) -> float:
+        """Return the value of a state weighted by the time until the next one."""
+        # The cast is safe, the base filter only lets numbers through
+        return (until.timestamp - state.timestamp).total_seconds() * cast(
+            float, state.state
+        )
 
 
 @FILTERS.register(FILTER_NAME_THROTTLE)

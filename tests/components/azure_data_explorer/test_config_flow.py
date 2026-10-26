@@ -3,8 +3,8 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.azure_data_explorer.const import (
@@ -24,7 +24,15 @@ from .const import BASE_CONFIG
 async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=None,
     )
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
@@ -57,9 +65,15 @@ async def test_config_flow_errors(
 ) -> None:
     """Test we handle connection KustoServiceError."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=None,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=None,
     )
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
@@ -75,12 +89,12 @@ async def test_config_flow_errors(
     assert result2["errors"] == {"base": expected}
 
     schema = result2["data_schema"]
-    assert isinstance(schema, vol.Schema)
+    assert isinstance(schema, probatio.Schema)
 
     suggested_values = {
         key.schema: key.description.get("suggested_value")
         for key in schema.schema
-        if isinstance(key, vol.Marker)
+        if isinstance(key, probatio.Marker)
         and key.description
         and "suggested_value" in key.description
     }

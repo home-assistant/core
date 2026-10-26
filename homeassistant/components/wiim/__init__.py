@@ -6,17 +6,17 @@ from wiim.exceptions import WiimDeviceException, WiimRequestException
 
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DATA_WIIM, DOMAIN, LOGGER, PLATFORMS, UPNP_PORT, WiimConfigEntry
 from .models import WiimData
-from .util import InvalidHomeAssistantURLError, get_homeassistant_local_host
+from .util import async_get_event_callback_host
 
 DEFAULT_AVAILABILITY_POLLING_INTERVAL = 60
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> None:
     """Set up WiiM from a config entry.
 
     This method owns the device connect/disconnect lifecycle.
@@ -49,11 +49,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     upnp_location = f"http://{host}:{UPNP_PORT}/description.xml"
 
     try:
-        local_host = get_homeassistant_local_host(hass)
-    except InvalidHomeAssistantURLError as err:
+        local_host = await async_get_event_callback_host(hass, upnp_location)
+    except HomeAssistantError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="missing_homeassistant_url",
+            translation_key="callback_host_unavailable",
         ) from err
 
     try:
@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
         )
     )
 
-    async def _unload_entry_cleanup():
+    async def _unload_entry_cleanup() -> None:
         """Cleanup when unloading the config entry.
 
         Removes the device from the controller and disconnects it.
@@ -114,17 +114,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     entry.async_on_unload(_unload_entry_cleanup)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> None:
     """Unload a config entry."""
     LOGGER.info("Unloading WiiM entry: %s (UDN: %s)", entry.title, entry.unique_id)
 
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         hass.data.pop(DATA_WIIM)
         LOGGER.info("Last WiiM entry unloaded, cleaning up domain data")
-    return True

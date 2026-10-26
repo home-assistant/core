@@ -1,0 +1,2378 @@
+{
+  "nodeId": 259,
+  "index": 0,
+  "installerIcon": 5376,
+  "userIcon": 5376,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": false,
+  "isSecure": true,
+  "manufacturerId": 634,
+  "productId": 54,
+  "productType": 257,
+  "firmwareVersion": "2.10.0",
+  "zwavePlusVersion": 2,
+  "deviceConfig": {
+    "filename": "/data/db/devices/0x027a/zac36.json",
+    "isEmbedded": true,
+    "manufacturer": "Zooz",
+    "manufacturerId": 634,
+    "label": "ZAC36",
+    "description": "Titan Water Valve Actuator",
+    "devices": [
+      {
+        "productType": 257,
+        "productId": 54
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "preferred": false,
+    "associations": {},
+    "paramInformation": {
+      "_map": {}
+    },
+    "metadata": {
+      "inclusion": "Set your Z-Wave Gateway into Inclusion mode / Add device.\ni. Start: Short press Touch Sense Button 3 times.\nii. Processing: Yellow LED and short beep sound keeping continue. For security inclusion support, you may need to entering first 5 digit\nthat show on QR Code label, please refer to the instructions of central controller.\niii. Success: Green LED on 1 second with 2 short beep sounds.\niv. The LED indication changes to Green LED slow blinking from Yellow LED blinking.",
+      "exclusion": "Set your Z-Wave Gateway into Exclusion mode / Remove device.\ni. Start: Short press Touch Sense Button 3 times.\nii. Processing: Yellow LED and short beep sound keeping continue.\niii. Success: Green LED on 1 second with 2 short beep sounds.\niv. The LED indication Changes to Yellow LED blinking",
+      "reset": "Start: Long hold Touch Sense Button for 10 seconds then short click 5 times.\nii. Processing: Yellow LED ON 1 second then wait 2-5 seconds.\niii. Success: Green LED on 2 second with long beep sounds for 2 seconds.\n*Factory Default Reset will:\na. Remote the BVS from Z-Wave Network;\nb. Delete the association setting;\nc. Restore the configuration settings to the default",
+      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3885/BVS_ZWU_v1.0.9.pdf"
+    }
+  },
+  "label": "ZAC36",
+  "interviewAttempts": 1,
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [100000],
+  "protocolVersion": 3,
+  "supportsBeaming": false,
+  "supportsSecurity": true,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 5,
+  "deviceClass": {
+    "basic": {
+      "key": 3,
+      "label": "End Node"
+    },
+    "generic": {
+      "key": 16,
+      "label": "Binary Switch"
+    },
+    "specific": {
+      "key": 0,
+      "label": "Unused"
+    }
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x027a:0x0101:0x0036:2.10.0",
+  "statistics": {
+    "commandsTX": 204,
+    "commandsRX": 207,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 0,
+    "rtt": 19.9,
+    "lastSeen": "2025-07-04T07:41:14.705Z",
+    "rssi": -54,
+    "lwr": {
+      "protocolDataRate": 4,
+      "repeaters": [],
+      "rssi": -54,
+      "repeaterRSSI": []
+    }
+  },
+  "highestSecurityClass": 1,
+  "isControllerNode": false,
+  "keepAwake": false,
+  "lastSeen": "2025-07-04T07:16:46.646Z",
+  "protocol": 1,
+  "sdkVersion": "7.18.8",
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": false,
+        "label": "Remaining duration",
+        "stateful": true,
+        "secret": false
+      },
+      "value": {
+        "value": 0,
+        "unit": "seconds"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "stateful": true,
+        "secret": false
+      },
+      "value": true
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "stateful": true,
+        "secret": false
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Air temperature",
+      "propertyName": "Air temperature",
+      "ccVersion": 11,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Air temperature",
+        "ccSpecific": {
+          "sensorType": 1,
+          "scale": 0
+        },
+        "unit": "\u00b0C",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 29.4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 17,
+      "propertyName": "Invert Water Valve Report",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "When enabled, the device will report off (0x00) when the valve is open, and on (0xff) when the valve is closed;",
+        "label": "Invert Water Valve Report",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 18,
+      "propertyName": "Association Group 2: Basic Set Value (On)",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Note: If parameter 17 is enabled, this level will be set when the valve is off",
+        "label": "Association Group 2: Basic Set Value (On)",
+        "default": 1,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Disable",
+          "1": "Basic Set on (0xff)",
+          "2": "Basic Set off (0x00)"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 19,
+      "propertyName": "Association Group 2: Basic Set Value (Off)",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Note: If parameter 17 is enabled, this level will be set when the valve is on",
+        "label": "Association Group 2: Basic Set Value (Off)",
+        "default": 2,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Disable",
+          "1": "Basic Set on (0xff)",
+          "2": "Basic Set off (0x00)"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 49,
+      "propertyName": "Association Group 3: Water Leak Basic Set Value (Trigger)",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Association Group 3: Water Leak Basic Set Value (Trigger)",
+        "default": 1,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Disable",
+          "1": "Basic Set on (0xff)",
+          "2": "Basic Set off (0x00)"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 50,
+      "propertyName": "Association Group 3: Water Leak Basic Set Value (Cancel)",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Association Group 3: Water Leak Basic Set Value (Cancel)",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Disable",
+          "1": "Basic Set on (0xff)",
+          "2": "Basic Set off (0x00)"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 33,
+      "propertyName": "Temperature Report Unit",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Temperature Report Unit",
+        "default": 2,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Disable reports",
+          "1": "Celsius",
+          "2": "Fahrenheit"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 35,
+      "propertyKey": 255,
+      "propertyName": "Temperature Report Offset",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Temperature Report Offset",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 35,
+      "propertyKey": 65280,
+      "propertyName": "Temperature Report Offset: Unit",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Temperature Report Offset: Unit",
+        "default": 1,
+        "min": 0,
+        "max": 17,
+        "states": {
+          "0": "Celsius (Positive)",
+          "1": "Fahrenheit (Negative)",
+          "16": "Celsius (Negative)",
+          "17": "Fahrenheit (Positive)"
+        },
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 34,
+      "propertyKey": 255,
+      "propertyName": "Temperature Change Reporting: Threshold",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Temperature Change Reporting: Threshold",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "unit": "\u00b0F/C",
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 34,
+      "propertyKey": 65280,
+      "propertyName": "Temperature Change Reporting: Unit",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Temperature Change Reporting: Unit",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Celsius",
+          "1": "Fahrenheit"
+        },
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 36,
+      "propertyKey": 255,
+      "propertyName": "Overheat Trigger: Temperature",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Overheat Trigger: Temperature",
+        "default": 104,
+        "min": 0,
+        "max": 255,
+        "unit": "\u00b0F/C",
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 104
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 36,
+      "propertyKey": 65280,
+      "propertyName": "Overheat Trigger: Unit",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Overheat Trigger: Unit",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Celsius",
+          "1": "Fahrenheit"
+        },
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 37,
+      "propertyKey": 255,
+      "propertyName": "Overheat Recover: Temperature",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Overheat Recover: Temperature",
+        "default": 86,
+        "min": 0,
+        "max": 255,
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 86
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 37,
+      "propertyKey": 65280,
+      "propertyName": "Overheat Recover: Unit",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Overheat Recover: Unit",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Celsius",
+          "1": "Fahrenheit"
+        },
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyName": "Association Group 4: Overheat Basic Set Value (Trigger)",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Association Group 4: Overheat Basic Set Value (Trigger)",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Disable",
+          "1": "Basic Set on (0xff)",
+          "2": "Basic Set off (0x00)"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 39,
+      "propertyName": "Association Group 4: Overheat Basic Set Value (Cancel)",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Association Group 4: Overheat Basic Set Value (Cancel)",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Disable",
+          "1": "Basic Set on (0xff)",
+          "2": "Basic Set off (0x00)"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 40,
+      "propertyKey": 255,
+      "propertyName": "Freeze Threshold: Temperature",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Freeze Threshold: Temperature",
+        "default": 32,
+        "min": 0,
+        "max": 255,
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 32
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 40,
+      "propertyKey": 65280,
+      "propertyName": "Freeze Threshold: Unit",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Freeze Threshold: Unit",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Celsius",
+          "1": "Fahrenheit"
+        },
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 41,
+      "propertyKey": 255,
+      "propertyName": "Freeze Recover: Temperature",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Freeze Recover: Temperature",
+        "default": 36,
+        "min": 0,
+        "max": 255,
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 36
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 41,
+      "propertyKey": 65280,
+      "propertyName": "Freeze Recover: Unit",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Freeze Recover: Unit",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Celsius",
+          "1": "Fahrenheit"
+        },
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 43,
+      "propertyName": "Association Group 5: Freeze Basic Set Value (Trigger)",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Association Group 5: Freeze Basic Set Value (Trigger)",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Disable",
+          "1": "Basic Set on (0xff)",
+          "2": "Basic Set off (0x00)"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 44,
+      "propertyName": "Association Group 5: Freeze Basic Set Value (Cancel)",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Association Group 5: Freeze Basic Set Value (Cancel)",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Disable",
+          "1": "Basic Set on (0xff)",
+          "2": "Basic Set off (0x00)"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 51,
+      "propertyName": "Allow Valve Control - Water Leak Detected",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Allow Valve Control - Water Leak Detected",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 42,
+      "propertyName": "Allow Valve Control - Water Leak Detected During Freeze Mode",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Allow Valve Control - Water Leak Detected During Freeze Mode",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 98,
+      "propertyName": "Auto Test Mode: Frequency",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Auto Test Mode: Frequency",
+        "default": 14,
+        "min": 1,
+        "max": 30,
+        "unit": "days",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 14
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 65,
+      "propertyName": "Sound Alarms and Notifications",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Sound Alarms and Notifications",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 66,
+      "propertyName": "LED Brightness Level",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "LED Brightness Level",
+        "default": 80,
+        "min": 0,
+        "max": 99,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 80
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 67,
+      "propertyName": "Touch Keylock Protection",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Touch Keylock Protection",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 81,
+      "propertyKey": 1,
+      "propertyName": "Notification Report: Water Valve Open",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Notification Report: Water Valve Open",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 81,
+      "propertyKey": 2,
+      "propertyName": "Notification Report: Overheat Detection",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Notification Report: Overheat Detection",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 81,
+      "propertyKey": 4,
+      "propertyName": "Notification Report: Freeze Detection",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Notification Report: Freeze Detection",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 81,
+      "propertyKey": 8,
+      "propertyName": "Notification Report: Local Water Leak Sensor Probe Detection",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Notification Report: Local Water Leak Sensor Probe Detection",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 45,
+      "propertyName": "Temperature Auto Report Time Interval Set",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Auto Report Time in Mins",
+        "label": "Temperature Auto Report Time Interval Set",
+        "default": 15,
+        "min": 1,
+        "max": 60,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 15
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 52,
+      "propertyName": "Water Leak Cancellation Time",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Report When No Longer Trigger",
+        "label": "Water Leak Cancellation Time",
+        "default": 10,
+        "min": 0,
+        "max": 60,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 82,
+      "propertyName": "Notification - Overheat",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Disable / Enable Overheat Report",
+        "label": "Notification - Overheat",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 2,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 83,
+      "propertyName": "Notification - Freeze",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Disable / Enable Freeze Report",
+        "label": "Notification - Freeze",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 2,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 84,
+      "propertyName": "Notification - Water Leak",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Disable / Enable Water Leak Report",
+        "label": "Notification - Water Leak",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 2,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 85,
+      "propertyName": "Notification - AC Power",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Disable / Enable AC Power Report",
+        "label": "Notification - AC Power",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 2,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 86,
+      "propertyName": "Notification - Battery",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Disable / Enable Battery Report",
+        "label": "Notification - Battery",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 2,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 97,
+      "propertyKey": 1,
+      "propertyName": "param097_1",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 3,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 97,
+      "propertyKey": 2,
+      "propertyName": "param097_2",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 3,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 99,
+      "propertyName": "Motor Full Open Offset",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Motor Full Open Offset (%)",
+        "label": "Motor Full Open Offset",
+        "default": 9,
+        "min": 1,
+        "max": 10,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 9
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 100,
+      "propertyName": "Motor Full Close Offset",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Motor Full Close Offset (%)",
+        "label": "Motor Full Close Offset",
+        "default": 4,
+        "min": 1,
+        "max": 10,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 113,
+      "propertyName": "Battery Threshold Change",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Battery Threshold To Auto Report",
+        "label": "Battery Threshold Change",
+        "default": 10,
+        "min": 1,
+        "max": 100,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 114,
+      "propertyName": "Low Battery Report Level",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Low Battery Level to Report",
+        "label": "Low Battery Report Level",
+        "default": 30,
+        "min": 0,
+        "max": 100,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 30
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 115,
+      "propertyName": "Low Battery Detection Valve Control",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Water Valve Low Battery Control",
+        "label": "Low Battery Detection Valve Control",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 2,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 97,
+      "propertyName": "Auto Test Mode",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Causes the valve to periodically make a 1/8 turn to ensure it is operational",
+        "label": "Auto Test Mode",
+        "default": 3,
+        "min": 1,
+        "max": 3,
+        "states": {
+          "1": "Enable when excluded",
+          "2": "Enable when included",
+          "3": "Enable when included/excluded"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Heat Alarm",
+      "propertyKey": "Heat sensor status",
+      "propertyName": "Heat Alarm",
+      "propertyKeyName": "Heat sensor status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Heat sensor status",
+        "ccSpecific": {
+          "notificationType": 4
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "2": "Overheat detected",
+          "6": "Underheat detected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Water Alarm",
+      "propertyKey": "Sensor status",
+      "propertyName": "Water Alarm",
+      "propertyKeyName": "Sensor status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Sensor status",
+        "ccSpecific": {
+          "notificationType": 5
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "2": "Water leak detected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Power status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Power status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Power status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "Power has been applied"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Backup battery level status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Backup battery level status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Backup battery level status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "16": "Back-up battery is low",
+          "18": "Back-up battery disconnected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 18
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Water Valve",
+      "propertyKey": "Valve jammed status",
+      "propertyName": "Water Valve",
+      "propertyKeyName": "Valve jammed status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Valve jammed status",
+        "ccSpecific": {
+          "notificationType": 15
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "7": "Valve jammed"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 7
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Mains status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Mains status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Mains status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "2": "AC mains disconnected",
+          "3": "AC mains re-connected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Water Valve",
+      "propertyKey": "Valve operation status",
+      "propertyName": "Water Valve",
+      "propertyKeyName": "Valve operation status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Valve operation status",
+        "ccSpecific": {
+          "notificationType": 15
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Off / Closed",
+          "1": "On / Open"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmType",
+      "propertyName": "alarmType",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Type",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmLevel",
+      "propertyName": "alarmLevel",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Level",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 54
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 257
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 634
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "disconnected",
+      "propertyName": "disconnected",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Battery is disconnected",
+        "stateful": true,
+        "secret": false
+      },
+      "value": true
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "rechargeOrReplace",
+      "propertyName": "rechargeOrReplace",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Recharge or replace",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "No",
+          "1": "Soon",
+          "2": "Now"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "lowFluid",
+      "propertyName": "lowFluid",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Fluid is low",
+        "stateful": true,
+        "secret": false
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "overheating",
+      "propertyName": "overheating",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Overheating",
+        "stateful": true,
+        "secret": false
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "backup",
+      "propertyName": "backup",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Used as backup",
+        "stateful": true,
+        "secret": false
+      },
+      "value": true
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "rechargeable",
+      "propertyName": "rechargeable",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Rechargeable",
+        "stateful": true,
+        "secret": false
+      },
+      "value": true
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "chargingStatus",
+      "propertyName": "chargingStatus",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Charging status",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Discharging",
+          "1": "Charging",
+          "2": "Maintaining"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "isLow",
+      "propertyName": "isLow",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Low battery level",
+        "stateful": true,
+        "secret": false
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "level",
+      "propertyName": "level",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Battery level",
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "temperature",
+      "propertyName": "temperature",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Temperature",
+        "min": -128,
+        "max": 127,
+        "unit": "\u00b0C",
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "maximumCapacity",
+      "propertyName": "maximumCapacity",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Maximum capacity",
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions",
+        "stateful": true,
+        "secret": false
+      },
+      "value": ["2.10"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "7.18"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationBuildNumber",
+      "propertyName": "applicationBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Application build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 437
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationVersion",
+      "propertyName": "applicationVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Application version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "2.10.0"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "zWaveProtocolBuildNumber",
+      "propertyName": "zWaveProtocolBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 437
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "zWaveProtocolVersion",
+      "propertyName": "zWaveProtocolVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "7.18.8"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hostInterfaceBuildNumber",
+      "propertyName": "hostInterfaceBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Serial API build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hostInterfaceVersion",
+      "propertyName": "hostInterfaceVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Serial API version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "unused"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationFrameworkBuildNumber",
+      "propertyName": "applicationFrameworkBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave application framework API build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 437
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationFrameworkAPIVersion",
+      "propertyName": "applicationFrameworkAPIVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave application framework API version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "2.1.0"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "sdkVersion",
+      "propertyName": "sdkVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "SDK version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "7.18.8"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": 80,
+      "propertyKey": 3,
+      "propertyName": "Node Identify",
+      "propertyKeyName": "On/Off Period: Duration",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Sets the duration of an on/off period in 1/10th seconds. Must be set together with \"On/Off Cycle Count\"",
+        "label": "0x50 (Node Identify) - On/Off Period: Duration",
+        "ccSpecific": {
+          "indicatorId": 80,
+          "propertyId": 3
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": 80,
+      "propertyKey": 4,
+      "propertyName": "Node Identify",
+      "propertyKeyName": "On/Off Cycle Count",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Sets the number of on/off periods. 0xff means infinite. Must be set together with \"On/Off Period duration\"",
+        "label": "0x50 (Node Identify) - On/Off Cycle Count",
+        "ccSpecific": {
+          "indicatorId": 80,
+          "propertyId": 4
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": 80,
+      "propertyKey": 5,
+      "propertyName": "Node Identify",
+      "propertyKeyName": "On/Off Period: On time",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "This property is used to set the length of the On time during an On/Off period. It allows asymmetric On/Off periods. The value 0x00 MUST represent symmetric On/Off period (On time equal to Off time)",
+        "label": "0x50 (Node Identify) - On/Off Period: On time",
+        "ccSpecific": {
+          "indicatorId": 80,
+          "propertyId": 5
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": "value",
+      "propertyName": "value",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Indicator value",
+        "ccSpecific": {
+          "indicatorId": 0
+        },
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": "identify",
+      "propertyName": "identify",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Identify",
+        "states": {
+          "true": "Identify"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": "timeout",
+      "propertyName": "timeout",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": true,
+        "label": "Timeout",
+        "stateful": true,
+        "secret": false
+      }
+    }
+  ],
+  "endpoints": [
+    {
+      "nodeId": 259,
+      "index": 0,
+      "installerIcon": 5376,
+      "userIcon": 5376,
+      "deviceClass": {
+        "basic": {
+          "key": 3,
+          "label": "End Node"
+        },
+        "generic": {
+          "key": 16,
+          "label": "Binary Switch"
+        },
+        "specific": {
+          "key": 0,
+          "label": "Unused"
+        }
+      },
+      "commandClasses": [
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 37,
+          "name": "Binary Switch",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 85,
+          "name": "Transport Service",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 135,
+          "name": "Indicator",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 5,
+          "isSecure": true
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": true
+        },
+        {
+          "id": 49,
+          "name": "Multilevel Sensor",
+          "version": 11,
+          "isSecure": true
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 2,
+          "isSecure": true
+        }
+      ]
+    }
+  ]
+}

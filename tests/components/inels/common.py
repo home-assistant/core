@@ -1,11 +1,11 @@
 """Common methods used across tests."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import inels
 from homeassistant.components.inels.const import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 __all__ = [
     "MockConfigEntry",
@@ -111,7 +111,10 @@ async def old_entity_and_device_removal(
     entity_registry.async_update_entity(old_entity.entity_id, device_id=device.id)
 
     assert (
-        device_registry.async_get_device({(DOMAIN, old_entity.unique_id)}) is not None
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, old_entity.unique_id), config_entry.entry_id
+        )
+        is not None
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -134,4 +137,9 @@ async def old_entity_and_device_removal(
     assert entity_registry.async_get(old_entity.entity_id) is None
 
     # Verify that the device no longer exists in the registry
-    assert device_registry.async_get_device({(DOMAIN, old_entity.unique_id)}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, old_entity.unique_id), config_entry.entry_id
+        )
+        is None
+    )

@@ -48,6 +48,7 @@ async def test_moisture_switch_uses_cap_sensor_endpoint(
     hass: HomeAssistant,
     service: str,
     expected_method: str,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the moisture switch arms/disarms via the cap sensor endpoint.
 
@@ -70,7 +71,7 @@ async def test_moisture_switch_uses_cap_sensor_endpoint(
         assert await async_setup_component(hass, "switch", CONFIG)
         await hass.async_block_till_done()
 
-        entity_id = er.async_get(hass).async_get_entity_id(
+        entity_id = entity_registry.async_get_entity_id(
             "switch", "wirelesstag", f"{UUID}_moisture"
         )
         assert entity_id is not None

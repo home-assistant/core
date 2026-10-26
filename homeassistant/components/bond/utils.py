@@ -130,6 +130,10 @@ class BondDevice:
         """Return True if this device supports setting a light brightness."""
         return self._has_any_action({Action.SET_BRIGHTNESS})
 
+    def supports_set_color_temp(self) -> bool:
+        """Return True if this device supports setting a light color temperature."""
+        return self._has_any_action({Action.SET_COLOR_TEMP})
+
 
 class BondHub:
     """Hub device representing Bond Bridge."""

@@ -10,22 +10,35 @@ from pymelcloud import get_devices
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> bool:
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the MELCloud integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> None:
     """Establish connection with MELCloud."""
     try:
         async with asyncio.timeout(10):
@@ -39,12 +52,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> 
         if ex.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
             raise ConfigEntryAuthFailed from ex
         if ex.status == HTTPStatus.TOO_MANY_REQUESTS:
-            raise UpdateFailed(
-                "MELCloud rate limit exceeded. Your account may be temporarily blocked"
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="rate_limit_exceeded"
             ) from ex
-        raise UpdateFailed(f"Error communicating with MELCloud: {ex}") from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": str(ex)},
+        ) from ex
     except (TimeoutError, ClientConnectionError) as ex:
-        raise UpdateFailed(f"Error communicating with MELCloud: {ex}") from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": str(ex)},
+        ) from ex
 
     # Create per-device coordinators
     coordinators: dict[str, list[MelCloudDeviceUpdateCoordinator]] = {}
@@ -65,16 +86,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> 
 
         # Register parent devices so zone entities can reference via_device
         for coordinator in coordinators[device_type]:
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_from_info(
                 config_entry_id=entry.entry_id,
-                **coordinator.device_info,
+                device_info=coordinator.device_info,
             )
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

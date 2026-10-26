@@ -7,7 +7,7 @@ from datetime import datetime as dt, timedelta
 import logging
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.permissions import filter_entity_ids_by_permission
 from homeassistant.auth.permissions.const import POLICY_READ
@@ -26,6 +26,7 @@ from homeassistant.core import (
     EventStateChangedData,
     HomeAssistant,
     State,
+    async_noop,
     callback,
     is_callback,
     valid_entity_id,
@@ -95,14 +96,14 @@ def _ws_get_significant_states(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "history/history_during_period",
-        vol.Required("start_time"): str,
-        vol.Optional("end_time"): str,
-        vol.Required("entity_ids"): [str],
-        vol.Optional("include_start_time_state", default=True): bool,
-        vol.Optional("significant_changes_only", default=True): bool,
-        vol.Optional("minimal_response", default=False): bool,
-        vol.Optional("no_attributes", default=False): bool,
+        probatio.Required("type"): "history/history_during_period",
+        probatio.Required("start_time"): str,
+        probatio.Optional("end_time"): str,
+        probatio.Required("entity_ids"): [str],
+        probatio.Optional("include_start_time_state", default=True): bool,
+        probatio.Optional("significant_changes_only", default=True): bool,
+        probatio.Optional("minimal_response", default=False): bool,
+        probatio.Optional("no_attributes", default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -408,14 +409,14 @@ def _async_subscribe_events(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "history/stream",
-        vol.Required("start_time"): str,
-        vol.Optional("end_time"): str,
-        vol.Required("entity_ids"): [str],
-        vol.Optional("include_start_time_state", default=True): bool,
-        vol.Optional("significant_changes_only", default=True): bool,
-        vol.Optional("minimal_response", default=False): bool,
-        vol.Optional("no_attributes", default=False): bool,
+        probatio.Required("type"): "history/stream",
+        probatio.Required("start_time"): str,
+        probatio.Optional("end_time"): str,
+        probatio.Required("entity_ids"): [str],
+        probatio.Optional("include_start_time_state", default=True): bool,
+        probatio.Optional("significant_changes_only", default=True): bool,
+        probatio.Optional("minimal_response", default=False): bool,
+        probatio.Optional("no_attributes", default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -474,7 +475,7 @@ async def ws_stream(
             _async_send_empty_response(connection, msg_id, start_time, end_time)
             return
 
-        connection.subscriptions[msg_id] = callback(lambda: None)
+        connection.subscriptions[msg_id] = async_noop
         connection.send_result(msg_id)
         await _async_send_historical_states(
             hass,

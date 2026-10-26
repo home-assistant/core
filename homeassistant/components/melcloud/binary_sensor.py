@@ -15,8 +15,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
-from .entity import MelCloudEntity
+from .coordinator import MelCloudConfigEntry
+from .entity import MelCloudDescriptionEntity
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -149,23 +149,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MelDeviceBinarySensor(MelCloudEntity, BinarySensorEntity):
+class MelDeviceBinarySensor(MelCloudDescriptionEntity, BinarySensorEntity):
     """Representation of a Binary Sensor."""
 
     entity_description: MelcloudBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: MelCloudDeviceUpdateCoordinator,
-        description: MelcloudBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.device.serial}-{coordinator.device.mac}-{description.key}"
-        )
-        self._attr_device_info = coordinator.device_info
 
     @property
     @override

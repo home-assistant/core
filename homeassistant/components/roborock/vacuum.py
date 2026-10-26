@@ -9,6 +9,7 @@ from roborock.data.b01_q10.b01_q10_code_mappings import (
     YXDeviceState,
     YXFanLevel,
 )
+from roborock.data.b01_q10.b01_q10_containers import Q10RoborockPoint
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
@@ -75,6 +76,9 @@ Q7_STATE_CODE_TO_STATE = {
     WorkStatusMapping.SLEEPING: VacuumActivity.IDLE,
     WorkStatusMapping.WAITING_FOR_ORDERS: VacuumActivity.IDLE,
     WorkStatusMapping.PAUSED: VacuumActivity.PAUSED,
+    # An untouched pause falls asleep after ~10 minutes; the job is kept and
+    # resumes on the next start, so this is a pause rather than an idle state.
+    WorkStatusMapping.WORKING_SLEEP: VacuumActivity.PAUSED,
     WorkStatusMapping.DOCKING: VacuumActivity.RETURNING,
     WorkStatusMapping.CHARGING: VacuumActivity.DOCKED,
     WorkStatusMapping.SWEEP_MOPING: VacuumActivity.CLEANING,
@@ -284,6 +288,12 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         """Send vacuum to a specific target point."""
         await self.send(RoborockCommand.APP_GOTO_TARGET, [x, y])
 
+    async def async_set_vacuum_zoned_cleaning(
+        self, x1: int, y1: int, x2: int, y2: int, repeats: int
+    ) -> None:
+        """Clean the specified zone."""
+        await self.send(RoborockCommand.APP_ZONED_CLEAN, [[x1, y1, x2, y2, repeats]])
+
     @override
     async def async_get_segments(self) -> list[Segment]:
         """Get the segments that can be cleaned."""
@@ -390,6 +400,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_AREA
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
@@ -540,9 +551,120 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 },
             ) from err
 
+    @staticmethod
+    def _get_room_names(map_data: Any) -> dict[str, str]:
+        """Safely extract and normalize the room_names mapping."""
+        if map_data is None:
+            return {}
+
+        additional_parameters = getattr(map_data, "additional_parameters", None)
+        if not isinstance(additional_parameters, dict):
+            return {}
+
+        raw_room_names = additional_parameters.get("room_names")
+        if not isinstance(raw_room_names, dict):
+            return {}
+
+        room_names: dict[str, str] = {}
+        for raw_key, raw_value in raw_room_names.items():
+            try:
+                room_id = int(raw_key)
+            except TypeError, ValueError, OverflowError:
+                _LOGGER.error("Skipping invalid room id %r in room_names data", raw_key)
+                continue
+            if not isinstance(raw_value, str):
+                _LOGGER.error(
+                    "Skipping invalid room name for id %r: expected str, got %s",
+                    raw_key,
+                    type(raw_value).__name__,
+                )
+                continue
+            room_names[str(room_id)] = raw_value
+
+        return room_names
+
     async def get_maps(self) -> ServiceResponse:
         """Get map information such as map id and room ids."""
-        raise ServiceNotSupported(DOMAIN, "get_maps", self.entity_id)
+        map_trait = self.coordinator.api.map
+        map_content_trait = self.coordinator.api.map_content
+        if not await self.coordinator.async_refresh_q7_map():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            )
+
+        room_names = self._get_room_names(map_content_trait.map_data)
+
+        return {
+            "maps": [
+                {
+                    "flag": entry.id,
+                    "name": f"Map {entry.id}",
+                    "rooms": (
+                        dict(room_names) if entry.id == map_trait.current_map_id else {}
+                    ),
+                }
+                for entry in (map_trait.map_list or [])
+                if entry.id is not None
+            ]
+        }
+
+    @override
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned."""
+        map_trait = self.coordinator.api.map
+        map_content_trait = self.coordinator.api.map_content
+        current_map_id = map_trait.current_map_id
+        map_data = map_content_trait.map_data
+        if await self.coordinator.async_refresh_q7_map():
+            current_map_id = map_trait.current_map_id
+            map_data = map_content_trait.map_data
+        if current_map_id is None:
+            return []
+        room_names = self._get_room_names(map_data)
+        if not room_names:
+            return []
+        map_name = f"Map {current_map_id}"
+        return [
+            Segment(id=f"{current_map_id}_{room_id}", name=name, group=map_name)
+            for room_id, name in room_names.items()
+        ]
+
+    @override
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Clean the specified segments."""
+        if not await self.coordinator.async_refresh_q7_map():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            )
+        parsed: list[tuple[int, int]] = []
+        for seg_id in segment_ids:
+            try:
+                map_id_str, room_id_str = seg_id.split("_", maxsplit=1)
+                parsed.append((int(map_id_str), int(room_id_str)))
+            except ValueError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="segment_id_parse_error",
+                    translation_placeholders={"segment_id": seg_id},
+                ) from err
+        current_map_id = self.coordinator.api.map.current_map_id
+        current_map_segments = [
+            room_id for map_id, room_id in parsed if map_id == current_map_id
+        ]
+        if not current_map_segments:
+            return
+        try:
+            await self.coordinator.api.clean_segments(current_map_segments)
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "clean_segments",
+                },
+            ) from err
 
     async def get_vacuum_current_position(self) -> ServiceResponse:
         """Get the current position of the vacuum from the map."""
@@ -551,6 +673,12 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
         """Set the vacuum to go to a specific position."""
         raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)
+
+    async def async_set_vacuum_zoned_cleaning(
+        self, x1: int, y1: int, x2: int, y2: int, repeats: int
+    ) -> None:
+        """Clean the specified zone."""
+        raise ServiceNotSupported(DOMAIN, "set_vacuum_zoned_cleaning", self.entity_id)
 
 
 class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
@@ -764,8 +892,50 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
 
     async def get_vacuum_current_position(self) -> ServiceResponse:
         """Get the current position of the vacuum from the map."""
-        raise ServiceNotSupported(DOMAIN, "get_vacuum_current_position", self.entity_id)
+        if (position := self.coordinator.api.map.robot_position) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="position_not_found",
+            )
+        return {"x": position.x, "y": position.y}
 
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
-        """Set the vacuum to go to a specific position."""
-        raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)
+        """Move the Q10 to a position using the library goto operation."""
+        try:
+            await self.coordinator.api.vacuum.goto_position(Q10RoborockPoint(x, y))
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_q10_coordinate",
+                translation_placeholders={"x": str(x), "y": str(y)},
+            ) from err
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"command": "set_vacuum_goto_position"},
+            ) from err
+
+    async def async_set_vacuum_zoned_cleaning(
+        self, x1: int, y1: int, x2: int, y2: int, repeats: int
+    ) -> None:
+        """Clean the specified zone."""
+        try:
+            # Home Assistant defines repeats as additional passes, while Q10
+            # carries the total clean count.
+            await self.coordinator.api.vacuum.clean_zone(
+                Q10RoborockPoint(x1, y1),
+                Q10RoborockPoint(x2, y2),
+                clean_count=repeats + 1,
+            )
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_q10_zone",
+            ) from err
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"command": "set_vacuum_zoned_cleaning"},
+            ) from err

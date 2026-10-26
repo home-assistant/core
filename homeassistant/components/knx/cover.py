@@ -17,7 +17,6 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -31,20 +30,17 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_SYNC_STATE, DOMAIN, KNX_MODULE_KEY, CoverConf
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .const import CONF_SYNC_STATE, KNX_MODULE_KEY, CoverConf
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .schema import CoverSchema
-from .storage.const import (
-    CONF_ENTITY,
-    CONF_GA_ANGLE,
-    CONF_GA_POSITION_SET,
-    CONF_GA_POSITION_STATE,
-    CONF_GA_STEP,
-    CONF_GA_STOP,
-    CONF_GA_UP_DOWN,
-)
-from .storage.util import ConfigExtractor
+from .storage.entity_store_schema import CoverKnxConfig, KnxEntityData
+from .storage.knx_selector import state_and_passive, write_and_passive
 
 
 async def async_setup_entry(
@@ -70,7 +66,9 @@ async def async_setup_entry(
             KnxYamlCover(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.COVER):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.COVER, CoverKnxConfig
+    ):
         entities.extend(
             KnxUiCover(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -257,42 +255,39 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
             invert_updown=config[CoverConf.INVERT_UPDOWN],
             invert_position=config[CoverConf.INVERT_POSITION],
             invert_angle=config[CoverConf.INVERT_ANGLE],
+            sync_state=config[CONF_SYNC_STATE],
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=(
-                f"{self._device.updown.group_address}_"
-                f"{self._device.position_target.group_address}"
+            unique_id=build_yaml_unique_id(
+                self._device.updown.group_address,
+                self._device.position_target.group_address,
             ),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         self.init_base()
         if custom_device_class := config.get(CONF_DEVICE_CLASS):
             self._attr_device_class = custom_device_class
 
 
-def _create_ui_cover(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxCover:
-    """Return a KNX Light device to be used within XKNX."""
-
-    conf = ConfigExtractor(knx_config)
-
+def _create_ui_cover(xknx: XKNX, conf: CoverKnxConfig, name: str | None) -> XknxCover:
+    """Return a KNX Cover device to be used within XKNX."""
     return XknxCover(
         xknx=xknx,
         name=name,
-        group_address_long=conf.get_write_and_passive(CONF_GA_UP_DOWN),
-        group_address_short=conf.get_write_and_passive(CONF_GA_STEP),
-        group_address_stop=conf.get_write_and_passive(CONF_GA_STOP),
-        group_address_position=conf.get_write_and_passive(CONF_GA_POSITION_SET),
-        group_address_position_state=conf.get_state_and_passive(CONF_GA_POSITION_STATE),
-        group_address_angle=conf.get_write(CONF_GA_ANGLE),
-        group_address_angle_state=conf.get_state_and_passive(CONF_GA_ANGLE),
-        travel_time_down=conf.get(CoverConf.TRAVELLING_TIME_DOWN),
-        travel_time_up=conf.get(CoverConf.TRAVELLING_TIME_UP),
-        invert_updown=conf.get(CoverConf.INVERT_UPDOWN, default=False),
-        invert_position=conf.get(CoverConf.INVERT_POSITION, default=False),
-        invert_angle=conf.get(CoverConf.INVERT_ANGLE, default=False),
-        sync_state=conf.get(CONF_SYNC_STATE),
+        group_address_long=write_and_passive(conf.ga_up_down),
+        group_address_short=write_and_passive(conf.ga_step),
+        group_address_stop=write_and_passive(conf.ga_stop),
+        group_address_position=write_and_passive(conf.ga_position_set),
+        group_address_position_state=state_and_passive(conf.ga_position_state),
+        group_address_angle=conf.ga_angle.write if conf.ga_angle else None,
+        group_address_angle_state=state_and_passive(conf.ga_angle),
+        travel_time_down=conf.travelling_time_down,
+        travel_time_up=conf.travelling_time_up,
+        invert_updown=conf.invert_updown,
+        invert_position=conf.invert_position,
+        invert_angle=conf.invert_angle,
+        sync_state=conf.sync_state,
     )
 
 
@@ -302,15 +297,16 @@ class KnxUiCover(_KnxCover, KnxUiEntity):
     _device: XknxCover
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[CoverKnxConfig],
     ) -> None:
         """Initialize KNX cover."""
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        self._device = _create_ui_cover(
-            knx_module.xknx, config[DOMAIN], config[CONF_ENTITY][CONF_NAME]
-        )
+        self._device = _create_ui_cover(knx_module.xknx, config.knx, config.entity.name)
         self.init_base()

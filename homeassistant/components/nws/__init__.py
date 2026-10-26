@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 
 from pynws import NwsNoDataError, SimpleNWS, call_with_retry
@@ -11,20 +11,25 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
-    EntityStateAttribute,
     Platform,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import debounce, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    debounce,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
     async_track_state_change_event,
 )
-from homeassistant.helpers.location import has_location
+from homeassistant.helpers.location import Coordinates, get_state_coordinates
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -42,6 +47,7 @@ from .const import (
     RETRY_STOP,
 )
 from .coordinator import NWSObservationDataUpdateCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +65,7 @@ def get_base_unique_id(entry: ConfigEntry) -> str:
     """Return base unique id from config entry."""
     if entry.data.get(CONF_LOCATION_ENTITY):
         return entry.entry_id
-    return base_unique_id(entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])
+    return base_unique_id(**entry.data[CONF_LOCATION])
 
 
 @dataclass
@@ -75,7 +81,16 @@ class NWSData:
     location_entity_id: str | None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the National Weather Service (NWS) integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
     """Set up a National Weather Service entry."""
     api_key = entry.data[CONF_API_KEY]
     location_entity_id: str | None = None
@@ -95,18 +110,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
             )
         location_entity_id = entity_entry.entity_id
         state = hass.states.get(location_entity_id)
-        if state is None or not has_location(state):
+        if state is None or (coordinates := get_state_coordinates(state)) is None:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="entity_unavailable",
                 translation_placeholders={"entity_id": location_entity_id},
             )
-        latitude = state.attributes[EntityStateAttribute.LATITUDE]
-        longitude = state.attributes[EntityStateAttribute.LONGITUDE]
+        latitude = coordinates.latitude
+        longitude = coordinates.longitude
         station = None
     else:
-        latitude = entry.data[CONF_LATITUDE]
-        longitude = entry.data[CONF_LONGITUDE]
+        latitude = entry.data[CONF_LOCATION][CONF_LATITUDE]
+        longitude = entry.data[CONF_LOCATION][CONF_LONGITUDE]
         station = entry.data[CONF_STATION]
 
     client_session = async_get_clientsession(hass)
@@ -116,8 +131,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     await nws_data.set_station(station)
 
     def async_setup_update_forecast(
-        retry_interval: datetime.timedelta | float,
-        retry_stop: datetime.timedelta | float,
+        retry_interval: dt.timedelta | float,
+        retry_stop: dt.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
         async def update_forecast() -> None:
             """Retrieve forecast."""
@@ -134,8 +149,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
         return update_forecast
 
     def async_setup_update_forecast_hourly(
-        retry_interval: datetime.timedelta | float,
-        retry_stop: datetime.timedelta | float,
+        retry_interval: dt.timedelta | float,
+        retry_stop: dt.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
         async def update_forecast_hourly() -> None:
             """Retrieve forecast hourly."""
@@ -156,7 +171,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
         entry,
         nws_data,
         location_entity_id=location_entity_id,
-        initial_position=(latitude, longitude) if location_entity_id else None,
+        initial_coordinates=Coordinates(latitude, longitude)
+        if location_entity_id
+        else None,
     )
 
     # Don't use retries in setup
@@ -214,20 +231,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
         ) -> None:
             """Request coordinator refresh when the location entity moves."""
             new_state = event.data["new_state"]
-            if new_state is None or not has_location(new_state):
-                return
-            new_lat = new_state.attributes[EntityStateAttribute.LATITUDE]
-            new_lon = new_state.attributes[EntityStateAttribute.LONGITUDE]
             if (
-                new_lat == entry.runtime_data.latitude
-                and new_lon == entry.runtime_data.longitude
+                new_state is None
+                or (coordinates := get_state_coordinates(new_state)) is None
+            ):
+                return
+            if (
+                coordinates.latitude == entry.runtime_data.latitude
+                and coordinates.longitude == entry.runtime_data.longitude
             ):
                 return
             dist = location_util.distance(
                 entry.runtime_data.latitude,
                 entry.runtime_data.longitude,
-                new_lat,
-                new_lon,
+                coordinates.latitude,
+                coordinates.longitude,
             )
             if dist is not None and dist <= LOCATION_CHANGE_THRESHOLD:
                 return
@@ -261,12 +279,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def device_info(entry: ConfigEntry, nws_data: NWSData) -> DeviceInfo:
@@ -275,10 +291,23 @@ def device_info(entry: ConfigEntry, nws_data: NWSData) -> DeviceInfo:
     if nws_data.location_entity_id:
         name = f"NWS: {nws_data.location_entity_id}"
     else:
-        name = f"NWS: {entry.data[CONF_LATITUDE]}, {entry.data[CONF_LONGITUDE]}"
+        location = entry.data[CONF_LOCATION]
+        name = f"NWS: {location[CONF_LATITUDE]}, {location[CONF_LONGITUDE]}"
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, uid)},
         manufacturer="National Weather Service",
         name=name,
     )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
+    """Migrate config entry."""
+
+    if entry.version < 2:
+        data = dict(entry.data)
+        long = data.pop(CONF_LONGITUDE, None)
+        lat = data.pop(CONF_LATITUDE, None)
+        if lat is not None and long is not None:
+            data[CONF_LOCATION] = {CONF_LATITUDE: lat, CONF_LONGITUDE: long}
+        hass.config_entries.async_update_entry(entry, data=data, version=2)

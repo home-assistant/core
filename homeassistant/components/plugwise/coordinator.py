@@ -165,9 +165,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
                     (DOMAIN, device_id), self.config_entry.entry_id
                 )
             ) is not None:
-                device_reg.async_update_device(
-                    device_entry.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_reg.async_remove_device(device_entry.id)
                 LOGGER.debug(
                     "%s %s %s removed from device_registry",
                     DOMAIN,

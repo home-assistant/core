@@ -2,14 +2,14 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The MAC address of the device does not match the previous MAC address"
     },
     "error": {
+      "account_device": "The Reolink device is set up as an 'account device', which blocks local login. Reset the device and set it up again as a 'local device' following the Reolink instructions: {reolink_account_device_link}",
       "api_error": "API error occurred",
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_mac_address": "Could not get the MAC address of the device",
       "not_admin": "User needs to be admin, user \"{username}\" has authorization level \"{userlevel}\"",
       "password_incompatible": "Password contains incompatible special character or is too long, maximum 31 characters and only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}. The streaming protocols necessitate these additional password restrictions.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
@@ -244,6 +244,9 @@
       },
       "ptz_zoom_out": {
         "name": "PTZ zoom out"
+      },
+      "sync_time": {
+        "name": "Synchronize time"
       }
     },
     "camera": {
@@ -481,6 +484,15 @@
       }
     },
     "select": {
+      "anti_flicker": {
+        "name": "Anti-flicker",
+        "state": {
+          "f50": "50 Hz",
+          "f60": "60 Hz",
+          "off": "[%key:common::state::off%]",
+          "other": "Other"
+        }
+      },
       "auto_quick_reply_message": {
         "name": "Auto quick reply message",
         "state": {
@@ -543,6 +555,7 @@
         "state": {
           "adaptive": "Adaptive",
           "auto": "[%key:common::state::auto%]",
+          "auto_pir": "Auto PIR",
           "autoadaptive": "Auto adaptive",
           "off": "[%key:common::state::off%]",
           "onatnight": "On at night",
@@ -727,6 +740,28 @@
           "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
           "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
+      },
+      "work_mode_battery": {
+        "name": "Work mode battery",
+        "state": {
+          "always_on_custom": "Always on custom",
+          "continuous_recording": "Always on continuous recording",
+          "custom": "Custom",
+          "detection_priority": "Detection priority",
+          "extended_recording": "AI extended recording",
+          "optimal_surveillance": "Optimal surveillance",
+          "power_saving": "Power saving",
+          "pre_recording": "Always on pre-recording",
+          "smart": "Smart power"
+        }
+      },
+      "work_mode_powered": {
+        "name": "Work mode powered",
+        "state": {
+          "alarm_based": "Alarm recording",
+          "continuous": "Continuous recording",
+          "custom": "[%key:component::reolink::entity::select::work_mode_battery::state::custom%]"
+        }
       }
     },
     "sensor": {
@@ -856,6 +891,9 @@
       "privacy_mask": {
         "name": "Privacy mask"
       },
+      "privacy_mask_lens": {
+        "name": "Privacy mask lens {channel}"
+      },
       "privacy_mode": {
         "name": "Privacy mode"
       },
@@ -876,18 +914,41 @@
       },
       "siren_on_event": {
         "name": "Siren on event"
+      },
+      "tamper_enabled": {
+        "name": "Tamper alarm"
+      }
+    },
+    "time": {
+      "floodlight_schedule_end": {
+        "name": "Floodlight schedule end"
+      },
+      "floodlight_schedule_start": {
+        "name": "Floodlight schedule start"
       }
     }
   },
   "exceptions": {
+    "account_device": {
+      "message": "Reolink device {host} is set up as an 'account device', which blocks local login. Reset the device and set it up again as a 'local device' following the Reolink instructions: {reolink_account_device_link}, also see the troubleshooting steps: {account_device_link}"
+    },
     "api_error": {
       "message": "The device responded with an error: {err}"
+    },
+    "authentication_failed": {
+      "message": "Authentication failed for {host}"
+    },
+    "config_entry_not_found": {
+      "message": "Could not find Reolink config entry ID \"{config_entry_id}\""
     },
     "config_entry_not_ready": {
       "message": "Error while trying to set up {host}: {err}"
     },
     "connection_error": {
       "message": "Could not connect to the device: {err}"
+    },
+    "firmware_check_failed": {
+      "message": "Error checking Reolink firmware update from {name}, if the camera is blocked from accessing the internet, disable the update entity"
     },
     "firmware_install_error": {
       "message": "Error trying to update Reolink firmware: {err}"
@@ -907,14 +968,20 @@
     "login_error": {
       "message": "Error during login attempt: {err}"
     },
+    "no_access_to_path": {
+      "message": "Cannot write `{filename}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+    },
     "no_data": {
       "message": "Device returned no data: {err}"
+    },
+    "no_mac_address": {
+      "message": "Could not get the MAC address of the device"
     },
     "not_supported": {
       "message": "Function not supported by this device: {err}"
     },
-    "service_entry_ex": {
-      "message": "Reolink {service_name} error: config entry not found or not loaded"
+    "password_incompatible": {
+      "message": "Reolink password contains an incompatible special character or is too long; please change the password to only contain characters a-z, A-Z, 0-9, or {special_chars} and not be longer than 31 characters"
     },
     "service_not_chime": {
       "message": "Reolink play_chime error: {device_name} is not a Chime"
@@ -934,8 +1001,26 @@
     "unexpected_data": {
       "message": "Device returned unexpected data: {err}"
     },
+    "unknown_media_item": {
+      "message": "Unknown media item \"{identifier}\""
+    },
     "update_already_running": {
       "message": "Reolink firmware update already running, wait on completion before starting another"
+    },
+    "update_api_error": {
+      "message": "The device {host} responded with an error while updating its state"
+    },
+    "update_connection_error": {
+      "message": "Could not connect to {host} while updating its state"
+    },
+    "update_failed": {
+      "message": "Error updating the state of {host}"
+    },
+    "update_timeout": {
+      "message": "Timeout while updating the state of {host}"
+    },
+    "user_not_admin": {
+      "message": "User \"{username}\" has authorization level \"{userlevel}\", only admin users can change camera settings"
     },
     "webhook_no_url": {
       "message": "Error registering URL for webhook {event_id}: Home Assistant URL is not available"
@@ -1019,6 +1104,20 @@
         }
       },
       "name": "PTZ move"
+    },
+    "snapshot_past": {
+      "description": "Takes a snapshot from a past moment in time out of the recordings of a camera and stores it in a file.",
+      "fields": {
+        "filename": {
+          "description": "Full path to filename.",
+          "name": "Filename"
+        },
+        "timestamp": {
+          "description": "Moment in time to take the snapshot from, in the local time of Home Assistant.",
+          "name": "Timestamp"
+        }
+      },
+      "name": "Take camera snapshot from past"
     }
   }
 }

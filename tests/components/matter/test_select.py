@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
+from matter_server.common import custom_clusters
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -17,6 +18,12 @@ from .common import (
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
+
+
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.SELECT
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -363,4 +370,232 @@ async def test_door_lock_operating_mode_select(
             attribute=clusters.DoorLock.Attributes.OperatingMode,
         ),
         value=clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_chime"])
+async def test_chime_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entity for the Chime cluster's SelectedChime attribute."""
+    entity_id = "select.mock_chime_chime_sound"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Classic Ding Dong"
+    assert state.attributes["options"] == [
+        "Classic Ding Dong",
+        "Merry Melodies",
+        "Digital Alert",
+    ]
+
+    set_node_attribute(matter_node, 1, 1366, 1, 2)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "Merry Melodies"
+
+    matter_client.write_attribute.reset_mock()
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "Classic Ding Dong"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.Chime.Attributes.SelectedChime,
+        ),
+        value=1,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["wago_home_relay_16a"])
+async def test_wago_switch_type_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entity for the WAGO custom cluster SwitchType attribute."""
+    entity_id = "select.home_relay_16a_thread_switch_type"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "switch"
+    assert state.attributes["options"] == ["switch", "button"]
+
+    set_node_attribute(matter_node, 0, 355793920, 1, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "button"
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "switch"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=0,
+            attribute=custom_clusters.WagoCluster.Attributes.SwitchType,
+        ),
+        value=1,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["wago_home_relay_16a"])
+async def test_wago_connection_mode_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entity for the WAGO custom cluster DirectlyConnected attribute."""
+    entity_id = "select.home_relay_16a_thread_connection_mode"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "directly_connected"
+    assert state.attributes["options"] == ["directly_connected", "matter_only"]
+
+    set_node_attribute(matter_node, 0, 355793920, 0, False)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "matter_only"
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "matter_only"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=0,
+            attribute=custom_clusters.WagoCluster.Attributes.DirectlyConnected,
+        ),
+        value=False,
+    )
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "directly_connected"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=0,
+            attribute=custom_clusters.WagoCluster.Attributes.DirectlyConnected,
+        ),
+        value=True,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["wago_home_blind_control"])
+async def test_wago_travel_time_mode_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entity for the WAGO WindowCovering ManualMode attribute."""
+    entity_id = "select.home_blind_wi_fi_travel_time_mode"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "manual"
+    assert state.attributes["options"] == ["automatic", "manual"]
+
+    set_node_attribute(matter_node, 1, 258, 355729412, False)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "automatic"
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "automatic"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.WindowCovering.Attributes.WagoManualMode,
+        ),
+        value=False,
+    )
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "manual"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.WindowCovering.Attributes.WagoManualMode,
+        ),
+        value=True,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["wago_home_blind_control"])
+async def test_wago_blind_type_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entity for the WAGO WindowCovering BlindType attribute."""
+    entity_id = "select.home_blind_wi_fi_blind_type"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "roller_shutter"
+    assert state.attributes["options"] == ["roller_shutter", "venetian_blind"]
+
+    set_node_attribute(matter_node, 1, 258, 355729413, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "venetian_blind"
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "venetian_blind"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.WindowCovering.Attributes.WagoBlindType,
+        ),
+        value=1,
+    )
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "roller_shutter"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.WindowCovering.Attributes.WagoBlindType,
+        ),
+        value=0,
     )

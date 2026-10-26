@@ -3,6 +3,8 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockUser, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import conversation
 from homeassistant.components.button import SERVICE_PRESS
@@ -33,9 +35,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, entity_registry as er, intent
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser, async_mock_service
-from tests.typing import ClientSessionGenerator
 
 
 async def test_http_handle_intent(
@@ -177,7 +176,10 @@ async def test_http_handle_intent_match_failure(
     assert resp.status == 200
     data = await resp.json()
 
-    assert "DUPLICATE_NAME" in data["speech"]["plain"]["speech"]
+    # The API speaks the failure, so it must be a sentence and not a repr
+    assert data["speech"]["plain"]["speech"] == (
+        "Multiple entities share the name (given name 'Garage Door')"
+    )
 
 
 async def test_http_assistant(

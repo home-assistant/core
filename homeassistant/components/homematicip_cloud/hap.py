@@ -18,10 +18,18 @@ from homematicip.exceptions.connection_exceptions import (
 import homeassistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN, PLATFORMS
+from .const import (
+    DOMAIN,
+    HMIPC_AUTHTOKEN,
+    HMIPC_HAPID,
+    HMIPC_NAME,
+    HMIPC_PIN,
+    PLATFORMS,
+)
 from .errors import HmipcConnectionError
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,6 +105,9 @@ class HomematicipAuth:
             _LOGGER.debug("Connection request result: %s", result)
         except HmipConnectionError:
             return None
+        # a rejected SGTIN or PIN comes back as a failed result, not an exception
+        if not result.success:
+            return None
         return auth
 
 
@@ -128,6 +139,8 @@ class HomematicipHAP:
                 self.config_entry.data.get(HMIPC_NAME),
             )
 
+        except HmipAuthenticationError as err:
+            raise ConfigEntryAuthFailed from err
         except HmipcConnectionError as err:
             raise ConfigEntryNotReady from err
         except Exception as err:  # noqa: BLE001
@@ -138,11 +151,31 @@ class HomematicipHAP:
             "Connected to HomematicIP with HAP %s", self.config_entry.unique_id
         )
 
+        # Register the access point as a device before forwarding platforms so
+        # child devices can resolve it as their via_device.
+        self._async_register_access_point()
+
         await self.hass.config_entries.async_forward_entry_setups(
             self.config_entry, PLATFORMS
         )
 
         return True
+
+    @callback
+    def _async_register_access_point(self) -> None:
+        """Register the access point as a device in the device registry."""
+        home = self.home
+        hapname = (
+            home.label
+            if home.label != self.config_entry.unique_id
+            else f"Home-{home.label}"
+        )
+        dr.async_get(self.hass).async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            identifiers={(DOMAIN, home.id)},
+            manufacturer="eQ-3",
+            name=hapname,
+        )
 
     @callback
     def async_update(self, *args, **kwargs) -> None:
@@ -381,6 +414,8 @@ class HomematicipHAP:
             context = await build_context_async(hass, hapid, authtoken)
             home.init_with_context(context, True, get_async_client(hass))
             await home.get_current_state_async()
+        except HmipAuthenticationError:
+            raise
         except HmipConnectionError as err:
             raise HmipcConnectionError from err
         home.on_update(self.async_update)

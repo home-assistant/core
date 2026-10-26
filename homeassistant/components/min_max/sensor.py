@@ -5,9 +5,10 @@ import logging
 import statistics
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_STATE_CLASSES,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
@@ -66,13 +67,13 @@ SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]): vol.All(
-            cv.string, vol.In(SENSOR_TYPES.values())
-        ),
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
-        vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(
+            CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]
+        ): probatio.All(cv.string, probatio.In(SENSOR_TYPES.values())),
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_ENTITY_IDS): cv.entity_ids,
+        probatio.Optional(CONF_ROUND_DIGITS, default=2): probatio.Coerce(int),
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -372,10 +373,15 @@ class MinMaxSensor(SensorEntity):
                 device_classes.append(None)
 
         # Only inherit device_class if all entities have the same non-None device_class
-        if device_classes and all(
-            dc is not None and dc == device_classes[0] for dc in device_classes
+        # and it allows the measurement state class, e.g. not energy
+        first = device_classes[0] if device_classes else None
+        if (
+            first is not None
+            and all(dc == first for dc in device_classes)
+            and SensorStateClass.MEASUREMENT
+            in DEVICE_CLASS_STATE_CLASSES.get(first, {SensorStateClass.MEASUREMENT})
         ):
-            self._attr_device_class = device_classes[0]
+            self._attr_device_class = first
 
     @callback
     def _calc_values(self) -> None:
