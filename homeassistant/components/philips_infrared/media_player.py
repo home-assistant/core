@@ -50,7 +50,7 @@ class PhilipsIrTvMediaPlayer(PhilipsIrEntity, MediaPlayerEntity):
 
     def __init__(self, entry: PhilipsIrConfigEntry, infrared_entity_id: str) -> None:
         """Initialize Philips IR media player."""
-        super().__init__(entry, infrared_entity_id, unique_id_suffix="media_player")
+        super().__init__(entry, infrared_entity_id)
         self._attr_state = MediaPlayerState.ON
 
     # Philips TVs only have a power toggle code, no discrete on and off codes.
