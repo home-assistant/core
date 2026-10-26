@@ -105,7 +105,11 @@ async def async_setup_entry(
     if not await connect_gateway_class.async_connect_gateway(
         host, key, blind_type_list
     ):
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        )
     motion_gateway = connect_gateway_class.gateway_device
 
     coordinator = DataUpdateCoordinatorMotionBlinds(
@@ -134,9 +138,9 @@ async def async_setup_entry(
         blind.device_type not in DEVICE_TYPES_WIFI
         for blind in motion_gateway.device_list.values()
     ):
-        dr.async_get(hass).async_get_or_create(
+        dr.async_get(hass).async_get_or_create_from_info(
             config_entry_id=entry.entry_id,
-            **gateway_device_info(motion_gateway),
+            device_info=gateway_device_info(motion_gateway),
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

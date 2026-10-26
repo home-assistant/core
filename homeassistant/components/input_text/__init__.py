@@ -30,6 +30,8 @@ from .const import (
     DATA_INPUT_TEXT,
     DOMAIN,
     SERVICE_SET_VALUE,
+    InputTextService,
+    InputTextServiceArgument,
 )
 from .entity import InputText
 from .services import async_setup_services
@@ -73,6 +75,8 @@ __all__ = [
     "SERVICE_RELOAD",
     "SERVICE_SET_VALUE",
     "STORAGE_FIELDS",
+    "InputTextService",
+    "InputTextServiceArgument",
 ]
 
 

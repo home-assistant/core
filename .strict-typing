@@ -127,6 +127,7 @@ homeassistant.components.blueprint.*
 homeassistant.components.bluesound.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_adapters.*
+homeassistant.components.bluetti_modbus.*
 homeassistant.components.bond.*
 homeassistant.components.bosch_alarm.*
 homeassistant.components.braviatv.*
@@ -230,6 +231,7 @@ homeassistant.components.flexit_bacnet.*
 homeassistant.components.flow_it.*
 homeassistant.components.flux_led.*
 homeassistant.components.folder_watcher.*
+homeassistant.components.foreca.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.freshr.*
 homeassistant.components.fritz.*
@@ -410,6 +412,7 @@ homeassistant.components.met_eireann.*
 homeassistant.components.metoffice.*
 homeassistant.components.midea.*
 homeassistant.components.miele.*
+homeassistant.components.mijn_farmad_apotheek.*
 homeassistant.components.mikrotik.*
 homeassistant.components.min_max.*
 homeassistant.components.minecraft_server.*
@@ -544,11 +547,13 @@ homeassistant.components.saunum.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
 homeassistant.components.schlage.*
+homeassistant.components.scorpiontrack.*
 homeassistant.components.scrape.*
 homeassistant.components.script.*
 homeassistant.components.search.*
 homeassistant.components.season.*
 homeassistant.components.select.*
+homeassistant.components.sensecap_lorawan.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
@@ -580,6 +585,7 @@ homeassistant.components.sonarr.*
 homeassistant.components.spaceapi.*
 homeassistant.components.specialized_turbo.*
 homeassistant.components.speedtestdotnet.*
+homeassistant.components.spin_ble.*
 homeassistant.components.spotify.*
 homeassistant.components.sql.*
 homeassistant.components.squeezebox.*
@@ -620,6 +626,7 @@ homeassistant.components.teltonika.*
 homeassistant.components.teslemetry.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
+homeassistant.components.thethingsnetwork_lorawan.*
 homeassistant.components.threema.*
 homeassistant.components.threshold.*
 homeassistant.components.tibber.*

@@ -23,7 +23,7 @@ from homeassistant.components.led_infrared.const import (
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.led_infrared.async_setup_entry", return_value=True
+        "homeassistant.components.led_infrared.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -74,6 +74,10 @@ def mock_infrared_code_to_command() -> Generator[None]:
         ),
         patch(
             "infrared_protocols.codes.generic.led.Generic10KeyCode.to_command",
+            new=mock_to_command,
+        ),
+        patch(
+            "infrared_protocols.codes.generic.led.Generic21KeyCode.to_command",
             new=mock_to_command,
         ),
     ):

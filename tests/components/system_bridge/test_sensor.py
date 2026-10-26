@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
+from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
 from systembridgeconnector.models.fixtures.modules.memory import FIXTURE_MEMORY
 
 from homeassistant.config_entries import ConfigEntryState
@@ -66,6 +67,30 @@ async def test_sensor_memory_missing(
     state = hass.states.get("sensor.hostname_memory_used")
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_sensor_load_average_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test load average sensors are not added when they are not reported."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value,
+        cpu=replace(
+            FIXTURE_CPU, load_average=None, load_average_5=None, load_average_15=None
+        ),
+    )
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.hostname_load") is not None
+    assert hass.states.get("sensor.hostname_load_average_1_min") is None
 
 
 @pytest.mark.usefixtures("mock_version")

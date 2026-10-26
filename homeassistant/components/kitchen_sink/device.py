@@ -3,7 +3,7 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import DOMAIN
+from .const import DOMAIN
 
 
 def async_create_device(

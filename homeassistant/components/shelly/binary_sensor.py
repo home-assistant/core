@@ -107,6 +107,25 @@ class RpcPresenceBinarySensor(RpcBinarySensor):
         return available and self.coordinator.device.config[self.key]["enable"]
 
 
+class RpcCameraZoneBinarySensor(RpcBinarySensor):
+    """Represent a RPC binary sensor entity for camerazone component."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcBinarySensorDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if not get_rpc_custom_name(coordinator.device, key):
+            _, _, component_id = get_rpc_key(key)
+            self._attr_translation_placeholders = {"zone_number": component_id}
+            self._attr_translation_key = "zone_motion_with_number"
+
+
 class RpcBluTrvBinarySensor(RpcBinarySensor):
     """Represent a RPC BluTrv binary sensor."""
 
@@ -392,6 +411,12 @@ RPC_SENSORS: Final = {
         key="camera",
         sub_key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
+    ),
+    "camerazone_motion": RpcBinarySensorDescription(
+        key="camerazone",
+        sub_key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        entity_class=RpcCameraZoneBinarySensor,
     ),
     "motion": RpcBinarySensorDescription(
         key="motion",

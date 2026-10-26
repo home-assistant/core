@@ -80,15 +80,14 @@ from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager
 from homeassistant.auth.models import AuthFlowContext, AuthFlowResult
 from homeassistant.components import onboarding
-from homeassistant.components.http import KEY_HASS
-from homeassistant.components.http.auth import async_user_not_allowed_do_auth
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import (
     log_invalid_auth,
     process_success_login,
     process_wrong_login,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import (
     NoURLAvailableError,
