@@ -41,6 +41,8 @@ DLNA_RESOLVE_FILTER: Final = "*"
 # Metadata needed to resolve a path
 DLNA_PATH_FILTER: Final = ["id", "upnp:class", "dc:title"]
 DLNA_SORT_CRITERIA: Final = ["+upnp:class", "+upnp:originalTrackNumber", "+dc:title"]
+# Upper bound on children fetched across pages for one browse
+MAX_BROWSE_CHILDREN: Final = 10000
 
 PROTOCOL_HTTP: Final = "http-get"
 PROTOCOL_RTSP: Final = "rtsp-rtp-udp"

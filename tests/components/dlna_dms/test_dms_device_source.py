@@ -1,7 +1,7 @@
 """Test the browse and resolve methods of DmsDeviceSource."""
 
 from typing import Final
-from unittest.mock import ANY, Mock, call
+from unittest.mock import ANY, Mock, call, patch
 
 from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, UpnpError
 from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
@@ -359,6 +359,31 @@ async def test_resolve_path_browsed(hass: HomeAssistant, dms_device_mock: Mock) 
     ]
 
 
+async def test_resolve_path_browsed_later_page(
+    hass: HomeAssistant, dms_device_mock: Mock
+) -> None:
+    """Test async_resolve_path: browsing finds a child past the first page."""
+    dms_device_mock.async_search_directory.side_effect = UpnpActionError()
+    dms_device_mock.async_browse_direct_children.side_effect = [
+        DmsDevice.BrowseResult(_browse_items("a", "b"), 2, 3, 0),
+        DmsDevice.BrowseResult(_browse_items("c"), 1, 3, 0),
+    ]
+    dms_device_mock.async_browse_metadata.return_value = didl_lite.Item(
+        id="c_id",
+        restricted="false",
+        title="c",
+        res=[didl_lite.Resource(uri="c.mp3", protocol_info="http-get:*:audio/mpeg:")],
+    )
+
+    result = await async_resolve_media(hass, "c")
+
+    assert result.didl_metadata.id == "c_id"
+    assert dms_device_mock.async_browse_direct_children.await_args_list == [
+        call("0", metadata_filter=["id", "upnp:class", "dc:title"]),
+        call("0", metadata_filter=["id", "upnp:class", "dc:title"], starting_index=2),
+    ]
+
+
 async def test_resolve_path_browsed_nothing(
     hass: HomeAssistant, dms_device_mock: Mock
 ) -> None:
@@ -622,6 +647,95 @@ async def test_browse_media_object(hass: HomeAssistant, dms_device_mock: Mock) -
         assert child.can_play
         assert not child.can_expand
         assert not child.children
+
+
+def _browse_items(*titles: str) -> BrowseResultList:
+    """Return DIDL-Lite items with the given titles."""
+    return [
+        didl_lite.Item(id=f"{title}_id", restricted="false", title=title, res=[])
+        for title in titles
+    ]
+
+
+@pytest.mark.parametrize(
+    (
+        "pages",
+        "max_children",
+        "expected_titles",
+        "expected_not_shown",
+        "expected_starting_indexes",
+    ),
+    [
+        pytest.param(
+            [
+                DmsDevice.BrowseResult(_browse_items("a", "b"), 2, 5, 0),
+                DmsDevice.BrowseResult(_browse_items("c", "d"), 2, 5, 0),
+                DmsDevice.BrowseResult(_browse_items("e"), 1, 5, 0),
+            ],
+            10000,
+            ["a", "b", "c", "d", "e"],
+            0,
+            [2, 4],
+            id="all_pages",
+        ),
+        pytest.param(
+            [
+                DmsDevice.BrowseResult(_browse_items("a", "b"), 2, 10, 0),
+                DmsDevice.BrowseResult([], 0, 10, 0),
+            ],
+            10000,
+            ["a", "b"],
+            8,
+            [2],
+            id="total_overstated",
+        ),
+        pytest.param(
+            [
+                DmsDevice.BrowseResult(_browse_items("a"), 50, 100, 0),
+                DmsDevice.BrowseResult(_browse_items("b"), 50, 100, 0),
+                DmsDevice.BrowseResult(_browse_items("c"), 50, 100, 0),
+            ],
+            3,
+            ["a", "b", "c"],
+            97,
+            [1, 2],
+            id="capped",
+        ),
+    ],
+)
+async def test_browse_object_paged(
+    hass: HomeAssistant,
+    dms_device_mock: Mock,
+    pages: list[DmsDevice.BrowseResult],
+    max_children: int,
+    expected_titles: list[str],
+    expected_not_shown: int,
+    expected_starting_indexes: list[int],
+) -> None:
+    """Test async_browse_object fetches further pages when the server caps results."""
+    object_id = "1234"
+    dms_device_mock.async_browse_metadata.return_value = didl_lite.Container(
+        id=object_id, restricted="false", title="subcontainer"
+    )
+    dms_device_mock.async_browse_direct_children.side_effect = pages
+
+    with patch(
+        "homeassistant.components.dlna_dms.dms.MAX_BROWSE_CHILDREN", max_children
+    ):
+        result = await async_browse_media(hass, f":{object_id}")
+
+    assert result.children
+    assert [child.title for child in result.children] == expected_titles
+    assert result.not_shown == expected_not_shown
+    assert dms_device_mock.async_browse_direct_children.await_args_list == [
+        call(object_id, metadata_filter=ANY, sort_criteria=ANY),
+        *(
+            call(
+                object_id, metadata_filter=ANY, sort_criteria=ANY, starting_index=index
+            )
+            for index in expected_starting_indexes
+        ),
+    ]
 
 
 async def test_browse_object_sort_anything(
