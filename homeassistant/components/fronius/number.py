@@ -2,28 +2,26 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, override
+from typing import TYPE_CHECKING, Any, Final, override
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import PERCENTAGE, EntityCategory, Platform
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import discovery_signal
+from .coordinator import FroniusCoordinatorBase, FroniusModbusSettingsUpdateCoordinator
 from .entity import (
     FroniusEntity,
     FroniusEntityDescription,
     ModbusComponentFn,
     ModbusValues,
+    async_add_entities_for_seen_keys,
 )
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
-    from .coordinator import (
-        FroniusCoordinatorBase,
-        FroniusModbusSettingsUpdateCoordinator,
-    )
 
 # writes go to one device at a time
 PARALLEL_UPDATES: Final = 1
@@ -108,24 +106,27 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Fronius number entities based on a config entry."""
-    solar_net = config_entry.runtime_data
-    for coordinator in solar_net.modbus_settings_coordinators:
-        coordinator.add_entities_for_seen_keys(
-            async_add_entities, Platform.NUMBER, ModbusSetpointNumber
-        )
 
     @callback
-    def async_add_new_entities(coordinator: FroniusCoordinatorBase) -> None:
-        """Add the entities of a coordinator found after setup."""
-        if Platform.NUMBER not in coordinator.valid_descriptions:
-            return
-        coordinator.add_entities_for_seen_keys(
-            async_add_entities, Platform.NUMBER, ModbusSetpointNumber
-        )
+    def async_add_coordinator_entities(
+        coordinator: FroniusCoordinatorBase[Any],
+    ) -> None:
+        """Add the entities of a coordinator, also one found after setup."""
+        if isinstance(coordinator, FroniusModbusSettingsUpdateCoordinator):
+            async_add_entities_for_seen_keys(
+                coordinator,
+                MODBUS_NUMBER_ENTITY_DESCRIPTIONS,
+                ModbusSetpointNumber,
+                async_add_entities,
+            )
 
+    for coordinator in config_entry.runtime_data.coordinators:
+        async_add_coordinator_entities(coordinator)
     config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, discovery_signal(config_entry.entry_id), async_add_new_entities
+            hass,
+            discovery_signal(config_entry.entry_id),
+            async_add_coordinator_entities,
         )
     )
 
