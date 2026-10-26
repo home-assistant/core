@@ -4962,7 +4962,9 @@ def async_get_device_and_config_entry_for_domain(
     if include_main_devices:
         device = registry._devices.get(device_id)  # noqa: SLF001
     if device is None and include_child_devices:
-        device = registry.async_get(device_id, include_main_devices=False)
+        device = registry.async_get(
+            device_id, include_main_devices=False, include_composite_devices=False
+        )
     if device is not None:
         config_entry = hass.config_entries.async_get_entry(device.config_entry_id)
         if config_entry is not None and config_entry.domain == domain:
