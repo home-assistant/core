@@ -26,7 +26,7 @@
     'name_by_user': None,
     'serial_number': '19239',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
 # name: test_device_setup[config_prod_awning_dimmer.json-status_prod_awning.json][device-58717]
@@ -56,7 +56,7 @@
     'name_by_user': None,
     'serial_number': '58717',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
 # name: test_device_setup[config_prod_awning_dimmer.json-status_prod_awning.json][device-97358]
@@ -86,7 +86,7 @@
     'name_by_user': None,
     'serial_number': '97358',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
 # name: test_device_setup[config_prod_awning_dimmer.json-status_prod_dimmer.json][device-19239]
@@ -116,7 +116,7 @@
     'name_by_user': None,
     'serial_number': '19239',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
 # name: test_device_setup[config_prod_awning_dimmer.json-status_prod_dimmer.json][device-58717]
@@ -146,7 +146,7 @@
     'name_by_user': None,
     'serial_number': '58717',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
 # name: test_device_setup[config_prod_awning_dimmer.json-status_prod_dimmer.json][device-97358]
@@ -176,7 +176,7 @@
     'name_by_user': None,
     'serial_number': '97358',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
 # name: test_device_setup[config_prod_roller_shutter.json-status_prod_roller_shutter.json][device-116682]
@@ -206,7 +206,7 @@
     'name_by_user': None,
     'serial_number': '116682',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
 # name: test_device_setup[config_prod_roller_shutter.json-status_prod_roller_shutter.json][device-172555]
@@ -236,7 +236,7 @@
     'name_by_user': None,
     'serial_number': '172555',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
 # name: test_device_setup[config_prod_roller_shutter.json-status_prod_roller_shutter.json][device-18894]
@@ -266,7 +266,7 @@
     'name_by_user': None,
     'serial_number': '18894',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
 # name: test_device_setup[config_prod_roller_shutter.json-status_prod_roller_shutter.json][device-230952]
@@ -296,7 +296,7 @@
     'name_by_user': None,
     'serial_number': '230952',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
 # name: test_device_setup[config_prod_roller_shutter.json-status_prod_roller_shutter.json][device-284942]
@@ -326,7 +326,7 @@
     'name_by_user': None,
     'serial_number': '284942',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
 # name: test_device_setup[config_prod_roller_shutter.json-status_prod_roller_shutter.json][device-328518]
@@ -356,6 +356,6 @@
     'name_by_user': None,
     'serial_number': '328518',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---

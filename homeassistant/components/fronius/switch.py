@@ -1,5 +1,6 @@
 """Switch entities for the Fronius Modbus controls."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, override
 
@@ -10,7 +11,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import discovery_signal
-from .entity import FroniusEntity, FroniusEntityDescription, ModbusComponentFn
+from .entity import (
+    FroniusEntity,
+    FroniusEntityDescription,
+    ModbusComponentFn,
+    ModbusValues,
+)
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
@@ -24,37 +30,54 @@ PARALLEL_UPDATES: Final = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class FroniusSwitchEntityDescription(FroniusEntityDescription, SwitchEntityDescription):
+class FroniusSwitchEntityDescription(
+    FroniusEntityDescription[ModbusValues], SwitchEntityDescription
+):
     """Describes a Fronius Modbus switch entity.
 
     ``field`` is the writable field of the model the control lives in.
     """
 
+    value_fn: Callable[[ModbusValues], bool | None]
     component_fn: ModbusComponentFn
     field: str
+
+
+def _modbus_value(key: str) -> Callable[[ModbusValues], bool | None]:
+    """Return a function reading a control state of a Modbus coordinator."""
+
+    def _value(values: ModbusValues) -> bool | None:
+        value = values.get(key)
+        return None if value is None else bool(value)
+
+    return _value
 
 
 MODBUS_SWITCH_ENTITY_DESCRIPTIONS: list[FroniusSwitchEntityDescription] = [
     FroniusSwitchEntityDescription(
         key="ac_power_limit_enabled",
+        value_fn=_modbus_value("ac_power_limit_enabled"),
         component_fn=lambda inverter: inverter.controls,
         field="enabled",
         entity_category=EntityCategory.CONFIG,
     ),
     FroniusSwitchEntityDescription(
         key="battery_charge_power_limit_enabled",
+        value_fn=_modbus_value("battery_charge_power_limit_enabled"),
         component_fn=lambda inverter: inverter.storage,
         field="charge_limit_enabled",
         entity_category=EntityCategory.CONFIG,
     ),
     FroniusSwitchEntityDescription(
         key="battery_discharge_power_limit_enabled",
+        value_fn=_modbus_value("battery_discharge_power_limit_enabled"),
         component_fn=lambda inverter: inverter.storage,
         field="discharge_limit_enabled",
         entity_category=EntityCategory.CONFIG,
     ),
     FroniusSwitchEntityDescription(
         key="battery_grid_charging",
+        value_fn=_modbus_value("battery_grid_charging"),
         component_fn=lambda inverter: inverter.storage,
         field="grid_charging",
         entity_category=EntityCategory.CONFIG,
@@ -118,7 +141,7 @@ class ModbusControlSwitch(FroniusEntity, SwitchEntity):
     @override
     def is_on(self) -> bool | None:
         """Return whether the control is active as the device reports it."""
-        return self._device_data()[self.response_key]["value"]  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(self._device_data())
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
