@@ -246,6 +246,56 @@ async def test_search_actions(
     assert response == snapshot
 
 
+async def test_search_actions_placeholders_and_empty_target(
+    hass: HomeAssistant,
+) -> None:
+    """Test the search actions tool fills in placeholders and keeps an empty target."""
+    descriptions = {
+        "test": {
+            "open": {
+                # services.yaml gives None for a target without restrictions
+                "target": None,
+                "fields": {"url": {"selector": {"text": {}}}},
+                "description_placeholders": {"docs_url": "https://example.com"},
+            }
+        }
+    }
+    translations = {
+        "component.test.services.open.name": "Open",
+        "component.test.services.open.description": "Opens it, see {docs_url}.",
+        "component.test.services.open.fields.url.description": "See {docs_url}.",
+    }
+    with (
+        patch(
+            "homeassistant.components.homeassistant.llm.async_get_all_descriptions",
+            return_value=descriptions,
+        ),
+        patch(
+            "homeassistant.components.homeassistant.llm.translation.async_get_translations",
+            return_value=translations,
+        ),
+    ):
+        response = await _async_call_tool(hass, SEARCH_ACTIONS_TOOL, {"query": "open"})
+    assert response == llm.ToolResult(
+        data={
+            "actions": [
+                {
+                    "action": "test.open",
+                    "name": "Open",
+                    "description": "Opens it, see https://example.com.",
+                    "target": {},
+                    "fields": {
+                        "url": {
+                            "description": "See https://example.com.",
+                            "selector": {"text": {}},
+                        }
+                    },
+                }
+            ]
+        }
+    )
+
+
 async def test_prompt_includes_context(hass: HomeAssistant) -> None:
     """Test the platform contributes the live-context and static-overview prompt."""
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")

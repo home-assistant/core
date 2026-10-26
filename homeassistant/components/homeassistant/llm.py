@@ -1,6 +1,6 @@
 """LLM tools for the homeassistant integration."""
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from decimal import Decimal
 from enum import Enum
 from operator import attrgetter
@@ -421,6 +421,13 @@ def _action_fields(fields: dict[str, Any]) -> Iterator[tuple[str, dict[str, Any]
             yield field, config
 
 
+def _fill_placeholders(text: str, placeholders: Mapping[str, str]) -> str:
+    """Return the text with the description placeholders of an action filled in."""
+    for key, value in placeholders.items():
+        text = text.replace(f"{{{key}}}", value)
+    return text
+
+
 def _describe_action(
     action_id: str,
     name: str,
@@ -436,8 +443,9 @@ def _describe_action(
         "name": name,
         "description": description,
     }
-    if target := action_description.get("target"):
-        result["target"] = target
+    if "target" in action_description:
+        # An empty target accepts any entity, device, area, floor or label
+        result["target"] = action_description["target"] or {}
     fields: JsonObjectType = {}
     field_infos: list[JsonObjectType] = []
     for field, config in _action_fields(action_description["fields"]):
@@ -448,7 +456,10 @@ def _describe_action(
             or config.get("name")
             or translations.get(f"{key}.{field}.name")
         ):
-            field_info["description"] = field_description
+            field_info["description"] = _fill_placeholders(
+                field_description,
+                action_description.get("description_placeholders", {}),
+            )
         if config.get("required"):
             field_info["required"] = True
         if selector_config := config.get("selector"):
@@ -510,6 +521,9 @@ class SearchActionsTool(Tool):
                 description = action_description.get("description") or translations.get(
                     f"{key}.description", ""
                 )
+                placeholders = action_description.get("description_placeholders", {})
+                name = _fill_placeholders(name, placeholders)
+                description = _fill_placeholders(description, placeholders)
                 # Actions that match on ID and name rank above description matches
                 head = f"{action_id} {name}".replace("_", " ").casefold()
                 text = f"{head} {description.casefold()}"
