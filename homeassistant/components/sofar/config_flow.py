@@ -179,6 +179,8 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             data = {CONF_TYPE: connection_type, **user_input}
+            if entry.data.get(HAS_FAULT_LOG):
+                data[HAS_FAULT_LOG] = True
 
             relinking = False
             if entry.state in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY):
@@ -198,8 +200,6 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
             if device is not None:
                 await self.async_set_unique_id(probed)
                 self._abort_if_unique_id_mismatch()
-                if entry.data.get(HAS_FAULT_LOG):
-                    data[HAS_FAULT_LOG] = True
                 return self.async_update_reload_and_abort(entry, data=data)
 
         suggested = user_input or (
