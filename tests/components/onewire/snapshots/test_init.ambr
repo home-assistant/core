@@ -146,7 +146,7 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('onewire', '1F.111111111111')]>,
   })
 # ---
 # name: test_registry[1F.111111111111-entry]

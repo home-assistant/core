@@ -8423,7 +8423,7 @@
     'name_by_user': None,
     'serial_number': 'gas_meter_G001',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.gas_meter_gas:entity-registry]
@@ -8511,7 +8511,7 @@
     'name_by_user': None,
     'serial_number': 'heat_meter_H001',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.heat_meter_energy:entity-registry]
@@ -8599,7 +8599,7 @@
     'name_by_user': None,
     'serial_number': 'inlet_heat_meter_IH001',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter:entity-registry]
@@ -8683,7 +8683,7 @@
     'name_by_user': None,
     'serial_number': 'warm_water_meter_WW001',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.warm_water_meter_water:entity-registry]
@@ -8771,7 +8771,7 @@
     'name_by_user': None,
     'serial_number': 'water_meter_W001',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.water_meter_water:entity-registry]
@@ -12347,7 +12347,7 @@
     'name_by_user': None,
     'serial_number': 'gas_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.gas_meter_gas:entity-registry]
@@ -12435,7 +12435,7 @@
     'name_by_user': None,
     'serial_number': 'heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.heat_meter_energy:entity-registry]
@@ -12523,7 +12523,7 @@
     'name_by_user': None,
     'serial_number': 'inlet_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.inlet_heat_meter:entity-registry]
@@ -12607,7 +12607,7 @@
     'name_by_user': None,
     'serial_number': 'warm_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.warm_water_meter_water:entity-registry]
@@ -12695,7 +12695,7 @@
     'name_by_user': None,
     'serial_number': 'water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.water_meter_water:entity-registry]
@@ -16455,7 +16455,7 @@
     'name_by_user': None,
     'serial_number': 'gas_meter_G001',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.gas_meter_gas:entity-registry]
@@ -16543,7 +16543,7 @@
     'name_by_user': None,
     'serial_number': 'heat_meter_H001',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.heat_meter_energy:entity-registry]
@@ -16631,7 +16631,7 @@
     'name_by_user': None,
     'serial_number': 'inlet_heat_meter_IH001',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.inlet_heat_meter:entity-registry]
@@ -16715,7 +16715,7 @@
     'name_by_user': None,
     'serial_number': 'warm_water_meter_WW001',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.warm_water_meter_water:entity-registry]
@@ -16803,7 +16803,7 @@
     'name_by_user': None,
     'serial_number': 'water_meter_W001',
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
   })
 # ---
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.water_meter_water:entity-registry]
