@@ -1,13 +1,15 @@
 """Tests for Philips Hue config flow."""
 
+from datetime import timedelta
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
 from aiohue.discovery import URL_NUPNP
 from aiohue.errors import AiohueException, LinkButtonNotPressed
+from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker, ClientError
 
 from homeassistant import config_entries
@@ -27,13 +29,6 @@ from homeassistant.helpers.service_info.zeroconf import (
 def hue_setup_fixture():
     """Mock hue entry setup."""
     with patch("homeassistant.components.hue.async_setup_entry", return_value=None):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def fast_link_polling():
-    """Do not wait between link button polls."""
-    with patch.object(config_flow, "LINK_POLL_INTERVAL", 0):
         yield
 
 
@@ -306,7 +301,9 @@ async def _start_link_flow(hass: HomeAssistant) -> ConfigFlowResult:
     return result
 
 
-async def test_flow_link_button_pressed_later(hass: HomeAssistant) -> None:
+async def test_flow_link_button_pressed_later(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test the flow keeps polling until the link button is pressed."""
     result = await _start_link_flow(hass)
 
@@ -315,11 +312,24 @@ async def test_flow_link_button_pressed_later(hass: HomeAssistant) -> None:
         "create_app_key",
         side_effect=[LinkButtonNotPressed, LinkButtonNotPressed, "123456789"],
     ) as mock_create_app_key:
-        result = await _press_link_button(hass, result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "wait_for_button"
+        await hass.async_block_till_done()
+        assert mock_create_app_key.call_count == 1
+
+        for call_count in (2, 3):
+            freezer.tick(timedelta(seconds=1))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            assert mock_create_app_key.call_count == call_count
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["api_key"] == "123456789"
-    assert mock_create_app_key.call_count == 3
 
 
 @pytest.mark.parametrize(
@@ -330,16 +340,26 @@ async def test_flow_link_button_pressed_later(hass: HomeAssistant) -> None:
     ],
 )
 async def test_flow_link_errors(
-    hass: HomeAssistant, side_effect: type[Exception], error: str
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    side_effect: type[Exception],
+    error: str,
 ) -> None:
     """Test the flow returns to the link form on errors and can recover."""
     result = await _start_link_flow(hass)
 
-    with (
-        patch.object(config_flow, "LINK_TIMEOUT", 0.01),
-        patch.object(config_flow, "create_app_key", side_effect=side_effect),
-    ):
-        result = await _press_link_button(hass, result["flow_id"])
+    with patch.object(config_flow, "create_app_key", side_effect=side_effect):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        freezer.tick(timedelta(seconds=60))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"

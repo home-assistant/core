@@ -217,8 +217,10 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         """Wait for the user to press the link button on the Hue bridge."""
         if self.link_task is None:
             # Not started eagerly, so the next step never receives the link form input
-            self.link_task = self.hass.async_create_task(
-                self._async_wait_for_button(), eager_start=False
+            self.link_task = self.hass.async_create_background_task(
+                self._async_wait_for_button(),
+                "hue_config_flow_wait_for_button",
+                eager_start=False,
             )
 
         if not self.link_task.done():
