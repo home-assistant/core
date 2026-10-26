@@ -53,6 +53,7 @@ async def setup_comp(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_fires_on_zone_enter(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -127,6 +128,7 @@ async def test_if_fires_on_zone_enter(
     assert len(service_calls) == 2
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 @pytest.mark.parametrize(
     "coords",
     [
@@ -178,6 +180,7 @@ async def test_if_fires_on_zone_enter_via_in_zones(
     assert len(service_calls) == 1
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_zone_enter_ignores_in_zones_for_other_domains(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -229,6 +232,7 @@ async def test_zone_enter_ignores_in_zones_for_other_domains(
     assert len(service_calls) == 1
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_zone_trigger_skips_coordinateless_non_tracker(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -265,6 +269,7 @@ async def test_zone_trigger_skips_coordinateless_non_tracker(
     assert "has no 'latitude' attribute" not in caplog.text
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_fires_on_zone_enter_uuid(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -347,6 +352,7 @@ async def test_if_fires_on_zone_enter_uuid(
     assert len(service_calls) == 2
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_not_fires_for_enter_on_zone_leave(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -380,6 +386,7 @@ async def test_if_not_fires_for_enter_on_zone_leave(
     assert len(service_calls) == 0
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_fires_on_zone_leave(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -413,6 +420,7 @@ async def test_if_fires_on_zone_leave(
     assert len(service_calls) == 1
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_not_fires_for_leave_on_zone_enter(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -446,6 +454,7 @@ async def test_if_not_fires_for_leave_on_zone_enter(
     assert len(service_calls) == 0
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_zone_condition(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -476,6 +485,7 @@ async def test_zone_condition(
     assert len(service_calls) == 1
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_unknown_zone(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -516,6 +526,113 @@ async def test_unknown_zone(
     await hass.async_block_till_done()
 
     assert "Non-existing zone 'zone.no_such_zone' in a zone trigger" in caplog.text
+
+
+# Accuracy circles relative to zone.test (radius 250 m)
+LOCATION_CONTAINED = {
+    "latitude": 32.880837,
+    "longitude": -117.237561,
+    "gps_accuracy": 50,
+}
+# ~300 m from the zone center
+LOCATION_OVERLAPPING = {
+    "latitude": 32.883537,
+    "longitude": -117.237561,
+    "gps_accuracy": 100,
+}
+# ~1100 m from the zone center
+LOCATION_SEPARATED = {"latitude": 32.890837, "longitude": -117.237561}
+
+
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_zone_trigger_legacy_device_tracker_leave(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test leaving is detected when attached while a legacy tracker is inside.
+
+    Legacy device trackers report no in_zones attribute, and resolve an
+    overlapping accuracy circle themselves.
+    """
+    hass.states.async_set("device_tracker.phone", "test", LOCATION_OVERLAPPING)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "device_tracker.phone",
+                    "zone": "zone.test",
+                    "event": "leave",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("device_tracker.phone", "not_home", LOCATION_SEPARATED)
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("improved_presence_detection", "event", "expected_calls"),
+    [
+        pytest.param(False, "enter", [1, 1, 1, 1, 2, 2], id="overlap-enter"),
+        pytest.param(True, "enter", [0, 1, 1, 1, 1, 1], id="containment-enter"),
+        pytest.param(False, "leave", [0, 0, 0, 1, 1, 2], id="overlap-leave"),
+        pytest.param(True, "leave", [0, 0, 0, 1, 1, 1], id="containment-leave"),
+    ],
+    indirect=["improved_presence_detection"],
+)
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_zone_trigger_location_accuracy(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    event: str,
+    expected_calls: list[int],
+) -> None:
+    """Test the legacy zone trigger with location accuracy.
+
+    With improved presence detection, an overlapping accuracy circle keeps the
+    previous zone match.
+    """
+    hass.states.async_set("test.entity", "hello", LOCATION_SEPARATED)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "test.entity",
+                    "zone": "zone.test",
+                    "event": event,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    calls = []
+    for location in (
+        LOCATION_OVERLAPPING,
+        LOCATION_CONTAINED,
+        LOCATION_OVERLAPPING,
+        LOCATION_SEPARATED,
+        LOCATION_OVERLAPPING,
+        LOCATION_SEPARATED,
+    ):
+        hass.states.async_set("test.entity", "hello", location)
+        await hass.async_block_till_done()
+        calls.append(len(service_calls))
+
+    assert calls == expected_calls
 
 
 # --- New-style zone trigger tests ---

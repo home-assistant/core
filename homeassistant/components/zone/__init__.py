@@ -1,6 +1,6 @@
 """Support for the definition of zones."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from dataclasses import dataclass
 import logging
 from operator import attrgetter
@@ -10,6 +10,7 @@ from typing import Any, Self, cast, override
 import probatio
 
 from homeassistant import config_entries
+from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
@@ -48,7 +49,9 @@ from .const import (
     DATA_ZONE,
     DOMAIN,
     HOME_ZONE,
+    PREVIEW_FEATURE_IMPROVED_PRESENCE_DETECTION,
     ZoneEntityStateAttribute,
+    ZoneRelation,
 )
 from .services import async_setup_services
 
@@ -96,14 +99,18 @@ __all__ = [
     "ENTITY_ID_HOME",
     "HOME_ZONE",
     "ICON_IMPORT",
+    "PREVIEW_FEATURE_IMPROVED_PRESENCE_DETECTION",
     "SERVICE_RELOAD",
     "UPDATE_FIELDS",
     "Zone",
     "ZoneEntityStateAttribute",
+    "ZoneRelation",
     "ZoneStorageCollection",
     "async_active_zone",
     "async_get_enclosing_zones",
     "async_in_zones",
+    "async_is_improved_presence_detection_enabled",
+    "zone_relation",
 ]
 
 
@@ -144,8 +151,63 @@ class ZoneData:
     yaml_collection: collection.IDLessCollection
 
 
+@callback
+def async_is_improved_presence_detection_enabled(hass: HomeAssistant) -> bool:
+    """Return if the improved presence detection labs feature is enabled."""
+    return async_is_preview_feature_enabled(
+        hass, DOMAIN, PREVIEW_FEATURE_IMPROVED_PRESENCE_DETECTION
+    )
+
+
+def _zone_relation(
+    zone_dist: float, zone_radius: float, radius: float | None
+) -> ZoneRelation:
+    """Return the relation between an accuracy circle and a zone.
+
+    A missing, zero or negative radius is treated as an exact point.
+    """
+    radius = max(radius or 0, 0)
+    if zone_dist - radius >= zone_radius:
+        return ZoneRelation.SEPARATED
+    if zone_dist + radius <= zone_radius:
+        return ZoneRelation.CONTAINED
+    return ZoneRelation.OVERLAPPING
+
+
+def zone_relation(
+    zone: State, latitude: float, longitude: float, radius: float | None = 0
+) -> ZoneRelation | None:
+    """Return the relation between an accuracy circle and the given zone.
+
+    Returns None if the zone is unavailable or the relation cannot be
+    calculated.
+
+    Async friendly.
+    """
+    if zone.state == STATE_UNAVAILABLE:
+        return None
+
+    zone_dist = distance(
+        latitude,
+        longitude,
+        zone.attributes[EntityStateAttribute.LATITUDE],
+        zone.attributes[EntityStateAttribute.LONGITUDE],
+    )
+
+    if (
+        zone_dist is None
+        or (zone_radius := zone.attributes[ZoneEntityStateAttribute.RADIUS]) is None
+    ):
+        return None
+    return _zone_relation(zone_dist, zone_radius, radius)
+
+
 def async_in_zones(
-    hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
+    hass: HomeAssistant,
+    latitude: float,
+    longitude: float,
+    radius: float = 0,
+    previous_in_zones: Collection[str] = (),
 ) -> tuple[State | None, list[str]]:
     """Find zones which contain the given latitude and longitude.
 
@@ -155,12 +217,18 @@ def async_in_zones(
     is sorted by radius and then by distance so that the smallest and closest
     zone is first.
 
+    By default, a zone contains the location if the accuracy circle overlaps
+    the zone. If improved presence detection is enabled, a zone contains the
+    location if the accuracy circle is fully contained in the zone, or if it
+    overlaps the zone and the zone is in previous_in_zones.
+
     This method must be run in the event loop.
     """
     min_radius: float = sys.maxsize
     min_dist: float = sys.maxsize
     active_zone: State | None = None
     zones: list[tuple[str, float, float]] = []
+    containment = async_is_improved_presence_detection_enabled(hass)
 
     # This can be called before async_setup by device tracker
     zone_entity_ids = hass.data.get(DATA_ZONE_ENTITY_IDS, ())
@@ -173,23 +241,22 @@ def async_in_zones(
         ):
             continue
         zone_attrs = zone.attributes
+        # Skip zones where we cannot calculate distance
         if (
-            # Skip zones where we cannot calculate distance
-            (
-                zone_dist := distance(
-                    latitude,
-                    longitude,
-                    zone_attrs[EntityStateAttribute.LATITUDE],
-                    zone_attrs[EntityStateAttribute.LONGITUDE],
-                )
+            zone_dist := distance(
+                latitude,
+                longitude,
+                zone_attrs[EntityStateAttribute.LATITUDE],
+                zone_attrs[EntityStateAttribute.LONGITUDE],
             )
-            is None
-            # Skip zone that are outside the radius aka the
-            # lat/long is outside the zone
-            or not (
-                zone_dist - (zone_radius := zone_attrs[ZoneEntityStateAttribute.RADIUS])
-                < radius
-            )
+        ) is None:
+            continue
+        zone_radius = zone_attrs[ZoneEntityStateAttribute.RADIUS]
+        relation = _zone_relation(zone_dist, zone_radius, radius)
+        if relation is ZoneRelation.SEPARATED or (
+            containment
+            and relation is ZoneRelation.OVERLAPPING
+            and entity_id not in previous_in_zones
         ):
             continue
 
@@ -310,25 +377,18 @@ def async_setup_track_zone_entity_ids(hass: HomeAssistant) -> None:
     event.async_track_state_removed_domain(hass, DOMAIN, _async_remove_zone_entity_id)
 
 
-def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -> bool:
+def in_zone(
+    zone: State, latitude: float, longitude: float, radius: float | None = 0
+) -> bool:
     """Test if given latitude, longitude is in given zone.
+
+    The location is in the zone if its accuracy circle overlaps the zone.
 
     Async friendly.
     """
-    if zone.state == STATE_UNAVAILABLE:
-        return False
-
-    zone_dist = distance(
-        latitude,
-        longitude,
-        zone.attributes[EntityStateAttribute.LATITUDE],
-        zone.attributes[EntityStateAttribute.LONGITUDE],
-    )
-
-    if zone_dist is None or zone.attributes[ZoneEntityStateAttribute.RADIUS] is None:
-        return False
-    return zone_dist - radius < cast(
-        float, zone.attributes[ZoneEntityStateAttribute.RADIUS]
+    return zone_relation(zone, latitude, longitude, radius) in (
+        ZoneRelation.CONTAINED,
+        ZoneRelation.OVERLAPPING,
     )
 
 

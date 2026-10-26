@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_OPTIONS,
     CONF_TARGET,
     CONF_ZONE,
+    STATE_HOME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
@@ -41,8 +42,13 @@ from homeassistant.helpers.condition import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import in_zone
-from .const import DOMAIN
+from . import (
+    ENTITY_ID_HOME,
+    async_is_improved_presence_detection_enabled,
+    in_zone,
+    zone_relation,
+)
+from .const import DOMAIN, ZoneRelation
 from .helpers import get_in_zones_attribute
 
 _OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
@@ -56,8 +62,13 @@ def zone(
     hass: HomeAssistant,
     zone_ent: str | State | None,
     entity: str | State | None,
+    previous_match: bool = False,
 ) -> bool:
     """Test if zone-condition matches.
+
+    If improved presence detection is enabled and the entity's accuracy circle
+    only partly overlaps the zone, previous_match is returned, except for
+    legacy device trackers, which are matched by their state.
 
     Async friendly.
     """
@@ -107,9 +118,20 @@ def zone(
             "zone", f"entity {entity_id} has no 'longitude' attribute"
         )
 
-    return in_zone(
-        zone_ent, latitude, longitude, entity.attributes.get(ATTR_GPS_ACCURACY, 0)
-    )
+    radius = entity.attributes.get(ATTR_GPS_ACCURACY)
+    if not async_is_improved_presence_detection_enabled(hass):
+        return in_zone(zone_ent, latitude, longitude, radius)
+
+    relation = zone_relation(zone_ent, latitude, longitude, radius)
+    if relation is not ZoneRelation.OVERLAPPING:
+        return relation is ZoneRelation.CONTAINED
+    # A legacy device tracker resolves ambiguous locations itself and reports
+    # the result as its state
+    if entity.domain == DEVICE_TRACKER_DOMAIN:
+        return entity.state == zone_ent.name or (
+            entity.state == STATE_HOME and zone_ent.entity_id == ENTITY_ID_HOME
+        )
+    return previous_match
 
 
 class ZoneCondition(Condition):

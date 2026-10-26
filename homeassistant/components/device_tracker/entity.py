@@ -1,5 +1,6 @@
 """Provide functionality to keep track of devices."""
 
+from collections.abc import Collection
 import logging
 from typing import TYPE_CHECKING, Any, final, override
 
@@ -264,6 +265,9 @@ class TrackerEntity(
     # If we reported setting deprecated _attr_location_name
     __deprecated_attr_location_name_reported = False
     __in_zones: list[str] | None = None
+    # Zones the device was last found in, used by improved zone presence
+    # detection to resolve ambiguous locations; survives unavailability
+    __previous_in_zones: Collection[str] = ()
 
     @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -306,7 +310,8 @@ class TrackerEntity(
 
         The list may be in any order; the base class sorts it by zone radius
         and discards zones which do not exist. Takes precedence over latitude
-        and longitude when set (including when set to an empty list).
+        and longitude when set (including when set to an empty list), with
+        both the default and the improved zone presence detection.
         """
         return self._attr_in_zones
 
@@ -372,6 +377,18 @@ class TrackerEntity(
         self._async_update_zones()
         return super()._async_calculate_state()
 
+    @final
+    @callback
+    def async_internal_zone_presence_detection_changed(self) -> None:
+        """Recalculate active zones from the current location alone."""
+        in_zones = self.__in_zones
+        self.__previous_in_zones = ()
+        self._async_update_zones()
+        # Avoid rewriting the state if it didn't change to avoid person
+        # entities recalculating their source tracker
+        if self.__in_zones != in_zones:
+            self.async_write_ha_state()
+
     @callback
     def _async_update_zones(self) -> None:
         """Calculate active zones."""
@@ -392,13 +409,20 @@ class TrackerEntity(
                 ),
                 None,
             )
-            self.__in_zones = [z.entity_id for z in zone_states]
+            self.__in_zones = self.__previous_in_zones = [
+                z.entity_id for z in zone_states
+            ]
         elif (
             self.available and self.latitude is not None and self.longitude is not None
         ):
             self.__active_zone, self.__in_zones = zone.async_in_zones(
-                self.hass, self.latitude, self.longitude, self.location_accuracy
+                self.hass,
+                self.latitude,
+                self.longitude,
+                self.location_accuracy,
+                self.__previous_in_zones,
             )
+            self.__previous_in_zones = self.__in_zones
         else:
             self.__active_zone = None
             self.__in_zones = None

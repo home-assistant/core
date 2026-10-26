@@ -47,6 +47,7 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     STATE_HOME,
     STATE_NOT_HOME,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
@@ -59,6 +60,9 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.setup import async_setup_component
+
+from tests.components.zone.common import async_set_improved_presence_detection
 
 TEST_DOMAIN = "test"
 TEST_MAC_ADDRESS = "12:34:56:AB:CD:EF"
@@ -207,6 +211,23 @@ class MockTrackerEntity(TrackerEntity):
     def location_accuracy(self) -> float:
         """Return the accuracy of the location in meters."""
         return self._location_accuracy
+
+    @callback
+    def set_location(
+        self,
+        location: tuple[float, float, float],
+        in_zones: list[str] | None = None,
+    ) -> None:
+        """Report a new location and the zones reported by the device, if any."""
+        self._latitude, self._longitude, self._location_accuracy = location
+        self._in_zones = in_zones
+        self.async_write_ha_state()
+
+    @callback
+    def set_available(self, available: bool) -> None:
+        """Set the availability of the entity."""
+        self._attr_available = available
+        self.async_write_ha_state()
 
 
 @pytest.fixture(name="battery_level")
@@ -499,6 +520,7 @@ def test_tracking_type_capability_attribute() -> None:
     }
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 @pytest.mark.parametrize(
     (
         "battery_level",
@@ -795,6 +817,270 @@ async def test_tracker_entity_state(
     assert state.attributes == expected_attributes | {
         ATTR_TRACKING_TYPE: TrackingType.POSITION
     }
+
+
+# (latitude, longitude, accuracy) relative to a home zone at 50, 60 with radius 200
+LOCATION_CONTAINED = (50.0, 60.0, 50)
+# ~222 m from the zone center
+LOCATION_OVERLAPPING = (50.002, 60.0, 100)
+# ~1100 m from the zone center
+LOCATION_SEPARATED = (50.01, 60.0, 0)
+# (state, in_zones) of the tracker entity
+AT_HOME = (STATE_HOME, ["zone.home"])
+AWAY = (STATE_NOT_HOME, [])
+
+
+async def _async_setup_tracker_at_home_zone(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tracker_entity: MockTrackerEntity,
+) -> None:
+    """Set up the tracker entity and the home zone."""
+    await create_mock_platform(hass, config_entry, [tracker_entity])
+    await hass.config.async_update(latitude=50.0, longitude=60.0, radius=200)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("improved_presence_detection", "expected_states"),
+    [
+        pytest.param(
+            False,
+            [AT_HOME, AT_HOME, AT_HOME, AWAY, AT_HOME],
+            id="overlap",
+        ),
+        pytest.param(
+            True,
+            [AWAY, AT_HOME, AT_HOME, AWAY, AWAY],
+            id="containment",
+        ),
+    ],
+    indirect=["improved_presence_detection"],
+)
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_tracker_entity_location_accuracy(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    tracker_entity: MockTrackerEntity,
+    expected_states: list[tuple[str, list[str]]],
+) -> None:
+    """Test tracker entity zones with location accuracy.
+
+    With improved presence detection, an overlapping accuracy circle keeps the
+    previous zones.
+    """
+    await _async_setup_tracker_at_home_zone(hass, config_entry, tracker_entity)
+    tracker_entity.set_location(LOCATION_SEPARATED)
+
+    states = []
+    for location in (
+        LOCATION_OVERLAPPING,
+        LOCATION_CONTAINED,
+        LOCATION_OVERLAPPING,
+        LOCATION_SEPARATED,
+        LOCATION_OVERLAPPING,
+    ):
+        tracker_entity.set_location(location)
+        state = hass.states.get(entity_id)
+        states.append((state.state, state.attributes[ATTR_IN_ZONES]))
+
+    assert states == expected_states
+
+
+async def test_tracker_entity_improved_presence_detection_toggled(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    tracker_entity: MockTrackerEntity,
+) -> None:
+    """Test tracker entity zones are re-resolved when the labs feature is toggled."""
+    await async_set_improved_presence_detection(hass, False)
+    await _async_setup_tracker_at_home_zone(hass, config_entry, tracker_entity)
+    tracker_entity.set_location(LOCATION_OVERLAPPING)
+    assert hass.states.get(entity_id).state == STATE_HOME
+
+    # The overlapping location no longer counts as inside, even though the
+    # tracker was inside the zone before the feature was enabled
+    await async_set_improved_presence_detection(hass, True)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_NOT_HOME
+
+    await async_set_improved_presence_detection(hass, False)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_HOME
+
+    # A contained location is inside the zone with both methods
+    tracker_entity.set_location(LOCATION_CONTAINED)
+    await async_set_improved_presence_detection(hass, True)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_HOME
+
+
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_tracker_entity_unavailable_keeps_previous_zones(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    tracker_entity: MockTrackerEntity,
+) -> None:
+    """Test the previous zones survive the tracker entity being unavailable."""
+    await _async_setup_tracker_at_home_zone(hass, config_entry, tracker_entity)
+    tracker_entity.set_location(LOCATION_CONTAINED)
+    tracker_entity.set_location(LOCATION_OVERLAPPING)
+
+    tracker_entity.set_available(False)
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    tracker_entity.set_available(True)
+    state = hass.states.get(entity_id)
+    assert (state.state, state.attributes[ATTR_IN_ZONES]) == AT_HOME
+
+
+@pytest.mark.parametrize(
+    ("in_zones", "location", "expected_state"),
+    [
+        pytest.param(
+            ["zone.home"], LOCATION_SEPARATED, AT_HOME, id="in_zone_location_outside"
+        ),
+        pytest.param(
+            ["zone.home"],
+            LOCATION_OVERLAPPING,
+            AT_HOME,
+            id="in_zone_location_overlapping",
+        ),
+        pytest.param([], LOCATION_CONTAINED, AWAY, id="no_zone_location_inside"),
+        pytest.param([], LOCATION_OVERLAPPING, AWAY, id="no_zone_location_overlapping"),
+    ],
+)
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_tracker_entity_in_zones_is_final(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    tracker_entity: MockTrackerEntity,
+    in_zones: list[str],
+    location: tuple[float, float, float],
+    expected_state: tuple[str, list[str]],
+) -> None:
+    """Test zones reported by the device win over its location with both methods."""
+    await _async_setup_tracker_at_home_zone(hass, config_entry, tracker_entity)
+
+    tracker_entity.set_location(location, in_zones)
+
+    state = hass.states.get(entity_id)
+    assert (state.state, state.attributes[ATTR_IN_ZONES]) == expected_state
+
+
+@pytest.mark.parametrize(
+    ("improved_presence_detection", "in_zones", "expected_state"),
+    [
+        pytest.param(False, ["zone.home"], AT_HOME, id="overlap-in_zone"),
+        pytest.param(True, ["zone.home"], AT_HOME, id="containment-in_zone"),
+        pytest.param(False, [], AT_HOME, id="overlap-no_zone"),
+        pytest.param(True, [], AWAY, id="containment-no_zone"),
+    ],
+    indirect=["improved_presence_detection"],
+)
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_tracker_entity_reported_zones_are_previous_zones(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    tracker_entity: MockTrackerEntity,
+    in_zones: list[str],
+    expected_state: tuple[str, list[str]],
+) -> None:
+    """Test zones reported by the device resolve a later ambiguous location."""
+    await _async_setup_tracker_at_home_zone(hass, config_entry, tracker_entity)
+    tracker_entity.set_location(LOCATION_SEPARATED, in_zones)
+
+    tracker_entity.set_location(LOCATION_OVERLAPPING)
+
+    state = hass.states.get(entity_id)
+    assert (state.state, state.attributes[ATTR_IN_ZONES]) == expected_state
+
+
+async def _async_setup_person(hass: HomeAssistant, device_trackers: list[str]) -> None:
+    """Set up a person tracked by the given device trackers."""
+    assert await async_setup_component(
+        hass,
+        "person",
+        {"person": [{"id": "1", "name": "Bob", "device_trackers": device_trackers}]},
+    )
+    await hass.async_block_till_done()
+
+
+async def test_tracker_entity_improved_presence_detection_toggled_unchanged(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test toggling the labs feature doesn't write unchanged tracker states.
+
+    Writing would bump last_updated, making the person pick another tracker.
+    """
+    phone = MockTrackerEntity()
+    phone.entity_id = "device_tracker.phone"
+    tablet = MockTrackerEntity()
+    tablet.entity_id = "device_tracker.tablet"
+    await async_set_improved_presence_detection(hass, False)
+    await create_mock_platform(hass, config_entry, [phone, tablet])
+    await hass.config.async_update(latitude=50.0, longitude=60.0, radius=200)
+    await _async_setup_person(hass, ["device_tracker.tablet", "device_tracker.phone"])
+    tablet.set_location(LOCATION_CONTAINED)
+    phone.set_location(LOCATION_SEPARATED)
+    await hass.async_block_till_done()
+    tablet_state = hass.states.get("device_tracker.tablet")
+    assert hass.states.get("person.bob").state == STATE_NOT_HOME
+
+    await async_set_improved_presence_detection(hass, True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.tablet") == tablet_state
+    person_state = hass.states.get("person.bob")
+    assert person_state.state == STATE_NOT_HOME
+    assert person_state.attributes["source"] == "device_tracker.phone"
+
+
+@pytest.mark.parametrize(
+    ("improved_presence_detection", "expected_states"),
+    [
+        pytest.param(
+            False,
+            [(STATE_HOME, "1"), (STATE_NOT_HOME, "0")],
+            id="overlap",
+        ),
+        pytest.param(
+            True,
+            [(STATE_NOT_HOME, "0"), (STATE_HOME, "1")],
+            id="containment",
+        ),
+    ],
+    indirect=["improved_presence_detection"],
+)
+async def test_tracker_entity_zone_presence_detection_person(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    tracker_entity: MockTrackerEntity,
+    improved_presence_detection: bool,
+    expected_states: list[tuple[str, str]],
+) -> None:
+    """Test persons and zone person counts follow the zone presence detection."""
+    await _async_setup_tracker_at_home_zone(hass, config_entry, tracker_entity)
+    await _async_setup_person(hass, [entity_id])
+    tracker_entity.set_location(LOCATION_OVERLAPPING)
+    await hass.async_block_till_done()
+
+    states = [(hass.states.get("person.bob").state, hass.states.get("zone.home").state)]
+
+    await async_set_improved_presence_detection(hass, not improved_presence_detection)
+    await hass.async_block_till_done()
+    states.append(
+        (hass.states.get("person.bob").state, hass.states.get("zone.home").state)
+    )
+
+    assert states == expected_states
 
 
 async def test_base_scanner_entity_state(
