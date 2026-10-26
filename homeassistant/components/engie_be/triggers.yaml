@@ -59,19 +59,3 @@ epex_next_quarter_hour_crossed_threshold:
     device_id: *device
     above: *price
     below: *price
-
-epex_high_today_hour_updated:
-  fields:
-    device_id: *device
-
-epex_low_today_hour_updated:
-  fields:
-    device_id: *device
-
-epex_high_today_quarter_hour_updated:
-  fields:
-    device_id: *device
-
-epex_low_today_quarter_hour_updated:
-  fields:
-    device_id: *device

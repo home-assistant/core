@@ -24,7 +24,6 @@ from .conftest import (
     automation_calls,
     build_contracts,
     build_epex_payload,
-    build_epex_payload_rising_per_day,
     build_epex_payload_with_gap,
     build_epex_payload_with_negative_current,
     build_epex_payload_without_tomorrow,
@@ -199,39 +198,6 @@ async def test_crossed_threshold_trigger(
     )
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "epex_high_today_hour_updated",
-        "epex_low_today_hour_updated",
-        "epex_high_today_quarter_hour_updated",
-        "epex_low_today_quarter_hour_updated",
-    ],
-)
-async def test_updated_trigger(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    device_registry: dr.DeviceRegistry,
-    service_calls: list[ServiceCall],
-    trigger_key: str,
-) -> None:
-    """Test the updated triggers fire when the prices of a new day take over."""
-    freezer.move_to(_brussels(3, 23, 30))
-    mock_engie_client.return_value.async_get_epex_prices.side_effect = (
-        build_epex_payload_rising_per_day
-    )
-    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    device_id = household_device_id(device_registry, mock_config_entry)
-    await _async_setup_trigger_automation(hass, trigger_key, {"device_id": device_id})
-
-    assert await _async_count_calls_along(
-        hass, freezer, service_calls, [_brussels(3, 23, 45), _brussels(4, 0, 0)]
-    ) == [0, 1]
-
-
-@pytest.mark.usefixtures("frozen_afternoon")
 async def test_tomorrow_prices_published_trigger(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -399,7 +365,6 @@ async def test_trigger_after_reload(
         pytest.param(
             "epex_current_hour_crossed_threshold", {"above": 0.14}, id="threshold"
         ),
-        pytest.param("epex_high_today_hour_updated", {}, id="updated"),
     ],
 )
 async def test_trigger_skips_missing_price(

@@ -27,7 +27,6 @@ from .coordinator import (
     EngieBeEpexCoordinator,
     EngieBeEpexData,
     epex_day_available,
-    epex_extreme_price_today,
     epex_is_negative,
     epex_next_price,
     epex_price_at,
@@ -273,64 +272,13 @@ class EpexNextQuarterHourCrossedThresholdTrigger(_EpexCrossedThresholdTrigger):
     _next = True
 
 
-class _EpexExtremeUpdatedTrigger(_EpexTrigger):
-    """Base for triggers that fire when the lowest or highest price of today changes."""
-
-    _granularity: EpexGranularity
-    _highest: bool
-
-    @override
-    def _value(self, data: EngieBeEpexData, now: datetime) -> float | None:
-        """Return the lowest or highest price of today."""
-        return epex_extreme_price_today(
-            data, self._granularity, now, max if self._highest else min
-        )
-
-    @override
-    def _fires(self, previous: float | None, current: float | None) -> bool:
-        """Return True when a known price changes to another known price."""
-        return previous is not None and current is not None and previous != current
-
-
-class EpexHighTodayHourUpdatedTrigger(_EpexExtremeUpdatedTrigger):
-    """Trigger that fires when the highest hourly EPEX price of today changes."""
-
-    _granularity = EpexGranularity.HOURLY
-    _highest = True
-
-
-class EpexLowTodayHourUpdatedTrigger(_EpexExtremeUpdatedTrigger):
-    """Trigger that fires when the lowest hourly EPEX price of today changes."""
-
-    _granularity = EpexGranularity.HOURLY
-    _highest = False
-
-
-class EpexHighTodayQuarterHourUpdatedTrigger(_EpexExtremeUpdatedTrigger):
-    """Trigger that fires when the highest quarter-hourly EPEX price of today changes."""
-
-    _granularity = EpexGranularity.QUARTER_HOURLY
-    _highest = True
-
-
-class EpexLowTodayQuarterHourUpdatedTrigger(_EpexExtremeUpdatedTrigger):
-    """Trigger that fires when the lowest quarter-hourly EPEX price of today changes."""
-
-    _granularity = EpexGranularity.QUARTER_HOURLY
-    _highest = False
-
-
 TRIGGERS: dict[str, type[Trigger]] = {
     "epex_current_hour_crossed_threshold": EpexCurrentHourCrossedThresholdTrigger,
     "epex_current_quarter_hour_crossed_threshold": (
         EpexCurrentQuarterHourCrossedThresholdTrigger
     ),
-    "epex_high_today_hour_updated": EpexHighTodayHourUpdatedTrigger,
-    "epex_high_today_quarter_hour_updated": EpexHighTodayQuarterHourUpdatedTrigger,
     "epex_hour_became_negative": EpexHourBecameNegativeTrigger,
     "epex_hour_no_longer_negative": EpexHourNoLongerNegativeTrigger,
-    "epex_low_today_hour_updated": EpexLowTodayHourUpdatedTrigger,
-    "epex_low_today_quarter_hour_updated": EpexLowTodayQuarterHourUpdatedTrigger,
     "epex_next_hour_crossed_threshold": EpexNextHourCrossedThresholdTrigger,
     "epex_next_quarter_hour_crossed_threshold": (
         EpexNextQuarterHourCrossedThresholdTrigger

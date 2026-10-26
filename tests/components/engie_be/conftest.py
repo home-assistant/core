@@ -273,28 +273,6 @@ def build_epex_payload_with_negative_current(
     )
 
 
-def build_epex_payload_rising_per_day(
-    start: datetime,
-    end: datetime,
-    granularity: EpexGranularity = EpexGranularity.HOURLY,
-) -> EpexPayload:
-    """Build a payload whose prices are one tenth of a cent higher every day."""
-    payload = build_epex_payload(start, end, granularity)
-    return EpexPayload(
-        slots=tuple(
-            EpexSlot(
-                start=slot.start,
-                end=slot.end,
-                value_eur_per_kwh=round(
-                    slot.value_eur_per_kwh + slot.start.day / 1000, 6
-                ),
-            )
-            for slot in payload.slots
-        ),
-        slot_duration=payload.slot_duration,
-    )
-
-
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""

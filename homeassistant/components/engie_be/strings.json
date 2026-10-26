@@ -503,26 +503,6 @@
       },
       "name": "EPEX current quarter-hourly price crossed threshold"
     },
-    "epex_high_today_hour_updated": {
-      "description": "Triggers when the highest hourly EPEX price of today changes.",
-      "fields": {
-        "device_id": {
-          "description": "[%key:component::engie_be::common::device_description%]",
-          "name": "[%key:component::engie_be::common::device_name%]"
-        }
-      },
-      "name": "EPEX highest hour price today updated"
-    },
-    "epex_high_today_quarter_hour_updated": {
-      "description": "Triggers when the highest quarter-hourly EPEX price of today changes.",
-      "fields": {
-        "device_id": {
-          "description": "[%key:component::engie_be::common::device_description%]",
-          "name": "[%key:component::engie_be::common::device_name%]"
-        }
-      },
-      "name": "EPEX highest quarter-hourly price today updated"
-    },
     "epex_hour_became_negative": {
       "description": "Triggers when the hourly EPEX day-ahead price turns negative.",
       "fields": {
@@ -542,26 +522,6 @@
         }
       },
       "name": "EPEX hour price no longer negative"
-    },
-    "epex_low_today_hour_updated": {
-      "description": "Triggers when the lowest hourly EPEX price of today changes.",
-      "fields": {
-        "device_id": {
-          "description": "[%key:component::engie_be::common::device_description%]",
-          "name": "[%key:component::engie_be::common::device_name%]"
-        }
-      },
-      "name": "EPEX lowest hour price today updated"
-    },
-    "epex_low_today_quarter_hour_updated": {
-      "description": "Triggers when the lowest quarter-hourly EPEX price of today changes.",
-      "fields": {
-        "device_id": {
-          "description": "[%key:component::engie_be::common::device_description%]",
-          "name": "[%key:component::engie_be::common::device_name%]"
-        }
-      },
-      "name": "EPEX lowest quarter-hourly price today updated"
     },
     "epex_next_hour_crossed_threshold": {
       "description": "Triggers when the next hourly EPEX price enters the configured range.",

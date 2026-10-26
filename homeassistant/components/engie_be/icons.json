@@ -209,23 +209,11 @@
     "epex_current_quarter_hour_crossed_threshold": {
       "trigger": "mdi:cash-clock"
     },
-    "epex_high_today_hour_updated": {
-      "trigger": "mdi:cash-multiple"
-    },
-    "epex_high_today_quarter_hour_updated": {
-      "trigger": "mdi:cash-multiple"
-    },
     "epex_hour_became_negative": {
       "trigger": "mdi:cash-off"
     },
     "epex_hour_no_longer_negative": {
       "trigger": "mdi:cash-check"
-    },
-    "epex_low_today_hour_updated": {
-      "trigger": "mdi:cash-remove"
-    },
-    "epex_low_today_quarter_hour_updated": {
-      "trigger": "mdi:cash-remove"
     },
     "epex_next_hour_crossed_threshold": {
       "trigger": "mdi:cash-fast"
