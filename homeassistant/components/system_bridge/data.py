@@ -10,6 +10,7 @@ from systembridgeconnector.models.modules import (
     Display,
     Media,
     Memory,
+    Networks,
     Process,
     System,
 )
@@ -26,5 +27,6 @@ class SystemBridgeData:
     gpus: list[GPU] = field(default_factory=list[GPU])
     media: Media = field(default_factory=Media)
     memory: Memory | None = None
+    networks: Networks | None = None
     processes: list[Process] = field(default_factory=list[Process])
     system: System | None = None
