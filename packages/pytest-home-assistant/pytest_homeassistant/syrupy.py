@@ -237,7 +237,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         serialized = EntityRegistryEntrySnapshot(
             attrs.asdict(data)
             | {
-                "config_entry_id": ANY,
+                "config_entry_id": None if data.config_entry_id is None else ANY,
                 "config_subentry_id": ANY,
                 "device_id": cls._serializable_device_id(data.device_id),
                 "id": ANY,
