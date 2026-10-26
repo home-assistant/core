@@ -43,7 +43,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_BAUD,
     CONF_DATARATE,
-    CONF_EXPIRE_AFTER,
     CONF_FREQUENCY,
     CONF_JEELINK_LED,
     CONF_TOGGLE_INTERVAL,
@@ -87,7 +86,6 @@ STEP_SENSOR_DATA_SCHEMA = probatio.Schema(
             )
         ),
         probatio.Optional(CONF_FRIENDLY_NAME): cv.string,
-        probatio.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     }
 )
 

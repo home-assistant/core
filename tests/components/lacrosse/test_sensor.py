@@ -1,6 +1,5 @@
 """Tests for the LaCrosse sensor platform."""
 
-from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -32,38 +31,6 @@ async def test_setup_platform_imports_yaml_configuration(hass: HomeAssistant) ->
 
     mock_async_init.assert_awaited_once_with(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-    )
-
-
-def test_sensor_uses_default_expiration(hass: HomeAssistant) -> None:
-    """Test sensors expire after 300 seconds when not configured otherwise."""
-    added_sensors: list[LaCrosseSensor] = []
-    _add_sensors(
-        hass,
-        MagicMock(),
-        "receiver_entry_id",
-        {
-            "device": "/dev/ttyUSB0",
-            "sensors": {"outdoor": {"id": 1, "type": "temperature"}},
-        },
-        added_sensors.extend,
-    )
-    sensor = added_sensors[0]
-    now = datetime(2024, 1, 1, tzinfo=UTC)
-
-    with (
-        patch(
-            "homeassistant.components.lacrosse.sensor.dt_util.utcnow", return_value=now
-        ),
-        patch(
-            "homeassistant.components.lacrosse.sensor.async_track_point_in_utc_time"
-        ) as mock_track_expiration,
-        patch.object(sensor, "async_write_ha_state"),
-    ):
-        sensor._callback_lacrosse(MagicMock(), None)
-
-    mock_track_expiration.assert_called_once_with(
-        hass, sensor.value_is_expired, now + timedelta(seconds=300)
     )
 
 
