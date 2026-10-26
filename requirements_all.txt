@@ -689,7 +689,7 @@ base36==0.1.1
 batinfo==0.4.2
 
 # homeassistant.components.scrape
-beautifulsoup4==4.13.3
+beautifulsoup4==4.15.0
 
 # homeassistant.components.besen
 besen==0.6.1
