@@ -175,9 +175,8 @@ async def test_expose_entity(
 
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"] == {
-        "changed_entity_ids": [entry1.entity_id, entry2.entity_id]
-    }
+    # entry2 was not exposed by default, so stopping to expose it changes nothing
+    assert response["result"] == {"changed_entity_ids": [entry1.entity_id]}
 
     entry1 = entity_registry.async_get(entry1.entity_id)
     assert entry1.options == {
@@ -249,7 +248,8 @@ async def test_expose_entity_unknown(
 
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"] == {"changed_entity_ids": ["test.test", "test.test2"]}
+    # test.test2 was not exposed by default, so stopping to expose it changes nothing
+    assert response["result"] == {"changed_entity_ids": ["test.test"]}
 
     assert len(exposed_entities.entities) == 2
     assert exposed_entities.entities == {
@@ -267,19 +267,33 @@ async def test_expose_entity_unknown(
         ),
     }
 
-    # Only entities with changed settings are returned
+    # Only entities whose exposure changed are returned
     await ws_client.send_json_auto_id(
         {
             "type": "homeassistant/expose_entity",
             "assistants": ["cloud.alexa"],
             "entity_ids": ["test.test", "test.test3"],
+            "should_expose": True,
+        }
+    )
+
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"changed_entity_ids": ["test.test", "test.test3"]}
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa"],
+            "entity_ids": ["test.test", "test.test3", "test.test4"],
             "should_expose": False,
         }
     )
 
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"] == {"changed_entity_ids": ["test.test3"]}
+    # test.test4 was not exposed by default, so it is not returned
+    assert response["result"] == {"changed_entity_ids": ["test.test", "test.test3"]}
 
 
 @pytest.mark.parametrize("expose_new", [True, False])

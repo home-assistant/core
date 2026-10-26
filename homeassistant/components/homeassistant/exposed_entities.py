@@ -411,14 +411,15 @@ def ws_expose_entity(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Expose an entity to an assistant."""
+    should_expose: bool = msg["should_expose"]
     changed_entity_ids: list[str] = []
 
     for entity_id in msg["entity_ids"]:
         changed = False
         for assistant in msg["assistants"]:
-            changed |= async_expose_entity(
-                hass, assistant, entity_id, msg["should_expose"]
-            )
+            if async_should_expose(hass, assistant, entity_id) != should_expose:
+                changed = True
+            async_expose_entity(hass, assistant, entity_id, should_expose)
         if changed:
             changed_entity_ids.append(entity_id)
     connection.send_result(msg["id"], {"changed_entity_ids": changed_entity_ids})
