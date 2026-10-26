@@ -17,7 +17,12 @@ from homeassistant.components.event import (
     ATTR_EVENT_TYPES,
     EventDeviceClass,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockESPHomeDeviceType
@@ -293,3 +298,98 @@ async def test_event_entity_without_variables(
         ATTR_EVENT_TYPES,
         ATTR_FRIENDLY_NAME,
     }
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        # automations for rotate_left must not fire on a press
+        pytest.param(ATTR_EVENT_TYPE, id="event_type"),
+        # the list must stay the one the device announced
+        pytest.param(ATTR_EVENT_TYPES, id="event_types"),
+    ],
+)
+async def test_event_entity_skips_reserved_variable_names(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    name: str,
+) -> None:
+    """Test a variable cannot replace an attribute of the event entity."""
+    entity_info = [
+        EventInfo(
+            object_id="dimmer",
+            key=1,
+            name="dimmer",
+            event_types=["press", "rotate_left"],
+            variables=[
+                EventVariable(name=name, type=EventVariableType.STRING),
+                EventVariable(name="number_of_presses", type=EventVariableType.INT),
+            ],
+        )
+    ]
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        # a double press whose first value says rotate_left
+        states=[
+            Event(
+                key=1,
+                event_type="press",
+                values=[
+                    EventVariableValue(index=0, string_="rotate_left"),
+                    EventVariableValue(index=1, int_=2),
+                ],
+            )
+        ],
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("event.test_dimmer")
+    assert state.attributes[ATTR_EVENT_TYPE] == "press"
+    assert state.attributes[ATTR_EVENT_TYPES] == ["press", "rotate_left"]
+    # the other values still arrive
+    assert state.attributes["number_of_presses"] == 2
+
+
+@pytest.mark.parametrize(
+    ("name", "value"),
+    [
+        # doorbell automations must not fire for a plain event
+        pytest.param(ATTR_DEVICE_CLASS, "doorbell", id="device_class"),
+        # the frontend must not show an icon the device picked
+        pytest.param(ATTR_ICON, "mdi:fire", id="icon"),
+    ],
+)
+async def test_event_entity_skips_entity_attribute_variable_names(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    name: str,
+    value: str,
+) -> None:
+    """Test a variable cannot set an attribute the entity leaves unset."""
+    # no device class and no icon
+    entity_info = [
+        EventInfo(
+            object_id="bell",
+            key=1,
+            name="bell",
+            event_types=["ring"],
+            variables=[EventVariable(name=name, type=EventVariableType.STRING)],
+        )
+    ]
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=[
+            Event(
+                key=1,
+                event_type="ring",
+                values=[EventVariableValue(index=0, string_=value)],
+            )
+        ],
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("event.test_bell")
+    assert state.attributes[ATTR_EVENT_TYPE] == "ring"
+    assert name not in state.attributes

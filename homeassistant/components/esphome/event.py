@@ -6,7 +6,13 @@ from typing import override
 
 from aioesphomeapi import EntityInfo, Event, EventInfo, EventVariableType
 
-from homeassistant.components.event import EventDeviceClass, EventEntity
+from homeassistant.components.event import (
+    EventDeviceClass,
+    EventEntity,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import callback
 from homeassistant.util.enum import try_parse_enum
 
@@ -20,6 +26,22 @@ _VALUE_FIELD: dict[EventVariableType | None, str] = {
     EventVariableType.FLOAT: "float_",
     EventVariableType.STRING: "string_",
 }
+
+# Home Assistant sets these attributes itself
+_RESERVED_VARIABLE_NAMES = frozenset(
+    {
+        EntityStateAttribute.ASSUMED_STATE,
+        EntityStateAttribute.ATTRIBUTION,
+        EntityStateAttribute.DEVICE_CLASS,
+        EntityStateAttribute.ENTITY_PICTURE,
+        EntityStateAttribute.FRIENDLY_NAME,
+        EntityStateAttribute.ICON,
+        EntityStateAttribute.SUPPORTED_FEATURES,
+        EntityStateAttribute.UNIT_OF_MEASUREMENT,
+        EventEntityCapabilityAttribute.EVENT_TYPES,
+        EventEntityStateAttribute.EVENT_TYPE,
+    }
+)
 
 
 class EsphomeEvent(EsphomeEntity[EventInfo, Event], EventEntity):
@@ -48,6 +70,8 @@ class EsphomeEvent(EsphomeEntity[EventInfo, Event], EventEntity):
             if value.index >= len(variables):
                 continue
             variable = variables[value.index]
+            if variable.name in _RESERVED_VARIABLE_NAMES:
+                continue
             # types this version does not know are skipped
             if (field := _VALUE_FIELD.get(variable.type)) is None:
                 continue
