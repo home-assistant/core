@@ -52,9 +52,7 @@ rules:
   docs-triggers:
     status: exempt
     comment: This integration does not provide any triggers.
-  entity-event-setup:
-    status: exempt
-    comment: Entities of this integration do not subscribe to events.
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -109,8 +107,8 @@ rules:
     comment: >-
       (1) coordinator.py is at 90%: the UpdateFailed path is not tested, and no
       test expects SETUP_RETRY when the unit is offline.
-      (2) fan.py is just above 95%; the error paths for setting power and fan
-      speed are not tested.
+      (2) The fan's power-setting failure and unsupported-profile fan speed
+      error paths are not tested.
       (3) No test explicitly unloads the entry.
       (4) The config flow tests patch the library inline instead of using
       shared mock_client and mock_setup_entry fixtures, and the user-step
