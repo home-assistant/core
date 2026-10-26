@@ -273,7 +273,8 @@ def caller_items(
     if definitions > 1:
         return None
     index, default = found or (None, None)
-    is_method = bool(func.args.args) and func.args.args[0].arg in ("self", "cls")
+    positional = [*func.args.posonlyargs, *func.args.args]
+    is_method = bool(positional) and positional[0].arg in ("self", "cls")
     # The issue id can be forwarded from the callers too.
     issue_parameter = (
         find_parameter(func, issue_arg.id) if isinstance(issue_arg, ast.Name) else None

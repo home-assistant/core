@@ -390,6 +390,25 @@ def test_scan_same_constant_name(tmp_path: Path) -> None:
     ]
 
 
+def test_scan_positional_only_receiver(tmp_path: Path) -> None:
+    """Test a method with a positional-only self gets its callers' versions."""
+    write_repo(
+        tmp_path,
+        {
+            "homeassistant/components/lambda_/entity.py": """
+                class Entity:
+                    def create_repair(self, /, version="2026.1"):
+                        async_create_issue(breaks_in_ha_version=version)
+
+                    def setup(self):
+                        self.create_repair("2027.1")
+            """,
+        },
+    )
+    result = find.scan(tmp_path, (2026, 1))
+    assert result["deprecations"] == []
+
+
 def test_scan_same_function_name(tmp_path: Path) -> None:
     """Test calls are not resolved when a function name is defined twice."""
     result = find.scan(write_repo(tmp_path, SAME_FUNCTION_NAME_FILES), (2099, 1))
