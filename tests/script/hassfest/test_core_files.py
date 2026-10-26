@@ -130,7 +130,6 @@ def test_core_integration_with_all(config: Config, tmp_path: Path, code: str) ->
     with (
         patch("script.hassfest.core_files.load_yaml_dict", return_value=core_files),
         patch("script.hassfest.core_files.EXTRA_BASE_PLATFORMS", set()),
-        patch("script.hassfest.core_files.MISSING_ALL", set()),
     ):
         validate(integrations, config)
 
@@ -184,56 +183,9 @@ def test_core_integration_missing_all(
     with (
         patch("script.hassfest.core_files.load_yaml_dict", return_value=core_files),
         patch("script.hassfest.core_files.EXTRA_BASE_PLATFORMS", extra_base_platforms),
-        patch("script.hassfest.core_files.MISSING_ALL", set()),
     ):
         validate(integrations, config)
 
     assert [error.error for error in config.errors] == [
         f"Core integration '{domain}' must define `__all__` in its `__init__.py`"
-    ]
-
-
-def test_core_integration_in_missing_all(config: Config, tmp_path: Path) -> None:
-    """Test no error when a core integration without __all__ is in MISSING_ALL."""
-    integrations = {
-        "http": _create_core_integration(config, tmp_path, "http", 'DOMAIN = "http"\n')
-    }
-    core_files = {
-        "base_platforms": [],
-        "components": ["homeassistant/components/http/**"],
-    }
-
-    with (
-        patch("script.hassfest.core_files.load_yaml_dict", return_value=core_files),
-        patch("script.hassfest.core_files.EXTRA_BASE_PLATFORMS", set()),
-        patch("script.hassfest.core_files.MISSING_ALL", {"http"}),
-    ):
-        validate(integrations, config)
-
-    assert not config.errors
-
-
-def test_core_integration_with_all_still_in_missing_all(
-    config: Config, tmp_path: Path
-) -> None:
-    """Test error when a core integration defines __all__ but is in MISSING_ALL."""
-    integrations = {
-        "http": _create_core_integration(
-            config, tmp_path, "http", '__all__ = ["DOMAIN"]\n'
-        )
-    }
-    core_files = {
-        "base_platforms": [],
-        "components": ["homeassistant/components/http/**"],
-    }
-
-    with (
-        patch("script.hassfest.core_files.load_yaml_dict", return_value=core_files),
-        patch("script.hassfest.core_files.EXTRA_BASE_PLATFORMS", set()),
-        patch("script.hassfest.core_files.MISSING_ALL", {"http"}),
-    ):
-        validate(integrations, config)
-
-    assert [error.error for error in config.errors] == [
-        "Core integration 'http' defines `__all__` but is still listed in MISSING_ALL"
     ]

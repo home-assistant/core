@@ -93,6 +93,17 @@ def _categories(
     return integration.categories
 
 
+def _connectivity(
+    integration: Integration, integrations: dict[str, Integration]
+) -> list[str]:
+    """Return the connectivity, virtual integrations inherit it from supported_by."""
+    if integration.supported_by and (
+        supported_by := integrations.get(integration.supported_by)
+    ):
+        return supported_by.connectivity
+    return integration.connectivity
+
+
 def _populate_brand_integrations(
     integration_data: dict[str, Any],
     integrations: dict[str, Integration],
@@ -122,6 +133,8 @@ def _populate_brand_integrations(
             metadata["iot_standards"] = integration.iot_standards
         if categories := _categories(integration, integrations):
             metadata["categories"] = categories
+        if connectivity := _connectivity(integration, integrations):
+            metadata["connectivity"] = connectivity
         if integration.translated_name:
             integration_data["translated_name"].add(domain)
         else:
@@ -198,6 +211,9 @@ def _generate_integrations(
 
             if categories := _categories(integration, integrations):
                 metadata["categories"] = categories
+
+            if connectivity := _connectivity(integration, integrations):
+                metadata["connectivity"] = connectivity
 
             if integration.integration_type == IntegrationType.VIRTUAL:
                 if integration.supported_by:

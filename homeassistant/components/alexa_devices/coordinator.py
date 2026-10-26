@@ -460,3 +460,12 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def device_sensor(self, serial_num: str, key: str) -> AmazonDeviceSensor | None:
         """Return a sensor of a device, if present."""
         return self.sensors.get(serial_num, {}).get(key)
+
+    def supported_sensor_keys(self, serial_num: str) -> set[str]:
+        """Return the sensor keys the device supports."""
+        return {
+            key
+            for instances in self.data[serial_num].features.values()
+            for feature in instances.values()
+            for key in feature.sensor_keys.values()
+        }

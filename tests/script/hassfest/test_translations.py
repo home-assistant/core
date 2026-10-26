@@ -635,3 +635,60 @@ def test_homeassistant_schema_invalid_integration_category(
 
     with pytest.raises(probatio.Invalid):
         schema({"integration_category": integration_category})
+
+
+INTEGRATION_CONNECTIVITY_STRINGS = {
+    "integration_connectivity": {
+        "zigbee": {
+            "name": "Zigbee",
+            "description": "Zigbee devices, through a Zigbee radio or a bridge.",
+        },
+        "cloud": {
+            "name": "Cloud",
+            "description": "Services on the internet, like a manufacturer's cloud.",
+        },
+    },
+}
+
+
+def test_homeassistant_schema_integration_connectivity(config: Config) -> None:
+    """Test the homeassistant integration accepts connectivity values."""
+    integration = get_integration("homeassistant", config)
+    schema = translations.gen_homeassistant_schema(config, integration)
+
+    assert schema(INTEGRATION_CONNECTIVITY_STRINGS) == INTEGRATION_CONNECTIVITY_STRINGS
+
+
+def test_integration_connectivity_only_for_homeassistant(config: Config) -> None:
+    """Test other integrations can't define connectivity values."""
+    integration = get_integration("test_integration", config)
+    schema = translations.gen_strings_schema(config, integration)
+
+    with pytest.raises(probatio.Invalid, match="not a valid option"):
+        schema(INTEGRATION_CONNECTIVITY_STRINGS)
+
+
+@pytest.mark.parametrize(
+    "integration_connectivity",
+    [
+        {"Zigbee": {"name": "Zigbee", "description": "Zigbee devices."}},
+        {"zigbee": {"name": "Zigbee"}},
+        {"zigbee": {"description": "Zigbee devices."}},
+        {
+            "zigbee": {
+                "name": "Zigbee",
+                "description": "Zigbee devices.",
+                "subcategory": {"coordinators": {"name": "Coordinators"}},
+            }
+        },
+    ],
+)
+def test_homeassistant_schema_invalid_integration_connectivity(
+    config: Config, integration_connectivity: dict
+) -> None:
+    """Test invalid connectivity values are rejected."""
+    integration = get_integration("homeassistant", config)
+    schema = translations.gen_homeassistant_schema(config, integration)
+
+    with pytest.raises(probatio.Invalid):
+        schema({"integration_connectivity": integration_connectivity})

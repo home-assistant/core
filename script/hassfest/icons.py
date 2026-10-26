@@ -153,6 +153,12 @@ INTEGRATION_CATEGORY_ICONS_SCHEMA = cv.schema_with_slug_keys(
 )
 
 
+INTEGRATION_CONNECTIVITY_ICONS_SCHEMA = cv.schema_with_slug_keys(
+    {probatio.Required("default"): icon_value_validator},
+    slug_validator=translation_key_validator,
+)
+
+
 def icon_schema(
     core_integration: bool, integration_type: IntegrationType, no_entity_platform: bool
 ) -> probatio.Schema:
@@ -275,6 +281,26 @@ def validate_integration_category_icons(
         integration.add_error("icons", f"Icon for unknown integration category `{key}`")
 
 
+def validate_integration_connectivity_icons(
+    integration: Integration, icons: dict[str, Any]
+) -> None:
+    """Validate every connectivity value has an icon, and every icon a value."""
+    # Invalid strings are reported by the json and translations plugins.
+    try:
+        strings = orjson.loads((integration.path / "strings.json").read_text())
+        values = set(strings.get("integration_connectivity", {}))
+    except ValueError, AttributeError, TypeError:
+        return
+
+    value_icons = set(icons.get("integration_connectivity", {}))
+
+    for key in sorted(values - value_icons):
+        integration.add_error("icons", f"Connectivity `{key}` has no icon")
+
+    for key in sorted(value_icons - values):
+        integration.add_error("icons", f"Icon for unknown connectivity `{key}`")
+
+
 def validate_icon_file(config: Config, integration: Integration) -> None:
     """Validate icon file for integration."""
     icons_file = integration.path / "icons.json"
@@ -299,7 +325,10 @@ def validate_icon_file(config: Config, integration: Integration) -> None:
             {
                 probatio.Optional(
                     "integration_category"
-                ): INTEGRATION_CATEGORY_ICONS_SCHEMA
+                ): INTEGRATION_CATEGORY_ICONS_SCHEMA,
+                probatio.Optional(
+                    "integration_connectivity"
+                ): INTEGRATION_CONNECTIVITY_ICONS_SCHEMA,
             }
         )
 
@@ -311,6 +340,7 @@ def validate_icon_file(config: Config, integration: Integration) -> None:
 
     if integration.domain == "homeassistant":
         validate_integration_category_icons(integration, icons)
+        validate_integration_connectivity_icons(integration, icons)
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
