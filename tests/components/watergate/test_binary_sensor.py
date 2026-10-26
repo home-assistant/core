@@ -1,8 +1,8 @@
 """Tests for the Watergate binary sensor platform."""
 
 from collections.abc import Generator
-from datetime import timedelta
 import copy
+from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
