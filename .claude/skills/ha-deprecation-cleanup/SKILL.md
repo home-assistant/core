@@ -83,9 +83,10 @@ Then pick one outcome per deprecation:
   or locally, don't touch it. Look for every branch of the integration and version
   (`git ls-remote --heads <remote> 'deprecation-cleanup/<name>-<X.Y>*'` and
   `git branch --list 'deprecation-cleanup/<name>-<X.Y>*'`), since a branch made for the
-  same deprecation can have another suffix, and check its diff to see what it removes. Report whether a PR is open from it, whether it is only local and not
-  pushed, and when its base is more than one release behind `dev`, say it needs a merge of
-  `dev` or a fresh branch.
+  same deprecation can have another suffix, and check its diff to see what it removes.
+  Report whether a PR is open from it, whether it is only local and not pushed, and when
+  its base is more than one release behind `dev`, say it needs a merge of `dev` or a fresh
+  branch.
 - **Prepare a branch** otherwise.
 
 For every deprecation, whatever the outcome, look for an open task issue in
