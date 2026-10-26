@@ -320,6 +320,12 @@ async def test_flow_link_button_pressed_later(
         await hass.async_block_till_done()
         assert mock_create_app_key.call_count == 1
 
+        # Polling the flow while the task is still running keeps showing progress
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "wait_for_button"
+        assert mock_create_app_key.call_count == 1
+
         for call_count in (2, 3):
             freezer.tick(timedelta(seconds=1))
             async_fire_time_changed(hass)
