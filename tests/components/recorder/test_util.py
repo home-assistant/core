@@ -22,7 +22,7 @@ from pytest_homeassistant.typing import (
     RecorderInstanceContextManager,
     RecorderInstanceGenerator,
 )
-from sqlalchemy import lambda_stmt, text
+from sqlalchemy import lambda_stmt, make_url, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -201,12 +201,32 @@ def test_get_engine_db_url(
     assert url.query == query
 
 
-def test_get_engine_db_url_decodes_password() -> None:
-    """Test the engine URL still URL-decodes the username and password."""
-    url = get_engine_db_url("postgresql://us%40er:pa%40ss@host/db")
-
-    assert url.username == "us@er"
-    assert url.password == "pa@ss"
+@pytest.mark.parametrize(
+    "db_url",
+    [
+        pytest.param("mysql://user:pass@host/db?charset=utf8mb4", id="mysql"),
+        pytest.param(
+            "mysql+pymysql://user:pass@host:3306/db?charset=utf8mb4",
+            id="mysql_pymysql",
+        ),
+        pytest.param("mariadb://user:pass@[::1]:3306/db", id="mariadb_ipv6"),
+        pytest.param(
+            "postgresql+psycopg2://us%40er:pa%40ss@host/db", id="postgresql_psycopg2"
+        ),
+        pytest.param(
+            "postgresql+psycopg://user:pa/ss@host:5432/db", id="postgresql_psycopg"
+        ),
+        pytest.param(
+            "postgresql+psycopg2://user:pa?ss@host/db?sslmode=require",
+            id="postgresql_question_mark_password",
+        ),
+        pytest.param("sqlite:////config/home-assistant_v2.db?timeout=0.1", id="sqlite"),
+        pytest.param("sqlite://", id="sqlite_memory"),
+    ],
+)
+def test_get_engine_db_url_unchanged(db_url: str) -> None:
+    """Test the URL is used as parsed when there is no driver to pin or path to keep."""
+    assert get_engine_db_url(db_url) == make_url(db_url)
 
 
 def test_validate_or_move_away_sqlite_database(
