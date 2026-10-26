@@ -1277,10 +1277,10 @@ class ZHAGatewayProxy(EventBase):
     ) -> None:
         """Remove registry entries for group entities the group no longer has.
 
-        A group entity disappears when the group drops below two members, and
-        (with zigpy/zha#849) when a single platform drops below two eligible
-        members. The group device stays until the group itself is removed, so
-        a group that grows back keeps its device customizations.
+        A group entity disappears when the group, or the group's members of
+        that platform, drop below two. The group device stays until the group
+        itself is removed, so a group that grows back keeps its device
+        customizations.
         """
         if (device_id := zha_group_proxy.device_id) is None:
             return
