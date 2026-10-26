@@ -67,3 +67,9 @@ SETTINGS_SCAN_INTERVAL: Final = timedelta(minutes=5)
 # Meters and batteries are wired to an inverter by hand, usually with the power
 # off, so looking for a change now and then is often enough.
 ATTACHMENT_SCAN_INTERVAL: Final = timedelta(minutes=15)
+
+# A sleeping SolarEdge inverter resets now and then, dropping the link and
+# refusing a new one for about a minute. Polls that fail within this long of
+# reading it asleep, and start within this long of the first of them, are that
+# reset and not an error.
+SLEEP_OUTAGE_GRACE: Final = timedelta(seconds=90)

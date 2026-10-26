@@ -1,11 +1,14 @@
 """Tests for the SolarEdge Modbus config-entry setup."""
 
 import asyncio
+from datetime import timedelta
+import logging
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import (
     IllegalDataAddressError,
+    ModbusConnectionError,
     ModbusTimeoutError,
     ModbusUnit,
     ServerDeviceFailureError,
@@ -13,8 +16,12 @@ from modbus_connection import (
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from solaredged import SolarEdge, SolarEdgeConnectionError
+from solaredged import InverterStatus, SolarEdge, SolarEdgeConnectionError
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -24,9 +31,11 @@ from homeassistant.components.solaredge_modbus.const import (
     ATTACHMENT_SCAN_INTERVAL,
     CONF_SILENT_BLOCKS,
     DOMAIN,
+    LOGGER,
     READ_TIMEOUT,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
+    SLEEP_OUTAGE_GRACE,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -39,6 +48,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from .conftest import (
     BATTERY_RATED_ENERGY,
@@ -56,6 +66,23 @@ POWER_ENTITY = "sensor.solaredge_se10000h_power"
 
 # An address inside the inverter's read, to make that read fail.
 INVERTER_REGISTER = 40069
+
+# The inverter's operating state.
+INVERTER_STATUS_REGISTER = 40107
+
+# Failed readings polls a reset may take without an error, counted from the
+# first one's start. The next one starts right at the end of the window.
+POLLS_IN_GRACE = int(SLEEP_OUTAGE_GRACE / SCAN_INTERVAL)
+
+# Readings polls per settings poll, which runs far less often.
+POLLS_PER_SETTINGS_POLL = int(SETTINGS_SCAN_INTERVAL / SCAN_INTERVAL)
+
+# How each coordinator logs a failed refresh.
+READINGS_ERROR = "Error fetching SolarEdge SE10000H readings data"
+SETTINGS_ERROR = "Error fetching SolarEdge SE10000H settings data"
+
+# How long a connection attempt to a silent address waits, as in the report.
+CONNECT_TIMEOUT = timedelta(seconds=10)
 
 # The register the probe counts meters by.
 METER_MODEL_REGISTER = 40188
@@ -84,6 +111,38 @@ async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def _tick_polls(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, polls: int
+) -> None:
+    """Let the readings poll run the given number of times."""
+    for _ in range(polls):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+
+def _records(caplog: pytest.LogCaptureFixture, level: int) -> list[str]:
+    """Return what this integration logged at the given level or above."""
+    return [
+        record.getMessage()
+        for record in caplog.records
+        if record.name == LOGGER.name and record.levelno >= level
+    ]
+
+
+def _errors_from(caplog: pytest.LogCaptureFixture, prefix: str) -> int:
+    """Count the refresh errors one coordinator logged."""
+    return sum(m.startswith(prefix) for m in _records(caplog, logging.ERROR))
+
+
+def _is_control_read(address: int, count: int) -> bool:
+    """Return whether a read belongs to the settings poll."""
+    return (
+        address <= SITE_CONTROL_REGISTER < address + count
+        or address >= POWER_CONTROL_REGISTER
+    )
 
 
 async def test_load_unload_entry(
@@ -486,30 +545,482 @@ async def test_single_late_answer_is_retried(
     assert state.state != STATE_UNAVAILABLE
 
 
-async def test_dead_link_fails_the_refresh(
+@pytest.mark.parametrize(
+    ("status", "errors"),
+    [
+        pytest.param(InverterStatus.SLEEPING, 0, id="sleeping"),
+        pytest.param(InverterStatus.OFF, 1, id="off"),
+        pytest.param(InverterStatus.STARTING, 1, id="starting"),
+        pytest.param(InverterStatus.PRODUCING, 1, id="producing"),
+        pytest.param(InverterStatus.FAULT, 1, id="fault"),
+    ],
+)
+async def test_dead_link_is_an_error_unless_sleeping(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
+    status: InverterStatus,
+    errors: int,
 ) -> None:
-    """A device that answers nothing at all fails the poll outright.
+    """A device that answers nothing at all leaves every value stale.
 
-    A partial poll leaves what answered alone, but silence from end to end is
-    a dead link, and every value the entry can show is then stale.
+    The entities go unavailable whatever the inverter was doing. Only a
+    sleeping one gets away without an error: SolarEdge inverters reset while
+    asleep and refuse connections for about a minute. One that just woke up
+    is read awake first, so its sleep does not carry over.
     """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
     await _setup(hass, mock_config_entry)
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = status
+    await _tick_polls(hass, freezer, 1)
 
     mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert mock_config_entry.runtime_data.readings.last_update_success is False
+    await _tick_polls(hass, freezer, 1)
 
     state = hass.states.get(POWER_ENTITY)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+    assert _errors_from(caplog, READINGS_ERROR) == errors
+    assert len(_records(caplog, logging.ERROR)) == errors
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ModbusTimeoutError("timed out"), id="silent"),
+        pytest.param(ModbusConnectionError("could not connect"), id="refused"),
+    ],
+)
+async def test_sleeping_inverter_comes_back_after_a_reset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    error: Exception,
+) -> None:
+    """A reset leaves nothing in the log, and the entities read again after it."""
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    power = state.state
+    caplog.clear()
+
+    mock_modbus_unit.fail_requests(error)
+    await _tick_polls(hass, freezer, POLLS_IN_GRACE)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_modbus_unit.fail_requests(None)
+    await _tick_polls(hass, freezer, 1)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == power
+    assert _records(caplog, logging.INFO) == []
+
+
+async def test_reported_reset_leaves_nothing_in_the_log(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """The reset from the report, with the time it takes, stays out of the log.
+
+    Two connection attempts wait out their timeout, the third is refused, and
+    the fourth finds the inverter back.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+    caplog.clear()
+
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+    attempts = ["silent", "silent", "refused"]
+
+    async def reset(address: int, count: int) -> list[int]:
+        """Answer the way the reported inverter did while it reset."""
+        if not attempts:
+            return await read_holding_registers(address, count)
+        if attempts.pop(0) == "refused":
+            raise ModbusConnectionError("could not connect")
+        freezer.tick(CONNECT_TIMEOUT)
+        raise ModbusTimeoutError("timed out")
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", reset):
+        await _tick_polls(hass, freezer, 4)
+
+    assert attempts == []  # the whole reset was played out
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert _records(caplog, logging.INFO) == []
+
+
+async def test_slow_poll_does_not_use_up_the_window(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A poll that read the inverter asleep counts from when it was done.
+
+    Here the meter and batteries time out on the first attempt and the retry,
+    which keeps that poll busy for minutes. A reset right after it is still a
+    reset.
+    """
+    await _setup(hass, mock_config_entry)
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+
+    async def slow_attachments(address: int, count: int) -> list[int]:
+        """Let every read past the inverter's wait out its timeout."""
+        if address > INVERTER_REGISTER and not _is_control_read(address, count):
+            freezer.tick(READ_TIMEOUT)
+            raise ModbusTimeoutError("timed out")
+        return await read_holding_registers(address, count)
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", slow_attachments):
+        await _tick_polls(hass, freezer, 1)
+
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
+    await _tick_polls(hass, freezer, 1)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert _records(caplog, logging.ERROR) == []
+
+
+async def test_failed_poll_counts_from_its_start(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """The timeout a failed poll waits out does not use up the window.
+
+    The inverter was last read asleep at setup; its own read fails after that,
+    so the window keeps counting from there. The poll that finds the link dead
+    starts inside the window and only ends past it.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+
+    mock_modbus_unit.fail_read(INVERTER_REGISTER, ModbusTimeoutError("timed out"))
+    await _tick_polls(hass, freezer, POLLS_IN_GRACE - 2)
+
+    async def wait_out_the_timeout(address: int, count: int) -> list[int]:
+        """Let the first read of the poll hang until it times out."""
+        freezer.tick(READ_TIMEOUT)
+        raise ModbusTimeoutError("timed out")
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", wait_out_the_timeout):
+        await _tick_polls(hass, freezer, 1)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert _records(caplog, logging.ERROR) == []
+
+
+async def test_sleeping_inverter_gone_past_the_grace_is_an_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A link that stays dead longer than a reset takes is logged once.
+
+    The first poll past the window is the one that logs. Its return is then
+    the coordinator's own business, logged once as well.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
+    await _tick_polls(hass, freezer, POLLS_IN_GRACE)
+    assert _records(caplog, logging.ERROR) == []
+
+    await _tick_polls(hass, freezer, 1)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert _errors_from(caplog, READINGS_ERROR) == 1
+
+    mock_modbus_unit.fail_requests(None)
+    await _tick_polls(hass, freezer, 1)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert len(_records(caplog, logging.ERROR)) == 1
+    assert (
+        sum(message.endswith("recovered") for message in _records(caplog, logging.INFO))
+        == 1
+    )
+
+
+async def test_each_reset_gets_its_own_window(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A poll that answers in between ends one reset, and the next starts over."""
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
+    await _tick_polls(hass, freezer, POLLS_IN_GRACE)
+    mock_modbus_unit.fail_requests(None)
+    await _tick_polls(hass, freezer, 1)
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
+    await _tick_polls(hass, freezer, POLLS_IN_GRACE)
+
+    assert _records(caplog, logging.ERROR) == []
+
+
+async def test_each_coordinator_counts_its_own_outage(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Readings failing while the settings poll answers are no reset.
+
+    The settings poll answering does not end the readings outage, so it is
+    logged once, and nothing claims it recovered.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+
+    async def refuse_the_readings(address: int, count: int) -> list[int]:
+        """Answer every read outside the control blocks with an exception."""
+        if not _is_control_read(address, count):
+            raise ServerDeviceFailureError
+        return await read_holding_registers(address, count)
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", refuse_the_readings):
+        await _tick_polls(hass, freezer, 2 * POLLS_PER_SETTINGS_POLL)
+
+    state = hass.states.get(ACTIVE_POWER_LIMIT_ENTITY)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE  # the settings poll really answered
+    assert _errors_from(caplog, READINGS_ERROR) == 1
+    assert not any(
+        message.endswith("recovered") for message in _records(caplog, logging.INFO)
+    )
+
+
+async def test_settings_failing_for_long_are_an_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A settings poll that keeps failing is no reset, even with the inverter asleep.
+
+    The readings poll reads it asleep every few seconds meanwhile, which must
+    not keep the settings outage quiet all night.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+
+    async def refuse_the_settings(address: int, count: int) -> list[int]:
+        """Answer every read of the control blocks with an exception."""
+        if _is_control_read(address, count):
+            raise ServerDeviceFailureError
+        return await read_holding_registers(address, count)
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", refuse_the_settings):
+        await _tick_polls(hass, freezer, 2 * POLLS_PER_SETTINGS_POLL)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE  # the readings poll really answered
+    assert _errors_from(caplog, SETTINGS_ERROR) == 1
+
+
+async def test_sleeping_read_after_the_outage_began_excuses_nothing(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A readings poll that answered after settings began failing proves a link.
+
+    A settings refresh asked for right after it, here through an entity update,
+    is no reset, however soon.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+
+    async def refuse_the_settings(address: int, count: int) -> list[int]:
+        """Answer every read of the control blocks with an exception."""
+        if _is_control_read(address, count):
+            raise ServerDeviceFailureError
+        return await read_holding_registers(address, count)
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", refuse_the_settings):
+        await _tick_polls(hass, freezer, POLLS_PER_SETTINGS_POLL + 1)
+        assert _records(caplog, logging.ERROR) == []
+        await hass.services.async_call(
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: ACTIVE_POWER_LIMIT_ENTITY},
+            blocking=True,
+        )
+
+    assert _errors_from(caplog, SETTINGS_ERROR) == 1
+
+
+@pytest.mark.parametrize(
+    ("answered_polls", "errors"),
+    [
+        pytest.param(POLLS_PER_SETTINGS_POLL - 1, 0, id="reset"),
+        pytest.param(0, 1, id="long_outage"),
+    ],
+)
+async def test_settings_poll_counts_from_the_last_sleeping_read(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    answered_polls: int,
+    errors: int,
+) -> None:
+    """The settings poll takes the readings poll's word for the inverter's sleep.
+
+    It runs far less often, so a reset that the readings saw begin finds it
+    within the window, and a link that died long before it ran does not.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+
+    await _tick_polls(hass, freezer, answered_polls)
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
+    await _tick_polls(hass, freezer, POLLS_PER_SETTINGS_POLL - answered_polls)
+
+    state = hass.states.get(ACTIVE_POWER_LIMIT_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert _errors_from(caplog, SETTINGS_ERROR) == errors
+
+
+async def test_sleep_is_only_taken_from_a_fresh_read(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A status kept from an earlier poll does not renew the inverter's sleep.
+
+    While the inverter's own read fails, its status is whatever an earlier
+    poll left, and the inverter may well be awake by now.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+
+    mock_modbus_unit.fail_read(INVERTER_REGISTER, ModbusTimeoutError("timed out"))
+    await _tick_polls(hass, freezer, POLLS_IN_GRACE - 1)
+
+    # This poll starts right at the end of the window from the setup's read.
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
+    await _tick_polls(hass, freezer, 1)
+
+    assert _errors_from(caplog, READINGS_ERROR) == 1
+
+
+async def test_no_reset_after_another_inverter_answered(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Once a poll failed, a dead link right after it is no reset either.
+
+    Here another inverter answered on the address first. Taking the dead link
+    after it for a reset would claim the entry recovered.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+
+    await async_seed_unit(
+        hass, mock_modbus_unit, serial_registers=[20308, 18501, 21041, 12851]
+    )
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _tick_polls(hass, freezer, 1)
+
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
+    await _tick_polls(hass, freezer, 1)
+
+    assert not any(
+        message.endswith("recovered") for message in _records(caplog, logging.INFO)
+    )
+
+
+async def test_retry_dying_still_counts_the_first_answer(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A poll whose retry died still found the inverter asleep.
+
+    The reset can start between the first attempt and its retry, and the next
+    failed poll is then part of that same reset. The sub-system the first
+    attempt missed is still logged as a warning.
+    """
+    await _setup(hass, mock_config_entry)
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+    dead = False
+
+    async def die_after_the_meter(address: int, count: int) -> list[int]:
+        """Miss the meter's read, then let nothing answer at all."""
+        nonlocal dead
+        if dead or address <= METER_MODEL_REGISTER < address + count:
+            dead = True
+            raise ModbusTimeoutError("link died")
+        return await read_holding_registers(address, count)
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", die_after_the_meter):
+        await _tick_polls(hass, freezer, 2)
+
+    assert dead  # the link really did die
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert _records(caplog, logging.ERROR) == []
+    assert any("meters[0]" in m for m in _records(caplog, logging.WARNING))
 
 
 async def test_another_inverter_on_the_address_fails_the_refresh(
@@ -570,9 +1081,17 @@ async def test_silent_control_block_leaves_the_others_alone(
 
 
 async def test_settings_failure_does_not_block_setup(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
 ) -> None:
-    """Readings carry the entry even when the control blocks stay silent."""
+    """Readings carry the entry even when the control blocks stay silent.
+
+    The failure is reported even though the inverter was just read asleep:
+    the first refresh has nothing yet to mark as failed.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
     with patch(
         "homeassistant.components.solaredge_modbus.SolarEdge.async_update_settings",
         side_effect=SolarEdgeConnectionError("timed out"),
@@ -585,6 +1104,7 @@ async def test_settings_failure_does_not_block_setup(
     state = hass.states.get("number.solaredge_se10000h_backup_reserve")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+    assert _errors_from(caplog, SETTINGS_ERROR) == 1
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

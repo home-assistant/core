@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Final, override
 
-from solaredged import SolarEdge, SolarEdgeConnectionError, UpdateReport
+from solaredged import InverterStatus, SolarEdge, SolarEdgeConnectionError, UpdateReport
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,8 +16,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     DOMAIN,
     LOGGER,
+    SLEEP_OUTAGE_GRACE,
     SUBSYSTEM_ADVANCED_POWER_CONTROL,
     SUBSYSTEM_COMMON,
+    SUBSYSTEM_INVERTER,
     SUBSYSTEM_POWER_CONTROL,
     SUBSYSTEM_SITE_CONTROL,
 )
@@ -49,6 +51,19 @@ def _merge(first: UpdateReport, second: UpdateReport) -> UpdateReport:
     )
 
 
+@dataclass(kw_only=True)
+class SleepState:
+    """When the inverter was last read asleep, shared by both coordinators.
+
+    Only the readings poll reads the inverter, but a reset takes the settings
+    poll down just the same, so both count from that read.
+    """
+
+    # Event loop time, which a clock change does not move. None when the last
+    # read that reached the inverter found it awake.
+    asleep_at: float | None = None
+
+
 class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     """Polls one set of the inverter's sub-systems over Modbus.
 
@@ -66,14 +81,18 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         entry: SolarEdgeModbusConfigEntry,
         solaredge: SolarEdge,
         *,
+        sleep: SleepState,
         poll: Callable[[], Awaitable[UpdateReport]],
         interval: timedelta,
         label: str,
     ) -> None:
         """Initialize the coordinator."""
         self.solaredge = solaredge
+        self._sleep = sleep
         self._poll = poll
         self._silent: set[str] = set()
+        # When this coordinator's current run of failed polls began.
+        self._outage_since: float | None = None
         super().__init__(
             hass,
             LOGGER,
@@ -87,7 +106,14 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     @override
     async def _async_update_data(self) -> UpdateReport:
         """Poll the inverter, reporting what answered."""
-        report = await self._async_poll()
+        # A failed poll counts from its start, so its own connect timeout does
+        # not use up the reset window.
+        started = self.hass.loop.time()
+        try:
+            report = await self._poll()
+        except SolarEdgeConnectionError as err:
+            return self._failed_poll(err, started)
+        self._outage_since = None
 
         # A sub-system that just fell silent gets a second chance: SolarEdge
         # answers a single request late often enough that one blip should not
@@ -108,6 +134,7 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                 translation_key="wrong_inverter",
             )
 
+        self._note_sleep(report)
         self._log_silence(report)
 
         return report
@@ -132,16 +159,58 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
         return _merge(report, retried)
 
-    async def _async_poll(self) -> UpdateReport:
-        """Poll the inverter's sub-systems, translating a dead link."""
-        try:
-            return await self._poll()
-        except SolarEdgeConnectionError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+    def _note_sleep(self, report: UpdateReport) -> None:
+        """Record whether this poll read the inverter asleep.
+
+        Only a fresh read counts, so a status kept from an earlier poll leaves
+        the last one standing, and the window bounds how old that can be. It is
+        stamped when the poll is done, the last moment the link is known to
+        work, so a slow poll and its retry do not use up the window either.
+        """
+        if SUBSYSTEM_INVERTER in report.updated:
+            asleep = self.solaredge.inverter.status is InverterStatus.SLEEPING
+            self._sleep.asleep_at = self.hass.loop.time() if asleep else None
+
+    def _failed_poll(
+        self, err: SolarEdgeConnectionError, started: float
+    ) -> UpdateReport:
+        """Handle a poll that brought nothing back.
+
+        Every value is stale then, so every sub-system counts as failed. If the
+        inverter was read asleep shortly before the failures began, and they
+        have not gone on for longer than a reset takes, that is all it takes:
+        the entities go unavailable without an error. A sleeping read after
+        they began proves the link worked meanwhile, so it excuses nothing.
+        Anything else is an error as before, and once it is, so is every
+        failure until a poll succeeds. The first refresh has nothing to mark
+        failed, and setup must see it.
+        """
+        if self._outage_since is None:
+            self._outage_since = started
+        asleep_at = self._sleep.asleep_at
+        grace = SLEEP_OUTAGE_GRACE.total_seconds()
+        if (
+            self.data is not None
+            and self.last_update_success
+            and asleep_at is not None
+            and 0 <= self._outage_since - asleep_at < grace
+            and started - self._outage_since < grace
+        ):
+            LOGGER.debug(
+                "%s: nothing answered the sleeping inverter's poll (%s)",
+                self.name,
+                err,
+            )
+            return UpdateReport(
+                updated=set(),
+                failed=dict.fromkeys(self.data.updated | self.data.failed.keys(), err),
+            )
+
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="communication_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     def _log_silence(self, report: UpdateReport) -> None:
         """Log a sub-system falling silent once, and log its return."""
