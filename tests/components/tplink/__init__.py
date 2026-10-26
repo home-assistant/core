@@ -23,7 +23,6 @@ from kasa.smartcam.modules.camera import LOCAL_STREAMING_PORT, Camera
 from pytest_homeassistant.common import MockConfigEntry, load_json_value_fixture
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -31,7 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import UNDEFINED
-from homeassistant.setup import async_setup_component
 
 from .const import (
     ALIAS,
@@ -125,21 +123,6 @@ async def snapshot_platform(
             assert state == snapshot(name=f"{entity_entry.entity_id}-state"), (
                 f"state snapshot failed for {entity_entry.entity_id}"
             )
-
-
-async def setup_automation(hass: HomeAssistant, alias: str, entity_id: str) -> None:
-    """Set up an automation for tests."""
-    assert await async_setup_component(
-        hass,
-        AUTOMATION_DOMAIN,
-        {
-            AUTOMATION_DOMAIN: {
-                "alias": alias,
-                "trigger": {"platform": "state", "entity_id": entity_id, "to": "on"},
-                "action": {"action": "notify.notify", "metadata": {}, "data": {}},
-            }
-        },
-    )
 
 
 def _mock_protocol() -> BaseProtocol:

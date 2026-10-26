@@ -267,16 +267,6 @@
     "type": "Action",
     "category": "Debug"
   },
-  "test_alarm": {
-    "value": "<Action>",
-    "type": "Action",
-    "category": "Config"
-  },
-  "stop_alarm": {
-    "value": "<Action>",
-    "type": "Action",
-    "category": "Config"
-  },
   "smooth_transition_on": {
     "value": false,
     "type": "Number",
