@@ -76,6 +76,12 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "dimmer_max": {
+        "name": "Maximum brightness"
+      },
+      "dimmer_min": {
+        "name": "Minimum brightness"
+      },
       "display_brightness": {
         "name": "Display brightness"
       },
