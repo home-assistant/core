@@ -61,6 +61,7 @@ from .const import (
     CONF_RETRY_CONNECTION_DELAY,
     CONF_USER_CODE_SLOT,
     DEFAULT_CLOUD_SCAN_INTERVAL,
+    DEFAULT_DIRECT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
     MANUFACTURER,
@@ -132,7 +133,9 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
         device_type = DeviceType(entry.data[CONF_TYPE])
         if update_interval is None:
             update_interval = (
-                DEFAULT_CLOUD_SCAN_INTERVAL if device_type == DeviceType.CLOUD else 60
+                DEFAULT_CLOUD_SCAN_INTERVAL
+                if device_type == DeviceType.CLOUD
+                else DEFAULT_DIRECT_SCAN_INTERVAL
             )
         request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass=hass,
@@ -406,16 +409,21 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
         finally:
             self._refresh_tasks.discard(task)
 
+    @callback
+    def _async_handle_authentication_failure(self, err: VisonicAuthException) -> None:
+        """Publish lost authentication and request updated credentials."""
+        self.async_set_update_error(ConfigEntryAuthFailed(str(err)))
+        if TYPE_CHECKING:
+            assert self.config_entry is not None
+        self.config_entry.async_start_reauth_if_available(self.hass)
+
     async def async_state_changed_callback(self) -> None:
         """Publish pushed state and report availability transitions."""
         with self._track_refresh():
             try:
                 data = await self.create_state_snapshot()
             except VisonicAuthException as err:
-                self.async_set_update_error(ConfigEntryAuthFailed(str(err)))
-                if TYPE_CHECKING:
-                    assert self.config_entry is not None
-                self.config_entry.async_start_reauth_if_available(self.hass)
+                self._async_handle_authentication_failure(err)
                 return
             except UpdateFailed as err:
                 if self.data is not None:
@@ -522,6 +530,9 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
         """Send a whole-panel command through the selected connection."""
         try:
             return await self.connection.send_command(command, code)
+        except VisonicAuthException as err:
+            self._async_handle_authentication_failure(err)
+            raise
         except (TimeoutError, OSError, aiohttp.ClientError) as err:
             raise HomeAssistantError(
                 f"Unable to communicate with Visonic panel {self.panel_id}"

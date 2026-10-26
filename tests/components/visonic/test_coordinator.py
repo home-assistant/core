@@ -53,7 +53,12 @@ from homeassistant.components.visonic.visonic_types import (
     DeviceType,
     PanelStateData,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE, Platform
+from homeassistant.const import (
+    CONF_SCAN_INTERVAL,
+    CONF_TYPE,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -199,6 +204,60 @@ async def test_cloud_polling_system_option(
             blocking=True,
         )
         assert snapshot.await_count == scheduled_polls + 1
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_panel_connect", "mock_async_zeroconf")
+@pytest.mark.parametrize(
+    "service",
+    [
+        pytest.param("alarm_arm_away", id="arm"),
+        pytest.param("alarm_disarm", id="disarm"),
+    ],
+)
+@pytest.mark.parametrize(
+    "disable_polling",
+    [pytest.param(False, id="polling"), pytest.param(True, id="polling-disabled")],
+)
+async def test_cloud_command_authentication_failure(
+    hass: HomeAssistant, service: str, disable_polling: bool
+) -> None:
+    """Failed actions request reauthentication even without scheduled polling."""
+    entry = create_mock_config_entry(data={CONF_TYPE: DeviceType.CLOUD})
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, pref_disable_polling=disable_polling)
+    error = VisonicAuthException("Credentials rejected")
+    with (
+        patch.object(
+            VisonicCloudConnection,
+            "create_state_snapshot",
+            return_value=VisonicCoordinatorData(
+                connected=True, armcode=AlarmPanelStatus.DISARMED
+            ),
+        ),
+        patch.object(VisonicCloudConnection, "send_command", side_effect=error) as send,
+        patch.object(entry, "async_start_reauth_if_available") as reauth,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        state = hass.states.get("alarm_control_panel.visonic_alarm_p1")
+        assert state is not None
+        assert state.state == AlarmControlPanelState.DISARMED
+
+        with pytest.raises(VisonicAuthException, match="Credentials rejected"):
+            await hass.services.async_call(
+                "alarm_control_panel",
+                service,
+                {"entity_id": state.entity_id, "code": "1234"},
+                blocking=True,
+            )
+        await hass.async_block_till_done()
+
+        send.assert_awaited_once()
+        reauth.assert_called_once_with(hass)
+        state = hass.states.get(state.entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
         assert await hass.config_entries.async_unload(entry.entry_id)
 
 
@@ -475,19 +534,46 @@ async def test_command_transport_failure(
     [
         pytest.param(RuntimeError("programming error"), id="unexpected-error"),
         pytest.param(asyncio.CancelledError(), id="cancelled"),
-        pytest.param(VisonicAuthException("credentials rejected"), id="authentication"),
     ],
 )
 async def test_command_preserves_non_transport_errors(
     command_coordinator: VisonicCoordinator, error: BaseException
 ) -> None:
-    """Keep cancellation, authentication and unexpected errors distinguishable."""
+    """Keep cancellation and unexpected errors distinguishable."""
     with (
         patch.object(command_coordinator.connection, "send_command", side_effect=error),
         pytest.raises(type(error)) as raised,
     ):
         await command_coordinator.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
     assert raised.value is error
+
+
+async def test_command_authentication_failure_requests_reauth(
+    hass: HomeAssistant, command_coordinator: VisonicCoordinator
+) -> None:
+    """Publish failed command authentication without discarding the last snapshot."""
+    snapshot = VisonicCoordinatorData(connected=True, mode="cloud")
+    command_coordinator.async_set_updated_data(snapshot)
+    listener = MagicMock()
+    command_coordinator.async_add_listener(listener)
+    error = VisonicAuthException("Credentials rejected")
+    assert command_coordinator.config_entry is not None
+    with (
+        patch.object(command_coordinator.connection, "send_command", side_effect=error),
+        patch.object(
+            command_coordinator.config_entry, "async_start_reauth_if_available"
+        ) as reauth,
+        pytest.raises(VisonicAuthException) as raised,
+    ):
+        await command_coordinator.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+
+    assert raised.value is error
+    assert not command_coordinator.last_update_success
+    assert isinstance(command_coordinator.last_exception, ConfigEntryAuthFailed)
+    assert str(command_coordinator.last_exception) == "Credentials rejected"
+    assert command_coordinator.data is snapshot
+    listener.assert_called_once_with()
+    reauth.assert_called_once_with(hass)
 
 
 @pytest.mark.parametrize(

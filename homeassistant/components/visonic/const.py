@@ -26,6 +26,7 @@ DEFAULT_DEVICE_SERIAL: Final = "/dev/ttyUSB0"
 DEFAULT_DEVICE_BAUD: Final = 9600
 DEFAULT_PANEL_USER_CODE: Final = "1111"
 DEFAULT_CLOUD_SCAN_INTERVAL: Final = 20
+DEFAULT_DIRECT_SCAN_INTERVAL: Final = 60
 
 # Text strings for entity attributes
 TEXT_DISCONNECTION_COUNT: Final = "Disconnection Count"
