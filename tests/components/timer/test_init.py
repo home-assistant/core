@@ -23,11 +23,6 @@ from homeassistant.components.timer import (
     CONF_RESTORE,
     DEFAULT_DURATION,
     DOMAIN,
-    SERVICE_CANCEL,
-    SERVICE_CHANGE,
-    SERVICE_FINISH,
-    SERVICE_PAUSE,
-    SERVICE_START,
     Timer,
     TimerEntityStateAttribute,
 )
@@ -41,16 +36,14 @@ from homeassistant.components.timer.const import (
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
+    TimerService,
+    TimerServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_ID,
-    ATTR_NAME,
     CONF_ENTITY_ID,
     CONF_ID,
     EVENT_STATE_CHANGED,
-    SERVICE_RELOAD,
+    EntityStateAttribute,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import ServiceValidationError, Unauthorized
@@ -74,8 +67,8 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
                 "data": {
                     "items": [
                         {
-                            ATTR_ID: "from_storage",
-                            ATTR_NAME: "timer from storage",
+                            CONF_ID: "from_storage",
+                            CONF_NAME: "timer from storage",
                             CONF_DURATION: "0:00:00",
                             CONF_RESTORE: False,
                         }
@@ -145,8 +138,8 @@ async def test_config_options(hass: HomeAssistant) -> None:
     assert state_2.attributes == {
         TimerEntityStateAttribute.DURATION: "0:00:10",
         TimerEntityStateAttribute.EDITABLE: False,
-        ATTR_FRIENDLY_NAME: "Hello World",
-        ATTR_ICON: "mdi:work",
+        EntityStateAttribute.FRIENDLY_NAME: "Hello World",
+        EntityStateAttribute.ICON: "mdi:work",
         TimerEntityStateAttribute.LAST_TRANSITION: None,
     }
 
@@ -193,7 +186,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
 
     steps = [
         {
-            "call": SERVICE_START,
+            "call": TimerService.START,
             "call_data": {},
             "expected_state": STATUS_ACTIVE,
             "expected_extra_attributes": {
@@ -204,7 +197,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_STARTED,
         },
         {
-            "call": SERVICE_PAUSE,
+            "call": TimerService.PAUSE,
             "call_data": {},
             "expected_state": STATUS_PAUSED,
             "expected_extra_attributes": {
@@ -214,7 +207,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_PAUSED,
         },
         {
-            "call": SERVICE_START,
+            "call": TimerService.START,
             "call_data": {},
             "expected_state": STATUS_ACTIVE,
             "expected_extra_attributes": {
@@ -225,7 +218,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_RESTARTED,
         },
         {
-            "call": SERVICE_CANCEL,
+            "call": TimerService.CANCEL,
             "call_data": {},
             "expected_state": STATUS_IDLE,
             "expected_extra_attributes": {
@@ -234,7 +227,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_CANCELLED,
         },
         {
-            "call": SERVICE_CANCEL,
+            "call": TimerService.CANCEL,
             "call_data": {},
             "expected_state": STATUS_IDLE,
             "expected_extra_attributes": {
@@ -243,7 +236,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": None,
         },
         {
-            "call": SERVICE_START,
+            "call": TimerService.START,
             "call_data": {},
             "expected_state": STATUS_ACTIVE,
             "expected_extra_attributes": {
@@ -254,7 +247,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_STARTED,
         },
         {
-            "call": SERVICE_FINISH,
+            "call": TimerService.FINISH,
             "call_data": {},
             "expected_state": STATUS_IDLE,
             "expected_extra_attributes": {
@@ -263,7 +256,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_FINISHED,
         },
         {
-            "call": SERVICE_FINISH,
+            "call": TimerService.FINISH,
             "call_data": {},
             "expected_state": STATUS_IDLE,
             "expected_extra_attributes": {
@@ -272,7 +265,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": None,
         },
         {
-            "call": SERVICE_START,
+            "call": TimerService.START,
             "call_data": {},
             "expected_state": STATUS_ACTIVE,
             "expected_extra_attributes": {
@@ -283,7 +276,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_STARTED,
         },
         {
-            "call": SERVICE_PAUSE,
+            "call": TimerService.PAUSE,
             "call_data": {},
             "expected_state": STATUS_PAUSED,
             "expected_extra_attributes": {
@@ -293,7 +286,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_PAUSED,
         },
         {
-            "call": SERVICE_CANCEL,
+            "call": TimerService.CANCEL,
             "call_data": {},
             "expected_state": STATUS_IDLE,
             "expected_extra_attributes": {
@@ -302,7 +295,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_CANCELLED,
         },
         {
-            "call": SERVICE_START,
+            "call": TimerService.START,
             "call_data": {},
             "expected_state": STATUS_ACTIVE,
             "expected_extra_attributes": {
@@ -313,8 +306,8 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_STARTED,
         },
         {
-            "call": SERVICE_CHANGE,
-            "call_data": {CONF_DURATION: -5},
+            "call": TimerService.CHANGE,
+            "call_data": {TimerServiceArgument.DURATION: -5},
             "expected_state": STATUS_ACTIVE,
             "expected_extra_attributes": {
                 TimerEntityStateAttribute.FINISHES_AT: finish_5,
@@ -324,7 +317,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_CHANGED,
         },
         {
-            "call": SERVICE_START,
+            "call": TimerService.START,
             "call_data": {},
             "expected_state": STATUS_ACTIVE,
             "expected_extra_attributes": {
@@ -335,7 +328,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_RESTARTED,
         },
         {
-            "call": SERVICE_PAUSE,
+            "call": TimerService.PAUSE,
             "call_data": {},
             "expected_state": STATUS_PAUSED,
             "expected_extra_attributes": {
@@ -345,7 +338,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "expected_event": EVENT_TIMER_PAUSED,
         },
         {
-            "call": SERVICE_FINISH,
+            "call": TimerService.FINISH,
             "call_data": {},
             "expected_state": STATUS_IDLE,
             "expected_extra_attributes": {
@@ -411,7 +404,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     }
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -428,7 +421,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     }
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        DOMAIN, TimerService.CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -443,15 +436,15 @@ async def test_start_service(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CHANGE,
-            {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 10},
+            TimerService.CHANGE,
+            {CONF_ENTITY_ID: "timer.test1", TimerServiceArgument.DURATION: 10},
             blocking=True,
         )
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START,
-        {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 15},
+        TimerService.START,
+        {CONF_ENTITY_ID: "timer.test1", TimerServiceArgument.DURATION: 15},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -474,8 +467,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CHANGE,
-            {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 20},
+            TimerService.CHANGE,
+            {CONF_ENTITY_ID: "timer.test1", TimerServiceArgument.DURATION: 20},
             blocking=True,
         )
 
@@ -485,15 +478,15 @@ async def test_start_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CHANGE,
-            {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -20},
+            TimerService.CHANGE,
+            {CONF_ENTITY_ID: "timer.test1", TimerServiceArgument.DURATION: -20},
             blocking=True,
         )
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHANGE,
-        {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -3},
+        TimerService.CHANGE,
+        {CONF_ENTITY_ID: "timer.test1", TimerServiceArgument.DURATION: -3},
         blocking=True,
     )
     state = hass.states.get("timer.test1")
@@ -514,8 +507,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHANGE,
-        {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 2},
+        TimerService.CHANGE,
+        {CONF_ENTITY_ID: "timer.test1", TimerServiceArgument.DURATION: 2},
         blocking=True,
     )
     state = hass.states.get("timer.test1")
@@ -535,7 +528,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     )
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        DOMAIN, TimerService.CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -553,8 +546,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CHANGE,
-            {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 2},
+            TimerService.CHANGE,
+            {CONF_ENTITY_ID: "timer.test1", TimerServiceArgument.DURATION: 2},
             blocking=True,
         )
 
@@ -603,7 +596,7 @@ async def test_wait_till_timer_expires(
     hass.bus.async_listen(EVENT_TIMER_CHANGED, fake_event_listener)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -625,8 +618,8 @@ async def test_wait_till_timer_expires(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHANGE,
-        {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -5},
+        TimerService.CHANGE,
+        {CONF_ENTITY_ID: "timer.test1", TimerServiceArgument.DURATION: -5},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -747,8 +740,8 @@ async def test_config_reload(
     assert state_2.attributes == {
         TimerEntityStateAttribute.DURATION: "0:00:10",
         TimerEntityStateAttribute.EDITABLE: False,
-        ATTR_FRIENDLY_NAME: "Hello World",
-        ATTR_ICON: "mdi:work",
+        EntityStateAttribute.FRIENDLY_NAME: "Hello World",
+        EntityStateAttribute.ICON: "mdi:work",
         TimerEntityStateAttribute.LAST_TRANSITION: None,
     }
 
@@ -769,13 +762,13 @@ async def test_config_reload(
         with pytest.raises(Unauthorized):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_RELOAD,
+                TimerService.RELOAD,
                 blocking=True,
                 context=Context(user_id=hass_read_only_user.id),
             )
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            TimerService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
@@ -798,8 +791,8 @@ async def test_config_reload(
     assert state_2.attributes == {
         TimerEntityStateAttribute.DURATION: "0:00:20",
         TimerEntityStateAttribute.EDITABLE: False,
-        ATTR_FRIENDLY_NAME: "Hello World reloaded",
-        ATTR_ICON: "mdi:work-reloaded",
+        EntityStateAttribute.FRIENDLY_NAME: "Hello World reloaded",
+        EntityStateAttribute.ICON: "mdi:work-reloaded",
         TimerEntityStateAttribute.LAST_TRANSITION: None,
     }
 
@@ -841,7 +834,7 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     hass.bus.async_listen(EVENT_TIMER_CANCELLED, fake_event_listener)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+        DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -861,7 +854,7 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     assert len(results) == 1
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+        DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -881,7 +874,7 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     assert len(results) == 2
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PAUSE, {CONF_ENTITY_ID: "timer.test1"}
+        DOMAIN, TimerService.PAUSE, {CONF_ENTITY_ID: "timer.test1"}
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -898,7 +891,7 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     assert len(results) == 3
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+        DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -944,7 +937,7 @@ async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
     hass.bus.async_listen(EVENT_STATE_CHANGED, fake_event_listener)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+        DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -964,7 +957,7 @@ async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
     assert len(results) == 1
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+        DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -995,13 +988,13 @@ async def test_last_transition_after_restarted_timer_expires(
 
     # Start the timer
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.async_block_till_done()
 
     # Restart the timer
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -1030,10 +1023,10 @@ async def test_last_transition_persists_across_config_update(
 
     # Start and cancel to set last_transition to "cancelled"
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.services.async_call(
-        DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        DOMAIN, TimerService.CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -1047,7 +1040,7 @@ async def test_last_transition_persists_across_config_update(
         autospec=True,
         return_value={DOMAIN: {"test1": {CONF_DURATION: 20}}},
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, TimerService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     state = hass.states.get("timer.test1")
@@ -1064,7 +1057,7 @@ async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     assert state.attributes == {
         TimerEntityStateAttribute.DURATION: "0:00:00",
         TimerEntityStateAttribute.EDITABLE: True,
-        ATTR_FRIENDLY_NAME: "timer from storage",
+        EntityStateAttribute.FRIENDLY_NAME: "timer from storage",
         TimerEntityStateAttribute.LAST_TRANSITION: None,
     }
 
@@ -1078,7 +1071,7 @@ async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> N
     assert state.attributes == {
         TimerEntityStateAttribute.DURATION: "0:00:00",
         TimerEntityStateAttribute.EDITABLE: True,
-        ATTR_FRIENDLY_NAME: "timer from storage",
+        EntityStateAttribute.FRIENDLY_NAME: "timer from storage",
         TimerEntityStateAttribute.LAST_TRANSITION: None,
     }
 
@@ -1110,7 +1103,7 @@ async def test_ws_list(
     assert len(result) == 1
     assert storage_ent in result
     assert yaml_ent not in result
-    assert result[storage_ent][ATTR_NAME] == "timer from storage"
+    assert result[storage_ent][CONF_NAME] == "timer from storage"
 
 
 async def test_ws_delete(
@@ -1155,8 +1148,8 @@ async def test_ws_delete_running_timer(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START,
-        {CONF_ENTITY_ID: timer_entity_id, CONF_DURATION: 10},
+        TimerService.START,
+        {CONF_ENTITY_ID: timer_entity_id, TimerServiceArgument.DURATION: 10},
         blocking=True,
     )
 
@@ -1191,7 +1184,7 @@ async def test_update(
     assert state.attributes == {
         TimerEntityStateAttribute.DURATION: "0:00:00",
         TimerEntityStateAttribute.EDITABLE: True,
-        ATTR_FRIENDLY_NAME: "timer from storage",
+        EntityStateAttribute.FRIENDLY_NAME: "timer from storage",
         TimerEntityStateAttribute.LAST_TRANSITION: None,
     }
     assert (
@@ -1227,7 +1220,7 @@ async def test_update(
     assert state.attributes == {
         TimerEntityStateAttribute.DURATION: "0:00:33",
         TimerEntityStateAttribute.EDITABLE: True,
-        ATTR_FRIENDLY_NAME: "timer from storage",
+        EntityStateAttribute.FRIENDLY_NAME: "timer from storage",
         TimerEntityStateAttribute.LAST_TRANSITION: None,
         TimerEntityStateAttribute.RESTORE: True,
     }
@@ -1267,7 +1260,7 @@ async def test_ws_create(
     assert state.attributes == {
         TimerEntityStateAttribute.DURATION: "0:00:42",
         TimerEntityStateAttribute.EDITABLE: True,
-        ATTR_FRIENDLY_NAME: "New Timer",
+        EntityStateAttribute.FRIENDLY_NAME: "New Timer",
         TimerEntityStateAttribute.LAST_TRANSITION: None,
     }
     assert (
@@ -1285,7 +1278,7 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            TimerService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
@@ -1542,7 +1535,7 @@ async def test_reentrant_start_does_not_orphan_the_expiry_callback(
         assert await async_setup_component(hass, "automation", RESTART_ON_OWN_START)
 
         await hass.services.async_call(
-            DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+            DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
         )
         await hass.async_block_till_done()
         assert hass.states.get("timer.test1").state == STATUS_ACTIVE
@@ -1566,7 +1559,7 @@ async def test_timer_kept_alive_by_restarts_never_finishes(
     finished = async_capture_events(hass, EVENT_TIMER_FINISHED)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -1575,7 +1568,7 @@ async def test_timer_kept_alive_by_restarts_never_finishes(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         await hass.services.async_call(
-            DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+            DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
         )
         await hass.async_block_till_done()
         assert hass.states.get("timer.test1").state == STATUS_ACTIVE
@@ -1616,14 +1609,14 @@ async def test_change_does_not_orphan_the_expiry_callback(
         assert await async_setup_component(hass, "automation", REARM_ON_DEADLINE_MOVE)
 
         await hass.services.async_call(
-            DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+            DOMAIN, TimerService.START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
         )
         await hass.async_block_till_done()
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CHANGE,
-            {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -5},
+            TimerService.CHANGE,
+            {CONF_ENTITY_ID: "timer.test1", TimerServiceArgument.DURATION: -5},
             blocking=True,
         )
         await hass.async_block_till_done()
