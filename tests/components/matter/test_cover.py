@@ -36,6 +36,12 @@ async def trigger_subscription_callback_debounced(
     await hass.async_block_till_done()
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.COVER
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_covers(
     hass: HomeAssistant,
@@ -270,6 +276,71 @@ async def test_cover_position_aware_lift_null_tilt(
     """
     state = hass.states.get(entity_id)
     assert state
+    assert (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+        == 0
+    )
+    assert "current_tilt_position" not in state.attributes
+
+
+@pytest.mark.parametrize("node_fixture", ["wago_home_blind_control"])
+async def test_cover_wago_blind_type(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the WAGO Home Blind Control hides tilt when set to roller shutter.
+
+    The device keeps reporting the tilt feature and a tilt blind Type in
+    roller shutter mode; only the vendor BlindType attribute tells.
+    """
+    entity_id = "cover.home_blind_wi_fi"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == "shutter"
+    assert (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+        == 0
+    )
+    assert "current_tilt_position" not in state.attributes
+
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=258,
+        attribute_id=clusters.WindowCovering.Attributes.WagoBlindType.attribute_id,
+        value=1,
+    )
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == "blind"
+    assert (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+        != 0
+    )
+    assert state.attributes["current_tilt_position"] == 100
+
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=258,
+        attribute_id=clusters.WindowCovering.Attributes.WagoBlindType.attribute_id,
+        value=0,
+    )
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == "shutter"
     assert (
         state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
         == 0

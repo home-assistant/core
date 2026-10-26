@@ -50,7 +50,7 @@ dependencies = [
   "hass-nabucasa==2.8.0",
   # When bumping httpx2, please check the version pins of
   # anyio and h11 in gen_requirements_all
-  "httpx2==2.13.1",
+  "httpx2==2.14.0",
   "home-assistant-bluetooth==2.0.0",
   "ifaddr==0.2.0",
   "Jinja2==3.1.6",
@@ -58,7 +58,7 @@ dependencies = [
   "PyJWT==2.15.1",
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==50.0.2",
-  "Pillow==12.3.0",
+  "Pillow==13.0.0",
   "propcache==0.5.4",
   "pyopenssl==26.4.0",
   # We patch pyserial at runtime in `block_shared_serial` and need it to be available

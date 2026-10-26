@@ -85,6 +85,7 @@ class AITaskEntity(RestoreEntity):
                     language=None,
                     assistant=DOMAIN,
                     device_id=None,
+                    agent_id=self.entity_id,
                 ),
                 user_llm_prompt=DEFAULT_SYSTEM_PROMPT,
                 user_llm_hass_api=user_llm_hass_api,

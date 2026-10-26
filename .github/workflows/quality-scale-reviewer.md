@@ -12,7 +12,8 @@ description: >
   applies the repository's `ha-quality-scale-verify` skill to each selected
   rule and posts each violation as an inline review comment on the offending
   changed line, or a short comment when no rule is violated. Pull requests
-  above the size limit are not reviewed; a comment states that.
+  above the size limit, or arriving after the workflow's daily AI-credit budget
+  is used up, are not reviewed; a comment states that.
 intent: >
   Pull requests that break a quality scale rule their integration claims to
   satisfy receive an inline review comment naming the rule on the offending
@@ -184,6 +185,28 @@ jobs:
           path: deterministic
           if-no-files-found: error
           retention-days: 7
+  # The activation job evaluates the daily AI-credit budget but may not write,
+  # so the notice is posted from the conclusion job, which runs when the budget
+  # is exceeded and the agent is skipped.
+  conclusion:
+    pre-steps:
+      - name: Comment that the review was skipped by the daily AI-credit budget
+        if: needs.activation.outputs.daily_ai_credits_exceeded == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
+        run: |
+          set -euo pipefail
+          MARKER='<!-- quality-scale-reviewer-credit-budget -->'
+          if gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate --jq '.[].body' \
+              | grep -F "${MARKER}" >/dev/null; then
+            echo "Comment already posted on PR #${PR_NUMBER}"
+            exit 0
+          fi
+          gh pr comment "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" --body "${MARKER}
+          ## Quality scale review
+
+          ⏭️ The automated Integration Quality Scale review was skipped: the workflow's daily AI-credit budget is used up."
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.pull_request_number }}
   cancel-in-progress: true
