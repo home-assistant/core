@@ -30,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import ENTITY_ID
 
@@ -117,7 +118,7 @@ async def test_missing_readings_clear_previous_values(
     mock_climate_api.async_get_humidity.return_value = None
     mock_climate_api.async_get_heat_demand.return_value = None
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
@@ -334,7 +335,7 @@ async def test_unload(
     await hass.async_block_till_done()
     mock_api.async_disconnect.assert_awaited_once_with()
     mock_climate_api.add_state_listener.return_value.assert_called_once_with()
-    assert mock_api.add_connection_state_listener.return_value.call_count == 2
+    assert mock_api.add_connection_state_listener.return_value.call_count == 3
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
     assert mock_climate_api.async_get_current_temperature.await_count == reads
@@ -444,3 +445,60 @@ async def test_report_during_refresh(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 19.0
     assert state.attributes[ATTR_TEMPERATURE] == 21.0
+
+
+async def test_fahrenheit_temperature_write(
+    hass: HomeAssistant, mock_climate_api: MagicMock
+) -> None:
+    """Converted Fahrenheit requests use the supported native temperature step."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 70.0},
+        blocking=True,
+    )
+    mock_climate_api.async_set_target_temperature.assert_awaited_once_with(21.0)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 70
+
+
+@pytest.mark.parametrize(
+    ("service", "initial", "expected"),
+    [
+        pytest.param(
+            "turn_on", ClimateOperationMode.OFF, ClimateOperationMode.MANUAL, id="on"
+        ),
+        pytest.param(
+            "turn_off", ClimateOperationMode.AUTO, ClimateOperationMode.OFF, id="off"
+        ),
+        pytest.param(
+            "toggle",
+            ClimateOperationMode.OFF,
+            ClimateOperationMode.MANUAL,
+            id="toggle-on",
+        ),
+        pytest.param(
+            "toggle",
+            ClimateOperationMode.AWAY,
+            ClimateOperationMode.OFF,
+            id="toggle-off-away",
+        ),
+    ],
+)
+async def test_power_actions(
+    hass: HomeAssistant,
+    mock_climate_api: MagicMock,
+    service: str,
+    initial: ClimateOperationMode,
+    expected: ClimateOperationMode,
+) -> None:
+    """Standard power actions use supported modes and clear the Away preset."""
+    mock_climate_api.async_get_operation_mode.return_value = initial
+    mock_climate_api.add_state_listener.call_args.args[0](
+        {ClimateCapability.OPERATION_MODE: initial}
+    )
+    await hass.services.async_call(
+        "climate", service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    mock_climate_api.async_set_operation_mode.assert_awaited_once_with(expected)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_PRESET_MODE] == PRESET_NONE

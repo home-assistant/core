@@ -91,6 +91,20 @@ def mock_climate_api() -> Generator[MagicMock]:
         api.async_get_heat_demand.return_value = False
         api.async_set_target_temperature.return_value = True
         api.async_set_operation_mode.return_value = True
+
+        async def set_temperature(temperature: float) -> bool:
+            if api.async_set_target_temperature.return_value:
+                api.async_get_target_temperature.return_value = temperature
+                api.async_get_operation_mode.return_value = ClimateOperationMode.MANUAL
+            return api.async_set_target_temperature.return_value
+
+        async def set_mode(mode: ClimateOperationMode) -> bool:
+            if api.async_set_operation_mode.return_value:
+                api.async_get_operation_mode.return_value = mode
+            return api.async_set_operation_mode.return_value
+
+        api.async_set_target_temperature.side_effect = set_temperature
+        api.async_set_operation_mode.side_effect = set_mode
         yield api
 
 

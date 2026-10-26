@@ -86,7 +86,7 @@ async def test_setup_device(
 ) -> None:
     """Load one climate entity and register the physical thermostat."""
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("climate")) == 1
     assert hass.states.get(ENTITY_ID).state == "heat"
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
@@ -113,34 +113,16 @@ async def test_setup_unexpected_mac(
 
 
 @pytest.mark.usefixtures("setup_integration")
-async def test_device_info_periodic_refresh(
+async def test_device_info_has_no_periodic_refresh(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_device_info: AsyncMock,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Metadata refreshes daily, independently of state polling, and stops on unload."""
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
-    )
-    assert device.sw_version == "1.0"
-    assert device.hw_version == "2.0"
+    """Metadata reads are event driven even when state polling is enabled."""
     mock_device_info.assert_awaited_once_with()
     mock_device_info.reset_mock()
-    mock_device_info.return_value = ZentralyDeviceInfo(hardware_version="2.1")
-    now = dt_util.utcnow()
-    async_fire_time_changed(hass, now + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=2))
+    await hass.async_block_till_done(wait_background_tasks=True)
     mock_device_info.assert_not_awaited()
-    async_fire_time_changed(hass, now + timedelta(hours=24))
-    await hass.async_block_till_done()
-    mock_device_info.assert_awaited_once_with()
-    assert device_registry.async_get(device.id).sw_version == "1.0"
-    assert device_registry.async_get(device.id).hw_version == "2.1"
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    async_fire_time_changed(hass, now + timedelta(hours=48))
-    await hass.async_block_till_done()
-    mock_device_info.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize(
@@ -196,21 +178,21 @@ async def test_climate_periodic_refresh_lifecycle(
     """Even after an initial read failure the entity registers and retries on schedule."""
     mock_climate_api.async_get_current_temperature.side_effect = [initial_read, 19.0]
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert len(hass.states.async_all("climate")) == 1
     mock_climate_api.async_get_current_temperature.reset_mock()
     now = dt_util.utcnow()
     async_fire_time_changed(hass, now + timedelta(minutes=4))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     mock_climate_api.async_get_current_temperature.assert_not_awaited()
     async_fire_time_changed(hass, now + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
     assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 21.0
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     async_fire_time_changed(hass, now + timedelta(minutes=10))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
 
 
@@ -264,4 +246,29 @@ async def test_device_info_connection_and_unload(
     mock_device_info.assert_awaited_once_with()
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert cancelled.is_set()
-    assert mock_api.add_connection_state_listener.return_value.call_count == 2
+    assert mock_api.add_connection_state_listener.return_value.call_count == 3
+
+
+async def test_disabled_periodic_polling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_climate_api: MagicMock,
+    mock_device_info: AsyncMock,
+    connection_state: Callable[[bool], None],
+) -> None:
+    """Disabling polling retains initial and reconnect reads without periodic reads."""
+    hass.config_entries.async_update_entry(mock_config_entry, pref_disable_polling=True)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
+    mock_device_info.assert_awaited_once_with()
+    mock_climate_api.async_get_current_temperature.reset_mock()
+    mock_device_info.reset_mock()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1, minutes=1))
+    await hass.async_block_till_done()
+    mock_climate_api.async_get_current_temperature.assert_not_awaited()
+    mock_device_info.assert_not_awaited()
+    connection_state(True)
+    await hass.async_block_till_done()
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
+    mock_device_info.assert_awaited_once_with()

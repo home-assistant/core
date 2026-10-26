@@ -1,7 +1,7 @@
 """The Zentraly integration."""
 
 import asyncio
-from datetime import datetime
+from collections.abc import Awaitable, Callable
 import logging
 
 from zentraly import (
@@ -29,10 +29,9 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import UNDEFINED
 
-from .const import DEVICE_INFO_INTERVAL, DOMAIN
+from .const import DOMAIN
 from .models import ZentralyConfigEntry, ZentralyData, ZentralyDevice
 from .platforms import get_device_platforms
 
@@ -76,13 +75,7 @@ async def _async_refresh_device_info(
     if not device.connected:
         return
 
-    try:
-        info = await device.async_get_device_info()
-    except ZentralyApiError:
-        _LOGGER.debug(
-            "Unable to refresh Zentraly device information for %s", device.device_id
-        )
-        return
+    info = await device.async_get_device_info()
     firmware_version = info.firmware_version
     hardware_version = info.hardware_version
 
@@ -113,51 +106,55 @@ async def _async_refresh_device_info(
     )
 
 
-def _register_device_info_polling(
+def _register_device_info_refresh(
     hass: HomeAssistant,
     entry: ZentralyConfigEntry,
     device: ZentralyDevice,
     device_registry: dr.DeviceRegistry,
     registry_device_id: str,
-) -> None:
-    """Register periodic device-information polling when supported."""
-
-    if not device.supports_device_info:
-        return
+) -> Callable[[], Awaitable[None]]:
+    """Share initial, reconnect and manual metadata reads without periodic polling."""
 
     refresh_task: asyncio.Task[None] | None = None
 
-    @callback
-    def _async_schedule_device_info_refresh(now: datetime | None = None) -> None:
-        """Schedule one metadata read, owned by the config entry."""
+    async def async_refresh() -> None:
+        """Refresh metadata, sharing a read already in progress."""
         nonlocal refresh_task
-        if not device.connected or (
-            refresh_task is not None and not refresh_task.done()
-        ):
+        if not device.connected or not device.supports_device_info:
             return
-        refresh_task = entry.async_create_background_task(
-            hass,
-            _async_refresh_device_info(device, device_registry, registry_device_id),
-            f"Refresh Zentraly device information: {device.device_id}",
-        )
+        if refresh_task is None or refresh_task.done():
+            refresh_task = entry.async_create_background_task(
+                hass,
+                _async_refresh_device_info(device, device_registry, registry_device_id),
+                f"Refresh Zentraly device information: {device.device_id}",
+            )
+        await asyncio.shield(refresh_task)
+
+    async def async_background_refresh() -> None:
+        """Preserve known metadata when an automatic read fails."""
+        try:
+            await async_refresh()
+        except ZentralyApiError:
+            _LOGGER.debug(
+                "Unable to refresh Zentraly device information for %s", device.device_id
+            )
 
     @callback
     def _async_connection_changed(connected: bool) -> None:
         """Refresh metadata after a connection is established."""
         if connected:
-            _async_schedule_device_info_refresh()
+            entry.async_create_background_task(
+                hass,
+                async_background_refresh(),
+                f"Schedule Zentraly device information: {device.device_id}",
+            )
 
-    entry.async_on_unload(
-        device.add_connection_state_listener(_async_connection_changed)
-    )
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass,
-            _async_schedule_device_info_refresh,
-            DEVICE_INFO_INTERVAL,
+    if device.supports_device_info:
+        entry.async_on_unload(
+            device.add_connection_state_listener(_async_connection_changed)
         )
-    )
-    _async_schedule_device_info_refresh()
+        _async_connection_changed(True)
+    return async_refresh
 
 
 async def async_setup_entry(
@@ -214,21 +211,22 @@ async def async_setup_entry(
         **device.device_info,
     )
 
-    runtime_data = ZentralyData(api=api, device=device)
-    platforms = [Platform.CLIMATE]
+    platforms = [Platform.CLIMATE, Platform.BUTTON]
 
     # Connection failures are retried inside the library's background task.
     await api.async_connect()
     entry.async_on_unload(api.async_disconnect)
 
-    entry.runtime_data = runtime_data
-
-    _register_device_info_polling(
+    refresh_device_info = _register_device_info_refresh(
         hass,
         entry,
         device,
         device_registry,
         parent_device_entry.id,
+    )
+
+    entry.runtime_data = ZentralyData(
+        api=api, device=device, async_refresh_device_info=refresh_device_info
     )
 
     await hass.config_entries.async_forward_entry_setups(
@@ -250,7 +248,7 @@ async def async_unload_entry(
 ) -> None:
     """Unload a Zentraly config entry."""
 
-    platforms = [Platform.CLIMATE]
+    platforms = [Platform.CLIMATE, Platform.BUTTON]
 
     await hass.config_entries.async_unload_platforms_or_raise(
         entry,

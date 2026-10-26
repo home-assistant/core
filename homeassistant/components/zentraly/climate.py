@@ -1,7 +1,6 @@
 """Climate platform for Zentraly."""
 
 import asyncio
-from datetime import datetime
 from typing import Any, override
 
 from zentraly import ClimateCapability, ClimateOperationMode, ZentralyClimateApi
@@ -20,12 +19,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
 
 from .actions import translate_action_errors
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL as DEFAULT_SCAN_INTERVAL
 from .models import ZentralyConfigEntry, ZentralyDevice
 
+SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 PARALLEL_UPDATES = 1
 
 
@@ -50,7 +49,7 @@ class ZentralyClimate(ClimateEntity):
     """Representation of a Zentraly thermostat."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
+    _attr_should_poll = True
 
     def __init__(
         self,
@@ -101,22 +100,6 @@ class ZentralyClimate(ClimateEntity):
         self.async_on_remove(
             self._climate_api.add_state_listener(self._handle_state_update)
         )
-
-        self.async_on_remove(
-            async_track_time_interval(
-                self.hass,
-                self._async_periodic_refresh,
-                SCAN_INTERVAL,
-            )
-        )
-
-        self.async_schedule_update_ha_state(force_refresh=True)
-
-    async def _async_periodic_refresh(
-        self,
-        now: datetime,
-    ) -> None:
-        """Refresh device state periodically as a synchronization fallback."""
 
         self.async_schedule_update_ha_state(force_refresh=True)
 
@@ -214,6 +197,10 @@ class ZentralyClimate(ClimateEntity):
                 )
                 if operation_mode in modes
             ]
+            if ClimateOperationMode.OFF in modes:
+                supported_features |= ClimateEntityFeature.TURN_OFF
+            if ClimateOperationMode.MANUAL in modes:
+                supported_features |= ClimateEntityFeature.TURN_ON
             if (
                 ClimateOperationMode.AWAY in modes
                 and ClimateOperationMode.MANUAL in modes
@@ -390,7 +377,8 @@ class ZentralyClimate(ClimateEntity):
                 translation_domain=DOMAIN, translation_key="invalid_action"
             )
 
-        temperature = kwargs[ATTR_TEMPERATURE]
+        step = self._configuration.temperature_step
+        temperature = round(float(kwargs[ATTR_TEMPERATURE]) / step) * step
 
         success = await self._climate_api.async_set_target_temperature(
             float(temperature)

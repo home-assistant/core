@@ -23,6 +23,13 @@
       }
     }
   },
+  "entity": {
+    "button": {
+      "refresh_device_info": {
+        "name": "Update device information"
+      }
+    }
+  },
   "exceptions": {
     "action_failed": {
       "message": "The device could not complete the action."
