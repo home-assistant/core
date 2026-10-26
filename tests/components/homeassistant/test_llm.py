@@ -19,10 +19,12 @@ from homeassistant.helpers import (
     entity_registry as er,
     llm,
 )
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.setup import async_setup_component
 
 ENTITY_ID = "light.kitchen"
 RENDER_TEMPLATE_TOOL = "homeassistant__render_template"
+SEARCH_ACTIONS_TOOL = "homeassistant__search_actions"
 
 
 @pytest.fixture(autouse=True)
@@ -59,9 +61,12 @@ async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
 
 
 async def test_home_assistant_api_tools(hass: HomeAssistant) -> None:
-    """Test the platform offers only the render template tool to the Home Assistant API."""
+    """Test the platform offers its tools to the Home Assistant API."""
     result = ha_llm.async_get_tools(hass, _llm_context(), llm.LLM_API_HOME_ASSISTANT)
-    assert [tool.name for tool in result.tools] == [RENDER_TEMPLATE_TOOL]
+    assert [tool.name for tool in result.tools] == [
+        RENDER_TEMPLATE_TOOL,
+        SEARCH_ACTIONS_TOOL,
+    ]
     assert result.prompt is None
 
 
@@ -151,6 +156,94 @@ async def test_render_template_output_too_large(hass: HomeAssistant) -> None:
         },
         error=True,
     )
+
+
+async def _async_call_tool(
+    hass: HomeAssistant, tool_name: str, tool_args: dict[str, Any]
+) -> llm.ToolResult:
+    """Call a tool of the Home Assistant API."""
+    llm_context = _llm_context()
+    result = await llm_component.async_get_tools(
+        hass, llm_context, llm.LLM_API_HOME_ASSISTANT
+    )
+    tool = next(tool for tool in result.tools if tool.name == tool_name)
+    return await tool.async_call(hass, llm.ToolInput(tool_name, tool_args), llm_context)
+
+
+@pytest.fixture
+def mock_actions(hass: HomeAssistant) -> None:
+    """Register test actions with descriptions."""
+    actions = {
+        "turn_on": {
+            "name": "Turn on",
+            "description": "Turns on the device.",
+            "target": {"entity": [{"domain": ["test"]}]},
+            "fields": {
+                "transition": {"selector": {"number": {"min": 0, "max": 300}}},
+                "advanced_fields": {
+                    "collapsed": True,
+                    "fields": {
+                        "brightness": {
+                            "description": "Brightness of the device.",
+                            "required": True,
+                            "selector": {"number": {"min": 0, "max": 255}},
+                        },
+                    },
+                },
+            },
+        },
+        "turn_off": {"name": "Turn off", "description": "Turns off the device."},
+        "toggle": {
+            "name": "Toggle",
+            "description": "Turns the device on when it is off.",
+        },
+        "restart": {"name": "Restart", "description": "Restarts the device."},
+        "large": {
+            "name": "Large",
+            "description": "Has many options.",
+            "fields": {
+                "option": {
+                    "description": "The option to pick.",
+                    "selector": {
+                        "select": {"options": [f"option_{i}" for i in range(2000)]}
+                    },
+                },
+            },
+        },
+        "translated": {},
+    }
+    for action, schema in actions.items():
+        hass.services.async_register("test", action, lambda call: None)
+        async_set_service_schema(hass, "test", action, schema)
+
+
+@pytest.mark.usefixtures("mock_actions")
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("TEST turn on", id="name_before_description"),
+        pytest.param("test turn_off", id="underscore"),
+        pytest.param("test device", id="more"),
+        pytest.param("test translated", id="translated"),
+        pytest.param("test large", id="too_large"),
+        pytest.param("test missing", id="no_match"),
+    ],
+)
+async def test_search_actions(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, query: str
+) -> None:
+    """Test the search actions tool returns the best matching actions."""
+    translations = {
+        "component.test.services.translated.name": "Translated",
+        "component.test.services.translated.description": "Translated action.",
+        "component.test.services.turn_on.fields.transition.name": "Transition",
+    }
+    with patch(
+        "homeassistant.components.homeassistant.llm.translation.async_get_translations",
+        return_value=translations,
+    ):
+        response = await _async_call_tool(hass, SEARCH_ACTIONS_TOOL, {"query": query})
+    assert response == snapshot
 
 
 async def test_prompt_includes_context(hass: HomeAssistant) -> None:

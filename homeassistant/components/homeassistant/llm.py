@@ -1,5 +1,6 @@
 """LLM tools for the homeassistant integration."""
 
+from collections.abc import Iterator
 from decimal import Decimal
 from enum import Enum
 from operator import attrgetter
@@ -23,7 +24,9 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     intent,
+    translation,
 )
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.llm import (
     LLM_API_ASSIST,
     LLM_API_HOME_ASSISTANT,
@@ -33,8 +36,10 @@ from homeassistant.helpers.llm import (
     ToolInput,
     ToolResult,
 )
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util, yaml as yaml_util
+from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN
 from .exposed_entities import async_should_expose
@@ -45,6 +50,9 @@ SCRIPT_DOMAIN = "script"
 
 TEMPLATE_RENDER_TIMEOUT = 3
 TEMPLATE_MAX_OUTPUT = 16 * 1024
+
+ACTION_SEARCH_LIMIT = 3
+ACTION_DESCRIPTION_MAX_SIZE = 16 * 1024
 
 NO_ENTITIES_PROMPT = (
     "Only if the user wants to control a device, tell them to expose entities "
@@ -404,13 +412,139 @@ class RenderTemplateTool(Tool):
         return ToolResult(data={"result": result})
 
 
+def _action_fields(fields: dict[str, Any]) -> Iterator[tuple[str, dict[str, Any]]]:
+    """Yield the fields of an action, including the fields inside sections."""
+    for field, config in fields.items():
+        if "fields" in config:
+            yield from config["fields"].items()
+        else:
+            yield field, config
+
+
+def _describe_action(
+    action_id: str,
+    name: str,
+    description: str,
+    action_description: dict[str, Any],
+    translations: dict[str, str],
+) -> JsonObjectType:
+    """Return the description of an action for the LLM."""
+    domain, action = action_id.split(".", 1)
+    key = f"component.{domain}.services.{action}.fields"
+    result: JsonObjectType = {
+        "action": action_id,
+        "name": name,
+        "description": description,
+    }
+    if target := action_description.get("target"):
+        result["target"] = target
+    fields: JsonObjectType = {}
+    field_infos: list[JsonObjectType] = []
+    for field, config in _action_fields(action_description["fields"]):
+        field_info: JsonObjectType = {}
+        if field_description := (
+            config.get("description")
+            or translations.get(f"{key}.{field}.description")
+            or config.get("name")
+            or translations.get(f"{key}.{field}.name")
+        ):
+            field_info["description"] = field_description
+        if config.get("required"):
+            field_info["required"] = True
+        if selector_config := config.get("selector"):
+            field_info["selector"] = selector_config
+        fields[field] = field_info
+        field_infos.append(field_info)
+    result["fields"] = fields
+    # Some actions list so many select options that they would fill the context
+    if len(json_dumps(result)) > ACTION_DESCRIPTION_MAX_SIZE:
+        for field_info in field_infos:
+            field_info.pop("selector", None)
+        result["note"] = "The selectors of the fields are left out to save space."
+    return result
+
+
+class SearchActionsTool(Tool):
+    """Tool for searching the actions that Home Assistant can perform."""
+
+    name = "homeassistant__search_actions"
+    title = "Search actions"
+    description = (
+        "Search the actions that Home Assistant can perform. Each word of the query "
+        "must appear in the action ID, name or description. Returns the "
+        f"{ACTION_SEARCH_LIMIT} best matches with their target and fields."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required(
+                "query",
+                description="Words to find, case-insensitive, e.g. 'light turn on'.",
+            ): probatio.All(str, probatio.NonEmpty()),
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Search the actions."""
+        args = self.parameters(tool_input.tool_args)
+        words = args["query"].replace("_", " ").casefold().split()
+        descriptions = await async_get_all_descriptions(hass)
+        translations = await translation.async_get_translations(
+            hass, "en", "services", descriptions
+        )
+
+        matches: list[tuple[int, str, str, str, dict[str, Any]]] = []
+        for domain, actions in descriptions.items():
+            for action, action_description in actions.items():
+                action_id = f"{domain}.{action}"
+                key = f"component.{domain}.services.{action}"
+                name = action_description.get("name") or translations.get(
+                    f"{key}.name", ""
+                )
+                description = action_description.get("description") or translations.get(
+                    f"{key}.description", ""
+                )
+                # Actions that match on ID and name rank above description matches
+                head = f"{action_id} {name}".replace("_", " ").casefold()
+                text = f"{head} {description.casefold()}"
+                if all(word in head for word in words):
+                    rank = 0
+                elif all(word in text for word in words):
+                    rank = 1
+                else:
+                    continue
+                matches.append((rank, action_id, name, description, action_description))
+
+        matches.sort(key=lambda match: match[:2])
+        result: JsonObjectType = {
+            "actions": [
+                _describe_action(action_id, name, description, desc, translations)
+                for _, action_id, name, description, desc in matches[
+                    :ACTION_SEARCH_LIMIT
+                ]
+            ]
+        }
+        if len(matches) > ACTION_SEARCH_LIMIT:
+            result["more"] = (
+                f"{len(matches)} actions match. Use a more specific query to "
+                "find the others."
+            )
+        return ToolResult(data=result)
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
 ) -> LLMTools | None:
     """Return the homeassistant LLM tools for the given API."""
     if api_id == LLM_API_HOME_ASSISTANT:
-        return LLMTools(tools=[RenderTemplateTool()])
+        return LLMTools(tools=[RenderTemplateTool(), SearchActionsTool()])
 
     if api_id != LLM_API_ASSIST:
         return None
