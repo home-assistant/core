@@ -44,12 +44,6 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
         is_on: bool | None = getattr(self._tracker_status, self.entity_description.key)
         return is_on
 
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and self.is_on is not None
-
 
 @dataclass(frozen=True, kw_only=True)
 class TractiveBinarySensorEntityDescription(BinarySensorEntityDescription):
@@ -79,7 +73,7 @@ async def async_setup_entry(
     entry: TractiveConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Tractive device trackers."""
+    """Set up Tractive binary sensors."""
     coordinator = entry.runtime_data
 
     async_add_entities(

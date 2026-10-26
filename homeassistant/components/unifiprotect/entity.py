@@ -554,12 +554,13 @@ class ProtectDeviceEntity(BaseProtectEntity):
         )
 
 
-class ProtectPublicChannelEntity[ChannelT](ProtectDeviceEntity):
+class ProtectPublicChannelEntity[ChannelT, ChannelIdT = int](ProtectDeviceEntity):
     """Base for an entity tracking one channel of a public device.
 
-    Alarm hub zones and relay inputs and outputs are channels of their device.
-    The entity goes unavailable while its channel cannot be read, on top of the
-    device's availability.
+    Alarm hub zones, relay inputs and outputs and chime ring settings are
+    channels of their device. The entity goes unavailable while its channel
+    cannot be read, on top of the device's availability. In hybrid the device
+    can be the private one; the channel is read from its public mirror.
     """
 
     _ufp_uses_public = True
@@ -567,9 +568,9 @@ class ProtectPublicChannelEntity[ChannelT](ProtectDeviceEntity):
     def __init__(
         self,
         data: ProtectData,
-        device: PublicDeviceModel,
+        device: ProtectDeviceType,
         description: EntityDescription,
-        channel_id: int,
+        channel_id: ChannelIdT,
     ) -> None:
         """Initialize the channel entity."""
         self._channel_id = channel_id
