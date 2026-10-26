@@ -191,6 +191,13 @@
           "smart": "Smart"
         }
       },
+      "efficiency_mode": {
+        "name": "Efficiency mode",
+        "state": {
+          "energy_efficient_mode": "Energy efficient",
+          "standard_mode": "Standard"
+        }
+      },
       "water_amount": {
         "name": "[%key:component::ecovacs::entity::number::water_amount::name%]",
         "state": {
