@@ -327,8 +327,7 @@ async def test_failed_update(hass: HomeAssistant) -> None:
 
     state = hass.states.get(ZONE_1_ID)
 
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
-    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
+    assert state.state == "unavailable"
 
 
 async def test_empty_update(hass: HomeAssistant) -> None:
@@ -353,8 +352,7 @@ async def test_empty_update(hass: HomeAssistant) -> None:
 
     state = hass.states.get(ZONE_1_ID)
 
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
-    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
+    assert state.state == "unavailable"
 
 
 async def test_supported_features(hass: HomeAssistant) -> None:

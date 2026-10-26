@@ -9,10 +9,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_NOT_FIRST_RUN, DOMAIN
+from .coordinator import ZONE_IDS, MonopriceCoordinator
 from .services import async_setup_services
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -28,7 +29,8 @@ class MonopriceRuntimeData:
     """Data stored in the config entry for a Monoprice entry."""
 
     client: Monoprice
-    first_run: bool
+    coordinator: MonopriceCoordinator
+    discovered_zones: set[int] | None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -58,9 +60,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) ->
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 
+    registry = er.async_get(hass)
+    zones = tuple(
+        zone_id
+        for zone_id in ZONE_IDS
+        if (
+            entity_id := registry.async_get_entity_id(
+                Platform.MEDIA_PLAYER, DOMAIN, f"{entry.entry_id}_{zone_id}"
+            )
+        )
+        is None
+        or not registry.entities[entity_id].disabled
+    )
+    coordinator = MonopriceCoordinator(hass, entry, monoprice, zones)
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.async_finish_discovery()
     entry.runtime_data = MonopriceRuntimeData(
         client=monoprice,
-        first_run=first_run,
+        coordinator=coordinator,
+        discovered_zones=(
+            {zone for zone, state in coordinator.data.items() if state is not None}
+            if first_run
+            else None
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
