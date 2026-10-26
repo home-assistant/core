@@ -234,6 +234,7 @@ class RuntimeEntryData:
         field(default_factory=list)
     )
     assist_satellite_wake_words: dict[int, str] = field(default_factory=dict)
+    assist_satellite_wake_word_options: dict[int, str] = field(default_factory=dict)
     device_id_to_name: dict[int, str] = field(default_factory=dict)
     entity_removal_callbacks: dict[EntityInfoKey, list[CALLBACK_TYPE]] = field(
         default_factory=dict
