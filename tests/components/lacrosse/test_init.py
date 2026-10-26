@@ -4,6 +4,7 @@ from types import MappingProxyType
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from serial import SerialException
 
 from homeassistant.components.lacrosse import async_remove_config_entry_device
@@ -18,8 +19,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
-
-from tests.common import MockConfigEntry
 
 ENTRY_DATA = {
     "device": "/dev/ttyUSB0",

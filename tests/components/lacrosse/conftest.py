@@ -10,7 +10,7 @@ import pytest
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent config entry setup during config flow tests."""
     with patch(
-        "homeassistant.components.lacrosse.async_setup_entry", return_value=True
+        "homeassistant.components.lacrosse.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 
