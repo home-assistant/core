@@ -1251,7 +1251,7 @@ async def test_save_home_source(
         },
         {
             "type": "home",
-            "stat_energy_from": "sensor.home_energy",
+            "stat_energy_to": "sensor.home_energy",
             "stat_rate": "sensor.home_power",
             "name": "Main meter",
         },
@@ -1277,12 +1277,12 @@ async def test_save_home_source(
     [
         pytest.param(
             [
-                {"type": "home", "stat_energy_from": "sensor.home_a"},
-                {"type": "home", "stat_energy_from": "sensor.home_b"},
+                {"type": "home", "stat_energy_to": "sensor.home_a"},
+                {"type": "home", "stat_energy_to": "sensor.home_b"},
             ],
             id="two_home_sources",
         ),
-        pytest.param([{"type": "home"}], id="missing_stat_energy_from"),
+        pytest.param([{"type": "home"}], id="missing_stat_energy_to"),
     ],
 )
 async def test_save_home_source_invalid(

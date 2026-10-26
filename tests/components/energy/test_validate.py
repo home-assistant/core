@@ -334,7 +334,7 @@ async def test_validation_home(
 ) -> None:
     """Test validating the whole-home meter unit."""
     await mock_energy_manager.async_update(
-        {"energy_sources": [{"type": "home", "stat_energy_from": "sensor.home_energy"}]}
+        {"energy_sources": [{"type": "home", "stat_energy_to": "sensor.home_energy"}]}
     )
     hass.states.async_set(
         "sensor.home_energy",
