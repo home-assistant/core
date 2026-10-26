@@ -189,9 +189,9 @@ def test_scan(repo: Path, snapshot: SnapshotAssertion) -> None:
             (2027, 1),
             [
                 "deprecation-cleanup/alpha-2025.1",
-                "deprecation-cleanup/alpha-2026.9",
-                "deprecation-cleanup/alpha-2026.11",
-                "deprecation-cleanup/alpha-2026.12",
+                "deprecation-cleanup/alpha-2026.9-yaml",
+                "deprecation-cleanup/alpha-2026.11-const",
+                "deprecation-cleanup/alpha-2026.12-later",
                 "deprecation-cleanup/beta-2025.6",
                 "deprecation-cleanup/beta-2026.9",
                 "deprecation-cleanup/beta-2026.12",
@@ -229,6 +229,28 @@ def test_scan_same_version(tmp_path: Path) -> None:
             "deprecation-cleanup/eta-2026.1-eta_deprecated_service",
             "eta_deprecated_service",
         ),
+    ]
+
+
+def test_scan_branch_name_after_sibling_removed(tmp_path: Path) -> None:
+    """Test a deprecation keeps its branch name when another one is removed."""
+    write_repo(
+        tmp_path,
+        {
+            "homeassistant/components/eta/__init__.py": """
+                def setup(hass, entry):
+                    ir.async_create_issue(
+                        hass,
+                        "eta",
+                        f"deprecated_option_{entry.entry_id}",
+                        breaks_in_ha_version="2026.1.0",
+                    )
+            """,
+        },
+    )
+    result = find.scan(tmp_path, (2026, 1))
+    assert [deprecation["branch"] for deprecation in result["deprecations"]] == [
+        "deprecation-cleanup/eta-2026.1-deprecated_option"
     ]
 
 

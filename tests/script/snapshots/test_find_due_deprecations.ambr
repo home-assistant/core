@@ -20,7 +20,7 @@
         'version': '2025.1',
       }),
       dict({
-        'branch': 'deprecation-cleanup/alpha-2026.9',
+        'branch': 'deprecation-cleanup/alpha-2026.9-yaml',
         'issue_id': 'yaml',
         'items': list([
           dict({
@@ -36,7 +36,7 @@
         'version': '2026.9',
       }),
       dict({
-        'branch': 'deprecation-cleanup/alpha-2026.11',
+        'branch': 'deprecation-cleanup/alpha-2026.11-const',
         'issue_id': 'const',
         'items': list([
           dict({

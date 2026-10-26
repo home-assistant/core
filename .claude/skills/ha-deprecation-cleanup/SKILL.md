@@ -54,9 +54,9 @@ passes none. Those items point at the call site. It prints JSON with:
   `_DEPRECATED_DEVICE_INFO_PARAMETERS` in `helpers/device_registry.py`. Add those that are
   due.
 
-Branch names are `deprecation-cleanup/<name>-<X.Y>`, with `-<issue_id>` added when the
-integration or module has more than one deprecation for that version. The script derives
-them, so the same deprecation gets the same name on every run.
+Branch names are `deprecation-cleanup/<name>-<X.Y>-<issue_id>`, or
+`deprecation-cleanup/<name>-<X.Y>` when there is no repair issue. The script derives them
+from the deprecation alone, so the same deprecation gets the same name on every run.
 
 ## 2. Check each deprecation
 
@@ -66,8 +66,8 @@ split is a starting point:
 - Items without an issue id (a logged warning, a constant) can belong to a deprecation
   that also has a repair issue. Clean them up together.
 - Two issue ids can be one deprecation, for example the success and failure issues of
-  one YAML import. Clean them up together on the base branch name
-  `deprecation-cleanup/<name>-<X.Y>`.
+  one YAML import. Clean them up together on the branch of the first one the script
+  lists.
 
 Then pick one outcome per deprecation:
 
@@ -79,9 +79,11 @@ Then pick one outcome per deprecation:
   would need a config entry migration that can't be defined safely; or it is a core API
   that custom integrations still use widely (the `custom-integration-sources` skill can
   measure that). Don't create a branch.
-- **Branch exists**: if the deprecation's branch already exists on the push remote
-  (`git ls-remote --heads <remote> <branch>`) or locally (`git branch --list <branch>`),
-  don't touch it. Report whether a PR is open from it, whether it is only local and not
+- **Branch exists**: if a branch for this deprecation already exists on the push remote
+  or locally, don't touch it. Look for every branch of the integration and version
+  (`git ls-remote --heads <remote> 'deprecation-cleanup/<name>-<X.Y>*'` and
+  `git branch --list 'deprecation-cleanup/<name>-<X.Y>*'`), since a branch made for the
+  same deprecation can have another suffix, and check its diff to see what it removes. Report whether a PR is open from it, whether it is only local and not
   pushed, and when its base is more than one release behind `dev`, say it needs a merge of
   `dev` or a fresh branch.
 - **Prepare a branch** otherwise.
@@ -116,10 +118,14 @@ another's branch. For each deprecation:
 4. Commit as "Remove deprecated <thing> from <domain>". In the body, name the
    `breaks_in_ha_version` and the PR that added the deprecation (find it with `git log -S`
    or `git blame`). Keep the PR template out of the commit message.
-5. Write a ready-to-paste PR description following `.github/PULL_REQUEST_TEMPLATE.md`
-   without removing anything: fill in the breaking change section, check "Breaking change"
-   as the type, leave unchecked boxes in place, and put the task issue (if one was found)
-   on the "fixes #" line. Don't commit it. It goes in the report.
+5. Write a ready-to-paste PR description following `.github/PULL_REQUEST_TEMPLATE.md`,
+   leaving unchecked boxes in place and putting the task issue (if one was found) on the
+   "fixes #" line. When users have to change something, check "Breaking change" and fill
+   in the breaking change section: what breaks, how to fix it and why. Removing a YAML
+   import whose deprecation period has ended is not a breaking change, because the
+   deprecation already announced it: check "Code quality improvements" and remove the
+   breaking change section, as the template allows. Don't commit the description. It goes
+   in the report.
 6. Push only if the user (or the routine prompt) asked for it, to the remote they named,
    for example the user's fork, or `origin` for maintainers who keep branches upstream.
    Use a plain `git push <remote> <branch>`. The compare link is

@@ -4,7 +4,6 @@
 
 import argparse
 import ast
-from collections import Counter
 from dataclasses import asdict, dataclass, field
 import json
 from pathlib import Path
@@ -44,7 +43,7 @@ class Deprecation:
     kind: str
     version: str
     issue_id: str | None
-    branch: str = ""
+    branch: str
     items: list[Item] = field(default_factory=list)
 
 
@@ -376,14 +375,14 @@ def scan(root: Path, current: tuple[int, int]) -> dict[str, Any]:
                 version = f"{parsed[0]}.{parsed[1]}"
                 deprecations.setdefault(
                     (name, version, found.issue_id),
-                    Deprecation(name, kind, version, found.issue_id),
+                    Deprecation(
+                        name,
+                        kind,
+                        version,
+                        found.issue_id,
+                        branch_name(name, version, found.issue_id),
+                    ),
                 ).items.append(found)
-
-    # Only a version with several deprecations needs the issue id in branch names.
-    per_version = Counter((name, version) for name, version, _ in deprecations)
-    for (name, version, issue), deprecation in deprecations.items():
-        suffix = issue if per_version[name, version] > 1 else None
-        deprecation.branch = branch_name(name, version, suffix)
 
     return {
         "current_version": f"{current[0]}.{current[1]}",
