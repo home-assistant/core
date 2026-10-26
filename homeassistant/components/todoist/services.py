@@ -43,7 +43,9 @@ NEW_TASK_SERVICE_SCHEMA = probatio.Schema(
         probatio.Optional(PROJECT_NAME, default="inbox"): probatio.All(
             cv.string, probatio.Lower
         ),
-        probatio.Optional(SECTION_NAME): probatio.All(cv.string, probatio.Lower),
+        probatio.Optional(SECTION_NAME): probatio.Any(
+            probatio.All(cv.string, probatio.Lower), None
+        ),
         probatio.Optional(LABELS): cv.ensure_list_csv,
         probatio.Optional(ASSIGNEE): cv.string,
         probatio.Optional(PRIORITY): probatio.All(
@@ -95,10 +97,10 @@ async def handle_new_task(call: ServiceCall) -> None:
             },
         )
 
-    # Optional section within project
+    # Optional section within project. An explicit `None` is accepted and
+    # ignored so templated service calls can omit the section conditionally.
     section_id: str | None = None
-    if SECTION_NAME in call.data:
-        section_name = call.data[SECTION_NAME]
+    if section_name := call.data.get(SECTION_NAME):
         sections = await coordinator.async_get_sections(project_id)
         for section in sections:
             if section_name == section.name.lower():

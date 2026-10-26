@@ -662,6 +662,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             for event_callback in self._event_listeners:
                 event_callback(event)
 
+            # Plug LED settings do not change any entity, so they need no reload
+            if event_type == "config_changed" and component == "plugs_ui":
+                continue
+
             if event_type in ("component_added", "component_removed", "config_changed"):
                 self.update_sleep_period()
                 LOGGER.info(

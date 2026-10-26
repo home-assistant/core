@@ -12,7 +12,6 @@ from homeassistant.components import (
     camera,
     cover,
     fan,
-    input_number,
     media_player,
     valve,
 )
@@ -1673,8 +1672,8 @@ async def async_api_set_range(
     elif instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
         range_value = float(range_value)
         service = InputNumberService.SET_VALUE
-        min_value = float(entity.attributes[input_number.ATTR_MIN])
-        max_value = float(entity.attributes[input_number.ATTR_MAX])
+        min_value = float(entity.attributes[NumberEntityCapabilityAttribute.MIN])
+        max_value = float(entity.attributes[NumberEntityCapabilityAttribute.MAX])
         data[InputNumberServiceArgument.VALUE] = min(
             max_value, max(min_value, range_value)
         )
@@ -1832,8 +1831,8 @@ async def async_api_adjust_range(
     elif instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
         range_delta = float(range_delta)
         service = InputNumberService.SET_VALUE
-        min_value = float(entity.attributes[input_number.ATTR_MIN])
-        max_value = float(entity.attributes[input_number.ATTR_MAX])
+        min_value = float(entity.attributes[NumberEntityCapabilityAttribute.MIN])
+        max_value = float(entity.attributes[NumberEntityCapabilityAttribute.MAX])
         current = float(entity.state)
         data[InputNumberServiceArgument.VALUE] = response_value = min(
             max_value, max(min_value, range_delta + current)
