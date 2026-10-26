@@ -74,6 +74,11 @@ FAKE_STATIONS = [
     {"label": "Montreal, QC", "value": "789"},
 ]
 
+LANGUAGE_PARAMS = [
+    pytest.param("en", "english", id="english"),
+    pytest.param("fr", "french", id="french"),
+]
+
 
 def mocked_ec():
     """Mock the env_canada library."""
@@ -98,12 +103,6 @@ def mocked_stations():
         "homeassistant.components.environment_canada.config_flow.get_ec_sites_list",
         return_value=FAKE_STATIONS,
     )
-
-
-LANGUAGE_PARAMS = [
-    pytest.param("en", "english", id="english"),
-    pytest.param("fr", "french", id="french"),
-]
 
 
 @pytest.mark.parametrize(("language", "ec_language"), LANGUAGE_PARAMS)
