@@ -2,13 +2,13 @@
 
 from datetime import datetime
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from aioengiebelgium import EnergyContractsResponse
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import automation
 from homeassistant.components.engie_be.condition import (
@@ -200,6 +200,32 @@ async def test_condition_per_household_tariff(
         )
         is expected
     )
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_condition_without_entities(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test the EPEX prices stay fresh for a condition when no entity listens."""
+    with patch("homeassistant.components.engie_be._PLATFORMS", []):
+        await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+        device_id = household_device_id(device_registry, mock_config_entry)
+
+        freezer.move_to(datetime(2026, 10, 5, 14, 0, tzinfo=BRUSSELS_TIME_ZONE))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert await _async_condition_passes(
+            hass,
+            service_calls,
+            "epex_hour_price_meets_threshold",
+            {"device_id": device_id, "above": -1},
+        )
 
 
 @pytest.mark.usefixtures("frozen_afternoon")

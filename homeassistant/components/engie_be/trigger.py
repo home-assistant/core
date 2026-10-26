@@ -9,7 +9,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_ABOVE, CONF_BELOW
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, async_noop, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import (
@@ -119,29 +119,15 @@ class _EpexTrigger(Trigger):
     ) -> CALLBACK_TYPE:
         """Track the EPEX prices for a single device."""
         description = f"EPEX prices changed for {device.name_by_user or device.name}"
-        tracked_coordinator: EngieBeEpexCoordinator | None = None
-        remove_coordinator_listener: CALLBACK_TYPE | None = None
-        previous: Any = UNDEFINED
-
-        @callback
-        def async_track_coordinator(coordinator: EngieBeEpexCoordinator) -> None:
-            """Keep the EPEX coordinator polling while the trigger is attached."""
-            nonlocal tracked_coordinator, remove_coordinator_listener
-            if remove_coordinator_listener is not None:
-                remove_coordinator_listener()
-            tracked_coordinator = coordinator
-            remove_coordinator_listener = coordinator.async_add_listener(async_noop)
-
-        if (epex := async_get_device_epex(self._hass, device_id)) is not None:
-            async_track_coordinator(epex)
-            previous = self._device_value(device_id)
+        tracked_coordinator = async_get_device_epex(self._hass, device_id)
+        previous: Any = self._device_value(device_id)
 
         @callback
         def async_epex_updated(coordinator: EngieBeEpexCoordinator) -> None:
             """Compare the device value against the previous update."""
-            nonlocal previous
+            nonlocal previous, tracked_coordinator
             if coordinator is not tracked_coordinator:
-                async_track_coordinator(coordinator)
+                tracked_coordinator = coordinator
                 previous = UNDEFINED
 
             current = self._device_value(device_id)
@@ -174,8 +160,6 @@ class _EpexTrigger(Trigger):
             """Stop tracking the device."""
             remove_dispatcher()
             remove_state_listener()
-            if remove_coordinator_listener is not None:
-                remove_coordinator_listener()
 
         return async_remove
 

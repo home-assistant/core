@@ -303,7 +303,7 @@ async def test_trigger_without_entities(
     device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
 ) -> None:
-    """Test the trigger keeps the EPEX prices polling when no entity listens."""
+    """Test the trigger fires when no entity listens to the EPEX prices."""
     client = mock_engie_client.return_value
     client.async_get_epex_prices.side_effect = build_epex_payload_without_tomorrow
     with patch("homeassistant.components.engie_be._PLATFORMS", []):
@@ -317,15 +317,6 @@ async def test_trigger_without_entities(
         await _async_move_to(hass, freezer, dt_util.utcnow() + EPEX_SCAN_INTERVAL)
 
         assert len(automation_calls(service_calls)) == 1
-
-        await hass.services.async_call(
-            automation.DOMAIN, "turn_off", {"entity_id": "all"}, blocking=True
-        )
-        client.async_get_epex_prices.side_effect = build_epex_payload_without_tomorrow
-        polls = client.async_get_epex_prices.call_count
-        await _async_move_to(hass, freezer, dt_util.utcnow() + 2 * EPEX_SCAN_INTERVAL)
-
-        assert client.async_get_epex_prices.call_count == polls
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
