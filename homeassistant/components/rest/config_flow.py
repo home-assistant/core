@@ -335,8 +335,7 @@ class RestSubentryFlow(ConfigSubentryFlow):
         entry: RestConfigEntry = self._get_entry()
         if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="config_entry_not_loaded")
-        if len(entry.subentries) == 0:
-            await entry.runtime_data.async_refresh()
+        await entry.runtime_data.async_refresh()
         if not entry.runtime_data.last_update_success:
             ex = entry.runtime_data.last_exception
             reason = "endpoint_error"
