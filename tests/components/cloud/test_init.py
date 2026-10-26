@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from hass_nabucasa import (
     AutoLoginController,
@@ -12,6 +12,7 @@ from hass_nabucasa import (
     LogoutEvent,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.cloud import (
@@ -29,17 +30,25 @@ from homeassistant.components.cloud.const import (
     DOMAIN,
     EVENT_CLOUD_EVENT,
     MODE_DEV,
+    PREF_ALEXA_SETTINGS_VERSION,
     PREF_CLOUDHOOKS,
+    PREF_GOOGLE_SETTINGS_VERSION,
 )
-from homeassistant.components.cloud.prefs import STORAGE_KEY
-from homeassistant.const import CONF_MODE, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.components.cloud.prefs import (
+    ALEXA_SETTINGS_VERSION,
+    GOOGLE_SETTINGS_VERSION,
+    STORAGE_KEY,
+)
+from homeassistant.const import (
+    CONF_MODE,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockUser
 
 REMOTE_UI_UNIQUE_ID = "cloud-remote-ui-connectivity"
 
@@ -277,6 +286,39 @@ async def test_remote_ui_url(hass: HomeAssistant) -> None:
         cl.client.prefs._prefs["remote_domain"] = "example.com"
 
         assert async_remote_ui_url(hass) == "https://example.com"
+
+        # Remote backend loaded after a login, stored domain not refreshed
+        cl.client.prefs._prefs["remote_domain"] = None
+        with patch.object(cl.remote, "_instance_domain", "live.example.com"):
+            assert async_remote_ui_url(hass) == "https://live.example.com"
+
+
+@pytest.mark.parametrize(
+    ("stored_domain", "expected_calls"),
+    [
+        pytest.param(None, 1, id="changed"),
+        pytest.param("example.ui.nabu.casa", 0, id="unchanged"),
+    ],
+)
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_on_initialized_updates_remote_domain(
+    hass: HomeAssistant, stored_domain: str | None, expected_calls: int
+) -> None:
+    """Test the remote domain preference is synced when cloud is initialized."""
+    cl = hass.data[DATA_CLOUD]
+    cl.client.prefs._prefs["remote_domain"] = stored_domain
+    (on_initialized,) = cl._on_initialized
+
+    with (
+        patch.object(cl.remote, "_instance_domain", "example.ui.nabu.casa"),
+        patch.object(cl.client.prefs, "async_update") as mock_update,
+    ):
+        await on_initialized()
+
+    assert (
+        mock_update.call_args_list
+        == [call(remote_domain="example.ui.nabu.casa")] * expected_calls
+    )
 
 
 async def test_async_get_or_create_cloudhook(
@@ -623,3 +665,30 @@ async def test_async_listen_cloudhook_change_cloud_setup_later(
 
     # Should not receive update after unsubscribe
     assert len(changes) == 1
+
+
+async def test_assistant_settings_migrated_at_startup(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test outdated assistant settings are migrated at startup without a login."""
+    hass.set_state(CoreState.not_running)
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 4,
+        "data": {
+            PREF_ALEXA_SETTINGS_VERSION: ALEXA_SETTINGS_VERSION - 1,
+            PREF_GOOGLE_SETTINGS_VERSION: GOOGLE_SETTINGS_VERSION - 1,
+        },
+    }
+    with patch("hass_nabucasa.Cloud.initialize"):
+        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    prefs = hass.data[DATA_CLOUD].client.prefs
+    assert prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION - 1
+    assert prefs.google_settings_version == GOOGLE_SETTINGS_VERSION - 1
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION
+    assert prefs.google_settings_version == GOOGLE_SETTINGS_VERSION

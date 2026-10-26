@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from mitsubishi_comfort import CloudIndoorUnit, DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mitsubishi_comfort_cloud.const import DOMAIN
@@ -19,7 +20,6 @@ from homeassistant.helpers import (
 
 from .conftest import MOCK_SERIAL, MOCK_SITE
 
-from tests.common import MockConfigEntry
 from tests.components.mitsubishi_comfort.conftest import create_mock_indoor_unit
 
 

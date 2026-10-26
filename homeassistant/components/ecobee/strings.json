@@ -82,6 +82,9 @@
     "mfa_reauthentication_needed": {
       "message": "ecobee account requires MFA; reauthentication needed"
     },
+    "no_devices_found": {
+      "message": "No ecobee devices found to set up"
+    },
     "sensor_lookup_failed": {
       "message": "There was an error getting the sensor IDs from sensor names. Try reloading the ecobee integration."
     }

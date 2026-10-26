@@ -28,9 +28,13 @@ from typing import TYPE_CHECKING, Any, Final, cast
 import probatio
 from yarl import URL
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
+from homeassistant.const import (
+    CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGGING_CHANGED,
+)
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import SetupPhases, async_pause_setup
@@ -150,11 +154,15 @@ def _convert_stream_options(
         raise HomeAssistantError("Stream integration is not set up.")
 
     stream_settings = copy.copy(hass.data[DOMAIN][ATTR_SETTINGS])
-    pyav_options: dict[str, str] = {}
     try:
         STREAM_OPTIONS_SCHEMA(stream_options)
     except probatio.Invalid as exc:
         raise HomeAssistantError(f"Invalid stream options: {exc}") from exc
+
+    # FFmpeg 9 verifies TLS peers by default; cameras use self-signed certificates
+    pyav_options: dict[str, str] = {
+        "tls_verify": "1" if stream_options.get(CONF_VERIFY_SSL) else "0"
+    }
 
     if extra_wait_time := stream_options.get(CONF_EXTRA_PART_WAIT_TIME):
         stream_settings.hls_part_timeout += extra_wait_time
@@ -567,13 +575,19 @@ class Stream:
 
         # Check for file access
         if not self.hass.config.is_allowed_path(video_path):
-            raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="path_not_allowed",
+                translation_placeholders={"filename": video_path},
+            )
 
         # Add recorder
         if recorder := self.outputs().get(RECORDER_PROVIDER):
             assert isinstance(recorder, RecorderOutput)
-            raise HomeAssistantError(
-                f"Stream already recording to {recorder.video_path}!"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="already_recording",
+                translation_placeholders={"filename": recorder.video_path},
             )
         recorder = cast(
             RecorderOutput, self.add_provider(RECORDER_PROVIDER, timeout=duration)
@@ -630,5 +644,6 @@ STREAM_OPTIONS_SCHEMA: Final = probatio.Schema(
         probatio.Optional(CONF_RTSP_TRANSPORT): probatio.In(RTSP_TRANSPORTS),
         probatio.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
         probatio.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
+        probatio.Optional(CONF_VERIFY_SSL): bool,
     }
 )

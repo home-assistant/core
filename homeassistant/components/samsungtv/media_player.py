@@ -94,10 +94,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         self._app_list_event: asyncio.Event = asyncio.Event()
 
         self._attr_supported_features = SUPPORT_SAMSUNGTV
-        if self._mac:
-            # Deprecated: Implicit Wake-On-LAN, will be removed in 2026.8.0
-            # Triggers have not yet been registered so this is adjusted in the property
-            self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
         if self._ssdp_rendering_control_location:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
 
@@ -381,7 +377,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         try:
             cv.positive_int(media_id)
         except probatio.Invalid as err:
-            LOGGER.error("Media ID must be positive integer")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="media_id_invalid",

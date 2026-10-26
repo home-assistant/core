@@ -23,7 +23,7 @@ from .const import (
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.webostv.async_setup_entry", return_value=True
+        "homeassistant.components.webostv.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -45,6 +45,10 @@ def client_fixture():
             hello={"deviceUUID": FAKE_UUID},
             system={"modelName": TV_MODEL, "serialNumber": "1234567890"},
             software={"major_ver": "major", "minor_ver": "minor"},
+            connection={
+                "wiredInfo": {"macAddress": "AA:BB:CC:DD:EE:01"},
+                "wifiInfo": {"macAddress": "AA:BB:CC:DD:EE:02"},
+            },
         )
         client.client_key = CLIENT_KEY
         client.tv_state = WebOsTvState(

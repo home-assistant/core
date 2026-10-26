@@ -4,6 +4,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock
 
 from dateutil.tz import tzutc
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from twitchAPI.object.api import FollowedChannel, Stream, UserSubscription
 from twitchAPI.type import TwitchResourceNotFound
 
@@ -11,8 +12,6 @@ from homeassistant.components.twitch.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import TwitchIterObject, get_generator_from_data, setup_integration
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 ENTITY_ID = "sensor.channel123"
 

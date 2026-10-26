@@ -1,6 +1,7 @@
 {
   "domain": "mitsubishi_comfort_cloud",
   "name": "Mitsubishi Comfort Cloud",
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@nikolairahimi"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mitsubishi_comfort_cloud",

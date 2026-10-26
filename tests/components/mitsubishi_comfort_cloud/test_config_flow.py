@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mitsubishi_comfort_cloud.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
@@ -14,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_PASSWORD, MOCK_USERNAME
 
-from tests.common import MockConfigEntry
-
 USER_INPUT = {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD}
 
 
@@ -24,7 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Isolate configuration from platform setup."""
     with patch(
         "homeassistant.components.mitsubishi_comfort_cloud.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 

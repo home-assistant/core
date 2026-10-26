@@ -4,6 +4,12 @@ from datetime import datetime, timedelta
 import time
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 from thermopro_ble import ThermoProDevice
 
 from homeassistant.components.bluetooth import (
@@ -14,13 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import TP357_SERVICE_INFO, TP358_SERVICE_INFO
-
-from tests.common import async_fire_time_changed
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
-)
 
 
 @pytest.mark.usefixtures("setup_thermopro")

@@ -28,10 +28,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ],
         schema={
             probatio.Required(ATTR_POSITION): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
             probatio.Required(ATTR_TILT_POSITION): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
         },
     )

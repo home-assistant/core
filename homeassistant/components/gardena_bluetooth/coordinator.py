@@ -104,13 +104,12 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             self.characteristics = chars
             self.device_info = DeviceInfo(
-                {
-                    **self.device_info,
-                    "name": name,
-                    "sw_version": sw_version,
-                    "manufacturer": manufacturer,
-                    "model": model,
-                }
+                identifiers={(DOMAIN, self.address)},
+                connections={(dr.CONNECTION_BLUETOOTH, self.address)},
+                name=name,
+                sw_version=sw_version,
+                manufacturer=manufacturer,
+                model=model,
             )
         except (TimeoutError, CommunicationFailure, DeviceUnavailable) as exception:
             raise UpdateFailed(

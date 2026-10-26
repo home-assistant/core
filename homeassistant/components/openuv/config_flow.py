@@ -33,7 +33,7 @@ from .coordinator import OpenUvConfigEntry
 
 STEP_REAUTH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
 
@@ -82,7 +82,7 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
         """Return the config schema."""
         return probatio.Schema(
             {
-                probatio.Required(CONF_API_KEY): str,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 probatio.Inclusive(
                     CONF_LATITUDE, "coords", default=self.hass.config.latitude
                 ): cv.latitude,

@@ -67,12 +67,10 @@ class ZinvoltUnitEntity(ZinvoltEntity):
         if not is_main_device:
             # The main battery device is pre-registered in async_setup_entry, so it
             # is guaranteed to exist here.
-            self._attr_device_info["via_device_id"] = (
-                dr.async_get_device_id_by_identifier(
-                    coordinator.hass,
-                    (DOMAIN, coordinator.data.battery.serial_number),
-                    config_entry_id=coordinator.config_entry.entry_id,
-                )
+            self._attr_device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.data.battery.serial_number),
+                config_entry_id=coordinator.config_entry.entry_id,
             )
 
     @property

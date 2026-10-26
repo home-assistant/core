@@ -9,6 +9,7 @@ from mitsubishi_comfort.exceptions import (
     DeviceConnectionError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import MOCK_SERIAL
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "climate.living_room"
 

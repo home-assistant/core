@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from aioesphomeapi import ZERO_NOISE_PSK, APIClient
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.esphome.const import CONF_NOISE_PSK, DOMAIN
 from homeassistant.components.esphome.manager import ESPHomeManager
@@ -22,8 +23,6 @@ from homeassistant.core import CoreState, HomeAssistant
 
 from . import VALID_NOISE_PSK
 from .conftest import MockESPHomeDeviceType
-
-from tests.common import MockConfigEntry
 
 MAC = "11:22:33:44:55:aa"
 

@@ -10,27 +10,26 @@ from pyportainer import StackType
 from pyportainer.models.docker import DockerContainerState, DockerSystemDF
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
-from homeassistant.const import UnitOfInformation, UnitOfRatio
+from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
+    PortainerCoordinatorData,
     PortainerStackData,
     PortainerVolumeData,
 )
 from .entity import (
     PortainerContainerEntity,
-    PortainerCoordinatorData,
     PortainerDockerSystemDiskSpaceEndpointEntity,
     PortainerEndpointEntity,
     PortainerStackEntity,
@@ -136,6 +135,28 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         ),
         device_class=SensorDeviceClass.ENUM,
         options=["healthy", "unhealthy", "starting"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Docker reports 0001-01-01 as the start time of a container that never started.
+    PortainerContainerSensorEntityDescription(
+        key="container_started_at",
+        translation_key="container_started_at",
+        value_fn=lambda data: (
+            started_at
+            if (state := data.container_inspect.state)
+            and state.started_at
+            and (started_at := dt_util.parse_datetime(state.started_at))
+            and started_at.year > 1
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="container_restart_count",
+        translation_key="container_restart_count",
+        value_fn=lambda data: data.container_inspect.restart_count,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerContainerSensorEntityDescription(
