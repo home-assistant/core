@@ -1354,7 +1354,7 @@ def _has_own_area_without_own_name(hass: HomeAssistant, entry: RegistryEntry) ->
 
 
 @callback
-def _async_child_device_taking_over_area(
+def _async_get_child_device_accepting_area(
     hass: HomeAssistant, entry: RegistryEntry
 ) -> dr.ChildDeviceEntry | None:
     """Return the child device which takes over the area of its new main entity.
@@ -2193,7 +2193,7 @@ class EntityRegistry(BaseRegistry):
         if _has_own_area_without_own_name(self.hass, new):
             # The child device only takes the area over when the entity moved to it
             if "device_id" in new_values:
-                child_device = _async_child_device_taking_over_area(self.hass, new)
+                child_device = _async_get_child_device_accepting_area(self.hass, new)
 
             if child_device is not None:
                 child_device_new_area_id = new.area_id
