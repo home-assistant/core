@@ -39,16 +39,17 @@ class DobissLight(CoordinatorEntity[DobissCoordinator], LightEntity):
         super().__init__(entry.runtime_data)
         self._key = light.key
         self._attr_unique_id = f"{entry.entry_id}_{light.key}"
-        controller = dr.async_get(self.coordinator.hass).async_get_device_by_identifier(
-            (DOMAIN, entry.entry_id), entry.entry_id
+        controller_id = dr.async_get_device_id_by_identifier(
+            self.coordinator.hass,
+            (DOMAIN, entry.entry_id),
+            config_entry_id=entry.entry_id,
         )
-        assert controller is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}_{light.key}")},
             name=light.name,
             manufacturer="Dobiss",
             model="NXT output",
-            via_device_id=controller.id,
+            via_device_id=controller_id,
         )
         mode = ColorMode.BRIGHTNESS if light.dimmable else ColorMode.ONOFF
         self._attr_color_mode = mode
