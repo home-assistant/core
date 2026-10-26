@@ -9,7 +9,6 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.openweathermap.const import (
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
-    DEFAULT_OWM_MODE,
     DOMAIN,
     OWM_MODE_V30,
     OWM_MODE_V40,
@@ -85,6 +84,27 @@ async def test_successful_config_flow(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("owm_client_mock")
+async def test_new_config_flow_defaults_to_v40(hass: HomeAssistant) -> None:
+    """New setups use One Call 4.0 when no mode is selected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "foo",
+            CONF_LOCATION: {CONF_LATITUDE: LATITUDE, CONF_LONGITUDE: LONGITUDE},
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"][CONF_MODE] == OWM_MODE_V40
+    assert result["result"].unique_id == f"{LATITUDE}-{LONGITUDE}"
+    assert result["result"].state is ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize("mode", [OWM_MODE_V30], indirect=True)
 @pytest.mark.usefixtures("owm_client_mock")
 async def test_abort_config_flow(
@@ -158,7 +178,7 @@ async def test_config_flow_options_change(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_LANGUAGE: updated_language,
-        CONF_MODE: DEFAULT_OWM_MODE,
+        CONF_MODE: mode,
     }
 
     await hass.async_block_till_done()

@@ -4,9 +4,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openweathermap.const import (
-    DEFAULT_OWM_MODE,
     DOMAIN,
+    OWM_MODE_AIRPOLLUTION,
+    OWM_MODE_FREE_CURRENT,
+    OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
+    OWM_MODE_V40,
 )
 from homeassistant.const import CONF_MODE
 from homeassistant.core import HomeAssistant
@@ -55,4 +58,31 @@ async def test_migration_preserves_v30_default(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.version == 5
-    assert mock_config_entry.options[CONF_MODE] == OWM_MODE_V30 == DEFAULT_OWM_MODE
+    assert mock_config_entry.options[CONF_MODE] == OWM_MODE_V30
+
+
+@pytest.mark.parametrize(
+    "mode",
+    [
+        OWM_MODE_V30,
+        OWM_MODE_V40,
+        OWM_MODE_FREE_CURRENT,
+        OWM_MODE_FREE_FORECAST,
+        OWM_MODE_AIRPOLLUTION,
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("owm_client_mock")
+async def test_existing_config_entry_preserves_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mode: str,
+) -> None:
+    """Existing version 5 entries keep their configured mode."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.version == 5
+    assert mock_config_entry.options[CONF_MODE] == mode
+    assert mock_config_entry.runtime_data.mode == mode

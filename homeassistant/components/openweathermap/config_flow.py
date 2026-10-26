@@ -50,15 +50,6 @@ USER_SCHEMA = probatio.Schema(
     }
 )
 
-OPTIONS_SCHEMA = probatio.Schema(
-    {
-        probatio.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
-            LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
-        ),
-        probatio.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): probatio.In(OWM_MODES),
-    }
-)
-
 
 class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for OpenWeatherMap."""
@@ -134,6 +125,20 @@ class OpenWeatherMapOptionsFlow(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, self.config_entry.options
+                probatio.Schema(
+                    {
+                        probatio.Optional(
+                            CONF_LANGUAGE, default=DEFAULT_LANGUAGE
+                        ): LanguageSelector(
+                            LanguageSelectorConfig(
+                                languages=LANGUAGES, native_name=True
+                            )
+                        ),
+                        probatio.Optional(
+                            CONF_MODE, default=self.config_entry.options[CONF_MODE]
+                        ): probatio.In(OWM_MODES),
+                    }
+                ),
+                self.config_entry.options,
             ),
         )
