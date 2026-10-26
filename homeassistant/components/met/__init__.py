@@ -76,7 +76,11 @@ async def async_migrate_entry(
         data = dict(config_entry.data)
         long = data.pop(CONF_LONGITUDE, None)
         lat = data.pop(CONF_LATITUDE, None)
-        if not data.get(CONF_TRACK_HOME, False):
+        if (
+            not data.get(CONF_TRACK_HOME, False)
+            and long is not None
+            and lat is not None
+        ):
             data[CONF_LOCATION] = {CONF_LATITUDE: lat, CONF_LONGITUDE: long}
         hass.config_entries.async_update_entry(
             config_entry,
