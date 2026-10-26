@@ -9,9 +9,8 @@ import json
 from pathlib import Path
 import re
 import sys
-from typing import Literal
+from typing import Any, Literal
 
-ROOT = Path.cwd()
 KEY = "breaks_in_ha_version"
 # Classes in helpers/deprecation.py that take breaks_in_ha_version positionally.
 POSITIONAL = {
@@ -51,9 +50,9 @@ def parse_version(value: str) -> tuple[int, int] | None:
     return None
 
 
-def dev_version() -> tuple[int, int]:
+def dev_version(root: Path) -> tuple[int, int]:
     """Read the current major and minor version from homeassistant/const.py."""
-    text = (ROOT / "homeassistant/const.py").read_text()
+    text = (root / "homeassistant/const.py").read_text()
     major = re.search(r"^MAJOR_VERSION: Final = (\d+)", text, re.MULTILINE)
     minor = re.search(r"^MINOR_VERSION: Final = (\d+)", text, re.MULTILINE)
     if not major or not minor:
@@ -220,29 +219,15 @@ def branch_name(name: str, version: str) -> str:
     return f"deprecation-cleanup/{slug}-{version}"
 
 
-def main() -> None:
-    """Run the scan and print the result as JSON."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--version",
-        help="Treat this X.Y as the current version instead of the one in const.py",
-    )
-    args = parser.parse_args()
-    if not (ROOT / "homeassistant/const.py").is_file():
-        sys.exit("Run this from the root of a home-assistant/core checkout")
-    if args.version:
-        if (current := parse_version(args.version)) is None:
-            sys.exit(f"Invalid version: {args.version}")
-    else:
-        current = dev_version()
-
+def scan(root: Path, current: tuple[int, int]) -> dict[str, Any]:
+    """Find the deprecations under root/homeassistant that are due at current."""
     trees: dict[str, tuple[str, ast.Module]] = {}
     group_files: dict[str, list[tuple[str, str, ast.Module]]] = {}
     constants: dict[str, dict[str, str]] = {}
-    for path in sorted((ROOT / "homeassistant").rglob("*.py")):
+    for path in sorted((root / "homeassistant").rglob("*.py")):
         text = path.read_text()
         tree = ast.parse(text)
-        rel = path.relative_to(ROOT).as_posix()
+        rel = path.relative_to(root).as_posix()
         name = group_name(rel)[0]
         constants.setdefault(name, {}).update(module_constants(tree))
         group_files.setdefault(name, []).append((rel, text, tree))
@@ -296,17 +281,31 @@ def main() -> None:
         group.oldest_version = f"{oldest[name][0]}.{oldest[name][1]}"
         group.branch = branch_name(group.name, group.oldest_version)
 
-    print(
-        json.dumps(
-            {
-                "current_version": f"{current[0]}.{current[1]}",
-                "groups": [asdict(group) for group in groups.values()],
-                "unresolved": [asdict(item) for item in unresolved],
-                "passthrough": [asdict(item) for item in passthrough],
-            },
-            indent=2,
-        )
+    return {
+        "current_version": f"{current[0]}.{current[1]}",
+        "groups": [asdict(group) for group in groups.values()],
+        "unresolved": [asdict(item) for item in unresolved],
+        "passthrough": [asdict(item) for item in passthrough],
+    }
+
+
+def main() -> None:
+    """Run the scan from the repository root and print the result as JSON."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--version",
+        help="Treat this X.Y as the current version instead of the one in const.py",
     )
+    args = parser.parse_args()
+    root = Path.cwd()
+    if not (root / "homeassistant/const.py").is_file():
+        sys.exit("Run this from the root of a home-assistant/core checkout")
+    if args.version:
+        if (current := parse_version(args.version)) is None:
+            sys.exit(f"Invalid version: {args.version}")
+    else:
+        current = dev_version(root)
+    print(json.dumps(scan(root, current), indent=2))
 
 
 if __name__ == "__main__":
