@@ -907,18 +907,34 @@ TILT_BUTTONS = (
     ],
 )
 @pytest.mark.parametrize(
-    ("feature_map", "expected_features", "unexpected_features", "expected_state"),
+    (
+        "initial_feature_map",
+        "feature_map",
+        "expected_features",
+        "unexpected_features",
+        "expected_state",
+    ),
     [
         pytest.param(
-            0b10010, TILT_BUTTONS, LIFT_BUTTONS, CoverState.CLOSED, id="tilt-only"
+            0b10011,
+            0b10010,
+            TILT_BUTTONS,
+            LIFT_BUTTONS,
+            CoverState.CLOSED,
+            id="tilt-only",
         ),
         # lift without PositionAwareLift has no lift position, so the
         # closed state must not be derived from the tilt position
         pytest.param(
-            0b10011, LIFT_BUTTONS, TILT_BUTTONS, "unknown", id="lift-and-pa-tilt"
+            0b10010,
+            0b10011,
+            LIFT_BUTTONS,
+            TILT_BUTTONS,
+            "unknown",
+            id="lift-and-pa-tilt",
         ),
         # non-conformant feature map falls back to the mandatory lift commands
-        pytest.param(0, LIFT_BUTTONS, TILT_BUTTONS, "unknown", id="empty"),
+        pytest.param(0b10010, 0, LIFT_BUTTONS, TILT_BUTTONS, "unknown", id="empty"),
     ],
 )
 async def test_cover_feature_map(
@@ -927,16 +943,42 @@ async def test_cover_feature_map(
     matter_node: MatterNode,
     entity_id: str,
     freezer: FrozenDateTimeFactory,
+    initial_feature_map: int,
     feature_map: int,
     expected_features: CoverEntityFeature,
     unexpected_features: CoverEntityFeature,
     expected_state: str,
 ) -> None:
     """Test tilt-only handling is selected from the WindowCovering FeatureMap."""
-    set_node_attribute(matter_node, 1, 258, 65532, feature_map)
+    set_node_attribute(matter_node, 1, 258, 65532, initial_feature_map)
     # fully closed tilt
-    set_node_attribute(matter_node, 1, 258, 15, 10000)
-    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    for attribute_id in (12, 15):
+        await set_node_attribute_and_notify(
+            hass,
+            matter_client,
+            matter_node,
+            endpoint=1,
+            cluster_id=258,
+            attribute_id=attribute_id,
+            value=10000,
+        )
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # the FeatureMap change is reported on its own, like a device does
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=258,
+        attribute_id=65532,
+        value=feature_map,
+    )
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
@@ -969,13 +1011,30 @@ async def test_cover_tilt_only_ignores_lift_position(
     lift_position: int | None,
 ) -> None:
     """Test a lift position reported by a tilt-only cover is ignored."""
-    # Tilt and PositionAwareTilt only
-    set_node_attribute(matter_node, 1, 258, 65532, 0b10010)
-    set_node_attribute(matter_node, 1, 258, 14, lift_position)
     # fully closed tilt
-    set_node_attribute(matter_node, 1, 258, 15, 10000)
-    set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    for attribute_id, value in ((14, lift_position), (12, 10000), (15, 10000)):
+        await set_node_attribute_and_notify(
+            hass,
+            matter_client,
+            matter_node,
+            endpoint=1,
+            cluster_id=258,
+            attribute_id=attribute_id,
+            value=value,
+        )
+    # Tilt and PositionAwareTilt only, reported on its own like a device does
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=258,
+        attribute_id=65532,
+        value=0b10010,
+    )
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
