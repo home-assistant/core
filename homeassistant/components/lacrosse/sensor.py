@@ -50,6 +50,7 @@ from .const import (
     DEFAULT_EXPIRE_AFTER,
     DOMAIN,
     TYPES,
+    sensor_entity_key,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,11 +85,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up LaCrosse sensors from a config entry."""
     for subentry in entry.subentries.values():
+        sensors = {
+            sensor_entity_key(subentry.subentry_id, sensor[CONF_TYPE])
+            if key == sensor[CONF_TYPE]
+            else key: sensor
+            for key, sensor in subentry.data[CONF_SENSORS].items()
+        }
         _add_sensors(
             hass,
             entry.runtime_data,
             entry.entry_id,
-            {**entry.data, **subentry.data},
+            {**entry.data, **subentry.data, CONF_SENSORS: sensors},
             lambda entities, subentry_id=subentry.subentry_id: async_add_entities(
                 entities, config_subentry_id=subentry_id
             ),
@@ -123,7 +130,7 @@ def _add_sensors(
 
         typ: str = device_config[CONF_TYPE]
         sensor_class = TYPE_CLASSES[typ]
-        name: str = device_config.get(CONF_FRIENDLY_NAME, device)
+        name = typ.capitalize()
         expire_after: int | None = device_config.get(
             CONF_EXPIRE_AFTER, DEFAULT_EXPIRE_AFTER
         )
@@ -160,6 +167,7 @@ class LaCrosseSensor(SensorEntity):
     _humidity: int | None = None
     _low_battery: bool | None = None
     _new_battery: bool | None = None
+    _attr_has_entity_name = True
 
     def __init__(
         self,

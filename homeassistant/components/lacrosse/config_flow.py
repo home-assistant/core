@@ -34,7 +34,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import SerialPortSelector
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import ensure_unique_string
 
 from .const import (
     CONF_BATTERY,
@@ -327,20 +326,7 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                 details = _sensor_details(user_input)
                 sensors: dict[str, dict[str, Any]] = {}
                 for sensor_type in selected:
-                    key = ensure_unique_string(
-                        sensor_entity_key(
-                            sensor_id,
-                            sensor_type,
-                            user_input.get(CONF_FRIENDLY_NAME),
-                        ),
-                        (
-                            key
-                            for subentry in self._get_entry().subentries.values()
-                            for key in subentry.data[CONF_SENSORS]
-                        ),
-                    )
-
-                    sensors[key] = {
+                    sensors[sensor_type.key] = {
                         **details,
                         CONF_TYPE: sensor_type.key,
                     }
@@ -389,34 +375,22 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                 }
                 entity_registry = er.async_get(self.hass)
                 removed_ids = {
-                    f"{entry.entry_id}_{key}" for key in sensors.keys() - updated.keys()
+                    f"{entry.entry_id}_{sensor_entity_key(reconfigure_subentry.subentry_id, configured[CONF_TYPE]) if key == configured[CONF_TYPE] else key}"
+                    for key, configured in sensors.items()
+                    if key not in updated
                 }
                 for entity in er.async_entries_for_config_entry(
                     entity_registry, entry.entry_id
                 ):
                     if entity.unique_id in removed_ids:
                         entity_registry.async_remove(entity.entity_id)
-                existing_keys = {
-                    configured_key
-                    for subentry in entry.subentries.values()
-                    for configured_key in subentry.data[CONF_SENSORS]
-                }
                 for sensor_type in selected:
                     if any(
                         configured[CONF_TYPE] == sensor_type.key
                         for configured in updated.values()
                     ):
                         continue
-                    key = ensure_unique_string(
-                        sensor_entity_key(
-                            sensor[CONF_ID],
-                            sensor_type,
-                            sensor.get(CONF_FRIENDLY_NAME),
-                        ),
-                        existing_keys,
-                    )
-                    existing_keys.add(key)
-                    updated[key] = {
+                    updated[sensor_type.key] = {
                         **details,
                         CONF_TYPE: sensor_type.key,
                     }
