@@ -308,6 +308,37 @@ def test_scan_forwarded_issue_id(tmp_path: Path, helper: str) -> None:
     ]
 
 
+def test_scan_issue_id_with_unpacked_kwargs(tmp_path: Path) -> None:
+    """Test a positional issue id is found when the call also unpacks kwargs."""
+    write_repo(
+        tmp_path,
+        {
+            "homeassistant/components/kappa/__init__.py": """
+                def setup(hass, options):
+                    async_create_issue(
+                        hass,
+                        "kappa",
+                        "deprecated_yaml",
+                        breaks_in_ha_version="2026.1",
+                        **options,
+                    )
+                    async_create_issue(
+                        hass,
+                        "kappa",
+                        "deprecated_service",
+                        breaks_in_ha_version="2026.1",
+                        **options,
+                    )
+            """,
+        },
+    )
+    result = find.scan(tmp_path, (2026, 1))
+    assert [deprecation["branch"] for deprecation in result["deprecations"]] == [
+        "deprecation-cleanup/kappa-2026.1-deprecated_service",
+        "deprecation-cleanup/kappa-2026.1-deprecated_yaml",
+    ]
+
+
 def test_scan_generic_entity_descriptor(tmp_path: Path) -> None:
     """Test the version passed to a subscripted deprecation class is found."""
     write_repo(

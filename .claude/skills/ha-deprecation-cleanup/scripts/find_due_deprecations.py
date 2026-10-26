@@ -223,13 +223,13 @@ def passed_argument(
     for keyword in call.keywords:
         if keyword.arg == name:
             return keyword.value
-    if any(keyword.arg is None for keyword in call.keywords):
-        return None
     if index is not None:
         if any(isinstance(arg, ast.Starred) for arg in call.args[: index + 1]):
             return None
         if len(call.args) > index:
             return call.args[index]
+    if any(keyword.arg is None for keyword in call.keywords):
+        return None
     return False
 
 
