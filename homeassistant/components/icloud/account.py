@@ -1071,6 +1071,11 @@ class IcloudDevice:
         return self._device.lost_mode_available
 
     @property
+    def sound_available(self) -> bool:
+        """Return whether the device can play a sound."""
+        return self._device.sound_available
+
+    @property
     def raw_status(self) -> dict[str, Any]:
         """Return the raw device data reported by Apple."""
         # update() stores the fetch interval in the status dict, which is

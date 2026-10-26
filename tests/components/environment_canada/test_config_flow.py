@@ -74,6 +74,11 @@ FAKE_STATIONS = [
     {"label": "Montreal, QC", "value": "789"},
 ]
 
+LANGUAGE_PARAMS = [
+    pytest.param("en", "english", id="english"),
+    pytest.param("fr", "french", id="french"),
+]
+
 
 def mocked_ec():
     """Mock the env_canada library."""
@@ -100,10 +105,13 @@ def mocked_stations():
     )
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(("language", "ec_language"), LANGUAGE_PARAMS)
+async def test_create_entry(
+    hass: HomeAssistant, language: str, ec_language: str
+) -> None:
     """Test creating an entry."""
     with (
-        mocked_ec(),
+        mocked_ec() as mock_ec,
         mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
@@ -114,13 +122,14 @@ async def test_create_entry(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], user_input=USER_INPUT
+            flow["flow_id"], user_input={**USER_INPUT, CONF_LANGUAGE: language}
         )
         await hass.async_block_till_done()
+        mock_ec.assert_called_once_with(station_id=TEST_STATION, language=ec_language)
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == FAKE_CONFIG
+        assert result["data"] == {**FAKE_CONFIG, CONF_LANGUAGE: ec_language}
         assert result["title"] == FAKE_TITLE
-        assert result["result"].unique_id == "123-english"
+        assert result["result"].unique_id == f"{TEST_STATION}-{ec_language}"
 
 
 async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
@@ -198,22 +207,24 @@ async def test_exception_handling(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_coordinates_without_station(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(("language", "ec_language"), LANGUAGE_PARAMS)
+async def test_coordinates_without_station(
+    hass: HomeAssistant, language: str, ec_language: str
+) -> None:
     """Test setup with coordinates but no station ID."""
     with (
-        mocked_ec(),
+        mocked_ec() as mock_ec,
         mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
             return_value=None,
         ),
     ):
-        # Config with coordinates but no station
         config_no_station = {
-            CONF_LANGUAGE: "en",
+            CONF_LANGUAGE: language,
             CONF_LOCATION: {
-                CONF_LATITUDE: 42.42,
-                CONF_LONGITUDE: -42.42,
+                CONF_LATITUDE: TEST_LATITUDE,
+                CONF_LONGITUDE: TEST_LONGITUDE,
             },
         }
         flow = await hass.config_entries.flow.async_init(
@@ -223,10 +234,13 @@ async def test_coordinates_without_station(hass: HomeAssistant) -> None:
             flow["flow_id"], config_no_station
         )
         await hass.async_block_till_done()
+        mock_ec.assert_called_once_with(
+            coordinates=(TEST_LATITUDE, TEST_LONGITUDE), language=ec_language
+        )
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == FAKE_CONFIG
+        assert result["data"] == {**FAKE_CONFIG, CONF_LANGUAGE: ec_language}
         assert result["title"] == FAKE_TITLE
-        assert result["result"].unique_id == "123-english"
+        assert result["result"].unique_id == f"{TEST_STATION}-{ec_language}"
 
 
 async def _setup_with_options(

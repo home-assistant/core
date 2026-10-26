@@ -1336,6 +1336,67 @@
     'state': '1000.0',
   })
 # ---
+# name: test_sensor_platform[sensor.hostname_name_download_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_name_download_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'name download rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'name download rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_interface_download_rate',
+    'unique_id': 'uuid_network_name_download_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_download_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name download rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_name_download_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.000164',
+  })
+# ---
 # name: test_sensor_platform[sensor.hostname_name_fan_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1388,6 +1449,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_link_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hostname_name_link_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'name link rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'name link rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_interface_link_rate',
+    'unique_id': 'uuid_network_name_link_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_link_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name link rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_name_link_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '866.7',
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_name_memory_clock_speed-entry]
@@ -1675,6 +1794,111 @@
     'state': '100.0',
   })
 # ---
+# name: test_sensor_platform[sensor.hostname_name_signal_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hostname_name_signal_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'name signal strength',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'name signal strength',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_interface_signal_strength',
+    'unique_id': 'uuid_network_name_signal_strength',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_signal_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name signal strength',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_name_signal_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-55',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_ssid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_name_ssid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'name SSID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'name SSID',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_interface_ssid',
+    'unique_id': 'uuid_network_name_ssid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_ssid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name SSID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_name_ssid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ssid',
+  })
+# ---
 # name: test_sensor_platform[sensor.hostname_name_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1733,6 +1957,67 @@
     'state': '100.0',
   })
 # ---
+# name: test_sensor_platform[sensor.hostname_name_upload_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_name_upload_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'name upload rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'name upload rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_interface_upload_rate',
+    'unique_id': 'uuid_network_name_upload_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_name_upload_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name upload rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_name_upload_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.000156',
+  })
+# ---
 # name: test_sensor_platform[sensor.hostname_name_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1788,6 +2073,128 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_network_download_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_network_download_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network download rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Network download rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_download_rate',
+    'unique_id': 'uuid_network_download_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_network_download_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Network download rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_network_download_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.4e-05',
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_network_upload_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hostname_network_upload_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network upload rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Network upload rate',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_upload_rate',
+    'unique_id': 'uuid_network_upload_rate',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.hostname_network_upload_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Network upload rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hostname_network_upload_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.6e-05',
   })
 # ---
 # name: test_sensor_platform[sensor.hostname_operating_system-entry]
