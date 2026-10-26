@@ -26,7 +26,6 @@ from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import DOMAIN
 
-_OAUTH_RUNTIME_ERRORS = {"No header in request", "No current request in context"}
 _STATUS_VALUES = ["loaded", "error", "not_loaded"]
 _STATUS_STATES: dict[str, set[ConfigEntryState]] = {
     "loaded": {ConfigEntryState.LOADED},
@@ -68,6 +67,15 @@ def _interpolate_placeholders(
     )
 
 
+def _format_short_id(domain: str, target_id: str, all_ids: Iterable[str]) -> str:
+    """Format target_id as a unique '<domain>:<suffix>' ID among all_ids."""
+    others = [item_id for item_id in all_ids if item_id != target_id]
+    length = _MIN_SHORT_ID_LEN
+    while any(other.endswith(target_id[-length:]) for other in others):
+        length += 1
+    return f"{domain}:{target_id[-length:]}"
+
+
 def _format_short_entry_ids(entries: Iterable[ConfigEntry]) -> dict[str, str]:
     """Return a mapping of full entry_id to short '<domain>:<suffix>' ID.
 
@@ -91,20 +99,54 @@ def _format_short_entry_ids(entries: Iterable[ConfigEntry]) -> dict[str, str]:
     return result
 
 
+def _parse_short_id(short_id: str, label: str) -> tuple[str, str]:
+    """Parse and validate a '<domain>:<suffix>' short ID."""
+    domain, sep, suffix = short_id.partition(":")
+    if not sep or not domain or len(suffix) < _MIN_SHORT_ID_LEN:
+        raise HomeAssistantError(f"{label} '{short_id}' not found.")
+    return domain.lower(), suffix
+
+
 def _resolve_short_entry_id(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
     """Resolve a ConfigEntry from a '<domain>:<suffix>' short ID."""
-    domain, sep, suffix = entry_id.partition(":")
-    if not sep or not domain or len(suffix) < _MIN_SHORT_ID_LEN:
-        raise HomeAssistantError(f"Config entry '{entry_id}' not found.")
-
+    domain, suffix = _parse_short_id(entry_id, "Config entry")
     matches = [
         candidate
-        for candidate in hass.config_entries.async_entries(domain.lower())
+        for candidate in hass.config_entries.async_entries(domain)
         if candidate.entry_id.endswith(suffix)
     ]
     if len(matches) != 1:
         raise HomeAssistantError(f"Config entry '{entry_id}' not found.")
+    return matches[0]
 
+
+def _format_short_flow_id(hass: HomeAssistant, domain: str, flow_id: str) -> str:
+    """Format a flow_id as a short '<domain>:<suffix>' ID."""
+    return _format_short_id(
+        domain,
+        flow_id,
+        (
+            flw["flow_id"]
+            for flw in hass.config_entries.flow.async_progress_by_handler(domain)
+        ),
+    )
+
+
+def _resolve_short_flow_id(
+    hass: HomeAssistant, short_flow_id: str
+) -> data_entry_flow.FlowHandler[Any, Any, Any]:
+    """Resolve an active config flow from a '<domain>:<suffix>' short ID."""
+    domain, suffix = _parse_short_id(short_flow_id, "Flow")
+    flow_mgr = hass.config_entries.flow
+    matches = [
+        flw
+        for progress in flow_mgr.async_progress_by_handler(domain)
+        if progress["flow_id"].endswith(suffix)
+        and (flw := flow_mgr._progress.get(progress["flow_id"])) is not None  # noqa: SLF001
+        and flw.cur_step is not None
+    ]
+    if len(matches) != 1:
+        raise HomeAssistantError(f"Flow '{short_flow_id}' not found.")
     return matches[0]
 
 
@@ -144,47 +186,10 @@ def _format_config_entry(entry: ConfigEntry, short_id: str) -> JsonObjectType:
     return result
 
 
-def _enrich_select_options(
-    options: list[Any],
-    selector_trans: dict[str, str],
-    domain: str,
-    trans_domain: str,
-    sel_trans_key: str,
-) -> list[Any]:
-    """Return a new options list with translated labels without mutating the source."""
-    new_options: list[Any] = []
-    for opt in options:
-        opt_val = (
-            opt
-            if isinstance(opt, str)
-            else opt.get("value")
-            if isinstance(opt, dict)
-            else None
-        )
-        if not isinstance(opt_val, str):
-            new_options.append(opt)
-            continue
-        opt_label = selector_trans.get(
-            f"component.{trans_domain}.selector.{sel_trans_key}.options.{opt_val}"
-        ) or selector_trans.get(
-            f"component.{domain}.selector.{sel_trans_key}.options.{opt_val}"
-        )
-        if isinstance(opt, str):
-            new_options.append({"value": opt, "label": opt_label} if opt_label else opt)
-        else:
-            label = opt_label or opt.get("label")
-            new_options.append({**opt, "label": label} if label else dict(opt))
-    return new_options
-
-
 def _enrich_schema_fields(
     fields: list[dict[str, Any]],
     trans: dict[str, str],
-    selector_trans: dict[str, str],
-    domain: str,
-    trans_domain: str,
     prefix: str,
-    trans_prefix: str,
     placeholders: Mapping[str, Any] | None,
 ) -> list[JsonValueType]:
     """Enrich probatio.to_field_list items with resolved translations."""
@@ -202,425 +207,182 @@ def _enrich_schema_fields(
             nested_schema := field.get("schema"), list
         ):
             sec_prefix = f"{prefix}.sections.{name}"
-            trans_sec_prefix = f"{trans_prefix}.sections.{name}"
-            if sec_name := _interpolate_placeholders(
-                trans.get(f"{trans_sec_prefix}.name")
-                or trans.get(f"{sec_prefix}.name"),
-                placeholders,
-            ):
-                field["label"] = sec_name
-            if sec_desc := _interpolate_placeholders(
-                trans.get(f"{trans_sec_prefix}.description")
-                or trans.get(f"{sec_prefix}.description"),
-                placeholders,
-            ):
-                field["description"] = sec_desc
+            label_key, desc_key = f"{sec_prefix}.name", f"{sec_prefix}.description"
             field["schema"] = _enrich_schema_fields(
-                nested_schema,
-                trans,
-                selector_trans,
-                domain,
-                trans_domain,
-                sec_prefix,
-                trans_sec_prefix,
-                placeholders,
+                nested_schema, trans, sec_prefix, placeholders
             )
-            enriched.append(field)
-            continue
+        else:
+            label_key, desc_key = (
+                f"{prefix}.data.{name}",
+                f"{prefix}.data_description.{name}",
+            )
 
-        if label := _interpolate_placeholders(
-            trans.get(f"{trans_prefix}.data.{name}")
-            or trans.get(f"{prefix}.data.{name}"),
-            placeholders,
-        ):
+        if label := _interpolate_placeholders(trans.get(label_key), placeholders):
             field["label"] = label
-        if description := _interpolate_placeholders(
-            trans.get(f"{trans_prefix}.data_description.{name}")
-            or trans.get(f"{prefix}.data_description.{name}"),
-            placeholders,
-        ):
+        if description := _interpolate_placeholders(trans.get(desc_key), placeholders):
             field["description"] = description
-
-        if (
-            isinstance(selector_cfg := field.get("selector"), dict)
-            and isinstance(select_cfg := selector_cfg.get("select"), dict)
-            and isinstance(options := select_cfg.get("options"), list)
-        ):
-            sel_trans_key = select_cfg.get("translation_key") or name
-            field["selector"] = {
-                **selector_cfg,
-                "select": {
-                    **select_cfg,
-                    "options": _enrich_select_options(
-                        options, selector_trans, domain, trans_domain, sel_trans_key
-                    ),
-                },
-            }
 
         enriched.append(field)
     return enriched
 
 
-def _resolve_step_title_and_description(
-    formatted: JsonObjectType,
+def _format_menu_options(
+    raw_menu_options: Any,
     trans: dict[str, str],
-    title_trans: dict[str, str],
-    domain: str,
     step_prefix: str,
-    trans_step_prefix: str,
-    placeholders: Mapping[str, Any] | None,
-) -> None:
-    """Populate step title and description on a formatted flow step."""
-    title = (
-        trans.get(f"{trans_step_prefix}.title")
-        or trans.get(f"{step_prefix}.title")
-        or title_trans.get(f"component.{domain}.title")
-    )
-    if title := _interpolate_placeholders(title, placeholders):
-        formatted["title"] = title
-
-    description = trans.get(f"{trans_step_prefix}.description") or trans.get(
-        f"{step_prefix}.description"
-    )
-    if description := _interpolate_placeholders(description, placeholders):
-        formatted["description"] = description
-
-
-def _translate_errors(
-    errors: Mapping[str, Any],
-    trans: dict[str, str],
-    base_prefix: str,
-    domain_prefix: str,
     placeholders: Mapping[str, Any] | None,
 ) -> JsonObjectType:
-    """Translate a dictionary of field error keys."""
+    """Format and translate menu_options for a MENU flow step."""
+    menu_options_out: JsonObjectType = {}
+    if not isinstance(raw_menu_options, Iterable):
+        return menu_options_out
+    for opt in raw_menu_options:
+        fallback = (
+            raw_menu_options[opt] if isinstance(raw_menu_options, Mapping) else opt
+        )
+        label = trans.get(f"{step_prefix}.menu_options.{opt}") or fallback
+        opt_desc = trans.get(f"{step_prefix}.menu_option_descriptions.{opt}")
+        label_str = _interpolate_placeholders(label, placeholders) or opt
+        if opt_desc_str := _interpolate_placeholders(opt_desc, placeholders):
+            menu_options_out[opt] = {"label": label_str, "description": opt_desc_str}
+        else:
+            menu_options_out[opt] = label_str
+    return menu_options_out
 
-    def _translate_one(err_val: Any) -> Any:
-        if isinstance(err_val, str):
-            err_msg = (
-                trans.get(f"{base_prefix}.error.{err_val}")
-                or trans.get(f"{domain_prefix}.error.{err_val}")
-                or err_val
-            )
-            return _interpolate_placeholders(err_msg, placeholders) or err_val
-        if isinstance(err_val, list):
-            return [_translate_one(item) for item in err_val]
-        return err_val
 
-    return {err_field: _translate_one(err_val) for err_field, err_val in errors.items()}
+def _build_external_step_error(domain: str) -> ToolResult:
+    """Return an error ToolResult directing the user to complete OAuth/external setup in the UI."""
+    frontend_url = f"/config/integrations/dashboard/add?domain={domain}"
+    return ToolResult(
+        data={
+            "error": (
+                f"Integration '{domain}' requires browser authentication (OAuth / external step) "
+                f"and must be configured in the Home Assistant UI at {frontend_url}."
+            ),
+            "frontend_url": frontend_url,
+        },
+        error=True,
+    )
 
 
-async def _async_load_flow_translations(
+async def _async_finalize_flow_step(
     hass: HomeAssistant,
+    result: data_entry_flow.FlowResult[Any, Any],
     domain: str,
-    trans_domain: str,
     language: str | None,
-) -> tuple[dict[str, str], str, str, str]:
-    """Load config flow translations and construct translation key prefixes."""
+) -> ToolResult:
+    """Handle external/OAuth steps or format a DataEntryFlow result with translations."""
+    flow_type = result["type"]
+    if (
+        flow_type is data_entry_flow.FlowResultType.EXTERNAL_STEP
+        or result.get("step_id") == "pick_implementation"
+    ):
+        with suppress(data_entry_flow.UnknownFlow):
+            hass.config_entries.flow.async_abort(result["flow_id"])
+        return _build_external_step_error(domain)
+    if (
+        flow_type is data_entry_flow.FlowResultType.ABORT
+        and result.get("reason") == "missing_credentials"
+    ):
+        return _build_external_step_error(domain)
+
     lang = _resolve_language(hass, language)
+    trans_domain: str = result.get("translation_domain") or domain
     trans = await translation.async_get_translations(
         hass, lang, "config", {domain, trans_domain, "homeassistant"}
     )
+    title_trans = await translation.async_get_translations(
+        hass, lang, "title", {domain}
+    )
     base_prefix = f"component.{trans_domain}.config"
-    domain_prefix = f"component.{domain}.config"
-    return trans, base_prefix, domain_prefix, lang
+    placeholders: Mapping[str, Any] | None = result.get("description_placeholders")
+    formatted: JsonObjectType = {
+        "flow_id": _format_short_flow_id(hass, domain, result["flow_id"]),
+        "type": str(flow_type),
+    }
 
-
-def _format_form_step(
-    formatted: JsonObjectType,
-    result: data_entry_flow.FlowResult[Any, Any],
-    trans: dict[str, str],
-    title_trans: dict[str, str],
-    selector_trans: dict[str, str],
-    domain: str,
-    trans_domain: str,
-    base_prefix: str,
-    domain_prefix: str,
-    placeholders: Mapping[str, Any] | None,
-) -> None:
-    """Populate fields and errors for a FORM flow result."""
-    step_id = result["step_id"]
-    formatted["step_id"] = step_id
-    step_prefix = f"{domain_prefix}.step.{step_id}"
-    trans_step_prefix = f"{base_prefix}.step.{step_id}"
-
-    _resolve_step_title_and_description(
-        formatted,
-        trans,
-        title_trans,
-        domain,
-        step_prefix,
-        trans_step_prefix,
-        placeholders,
-    )
-    if (last_step := result.get("last_step")) is not None:
-        formatted["last_step"] = last_step
-
-    schema = result.get("data_schema")
-    serialized = (
-        probatio.to_field_list(schema, custom_serializer=cv.custom_serializer)
-        if schema is not None
-        else []
-    )
-    raw_fields = serialized if isinstance(serialized, list) else []
-    if schema is not None and raw_fields:
-        data_entry_flow.add_visible_conditions_to_serialized_schema(schema, raw_fields)
-    formatted["fields"] = _enrich_schema_fields(
-        raw_fields,
-        trans,
-        selector_trans,
-        domain,
-        trans_domain,
-        step_prefix,
-        trans_step_prefix,
-        placeholders,
-    )
-
-    if err_source := result.get("errors"):
-        formatted["errors"] = _translate_errors(
-            err_source,
-            trans,
-            base_prefix,
-            domain_prefix,
-            placeholders,
-        )
-
-
-def _format_menu_step(
-    formatted: JsonObjectType,
-    result: data_entry_flow.FlowResult[Any, Any],
-    trans: dict[str, str],
-    title_trans: dict[str, str],
-    domain: str,
-    base_prefix: str,
-    domain_prefix: str,
-    placeholders: Mapping[str, Any] | None,
-) -> None:
-    """Populate menu_options for a MENU flow result."""
-    step_id = result["step_id"]
-    formatted["step_id"] = step_id
-    step_prefix = f"{domain_prefix}.step.{step_id}"
-    trans_step_prefix = f"{base_prefix}.step.{step_id}"
-
-    _resolve_step_title_and_description(
-        formatted,
-        trans,
-        title_trans,
-        domain,
-        step_prefix,
-        trans_step_prefix,
-        placeholders,
-    )
-
-    raw_menu_options = result.get("menu_options", [])
-    menu_options_out: JsonObjectType = {}
-    option_keys: Iterable[str] = (
-        raw_menu_options.keys()
-        if isinstance(raw_menu_options, Mapping)
-        else raw_menu_options
-        if isinstance(raw_menu_options, Iterable)
-        else ()
-    )
-
-    for opt in option_keys:
-        label = (
-            trans.get(f"{trans_step_prefix}.menu_options.{opt}")
-            or trans.get(f"{step_prefix}.menu_options.{opt}")
-            or (raw_menu_options[opt] if isinstance(raw_menu_options, Mapping) else opt)
-        )
-        opt_desc = trans.get(
-            f"{trans_step_prefix}.menu_option_descriptions.{opt}"
-        ) or trans.get(f"{step_prefix}.menu_option_descriptions.{opt}")
-        label_str = _interpolate_placeholders(label, placeholders) or opt
-        if opt_desc_str := _interpolate_placeholders(opt_desc, placeholders):
-            menu_options_out[opt] = {
-                "label": label_str,
-                "description": opt_desc_str,
-            }
-        else:
-            menu_options_out[opt] = label_str
-    formatted["menu_options"] = menu_options_out
-
-
-def _format_terminal_or_progress_step(
-    hass: HomeAssistant,
-    formatted: JsonObjectType,
-    result: data_entry_flow.FlowResult[Any, Any],
-    flow_type: data_entry_flow.FlowResultType | str,
-    trans: dict[str, str],
-    title_trans: dict[str, str],
-    domain: str,
-    base_prefix: str,
-    domain_prefix: str,
-    placeholders: Mapping[str, Any] | None,
-) -> None:
-    """Populate fields for CREATE_ENTRY, ABORT, or SHOW_PROGRESS."""
-    if flow_type is data_entry_flow.FlowResultType.CREATE_ENTRY:
-        if title := result.get("title"):
-            formatted["title"] = title
-        desc_key = result.get("description") or "default"
-        if desc := _interpolate_placeholders(
-            trans.get(f"{base_prefix}.create_entry.{desc_key}")
-            or trans.get(f"{domain_prefix}.create_entry.{desc_key}"),
-            placeholders,
-        ):
-            formatted["description"] = desc
-        if isinstance(created_entry := result.get("result"), ConfigEntry):
-            short_ids = _format_short_entry_ids(
-                hass.config_entries.async_entries(
-                    created_entry.domain, include_ignore=True, include_disabled=True
-                )
-            )
-            formatted["entry_id"] = short_ids.get(
-                created_entry.entry_id,
-                f"{created_entry.domain}:{created_entry.entry_id[-_MIN_SHORT_ID_LEN:]}",
-            )
-
-    elif flow_type is data_entry_flow.FlowResultType.ABORT:
-        reason = result["reason"]
-        formatted["reason"] = reason
-        abort_msg = (
-            trans.get(f"{base_prefix}.abort.{reason}")
-            or trans.get(f"{domain_prefix}.abort.{reason}")
-            or trans.get(f"component.homeassistant.config.abort.{reason}")
-        )
-        if abort_text := _interpolate_placeholders(abort_msg, placeholders):
-            formatted["description"] = abort_text
-
-    elif flow_type is data_entry_flow.FlowResultType.SHOW_PROGRESS:
-        step_id = result["step_id"]
-        progress_action = result["progress_action"]
+    if (step_id := result.get("step_id")) is not None:
         formatted["step_id"] = step_id
-        formatted["progress_action"] = progress_action
-        step_prefix = f"{domain_prefix}.step.{step_id}"
-        trans_step_prefix = f"{base_prefix}.step.{step_id}"
+        step_prefix = f"{base_prefix}.step.{step_id}"
         if title := _interpolate_placeholders(
-            trans.get(f"{trans_step_prefix}.title")
-            or trans.get(f"{step_prefix}.title")
+            trans.get(f"{step_prefix}.title")
             or title_trans.get(f"component.{domain}.title"),
             placeholders,
         ):
             formatted["title"] = title
         if description := _interpolate_placeholders(
-            trans.get(f"{base_prefix}.progress.{progress_action}")
-            or trans.get(f"{domain_prefix}.progress.{progress_action}"),
-            placeholders,
+            trans.get(f"{step_prefix}.description"), placeholders
         ):
             formatted["description"] = description
 
-    if isinstance(next_flow := result.get("next_flow"), tuple) and len(next_flow) == 2:
-        formatted["next_flow"] = {
-            "flow_type": str(next_flow[0]),
-            "flow_id": str(next_flow[1]),
-        }
+        if flow_type is data_entry_flow.FlowResultType.FORM:
+            if (last_step := result.get("last_step")) is not None:
+                formatted["last_step"] = last_step
+            raw_fields: list[dict[str, Any]] = []
+            if (schema := result.get("data_schema")) is not None and isinstance(
+                serialized := probatio.to_field_list(
+                    schema, custom_serializer=cv.custom_serializer
+                ),
+                list,
+            ):
+                raw_fields = serialized
+                data_entry_flow.add_visible_conditions_to_serialized_schema(
+                    schema, raw_fields
+                )
+            formatted["fields"] = _enrich_schema_fields(
+                raw_fields, trans, step_prefix, placeholders
+            )
+            if err_source := result.get("errors"):
+                formatted["errors"] = {
+                    err_field: (
+                        _interpolate_placeholders(
+                            trans.get(f"{base_prefix}.error.{err_val}", err_val),
+                            placeholders,
+                        )
+                        or err_val
+                    )
+                    for err_field, err_val in err_source.items()
+                }
+        elif flow_type is data_entry_flow.FlowResultType.MENU:
+            formatted["menu_options"] = _format_menu_options(
+                result.get("menu_options", []), trans, step_prefix, placeholders
+            )
+        elif flow_type is data_entry_flow.FlowResultType.SHOW_PROGRESS:
+            progress_action = result["progress_action"]
+            formatted["progress_action"] = progress_action
+            if description := _interpolate_placeholders(
+                trans.get(f"{base_prefix}.progress.{progress_action}"), placeholders
+            ):
+                formatted["description"] = description
 
+    elif flow_type is data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if title := result.get("title"):
+            formatted["title"] = title
+        desc_key = result.get("description") or "default"
+        if desc := _interpolate_placeholders(
+            trans.get(f"{base_prefix}.create_entry.{desc_key}"), placeholders
+        ):
+            formatted["description"] = desc
+        if isinstance(created_entry := result.get("result"), ConfigEntry):
+            formatted["entry_id"] = _format_short_id(
+                created_entry.domain,
+                created_entry.entry_id,
+                (
+                    entry.entry_id
+                    for entry in hass.config_entries.async_entries(created_entry.domain)
+                ),
+            )
 
-async def async_format_flow_result(
-    hass: HomeAssistant,
-    result: data_entry_flow.FlowResult[Any, Any],
-    domain: str,
-    language: str | None,
-) -> JsonObjectType:
-    """Format a DataEntryFlow result with resolved translations and field metadata."""
-    trans_domain: str = result.get("translation_domain") or domain
-    (
-        trans,
-        base_prefix,
-        domain_prefix,
-        lang,
-    ) = await _async_load_flow_translations(hass, domain, trans_domain, language)
-    title_trans = await translation.async_get_translations(
-        hass, lang, "title", {domain}
-    )
-
-    placeholders: Mapping[str, Any] | None = result.get("description_placeholders")
-    flow_type = result["type"]
-    formatted: JsonObjectType = {
-        "flow_id": result["flow_id"],
-        "type": str(
-            flow_type.value
-            if isinstance(flow_type, data_entry_flow.FlowResultType)
-            else flow_type
-        ),
-    }
-
-    if flow_type is data_entry_flow.FlowResultType.FORM:
-        selector_trans = await translation.async_get_translations(
-            hass, lang, "selector", {domain, trans_domain, "homeassistant"}
+    elif flow_type is data_entry_flow.FlowResultType.ABORT:
+        reason = result["reason"]
+        formatted["reason"] = reason
+        abort_msg = trans.get(f"{base_prefix}.abort.{reason}") or trans.get(
+            f"component.homeassistant.config.abort.{reason}"
         )
-        _format_form_step(
-            formatted,
-            result,
-            trans,
-            title_trans,
-            selector_trans,
-            domain,
-            trans_domain,
-            base_prefix,
-            domain_prefix,
-            placeholders,
-        )
-    elif flow_type is data_entry_flow.FlowResultType.MENU:
-        _format_menu_step(
-            formatted,
-            result,
-            trans,
-            title_trans,
-            domain,
-            base_prefix,
-            domain_prefix,
-            placeholders,
-        )
-    else:
-        _format_terminal_or_progress_step(
-            hass,
-            formatted,
-            result,
-            flow_type,
-            trans,
-            title_trans,
-            domain,
-            base_prefix,
-            domain_prefix,
-            placeholders,
-        )
+        if abort_text := _interpolate_placeholders(abort_msg, placeholders):
+            formatted["description"] = abort_text
 
-    return formatted
-
-
-async def async_format_schema_errors(
-    hass: HomeAssistant,
-    flow_id: str,
-    cur_step: data_entry_flow.FlowResult[Any, Any],
-    schema_errors: dict[str, Any],
-    domain: str,
-    language: str | None,
-) -> JsonObjectType:
-    """Format schema validation errors for a flow step without re-serializing fields."""
-    trans_domain: str = cur_step.get("translation_domain") or domain
-    (
-        trans,
-        base_prefix,
-        domain_prefix,
-        _,
-    ) = await _async_load_flow_translations(hass, domain, trans_domain, language)
-    flow_type = cur_step["type"]
-    return {
-        "flow_id": flow_id,
-        "type": str(
-            flow_type.value
-            if isinstance(flow_type, data_entry_flow.FlowResultType)
-            else flow_type
-        ),
-        "step_id": str(cur_step.get("step_id", "user")),
-        "errors": _translate_errors(
-            schema_errors,
-            trans,
-            base_prefix,
-            domain_prefix,
-            cur_step.get("description_placeholders"),
-        ),
-    }
+    return ToolResult(data={"result": formatted})
 
 
 class GetConfigEntriesTool(Tool):
@@ -669,9 +431,7 @@ class GetConfigEntriesTool(Tool):
         domain_filter: str | list[str] | None = args.get("domain")
         status_filter: str | None = args.get("status")
 
-        entries = hass.config_entries.async_entries(
-            include_ignore=True, include_disabled=True
-        )
+        entries = hass.config_entries.async_entries()
 
         if domain_filter is not None:
             domains = {
@@ -765,60 +525,6 @@ class ReloadConfigEntryTool(Tool):
         return ToolResult(data={"result": result})
 
 
-def _build_external_step_error(domain: str) -> ToolResult:
-    """Return an error ToolResult directing the user to complete OAuth/external setup in the UI."""
-    frontend_url = f"/config/integrations/dashboard/add?domain={domain}"
-    return ToolResult(
-        data={
-            "error": (
-                f"Integration '{domain}' requires browser authentication (OAuth / external step) "
-                f"and must be configured in the Home Assistant UI at {frontend_url}."
-            ),
-            "frontend_url": frontend_url,
-        },
-        error=True,
-    )
-
-
-def _abort_uninitialized_flows(
-    flow_mgr: data_entry_flow.FlowManager[Any, Any, Any], domain: str
-) -> None:
-    """Abort any uninitialized user flows left behind when async_init raises."""
-    for flw in flow_mgr.async_progress_by_handler(domain, include_uninitialized=True):
-        if (
-            "step_id" not in flw
-            and flw["context"].get("source") == config_entries.SOURCE_USER
-        ):
-            with suppress(data_entry_flow.UnknownFlow):
-                flow_mgr.async_abort(flw["flow_id"])
-
-
-async def _async_finalize_flow_step(
-    hass: HomeAssistant,
-    flow_mgr: data_entry_flow.FlowManager[Any, Any, Any],
-    result: data_entry_flow.FlowResult[Any, Any],
-    domain: str,
-    language: str | None,
-) -> ToolResult:
-    """Handle external/OAuth steps or format the flow result."""
-    flow_type = result["type"]
-    if (
-        flow_type is data_entry_flow.FlowResultType.EXTERNAL_STEP
-        or result.get("step_id") == "pick_implementation"
-    ):
-        with suppress(data_entry_flow.UnknownFlow):
-            flow_mgr.async_abort(result["flow_id"])
-        return _build_external_step_error(domain)
-    if (
-        flow_type is data_entry_flow.FlowResultType.ABORT
-        and result.get("reason") == "missing_credentials"
-    ):
-        return _build_external_step_error(domain)
-
-    formatted = await async_format_flow_result(hass, result, domain, language)
-    return ToolResult(data={"result": formatted})
-
-
 # Only user-initiated config flows are exposed here for now. Listing background
 # discovery/reauth flows in progress, as well as starting options, reconfigure,
 # and subentry flows on existing entries, are omitted for now.
@@ -860,27 +566,15 @@ class StartFlowTool(Tool):
             return _error_result(
                 f"Integration '{domain}' does not exist or does not support config flows."
             )
-        except RuntimeError as err:
-            if str(err) not in _OAUTH_RUNTIME_ERRORS:
-                raise
-            _abort_uninitialized_flows(hass.config_entries.flow, domain)
-            return _build_external_step_error(domain)
-        except data_entry_flow.UnknownStep as err:
-            return _error_result(str(err))
         except DependencyError as err:
             return _error_result(
                 f"Failed dependencies: {', '.join(err.failed_dependencies)}"
             )
         except HomeAssistantError as err:
-            _abort_uninitialized_flows(hass.config_entries.flow, domain)
             return _error_result(str(err))
 
         return await _async_finalize_flow_step(
-            hass,
-            hass.config_entries.flow,
-            result,
-            domain,
-            llm_context.language,
+            hass, result, domain, llm_context.language
         )
 
 
@@ -905,7 +599,7 @@ class ConfigureFlowTool(Tool):
         {
             probatio.Required(
                 "flow_id",
-                description="The flow_id of the in-progress flow.",
+                description="The flow_id of the in-progress flow (e.g. 'random:8K2M').",
             ): _NON_EMPTY_STRING,
             probatio.Optional(
                 "user_input",
@@ -934,7 +628,7 @@ class ConfigureFlowTool(Tool):
     ) -> ToolResult:
         """Configure or abort the specified flow."""
         args = self.parameters(tool_input.tool_args)
-        flow_id: str = args["flow_id"]
+        short_flow_id: str = args["flow_id"]
         user_input: dict[str, Any] | None = args.get("user_input")
         next_step_id: str | None = args.get("next_step_id")
         abort: bool = args["abort"]
@@ -947,20 +641,24 @@ class ConfigureFlowTool(Tool):
                 "to select a menu option."
             )
 
-        flow_mgr = hass.config_entries.flow
-        if (
-            flow_handler := flow_mgr._progress.get(flow_id)  # noqa: SLF001
-        ) is None or (cur_step := flow_handler.cur_step) is None:
-            return _error_result(f"Flow '{flow_id}' not found.")
+        try:
+            flow_handler = _resolve_short_flow_id(hass, short_flow_id)
+        except HomeAssistantError as err:
+            return _error_result(str(err))
 
+        flow_mgr = hass.config_entries.flow
+        flow_id = flow_handler.flow_id
+        cur_step = flow_handler.cur_step
+        assert cur_step is not None
         domain = str(flow_handler.handler)
+        canonical_short_id = _format_short_flow_id(hass, domain, flow_id)
 
         if abort:
             flow_mgr.async_abort(flow_id)
             return ToolResult(
                 data={
                     "result": {
-                        "flow_id": flow_id,
+                        "flow_id": canonical_short_id,
                         "type": "abort",
                         "reason": "aborted",
                     }
@@ -968,17 +666,6 @@ class ConfigureFlowTool(Tool):
             )
 
         cur_type = cur_step.get("type")
-        if (
-            cur_type is data_entry_flow.FlowResultType.EXTERNAL_STEP
-            or cur_step.get("step_id") == "pick_implementation"
-        ):
-            return await _async_finalize_flow_step(
-                hass,
-                flow_mgr,
-                cur_step,
-                domain,
-                llm_context.language,
-            )
         if cur_type is data_entry_flow.FlowResultType.MENU and user_input is not None:
             return _error_result(
                 "Current step is a 'menu' step; pass the chosen option in "
@@ -1002,47 +689,34 @@ class ConfigureFlowTool(Tool):
             and (progress_task := flow_handler.async_get_progress_task()) is not None
             and not progress_task.done()
         ):
-            return await _async_finalize_flow_step(
-                hass,
-                flow_mgr,
-                cur_step,
-                domain,
-                llm_context.language,
+            result = cur_step
+        else:
+            flow_input: dict[str, Any] | None = (
+                {"next_step_id": next_step_id}
+                if next_step_id is not None
+                else user_input
             )
-
-        flow_input: dict[str, Any] | None = (
-            {"next_step_id": next_step_id} if next_step_id is not None else user_input
-        )
-
-        try:
-            result = await flow_mgr.async_configure(flow_id, flow_input)
-        except data_entry_flow.InvalidData as err:
-            formatted = await async_format_schema_errors(
-                hass,
-                flow_id,
-                cur_step,
-                err.schema_errors,
-                domain,
-                llm_context.language,
-            )
-            return ToolResult(data={"result": formatted}, error=True)
-        except RuntimeError as err:
-            if str(err) not in _OAUTH_RUNTIME_ERRORS:
-                raise
-            with suppress(data_entry_flow.UnknownFlow):
-                flow_mgr.async_abort(flow_id)
-            return _build_external_step_error(domain)
-        except data_entry_flow.UnknownFlow:
-            return _error_result(f"Flow '{flow_id}' not found.")
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+            try:
+                result = await flow_mgr.async_configure(flow_id, flow_input)
+            except data_entry_flow.InvalidData as err:
+                return ToolResult(
+                    data={
+                        "result": {
+                            "flow_id": canonical_short_id,
+                            "type": str(cur_type),
+                            "step_id": str(cur_step.get("step_id", "user")),
+                            "errors": err.schema_errors,
+                        }
+                    },
+                    error=True,
+                )
+            except data_entry_flow.UnknownFlow:
+                return _error_result(f"Flow '{short_flow_id}' not found.")
+            except HomeAssistantError as err:
+                return _error_result(str(err))
 
         return await _async_finalize_flow_step(
-            hass,
-            flow_mgr,
-            result,
-            domain,
-            llm_context.language,
+            hass, result, domain, llm_context.language
         )
 
 

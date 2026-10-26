@@ -967,6 +967,7 @@ async def test_config_flow_sections_selectors_and_progress(
         assert step1.error is False
         assert isinstance(res1 := step1.data["result"], dict)
         flow_id = str(res1["flow_id"])
+        assert flow_id.startswith(f"{TEST_DOMAIN}:")
         assert res1["title"] == "Connect Bridge"
         assert res1["description"] == "Configure Bridge"
         assert res1["last_step"] is False
@@ -975,14 +976,11 @@ async def test_config_flow_sections_selectors_and_progress(
         assert host_field["label"] == "Host address"
         assert host_field["description"] == "IP or hostname"
         assert host_field["suggested_value"] == "auto"
-        assert host_field["selector"]["select"]["options"] == [
-            {"value": "auto", "label": "Auto-discover"},
-            "manual",
-        ]
+        assert host_field["selector"]["select"]["options"] == ["auto", "manual"]
         assert isinstance(mode_field := fields[1], dict)
         assert "suggested_value" not in mode_field
         assert mode_field["selector"]["select"]["options"] == [
-            {"value": "fast", "label": "Fast mode"},
+            {"value": "fast", "label": "Fallback Fast"},
             {"value": "slow", "label": "Slow mode"},
         ]
         assert isinstance(sec_field := fields[2], dict)
@@ -1112,6 +1110,16 @@ async def test_abort_flow_and_error_cases(
         error=True,
     )
 
+    err_unmatched_suffix = await configure_tool.async_call(
+        hass,
+        llm.ToolInput(configure_tool.name, {"flow_id": "random:9999"}),
+        llm_context,
+    )
+    assert err_unmatched_suffix == llm.ToolResult(
+        data={"error": "Flow 'random:9999' not found."},
+        error=True,
+    )
+
     step1 = await start_tool.async_call(
         hass,
         llm.ToolInput(start_tool.name, {"domain": "random"}),
@@ -1119,6 +1127,7 @@ async def test_abort_flow_and_error_cases(
     )
     assert isinstance(step1_res := step1.data["result"], dict)
     assert isinstance(flow_id := step1_res["flow_id"], str)
+    assert flow_id.startswith("random:")
 
     aborted = await configure_tool.async_call(
         hass,
@@ -1176,11 +1185,6 @@ async def _step_missing_credentials(flow: _BaseOAuthTestFlow) -> ConfigFlowResul
     return flow.async_abort(reason="missing_credentials")
 
 
-async def _step_oauth_runtime_error(flow: _BaseOAuthTestFlow) -> ConfigFlowResult:
-    """Raise an OAuth RuntimeError when no HTTP request is in context."""
-    raise RuntimeError("No header in request")
-
-
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
 @pytest.mark.usefixtures("ignore_translations_for_mock_domains")
 @pytest.mark.parametrize(
@@ -1189,7 +1193,6 @@ async def _step_oauth_runtime_error(flow: _BaseOAuthTestFlow) -> ConfigFlowResul
         pytest.param(_step_external, id="external_step"),
         pytest.param(_step_pick_implementation, id="pick_implementation"),
         pytest.param(_step_missing_credentials, id="missing_credentials"),
-        pytest.param(_step_oauth_runtime_error, id="oauth_runtime_error"),
     ],
 )
 async def test_oauth_and_external_step_new_flow(
@@ -1232,17 +1235,9 @@ async def test_oauth_and_external_step_new_flow(
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
 @pytest.mark.usefixtures("ignore_translations_for_mock_domains")
-@pytest.mark.parametrize(
-    "step_action",
-    [
-        pytest.param(_step_external, id="external_step"),
-        pytest.param(_step_oauth_runtime_error, id="oauth_runtime_error"),
-    ],
-)
 async def test_oauth_and_external_step_on_configure_step(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
-    step_action: Callable[[_BaseOAuthTestFlow], Coroutine[Any, Any, ConfigFlowResult]],
 ) -> None:
     """Test flows hitting OAuth/external steps on step 2 abort cleanly and return a frontend URL."""
     mock_integration(hass, MockModule(TEST_DOMAIN))
@@ -1256,7 +1251,7 @@ async def test_oauth_and_external_step_on_configure_step(
             self, user_input: dict[str, Any] | None = None
         ) -> ConfigFlowResult:
             if user_input is not None:
-                return await step_action(self)
+                return await self.async_step_auth()
             return self.async_show_form(step_id="user")
 
     with mock_config_flow(TEST_DOMAIN, TwoStepOAuthFlow):

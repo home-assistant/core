@@ -10,7 +10,7 @@
           'type': 'boolean',
         }),
         'flow_id': dict({
-          'description': 'The flow_id of the in-progress flow.',
+          'description': "The flow_id of the in-progress flow (e.g. 'random:8K2M').",
           'format': 'strip',
           'type': 'string',
         }),
