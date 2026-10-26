@@ -18,6 +18,7 @@ from ouman_eh_800_api import (
     SystemEndpoints,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -31,8 +32,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import SCENARIOS
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize("scenario", SCENARIOS.keys(), indirect=True)

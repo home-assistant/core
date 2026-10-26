@@ -165,6 +165,9 @@ class LLMContext:
     device_id: str | None
     """Device that is making the request."""
 
+    agent_id: str | None = None
+    """Conversation agent or AI task entity that is handling the LLM request."""
+
 
 @dataclass(slots=True)
 class ToolInput:
@@ -681,7 +684,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
 
     if isinstance(schema, selector.TargetSelector):
         return probatio.to_openapi(
-            cv.TARGET_FIELDS, custom_serializer=selector_serializer
+            cv.TARGET_ID_FIELDS, custom_serializer=selector_serializer
         )
 
     if isinstance(schema, selector.TemplateSelector):

@@ -5,11 +5,10 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.droplet.const import DOMAIN
 from homeassistant.const import CONF_CODE, CONF_IP_ADDRESS, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 MOCK_CODE = "11223"
 MOCK_HOST = "192.168.1.2"

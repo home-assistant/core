@@ -1,6 +1,7 @@
 {
   "domain": "sharkiq",
   "name": "Shark IQ",
+  "categories": ["appliances_cleaning.cleaning"],
   "codeowners": ["@JeffResc", "@funkybunch"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sharkiq",

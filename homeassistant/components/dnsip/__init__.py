@@ -37,7 +37,7 @@ class DnsIPRuntimeData:
 type DnsIPConfigEntry = ConfigEntry[DnsIPRuntimeData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> None:
     """Set up DNS IP from a config entry."""
 
     hostname = entry.data[CONF_HOSTNAME]
@@ -91,24 +91,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> boo
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> None:
     """Unload DNS IP config entry."""
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        if entry.runtime_data.resolver_ipv4 is not None:
-            await entry.runtime_data.resolver_ipv4.close()
-        if entry.runtime_data.resolver_ipv6 is not None:
-            await entry.runtime_data.resolver_ipv6.close()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    if entry.runtime_data.resolver_ipv4 is not None:
+        await entry.runtime_data.resolver_ipv4.close()
+    if entry.runtime_data.resolver_ipv6 is not None:
+        await entry.runtime_data.resolver_ipv6.close()
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: DnsIPConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry to a newer version."""
 
     if config_entry.version < 2 and config_entry.minor_version < 2:
@@ -140,5 +137,3 @@ async def async_migrate_entry(
         )
 
         _LOGGER.debug("Migration to configuration version %s.%s successful", 1, 3)
-
-    return True

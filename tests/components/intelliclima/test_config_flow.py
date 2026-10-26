@@ -9,6 +9,7 @@ from pyintelliclima.api import (
     IntelliClimaDevices,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.intelliclima.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import create_eco_device
-
-from tests.common import MockConfigEntry
 
 DATA_CONFIG = {
     CONF_USERNAME: "SuperUser",

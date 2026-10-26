@@ -13,6 +13,11 @@ from elmax_api.constants import (
 from httpx2 import Response
 import jwt
 import pytest
+from pytest_homeassistant.common import (
+    load_fixture,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 import respx
 
 from homeassistant.util import dt as dt_util
@@ -25,8 +30,6 @@ from . import (
     MOCK_PANEL_ID,
     MOCK_PANEL_PIN,
 )
-
-from tests.common import load_fixture, load_json_array_fixture, load_json_object_fixture
 
 TOKEN_SIGNING_KEY = "elmax-test-token-signing-key-0123"
 

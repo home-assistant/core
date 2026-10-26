@@ -4,6 +4,7 @@ from unittest.mock import _Call, call
 
 from haphilipsjs import PhilipsTV
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
@@ -12,8 +13,6 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 REMOTE_ENTITY_ID = "remote.philips_tv_remote"
 

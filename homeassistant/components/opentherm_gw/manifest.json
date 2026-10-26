@@ -1,6 +1,7 @@
 {
   "domain": "opentherm_gw",
   "name": "OpenTherm Gateway",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@mvn23"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/opentherm_gw",

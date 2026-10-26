@@ -1,6 +1,7 @@
 {
   "domain": "vistapool",
   "name": "Vistapool",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@fdebrus"],
   "config_flow": true,
   "dhcp": [
@@ -13,5 +14,5 @@
   "iot_class": "cloud_push",
   "loggers": ["aioaquarite"],
   "quality_scale": "platinum",
-  "requirements": ["aioaquarite==0.13.0"]
+  "requirements": ["aioaquarite==0.13.1"]
 }

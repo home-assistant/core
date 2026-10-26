@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
@@ -13,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import remove_config_entry, setup_config_entry, unload_config_entry
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_config_flow(

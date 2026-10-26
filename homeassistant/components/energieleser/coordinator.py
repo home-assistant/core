@@ -83,6 +83,7 @@ class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
                     self.hass,
                     DOMAIN,
                     issue_id,
+                    config_entry_id=self.config_entry.entry_id,
                     is_fixable=False,
                     is_persistent=False,
                     learn_more_url="https://docs.energieleser.de/en/docs/stromleser-one/installation/preparation",

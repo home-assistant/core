@@ -6,12 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysaunum import SaunumData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.saunum.const import DOMAIN
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -112,5 +111,5 @@ def mock_setup_entry() -> Generator[MagicMock]:
     with patch(
         "homeassistant.components.saunum.async_setup_entry", autospec=True
     ) as mock_setup_entry:
-        mock_setup_entry.return_value = True
+        mock_setup_entry.return_value = None
         yield mock_setup_entry

@@ -1,5 +1,7 @@
 """Test KNX date."""
 
+from pytest_homeassistant.common import mock_restore_cache
+
 from homeassistant.components.date import (
     ATTR_DATE,
     DOMAIN as DATE_DOMAIN,
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant, State
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import mock_restore_cache
 
 
 async def test_date(hass: HomeAssistant, knx: KNXTestKit) -> None:

@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from python_homeassistant_analytics import (
     HomeassistantAnalyticsConnectionError,
     HomeassistantAnalyticsError,
@@ -20,8 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -137,3 +140,7 @@ async def test_data_not_modified_without_previous_data(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == (
+        "Home Assistant Analytics reported no changes for addons.json, "
+        "but no previous data is available"
+    )

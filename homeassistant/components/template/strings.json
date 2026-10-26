@@ -543,6 +543,7 @@
           "switch": "[%key:component::switch::title%]",
           "update": "[%key:component::update::title%]",
           "vacuum": "[%key:component::vacuum::title%]",
+          "water_heater": "[%key:component::water_heater::title%]",
           "weather": "[%key:component::weather::title%]"
         },
         "title": "Template helper"
@@ -587,6 +588,53 @@
           }
         },
         "title": "Template vacuum"
+      },
+      "water_heater": {
+        "data": {
+          "current_temperature": "[%key:component::water_heater::entity_component::_::state_attributes::current_temperature::name%]",
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "operation_list": "Operation modes",
+          "operation_mode": "[%key:component::water_heater::entity_component::_::state_attributes::operation_mode::name%]",
+          "set_operation_mode": "Actions on set operation mode",
+          "set_temperature": "Actions on set temperature",
+          "target_temperature": "Target temperature",
+          "temperature_unit": "[%key:component::template::common::temperature_unit%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]"
+        },
+        "data_description": {
+          "current_temperature": "Defines a template for the current temperature.",
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "operation_list": "Defines a template for a list of available operation modes.",
+          "operation_mode": "Defines a template for the current operation mode.",
+          "set_operation_mode": "Defines actions to run when the water heater is given a `set_operation_mode` command. Receives variable `operation_mode`.",
+          "set_temperature": "Defines actions to run when the water heater is given a `set_temperature` command. Receives variable `temperature` and `operation_mode`.",
+          "target_temperature": "Defines a template for the target temperature.",
+          "temperature_unit": "[%key:component::template::common::temperature_unit_description%]",
+          "turn_off": "Defines actions to run when the water heater is turned off.",
+          "turn_on": "Defines actions to run when the water heater is turned on."
+        },
+        "sections": {
+          "additional_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]",
+              "away_mode": "[%key:component::water_heater::entity_component::_::state_attributes::away_mode::name%]",
+              "max_temperature": "[%key:component::water_heater::entity_component::_::state_attributes::max_temp::name%]",
+              "min_temperature": "[%key:component::water_heater::entity_component::_::state_attributes::min_temp::name%]",
+              "turn_away_mode_off": "Actions on turn away mode off",
+              "turn_away_mode_on": "Actions on turn away mode on"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]",
+              "away_mode": "Defines a template for the away mode state.",
+              "turn_away_mode_off": "Defines actions to run when the water heater is given a `turn_away_mode_off` command.",
+              "turn_away_mode_on": "Defines actions to run when the water heater is given a `turn_away_mode_on` command."
+            },
+            "name": "[%key:component::template::common::additional_options%]"
+          }
+        },
+        "title": "Template water heater"
       },
       "weather": {
         "data": {
@@ -1197,6 +1245,53 @@
         },
         "title": "[%key:component::template::config::step::vacuum::title%]"
       },
+      "water_heater": {
+        "data": {
+          "current_temperature": "[%key:component::water_heater::entity_component::_::state_attributes::current_temperature::name%]",
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "operation_list": "[%key:component::template::config::step::water_heater::data::operation_list%]",
+          "operation_mode": "[%key:component::water_heater::entity_component::_::state_attributes::operation_mode::name%]",
+          "set_operation_mode": "[%key:component::template::config::step::water_heater::data::set_operation_mode%]",
+          "set_temperature": "[%key:component::template::config::step::water_heater::data::set_temperature%]",
+          "target_temperature": "[%key:component::template::config::step::water_heater::data::target_temperature%]",
+          "temperature_unit": "[%key:component::template::common::temperature_unit%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]"
+        },
+        "data_description": {
+          "current_temperature": "[%key:component::template::config::step::water_heater::data_description::current_temperature%]",
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "operation_list": "[%key:component::template::config::step::water_heater::data_description::operation_list%]",
+          "operation_mode": "[%key:component::template::config::step::water_heater::data_description::operation_mode%]",
+          "set_operation_mode": "[%key:component::template::config::step::water_heater::data_description::set_operation_mode%]",
+          "set_temperature": "[%key:component::template::config::step::water_heater::data_description::set_temperature%]",
+          "target_temperature": "[%key:component::template::config::step::water_heater::data_description::target_temperature%]",
+          "temperature_unit": "[%key:component::template::common::temperature_unit_description%]",
+          "turn_off": "[%key:component::template::config::step::water_heater::data_description::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::water_heater::data_description::turn_on%]"
+        },
+        "sections": {
+          "additional_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]",
+              "away_mode": "[%key:component::water_heater::entity_component::_::state_attributes::away_mode::name%]",
+              "max_temperature": "[%key:component::water_heater::entity_component::_::state_attributes::max_temp::name%]",
+              "min_temperature": "[%key:component::water_heater::entity_component::_::state_attributes::min_temp::name%]",
+              "turn_away_mode_off": "[%key:component::template::config::step::water_heater::sections::additional_options::data::turn_away_mode_off%]",
+              "turn_away_mode_on": "[%key:component::template::config::step::water_heater::sections::additional_options::data::turn_away_mode_on%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]",
+              "away_mode": "Defines a template for the away mode state.",
+              "turn_away_mode_off": "[%key:component::template::config::step::water_heater::sections::additional_options::data_description::turn_away_mode_off%]",
+              "turn_away_mode_on": "[%key:component::template::config::step::water_heater::sections::additional_options::data_description::turn_away_mode_on%]"
+            },
+            "name": "[%key:component::template::common::additional_options%]"
+          }
+        },
+        "title": "[%key:component::template::config::step::water_heater::title%]"
+      },
       "weather": {
         "data": {
           "condition": "[%key:component::template::config::step::weather::data::condition%]",
@@ -1235,11 +1330,6 @@
         "no_code": "No code format",
         "number": "Number",
         "text": "Text"
-      }
-    },
-    "sensor_unit_of_measurement": {
-      "options": {
-        "none": "No unit of measurement"
       }
     },
     "update_device_class": {

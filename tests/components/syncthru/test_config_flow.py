@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pysyncthru import SyncThruAPINotSupported
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.syncthru.const import DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT = {
     CONF_URL: "http://192.168.1.2/",

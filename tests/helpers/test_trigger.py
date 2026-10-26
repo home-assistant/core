@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
-import datetime
+import datetime as dt
 import inspect
 import io
 import logging
@@ -12,6 +12,14 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -25,6 +33,7 @@ from homeassistant.const import (
     ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
+    CONF_EXCLUDE,
     CONF_FOR,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -99,15 +108,6 @@ from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.yaml.loader import parse_yaml
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    async_fire_time_changed,
-    mock_integration,
-    mock_platform,
-)
 
 
 def _reported_reasons(
@@ -4783,14 +4783,14 @@ async def test_entity_trigger_with_duration(
     assert len(calls) == 0
 
     # Advance time past duration — should fire
-    freezer.tick(datetime.timedelta(seconds=6))
+    freezer.tick(dt.timedelta(seconds=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0]["entity_id"] == entity_id
     assert calls[0]["from_state"].state == STATE_OFF
     assert calls[0]["to_state"].state == STATE_ON
-    assert calls[0]["for"] == datetime.timedelta(seconds=5)
+    assert calls[0]["for"] == dt.timedelta(seconds=5)
 
     unsub()
 
@@ -4813,7 +4813,7 @@ async def test_entity_trigger_duration_cancelled_on_state_change(
     hass.states.async_set(entity_id, STATE_ON)
     await hass.async_block_till_done()
 
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -4821,7 +4821,7 @@ async def test_entity_trigger_duration_cancelled_on_state_change(
     await hass.async_block_till_done()
 
     # Advance past the original duration — should NOT fire
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -4850,21 +4850,21 @@ async def test_entity_trigger_duration_each_independent(
     assert len(calls) == 0
 
     # Turn B on 2 seconds later
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_b, STATE_ON)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
     # After 5s from A's turn-on, A should fire
-    freezer.tick(datetime.timedelta(seconds=3))
+    freezer.tick(dt.timedelta(seconds=3))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0]["entity_id"] == entity_a
 
     # After 5s from B's turn-on (2 more seconds), B should fire
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 2
@@ -4894,13 +4894,13 @@ async def test_entity_trigger_duration_each_entity_off_cancels_only_that_entity(
     await hass.async_block_till_done()
 
     # Turn A off after 2 seconds — cancels A's timer but not B's
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_a, STATE_OFF)
     await hass.async_block_till_done()
 
     # After 5s total, B should fire but A should not
-    freezer.tick(datetime.timedelta(seconds=3))
+    freezer.tick(dt.timedelta(seconds=3))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -4964,7 +4964,7 @@ async def test_entity_trigger_blip_same_loop_iteration_with_duration(
     await hass.async_block_till_done()
 
     # Advance past the duration — should NOT fire
-    freezer.tick(datetime.timedelta(seconds=6))
+    freezer.tick(dt.timedelta(seconds=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -5000,14 +5000,14 @@ async def test_entity_trigger_duration_cancelled_by_dip_same_loop_iteration(
     assert len(calls) == 0
 
     # Dip through unavailable and recover in the same event loop iteration
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_id, STATE_UNAVAILABLE)
     hass.states.async_set(entity_id, STATE_ON)
     await hass.async_block_till_done()
 
     # Advance past the original duration — the trigger does not fire
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -5047,13 +5047,13 @@ async def test_entity_trigger_duration_cancelled_after_resubscription(
     await hass.async_block_till_done()
 
     # Turning A off must cancel the timer
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_a, STATE_OFF)
     await hass.async_block_till_done()
 
     # Advance past the original duration — should NOT fire
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -5096,18 +5096,18 @@ async def test_entity_trigger_duration_first_match_handover_after_resubscription
 
     # The match hands over from A to B: at least one entity matches at all
     # times, so the timer keeps running.
-    freezer.tick(datetime.timedelta(seconds=1))
+    freezer.tick(dt.timedelta(seconds=1))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_b, STATE_ON)
     await hass.async_block_till_done()
 
-    freezer.tick(datetime.timedelta(seconds=1))
+    freezer.tick(dt.timedelta(seconds=1))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_a, STATE_OFF)
     await hass.async_block_till_done()
 
     # Advance past the duration — the trigger fires for the arming event
-    freezer.tick(datetime.timedelta(seconds=4))
+    freezer.tick(dt.timedelta(seconds=4))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -5140,14 +5140,14 @@ async def test_entity_trigger_duration_not_cancelled_by_attribute_change(
     assert len(calls) == 0
 
     # An attribute-only change keeps the state valid
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_id, STATE_ON, {"brightness": 10})
     await hass.async_block_till_done()
     assert len(calls) == 0
 
     # The timer fires at the original deadline
-    freezer.tick(datetime.timedelta(seconds=4))
+    freezer.tick(dt.timedelta(seconds=4))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -5189,13 +5189,193 @@ async def test_entity_trigger_duration_each_cancelled_when_entity_leaves_target(
     assert len(calls) == 0
 
     # Removing the label removes the entity from the target mid-wait
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     entity_registry.async_update_entity(entry.entity_id, labels=set())
     await hass.async_block_till_done()
 
     # Advance past the original duration — should NOT fire
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_trigger_target_exclude_only_invalid(hass: HomeAssistant) -> None:
+    """Test a trigger target consisting of only an exclude block is rejected."""
+
+    class MockTrigger(Trigger):
+        """Mock trigger."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {"_": MockTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    with pytest.raises(
+        probatio.Invalid, match="an exclude block requires a target to exclude from"
+    ):
+        await async_validate_trigger_config(
+            hass,
+            [
+                {
+                    CONF_PLATFORM: "test",
+                    CONF_TARGET: {CONF_EXCLUDE: {CONF_ENTITY_ID: "test.excluded"}},
+                }
+            ],
+        )
+
+
+_INCLUDED_ENTITY_ID = "test.included"
+_EXCLUDED_ENTITY_ID = "test.excluded"
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
+async def test_entity_trigger_target_exclude(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+    behavior: str,
+) -> None:
+    """Test entities matched by the exclude block are ignored by the trigger."""
+    label = label_registry.async_create("Targeted")
+    for object_id in ("included", "excluded"):
+        entry = entity_registry.async_get_or_create(
+            "test", "test", object_id, suggested_object_id=object_id
+        )
+        entity_registry.async_update_entity(entry.entity_id, labels={label.label_id})
+        hass.states.async_set(entry.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        behavior,
+        calls,
+        duration=None,
+        target={
+            ATTR_LABEL_ID: label.label_id,
+            CONF_EXCLUDE: {CONF_ENTITY_ID: _EXCLUDED_ENTITY_ID},
+        },
+    )
+
+    hass.states.async_set(_EXCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # The excluded entity being off doesn't prevent behavior all from firing
+    hass.states.async_set(_EXCLUDED_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == _INCLUDED_ENTITY_ID
+
+    unsub()
+
+
+async def test_entity_trigger_target_exclude_registry_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test a registry change of the excluded entities is taken into account."""
+    excluded_label = label_registry.async_create("Excluded")
+    entity_registry.async_get_or_create(
+        "test", "test", "included", suggested_object_id="included"
+    )
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        BEHAVIOR_EACH,
+        calls,
+        duration=None,
+        target={
+            CONF_ENTITY_ID: _INCLUDED_ENTITY_ID,
+            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+        },
+    )
+
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Adding the excluded label removes the entity from the target
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_OFF)
+    entity_registry.async_update_entity(
+        _INCLUDED_ENTITY_ID, labels={excluded_label.label_id}
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Removing the excluded label adds it back
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_OFF)
+    entity_registry.async_update_entity(_INCLUDED_ENTITY_ID, labels=set())
+    await hass.async_block_till_done()
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    unsub()
+
+
+async def test_entity_trigger_duration_each_cancelled_when_entity_excluded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test an each duration timer is cancelled when its entity gets excluded."""
+    excluded_label = label_registry.async_create("Excluded")
+    entity_registry.async_get_or_create(
+        "test", "test", "included", suggested_object_id="included"
+    )
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        BEHAVIOR_EACH,
+        calls,
+        duration={"seconds": 5},
+        target={
+            CONF_ENTITY_ID: _INCLUDED_ENTITY_ID,
+            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+        },
+    )
+
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    freezer.tick(dt.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    entity_registry.async_update_entity(
+        _INCLUDED_ENTITY_ID, labels={excluded_label.label_id}
+    )
+    await hass.async_block_till_done()
+
+    # Advance past the original duration, the timer was cancelled
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -5240,7 +5420,7 @@ async def test_entity_trigger_duration_each_cancelled_on_entity_rename(
     # Rename the entity mid-wait. It keeps its label, so it stays targeted
     # under the new id; the state follows the rename like the entity
     # component does.
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     new_entity_id = "test.renamed"
     entity_registry.async_update_entity(entry.entity_id, new_entity_id=new_entity_id)
@@ -5250,7 +5430,7 @@ async def test_entity_trigger_duration_each_cancelled_on_entity_rename(
 
     # Advance past the original duration — should NOT fire: the timer for
     # the old id was cancelled, and the new id never transitioned off→on.
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -5298,7 +5478,7 @@ async def test_entity_trigger_duration_all_survives_entity_leaving_target(
 
     # B leaves the target mid-wait and turns off: it no longer gates the
     # all-match, so the timer keeps running.
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     entity_registry.async_update_entity(entry_b.entity_id, labels=set())
     await hass.async_block_till_done()
@@ -5306,7 +5486,7 @@ async def test_entity_trigger_duration_all_survives_entity_leaving_target(
     await hass.async_block_till_done()
 
     # The remaining targeted entity stayed on for the duration — fires
-    freezer.tick(datetime.timedelta(seconds=4))
+    freezer.tick(dt.timedelta(seconds=4))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -5365,13 +5545,13 @@ async def test_entity_trigger_duration_all_revalidated_when_entity_joins_target(
     entry_c = entity_registry.async_get_or_create("test", "test", "labeled_c")
     hass.states.async_set(entry_c.entity_id, added_entity_state)
     await hass.async_block_till_done()
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     entity_registry.async_update_entity(entry_c.entity_id, labels={label.label_id})
     await hass.async_block_till_done()
 
     # Advance past the duration
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == expected_calls
@@ -5415,13 +5595,13 @@ async def test_entity_trigger_duration_first_cancelled_when_match_leaves_target(
     assert len(calls) == 0
 
     # The only matching entity leaves the target mid-wait
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     entity_registry.async_update_entity(entry_a.entity_id, labels=set())
     await hass.async_block_till_done()
 
     # Advance past the original duration — should NOT fire
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -5464,13 +5644,13 @@ async def test_entity_trigger_duration_first_survives_entity_joining_target(
     entry_b = entity_registry.async_get_or_create("test", "test", "labeled_b")
     hass.states.async_set(entry_b.entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     entity_registry.async_update_entity(entry_b.entity_id, labels={label.label_id})
     await hass.async_block_till_done()
 
     # The matching entity stayed on for the duration — fires
-    freezer.tick(datetime.timedelta(seconds=4))
+    freezer.tick(dt.timedelta(seconds=4))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -5555,7 +5735,7 @@ async def test_entity_trigger_duration_all_requires_all(
     hass.states.async_set(entity_a, STATE_ON)
     await hass.async_block_till_done()
 
-    freezer.tick(datetime.timedelta(seconds=6))
+    freezer.tick(dt.timedelta(seconds=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -5564,7 +5744,7 @@ async def test_entity_trigger_duration_all_requires_all(
     hass.states.async_set(entity_b, STATE_ON)
     await hass.async_block_till_done()
 
-    freezer.tick(datetime.timedelta(seconds=6))
+    freezer.tick(dt.timedelta(seconds=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -5602,14 +5782,14 @@ async def test_entity_trigger_duration_all_cancelled_when_all_entities_filtered(
     # After 2 seconds, every targeted entity goes unavailable. Both are
     # filtered out of the all-check by `_should_include`, leaving the
     # check vacuously True. The timer must still be cancelled.
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_a, STATE_UNAVAILABLE)
     hass.states.async_set(entity_b, STATE_UNAVAILABLE)
     await hass.async_block_till_done()
 
     # Advance past the original duration — should NOT fire
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -5638,13 +5818,13 @@ async def test_entity_trigger_duration_all_cancelled_when_one_turns_off(
     await hass.async_block_till_done()
 
     # Turn A off after 2 seconds
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_a, STATE_OFF)
     await hass.async_block_till_done()
 
     # Advance past original duration — should NOT fire
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -5674,25 +5854,25 @@ async def test_entity_trigger_duration_all_timer_reset(
     await hass.async_block_till_done()
 
     # After 2 seconds, B turns off — combined state breaks, timer cancelled
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_b, STATE_OFF)
     await hass.async_block_till_done()
 
     # B turns back on — combined state restored, timer restarts
-    freezer.tick(datetime.timedelta(seconds=1))
+    freezer.tick(dt.timedelta(seconds=1))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_b, STATE_ON)
     await hass.async_block_till_done()
 
     # 4 seconds after restart (not enough) — should NOT fire
-    freezer.tick(datetime.timedelta(seconds=4))
+    freezer.tick(dt.timedelta(seconds=4))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
     # 1 more second (5 total from restart) — should fire
-    freezer.tick(datetime.timedelta(seconds=1))
+    freezer.tick(dt.timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -5721,7 +5901,7 @@ async def test_entity_trigger_duration_first_fires_when_any_on(
     assert len(calls) == 0
 
     # Advance past duration — should fire
-    freezer.tick(datetime.timedelta(seconds=6))
+    freezer.tick(dt.timedelta(seconds=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -5750,14 +5930,14 @@ async def test_entity_trigger_duration_first_not_cancelled_by_second(
 
     # Turn B on 3 seconds later — combined state was already "any on",
     # so this should NOT restart the timer
-    freezer.tick(datetime.timedelta(seconds=3))
+    freezer.tick(dt.timedelta(seconds=3))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_b, STATE_ON)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
     # 2 more seconds (5 total from A) — should fire
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -5787,13 +5967,13 @@ async def test_entity_trigger_duration_first_not_cancelled_by_partial_off(
     await hass.async_block_till_done()
 
     # Turn A off after 2 seconds — combined state still "any on" (B is on)
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_a, STATE_OFF)
     await hass.async_block_till_done()
 
     # Advance past duration — should still fire (combined state never went to "none on")
-    freezer.tick(datetime.timedelta(seconds=4))
+    freezer.tick(dt.timedelta(seconds=4))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -5822,14 +6002,14 @@ async def test_entity_trigger_duration_first_cancelled_when_all_off(
     await hass.async_block_till_done()
 
     # Turn both off after 2 seconds — combined state goes to "none on"
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_a, STATE_OFF)
     hass.states.async_set(entity_b, STATE_OFF)
     await hass.async_block_till_done()
 
     # Advance past original duration — should NOT fire
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -5855,7 +6035,7 @@ async def test_entity_trigger_duration_each_retrigger_resets_timer(
     await hass.async_block_till_done()
 
     # After 3 seconds, turn off and on again — resets the timer
-    freezer.tick(datetime.timedelta(seconds=3))
+    freezer.tick(dt.timedelta(seconds=3))
     async_fire_time_changed(hass)
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
@@ -5863,13 +6043,13 @@ async def test_entity_trigger_duration_each_retrigger_resets_timer(
     await hass.async_block_till_done()
 
     # 3 more seconds (6 from start, but only 3 from retrigger) — should NOT fire
-    freezer.tick(datetime.timedelta(seconds=3))
+    freezer.tick(dt.timedelta(seconds=3))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
     # 2 more seconds (5 from retrigger) — should fire
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -5916,13 +6096,13 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
         await hass.async_block_till_done()
 
     # Entity A becomes invalid during the wait
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     async_fire_time_changed(hass)
     _set_or_remove_state(hass, entity_a, invalid_state)
     await hass.async_block_till_done()
 
     # Advance past the original duration — should NOT fire
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == expected_calls
