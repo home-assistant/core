@@ -69,6 +69,7 @@ from .const import (
     OWM_MODE_FREE_CURRENT,
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
+    OWM_MODE_V40,
     WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT,
 )
 
@@ -309,6 +310,7 @@ def get_owm_update_coordinator(mode: str) -> type[OWMUpdateCoordinator]:
     """Create coordinator with a factory."""
     coordinators = {
         OWM_MODE_V30: WeatherUpdateCoordinator,
+        OWM_MODE_V40: WeatherUpdateCoordinator,
         OWM_MODE_FREE_CURRENT: WeatherUpdateCoordinator,
         OWM_MODE_FREE_FORECAST: WeatherUpdateCoordinator,
         OWM_MODE_AIRPOLLUTION: AirPollutionUpdateCoordinator,
