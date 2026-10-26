@@ -6,6 +6,7 @@ from homeassistant.components.energy import validate
 from homeassistant.components.energy.data import EnergyManager
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
+from typing import Any
 
 POWER_UNITS_STRING = ", ".join(tuple(UnitOfPower))
 
@@ -128,7 +129,7 @@ async def test_validation_home_power(
     mock_energy_manager: EnergyManager,
     unit: str,
     state_class: str,
-    issues: list[dict[str, any]],
+    issues: list[dict[str, Any]],
 ) -> None:
     """Test validating the whole-home power sensor."""
     await mock_energy_manager.async_update(
