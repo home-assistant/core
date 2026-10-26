@@ -32,18 +32,20 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.selector import SerialPortSelector
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    SerialPortSelector,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_BATTERY,
     CONF_BAUD,
     CONF_DATARATE,
     CONF_EXPIRE_AFTER,
     CONF_FREQUENCY,
-    CONF_HUMIDITY,
     CONF_JEELINK_LED,
-    CONF_TEMPERATURE,
     CONF_TOGGLE_INTERVAL,
     CONF_TOGGLE_MASK,
     DEFAULT_BAUD,
@@ -62,18 +64,32 @@ RECEIVER_OPTION_KEYS: Final = (
     CONF_TOGGLE_MASK,
 )
 
+SENSOR_TYPE_COMBINATIONS: Final = {
+    "temperature": LaCrosseSensorType.TEMPERATURE,
+    "humidity": LaCrosseSensorType.HUMIDITY,
+    "temperature_humidity": LaCrosseSensorType.TEMPERATURE
+    | LaCrosseSensorType.HUMIDITY,
+    "temperature_battery": LaCrosseSensorType.TEMPERATURE | LaCrosseSensorType.BATTERY,
+    "humidity_battery": LaCrosseSensorType.HUMIDITY | LaCrosseSensorType.BATTERY,
+    "temperature_humidity_battery": LaCrosseSensorType.TEMPERATURE
+    | LaCrosseSensorType.HUMIDITY
+    | LaCrosseSensorType.BATTERY,
+}
+
 STEP_SENSOR_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_ID): cv.positive_int,
-        probatio.Required(CONF_TEMPERATURE, default=True): cv.boolean,
-        probatio.Required(CONF_HUMIDITY, default=False): cv.boolean,
-        probatio.Required(CONF_BATTERY, default=False): cv.boolean,
+        probatio.Required(CONF_TYPE, default="temperature"): SelectSelector(
+            SelectSelectorConfig(
+                options=list(SENSOR_TYPE_COMBINATIONS),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="sensor_type",
+            )
+        ),
         probatio.Optional(CONF_FRIENDLY_NAME): cv.string,
         probatio.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     }
 )
-
-MIN_REQUIRED_SENSOR_TYPES = LaCrosseSensorType.TEMPERATURE | LaCrosseSensorType.HUMIDITY
 
 EMPTY_VALUES: Final = (None, "")
 
@@ -164,30 +180,25 @@ def _selected_sensor_types(
 ) -> list[LaCrosseSensorType]:
     """Return the selected sensor types from user input."""
     return [
-        sensor_type for sensor_type in LaCrosseSensorType if user_input[sensor_type.key]
+        sensor_type
+        for sensor_type in LaCrosseSensorType
+        if sensor_type & SENSOR_TYPE_COMBINATIONS[user_input[CONF_TYPE]]
     ]
 
 
 def _sensor_input_error(
     sensor_id: int,
-    selected: Iterable[LaCrosseSensorType],
     configured_sensors: Iterable[Mapping[str, Any]],
 ) -> str | None:
-    """Return a validation error for the selected sensor types and ID."""
-    if not any(sensor_type & MIN_REQUIRED_SENSOR_TYPES for sensor_type in selected):
-        return "value_type_required"
+    """Return a validation error for the sensor ID."""
     if _sensor_id_is_configured(sensor_id, configured_sensors):
         return "sensor_already_configured"
     return None
 
 
 def _sensor_details(user_input: Mapping[str, Any]) -> dict[str, Any]:
-    """Return sensor details without the selected type flags."""
-    return {
-        key: value
-        for key, value in user_input.items()
-        if key not in {sensor_type.key for sensor_type in LaCrosseSensorType}
-    }
+    """Return sensor details without the selected type combination."""
+    return {key: value for key, value in user_input.items() if key != CONF_TYPE}
 
 
 class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -318,7 +329,6 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
             )
             if error := _sensor_input_error(
                 sensor_id,
-                selected,
                 configured_sensors,
             ):
                 errors["base"] = error
@@ -362,7 +372,6 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
             )
             if error := _sensor_input_error(
                 new_id,
-                selected,
                 configured_sensors,
             ):
                 errors["base"] = error
@@ -371,7 +380,7 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                 updated = {
                     key: {**details, CONF_TYPE: configured[CONF_TYPE]}
                     for key, configured in sensors.items()
-                    if user_input[configured[CONF_TYPE]]
+                    if LaCrosseSensorType[configured[CONF_TYPE].upper()] in selected
                 }
                 entity_registry = er.async_get(self.hass)
                 removed_ids = {
@@ -416,13 +425,12 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
 
         defaults = {
             **sensor,
-            **{
-                sensor_type.key: any(
-                    configured[CONF_TYPE] == sensor_type.key
-                    for configured in sensors.values()
-                )
-                for sensor_type in LaCrosseSensorType
-            },
+            CONF_TYPE: next(
+                combination
+                for combination, sensor_types in SENSOR_TYPE_COMBINATIONS.items()
+                if {sensor_type.key for sensor_type in sensor_types}
+                == {configured[CONF_TYPE] for configured in sensors.values()}
+            ),
         }
         return self.async_show_form(
             step_id="reconfigure",
