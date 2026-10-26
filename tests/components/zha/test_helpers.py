@@ -306,6 +306,8 @@ async def test_debug_mode_log_filter(
     assert relayed == ["test filtered", "test marker"]
 
     unsub()
+
+
 @pytest.mark.parametrize(
     ("group_id", "expected_identifier"),
     [
@@ -676,10 +678,9 @@ def _shrink_group_while_stopped(app_controller: ControllerApplication) -> None:
 
 
 @pytest.mark.parametrize(
-    ("change_group", "removed"),
+    ("change_group", "device_removed"),
     [
         pytest.param(_remove_group_while_stopped, True, id="group_removed"),
-        # entries disabled by the device are kept until the device is enabled
         pytest.param(_shrink_group_while_stopped, False, id="group_shrunk"),
     ],
 )
@@ -691,7 +692,7 @@ async def test_zha_group_device_reconciled_on_startup(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     change_group: Callable[[ControllerApplication], None],
-    removed: bool,
+    device_removed: bool,
 ) -> None:
     """Test group changes made while ZHA was not running are cleaned up on setup."""
     await setup_zha()
@@ -721,9 +722,9 @@ async def test_zha_group_device_reconciled_on_startup(
 
     # resetting the removed device must not re-enable entities and reload ZHA
     mock_reload.assert_not_called()
-    assert (device_registry.async_get(device_id) is None) is removed
+    assert (device_registry.async_get(device_id) is None) is device_removed
     for entry in entity_entries:
-        assert (entity_registry.async_get(entry.entity_id) is None) is removed
+        assert entity_registry.async_get(entry.entity_id) is None
 
 
 async def test_zha_group_stale_entity_removed_on_startup(

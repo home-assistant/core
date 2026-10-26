@@ -1295,10 +1295,6 @@ class ZHAGatewayProxy(EventBase):
         ):
             if entry.unique_id in current_unique_ids:
                 continue
-            # A removed entry would restore `disabled_by` from its deleted entry
-            # even after the device is enabled again, so wait for the device
-            if entry.disabled_by is er.RegistryEntryDisabler.DEVICE:
-                continue
             _LOGGER.debug(
                 "cleaning up entity registry entry for stale group entity: %s",
                 entry.entity_id,
