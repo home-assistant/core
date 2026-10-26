@@ -9,7 +9,6 @@ from homeassistant.components import (
     cover,
     fan,
     humidifier,
-    input_number,
     media_player,
     vacuum,
     valve,
@@ -2116,9 +2115,15 @@ class AlexaRangeController(AlexaCapability):
 
         # Input Number Value
         if self.instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
-            min_value = float(self.entity.attributes[input_number.ATTR_MIN])
-            max_value = float(self.entity.attributes[input_number.ATTR_MAX])
-            precision = float(self.entity.attributes.get(input_number.ATTR_STEP, 1))
+            min_value = float(
+                self.entity.attributes[NumberEntityCapabilityAttribute.MIN]
+            )
+            max_value = float(
+                self.entity.attributes[NumberEntityCapabilityAttribute.MAX]
+            )
+            precision = float(
+                self.entity.attributes.get(NumberEntityCapabilityAttribute.STEP, 1)
+            )
             unit = self.entity.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
             self._resource = AlexaPresetResource(
