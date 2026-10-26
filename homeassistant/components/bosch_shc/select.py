@@ -257,7 +257,6 @@ SWITCH_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
 )
 
 
-<<<<<<< HEAD
 def _terminal_type_select_option(device: SHCRoomThermostat2, option: str) -> None:
     """Write the thermostat's terminal (external sensor) type."""
     device.terminal_type = TerminalConfiguration.Type[option.upper()]
@@ -325,7 +324,9 @@ OUTPUT_MODE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
         value.name.lower() if (value := device.output_mode) else None
     ),
     select_option_fn=_output_mode_select_option,
-=======
+)
+
+
 def _smart_sensitivity_current_option(
     device: SHCMotionDetector2,
     context: SmartSensitivityControlService.SmartSensitivityContext,
@@ -368,7 +369,6 @@ SMART_SENSITIVITY_COMFORT_LEVEL_DESCRIPTION = SHCSelectEntityDescription[
         SmartSensitivityControlService.SmartSensitivityContext.COMFORT,
         SmartSensitivityControlService.MotionSensitivity[option.upper()],
     ),
->>>>>>> 4714345c5b (Add smart sensitivity level selects to Bosch SHC)
 )
 
 
@@ -534,7 +534,6 @@ async def async_setup_entry(
     entities.extend(
         SHCSelect(
             hass=hass,
-<<<<<<< HEAD
             device=room_thermostat,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -566,7 +565,10 @@ async def async_setup_entry(
         )
         for relay in session.device_helper.micromodule_relays
         if relay.supports_switch_configuration and relay.output_mode is not None
-=======
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
             device=detector,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -578,7 +580,6 @@ async def async_setup_entry(
             SMART_SENSITIVITY_SECURITY_LEVEL_DESCRIPTION,
             SMART_SENSITIVITY_COMFORT_LEVEL_DESCRIPTION,
         )
->>>>>>> 4714345c5b (Add smart sensitivity level selects to Bosch SHC)
     )
 
     async_add_entities(entities)

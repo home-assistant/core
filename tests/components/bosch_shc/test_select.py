@@ -846,6 +846,7 @@ async def test_relay_output_mode_unsupported(
 
     assert hass.states.get(OUTPUT_MODE_ENTITY_ID) is None
 
+
 SECURITY_LEVEL_ENTITY_ID = "select.motion_detector_sensitivity_for_alarm_system"
 COMFORT_LEVEL_ENTITY_ID = "select.motion_detector_sensitivity_for_other_cases"
 
@@ -904,3 +905,20 @@ async def test_smart_sensitivity_levels_unsupported(
 
     assert hass.states.get(SECURITY_LEVEL_ENTITY_ID) is None
     assert hass.states.get(COMFORT_LEVEL_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(supports_smart_sensitivity=True)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_sensitivity_levels_not_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The levels stay unknown while the controller reports none."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SECURITY_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(COMFORT_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
