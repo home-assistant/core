@@ -38,6 +38,7 @@ from ..const import (
     ATTR_PROPERTY_NAME,
     DOMAIN,
     EVENT_VALUE_UPDATED,
+    LOGGER,
 )
 from ..helpers import (
     async_bypass_dynamic_config_validation,
@@ -97,6 +98,35 @@ async def async_validate_trigger_config(
     if not async_get_nodes_from_targets(hass, options):
         raise probatio.Invalid(
             f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
+        )
+
+    # A child device still resolves to its node, so a child target whose endpoint is
+    # missing or not covered is dropped when attaching (it must not listen on an
+    # unrelated endpoint of the node). Mirror that filtering here and reject the config
+    # only when it would leave no target to attach, so the trigger can't silently do
+    # nothing. Mixed configs where another target still attaches stay valid.
+    endpoint = options.get(ATTR_ENDPOINT)
+    dev_reg = dr.async_get(hass)
+    targets_a_child = False
+    kept_device_ids: list[str] = []
+    for device_id in options.get(ATTR_DEVICE_ID, []):
+        if not isinstance(
+            device_entry := dev_reg.async_get(device_id), dr.ChildDeviceEntry
+        ):
+            kept_device_ids.append(device_id)
+            continue
+        targets_a_child = True
+        try:
+            node = async_get_node_from_device_id(hass, device_id)
+        except ValueError:
+            continue
+        if endpoint in get_endpoint_indices_from_child_device(device_entry, node):
+            kept_device_ids.append(device_id)
+    if targets_a_child and not async_get_nodes_from_targets(
+        hass, {**options, ATTR_DEVICE_ID: kept_device_ids}
+    ):
+        raise probatio.Invalid(
+            f"Endpoint {endpoint} is not covered by any targeted endpoint child device"
         )
     return config
 
@@ -206,6 +236,14 @@ async def async_attach_trigger(
             if endpoint not in get_endpoint_indices_from_child_device(
                 device_entry, target_node
             ):
+                # Normally rejected by async_validate_trigger_config; this is a fallback
+                # for bypassed validation or a child whose endpoints changed since.
+                LOGGER.warning(
+                    "Z-Wave value updated trigger target %s is an endpoint child "
+                    "device that does not cover endpoint %s; dropping this target",
+                    device_id,
+                    endpoint,
+                )
                 continue
             assert target_node.client.driver is not None
             child_device_by_node[

@@ -26,9 +26,10 @@ from homeassistant.components.zwave_js.triggers.event import (
 )
 from homeassistant.components.zwave_js.triggers.value_updated import (
     _OPTIONS_SCHEMA_DICT as VALUE_UPDATED_OPTIONS_SCHEMA_DICT,
+    async_attach_trigger as async_attach_value_updated_trigger,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.const import MATCH_ALL, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, trigger
 from homeassistant.helpers.translation import async_get_translations
@@ -388,6 +389,121 @@ async def test_zwave_js_value_updated_child_device(
     assert child_events[0].data["device_id"] == child_device.id
     assert len(node_events) == 1
     assert node_events[0].data["device_id"] == node_device.id
+
+
+async def test_zwave_js_value_updated_child_device_endpoint_validation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test a child-device value_updated trigger validates the configured endpoint.
+
+    A child device still resolves to its node, so an omitted or mismatched endpoint
+    would otherwise validate but silently attach no listener.
+    """
+    node = climate_heatit_z_trm3
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(client.driver, node, node.endpoints[2]),
+        integration.entry_id,
+    )
+    assert child_device
+
+    def make_config(options: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "platform": f"{DOMAIN}.value_updated",
+            "options": {
+                "device_id": child_device.id,
+                "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+                "property": "Air temperature",
+                **options,
+            },
+        }
+
+    # The endpoint the child device covers validates.
+    assert await TRIGGERS["value_updated"].async_validate_complete_config(
+        hass, make_config({"endpoint": 2})
+    )
+
+    # An omitted endpoint is rejected.
+    with pytest.raises(
+        probatio.Invalid, match="not covered by any targeted endpoint child device"
+    ):
+        await TRIGGERS["value_updated"].async_validate_complete_config(
+            hass, make_config({})
+        )
+
+    # An endpoint the child device does not cover is rejected.
+    with pytest.raises(
+        probatio.Invalid, match="not covered by any targeted endpoint child device"
+    ):
+        await TRIGGERS["value_updated"].async_validate_complete_config(
+            hass, make_config({"endpoint": 3})
+        )
+
+
+async def test_zwave_js_value_updated_child_device_endpoint_mismatch_warns(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attaching a child trigger with an uncovered endpoint drops it with a warning.
+
+    Validation rejects this up front, but attaching must still drop the target (rather
+    than attach a listener on an unrelated endpoint) and warn, e.g. when the child's
+    endpoints changed after the automation was created.
+    """
+    node = climate_heatit_z_trm3
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(client.driver, node, node.endpoints[2]),
+        integration.entry_id,
+    )
+    assert child_device
+
+    events: list[dict[str, Any]] = []
+    unsub = await async_attach_value_updated_trigger(
+        hass,
+        {
+            "device_id": [child_device.id],
+            "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+            "property": "Air temperature",
+            "endpoint": 3,  # the endpoint 2 child device does not cover endpoint 3
+            "from": MATCH_ALL,
+            "to": MATCH_ALL,
+        },
+        lambda payload, description=None: events.append(payload),
+    )
+
+    assert "does not cover endpoint 3" in caplog.text
+
+    # No listener was attached, so a value update produces no trigger.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Sensor",
+                    "commandClass": 49,
+                    "endpoint": 2,
+                    "property": "Air temperature",
+                    "propertyName": "Air temperature",
+                    "newValue": 25.5,
+                    "prevValue": 20.0,
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert not events
+
+    unsub()
 
 
 async def test_zwave_js_value_updated_child_device_unavailable_target(
